@@ -1,0 +1,2556 @@
+[
+  {
+    "section": "core",
+    "name": "C01 the scheduling baseline validates at L1 with no diagnostics",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "artifacts": [
+      "ADR-ASMT-SEAM",
+      "BEH-ASMT-SCHEDULE",
+      "CAP-ASMT-ASSIGN",
+      "CONTRACT-ASMT-SCHEDULE",
+      "INT-PREPARE",
+      "KB-ASMT-SCHEDULE",
+      "OUT-PREPARE",
+      "PRD-LANTERN",
+      "RULE-ASMT-AUTH",
+      "RULE-ASMT-FUTURE",
+      "SCN-ASMT-SCHEDULE",
+      "SLICE-ASMT-SCHEDULE",
+      "TEST-ASMT-SCHEDULE"
+    ],
+    "notes": "Every draft piece is attached: both rules are governed by the behavior, the scenario, verification and knowledge carry their outgoing links, the slice implements the behavior, the contract is exposed and the decision informs the slice. Every registry the documents use is declared, and no flag value is used, so the empty flags registry is never consulted."
+  },
+  {
+    "section": "core",
+    "name": "C01 the baseline is valid at L2: drafts are not bound by ownership",
+    "baseline": "scheduling",
+    "level": "L2",
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C01 every artifact approved: active attachment rules all hold",
+    "baseline": "scheduling",
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "CONTRACT-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "INT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "OUT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "PRD-LANTERN.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C01 every artifact approved, at L2: one accountable product slice",
+    "baseline": "scheduling",
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "CONTRACT-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "INT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "OUT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "PRD-LANTERN.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "level": "L2",
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C01 unknown top-level frontmatter is preserved and not interpreted",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "x-editor": {
+            "theme": "dark"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C01 namespaced extensions are accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.extensions": {
+            "example/change": {
+              "ticket": "LAN-12"
+            }
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C06 duplicate YAML status key is a parse rejection",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  status: approved\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The record is not read, and the behavior's parent reference to it is not reported again as unresolved."
+  },
+  {
+    "section": "core",
+    "name": "C06 duplicate key in a behavior: the rules it governed are left unattached",
+    "baseline": "scheduling",
+    "files": {
+      "BEH-ASMT-SCHEDULE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule an assessment\n  status: draft\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule an assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001",
+      "CORE009",
+      "CORE009"
+    ],
+    "notes": "An unreadable record is not in the graph. References to its ID are not unresolved, but its own outgoing governedBy edges are gone, so both draft rules are unattached in this snapshot."
+  },
+  {
+    "section": "core",
+    "name": "C06 anchors are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: &team team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 aliases are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: *team\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 custom tags are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: !!str Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 merge keys are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  <<: *defaults\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 flow mappings are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  links: {supports: [OUT-PREPARE]}\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 block scalars are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: |\n    Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 a second YAML document is rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n...\nnote: second\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 tab indentation is rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n\trevision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 non-finite numbers are rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: .inf\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 boundary: nesting of exactly 16 levels is accepted",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n  extensions:\n    example/deep:\n      l1:\n        l2:\n          l3:\n            l4:\n              l5:\n                l6:\n                  l7:\n                    l8:\n                      l9:\n                        l10:\n                          l11:\n                            l12:\n                              l13: leaf\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C06 nesting deeper than 16 levels is rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n  extensions:\n    example/deep:\n      l1:\n        l2:\n          l3:\n            l4:\n              l5:\n                l6:\n                  l7:\n                    l8:\n                      l9:\n                        l10:\n                          l11:\n                            l12:\n                              l13:\n                                l14: leaf\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 boundary: a frontmatter of exactly 4096 lines is accepted",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C06 a frontmatter longer than 4096 lines is rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n# filler\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C06 boundary: flow sequences, comments and a byte-order mark are accepted",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "﻿---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  # who reads it\n  audiences: [engineering, 'product']  # flow form\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C06 an unquoted version reads as a number and is rejected",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-ASSIGN.md": "---\nmarkset: 0\nintentset:\n  spec: 0.1\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-ASSIGN\n  type: capability\n  title: Assessment assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n---\n\n# Assessment assignment\n\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a document without frontmatter",
+    "baseline": "scheduling",
+    "files": {
+      "TEST-ASMT-SCHEDULE.md": "\n# Review assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Nothing refers to a verification, so no reference is left dangling."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 an unclosed frontmatter fence is no frontmatter",
+    "baseline": "scheduling",
+    "files": {
+      "TEST-ASMT-SCHEDULE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/verification/0.1\n  id: TEST-ASMT-SCHEDULE\n  type: verification\n  title: Review assessment scheduling behavior\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  links:\n    verifies:\n    - BEH-ASMT-SCHEDULE\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n    - SCN-ASMT-SCHEDULE\n  verification:\n    method: manual\n    locator: examples/scheduling/TEST-ASMT-SCHEDULE.md\n    selector: schedule-review-v1\n\n# Review assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 markset version missing",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "markset": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 markset version is not 0",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "markset": 1
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 intentset block missing",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C07 unknown intentset.truh field",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.truh": true
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a required common field is missing",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.owner": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The record is not read; references to its ID are not reported again."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 spec is not 0.1",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.spec": "0.2"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 id does not match the pattern",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.id": "test-asmt-schedule"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 type is not a Core type",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.type": "check"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 profile does not match type",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.profile": "intentset/behavior/0.1"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 status is not a lifecycle status",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.status": "done"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 visibility is not one of the four",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.visibility": "secret"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 audiences is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.audiences": []
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 audiences repeats a value",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.audiences": [
+            "engineering",
+            "engineering"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 title is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.title": ""
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The record is not read, so its narrative is not checked against an empty title."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: revision 0 is not a positive integer",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.revision": 0
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 an optional field written with no value",
+    "baseline": "scheduling",
+    "files": {
+      "RULE-ASMT-AUTH.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/rule/0.1\n  id: RULE-ASMT-AUTH\n  type: rule\n  title: Require assignment permission\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  reviewedBy:\n---\n\n# Require assignment permission\n\n## Constraint\n\nThe server must reject scheduling unless the assessment is published and the actor is authorized to assign it to the requested class.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 extension keys must be namespaced",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.extensions": {
+            "change": "LAN-12"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a reverse edge written in a file is an unknown relationship",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.links": {
+            "governs": [
+              "BEH-ASMT-SCHEDULE"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a link entry is not an ID",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies.3": "scn-asmt-schedule"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The bad entry is left out; the other three targets still resolve."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a link field is not a list",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.consumes": "CONTRACT-ASMT-SCHEDULE"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 availability lacks a dimension",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.flags": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Empty flags is written `flags: []`; an omitted dimension is not a wildcard."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 an availability dimension is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.releases": []
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 availability names an unknown dimension",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.regions": [
+            "eu"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 verification metadata missing",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 verification method is not automated or manual",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "scripted"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 verification metadata on a behavior",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification": {
+            "method": "manual",
+            "locator": "docs/review.md",
+            "selector": "r1"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 slice metadata missing",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 slice kind is not product or technical",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.kind": "feature"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 slice domain missing",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.domain": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 slice carries an unknown key",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.owners": [
+            "team-assessment"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 claim kind is not a claim kind",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.claims.0.kind": "tests"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 claim path is absolute",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.claims.0.path": "/src/features/assessment/schedule/**"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 claim path climbs with ..",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.claims.0.path": "src/features/../shared/**"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 claim path uses brace expansion",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.claims.0.path": "src/features/assessment/{schedule,remind}/**"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 claim path uses negation",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.claims.0.path": "!src/features/assessment/schedule/ui/**"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 layer pattern climbs with ..",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.layers.model.0": "../models/**"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 entrypoint is absolute",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.entrypoint": "/src/features/assessment/schedule/index.ts"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: empty layers and usesResources are accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.layers": {},
+          "intentset.slice.usesResources": []
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE001 technical slice implements a behavior",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.kind": "technical",
+          "intentset.slice.rationale": "Shared scheduling mechanism."
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 technical slice without a rationale",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.kind": "technical",
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: technical slice with a rationale and no implements",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.kind": "technical",
+          "intentset.slice.rationale": "Shared scheduling mechanism.",
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE001 slice metadata on a capability",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.slice": {
+            "kind": "product",
+            "domain": "assessment",
+            "entrypoint": "src/x.ts",
+            "layers": {},
+            "claims": [],
+            "usesResources": []
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 no level-one heading",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {},
+        "body": "\n## Overview\n\nTeachers prepare and distribute published assessments to classes.\n"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 level-one heading differs from the title",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.title": "Assessment distribution"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a required section is missing",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {},
+        "body": "\n# Schedule an assessment\n\n## Behavior\n\nA teacher schedules.\n\n## Outcomes\n\nSuccess and failure.\n"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: a heading inside a code fence does not count",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {},
+        "body": "\n# Schedule an assessment\n\n## Behavior\n\nA teacher schedules.\n\n````markdown\n## Preconditions\n```\nnot closed by three\n```\n````\n\n## Outcomes\n\nSuccess and failure.\n"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: a level-three heading is not a section",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {},
+        "body": "\n# Schedule an assessment\n\n## Behavior\n\nA teacher schedules.\n\n### Preconditions\n\nAuthorized.\n\n## Outcomes\n\nSuccess and failure.\n"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: inline markup and closing hashes do not change a heading",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {},
+        "body": "\n# *Schedule* an `assessment` #\n\n## Behavior ##\n\nA teacher schedules.\n\n## _Preconditions_\n\nAuthorized.\n\n## [Outcomes](#outcomes)\n\nSuccess and failure.\n"
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C02 copy of the behavior file retaining the same ID",
+    "baseline": "scheduling",
+    "files": {
+      "BEH-ASMT-SCHEDULE-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule an assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE002",
+      "CORE002"
+    ],
+    "notes": "Both files are reported; neither record is merged into the other."
+  },
+  {
+    "section": "core",
+    "name": "C02 two different artifacts share an ID",
+    "baseline": "scheduling",
+    "files": {
+      "rules/RULE-ASMT-AUTH.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/rule/0.1\n  id: RULE-ASMT-AUTH\n  type: rule\n  title: Require a class roster\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n---\n\n# Require a class roster\n\n## Constraint\n\nThe server must reject scheduling unless the assessment is published and the actor is authorized to assign it to the requested class.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE002",
+      "CORE002"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C02 boundary: a copy with a new ID is a separate artifact",
+    "baseline": "scheduling",
+    "files": {
+      "RULE-ASMT-AUTH-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/rule/0.1\n  id: RULE-ASMT-ROSTER\n  type: rule\n  title: Require assignment permission\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n---\n\n# Require assignment permission\n\n## Constraint\n\nThe server must reject scheduling unless the assessment is published and the actor is authorized to assign it to the requested class.\n"
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ],
+    "notes": "Titles are not identity. The new rule is a draft nothing governs."
+  },
+  {
+    "section": "core",
+    "name": "C03 governedBy: [CAP-ASMT-ASSIGN]",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.governedBy": [
+            "CAP-ASMT-ASSIGN"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003",
+      "CORE009",
+      "CORE009"
+    ],
+    "notes": "The catalog's mutation replaces the list, so both draft rules also lose their only governedBy."
+  },
+  {
+    "section": "core",
+    "name": "C03 governedBy also names a capability",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.governedBy.2": "CAP-ASMT-ASSIGN"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C04 parent changed to nonexistent CAP-MISSING",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.parent": "CAP-MISSING"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a behavior's parent is an outcome",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.parent": "OUT-PREPARE"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 boundary: a capability's parent may be a capability",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-SUB.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-SUB\n  type: capability\n  title: Reschedule an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering, product]\n  parent: CAP-ASMT-ASSIGN\n---\n\n# Reschedule an assessment\n\n## Overview\n\nTeachers move an existing schedule to a new release time.\n"
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a rule has a navigation parent",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.parent": "CAP-ASMT-ASSIGN"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a slice depends on itself",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a relationship authored on the wrong source type",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.links": {
+            "illustrates": [
+              "BEH-ASMT-SCHEDULE"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 verifies targets a capability",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies.0": "CAP-ASMT-ASSIGN"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 explains an unresolved ID",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.explains.0": "BEH-MISSING"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 requires targets a rule",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.requires": [
+            "RULE-ASMT-AUTH"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 informedBy targets a contract",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy.1": "CONTRACT-ASMT-SCHEDULE"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a capability supports an intent",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.links": {
+            "supports": [
+              "INT-PREPARE"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ],
+    "notes": "Core §5 pairs supports by source: outcome to intent, capability to outcome."
+  },
+  {
+    "section": "core",
+    "name": "CORE003 boundary: a capability supports an outcome",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.links": {
+            "supports": [
+              "OUT-PREPARE"
+            ]
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a link array repeats an ID",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies.1": "BEH-ASMT-SCHEDULE"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 replacedBy names a different type",
+    "baseline": "scheduling",
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "retired",
+          "intentset.links": {
+            "replacedBy": [
+              "RULE-ASMT-AUTH"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 usesResources names an undeclared resource",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.usesResources.0": "RES-MISSING"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 an approved rule nothing governs",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.governedBy.1": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 an approved scenario illustrates nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.links": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 an approved verification verifies nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.links": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 approved knowledge explains nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.links": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 an approved product slice implements nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 boundary: a retired rule nothing governs is history, not an error",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "retired"
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.governedBy.1": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE005"
+    ],
+    "notes": "The only diagnostic is the warning that the retired rule names no successor."
+  },
+  {
+    "section": "core",
+    "name": "C05 capability parents form a cycle",
+    "baseline": "scheduling",
+    "files": {
+      "CAP-ASMT-SUB.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/capability/0.1\n  id: CAP-ASMT-SUB\n  type: capability\n  title: Reschedule an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering, product]\n  parent: CAP-ASMT-ASSIGN\n---\n\n# Reschedule an assessment\n\n## Overview\n\nTeachers move an existing schedule to a new release time.\n"
+    },
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.parent": "CAP-ASMT-SUB"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004",
+      "CORE004"
+    ],
+    "notes": "Each member of the cycle is reported."
+  },
+  {
+    "section": "core",
+    "name": "C05 a capability is its own parent",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.parent": "CAP-ASMT-ASSIGN"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C09 retired replacement points to self",
+    "baseline": "scheduling",
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "retired",
+          "intentset.links": {
+            "replacedBy": [
+              "ADR-ASMT-SEAM"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C09 two retired decisions replace each other",
+    "baseline": "scheduling",
+    "files": {
+      "ADR-ASMT-SEAM-2.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/decision/0.1\n  id: ADR-ASMT-SEAM-2\n  type: decision\n  title: Keep backend access behind a typed client\n  status: retired\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    replacedBy: [ADR-ASMT-SEAM]\n---\n\n# Keep backend access behind a typed client\n\n## Context\n\nThe first seam decision left the client's error mapping unstated.\n\n## Decision\n\nThe scheduling client maps every transport failure to a typed rejection.\n\n## Consequences\n\nCallers never see transport errors.\n"
+    },
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "retired",
+          "intentset.links": {
+            "replacedBy": [
+              "ADR-ASMT-SEAM-2"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004",
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C09 boundary: a retired decision replaced by its successor",
+    "baseline": "scheduling",
+    "files": {
+      "ADR-ASMT-SEAM-2.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/decision/0.1\n  id: ADR-ASMT-SEAM-2\n  type: decision\n  title: Keep backend access behind a typed client\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Keep backend access behind a typed client\n\n## Context\n\nThe first seam decision left the client's error mapping unstated.\n\n## Decision\n\nThe scheduling client maps every transport failure to a typed rejection.\n\n## Consequences\n\nCallers never see transport errors.\n"
+    },
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "retired",
+          "intentset.links": {
+            "replacedBy": [
+              "ADR-ASMT-SEAM-2"
+            ]
+          }
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy.0": "ADR-ASMT-SEAM-2"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE004 requires forms a cycle",
+    "baseline": "scheduling",
+    "files": {
+      "BEH-ASMT-PUBLISH.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-PUBLISH\n  type: behavior\n  title: Publish an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering, product]\n  parent: CAP-ASMT-ASSIGN\n  links:\n    requires: [BEH-ASMT-SCHEDULE]\n  availability:\n    products: [PRD-LANTERN]\n    releases: [pilot-1]\n    roles: [teacher]\n    editions: [standard]\n    flags: []\n---\n\n# Publish an assessment\n\n## Behavior\n\nA teacher publishes a draft assessment so it can be scheduled.\n\n## Preconditions\n\nThe assessment is complete and the teacher owns it.\n\n## Outcomes\n\nSuccess: the assessment becomes schedulable. Failure: an incomplete assessment is rejected and stays a draft.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.requires": [
+            "BEH-ASMT-PUBLISH"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004",
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE004 a behavior requires itself",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.requires": [
+            "BEH-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE004 boundary: a requires chain without a cycle",
+    "baseline": "scheduling",
+    "files": {
+      "BEH-ASMT-PUBLISH.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-PUBLISH\n  type: behavior\n  title: Publish an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering, product]\n  parent: CAP-ASMT-ASSIGN\n  availability:\n    products: [PRD-LANTERN]\n    releases: [pilot-1]\n    roles: [teacher]\n    editions: [standard]\n    flags: []\n---\n\n# Publish an assessment\n\n## Behavior\n\nA teacher publishes a draft assessment so it can be scheduled.\n\n## Preconditions\n\nThe assessment is complete and the teacher owns it.\n\n## Outcomes\n\nSuccess: the assessment becomes schedulable. Failure: an incomplete assessment is rejected and stays a draft.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.requires": [
+            "BEH-ASMT-PUBLISH"
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE004 a capability without a parent does not reach a product",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.parent": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE004 an intent without a parent does not reach a product",
+    "baseline": "scheduling",
+    "patch": {
+      "INT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.parent": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE004 a product with a parent",
+    "baseline": "scheduling",
+    "files": {
+      "PRD-BEACON.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/product/0.1\n  id: PRD-BEACON\n  type: product\n  title: Beacon example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  parent: INT-PREPARE\n---\n\n# Beacon example\n\n## Scope\n\nA second invented product.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 a behavior without availability",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 knowledge without availability",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 owner is not in the owner registry",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.owner": "team-ghost"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 an audience is not in the audience registry",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.audiences.1": "executives"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 a release label is not in the registries",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.releases.0": "pilot-2"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ],
+    "notes": "Release labels match exactly; nothing infers pilot-2 from pilot-1."
+  },
+  {
+    "section": "core",
+    "name": "CORE005 a role is not in the registries",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.roles.0": "student"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 an edition is not in the registries",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.editions.0": "premium"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 a flag is not in the registries",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.flags": [
+            "gamma"
+          ]
+        }
+      }
+    },
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [
+        "beta-scheduling"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: a declared flag is accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.flags": [
+            "beta-scheduling"
+          ]
+        }
+      }
+    },
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [
+        "beta-scheduling"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: a flag used while the registries declare none warns once",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.flags": [
+            "beta-scheduling"
+          ]
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.flags": [
+            "beta-scheduling"
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE005"
+    ],
+    "notes": "An empty registry list reads as not declared: one repository-wide warning, not one per artifact."
+  },
+  {
+    "section": "core",
+    "name": "CORE005 availability names a capability as a product",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.products.0": "CAP-ASMT-ASSIGN"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 availability names a product not in the graph",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.products.0": "PRD-MISSING"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: without a registries file nothing can be checked, and that is one warning",
+    "baseline": "scheduling",
+    "files": {
+      "registries.yaml": null
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 a retired artifact names no successor",
+    "baseline": "scheduling",
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.status": "retired"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 replacedBy on an artifact that is not retired",
+    "baseline": "scheduling",
+    "files": {
+      "ADR-ASMT-SEAM-2.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/decision/0.1\n  id: ADR-ASMT-SEAM-2\n  type: decision\n  title: Keep backend access behind a typed client\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Keep backend access behind a typed client\n\n## Context\n\nThe first seam decision left the client's error mapping unstated.\n\n## Decision\n\nThe scheduling client maps every transport failure to a typed rejection.\n\n## Consequences\n\nCallers never see transport errors.\n"
+    },
+    "patch": {
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.links": {
+            "replacedBy": [
+              "ADR-ASMT-SEAM-2"
+            ]
+          }
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy.1": "ADR-ASMT-SEAM-2"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE006 an approved behavior no product slice implements, at L2",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "level": "L2",
+    "valid": false,
+    "diagnostics": [
+      "CORE006",
+      "CORE009"
+    ],
+    "notes": "The draft slice that lost its implements is also an unattached draft."
+  },
+  {
+    "section": "core",
+    "name": "CORE006 two product slices implement one released behavior, at L2",
+    "baseline": "scheduling",
+    "files": {
+      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoint: src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "released"
+        }
+      }
+    },
+    "level": "L2",
+    "valid": false,
+    "diagnostics": [
+      "CORE006"
+    ],
+    "notes": "Catalog V01 from the core side; the architecture checker reports VSA001 for the same condition."
+  },
+  {
+    "section": "core",
+    "name": "CORE006 boundary: the same two slices at L1 are not an ownership check",
+    "baseline": "scheduling",
+    "files": {
+      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoint: src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "released"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE006 boundary: a draft behavior with two slices at L2",
+    "baseline": "scheduling",
+    "files": {
+      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoint: src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
+    },
+    "level": "L2",
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE006 a technical slice is not an accountable owner, at L2",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.kind": "technical",
+          "intentset.slice.rationale": "Shared mechanism."
+        }
+      }
+    },
+    "level": "L2",
+    "valid": false,
+    "diagnostics": [
+      "CORE001",
+      "CORE006"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C08 draft unattached rule",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.governedBy.1": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE009 draft scenario illustrates nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE009 draft verification verifies nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE009 draft knowledge explains nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE009 draft product slice implements nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE009 draft contract no slice exposes or consumes",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.exposes": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE009 boundary: a contract consumed but not exposed is attached",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.exposes": null,
+          "intentset.links.consumes": [
+            "CONTRACT-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE009 draft decision nothing is informed by",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG002 a registry is not a list",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": "team-assessment",
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG002",
+      "CORE005"
+    ],
+    "notes": "The unreadable owners registry is empty, so owners are then not declared."
+  },
+  {
+    "section": "core",
+    "name": "CFG002 an unknown registry",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ],
+      "teams": [
+        "team-assessment"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG002"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG001 config without a repository identity",
+    "baseline": "scheduling",
+    "config": {
+      "scope": [
+        "**/*.md"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG001 boundary: config with a repository identity and defaults",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling"
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CFG001 config scope is not a list of globs",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "scope": "**/*.md"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ]
+  }
+]

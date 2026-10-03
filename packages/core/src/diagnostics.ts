@@ -32,6 +32,7 @@ export interface Diagnostic {
   remediation: string;
 }
 
+/** ADR 0004: true when any diagnostic is an error; warnings never fail a check. */
 export function hasErrors(diagnostics: readonly Diagnostic[]): boolean {
   return diagnostics.some((d) => d.severity === "error");
 }
@@ -49,6 +50,7 @@ export function compareDiagnostics(a: Diagnostic, b: Diagnostic): number {
   );
 }
 
+/** Core §11 and ADR 0004: a sorted copy, in `compareDiagnostics` order. */
 export function sortDiagnostics<T extends Diagnostic>(diagnostics: readonly T[]): T[] {
   return [...diagnostics].sort(compareDiagnostics);
 }

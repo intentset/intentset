@@ -153,7 +153,7 @@ decisions in §8 are recorded or explicitly deferred with a date.
 - Fixtures: `tests/core.json` covering C01–C09 plus the minimum per rule (valid, each error, each warning), and
   `tests/export.json`.
 
-Exit: the scheduling example validates at L1 with its two expected warnings and nothing else; every core fixture
+Exit: the scheduling example validates at L1 with no diagnostics (every draft piece in it is attached); every core fixture
 passes; the export of the example is byte-identical across two runs and across macOS and Linux in CI.
 
 ### M2 Traceable architecture (two to three weeks, piloted on Streamlane)

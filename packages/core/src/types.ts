@@ -240,6 +240,18 @@ export const EMPTY_REGISTRIES: Registries = {
   resources: [],
 };
 
+/** `.intentset/config.yaml`: the declared repository scope a conformance claim is about (Core §11). */
+export interface Config {
+  /** Stable identity of the repository, carried by the export (e.g. "intentset/intentset"). */
+  repository: string;
+  /** Globs selecting the documents in scope; the default is every `.md` file under the repository. */
+  scope: string[];
+  /** Path of registries.yaml, or null when the repository declares none. */
+  registries: string | null;
+  /** Globs excluded from scope and from source enumeration. */
+  ignore: string[];
+}
+
 /** Conformance levels, Core §11. Checks above the requested level do not run. */
 export const LEVELS = ["L1", "L2", "L3", "L4", "L5"] as const;
 export type Level = (typeof LEVELS)[number];
