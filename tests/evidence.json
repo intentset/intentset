@@ -1,0 +1,1620 @@
+[
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E01 current pass at L1 is a current pass and reports nothing",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/1",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Pure classification: TEST-ASMT-SCHEDULE is current-pass. \"@current\" in commit or graphHash is bound by the driver to the snapshot (FIXTURE_COMMIT and the expanded tree's graph hash) before the records are read; any other value is taken literally."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E01 current pass at L3 verifies every claim the review links",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-02",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/2",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "The behavior, both rules and the scenario are approved, and the one manual review linked to each passed at the snapshot. \"@current\" in commit or graphHash is bound by the driver to the snapshot (FIXTURE_COMMIT and the expanded tree's graph hash) before the records are read; any other value is taken literally."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E01 current pass at L3 still fails the approved rule no verification names",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies": [
+            "BEH-ASMT-SCHEDULE",
+            "RULE-ASMT-FUTURE",
+            "SCN-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-03",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/3",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007"
+    ],
+    "notes": "A behavior's pass does not cover its rules: RULE-ASMT-AUTH has no verification definition, so it alone gets CORE007."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E01 draft claims need no evidence at L3",
+    "level": "L3",
+    "evidence": [],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Boundary: the example is all draft, and CORE007 binds non-draft claims only; coverage still reports zero verified."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E02 pass at an older commit is stale",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-04",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "0000000000000000000000000000000000000001",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/4",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "Same graph hash, different commit: stale, so each of the four approved claims gets CORE007. \"@current\" in commit or graphHash is bound by the driver to the snapshot (FIXTURE_COMMIT and the expanded tree's graph hash) before the records are read; any other value is taken literally."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E02 pass at an older graph hash is stale",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-05",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/5",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "Same commit, different graph hash: the files the run assessed are not these files."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E02 stale pass below L3 is not a diagnostic",
+    "level": "L1",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-06",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "0000000000000000000000000000000000000001",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/6",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Boundary: CORE007 applies at L3 and above; the coverage report still shows the review as stale."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E03 skipped review at the snapshot is not a pass",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-07",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "skip",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/7",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E03 errored review at the snapshot is not a pass",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-08",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "error",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/8",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E03 missing evidence fails every approved claim",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E03 missing evidence fails only the approved claim",
+    "level": "L3",
+    "patch": {
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [],
+    "valid": false,
+    "diagnostics": [
+      "CORE007"
+    ],
+    "notes": "Only the scenario is approved; the draft behavior and rules are reported in coverage, not as CORE007."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E04 prior pass followed by a current fail stays failing",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-09",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/9",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-10",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-10-01T10:00:00Z",
+        "finishedAt": "2026-10-01T10:30:00Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/10",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "Both runs are at the snapshot; the later one failed, and the earlier pass cannot hide it."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E04 stale pass followed by a current fail stays failing",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-11",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "0000000000000000000000000000000000000001",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/11",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-12",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-10-01T10:00:00Z",
+        "finishedAt": "2026-10-01T10:30:00Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/12",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E04 a pass recorded after the failure at the same snapshot is current",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-13",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-10-01T11:00:00Z",
+        "finishedAt": "2026-10-01T11:40:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/13",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-14",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-10-01T10:00:00Z",
+        "finishedAt": "2026-10-01T10:30:00Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/14",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Boundary: the latest run at the snapshot decides, whatever the array order; the failure stays in the history and the snapshot counts."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E04 runs that finish together are ordered by evidence ID",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-B",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/15",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-A",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/16",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "Same finishedAt: EV-REVIEW-B sorts after EV-REVIEW-A, so its failure is the latest run."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "E04 fractional seconds order runs exactly",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-17",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/17",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-18",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00.5Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/18",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "09:45:00.5Z is after 09:45:00Z, though it sorts before it as a plain string."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 manual record without a rationale",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-19",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/19"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 record with neither a tool nor a reviewer",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-20",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": null,
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/20"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 run of a manual verification without a reviewer",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-21",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/21"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ],
+    "notes": "Well-formed on its own, but TEST-ASMT-SCHEDULE is a manual review and a manual record must name its reviewer."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 run that finishes before it starts",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-22",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T10:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/22",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 result outside pass, fail, skip and error",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-23",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "passed",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/23",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 timestamp with a local offset",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-24",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T11:00:00+02:00",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/24",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 repeated evidence ID",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-SAME",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/25",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-SAME",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:50:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/26",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001"
+    ],
+    "notes": "The first record is kept and the repeat reported; tools never merge two records."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID001 malformed pass never counts as evidence at L3",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-27",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/27"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "EVID001",
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID002 run record names a verification that does not exist",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-28",
+        "verificationId": "TEST-ASMT-MISSING",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/28",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": [
+      "EVID002"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID002 run record names a behavior rather than a verification",
+    "level": "L1",
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-29",
+        "verificationId": "BEH-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/29",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": [
+      "EVID002"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Scope a pass for another release is ignored",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-30",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-2"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/30",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "The request is PRD-LANTERN pilot-1; the pilot-2 record is counted in ignoredOutOfScope and the review reads as missing."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Scope a fail for another release does not hide the in-scope pass",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-31",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/31",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-REVIEW-32",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-2"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:55:00Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/32",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      }
+    ],
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID003 locator names a file that is not in the tree",
+    "level": "L1",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "test/schedule-review.test.ts"
+        }
+      }
+    },
+    "sources": {
+      "test/schedule-assessment.test.ts": "import test from \"node:test\";\n"
+    },
+    "evidence": [],
+    "valid": true,
+    "diagnostics": [
+      "EVID003"
+    ],
+    "notes": "The driver checks locators against the tree's documents and sources only when the case supplies sources."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "EVID003 locator that names a supplied source is resolved",
+    "level": "L1",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "test/schedule-review.test.ts"
+        }
+      }
+    },
+    "sources": {
+      "test/schedule-review.test.ts": "import test from \"node:test\";\n"
+    },
+    "evidence": [],
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Automated verification passing at the snapshot verifies its claims",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-33",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/33"
+      }
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "An automated record names its tool and needs neither reviewer nor rationale."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Every linked verification must pass for a claim to be verified",
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "files": {
+      "TEST-ASMT-PAST.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/verification/0.1\n  id: TEST-ASMT-PAST\n  type: verification\n  title: Reject a past release time\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    verifies:\n    - RULE-ASMT-FUTURE\n  verification:\n    method: automated\n    locator: src/features/assessment/schedule/domain/policies/future-release.test.ts\n    selector: rejects a past release time\n---\n\n# Reject a past release time\n\n## Procedure\n\nAn automated test submits a schedule request whose release time is one minute in the past and asserts that the service rejects it without recording a schedule.\n\n## Expected result\n\nThe request is rejected with a validation error, and no schedule exists for the assessment afterwards.\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-REVIEW-34",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "pilot",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": null,
+        "reviewer": "reviewer-ana",
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "pass",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/34",
+        "rationale": "Ran the five requests of the procedure in the pilot environment and observed the expected result for each."
+      },
+      {
+        "evidenceId": "EV-PAST-01",
+        "verificationId": "TEST-ASMT-PAST",
+        "commit": "@current",
+        "graphHash": "@current",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-09-30T09:00:00Z",
+        "finishedAt": "2026-09-30T09:45:00Z",
+        "result": "fail",
+        "uri": "https://evidence.example/lantern/schedule-review-v1/35"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007"
+    ],
+    "notes": "RULE-ASMT-FUTURE is verified by the passing review and the failing automated test, so it alone is not verified."
+  }
+]
