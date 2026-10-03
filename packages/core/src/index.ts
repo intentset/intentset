@@ -10,3 +10,4 @@ export * from "./registries.ts";
 export * from "./types.ts";
 export * from "./validate.ts";
 export * from "./yaml.ts";
+export { compareStrings } from "./report.ts";

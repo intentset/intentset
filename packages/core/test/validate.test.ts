@@ -5,11 +5,13 @@ import { test } from "node:test";
 import {
   DEFAULT_IGNORE,
   DEFAULT_SCOPE,
+  DOCUMENT_MAX_BYTES,
   type Diagnostic,
   type DocumentInput,
   EMPTY_REGISTRIES,
   compareDiagnostics,
   plainCarrier,
+  readArtifact,
   readConfig,
   readRegistries,
   validate,
@@ -137,7 +139,8 @@ test("readRegistries reports a bad shape as CFG002 with its line", () => {
     ],
   );
   const unparsed = readRegistries("owners: [a\n", "registries.yaml");
-  assert.equal(unparsed.diagnostics[0].origin, "syntax");
+  // "syntax" is Markset's origin alone (ADR 0004); a YAML rejection here is Intentset's own.
+  assert.equal(unparsed.diagnostics[0].origin, "profile");
 });
 
 test("readConfig applies defaults and reports CFG001", () => {
@@ -163,4 +166,30 @@ test("readConfig applies defaults and reports CFG001", () => {
   );
   assert.deepEqual(bad.config.scope, DEFAULT_SCOPE);
   assert.equal(bad.config.registries, null);
+});
+
+test("Core §3: a record over the size limit is refused before it is parsed", () => {
+  const big = `---\nmarkset: 0\n---\n\n# Big\n\n${"x".repeat(DOCUMENT_MAX_BYTES)}\n`;
+  const read = readArtifact(plainCarrier("BIG.md", big));
+  assert.equal(read.artifact, null);
+  assert.deepEqual(
+    read.diagnostics.map((d) => [d.code, d.origin]),
+    [["CORE001", "profile"]],
+  );
+  assert.match(read.diagnostics[0].message, /MiB/);
+});
+
+test("a scope or ignore pattern the matcher cannot honour is CFG001, not silently empty", () => {
+  const read = readConfig(
+    "repository: a/b\nscope:\n- /abs/**/*.md\n- 'docs/{a,b}/*.md'\nignore:\n- '!keep/**'\n",
+    "c.yaml",
+  );
+  assert.deepEqual(
+    read.diagnostics.map((d) => [d.code, d.field]),
+    [
+      ["CFG001", "/scope/0"],
+      ["CFG001", "/scope/1"],
+      ["CFG001", "/ignore/0"],
+    ],
+  );
 });
