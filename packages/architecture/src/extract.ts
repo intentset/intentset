@@ -118,9 +118,27 @@ function tokenize(path: string, text: string): { tokens: Token[]; problems: Extr
   /** Open brace depth inside each `${` of an unfinished template literal. */
   const templates: number[] = [];
   let previous: Token | undefined;
+  let lastEnd = -1;
   for (;;) {
     let kind = scanner.scan();
     if (kind === SyntaxKind.EndOfFile) break;
+    // TypeScript 7's scanner can return a token without advancing: JSX text
+    // such as `#{n}` scans as an empty private identifier at the `#`, forever.
+    // A token that ends where the last one did makes no progress, so step over
+    // one character. In JSX that costs nothing, since no import is written in
+    // JSX text; anywhere else it is reported, because something was skipped.
+    if (scanner.getTokenEnd() <= lastEnd) {
+      if (!jsx) {
+        problems.push({
+          line: lineOf(lastEnd),
+          message: "the scanner could not advance here, so one character was skipped",
+        });
+      }
+      lastEnd++;
+      scanner.resetTokenState(lastEnd);
+      continue;
+    }
+    lastEnd = scanner.getTokenEnd();
     if ((kind === SyntaxKind.SlashToken || kind === SyntaxKind.SlashEqualsToken) && regexAllowed(previous)) {
       kind = scanner.reScanSlashToken();
     } else if (kind === SyntaxKind.OpenBraceToken && templates.length > 0) {

@@ -113,8 +113,14 @@ export function buildModel(
     meta.claims.forEach((claim, i) => {
       if (validatePattern(claim.path) !== null) invalidClaims.push(i);
     });
-    const claimFiles = expandClaims(meta.claims, production, []).map((list, i) =>
-      invalidClaims.includes(i) ? [] : list,
+    // A verification claim names tests, so it resolves against them as well;
+    // every other kind resolves against production files only, so a source
+    // claim over a directory does not sweep in the tests that sit beside it.
+    const withTests = [...production, ...tests].sort(compareStrings);
+    const claimFiles = meta.claims.map((claim, i) =>
+      invalidClaims.includes(i)
+        ? []
+        : (expandClaims([claim], claim.kind === "verification" ? withTests : production, [])[0] ?? []),
     );
     return {
       id: artifact.meta.id,

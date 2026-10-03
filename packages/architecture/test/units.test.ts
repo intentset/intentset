@@ -610,3 +610,70 @@ describe("checkArchitecture: declared scope and modes", () => {
     assert.ok(summary.reviewRequired.some((rule) => rule.startsWith("VSA012")));
   });
 });
+
+test("JSX text starting with #{ does not stop the scan, and imports after it are found", () => {
+  // Found on Streamlane: TypeScript 7's scanner returned an empty token at the
+  // `#` without advancing, and the extractor allocated until the heap ran out.
+  const text = 'import a from "./a";\nconst e = <A>\n  #{String(n)} · {x}\n</A>;\nimport b from "./b";\n';
+  const extracted = extractImports("x.tsx", text);
+  assert.deepEqual(
+    extracted.imports.map((i) => i.specifier),
+    ["./a", "./b"],
+  );
+});
+
+test("a verification claim resolves against test files, and a source claim does not sweep them in", () => {
+  // Found on Streamlane: claims resolved against production files only, so a
+  // verification claim naming a test file always read as matching nothing.
+  const slice = `---
+markset: 0
+intentset:
+  spec: '0.1'
+  profile: intentset/slice/0.1
+  id: SLICE-X
+  type: slice
+  title: X slice
+  status: draft
+  owner: o
+  visibility: internal
+  audiences: [engineering]
+  slice:
+    kind: technical
+    rationale: test
+    domain: x
+    entrypoint: src/x/index.ts
+    layers: {}
+    claims:
+      - kind: source
+        path: src/x/**
+      - kind: verification
+        path: test/x.test.ts
+    usesResources: []
+---
+
+# X slice
+
+## Responsibility
+
+r
+
+## Public contract
+
+p
+
+## Verification
+
+v
+`;
+  const graph = validate([plainCarrier("SLICE-X.md", slice)], EMPTY_REGISTRIES, { level: "L2" }).graph;
+  const files = new Map([
+    ["SLICE-X.md", slice],
+    ["src/x/index.ts", "export const x = 1;\n"],
+    ["src/x/index.test.ts", 'import { x } from "./index.ts";\n'],
+    ["test/x.test.ts", 'import { x } from "../src/x/index.ts";\n'],
+  ]);
+  const result = checkArchitecture(graph, EMPTY_REGISTRIES, { files }, { level: "L2", today: "2026-10-02" });
+  const vsa009 = result.diagnostics.filter((d) => d.code === "VSA009").map((d) => d.message);
+  assert.deepEqual(vsa009, []);
+  assert.equal(result.summary.filesClaimed, 1, "the source claim owns index.ts, not the test beside it");
+});
