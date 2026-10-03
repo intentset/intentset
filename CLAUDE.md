@@ -125,8 +125,8 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
 - [x] Streamlane pilot (Streamlane ADR 0033, branch `intentset-pilot`); findings in `docs/pilot-findings.md`
 - [ ] Not published. Each package needs one manual `npm publish` and its trusted publisher configured before CI can
       release it (see the release workflow's comment). The site's install-claims test flips only after that.
-- [ ] Four open specification questions from the pilot, `docs/pilot-findings.md`: a slice's surface across packages,
-      scope hiding consumers, where evidence lives, and draft gaps at L3.
+- [x] The pilot's four specification questions, decided 2026-10-03 (`docs/pilot-findings.md`): `entrypoints` per
+      package, out-of-scope importers as warnings, evidence kept out of the commit it assesses, draft gaps as warnings.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

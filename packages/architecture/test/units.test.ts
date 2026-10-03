@@ -4,6 +4,7 @@ import { type Diagnostic, EMPTY_REGISTRIES, type Graph, plainCarrier, validate }
 import {
   applyBaseline,
   applyExceptions,
+  buildModel,
   checkArchitecture,
   covers,
   expandClaims,
@@ -17,6 +18,7 @@ import {
   readExceptionRecord,
   resolveConfig,
   Resolver,
+  seamPatterns,
   shortestCycle,
   stripJsonComments,
   stronglyConnected,
@@ -481,7 +483,8 @@ ${extra}  slice:
     kind: technical
     rationale: Test fixture.
     domain: test
-    entrypoint: ${root}/index.ts
+    entrypoints:
+    - ${root}/index.ts
     layers: {}
     claims:
     - kind: source
@@ -545,6 +548,35 @@ describe("checkArchitecture: declared scope and modes", () => {
     assert.ok(seen.includes("VSA004 packages/a/src/index.ts"));
     assert.equal(summary.outOfScope, 4);
     assert.equal(summary.slices, 2);
+  });
+
+  test("an import from outside the scope past a slice's surface is a VSA003 warning and counts toward no edge", () => {
+    const withInternal = new Map(files);
+    withInternal.set("packages/a/src/internal.ts", "export const a = 1;\n");
+    const leaking = new Map(withInternal);
+    leaking.set(
+      "legacy/src/new.ts",
+      'import { a } from "../../packages/a/src/internal";\nimport { b } from "../../packages/a/src/index";\nexport const both = [a, b];\n',
+    );
+    const before = checkArchitecture(graph, EMPTY_REGISTRIES, { files: withInternal }, { config, today: "2026-10-02" });
+    const after = checkArchitecture(graph, EMPTY_REGISTRIES, { files: leaking }, { config, today: "2026-10-02" });
+    const leak = after.diagnostics.filter((d) => d.path === "legacy/src/new.ts");
+    assert.deepEqual(
+      leak.map((d) => `${d.severity} ${d.code} ${d.location?.line}`),
+      ["warning VSA003 1"],
+      "the private file is reported and the entrypoint is not",
+    );
+    assert.match(
+      leak[0].message,
+      /^legacy\/src\/new\.ts lies outside the declared scope and imports "\.\.\/\.\.\/packages\/a\/src\/internal", a private file of SLICE-A .*; its public surface is packages\/a\/src\/index\.ts\.$/,
+    );
+    assert.equal(after.summary.edges, before.summary.edges);
+    assert.equal(after.summary.crossSliceEdges, before.summary.crossSliceEdges);
+    assert.equal(after.summary.outOfScope, before.summary.outOfScope + 1, "the importer is counted as before");
+    assert.equal(
+      after.diagnostics.filter((d) => d.severity === "error").length,
+      before.diagnostics.filter((d) => d.severity === "error").length,
+    );
   });
 
   test("the same input gives the same bytes", () => {
@@ -611,6 +643,114 @@ describe("checkArchitecture: declared scope and modes", () => {
   });
 });
 
+describe("a slice with an entrypoint in each package it spans (VSA §3)", () => {
+  const record = `---
+markset: 0
+intentset:
+  spec: '0.1'
+  profile: intentset/slice/0.1
+  id: SLICE-M
+  type: slice
+  title: SLICE-M
+  status: draft
+  owner: team-a
+  visibility: internal
+  audiences:
+  - engineering
+  slice:
+    kind: technical
+    rationale: Test fixture.
+    domain: test
+    entrypoints:
+    - packages/a/src/index.ts
+    - apps/web/src/index.ts
+    layers: {}
+    claims:
+    - kind: source
+      path: packages/a/src/**
+    - kind: source
+      path: apps/web/src/**
+    usesResources: []
+---
+
+# SLICE-M
+
+## Responsibility
+
+Test.
+
+## Public contract
+
+Test.
+
+## Verification
+
+Test.
+`;
+  const graph = graphOf({ "SLICE-M.md": record });
+  const files = new Map<string, string>([
+    ["packages/a/package.json", '{ "name": "a" }\n'],
+    ["packages/a/src/index.ts", 'export * from "./domain/models/m";\n'],
+    ["packages/a/src/domain/models/m.ts", 'import { c } from "../../client/c";\nexport const m = c;\n'],
+    ["packages/a/src/client/c.ts", "export const c = 1;\n"],
+    ["apps/web/package.json", '{ "name": "web" }\n'],
+    ["apps/web/src/index.ts", 'export * from "./domain/models/w";\n'],
+    ["apps/web/src/domain/models/w.ts", 'import { k } from "../../client/k";\nexport const w = k;\n'],
+    ["apps/web/src/client/k.ts", "export const k = 1;\n"],
+  ]);
+  const config = { sourceRoots: ["packages/**", "apps/**"] };
+
+  test("each entrypoint is a surface: TS001 applies to each, and the layer fallback uses the root above each file", () => {
+    const { diagnostics } = checkArchitecture(graph, EMPTY_REGISTRIES, { files }, { config, today: "2026-10-02" });
+    assert.deepEqual(
+      diagnostics
+        .filter((d) => d.code !== "VSA006") // layers: {} leaves every file unclassified, which is beside the point here
+        .map((d) => `${d.code} ${d.path}`)
+        .sort(),
+      [
+        "AMP006 apps/web/src/domain/models/w.ts",
+        "AMP006 packages/a/src/domain/models/m.ts",
+        "TS001 apps/web/src/index.ts",
+        "TS001 packages/a/src/index.ts",
+      ],
+    );
+  });
+
+  test("a file's package is the nearest directory with a package.json, and its root the nearest entrypoint directory", () => {
+    const model = buildModel(graph, EMPTY_REGISTRIES, files, resolveConfig(config));
+    const slice = model.sliceById.get("SLICE-M")!;
+    assert.deepEqual(slice.roots, ["apps/web/src", "packages/a/src"]);
+    assert.equal(model.packageOf("apps/web/src/domain/models/w.ts"), "apps/web");
+    assert.equal(model.packageOf("packages/a/src/index.ts"), "packages/a");
+    assert.equal(model.packageOf("src/features/x.ts"), "", "no package.json above: the repository root");
+    assert.deepEqual(seamPatterns(slice), ["apps/web/src/client/**", "packages/a/src/client/**"]);
+    assert.deepEqual(seamPatterns(slice, "apps/web/src/ui/x.ts"), ["apps/web/src/client/**"]);
+    assert.deepEqual(seamPatterns(slice, "elsewhere/x.ts"), []);
+  });
+
+  test("two entrypoints in one package is VSA002, naming both and the package", () => {
+    const twice = graphOf({
+      "SLICE-M.md": record.replace(
+        "    - apps/web/src/index.ts\n",
+        "    - apps/web/src/index.ts\n    - apps/web/src/ui.ts\n",
+      ),
+    });
+    const { diagnostics } = checkArchitecture(
+      twice,
+      EMPTY_REGISTRIES,
+      { files: new Map([...files, ["apps/web/src/ui.ts", "export const ui = 1;\n"]]) },
+      { config, today: "2026-10-02" },
+    );
+    const vsa002 = diagnostics.filter((d) => d.code === "VSA002");
+    assert.deepEqual(
+      vsa002.map((d) => `${d.field} ${d.message}`),
+      [
+        "/intentset/slice/entrypoints/2 SLICE-M declares two entrypoints in the package at apps/web, apps/web/src/index.ts and apps/web/src/ui.ts; a slice has one public surface per package it spans.",
+      ],
+    );
+  });
+});
+
 test("JSX text starting with #{ does not stop the scan, and imports after it are found", () => {
   // Found on Streamlane: TypeScript 7's scanner returned an empty token at the
   // `#` without advancing, and the extractor allocated until the heap ran out.
@@ -641,7 +781,7 @@ intentset:
     kind: technical
     rationale: test
     domain: x
-    entrypoint: src/x/index.ts
+    entrypoints: [src/x/index.ts]
     layers: {}
     claims:
       - kind: source

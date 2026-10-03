@@ -16,7 +16,7 @@
  */
 import type { Artifact, Graph, Registries, Resource, SliceMeta } from "@intentset/core";
 import type { ArchitectureConfig } from "./config.ts";
-import { dirname, isCode, within } from "./paths.ts";
+import { ancestors, dirname, isCode, within } from "./paths.ts";
 import { compareStrings, expandClaims, matchAny, matchPattern, validatePattern } from "./patterns.ts";
 
 export type RegionKind =
@@ -45,8 +45,11 @@ export interface SliceInfo {
   path: string;
   artifact: Artifact;
   meta: SliceMeta;
-  /** Directory of the entrypoint: where the profile's ui/, client/ and domain/ folders live. */
-  root: string;
+  /**
+   * Directories of the entrypoints, sorted: where the profile's ui/, client/ and domain/ folders live, one root per
+   * package the slice spans. A file belongs to the deepest root above it (`rootOf`).
+   */
+  roots: string[];
   dependsOn: string[];
   exposes: string[];
   consumes: string[];
@@ -78,6 +81,11 @@ export interface Model {
   regionOf(path: string): Region;
   /** The slice a test file belongs to, by claim pattern, or null. */
   testOwner(path: string): string | null;
+  /**
+   * A file's package (VSA §3): the nearest ancestor directory holding a package.json in the tree, or the
+   * repository root, "", when there is none.
+   */
+  packageOf(path: string): string;
   inScope(path: string): boolean;
   isTest(path: string): boolean;
   underBackend(path: string): boolean;
@@ -127,7 +135,7 @@ export function buildModel(
       path: artifact.path,
       artifact,
       meta,
-      root: dirname(meta.entrypoint),
+      roots: [...new Set(meta.entrypoints.map(dirname))].sort(compareStrings),
       dependsOn: [...(artifact.meta.links.dependsOn ?? [])].sort(compareStrings),
       exposes: [...(artifact.meta.links.exposes ?? [])].sort(compareStrings),
       consumes: [...(artifact.meta.links.consumes ?? [])].sort(compareStrings),
@@ -149,10 +157,7 @@ export function buildModel(
   }
   // A file two slices claim is VSA009 either way; for its region, the slice whose directory holds it is the
   // likelier owner, so an overlap reports once rather than turning every import of the file into a boundary error.
-  const home = (file: string, id: string) => {
-    const root = sliceById.get(id)!.root;
-    return within(root, file) === null ? -1 : root.length;
-  };
+  const home = (file: string, id: string) => rootOf(sliceById.get(id)!, file)?.length ?? -1;
   for (const [file, owners] of claimOwners) {
     owners.sort(
       (a, b) => home(file, b.slice) - home(file, a.slice) || compareStrings(a.slice, b.slice) || a.claim - b.claim,
@@ -186,6 +191,17 @@ export function buildModel(
     return region;
   };
 
+  const packages = new Map<string, string>();
+  const packageOf = (path: string): string => {
+    const directory = dirname(path);
+    const cached = packages.get(directory);
+    if (cached !== undefined) return cached;
+    const found =
+      ancestors(directory).find((dir) => files.has(dir === "" ? "package.json" : `${dir}/package.json`)) ?? "";
+    packages.set(directory, found);
+    return found;
+  };
+
   const testOwner = (path: string): string | null => {
     for (const slice of slices) {
       if (slice.meta.claims.some((claim, i) => !slice.invalidClaims.includes(i) && matchPattern(claim.path, path)))
@@ -205,13 +221,23 @@ export function buildModel(
     resources,
     regionOf,
     testOwner,
+    packageOf,
     inScope: (path) => matchAny(config.scope, path),
     isTest,
     underBackend,
   };
 }
 
-/** The path of a file relative to its slice's root, or null when it lies elsewhere (a backend claim, say). */
-export function inSliceRoot(slice: SliceInfo, path: string): string | null {
-  return within(slice.root, path);
+/** The deepest of the slice's entrypoint directories above a file, or null when it lies under none (a backend claim, say). */
+export function rootOf(slice: SliceInfo, path: string): string | null {
+  let found: string | null = null;
+  for (const root of slice.roots) {
+    if (within(root, path) !== null && (found === null || root.length > found.length)) found = root;
+  }
+  return found;
+}
+
+/** "the repository root" or "the package at apps/web", for messages. */
+export function describePackage(directory: string): string {
+  return directory === "" ? "the repository root" : `the package at ${directory}`;
 }

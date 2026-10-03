@@ -1,34 +1,29 @@
 # Pilot findings
 
 An open register of what real repositories asked of the v0.1 specifications and the reference implementation. Each
-entry says what was found, where, and whether it is fixed, decided, or open. Open entries need a decision from the
-specification's owner before the spec changes; the implementation does not change semantics on its own.
+entry says what was found, where, and whether it is fixed, decided, or open. An open entry needs a decision from the
+specification's owner before the spec changes; the implementation does not change semantics on its own. None is
+open now.
 
 The first pilot is Streamlane's blocked state (Streamlane ADR 0033, branch `intentset-pilot`): 26 records, one
 slice across `packages/core`, `amplify/` and `apps/web`, eight verification records bound to existing tests.
 
-## Open: decisions for the specification
+## Decided by the specification's owner, 2026-10-03
 
-1. **A slice that spans packages has more than one public surface.** VSA002 gives a slice one declared contract
-   surface, and the profile makes it one `entrypoint`. Streamlane's blocked-work slice has its logic in
-   `packages/core` and its UI in `apps/web`; with the web app in the architecture scope, nine files import
-   `components/Blocked.tsx` or `lib/blocked.ts` directly and are reported as VSA003 private-file imports, plus four
-   TS006 (the `@/*` alias opening them). Options: (a) `entrypoints`, one per package or deployment unit, each a
-   public surface; (b) UI components as a composition surface (VSA §6 already lets composition import screens by a
-   named exemption; this would generalise it to declared UI exports); (c) the current rule, with the advice that such
-   a slice is two slices joined by a contract. (a) is the smallest change and matches how monorepos publish.
-2. **Declared scope hides consumers.** With the architecture scope set to the slice's own files, imports *into* the
-   slice from outside the scope are not checked, so finding 1 is invisible until the scope is widened. Options:
-   report edges into an in-scope slice from out-of-scope files as warnings, or say in VSA §9 that a scope must include
-   a slice's consumers to claim VSA003 conformance.
-3. **Where run evidence lives.** Core §8 counts a pass only at the assessed commit and graph hash, so a run record
-   committed to the repository is stale the moment it is committed. The spec says evidence stores are the adopter's
-   to control but not that they cannot be the repository. An informative note in §8 (CI artifacts or an external
-   store; never the commit under assessment) would save every adopter discovering it.
-4. **Draft records make every level above L1 say nothing.** The pilot's records are draft because an agent wrote
-   them (Core §10 forbids self-approval), and CORE006, CORE007 and CORE008 bind non-draft records only, so the L3 run
-   reports no diagnostic while two rules have no verification at all. The coverage report shows it; the diagnostics
-   do not. Option: a warning-level counterpart of CORE007 for drafts at L3, so a draft gap is visible in CI output.
+1. **A slice has one entrypoint per package it spans.** `slice.entrypoint` became `slice.entrypoints`, a nonempty
+   list; every entry is a public surface, each lies in the slice's own source claims, and two in one package are
+   VSA002. A consumer is pointed at the entrypoint in its own package. Streamlane's blocked-work slice had its logic
+   in `packages/core` and its UI in `apps/web`; nine web files read as VSA003 under the single-entrypoint rule.
+   Rejected: UI as a composition surface, and keeping one entrypoint with the advice to split such slices.
+2. **Imports into a slice from outside the declared scope are warnings.** An out-of-scope importer reaching a
+   slice's private file is VSA003 (or TS003 for a screen) at severity warning, so a narrow scope no longer hides the
+   consumers that reach past a surface; one reaching an entrypoint reports nothing. Rejected: requiring consumers to
+   be in scope, and leaving it silent.
+3. **Where run evidence lives: an informative note in Core §8.** Keep run records in CI artifacts or another store,
+   never in the commit under assessment. Rejected: a normative MUST NOT, and saying nothing.
+4. **A draft claim with no verification is a CORE007 warning at L3 and above.** Only a missing definition warns; a
+   missing run on a draft is left to the coverage report, and an approved claim is still an error. Rejected: leaving
+   drafts silent, and failing L3 on drafts.
 
 ## Fixed in the implementation
 

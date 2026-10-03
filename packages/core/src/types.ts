@@ -117,7 +117,8 @@ export interface SliceMeta {
   kind: "product" | "technical";
   rationale?: string;
   domain: string;
-  entrypoint: string;
+  /** Repository-relative file paths, the slice's public contract surfaces: one per package it spans (VSA §3). */
+  entrypoints: string[];
   layers: Record<string, string[]>;
   claims: Claim[];
   usesResources: string[];

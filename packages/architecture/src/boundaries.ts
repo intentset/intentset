@@ -11,10 +11,13 @@
  *              assertion about business ownership, so a structural region
  *              violation has its own code.
  *   3. TS003   a screen of another slice imported by anything but a named
- *              router file; or a slice's entrypoint importing its own screen.
- *   4. VSA003  another slice's file that is not its entrypoint, by relative
- *              path, alias or re-export; with TS006 beside it when a wildcard
- *              alias opened the path.
+ *              router file; or one of a slice's entrypoints importing its own
+ *              screen.
+ *   4. VSA003  another slice's file that is none of its entrypoints, by
+ *              relative path, alias or re-export; with TS006 beside it when a
+ *              wildcard alias opened the path. Every entrypoint is a public
+ *              surface, and the message names the one in the importer's own
+ *              package first, since that is the surface it should use.
  *   5. AMP006  a policy or model file importing its slice's client seam or
  *              infrastructure, or a backend SDK.
  *   6. VSA006  an edge inside one slice that the layer matrix does not allow.
@@ -26,14 +29,20 @@
  *
  * Test files get the separate pass profile §3 asks for: they may import
  * their own slice's internals, and VSA003 and TS003 still apply to anyone
- * else's. Edges from files outside the declared scope are not checked; edges
- * into it are, when a slice claims the target.
+ * else's.
+ *
+ * Edges from files inside the declared scope are checked, including those to
+ * a file outside it that a slice claims. Edges from files outside the scope
+ * are checked for one thing only: reaching past a slice's public surfaces to
+ * a file inside the scope, which is VSA003 (TS003 for a screen) as a warning,
+ * so a narrow scope cannot hide its consumers and they do not fail it
+ * (VSA §9). They count toward no edge total and no slice dependency.
  */
-import { type Finding, finding } from "./finding.ts";
+import { type Finding, finding, listSome } from "./finding.ts";
 import type { ImportEdge } from "./imports.ts";
 import { inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
 import { matchAny, matchPattern } from "./patterns.ts";
-import type { Model, Region, SliceInfo } from "./regions.ts";
+import { describePackage, type Model, type Region, type SliceInfo } from "./regions.ts";
 import type { Resolver } from "./resolve.ts";
 
 export interface SliceEdge {
@@ -64,6 +73,39 @@ function how(edge: ImportEdge): string {
   return `${kind} "${edge.specifier}"`;
 }
 
+function through(edge: ImportEdge): string {
+  return edge.via === "relative"
+    ? "a relative path"
+    : edge.via === "workspace"
+      ? "a package path"
+      : `the ${edge.via === "baseUrl" ? "baseUrl" : "alias"} "${edge.specifier}"`;
+}
+
+/** A slice's entrypoints with those in the importer's own package first, since that is the surface it should use. */
+function surfacesFor(model: Model, target: SliceInfo, from: string): { own: string[]; others: string[] } {
+  const pkg = model.packageOf(from);
+  const own = target.meta.entrypoints.filter((entry) => model.packageOf(entry) === pkg);
+  return { own, others: target.meta.entrypoints.filter((entry) => !own.includes(entry)) };
+}
+
+/** "its public surface is X", or with several, the one in the importer's package first. */
+function describeSurfaces(model: Model, target: SliceInfo, from: string): string {
+  const entries = target.meta.entrypoints;
+  if (entries.length === 1) return `its public surface is ${entries[0]}`;
+  const { own, others } = surfacesFor(model, target, from);
+  if (own.length === 0) return `its public surfaces are ${listSome(others, others.length)}`;
+  const elsewhere = others.length === 0 ? "" : `, and elsewhere ${listSome(others, others.length)}`;
+  return `its public surface in ${describePackage(model.packageOf(from))} is ${listSome(own, own.length)}${elsewhere}`;
+}
+
+/** The file to import instead: the entrypoint in the importer's package, or the only one. */
+function importInstead(model: Model, target: SliceInfo, from: string): string {
+  const { own } = surfacesFor(model, target, from);
+  if (own.length > 0) return `Import ${own[0]}`;
+  const entries = target.meta.entrypoints;
+  return entries.length === 1 ? `Import ${entries[0]}` : `Import one of ${target.id}'s entrypoints`;
+}
+
 function describeRegion(region: Region): string {
   switch (region.kind) {
     case "slice":
@@ -85,9 +127,56 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
     region.kind === "slice" ? model.sliceById.get(region.owner as string) : undefined;
   const isScreen = (path: string) => matchPattern(config.screensGlob, path);
 
+  // VSA §9: from outside the declared scope, only an import past a slice's public surfaces into the scope is
+  // reported, and as a warning. The exemptions are those that hold inside the scope.
+  const outOfScope = (edge: ImportEdge): Finding | null => {
+    const { from, to } = edge;
+    if (to === null || !model.inScope(to)) return null;
+    const target = sliceOf(model.regionOf(to));
+    if (target === undefined || target.meta.entrypoints.includes(to)) return null;
+    const test = model.isTest(from);
+    const source = test ? undefined : sliceOf(model.regionOf(from));
+    const owner = test ? model.testOwner(from) : (source?.id ?? null);
+    if (owner === target.id) return null;
+    if (!test && model.underBackend(to)) {
+      if (source === undefined && model.underBackend(from)) return null; // the unified backend composition (VSA §7)
+      if (source !== undefined && inSeam(source, from) && matchAny(config.responseParserModules, to)) return null;
+    }
+    const who = test ? `Test file ${from}` : from;
+    const subject = { edges: [{ from, to }, ...(owner !== null ? [{ from: owner, to: target.id }] : [])] };
+    const why = "It is a warning because the importer lies outside the declared scope (VSA §9).";
+    if (isScreen(to)) {
+      if (!test && matchAny(config.routerFiles, from)) return null;
+      return finding({
+        code: "TS003",
+        severity: "warning",
+        artifact: owner,
+        path: from,
+        location: { line: edge.line },
+        message: `${who} lies outside the declared scope and ${how(edge)}, a screen of ${target.id}; only a named router file may import screens directly.`,
+        remediation: `Let the router compose ${target.id}'s screen, or consume a component API that ${target.id} exposes through an entrypoint (TS003). ${why}`,
+        ...subject,
+      });
+    }
+    return finding({
+      code: "VSA003",
+      severity: "warning",
+      artifact: owner,
+      path: from,
+      location: { line: edge.line },
+      message: `${who} lies outside the declared scope and ${how(edge)}, a private file of ${target.id} reached through ${through(edge)}; ${describeSurfaces(model, target, from)}.`,
+      remediation: `${importInstead(model, target, from)} and have it export what is needed (VSA003). ${why}`,
+      ...subject,
+    });
+  };
+
   for (const edge of edges) {
     const from = edge.from;
-    if (!model.inScope(from)) continue;
+    if (!model.inScope(from)) {
+      const leak = outOfScope(edge);
+      if (leak !== null) findings.push(leak);
+      continue;
+    }
     const location = { line: edge.line };
 
     if (model.isTest(from)) {
@@ -107,15 +196,15 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
             edges: [{ from, to: edge.to }],
           }),
         );
-      } else if (edge.to !== target.meta.entrypoint) {
+      } else if (!target.meta.entrypoints.includes(edge.to)) {
         findings.push(
           finding({
             code: "VSA003",
             artifact: owner,
             path: from,
             location,
-            message: `Test file ${from} ${how(edge)}, a private file of ${target.id} whose public surface is ${target.meta.entrypoint}.`,
-            remediation: `Import ${target.meta.entrypoint} instead; tests may reach only their own slice's internals (profile §3).`,
+            message: `Test file ${from} ${how(edge)}, a private file of ${target.id}; ${describeSurfaces(model, target, from)}.`,
+            remediation: `${importInstead(model, target, from)} instead; tests may reach only their own slice's internals (profile §3).`,
             edges: [{ from, to: edge.to }],
           }),
         );
@@ -127,7 +216,7 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
     const source = sliceOf(regionFrom);
     const artifact = source?.id ?? null;
 
-    if (source !== undefined && from === source.meta.entrypoint && edge.wildcardExport) {
+    if (source?.meta.entrypoints.includes(from) && edge.wildcardExport) {
       findings.push(
         finding({
           code: "TS001",
@@ -255,7 +344,7 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
               message: `${from} ${how(edge)}, a screen of ${target.id}, and only a named router file may import screens directly.`,
               remediation:
                 source !== undefined
-                  ? `Let the router compose ${target.id}'s screen, or consume a component API that ${target.id} exposes through its entrypoint (TS003).`
+                  ? `Let the router compose ${target.id}'s screen, or consume a component API that ${target.id} exposes through an entrypoint (TS003).`
                   : "Import the screen from the router file named in routerFiles, or name this file there if it is the router (TS003).",
               ...subject,
             }),
@@ -263,21 +352,15 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
         }
         continue;
       }
-      if (to !== target.meta.entrypoint) {
-        const through =
-          edge.via === "relative"
-            ? "a relative path"
-            : edge.via === "workspace"
-              ? "a package path"
-              : `the ${edge.via === "baseUrl" ? "baseUrl" : "alias"} "${edge.specifier}"`;
+      if (!target.meta.entrypoints.includes(to)) {
         findings.push(
           finding({
             code: "VSA003",
             artifact,
             path: from,
             location,
-            message: `${source ? source.id : describeRegion(regionFrom)} ${how(edge)}, a private file of ${target.id} reached through ${through}; its public surface is ${target.meta.entrypoint}.`,
-            remediation: `Import ${target.id}'s entrypoint and have it export what is needed, or move the shared rule into a contract (VSA003).`,
+            message: `${source ? source.id : describeRegion(regionFrom)} ${how(edge)}, a private file of ${target.id} reached through ${through(edge)}; ${describeSurfaces(model, target, from)}.`,
+            remediation: `${importInstead(model, target, from)} and have it export what is needed, or move the shared rule into a contract (VSA003).`,
             ...subject,
           }),
         );
@@ -289,7 +372,7 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
               path: from,
               location,
               message: `The wildcard in "${edge.specifier}" opens ${to}, a private file of ${target.id}, to code outside the slice.`,
-              remediation: `Map the alias for ${target.id} to its entrypoint only, so the alias cannot reach internals (TS006).`,
+              remediation: `Map the alias for ${target.id} to its entrypoints only, so the alias cannot reach internals (TS006).`,
               ...subject,
             }),
           );
@@ -319,7 +402,7 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
     if (source === undefined) continue;
 
     // Inside one slice, or out to shared and infrastructure.
-    if (target !== undefined && from === source.meta.entrypoint && isScreen(to)) {
+    if (target !== undefined && source.meta.entrypoints.includes(from) && isScreen(to)) {
       findings.push(
         finding({
           code: "TS003",
@@ -387,7 +470,7 @@ export function checkUnclassified(model: Model): Finding[] {
       if (
         !/\.[cm]?[jt]sx?$/.test(file) ||
         matchAny(model.config.tests, file) ||
-        file === slice.meta.entrypoint ||
+        slice.meta.entrypoints.includes(file) ||
         model.underBackend(file) ||
         !model.inScope(file)
       )

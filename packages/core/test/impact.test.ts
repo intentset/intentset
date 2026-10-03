@@ -55,7 +55,7 @@ test("reverse slice dependencies are followed transitively, and a cycle terminat
   const slice = (id: string, dependsOn: string[]) =>
     plainCarrier(
       `${id}.md`,
-      `---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: ${id}\n  type: slice\n  title: ${id}\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    dependsOn: [${dependsOn.join(", ")}]\n  slice:\n    kind: technical\n    rationale: Shared.\n    domain: d\n    entrypoint: src/${id}.ts\n    layers: {}\n    claims: []\n    usesResources: []\n---\n# ${id}\n## Responsibility\n## Public contract\n## Verification\n`,
+      `---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: ${id}\n  type: slice\n  title: ${id}\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    dependsOn: [${dependsOn.join(", ")}]\n  slice:\n    kind: technical\n    rationale: Shared.\n    domain: d\n    entrypoints: [src/${id}.ts]\n    layers: {}\n    claims: []\n    usesResources: []\n---\n# ${id}\n## Responsibility\n## Public contract\n## Verification\n`,
     );
   const graph = validate(
     [

@@ -78,7 +78,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "graphHash": "f4a8c12d9e05d126c0a00dacb9e925f4eef1bbf439a835b807462c1c3a309bc2"
+      "graphHash": "507d45e13510b80935ae1349f4bc0caecfbf76ac3dc07d16638f84a9cde23e0e"
     },
     "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
   },
@@ -211,7 +211,9 @@
           "slice": {
             "kind": "product",
             "domain": "assessment",
-            "entrypoint": "src/features/assessment/schedule/index.ts",
+            "entrypoints": [
+              "src/features/assessment/schedule/index.ts"
+            ],
             "claims": [
               {
                 "kind": "backend",

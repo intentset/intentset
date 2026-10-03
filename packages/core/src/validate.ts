@@ -594,10 +594,15 @@ function checkSlices(context: Context): void {
         );
       }
     }
-    const entry = patternProblem(slice.entrypoint);
-    if (entry !== null) {
-      profile("/intentset/slice/entrypoint", `slice.entrypoint ${entry}.`, "Give a repository-relative POSIX path.");
-    }
+    slice.entrypoints.forEach((entrypoint, i) => {
+      const why = patternProblem(entrypoint);
+      if (why !== null)
+        profile(
+          `/intentset/slice/entrypoints/${i}`,
+          `Entrypoint ${entrypoint} ${why}.`,
+          "Give the repository-relative POSIX path of a file inside the slice's source claims (VSA §3).",
+        );
+    });
     for (const layer of Object.keys(slice.layers).sort(compareStrings)) {
       slice.layers[layer].forEach((pattern, i) => {
         const why = patternProblem(pattern);

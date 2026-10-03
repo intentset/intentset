@@ -11,12 +11,14 @@
  * each layer also importing itself. The same declaration names the slice's
  * external-access seam (the `external` layer, VSA010 and AMP002) and its pure
  * layers (`policy` and `model`, AMP006). A slice that declares no layers
- * falls back to the reference layout's folders under its entrypoint's
- * directory: client/, domain/policies/, domain/models/.
+ * falls back to the reference layout's folders under an entrypoint's
+ * directory: client/, domain/policies/, domain/models/. A slice has one
+ * entrypoint per package, so a file uses the folders under the entrypoint
+ * directory nearest above it.
  */
 import type { ArchitectureConfig } from "./config.ts";
 import { matchAny } from "./patterns.ts";
-import type { SliceInfo } from "./regions.ts";
+import { rootOf, type SliceInfo } from "./regions.ts";
 
 export type LayerOf = { layer: string } | { layer: null; reason: "none" | "ambiguous"; candidates: string[] };
 
@@ -28,28 +30,30 @@ export function layerOf(slice: SliceInfo, path: string): LayerOf {
   return { layer: null, reason: matches.length === 0 ? "none" : "ambiguous", candidates: matches };
 }
 
-function under(slice: SliceInfo, folder: string): string {
-  return slice.root === "" ? `${folder}/**` : `${slice.root}/${folder}/**`;
+/** The fallback folders under the root a path belongs to, or under every root when no path is given. */
+function under(slice: SliceInfo, folders: string[], path?: string): string[] {
+  const roots = path === undefined ? slice.roots : [rootOf(slice, path)].filter((root) => root !== null);
+  return roots.flatMap((root) => folders.map((folder) => (root === "" ? `${folder}/**` : `${root}/${folder}/**`)));
 }
 
-/** The slice's declared external-access seam. */
-export function seamPatterns(slice: SliceInfo): string[] {
+/** The slice's declared external-access seam; for a slice that declares none, the client/ folder under each entrypoint (or the one above `path`). */
+export function seamPatterns(slice: SliceInfo, path?: string): string[] {
   const declared = slice.meta.layers.external ?? [];
-  return declared.length > 0 ? declared : [under(slice, "client")];
+  return declared.length > 0 ? declared : under(slice, ["client"], path);
 }
 
 /** The slice's pure layers: policies and models, which must stay free of clients and SDKs. */
-export function purePatterns(slice: SliceInfo): string[] {
+export function purePatterns(slice: SliceInfo, path?: string): string[] {
   const declared = [...(slice.meta.layers.policy ?? []), ...(slice.meta.layers.model ?? [])];
-  return declared.length > 0 ? declared : [under(slice, "domain/policies"), under(slice, "domain/models")];
+  return declared.length > 0 ? declared : under(slice, ["domain/policies", "domain/models"], path);
 }
 
 export function inSeam(slice: SliceInfo, path: string): boolean {
-  return matchAny(seamPatterns(slice), path);
+  return matchAny(seamPatterns(slice, path), path);
 }
 
 export function isPure(slice: SliceInfo, path: string): boolean {
-  return matchAny(purePatterns(slice), path);
+  return matchAny(purePatterns(slice, path), path);
 }
 
 /** May a file in layer `from` import one in layer `to`? Unknown layers are never allowed anything. */
