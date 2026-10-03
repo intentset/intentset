@@ -16,15 +16,28 @@
   "publishConfig": {
     "access": "public"
   },
+  "keywords": [
+    "intentset",
+    "conformance",
+    "test-suite"
+  ],
   "files": [
     "dist",
-    "src"
+    "src",
+    "cases",
+    "schemas",
+    "examples"
   ],
   "exports": {
     ".": {
       "intentset-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./cases/*.json": "./cases/*.json",
+    "./schemas/*.json": "./schemas/*.json"
+  },
+  "scripts": {
+    "prepack": "node --conditions=intentset-source stage.ts"
   }
 }
