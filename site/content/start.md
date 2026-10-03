@@ -30,4 +30,4 @@ Write audience-safe guidance for an exact release. Keep internal decisions and i
 [[Open the worked example](../example/index.html)]{.button .primary} [[Read the Core specification](../specifications/core/index.html)]{.button}
 
 > [!NOTE]
-> This is a manual adoption guide for the v0.1 draft. There is no installation command in this package.
+> This is a manual adoption guide for the v0.1 draft. To check your records as you go, install the reference toolchain with `npm install --save-dev @intentset/cli`, then run `npx intentset init` and `npx intentset validate`.

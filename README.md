@@ -4,8 +4,8 @@ Keep product intent connected to what you ship. Intentset connects what a produc
 that implement it, the checks that verify it, and the knowledge you share with customers, as readable Markdown files
 in your repository. The graph, reports, Atlas and published knowledge are views of those files.
 
-**Status: v0.1 draft.** The specifications are ready for review, and this repository holds a working reference
-implementation that has not been published to npm yet.
+**Status: v0.1 draft.** The specifications are ready for review, and the reference implementation is on npm as
+`@intentset/*` 0.1.0, early releases to try against one real capability.
 
 - Specifications: [`spec/core-0.1.md`](spec/core-0.1.md), [`spec/vsa-0.1.md`](spec/vsa-0.1.md),
   [`spec/profile-typescript-amplify-gen2-0.1.md`](spec/profile-typescript-amplify-gen2-0.1.md),
@@ -15,7 +15,16 @@ implementation that has not been published to npm yet.
   [`spec/conformance.schema.json`](spec/conformance.schema.json)
 - Site: intentset.org, built from [`site/`](site/)
 
-## Try it from a checkout
+## Try it
+
+```sh
+npm install --save-dev @intentset/cli
+npx intentset init --repository you/repo --example
+npx intentset validate
+npx intentset impact BEH-ASMT-SCHEDULE
+```
+
+From a checkout of this repository:
 
 ```sh
 npm install
