@@ -1,0 +1,218 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>profile — Intentset draft</title><link rel="stylesheet" href="styles.css"></head><body class=""><a class="skip" href="#main">Skip to content</a><div class="review-tag">V0.1 · RESPONSIVE WIREFRAME · CONCEPT FOR REVIEW</div><div class="wrap"><header class="masthead"><a class="brand" href="intentset.html"><span class="mark" aria-hidden="true">⌘</span> Intentset</a><nav class="nav" aria-label="Main"><a href="intentset.html#how">How it works</a><a href="specifications.html">Specifications</a><a href="markset.html">Markset</a><a href="roadmap.html">Roadmap</a></nav></header><main id="main"><article class="article"><h1>TypeScript + AWS Amplify Gen 2 Reference Profile v0.1</h1>
+<p><strong>Status:</strong> proposed normative reference profile, not an executable Amplify starter.<br />
+<strong>Profile ID:</strong> <code>intentset/typescript-amplify-gen2/0.1</code></p>
+<p>Implements <a href="../profiles/../specs/01-core-specification.md">Core</a> and <a href="../profiles/../specs/02-traceable-vsa-specification.md">Traceable VSA</a>. Rules below are Intentset decisions, not requirements imposed by AWS. Package versions and compatibility must be pinned and exercised in the first implementation milestone.</p>
+<h2>1. Reference layout</h2>
+<pre><code class="language-text">product/                       # Intentset product/knowledge documents
+src/
+  app/                         # application and route composition
+  features/&lt;domain&gt;/&lt;slice&gt;/
+    slice.md                   # sole slice metadata record
+    index.ts                   # cross-slice public contract
+    ui/
+    client/
+    domain/{models,policies,use-cases}/
+    tests/
+    docs/
+  shared/                      # neutral types, utilities, primitives
+  infrastructure/
+    amplify/                   # technical client setup; no resource imports by default
+amplify/
+  backend.ts                   # unified backend composition
+  data/resource.ts             # single authoritative data schema
+  auth/resource.ts
+  functions/&lt;function&gt;/{resource.ts,handler.ts}
+architecture/{decisions,resources,exceptions}/
+.intentset/                    # registry/config, not secrets or generated truth
+</code></pre>
+<p>This is a reference mapping; directory migrations are not a prerequisite to first adoption. A repository MAY group slices under named domains with one alias per group (for example <code>@assessment/*</code>), and folders a slice does not need stay absent rather than empty.</p>
+<h2>2. TypeScript boundaries</h2>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS001</td>
+<td>A slice's cross-slice contract MUST be its explicit <code>index.ts</code> exports</td>
+</tr>
+<tr>
+<td>TS002</td>
+<td>Cross-slice imports MUST use an exact configured alias and MUST resolve to that contract</td>
+</tr>
+<tr>
+<td>TS003</td>
+<td>Screens MUST NOT be exported from <code>index.ts</code>; only the explicitly configured Router may import screen internals directly</td>
+</tr>
+<tr>
+<td>TS004</td>
+<td>Type-only imports, dynamic imports, re-exports, and path aliases MUST be included in boundary analysis</td>
+</tr>
+<tr>
+<td>TS005</td>
+<td>Runtime resolver/bundler and type-checker MUST agree on alias resolution</td>
+</tr>
+<tr>
+<td>TS006</td>
+<td>Wildcard aliases opening another slice's internals MUST NOT be permitted</td>
+</tr>
+</tbody>
+</table>
+<p>Example alias: <code>@assessment/schedule</code> → <code>src/features/assessment/schedule/index.ts</code>. A repository that lets its router import screens directly MUST name that one file (for example <code>src/app/routes/Router.tsx</code>) and MUST NOT widen the exemption to all application files. A separate composition entrypoint is an optional future design requiring an ADR, not the inherited convention. An alias is convenience, not an access-control boundary: the checker must resolve relative and transitive re-export paths too. TypeScript <code>paths</code> does not rewrite emitted imports, so bundler/runtime configuration must match it. <a href="https://www.typescriptlang.org/tsconfig/paths.html">TypeScript paths documentation</a></p>
+<h2>3. Internal layer matrix</h2>
+<p>Each row may import itself plus listed targets. Test files MAY import their own slice internals; tests MUST NOT bypass foreign slice contracts. Entry files are reviewed façades, not general-purpose logic modules.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Allowed targets inside its slice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui/screens</code></td>
+<td>components, hooks, display view-models; thin assembly only</td>
+</tr>
+<tr>
+<td><code>ui/components</code></td>
+<td>hooks, view-models, model types; rendering and interaction wiring</td>
+</tr>
+<tr>
+<td><code>ui/hooks</code></td>
+<td>view-models, use-cases, model types; state coordination</td>
+</tr>
+<tr>
+<td><code>ui/view-models</code></td>
+<td>model types and pure display transformations</td>
+</tr>
+<tr>
+<td><code>domain/use-cases</code></td>
+<td>policies, models, client</td>
+</tr>
+<tr>
+<td><code>domain/policies</code></td>
+<td>models</td>
+</tr>
+<tr>
+<td><code>domain/models</code></td>
+<td>models</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td>models</td>
+</tr>
+<tr>
+<td><code>index.ts</code></td>
+<td>explicit contract-safe types, constants, policies, use-cases, client functions, and hooks that do not import other slices</td>
+</tr>
+</tbody>
+</table>
+<p>UI MUST NOT call the backend directly. Policies/models MUST NOT import UI, clients, or cloud SDKs. Client code MAY use technical infrastructure. Use-cases MAY orchestrate declared foreign slice contracts. Shared neutral types/utilities are available to each layer. Features may import neutral infrastructure; backend operations remain restricted to client seams. Shared MUST NOT import infrastructure; infrastructure MAY import shared. Application initialization may configure technical clients but MUST NOT perform product service calls or own stores. The UI matrix encodes a downward flow and one responsibility per folder; type-only dependencies still count for cycle analysis. Pure exported policies MAY be called through another slice's public contract when dependency direction remains valid. Avoid a use-case importing a client that imports the use-case back.</p>
+<h2>4. Amplify boundary and schema bridge</h2>
+<p>Amplify Gen 2 describes backend resources in TypeScript, with <code>amplify/data/resource.ts</code> defining the data schema and exporting a <code>Schema</code> type. The client can be configured from <code>amplify_outputs.json</code> and created with <code>generateClient&lt;Schema&gt;()</code>. <a href="https://docs.amplify.aws/react/build-a-backend/data/set-up-data/">AWS data setup</a></p>
+<p>Intentset imposes the following additional constraints:</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AMP001</td>
+<td>Frontend MUST NOT import executable backend resource definitions</td>
+</tr>
+<tr>
+<td>AMP002</td>
+<td>Slice backend operations MUST occur through <code>client/</code>; SDK initialization MAY reside in infrastructure</td>
+</tr>
+<tr>
+<td>AMP003</td>
+<td>Backend transport/schema contracts MUST have one authoritative definition; domain models MAY differ through explicit adapters</td>
+</tr>
+<tr>
+<td>AMP004</td>
+<td>Backend handlers/resources MUST be claimed by one slice or recorded technical owner</td>
+</tr>
+<tr>
+<td>AMP005</td>
+<td>Backend authorization and product invariants MUST be verified independently of frontend validation</td>
+</tr>
+<tr>
+<td>AMP006</td>
+<td>Generated client/configuration and runtime SDK types MUST NOT leak into domain policy/model layers</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Inherited exception — response envelope only:</strong> feature <code>client/</code> modules MAY import <code>parseResolverResponse</code> from <code>@/amplify/shared/lambda-core/</code>. A repository adopting this profile names that one module explicitly. Treat it as a narrow named exception, not permission to import handlers or resource definitions. Preserve one authoritative backend contract; do not manually copy transport types.</p>
+<p><strong>Optional proposed extension — schema type bridge:</strong> AWS's exported <code>Schema</code> pattern may motivate a type-only bridge, but this profile does not authorize one by default. The default profile therefore forbids frontend imports of <code>amplify/data/resource.ts</code>, including type-only imports. An adopting repository MAY approve a precisely scoped ADR for a type-only bridge, with no value imports and checks proving backend runtime code is absent from the browser bundle. Report this as an explicit exception to the baseline, not inherited conformance. Alternatively evaluate a generated declaration-only contract package; generation must preserve the backend authority and must not be described as already implemented.</p>
+<p>The initial draft incorrectly treated the type bridge as an existing permitted seam. This revision removes that assumption. Actual client initialization and contract generation must be inspected during implementation before choosing an adapter; no source-project SDK code was audited here.</p>
+<h2>5. Scheduling example: responsibilities, not a cloud implementation</h2>
+<p>The sample behavior is illustrative and is not claimed to exist in any product. A teacher schedules a published assessment for a class they can manage. The authoritative server checks permissions, published state, and future time; it records the schedule and ensures students cannot access it before release. Product review must define time zone presentation, retries, cancellation, precision, and delivery tolerance before marking this behavior released.</p>
+<table>
+<thead>
+<tr>
+<th>Responsibility</th>
+<th>Owner / location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Form and visible error state</td>
+<td>Schedule slice <code>ui/</code></td>
+</tr>
+<tr>
+<td>Coordinate request, handle result</td>
+<td><code>domain/use-cases/</code></td>
+</tr>
+<tr>
+<td>Pure date/input policies</td>
+<td><code>domain/policies/</code></td>
+</tr>
+<tr>
+<td>Transport call and error translation</td>
+<td><code>client/</code></td>
+</tr>
+<tr>
+<td>Authoritative permissions/state checks</td>
+<td>Slice-owned backend handler</td>
+</tr>
+<tr>
+<td>Shared data resource configuration</td>
+<td>Technical owner in resource registry</td>
+</tr>
+<tr>
+<td>Timed execution and retry mechanism</td>
+<td>Declared backend implementation, verified in sandbox</td>
+</tr>
+<tr>
+<td>Observable student availability</td>
+<td>Behavior-linked integration/journey tests</td>
+</tr>
+</tbody>
+</table>
+<p>A Lambda declaration alone does not implement future delivery. Choosing a durable scheduler/queue and idempotency strategy is an implementation decision requiring an ADR. This package makes no latency or exactly-once guarantee.</p>
+<p>Amplify functions use <code>defineFunction</code> with a handler and are composed into the backend. Resource layout and business ownership are separate concerns. <a href="https://docs.amplify.aws/react/build-a-backend/functions/set-up-function/">AWS function setup</a></p>
+<h2>6. Contract and resource ownership</h2>
+<p>Maintain <code>architecture/resources/registry.yaml</code> with resource ID, path, technical owner, and consuming slice IDs. Example: <code>RES-ASSESSMENT-DATA</code> refers to the shared data definition and is owned by <code>team-platform</code>; the schedule slice lists it in <code>usesResources</code>. The slice claims only its dedicated handler path. Do not let every feature claim all of <code>amplify/data/resource.ts</code>.</p>
+<p>Transport types derive from the backend source; domain models represent product meaning. An adapter between them is not a forbidden duplicate contract. Manually copying a GraphQL transport schema into several slices is. Generated files are excluded from hand-maintained ownership claims and checked through their generator source/provenance.</p>
+<h2>7. Verification and enforcement</h2>
+<p>Implement resolved import rules through dependency-cruiser or equivalent; use TypeScript checking for actual resolution and a linter for local coding rules. Tool names do not themselves prove enforcement. The implementation must include negative fixtures that exercise aliases, type imports, dynamic imports, re-exports, app-only screens, and backend SDK calls outside seams.</p>
+<p>A verifier adapter SHOULD map stable test IDs to test-run results without modifying test framework semantics. The package's <code>TEST-ASMT-SCHEDULE</code> record is a definition, not a passing run. Use a stable test title/selector or supported framework annotations; do not invent <code>describe.behavior</code> APIs.</p>
+<p>CI sequence:</p>
+<ol>
+<li>Parse documents, validate schema/relationships and type-specific sections.</li>
+<li>Resolve implementation claims, registries, dependencies, and exceptions.</li>
+<li>Type-check and enforce architecture boundaries, including backend bundle exclusion.</li>
+<li>Run unit, contract, integration, and selected end-to-end checks; collect snapshot-bound evidence.</li>
+<li>Generate an impact/review report, showing stale knowledge and uncovered rules.</li>
+<li>On reviewed release, create an immutable snapshot and audience-specific publication preview.</li>
+<li>Publish only the approved projection after release availability and access checks pass.</li>
+</ol>
+<p>The first repository adoption MUST test against locked TypeScript, Amplify, test-runner, and import-checker versions. Record Node/runtime compatibility from the adopted dependency set rather than treating this document as an evergreen installation guide.</p>
+<h2>8. Reference implementation acceptance</h2>
+<p>Acceptance requires a clean sample repository, deliberate failing fixtures, one deployed sandbox journey, tenant/role denial tests, current evidence export, absence of backend resources from the browser bundle, deterministic graph output, and a reviewed Markset publication. These checks are roadmap work; no AWS deployment or TypeScript package compilation was performed for this document package.</p></article></main><footer><div class="footrow"><div><strong>Intentset</strong><br>An open-source project in development from Coral Reef Ventures.</div><div class="footlinks"><a href="start.html">Start</a><a href="specifications.html">Specifications</a><a href="about.html">About</a><a href="about.html">Coral Reef Ventures</a></div></div></footer></div></body></html>

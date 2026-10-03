@@ -1,0 +1,373 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>core — Intentset draft</title><link rel="stylesheet" href="styles.css"></head><body class=""><a class="skip" href="#main">Skip to content</a><div class="review-tag">V0.1 · RESPONSIVE WIREFRAME · CONCEPT FOR REVIEW</div><div class="wrap"><header class="masthead"><a class="brand" href="intentset.html"><span class="mark" aria-hidden="true">⌘</span> Intentset</a><nav class="nav" aria-label="Main"><a href="intentset.html#how">How it works</a><a href="specifications.html">Specifications</a><a href="markset.html">Markset</a><a href="roadmap.html">Roadmap</a></nav></header><main id="main"><article class="article"><h1>Intentset Core Specification v0.1</h1>
+<p><strong>Status:</strong> initial normative draft for review • <strong>Date:</strong> 2026-10-02<br />
+<strong>Specification ID:</strong> <code>intentset/core/0.1</code> • <strong>Working name:</strong> Intentset</p>
+<h2>1. Purpose and scope</h2>
+<p>Intentset is an open framework for keeping product intent, observable behavior, implementation, verification, and published knowledge connected. Repository files are authoritative; the graph, Atlas, reports, and customer knowledge are derived views. A graph database is not required.</p>
+<p>This specification defines product semantics and interchange. The <a href="../specs/02-traceable-vsa-specification.md">VSA specification</a> adds implementation ownership and architecture constraints. The <a href="../specs/../profiles/03-typescript-amplify-gen2.md">reference profile</a> maps those constraints to TypeScript and Amplify Gen 2. Core adoption does not require either architecture or platform.</p>
+<p>MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY express requirements in this draft. SHOULD departures require a recorded reason. Examples are informative unless a rule explicitly makes them normative. The CLI, Atlas, publisher, and MCP interface described here are implementation targets, not shipped software.</p>
+<h2>2. Semantic model and granularity</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Meaning</th>
+<th>Review question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>product</code></td>
+<td>Product identity and scope</td>
+<td>What system are we describing?</td>
+</tr>
+<tr>
+<td><code>intent</code></td>
+<td>Strategic purpose</td>
+<td>Why should this product exist or change?</td>
+</tr>
+<tr>
+<td><code>outcome</code></td>
+<td>Desired measurable change</td>
+<td>What improvement will show success?</td>
+</tr>
+<tr>
+<td><code>capability</code></td>
+<td>Stable product ability</td>
+<td>What can a user accomplish?</td>
+</tr>
+<tr>
+<td><code>behavior</code></td>
+<td>Observable action or response under stated conditions</td>
+<td>What exactly does the system do?</td>
+</tr>
+<tr>
+<td><code>rule</code></td>
+<td>Constraint governing behavior</td>
+<td>What must remain true?</td>
+</tr>
+<tr>
+<td><code>scenario</code></td>
+<td>Concrete conditions, action, and expected result</td>
+<td>What example would demonstrate the promise?</td>
+</tr>
+<tr>
+<td><code>slice</code></td>
+<td>Implementation owner of a cohesive set of behaviors</td>
+<td>Where is the behavior delivered?</td>
+</tr>
+<tr>
+<td><code>contract</code></td>
+<td>Maintained interface between implementation owners</td>
+<td>What may another component rely on?</td>
+</tr>
+<tr>
+<td><code>verification</code></td>
+<td>Definition of an executable check or review procedure</td>
+<td>How is a claim assessed?</td>
+</tr>
+<tr>
+<td><code>knowledge</code></td>
+<td>Audience-specific explanation grounded in product artifacts</td>
+<td>What may we tell this audience?</td>
+</tr>
+<tr>
+<td><code>decision</code></td>
+<td>Architecture/product decision and rationale</td>
+<td>Why was this design selected?</td>
+</tr>
+</tbody>
+</table>
+<p>A capability MAY contain many behaviors and map to several slices. A behavior SHOULD contain one recognizable promise, including its failure response. Split it when release, ownership, availability, or independent review differ. A rule MAY govern many behaviors; it MUST NOT be duplicated solely to appear in multiple capability pages. A scenario is an example, not proof that all cases work.</p>
+<p>Recommended human decomposition is product → intent → outcome → capability → behavior. This is a navigation spine in a typed graph, not a demand that reality form one tree. Technical detail belongs in rules, scenarios, decisions, and implementation views; strategic reviewers should start at capabilities and drill down.</p>
+<h2>3. Authoritative representation</h2>
+<p>Each artifact MUST have exactly one authoritative UTF-8 Markdown document with YAML frontmatter in the declared repository scope. Slice documents are named <code>slice.md</code> in this profile; other filenames are not identity. This consolidates the conversation's alternative YAML manifests and Markdown records into one v0.1 carrier. A later standalone YAML binding MAY be specified; v0.1 tools MUST NOT silently merge duplicate records.</p>
+<p>Frontmatter MUST be the first block between <code>---</code> delimiters. It MUST decode to a JSON-compatible object. Reject duplicate keys, custom YAML tags, merge keys, aliases, and non-finite numbers. Quote dates and version strings. Implementations MUST limit file size, nesting, and parser resource use. Document bodies MUST NOT execute code or templates. Ordinary code fences remain inert text.</p>
+<pre><code class="language-yaml">---
+markset: 0
+intentset:
+  spec: &quot;0.1&quot;
+  profile: intentset/behavior/0.1
+  id: BEH-ASMT-SCHEDULE
+  type: behavior
+  title: Schedule an assessment
+  status: approved
+  owner: team-assessment
+  visibility: internal
+  audiences: [engineering, product]
+  parent: CAP-ASMT-ASSIGN
+  links:
+    governedBy: [RULE-ASMT-FUTURE]
+  availability:
+    products: [PRD-LANTERN]
+    releases: [&quot;pilot-1&quot;]
+    roles: [teacher]
+    editions: [standard]
+    flags: []
+---
+</code></pre>
+<p><code>markset</code> is required by the Intentset Markset binding, not by language-neutral graph interchange. <code>intentset.profile</code> is an Intentset-owned semantic profile identifier; it is not a claim that Markset has registered a profile API. Unknown top-level frontmatter is preserved, but cannot alter Intentset semantics. Unknown keys inside <code>intentset</code> are errors except under <code>extensions</code>.</p>
+<h2>4. Common fields and identity</h2>
+<p>Required common fields are <code>spec</code>, <code>profile</code>, <code>id</code>, <code>type</code>, <code>title</code>, <code>status</code>, <code>owner</code>, <code>visibility</code>, and <code>audiences</code>. <code>spec</code> is the string <code>0.1</code>. <code>profile</code> MUST equal <code>intentset/&lt;type&gt;/0.1</code>. <code>id</code> MUST match <code>^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$</code> and be unique within the product graph. IDs are case-sensitive, immutable, independent of title/path, and MUST never be reused. Recommended prefixes are PRD, INT, OUT, CAP, BEH, RULE, SCN, SLICE, CONTRACT, TEST, KB, ADR. Prefixes aid humans; <code>type</code> determines semantics.</p>
+<p><code>owner</code> is one accountable team/role identifier from the repository's owner registry. <code>audiences</code> is a nonempty array from its audience registry. These are documentation audiences, not runtime authorization. <code>visibility</code> is <code>public</code>, <code>customer</code>, <code>internal</code>, or <code>restricted</code>. Missing access information MUST fail closed for publication.</p>
+<p>Optional common fields: <code>parent</code>, <code>links</code>, <code>availability</code>, <code>revision</code>, <code>reviewedAt</code>, <code>reviewedBy</code>, <code>extensions</code>. <code>revision</code> is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example <code>org.example/change</code>) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.</p>
+<p>Moving a file or correcting wording does not change identity. Splitting a behavior creates new IDs and preserves the old artifact as retired with <code>replacedBy</code> links. Merging works similarly. Historical release snapshots keep the earlier meaning.</p>
+<h2>5. Relationships and cardinality</h2>
+<p>Relationships are authored once, in the direction below. Reverse edges are derived and MUST NOT be separately maintained. References MUST resolve in the same graph snapshot. External issue/PR URLs belong in <code>extensions</code>, never as dangling internal IDs.</p>
+<table>
+<thead>
+<tr>
+<th>Field / relationship</th>
+<th>Source → target</th>
+<th>Cardinality and meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parent</code></td>
+<td>intent → product; outcome → intent; capability → outcome or capability; behavior → capability</td>
+<td>Exactly one except product; navigation parent</td>
+</tr>
+<tr>
+<td><code>governedBy</code></td>
+<td>behavior → rule</td>
+<td>Zero or more constraints</td>
+</tr>
+<tr>
+<td><code>illustrates</code></td>
+<td>scenario → behavior</td>
+<td>One or more behaviors exemplified</td>
+</tr>
+<tr>
+<td><code>implements</code></td>
+<td>slice → behavior</td>
+<td>One or more for product slices; authoritative ownership</td>
+</tr>
+<tr>
+<td><code>dependsOn</code></td>
+<td>slice → slice</td>
+<td>Zero or more implementation dependencies</td>
+</tr>
+<tr>
+<td><code>exposes</code></td>
+<td>slice → contract</td>
+<td>Zero or more public contracts</td>
+</tr>
+<tr>
+<td><code>consumes</code></td>
+<td>slice → contract</td>
+<td>Zero or more consumed contracts</td>
+</tr>
+<tr>
+<td><code>verifies</code></td>
+<td>verification → behavior, rule, or scenario</td>
+<td>One or more assessed claims</td>
+</tr>
+<tr>
+<td><code>explains</code></td>
+<td>knowledge → behavior, rule, or capability</td>
+<td>One or more sources of knowledge</td>
+</tr>
+<tr>
+<td><code>informedBy</code></td>
+<td>slice, contract, or behavior → decision</td>
+<td>Zero or more supporting decisions</td>
+</tr>
+<tr>
+<td><code>requires</code></td>
+<td>behavior → behavior</td>
+<td>Zero or more functional prerequisites</td>
+</tr>
+<tr>
+<td><code>supports</code></td>
+<td>outcome → intent; capability → outcome</td>
+<td>Additional associations beyond the navigation parent</td>
+</tr>
+<tr>
+<td><code>replacedBy</code></td>
+<td>retired artifact → same type</td>
+<td>One or more successors when applicable</td>
+</tr>
+</tbody>
+</table>
+<p>All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in <code>parent</code>, cycles in <code>replacedBy</code>, and cycles in <code>requires</code> are errors. Other cycles are evaluated by the relevant profile; <code>dependsOn</code> is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming <code>governedBy</code>; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. Draft unattached artifacts produce warnings.</p>
+<p>At VSA adoption, an approved, implemented, released, or deprecated behavior MUST have exactly one accountable product slice through <code>implements</code>. Other collaborating slices appear through slice dependencies and contracts. This resolves the earlier discussion's “one or more owners” ambiguity while retaining multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.</p>
+<h2>6. Required narrative by artifact type</h2>
+<p>Every document MUST contain a level-one heading matching its title and substantive prose. Validators can check section presence; reviewers determine semantic adequacy.</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Required level-two headings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>product</td>
+<td>Scope</td>
+</tr>
+<tr>
+<td>intent</td>
+<td>Rationale</td>
+</tr>
+<tr>
+<td>outcome</td>
+<td>Measure</td>
+</tr>
+<tr>
+<td>capability</td>
+<td>Overview</td>
+</tr>
+<tr>
+<td>behavior</td>
+<td>Behavior; Preconditions; Outcomes</td>
+</tr>
+<tr>
+<td>rule</td>
+<td>Constraint</td>
+</tr>
+<tr>
+<td>scenario</td>
+<td>Given; When; Then</td>
+</tr>
+<tr>
+<td>slice</td>
+<td>Responsibility; Public contract; Verification</td>
+</tr>
+<tr>
+<td>contract</td>
+<td>Interface; Compatibility</td>
+</tr>
+<tr>
+<td>verification</td>
+<td>Procedure; Expected result</td>
+</tr>
+<tr>
+<td>knowledge</td>
+<td>Guidance</td>
+</tr>
+<tr>
+<td>decision</td>
+<td>Context; Decision; Consequences</td>
+</tr>
+</tbody>
+</table>
+<p>A behavior MUST identify actor, trigger, observable success response, and meaningful failure response in these sections. An outcome's Measure MUST state metric, baseline or “unknown,” target, and measurement method. A verification's Procedure MUST identify automation or a reproducible manual review; neither a filename nor a test count is sufficient.</p>
+<h2>7. Lifecycle, release, and version semantics</h2>
+<p><code>status</code> is <code>draft</code>, <code>approved</code>, <code>implemented</code>, <code>released</code>, <code>deprecated</code>, or <code>retired</code>. Default progression follows that order. Drafts may be retired without release. Returning to draft requires a review note and MUST NOT rewrite immutable release snapshots. Released artifacts are changed through a new snapshot; their ID remains stable only when meaning remains recognizably continuous.</p>
+<p>Status is an editorial claim, not a test result. <code>approved</code> records intent; <code>implemented</code> records an implementation claim; <code>released</code> requires inclusion in a reviewed release snapshot. <code>deprecated</code> remains available until the stated removal; <code>retired</code> is excluded from current publication and retained for history.</p>
+<p>A release snapshot records product ID, exact release label, source commit, graph hash, specification/profile versions, and build time. Release labels are opaque strings: v0.1 performs exact matching, not inferred SemVer ordering. <code>availability</code>, required on behaviors and knowledge, contains nonempty <code>products</code>, <code>releases</code>, <code>roles</code>, and <code>editions</code> arrays plus a <code>flags</code> array. All named flags are required; empty means no flags. No implicit wildcard is allowed. Applicability is AND across dimensions and OR within an array. The repository registries define valid dimension values.</p>
+<p>A release may include deprecated behavior; prospective documentation MAY describe future work only in a separately labeled roadmap projection. A status of “released” alone MUST NOT make a feature available to all customers.</p>
+<h2>8. Verification definitions and run evidence</h2>
+<p>Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. <code>verification</code> metadata contains <code>method</code> (<code>automated</code> or <code>manual</code>), <code>locator</code> (repository-relative path), and <code>selector</code> (stable test or review case identifier).</p>
+<p>A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (<code>pass</code>, <code>fail</code>, <code>skip</code>, <code>error</code>), and an evidence URI. A manual record also MUST identify reviewer and review rationale. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization.</p>
+<p>Only <code>pass</code> at the assessed commit and graph hash counts as current passing evidence in v0.1. Any older evidence is stale. This deliberately conservative policy avoids pretending change-impact analysis proves unrelated code safe. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.</p>
+<p>A claim is “verified in snapshot” only if every applicable required verification linked to it passes. Scenarios and governing rules require their own coverage; a parent behavior pass does not silently satisfy them. Manual and automated coverage MUST be separately countable. Structural validation cannot prove that tests adequately assert the documented behavior.</p>
+<h2>9. Markset profiles and document publication</h2>
+<p>Intentset owns metadata, required sections, semantic validation, graph resolution, and publication policy. Markset owns document syntax and rendering. The reference implementation MUST accept Markdown + YAML frontmatter and support Markset validation/rendering through a version-pinned adapter. Plain Markdown fallback MUST remain readable. Profiles MUST NOT introduce <code>:::behavior</code>, <code>:::rule</code>, or any other new Markset directive.</p>
+<p>The profiles are <code>intentset/&lt;type&gt;/0.1</code>, plus generated <code>intentset/atlas/0.1</code> and <code>intentset/publication/0.1</code>. Generated profiles are publication outputs, not canonical graph nodes. Metadata validation and Markset validation MUST produce separately identifiable diagnostics. A successful render MUST NOT imply semantic conformance.</p>
+<p>Use ordinary Markdown links with repository-relative paths for authored cross-references. ID resolution is an Intentset graph function. Symbolic-reference syntax and a Markset-native profile registry are deferred; no new syntax is assumed in v0.1. This package uses plain Markdown bodies to avoid reliance on unverified Markset directives. Markset integration details are provisional until the upstream specification and parser version are pinned (see <a href="../specs/../SOURCES.md">sources</a>).</p>
+<p>Publication pipeline:</p>
+<pre><code class="language-text">Canonical files → validated graph → exact release snapshot
+                → authorized audience projection → reviewed knowledge
+                → generated Markset → HTML / portable text / retrieval chunks
+</code></pre>
+<p>A publisher MUST select authorized artifacts before sending text to a renderer or language model. It MUST deny by default, intersect product/release/role/edition/flag availability, restrict visibility and audience, and exclude draft/retired material. Public projection allows public records only. Customer projection allows public and customer records, with authenticated entitlements; internal/restricted data require separate explicit authorization. Knowledge bodies are curated audience-safe text, not automatically copied engineering prose.</p>
+<p>Each published knowledge document MUST retain source IDs, source revisions/hashes, snapshot ID, audience, availability, reviewer, and publication timestamp. If a source changes, dependent knowledge becomes <code>needs-review</code> and MUST NOT be republished as current until reviewed. Generated files MUST be marked derived and MUST NOT be edited as canonical truth. A reference to an excluded source MUST fail publication or be replaced with an explicitly reviewed safe explanation; it MUST NOT leak the source title or internal path.</p>
+<p>Retrieval chunks MUST inherit the same access filters and provenance. Authorization must occur before retrieval and again before response assembly; filtering only the final answer is insufficient. Answers MUST cite eligible knowledge, disclose unavailable evidence, and abstain when the requested version is unknown. Documentation metadata MUST NOT be used to grant runtime product access. Generated prose needs review; graph connectivity alone cannot establish that it is accurate.</p>
+<h2>10. Human review, impact, and agent context</h2>
+<p>An Atlas SHOULD provide: product/capability overview; behavior detail; engineering ownership; verification status; publication readiness. Summary counts MUST disclose snapshot, denominator, scope, and whether they measure links or current pass evidence. The UI MUST expose missing/stale evidence rather than replace it with a generic green status.</p>
+<p>Impact reports MUST show direct changes separately from candidate downstream effects. Starting at an ID, traverse reverse relationships to dependent behaviors, owners, verifications, and knowledge; include outgoing rules, contracts, and decisions as review context. Traverse reverse slice dependencies transitively, with a visited set. Include parent ancestors for navigation. Record each path/reason; do not label reachability as proof that runtime behavior changed.</p>
+<p>Before an agent edits implementation it SHOULD load the owning slice, behaviors, rules, scenarios, contracts, and decisions. Afterward it SHOULD update affected semantics and checks in the same review. Agents MUST NOT self-approve release/publication simply because validation passes. MCP and CLI context results MUST identify snapshot and source paths; customer tools MUST use the restricted publication index, never raw engineering context.</p>
+<h2>11. Conformance and diagnostics</h2>
+<p>Conformance is a claim about a declared repository scope and snapshot, not a universal product certification. Publish the spec/profile versions, scope, exclusions, waiver count, checker version, and report hash.</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Required conditions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1 Product model</td>
+<td>Parse, identity, fields, typed links, hierarchy, lifecycle, narrative checks pass</td>
+</tr>
+<tr>
+<td>L2 Traceable implementation</td>
+<td>L1 + VSA ownership and path attribution for adopted behavior scope</td>
+</tr>
+<tr>
+<td>L3 Verified product</td>
+<td>L2 + applicable behavior/rule/scenario verification definitions and current passing evidence</td>
+</tr>
+<tr>
+<td>L4 Published knowledge</td>
+<td>L3 + reviewed audience projections with availability and provenance checks</td>
+</tr>
+<tr>
+<td>L5 Continuous product truth</td>
+<td>L4 + required CI checks, architecture enforcement, impact reports, release snapshot automation and versioned agent context</td>
+</tr>
+</tbody>
+</table>
+<p>A partial adoption MUST name included capabilities/IDs and show out-of-scope counts; it MUST NOT advertise repository-wide L3 when only a pilot passed. A waiver does not erase a failed MUST: report “with exceptions,” not unqualified conformance. Recommended checks:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Condition</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CORE001</td>
+<td>Invalid carrier, schema, or required section</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE002</td>
+<td>Duplicate/reused ID</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE003</td>
+<td>Unresolved or wrong-type relationship</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE004</td>
+<td>Invalid/cyclic decomposition or replacement</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE005</td>
+<td>Lifecycle/release claim inconsistent</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE006</td>
+<td>Missing applicable ownership (L2+)</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE007</td>
+<td>Missing/failing/stale required evidence (L3+)</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE008</td>
+<td>Unauthorized/stale publication (L4+)</td>
+<td>Error</td>
+</tr>
+<tr>
+<td>CORE009</td>
+<td>Draft unattached artifact</td>
+<td>Warning</td>
+</tr>
+</tbody>
+</table>
+<p>Diagnostics MUST identify code, severity, artifact, path, field/location, explanation, and remediation. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. Proposed CLI exits: 0 pass, 1 validation failure, 2 invocation/tool failure. JSON reports MUST preserve warnings separately.</p>
+<h2>12. Portability and exclusions</h2>
+<p>A normalized JSON graph MUST retain metadata, body, source path, source hash, and explicit edges; serialization MUST preserve unknown namespaced extensions. Round trips MUST preserve semantics, not YAML formatting. Generated inverses MUST be marked derived. Importers for issue trackers/ReqIF/OSLC are later adapters and MUST report lossy mappings. Tickets describe changes; product artifacts describe ongoing behavior.</p>
+<p>v0.1 does not mandate a database, hosted service, test framework, cloud, commercial product, or universal AI correctness score. It does not assert that documented intent and production reality can be equated by static validation.</p></article></main><footer><div class="footrow"><div><strong>Intentset</strong><br>An open-source project in development from Coral Reef Ventures.</div><div class="footlinks"><a href="start.html">Start</a><a href="specifications.html">Specifications</a><a href="about.html">About</a><a href="about.html">Coral Reef Ventures</a></div></div></footer></div></body></html>

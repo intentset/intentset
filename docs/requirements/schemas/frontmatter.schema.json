@@ -1,0 +1,605 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Intentset v0.1 authoring frontmatter",
+  "description": "Structural schema; semantic graph, narrative, path, lifecycle and evidence checks are additional requirements.",
+  "type": "object",
+  "required": ["markset", "intentset"],
+  "properties": {
+    "markset": {
+      "const": 0
+    },
+    "intentset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spec", "profile", "id", "type", "title", "status", "owner", "visibility", "audiences"],
+      "properties": {
+        "spec": {
+          "const": "0.1"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+        },
+        "type": {
+          "enum": [
+            "product",
+            "intent",
+            "outcome",
+            "capability",
+            "behavior",
+            "rule",
+            "scenario",
+            "slice",
+            "contract",
+            "verification",
+            "knowledge",
+            "decision"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": ["draft", "approved", "implemented", "released", "deprecated", "retired"]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visibility": {
+          "enum": ["public", "customer", "internal", "restricted"]
+        },
+        "audiences": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "parent": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "governedBy": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "illustrates": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "implements": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "dependsOn": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "exposes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "consumes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "verifies": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "explains": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "informedBy": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "requires": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "supports": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            },
+            "replacedBy": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "availability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["products", "releases", "roles", "editions", "flags"],
+          "properties": {
+            "products": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "releases": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "editions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "flags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reviewedAt": {
+          "type": "string"
+        },
+        "reviewedBy": {
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[^/]+/.+$"
+          }
+        },
+        "slice": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "domain", "entrypoint", "layers", "claims", "usesResources"],
+          "properties": {
+            "kind": {
+              "enum": ["product", "technical"]
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "entrypoint": {
+              "type": "string"
+            },
+            "layers": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              }
+            },
+            "claims": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "path"],
+                "properties": {
+                  "kind": {
+                    "enum": ["source", "backend", "contract", "verification", "documentation"]
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "usesResources": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "locator", "selector"],
+          "properties": {
+            "method": {
+              "enum": ["automated", "manual"]
+            },
+            "locator": {
+              "type": "string",
+              "minLength": 1
+            },
+            "selector": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "product"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/product/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "intent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/intent/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "outcome"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/outcome/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "capability"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/capability/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "behavior"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/behavior/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "rule"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/rule/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "scenario"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/scenario/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "slice"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/slice/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "contract"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/contract/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "verification"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/verification/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "knowledge"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/knowledge/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "decision"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/decision/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "behavior"
+              }
+            }
+          },
+          "then": {
+            "required": ["availability"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "knowledge"
+              }
+            }
+          },
+          "then": {
+            "required": ["availability"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "slice"
+              }
+            }
+          },
+          "then": {
+            "required": ["slice"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "verification"
+              }
+            }
+          },
+          "then": {
+            "required": ["verification"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "intent"
+              }
+            }
+          },
+          "then": {
+            "required": ["parent"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "outcome"
+              }
+            }
+          },
+          "then": {
+            "required": ["parent"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "capability"
+              }
+            }
+          },
+          "then": {
+            "required": ["parent"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "behavior"
+              }
+            }
+          },
+          "then": {
+            "required": ["parent"]
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@intentset/conformance-suite",
+  "version": "0.1.0",
+  "description": "The conformance cases and schemas as data, for implementations that are not this one. No dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git",
+    "directory": "packages/conformance-suite"
+  },
+  "homepage": "https://intentset.org/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "intentset-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+owners:
+- team-assessment
+- team-platform
+audiences:
+- engineering
+- product
+- teacher
+releases:
+- pilot-1
+roles:
+- teacher
+editions:
+- standard
+flags: []
+resources:
+- id: RES-ASSESSMENT-DATA
+  path: amplify/data/resource.ts
+  owner: team-platform
+  consumers:
+  - SLICE-ASMT-SCHEDULE

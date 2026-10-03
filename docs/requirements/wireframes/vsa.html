@@ -1,0 +1,153 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vsa — Intentset draft</title><link rel="stylesheet" href="styles.css"></head><body class=""><a class="skip" href="#main">Skip to content</a><div class="review-tag">V0.1 · RESPONSIVE WIREFRAME · CONCEPT FOR REVIEW</div><div class="wrap"><header class="masthead"><a class="brand" href="intentset.html"><span class="mark" aria-hidden="true">⌘</span> Intentset</a><nav class="nav" aria-label="Main"><a href="intentset.html#how">How it works</a><a href="specifications.html">Specifications</a><a href="markset.html">Markset</a><a href="roadmap.html">Roadmap</a></nav></header><main id="main"><article class="article"><h1>Intentset Traceable Vertical Slice Architecture Specification v0.1</h1>
+<p><strong>Status:</strong> initial normative draft • <strong>Specification ID:</strong> <code>intentset/vsa/0.1</code><br />
+Depends on <a href="../specs/01-core-specification.md">Core v0.1</a>. MUST/SHOULD have the same meaning.</p>
+<h2>1. Architecture model</h2>
+<p>A product slice owns a cohesive set of observable behaviors end-to-end: presentation, application coordination, domain logic, external access, verification, and explanatory documentation. “End-to-end” means accountable ownership; it does not require every cloud resource to occupy one directory.</p>
+<p>Product decomposition and architecture grouping MUST remain distinct. A capability can span slices; a slice may deliver related behaviors from more than one capability when cohesion is explained. A domain is a product-oriented organizational grouping of slices, not a required deployment boundary.</p>
+<p>The architecture regions are composition, product slices, shared neutral abstractions, and technical infrastructure. Composition assembles screens, services, routes, and adapters. Shared contains reusable types/utilities with no meaningful product behavior owner. Infrastructure provides technical mechanisms. A reusable business rule stays with its product owner even if many slices use it.</p>
+<h2>2. Normative invariants</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Evidence/check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VSA001</td>
+<td>Every adopted non-draft behavior MUST have exactly one accountable product slice</td>
+<td>Unique incoming <code>implements</code></td>
+</tr>
+<tr>
+<td>VSA002</td>
+<td>Every slice MUST expose one declared public contract surface; it MAY be empty for a leaf</td>
+<td>Contract record and entrypoint</td>
+</tr>
+<tr>
+<td>VSA003</td>
+<td>Consumers MUST NOT import another slice's private implementation</td>
+<td>Resolved dependency graph</td>
+</tr>
+<tr>
+<td>VSA004</td>
+<td>All cross-slice dependencies MUST be declared; each consumed contract MUST have one exposing owner</td>
+<td>Observed vs declared edges</td>
+</tr>
+<tr>
+<td>VSA005</td>
+<td>Slice compile-time dependencies MUST be acyclic</td>
+<td>Strongly connected components</td>
+</tr>
+<tr>
+<td>VSA006</td>
+<td>Dependencies inside a slice MUST obey its declared layer policy</td>
+<td>Layer import graph</td>
+</tr>
+<tr>
+<td>VSA007</td>
+<td>Business behavior MUST NOT be owned by shared, infrastructure, or composition</td>
+<td>Architecture review + claimed ownership</td>
+</tr>
+<tr>
+<td>VSA008</td>
+<td>Each implemented behavior MUST identify verification definitions, including negative/authorization cases where applicable</td>
+<td>Core verification links + review</td>
+</tr>
+<tr>
+<td>VSA009</td>
+<td>Source, backend, and contract artifacts MUST have explicit accountable ownership</td>
+<td>Path/resource claim resolution</td>
+</tr>
+<tr>
+<td>VSA010</td>
+<td>Backend access MUST pass through the slice's declared external-access seam</td>
+<td>SDK/network access analysis + review</td>
+</tr>
+<tr>
+<td>VSA011</td>
+<td>Public contract changes MUST include compatibility assessment and consumer verification</td>
+<td>Contract diff + review record</td>
+</tr>
+<tr>
+<td>VSA012</td>
+<td>Deleting or splitting a slice MUST disposition all owned behavior, paths, and contracts</td>
+<td>Snapshot graph diff</td>
+</tr>
+</tbody>
+</table>
+<p>A checker MUST distinguish automatic structural checks from human assertions. It cannot reliably infer “business-neutral” from names or prove absence of dynamic network behavior. Reviews of VSA007 and unresolvable dynamic dependencies are required; unresolved checks cannot be represented as passed.</p>
+<h2>3. Slice metadata</h2>
+<p><code>slice.md</code> uses the Core carrier and the <code>intentset/slice/0.1</code> profile. <code>slice</code> is a type-specific object:</p>
+<pre><code class="language-yaml">slice:
+  kind: product
+  domain: assessment
+  entrypoint: src/features/assessment/schedule/index.ts
+  layers:
+    presentation: [src/features/assessment/schedule/ui/**]
+    application: [src/features/assessment/schedule/domain/use-cases/**]
+    policy: [src/features/assessment/schedule/domain/policies/**]
+    model: [src/features/assessment/schedule/domain/models/**]
+    external: [src/features/assessment/schedule/client/**]
+  claims:
+    - kind: source
+      path: src/features/assessment/schedule/**
+    - kind: backend
+      path: amplify/functions/schedule-assessment/**
+  usesResources: [RES-ASSESSMENT-DATA]
+</code></pre>
+<p><code>kind</code> is <code>product</code> or <code>technical</code>. Product slices MUST implement at least one behavior. Technical slices MUST give a <code>rationale</code>, implement none, and MUST NOT absorb product policy. <code>domain</code>, <code>entrypoint</code>, <code>layers</code>, <code>claims</code>, and <code>usesResources</code> are required; <code>layers</code> and <code>usesResources</code> may be empty in a platform-neutral profile if absence is explained in Responsibility.</p>
+<p>A claim has <code>kind</code> (<code>source</code>, <code>backend</code>, <code>contract</code>, <code>verification</code>, <code>documentation</code>) and <code>path</code>. Paths are repository-relative POSIX paths. v0.1 patterns allow literal segments, <code>*</code> within one segment, and <code>**</code> across zero or more segments. Absolute paths, <code>..</code>, traversal through symlinks outside the repository, brace expansion, and negation are forbidden. Include/exclude precedence is therefore unnecessary. Source enumeration MUST use a versioned ignore list to exclude generated/build/vendor output. A nonempty claim matching no file is an error.</p>
+<p>Two slices MUST NOT own the same resolved file. When ownership differs inside a file, extract a contract/module or assign the file to a technical resource owner; v0.1 does not infer symbol ownership from line ranges. A backend registry MAY declare one technical owner for a shared resource and list consuming slices. <code>usesResources</code> references those resource IDs and does not transfer ownership. This registry is a deployment inventory, not a second product graph.</p>
+<h2>4. Contracts and collaboration</h2>
+<p>A contract node MUST specify an interface, producer ownership, compatibility policy, and consumer impact. Slice <code>exposes</code> is the authoritative producer edge. A consumer lists both <code>consumes</code> and <code>dependsOn</code> the producer. Public contract surfaces MAY include operations, events, DTOs, business-neutral read views, and explicit component APIs permitted by a profile. Database tables and another slice's private models are not implicit public contracts.</p>
+<p>Contract entrypoints MUST export only reviewed APIs. Re-exporting private modules through a broad wildcard can expose unintended commitments; explicit named exports are recommended. Contract version changes MUST distinguish compatible additions from breaking removals, renamed fields, tightened preconditions, and changed event meaning. Runtime/event consumers require contract tests even without a source import.</p>
+<p>Events MAY decouple compile-time dependencies through a neutral event contract registry. Event producer/consumer ownership MUST still be declared. A runtime workflow cycle is not automatically a compile-time import cycle, but MUST document delivery, idempotency, retry, timeout, and failure ownership. An event bus is not permission to hide dependencies.</p>
+<h2>5. Internal dependency policy</h2>
+<p>The portable invariant is that presentation/composition MUST NOT become a dependency of lower-level product logic. Profiles MUST provide a concrete allowed matrix. The reference profile retains use-cases → client as an external-access seam while keeping policies/models independent of backend technology.</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>May depend on</th>
+<th>Must not depend on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Composition</td>
+<td>Declared slice composition surfaces, neutral shared, infrastructure setup</td>
+<td>Private business logic through ad hoc imports</td>
+</tr>
+<tr>
+<td>Slice</td>
+<td>Own permitted layers; declared foreign contracts; shared; infrastructure through seam</td>
+<td>Foreign internals</td>
+</tr>
+<tr>
+<td>Shared</td>
+<td>Shared neutral abstractions</td>
+<td>Infrastructure, slices, composition, owned business policy</td>
+</tr>
+<tr>
+<td>Infrastructure</td>
+<td>Infrastructure, shared neutral abstractions, external libraries</td>
+<td>Slices or composition</td>
+</tr>
+</tbody>
+</table>
+<p>The dependency direction is infrastructure → shared, never shared → infrastructure. Product-specific behavior remains slice-owned. The earlier draft reversed this direction; this revision corrects that error.</p>
+<h2>6. Composition and screens</h2>
+<p>Composition MUST wire rather than implement business behavior. A profile MAY define narrowly scoped direct screen imports by a named router or a composition-only entrypoint, distinct from a cross-slice public contract. This is explicit access granted only to composition, not a loophole allowing slices to deep-import UI. Ownership remains with the slice. Route guards MAY coordinate access, but authoritative authorization belongs at the backend boundary and product rules remain slice-owned.</p>
+<h2>7. Backend resources and data</h2>
+<p>A unified deployment root is compatible with VSA. A slice MAY claim a handler outside its frontend directory. Shared schema/resource definitions MUST have one recorded owner; slice claims MUST NOT overlap merely because multiple slices use a model. Resource access is distinct from behavior ownership.</p>
+<p>Client seams adapt transport types to domain types and normalize errors. Frontend checks improve experience; backend enforcement MUST protect authorization, tenant isolation, and business invariants against bypass. A slice owning a rule also owns verification of its backend enforcement, regardless of deployment location.</p>
+<h2>8. Verification and change workflow</h2>
+<p>Verification artifacts MAY be outside the slice (for example journey tests), but MUST link explicit behaviors/rules/scenarios. A journey spanning slices has one test owner and multiple <code>verifies</code> targets. Fixtures that mention an ID without asserting it MUST NOT count as coverage.</p>
+<p>A behavior change review SHOULD include: observable change; rules/scenarios affected; owner and contracts; implementation paths; evidence; audience knowledge impact; release availability. A refactor with no behavior change still updates moved claims and contract dependencies. IDs survive file moves.</p>
+<h2>9. Exceptions and adoption</h2>
+<p>An exception record MUST include ID, rule, exact paths/edges, rationale, accountable owner, approver, creation date, expiration date, and remediation issue. Expired exceptions are errors. Exceptions MUST be visible in reports. A cycle exception means VSA005 failed with a documented exception, not that the dependency graph is acyclic.</p>
+<p>Adopt by declared scope. Baseline existing violations, block new violations, and progressively retire the baseline. A baseline is not a blanket waiver for new files or enlarged violations. Migration mode and strict conformance mode MUST be distinguishable.</p>
+<h2>10. Conformance fixtures</h2>
+<p>A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; deep import through relative path; alias and re-export bypass; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.1.</p></article></main><footer><div class="footrow"><div><strong>Intentset</strong><br>An open-source project in development from Coral Reef Ventures.</div><div class="footlinks"><a href="start.html">Start</a><a href="specifications.html">Specifications</a><a href="about.html">About</a><a href="about.html">Coral Reef Ventures</a></div></div></footer></div></body></html>

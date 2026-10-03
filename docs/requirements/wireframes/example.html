@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Worked example — Intentset</title><link rel="stylesheet" href="styles.css"></head><body class=""><a class="skip" href="#main">Skip to content</a><div class="review-tag">V0.1 · RESPONSIVE WIREFRAME · CONCEPT FOR REVIEW</div><div class="wrap"><header class="masthead"><a class="brand" href="intentset.html"><span class="mark" aria-hidden="true">⌘</span> Intentset</a><nav class="nav" aria-label="Main"><a href="intentset.html#how">How it works</a><a href="specifications.html">Specifications</a><a href="markset.html">Markset</a><a href="roadmap.html">Roadmap</a></nav></header><main id="main"><article class="article"><div class="eyebrow">Worked example · all records are draft</div><h1>Schedule an assessment</h1><p class="lead">Follow one behavior through intent, rules, ownership, verification, and customer guidance.</p><p>No running product, passing evidence, or publication is claimed. Planned code paths do not exist in this package.</p><details><summary style="padding:14px 0;cursor:pointer">ADR-ASMT-SEAM</summary><h2>Keep backend access behind the slice seam</h2>
+<h2>Context</h2>
+<p>Frontend and backend resources may live in different directories while serving one product behavior.</p>
+<h2>Decision</h2>
+<p>The scheduling client adapts transport into domain results. The backend handler enforces authorization and rules; shared data composition has a technical owner.</p>
+<h2>Consequences</h2>
+<p>Ownership stays explicit without moving all cloud resources into a frontend feature. Imports and bundle contents require checking.</p></details><details><summary style="padding:14px 0;cursor:pointer">BEH-ASMT-SCHEDULE</summary><h2>Schedule an assessment</h2>
+<h2>Behavior</h2>
+<p>A teacher submits a future release time for a published assessment and a class.</p>
+<h2>Preconditions</h2>
+<p>The teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.</p>
+<h2>Outcomes</h2>
+<p>Success: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.</p></details><details><summary style="padding:14px 0;cursor:pointer">CAP-ASMT-ASSIGN</summary><h2>Assessment assignment</h2>
+<h2>Overview</h2>
+<p>Teachers prepare and distribute published assessments to classes.</p></details><details><summary style="padding:14px 0;cursor:pointer">CONTRACT-ASMT-SCHEDULE</summary><h2>ScheduleAssessment contract</h2>
+<h2>Interface</h2>
+<p>Input: assessmentId, classId, releaseAt (UTC timestamp). Success: scheduleId. Rejections: unauthorized, unpublished, invalid-time. Draft transport representation is not yet selected.</p>
+<h2>Compatibility</h2>
+<p>Removing a field or tightening accepted times is breaking. Consumers must be reviewed when preconditions change.</p></details><details><summary style="padding:14px 0;cursor:pointer">INT-PREPARE</summary><h2>Prepare learning in advance</h2>
+<h2>Rationale</h2>
+<p>Reduce last-minute administrative work for teachers.</p></details><details><summary style="padding:14px 0;cursor:pointer">KB-ASMT-SCHEDULE</summary><h2>Prepare a scheduled assessment</h2>
+<h2>Guidance</h2>
+<p>Choose a published assessment, a class you can manage, and a future release time. Review the schedule before confirming. If scheduling is rejected, check your class permissions, publication state, and chosen time. This draft guidance must be reviewed against the actual interface before publication.</p></details><details><summary style="padding:14px 0;cursor:pointer">OUT-PREPARE</summary><h2>Reduce assignment preparation friction</h2>
+<h2>Measure</h2>
+<p>Metric: teacher minutes spent preparing an assignment. Baseline: unknown. Proposed target: 20% reduction from the measured pilot baseline. Method: observed task study before and after the pilot; product review required.</p></details><details><summary style="padding:14px 0;cursor:pointer">PRD-LANTERN</summary><h2>Lantern example</h2>
+<h2>Scope</h2>
+<p>An illustrative assessment workflow used to review Intentset. Lantern is an invented product; nothing here describes a real system.</p></details><details><summary style="padding:14px 0;cursor:pointer">RULE-ASMT-AUTH</summary><h2>Require assignment permission</h2>
+<h2>Constraint</h2>
+<p>The server must reject scheduling unless the assessment is published and the actor is authorized to assign it to the requested class.</p></details><details><summary style="padding:14px 0;cursor:pointer">RULE-ASMT-FUTURE</summary><h2>Require a future release time</h2>
+<h2>Constraint</h2>
+<p>The authoritative server time must be earlier than the requested release time when the schedule is accepted.</p></details><details><summary style="padding:14px 0;cursor:pointer">SCN-ASMT-SCHEDULE</summary><h2>Accept an eligible schedule</h2>
+<h2>Given</h2>
+<p>An authorized teacher, a published assessment, and a future release time.</p>
+<h2>When</h2>
+<p>The teacher schedules the assessment for a class they manage.</p>
+<h2>Then</h2>
+<p>The system records the schedule and does not expose the assessment to students before its release time.</p></details><details><summary style="padding:14px 0;cursor:pointer">SLICE-ASMT-SCHEDULE</summary><h2>Assessment scheduling slice</h2>
+<h2>Responsibility</h2>
+<p>Accountable implementation owner for scheduled assessment delivery. Code paths are planned; this example is L1 only and makes no implementation-conformance claim.</p>
+<h2>Public contract</h2>
+<p>ScheduleAssessment accepts a class, assessment, and release time and returns a stable schedule identifier or a typed rejection.</p>
+<h2>Verification</h2>
+<p>TEST-ASMT-SCHEDULE defines a manual pilot review, with no execution evidence yet.</p></details><details><summary style="padding:14px 0;cursor:pointer">TEST-ASMT-SCHEDULE</summary><h2>Review assessment scheduling behavior</h2>
+<h2>Procedure</h2>
+<p>In a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.</p>
+<h2>Expected result</h2>
+<p>The valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.</p></details></article></main><footer><div class="footrow"><div><strong>Intentset</strong><br>An open-source project in development from Coral Reef Ventures.</div><div class="footlinks"><a href="start.html">Start</a><a href="specifications.html">Specifications</a><a href="about.html">About</a><a href="about.html">Coral Reef Ventures</a></div></div></footer></div></body></html>

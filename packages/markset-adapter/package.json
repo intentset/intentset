@@ -1,0 +1,34 @@
+{
+  "name": "@intentset/markset-adapter",
+  "version": "0.1.0",
+  "description": "The one place Markset is imported: turns a Markset document into the input core validates, with syntax diagnostics kept separate.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git",
+    "directory": "packages/markset-adapter"
+  },
+  "homepage": "https://intentset.org/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "intentset-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@intentset/core": "^0.1.0",
+    "@markset-lang/parser": "0.3.4"
+  }
+}
