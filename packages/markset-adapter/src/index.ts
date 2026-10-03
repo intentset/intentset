@@ -15,14 +15,16 @@ import type { Nodes, Root } from "mdast";
 export const MARKSET_VERSION = "0.3.4";
 
 /**
- * Markset codes about reading the frontmatter, which Intentset owns (Core §9).
- * Markset's reader is a subset for its own two keys and, at 0.3.4, rejects a
- * block sequence written at its key's indentation, which is valid YAML and how
- * the examples are written. Core's strict reader is authoritative for the
- * carrier, so Markset's opinion of the YAML is dropped here; its opinion of
- * the `markset:` version and theme keys is kept.
+ * Markset 0.3.4's frontmatter reader rejects a block sequence written at its
+ * key's indentation, which is valid YAML and how every Intentset record is
+ * written, and reports FRONTMATTER_UNPARSEABLE for it. Fixed upstream in
+ * Markset after 0.3.4 (markset commit 3601c8c). Until the pin moves to a
+ * release with the fix, that one code is dropped here; Intentset's strict
+ * reader is authoritative for the carrier either way. A test fails once the
+ * pin moves past 0.3.4 while this set is still non-empty, so the workaround is
+ * removed in the same commit as the bump.
  */
-const OWNED_BY_INTENTSET = new Set(["FRONTMATTER_UNPARSEABLE"]);
+export const DROPPED_MARKSET_CODES: ReadonlySet<string> = new Set(["FRONTMATTER_UNPARSEABLE"]);
 
 export function marksetCarrier(path: string, source: string): DocumentInput {
   const parsed = parseDocument(source);
@@ -34,7 +36,9 @@ export function marksetCarrier(path: string, source: string): DocumentInput {
     source,
     frontmatter,
     headings: collectHeadings(parsed.ast),
-    syntax: parsed.diagnostics.filter((d) => !OWNED_BY_INTENTSET.has(d.code)).map((d) => toDiagnostic(d, path, source)),
+    syntax: parsed.diagnostics
+      .filter((d) => !DROPPED_MARKSET_CODES.has(d.code))
+      .map((d) => toDiagnostic(d, path, source)),
   };
 }
 

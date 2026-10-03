@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { MARKSET_VERSION, marksetCarrier } from "../src/index.ts";
+import { DROPPED_MARKSET_CODES, MARKSET_VERSION, marksetCarrier } from "../src/index.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
 
@@ -27,6 +27,16 @@ test("frontmatter, headings and syntax diagnostics come out in the shared shape"
     assert.equal(d.origin, "syntax");
     assert.equal(d.path, "a.md");
     assert.ok(d.location && d.location.line >= 21, JSON.stringify(d));
+  }
+});
+
+test("the workaround for Markset 0.3.4's YAML reader goes when the pin moves past it", () => {
+  if (MARKSET_VERSION !== "0.3.4") {
+    assert.equal(
+      DROPPED_MARKSET_CODES.size,
+      0,
+      "remove DROPPED_MARKSET_CODES: the pinned Markset reads indentless sequences",
+    );
   }
 });
 
