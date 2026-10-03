@@ -1,0 +1,114 @@
+/**
+ * Behavior ownership and contract surfaces (VSA001, VSA002; Core §5).
+ *
+ * VSA001 at L2 and above: an approved, implemented, released or deprecated
+ * behavior has exactly one incoming `implements` from a product slice. Core
+ * reports the same condition as CORE006 from the graph alone; VSA001 is the
+ * architecture's own statement of it, so a VSA report stands by itself.
+ *
+ * VSA002: every slice's entrypoint is a file in the repository and lies
+ * inside one of the slice's own source claims. An empty entrypoint module is
+ * allowed for a leaf.
+ *
+ * VSA012 (deleting or splitting a slice dispositions its behavior, paths and
+ * contracts) is a diff between two snapshots. This check sees one snapshot,
+ * so it emits nothing for VSA012; what a deletion leaves behind still shows
+ * here as VSA001 for the orphaned behavior and VSA009 or AMP004 for the
+ * orphaned files.
+ */
+import type { Artifact, Graph, Level } from "@intentset/core";
+import { LEVELS } from "@intentset/core";
+import { type Finding, finding } from "./finding.ts";
+import { compareStrings, matchPattern, validatePattern } from "./patterns.ts";
+import type { Model } from "./regions.ts";
+
+const OWNED_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+
+export function checkOwnership(model: Model, graph: Graph, level: Level): Finding[] {
+  const findings: Finding[] = [];
+
+  if (LEVELS.indexOf(level) >= LEVELS.indexOf("L2")) {
+    const behaviors = [...graph.artifacts.values()]
+      .filter((artifact) => artifact.meta.type === "behavior" && OWNED_STATUSES.has(artifact.meta.status))
+      .sort((a, b) => compareStrings(a.meta.id, b.meta.id));
+    for (const behavior of behaviors) {
+      const id = behavior.meta.id;
+      const owners = (graph.in.get(id) ?? [])
+        .filter((edge) => edge.kind === "implements")
+        .map((edge) => graph.artifacts.get(edge.from))
+        .filter((slice): slice is Artifact => slice?.meta.slice?.kind === "product")
+        .map((slice) => slice.meta.id)
+        .sort(compareStrings);
+      const unique = [...new Set(owners)];
+      if (unique.length === 1) continue;
+      findings.push(
+        finding({
+          code: "VSA001",
+          artifact: id,
+          path: behavior.path,
+          message:
+            unique.length === 0
+              ? `Behavior ${id} is ${behavior.meta.status} and no product slice implements it.`
+              : `Behavior ${id} is ${behavior.meta.status} and ${unique.length} product slices implement it: ${unique.join(", ")}.`,
+          remediation:
+            unique.length === 0
+              ? "Add it to the implements of the one product slice accountable for it, or retire it with replacedBy (VSA001)."
+              : "Keep implements on the one accountable slice and express the others through dependsOn and contracts (VSA001).",
+          paths: unique.map((owner) => graph.artifacts.get(owner)!.path),
+          edges: unique.map((owner) => ({ from: owner, to: id })),
+        }),
+      );
+    }
+  }
+
+  for (const slice of model.slices) {
+    const entrypoint = slice.meta.entrypoint;
+    const field = "/intentset/slice/entrypoint";
+    if (entrypoint === "" || validatePattern(entrypoint) !== null || entrypoint.includes("*")) {
+      findings.push(
+        finding({
+          code: "VSA002",
+          artifact: slice.id,
+          path: slice.path,
+          field,
+          message: `${slice.id} declares the entrypoint "${entrypoint}", which is not one repository-relative file path.`,
+          remediation:
+            "Name the one file that is the slice's public contract surface, such as its index.ts (VSA002, TS001).",
+        }),
+      );
+      continue;
+    }
+    if (!model.files.has(entrypoint)) {
+      findings.push(
+        finding({
+          code: "VSA002",
+          artifact: slice.id,
+          path: slice.path,
+          field,
+          message: `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
+          remediation: "Create the entrypoint, empty if the slice exposes nothing yet, or correct the path (VSA002).",
+          paths: [entrypoint],
+        }),
+      );
+      continue;
+    }
+    const owned = slice.meta.claims.some(
+      (claim, i) => claim.kind === "source" && !slice.invalidClaims.includes(i) && matchPattern(claim.path, entrypoint),
+    );
+    if (!owned) {
+      findings.push(
+        finding({
+          code: "VSA002",
+          artifact: slice.id,
+          path: slice.path,
+          field,
+          message: `The entrypoint ${entrypoint} of ${slice.id} lies outside every source claim of the slice.`,
+          remediation: "Move the entrypoint into the slice's source claim, or extend the claim to cover it (VSA002).",
+          paths: [entrypoint],
+        }),
+      );
+    }
+  }
+
+  return findings;
+}
