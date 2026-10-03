@@ -23,7 +23,11 @@ export interface CheckEvidenceOptions {
 }
 
 export interface EvidenceCheck {
-  /** EVID001 (graph-aware), EVID002, EVID003 and, at L3 and above, CORE007; sorted, origin "evidence". */
+  /**
+   * EVID001 (graph-aware), EVID002, EVID003 and, at L3 and above, CORE007 (an
+   * error for a required claim, a warning for a draft claim with no
+   * verification definition); sorted, origin "evidence".
+   */
   diagnostics: Diagnostic[];
   classification: Classification;
   coverage: CoverageReport;
@@ -75,6 +79,23 @@ export function checkEvidence(
 
   if (LEVELS.indexOf(level) >= LEVELS.indexOf("L3")) {
     for (const claim of report.perClaim) {
+      // A draft claim is not required yet, but one with no verification at all
+      // is a gap CI output should show (decided 2026-10-03, after the Streamlane
+      // pilot reported nothing at L3 while two rules had no test): a warning,
+      // never an error, and only for a missing definition, not a missing run.
+      if (!claim.required && claim.lifecycle === "draft" && claim.verifications.length === 0) {
+        diagnostics.push(
+          evidenceDiagnostic({
+            code: "CORE007",
+            severity: "warning",
+            artifact: claim.id,
+            path: claim.path,
+            message: `Draft ${claim.type} ${claim.id} has no verification definition naming it in verifies; it is not required while draft, and will fail L3 once approved.`,
+            remediation: `Add a verification whose links.verifies names ${claim.id} before the claim leaves draft (Core §8).`,
+          }),
+        );
+        continue;
+      }
       if (!claim.required || claim.verified) continue;
       const subject = `${capitalize(claim.lifecycle)} ${claim.type} ${claim.id}`;
       if (claim.verifications.length === 0) {

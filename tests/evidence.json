@@ -174,6 +174,102 @@
       "product": "PRD-LANTERN",
       "release": "pilot-1"
     },
+    "name": "Draft gap: a draft rule no verification names is a CORE007 warning at L3, and the case stays valid",
+    "level": "L3",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies": [
+            "BEH-ASMT-SCHEDULE",
+            "RULE-ASMT-FUTURE",
+            "SCN-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "evidence": [],
+    "valid": true,
+    "diagnostics": [
+      "CORE007"
+    ],
+    "notes": "Decided 2026-10-03 after the Streamlane pilot: a draft claim is not required, but one with no verification definition at all is reported as a warning at L3 and above, so CI output shows the gap."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Draft gap: below L3 the same draft rule is not a diagnostic",
+    "level": "L2",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies": [
+            "BEH-ASMT-SCHEDULE",
+            "RULE-ASMT-FUTURE",
+            "SCN-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "evidence": [],
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Draft gap: a draft claim with a verification but no run record is not a diagnostic",
+    "level": "L3",
+    "evidence": [],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "The warning is for a missing definition only. A missing run on a draft claim is shown by the coverage report, not by a diagnostic."
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "name": "Draft gap: an approved rule no verification names is still a CORE007 error",
+    "level": "L3",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies": [
+            "BEH-ASMT-SCHEDULE",
+            "RULE-ASMT-FUTURE",
+            "SCN-ASMT-SCHEDULE"
+          ]
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "evidence": [],
+    "valid": false,
+    "diagnostics": [
+      "CORE007"
+    ]
+  },
+  {
+    "section": "evidence",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
     "name": "E02 pass at an older commit is stale",
     "level": "L3",
     "patch": {
