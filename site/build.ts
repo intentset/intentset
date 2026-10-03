@@ -9,7 +9,9 @@
  * worked example, rendered from examples/scheduling/ one record per page.
  *
  * Output: dist/ with relative links, so it works at any base path as well as on
- * the custom domain. No page carries a script.
+ * the custom domain. Nothing rendered from a document carries a script; the one
+ * script on a page is the shell's, and it only remembers the reader's color
+ * scheme (SCHEME_SCRIPT).
  *
  *   npm run site
  */
@@ -40,15 +42,20 @@ export const EXTERNAL = {
 
 export const SITE_NAME = "Intentset";
 
-/** The bar, as the information architecture names it: How it works is an anchor on the home page. */
+/**
+ * The bar, as the information architecture names it. How it works was an anchor
+ * on the home page and is a page of its own since 2026-10-03, so the home page
+ * can stay with the outcome and the explanation can take the room it needs.
+ */
 export const NAV: Array<[string, string]> = [
-  ["How it works", "index.html#how"],
+  ["How it works", "how-it-works/index.html"],
   ["Specifications", "specifications/index.html"],
   ["Markset", "markset/index.html"],
   ["Roadmap", "roadmap/index.html"],
 ];
 
 export const FOOTER_LINKS: Array<[string, string]> = [
+  ["How it works", "how-it-works/index.html"],
   ["Start", "start/index.html"],
   ["Specifications", "specifications/index.html"],
   ["Roadmap", "roadmap/index.html"],
@@ -75,6 +82,7 @@ const EXAMPLE_DIR = "examples/scheduling";
 /** The content pages: output path and source file under site/content/. */
 export const CONTENT_PAGES: Array<[string, string]> = [
   ["index.html", "index.md"],
+  ["how-it-works/index.html", "how-it-works.md"],
   ["start/index.html", "start.md"],
   ["specifications/index.html", "specifications.md"],
   ["markset/index.html", "markset.md"],
@@ -163,6 +171,9 @@ async function writeSite(out: string): Promise<string[]> {
 
 // ---------------------------------------------------------------------------
 
+/** Content pages long enough to want the contents rail the specifications have. */
+const RAIL_PAGES = new Set(["how-it-works/index.html"]);
+
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
   const source = join(root, "site", "content", file);
@@ -170,10 +181,10 @@ async function contentPage(path: string, file: string, tokens: Record<string, st
   for (const [name, value] of Object.entries(tokens)) text = text.replaceAll(`{{${name}}}`, value);
   const leftover = /\{\{\w+\}\}/.exec(text);
   if (leftover) throw new Error(`${relative(root, source)}: unsubstituted token ${leftover[0]}`);
-  return renderPage(path, text, source);
+  return renderPage(path, text, source, {}, RAIL_PAGES.has(path));
 }
 
-function renderPage(path: string, source: string, file: string, extra: Partial<Page> = {}): Page {
+function renderPage(path: string, source: string, file: string, extra: Partial<Page> = {}, rail = false): Page {
   const parsed = parseDocument(source);
   failOnErrors(parsed.diagnostics, file);
   const ast = addHeadingIds(parsed.ast);
@@ -183,6 +194,7 @@ function renderPage(path: string, source: string, file: string, extra: Partial<P
     description: firstParagraph(ast),
     body: renderHtml(ast, { diagrams: false, charts: false }),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
+    ...(rail ? { toc: tableOfContents(ast, 2, 3) } : {}),
     ...extra,
   };
 }
@@ -347,7 +359,11 @@ function shell(page: Page): string {
   const rail = page.toc
     ? `<aside class="site-toc"><nav aria-label="Contents"><p class="site-rail-title">On this page</p>\n${page.toc}</nav></aside>\n`
     : "";
-  const title = page.path === "index.html" ? `${SITE_NAME} — ${page.title}` : `${page.title} · ${SITE_NAME}`;
+  // The pattern all four sites share (Streamlane's): the home page is "Intentset
+  // · what it is", every other page "Page · Intentset", and a heading's closing
+  // period is dropped, since a title is a label rather than a sentence.
+  const label = page.title.replace(/\.$/, "");
+  const title = page.path === "index.html" ? `${SITE_NAME} · ${label}` : `${label} · ${SITE_NAME}`;
   const canonical = new URL(page.path.replace(/index\.html$/, ""), CANONICAL).href;
   return `<!doctype html>
 <html lang="en">
@@ -368,28 +384,106 @@ function shell(page: Page): string {
 <link rel="stylesheet" href="${rel}css/site.css">
 </head>
 <body${page.bodyAttributes}>
-<a class="site-skip" href="#main">Skip to content</a>
+${SCHEME_SCRIPT}<a class="site-skip" href="#main">Skip to content</a>
 <header class="site-header">
 <a class="site-brand" href="${rel}index.html"><img class="site-mark" src="${rel}icon.svg" alt="" width="28" height="28">${SITE_NAME}</a>
 <nav class="site-nav" aria-label="Main">
 ${nav}
 </nav>
-</header>
+${SCHEME_CONTROL}</header>
 <div class="site-layout${rail ? " has-rail" : ""}">
 ${rail}<main id="main" class="ms-document" tabindex="-1">
 ${page.body}</main>
 </div>
 <footer class="site-footer">
+<div>
 <nav class="site-footer-nav" aria-label="Footer">
 ${footerLinks}
 </nav>
 <p><strong>${SITE_NAME}</strong> · ${esc(FOOTER.statement)} <a href="${REPO}">${esc(FOOTER.repository)}</a></p>
 <p>${esc(FOOTER.independence)}</p>
-</footer>
+</div>
+${FAMILY_MARK}</footer>
 </body>
 </html>
 `;
 }
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The network figure from coralreefventures.com, which draws the three
+ * products as clusters of nodes: Markset's two, Intentset's two, Streamlane's
+ * one, and two unaffiliated. Here Intentset's nodes carry the accent and the
+ * rest stay quiet: the family's mark, worn by one member. Inline so its colors
+ * are tokens and follow the reader's scheme; decoration, so hidden from
+ * assistive technology.
+ */
+const FAMILY_MARK = `<svg class="site-family" viewBox="0 0 384 240" aria-hidden="true" focusable="false"><path d="M40 170 112 96 196 132 268 52 344 104M112 96 150 30 268 52M196 132 236 206 344 104M40 170 236 206M150 30 196 132"/><circle cx="40" cy="170" r="7"/><circle cx="112" cy="96" r="9"/><circle cx="150" cy="30" r="5"/><circle class="own" cx="196" cy="132" r="10"/><circle cx="236" cy="206" r="5"/><circle class="own" cx="268" cy="52" r="8"/><circle cx="344" cy="104" r="8"/></svg>
+`;
+
+/**
+ * The reader's color scheme, the same control markset.org has: three radio
+ * inputs, read by body:has() in site.css, with markset.css resolving every
+ * color from color-scheme. Auto is checked, so a reader who never touches it
+ * keeps their system preference. Each option is an icon with its word kept in
+ * the accessibility tree.
+ */
+const ICON_AUTO = `<svg class="site-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17z" fill="currentColor" stroke="none"/></svg>`;
+const ICON_LIGHT = `<svg class="site-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg>`;
+const ICON_DARK = `<svg class="site-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.4 8.4 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2z"/></svg>`;
+
+export const SCHEME_CONTROL = `<div class="site-scheme-slot"><div class="site-scheme" role="group" aria-label="Color scheme">
+<input type="radio" name="ms-scheme" id="ms-scheme-auto" class="site-scheme-input" checked>
+<label class="site-scheme-option" for="ms-scheme-auto" title="Match the system">${ICON_AUTO}<span class="site-visually-hidden">Auto</span></label>
+<input type="radio" name="ms-scheme" id="ms-scheme-light" class="site-scheme-input">
+<label class="site-scheme-option" for="ms-scheme-light" title="Light">${ICON_LIGHT}<span class="site-visually-hidden">Light</span></label>
+<input type="radio" name="ms-scheme" id="ms-scheme-dark" class="site-scheme-input">
+<label class="site-scheme-option" for="ms-scheme-dark" title="Dark">${ICON_DARK}<span class="site-visually-hidden">Dark</span></label>
+</div></div>
+`;
+
+/**
+ * The only script on a built page, and all it does is carry the reader's scheme
+ * choice from one page to the next, which no CSS can do. It is chrome, ahead of
+ * <main>, and nothing rendered from a document carries a script. With scripting
+ * off the control still works for the page it is on. It writes data-scheme on
+ * <body>, the hook markset.css publishes (Markset spec §6), and runs first so
+ * the scheme is in force before anything paints.
+ */
+export const SCHEME_SCRIPT = `<script>
+(function () {
+  var key = "ms-scheme";
+  var read = function () {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  };
+  var apply = function (value) {
+    if (value === "light" || value === "dark") document.body.dataset.scheme = value;
+    else delete document.body.dataset.scheme;
+  };
+  apply(read());
+  document.addEventListener("change", function (event) {
+    var input = event.target;
+    if (!input || input.name !== key) return;
+    var value = input.id.slice(key.length + 1);
+    apply(value);
+    try {
+      if (value === "auto") localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    } catch (e) {}
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var value = read();
+    var input = document.getElementById(key + "-" + (value === "light" || value === "dark" ? value : "auto"));
+    if (input) input.checked = true;
+  });
+})();
+</script>
+`;
 
 // ---------------------------------------------------------------------------
 

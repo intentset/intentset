@@ -3,7 +3,18 @@ import { access, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, normalize, resolve } from "node:path";
 import { after, test } from "node:test";
-import { build, CONTENT_PAGES, EXTERNAL, FOOTER, FOOTER_LINKS, NAV, REPO, SITE_HOST, SPECS } from "../build.ts";
+import {
+  build,
+  CONTENT_PAGES,
+  EXTERNAL,
+  FOOTER,
+  FOOTER_LINKS,
+  NAV,
+  REPO,
+  SCHEME_SCRIPT,
+  SITE_HOST,
+  SPECS,
+} from "../build.ts";
 import { loadRecords } from "../records.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
@@ -72,12 +83,18 @@ test("every internal link resolves to a page that was built, and every fragment 
   }
 });
 
-test("every page has exactly one h1, a skip link to main, and no script", () => {
+test("every page has exactly one h1, a skip link to main, and no script but the scheme's", () => {
+  // The one script is the shell's, and all it does is remember the reader's
+  // color scheme across pages, as markset.org's does. It sits ahead of the
+  // header; nothing inside <main>, which is rendered from a document, has one.
   for (const [page, doc] of html) {
     assert.equal((doc.match(/<h1[\s>]/g) ?? []).length, 1, `${page}: h1 count`);
     assert.match(doc, /<a class="site-skip" href="#main">Skip to content<\/a>/, page);
     assert.match(doc, /<main id="main" class="ms-document" tabindex="-1">/, page);
-    assert.doesNotMatch(doc, /<script/i, page);
+    assert.equal((doc.match(/<script/gi) ?? []).length, 1, `${page}: one script`);
+    assert.ok(doc.includes(SCHEME_SCRIPT), `${page}: and it is the scheme script`);
+    assert.ok(doc.indexOf(SCHEME_SCRIPT) < doc.indexOf('<header class="site-header">'), `${page}: ahead of the header`);
+    assert.doesNotMatch(doc.slice(doc.indexOf("<main"), doc.indexOf("</main>")), /<script/i, page);
     assert.doesNotMatch(doc, /<form/i, page);
     assert.match(doc, /<html lang="en">/, page);
     assert.match(doc, /<meta name="viewport" content="width=device-width, initial-scale=1">/, page);
@@ -94,7 +111,7 @@ test("the navigation carries the four items the IA names, and the footer its fiv
       page,
     );
     assert.deepEqual(labels, ["How it works", "Specifications", "Markset", "Roadmap"]);
-    assert.match(nav, /href="(\.\/|(\.\.\/)+)index\.html#how"/, `${page}: How it works is the home anchor`);
+    assert.match(nav, /href="(\.\/|(\.\.\/)+)how-it-works\/index\.html"/, `${page}: How it works is a page`);
     const footer = doc.slice(doc.indexOf("<footer"), doc.indexOf("</footer>"));
     const footerNav = footer.slice(0, footer.indexOf("</nav>"));
     assert.deepEqual(
@@ -106,7 +123,40 @@ test("the navigation carries the four items the IA names, and the footer its fiv
     assert.ok(text(footer).includes(FOOTER.independence), page);
     assert.match(footer, new RegExp(`<a href="${REPO}">${FOOTER.repository}</a>`), page);
   }
-  assert.match(html.get("index.html") ?? "", /<h2 id="how">/, "the How it works anchor exists");
+});
+
+test("tab titles follow the family's pattern: the home page names Intentset first, every other page last", () => {
+  assert.match(
+    html.get("index.html") ?? "",
+    /<title>Intentset · Keep product intent connected to what you ship<\/title>/,
+  );
+  for (const [page, doc] of html) {
+    if (page === "index.html") continue;
+    assert.match(doc, /<title>[^<]*[^.] · Intentset<\/title>/, page);
+  }
+});
+
+test("How it works is a page of its own, with a contents rail, and the home page leads to it", () => {
+  const page = html.get("how-it-works/index.html") ?? "";
+  assert.match(page, /<aside class="site-toc">/, "the explanation has a contents rail");
+  assert.match(
+    page,
+    /<nav class="site-nav"[\s\S]*?<a href="\.\.\/how-it-works\/index\.html" aria-current="page">How it works<\/a>/,
+  );
+  const home = main("index.html");
+  assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/index\.html">See how it works<\/a>/);
+  assert.doesNotMatch(html.get("index.html") ?? "", /index\.html#how/, "nothing points at the old anchor");
+});
+
+test("the header carries the color-scheme control, and the footer the family's mark", () => {
+  for (const [page, doc] of html) {
+    const header = doc.slice(doc.indexOf('<header class="site-header">'), doc.indexOf("</header>"));
+    assert.match(header, /<div class="site-scheme" role="group" aria-label="Color scheme">/, page);
+    for (const name of ["Auto", "Light", "Dark"]) assert.ok(header.includes(`>${name}</span>`), `${page}: ${name}`);
+    assert.match(header, /id="ms-scheme-auto" class="site-scheme-input" checked/, `${page}: auto by default`);
+    const footer = doc.slice(doc.indexOf("<footer"), doc.indexOf("</footer>"));
+    assert.match(footer, /<svg class="site-family"[^>]*aria-hidden="true"/, `${page}: the mark is decoration`);
+  }
 });
 
 test("CNAME names the homepage's host, and the shell links the two stylesheets relative to the page", async () => {
@@ -257,9 +307,13 @@ test("home: the hero, worked example, audience cards, adoption steps and status 
   assert.match(home, /<h2 id="example">/);
   assert.match(
     home,
-    /<span class="ms-span button primary"><a href="specifications\/index\.html">Read the draft specification<\/a>/,
+    /<span class="ms-span button"><a href="specifications\/index\.html">Read the draft specification<\/a>/,
   );
-  assert.match(home, /<span class="ms-span button"><a href="#example">Explore an example<\/a>/);
+  assert.equal(
+    (home.match(/<h3 class="ms-card-title">[^<]*\?<\/h3>/g) ?? []).length,
+    6,
+    "the benefits are six cards, each a question the repository can answer",
+  );
 });
 
 test("the build leaves no placeholder behind", async () => {
