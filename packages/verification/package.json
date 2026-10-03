@@ -1,0 +1,33 @@
+{
+  "name": "@intentset/verification",
+  "version": "0.1.0",
+  "description": "Run records, evidence freshness classification, and test-reporter adapters.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git",
+    "directory": "packages/verification"
+  },
+  "homepage": "https://intentset.org/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "intentset-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@intentset/core": "^0.1.0"
+  }
+}

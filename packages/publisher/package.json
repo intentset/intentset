@@ -1,0 +1,36 @@
+{
+  "name": "@intentset/publisher",
+  "version": "0.1.0",
+  "description": "Audience and release projection of reviewed knowledge into Markset documents with provenance.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git",
+    "directory": "packages/publisher"
+  },
+  "homepage": "https://intentset.org/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "intentset-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@intentset/core": "^0.1.0",
+    "@intentset/markset-adapter": "^0.1.0",
+    "@markset-lang/parser": "0.3.4",
+    "@markset-lang/render-html": "0.3.4"
+  }
+}

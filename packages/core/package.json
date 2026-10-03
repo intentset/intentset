@@ -1,0 +1,36 @@
+{
+  "name": "@intentset/core",
+  "version": "0.1.0",
+  "description": "Intentset core: the frontmatter carrier, typed graph, validator, impact traversal and export. No dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://intentset.org/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "intentset",
+    "requirements",
+    "traceability",
+    "product-model"
+  ],
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "intentset-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

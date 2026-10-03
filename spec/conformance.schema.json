@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Intentset conformance case",
+  "description": "One entry of tests/<section>.json. A case starts from a baseline repository tree (examples/<baseline>/), applies files, patches, sources and registries, and states what a conforming implementation reports. The published suite (@intentset/conformance-suite) carries the expanded form, with every patch already applied, so a consumer needs no patch logic.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["section", "name", "valid"],
+    "properties": {
+      "section": { "type": "string", "description": "Must equal the file's basename." },
+      "name": {
+        "type": "string",
+        "description": "Unique within the section. Catalog cases keep their catalog ID as a prefix, e.g. \"C03 governedBy targets a capability\"."
+      },
+      "baseline": {
+        "type": "string",
+        "description": "A directory under examples/ whose files start the tree. Omit for a self-contained case built only from files.",
+        "default": null
+      },
+      "files": {
+        "type": "object",
+        "description": "Whole documents by repository-relative path. A null value deletes the baseline's file.",
+        "additionalProperties": { "type": ["string", "null"] }
+      },
+      "patch": {
+        "type": "object",
+        "description": "Edits to baseline documents by path. For each: frontmatter edits keyed by dotted path into the YAML mapping (null deletes the key), and an optional body replacement.",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "frontmatter": { "type": "object", "additionalProperties": true },
+            "body": { "type": "string" }
+          }
+        }
+      },
+      "registries": {
+        "type": "object",
+        "description": "Replaces the baseline's registries.yaml content as a mapping; omitted keeps the baseline's."
+      },
+      "sources": {
+        "type": "object",
+        "description": "Non-document files (TypeScript sources, tsconfig, test output) by repository-relative path, for VSA and evidence cases.",
+        "additionalProperties": { "type": ["string", "null"] }
+      },
+      "config": {
+        "type": "object",
+        "description": "The .intentset/config.yaml mapping; omitted uses the baseline's or a default scope of **/*.md."
+      },
+      "level": { "enum": ["L1", "L2", "L3", "L4", "L5"], "default": "L1" },
+      "evidence": {
+        "type": "array",
+        "description": "Run records (Core §8) supplied to the evidence check.",
+        "items": { "type": "object" }
+      },
+      "request": {
+        "type": "object",
+        "description": "A publication request for publication cases.",
+        "additionalProperties": false,
+        "properties": {
+          "audience": { "type": "string" },
+          "visibility": { "enum": ["public", "customer", "internal", "restricted"] },
+          "product": { "type": "string" },
+          "release": { "type": "string" },
+          "role": { "type": "string" },
+          "edition": { "type": "string" },
+          "flags": { "type": "array", "items": { "type": "string" } },
+          "ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Knowledge IDs requested; omitted means every eligible one."
+          }
+        }
+      },
+      "valid": { "type": "boolean", "description": "True when no diagnostic is an error." },
+      "diagnostics": {
+        "type": "array",
+        "description": "Every diagnostic code the case must produce, errors and warnings, as a multiset. Omitted on a valid case means none.",
+        "items": { "type": "string", "pattern": "^[A-Z]+[0-9]{3}$" }
+      },
+      "artifacts": {
+        "type": "array",
+        "description": "Optional: the artifact IDs that must appear in the graph, sorted.",
+        "items": { "type": "string" }
+      },
+      "export": {
+        "type": "object",
+        "description": "Optional: fields of the export envelope that must match (deep partial; generatedAt, commit and graphHash are compared only if named)."
+      },
+      "published": {
+        "type": "object",
+        "description": "Optional, publication cases: knowledge IDs that must be published and text that must not appear anywhere in the output.",
+        "additionalProperties": false,
+        "properties": {
+          "ids": { "type": "array", "items": { "type": "string" } },
+          "mustNotContain": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "notes": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist.staging-*/
+dist.previous-*/
+packages/*/dist/
+test-results/
+playwright-report/
+.DS_Store

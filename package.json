@@ -1,0 +1,38 @@
+{
+  "name": "intentset",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Intentset: product intent, behavior, implementation, verification and knowledge, connected in readable files. Reference implementation of the v0.1 specifications.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "site"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "intentset": "node --conditions=intentset-source packages/cli/src/intentset.ts",
+    "test": "node --conditions=intentset-source --test packages/*/test/*.test.ts site/test/*.test.ts test/*.test.ts",
+    "conformance": "node --conditions=intentset-source packages/conformance/src/cli.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "build": "rm -rf packages/*/dist && node --conditions=intentset-source packages/conformance-suite/stage.ts && tsc -p packages/core/tsconfig.build.json && tsc -p packages/markset-adapter/tsconfig.build.json && tsc -p packages/architecture/tsconfig.build.json && tsc -p packages/verification/tsconfig.build.json && tsc -p packages/publisher/tsconfig.build.json && tsc -p packages/atlas/tsconfig.build.json && tsc -p packages/cli/tsconfig.build.json && tsc -p packages/mcp/tsconfig.build.json && tsc -p packages/conformance-suite/tsconfig.build.json",
+    "site": "node --conditions=intentset-source site/build.ts",
+    "site:watch": "node --conditions=intentset-source site/serve.ts",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.13",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.5.1",
+    "typescript": "^7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git"
+  },
+  "homepage": "https://intentset.org/"
+}
