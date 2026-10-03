@@ -1,0 +1,504 @@
+[
+  {
+    "section": "export",
+    "name": "export the baseline envelope",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "contract": "intentset/export/0.1",
+      "spec": "0.1",
+      "generatedAt": "2026-01-01T00:00:00Z",
+      "repository": "example/scheduling",
+      "products": [
+        "PRD-LANTERN"
+      ],
+      "source": {
+        "commit": null,
+        "commitUnavailable": "fixture"
+      },
+      "release": null,
+      "validation": {
+        "level": "L1",
+        "scope": [
+          "**/*.md"
+        ],
+        "status": "pass",
+        "errors": 0,
+        "warnings": 0,
+        "diagnostics": []
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export graph hash of the baseline",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "graphHash": "f4a8c12d9e05d126c0a00dacb9e925f4eef1bbf439a835b807462c1c3a309bc2"
+    },
+    "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
+  },
+  {
+    "section": "export",
+    "name": "export derived edges are inverses of authored ones",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "id": "RULE-ASMT-FUTURE",
+          "links": {},
+          "parent": null,
+          "derived": {
+            "governedBy": [
+              "BEH-ASMT-SCHEDULE"
+            ],
+            "verifies": [
+              "TEST-ASMT-SCHEDULE"
+            ],
+            "explains": [
+              "KB-ASMT-SCHEDULE"
+            ]
+          }
+        },
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export authored links are sorted and parent is separate",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {},
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "parent": "CAP-ASMT-ASSIGN",
+          "links": {
+            "governedBy": [
+              "RULE-ASMT-AUTH",
+              "RULE-ASMT-FUTURE"
+            ]
+          },
+          "derived": {
+            "illustrates": [
+              "SCN-ASMT-SCHEDULE"
+            ],
+            "implements": [
+              "SLICE-ASMT-SCHEDULE"
+            ],
+            "verifies": [
+              "TEST-ASMT-SCHEDULE"
+            ],
+            "explains": [
+              "KB-ASMT-SCHEDULE"
+            ]
+          },
+          "availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "revision": 1,
+          "slice": null,
+          "verification": null,
+          "extensions": null
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export slice and verification metadata",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "id": "SLICE-ASMT-SCHEDULE",
+          "slice": {
+            "kind": "product",
+            "domain": "assessment",
+            "entrypoint": "src/features/assessment/schedule/index.ts",
+            "claims": [
+              {
+                "kind": "backend",
+                "path": "amplify/functions/schedule-assessment/**"
+              },
+              {
+                "kind": "source",
+                "path": "src/features/assessment/schedule/**"
+              }
+            ],
+            "usesResources": [
+              "RES-ASSESSMENT-DATA"
+            ]
+          }
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE",
+          "verification": {
+            "method": "manual",
+            "locator": "examples/scheduling/TEST-ASMT-SCHEDULE.md",
+            "selector": "schedule-review-v1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export registries sorted",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "registries": {
+        "owners": [
+          "team-assessment",
+          "team-platform"
+        ],
+        "audiences": [
+          "engineering",
+          "product",
+          "teacher"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": [],
+        "resources": [
+          {
+            "id": "RES-ASSESSMENT-DATA",
+            "path": "amplify/data/resource.ts",
+            "owner": "team-platform",
+            "consumers": [
+              "SLICE-ASMT-SCHEDULE"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "section": "export",
+    "name": "export preserves namespaced extensions",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.extensions": {
+            "example/change": {
+              "ticket": "LAN-12"
+            }
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {},
+        {},
+        {
+          "id": "CAP-ASMT-ASSIGN",
+          "extensions": {
+            "example/change": {
+              "ticket": "LAN-12"
+            }
+          }
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export a failing validation keeps the diagnostic and the count",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.parent": "CAP-MISSING"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ],
+    "export": {
+      "validation": {
+        "status": "fail",
+        "errors": 1,
+        "warnings": 0,
+        "diagnostics": [
+          {
+            "code": "CORE003",
+            "severity": "error",
+            "origin": "graph",
+            "artifact": "BEH-ASMT-SCHEDULE",
+            "path": "BEH-ASMT-SCHEDULE.md",
+            "location": {
+              "line": 16
+            },
+            "field": "/intentset/parent"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "section": "export",
+    "name": "export warnings are counted separately and do not fail",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.governedBy.1": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ],
+    "export": {
+      "validation": {
+        "status": "pass",
+        "errors": 0,
+        "warnings": 1,
+        "diagnostics": [
+          {
+            "code": "CORE009",
+            "severity": "warning",
+            "artifact": "RULE-ASMT-AUTH"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "section": "export",
+    "name": "export an unreadable record is absent from the artifacts",
+    "baseline": "scheduling",
+    "files": {
+      "TEST-ASMT-SCHEDULE.md": "\n# Review assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "export": {
+      "validation": {
+        "status": "fail",
+        "errors": 1,
+        "diagnostics": [
+          {
+            "code": "CORE001",
+            "artifact": null,
+            "path": "TEST-ASMT-SCHEDULE.md",
+            "location": {
+              "line": 1
+            }
+          }
+        ]
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export a duplicate ID keeps one record, the first by path",
+    "baseline": "scheduling",
+    "files": {
+      "BEH-ASMT-SCHEDULE-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule an assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE002",
+      "CORE002"
+    ],
+    "export": {
+      "artifacts": [
+        {},
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "path": "BEH-ASMT-SCHEDULE-COPY.md"
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  {
+    "section": "export",
+    "name": "export products lists every product, sorted",
+    "baseline": "scheduling",
+    "files": {
+      "PRD-ABACUS.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/product/0.1\n  id: PRD-ABACUS\n  type: product\n  title: Abacus example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Abacus example\n\n## Scope\n\nA second invented product.\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "products": [
+        "PRD-ABACUS",
+        "PRD-LANTERN"
+      ]
+    }
+  }
+]
