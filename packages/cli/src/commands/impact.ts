@@ -13,8 +13,9 @@ import { unresolved, validationLine, validationSummary } from "./shared.ts";
 export const REACHABILITY_NOTE =
   "Reachability through authored links marks an artifact for review; it is not proof that runtime behavior changed (Core §10).";
 
-export function impactCommand(session: Session, id: string, level: string, asJson: boolean, io: Io): number {
+export function impactCommand(session: Session, id: string, asJson: boolean, io: Io): number {
   const { graph } = session.result;
+  const level = session.level;
   const start = graph.artifacts.get(id);
   if (start === undefined) {
     const diagnostic = unresolved(id, session);

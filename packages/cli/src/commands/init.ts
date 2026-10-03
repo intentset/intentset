@@ -10,9 +10,9 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_IGNORE, readConfig, readRegistries } from "@intentset/core";
+import { compareStrings, DEFAULT_IGNORE, readConfig, readRegistries } from "@intentset/core";
 import type { Io } from "../output.ts";
-import { CONFIG_PATH, compareStrings } from "../repository.ts";
+import { CONFIG_PATH } from "../repository.ts";
 
 export const REGISTRIES_PATH = ".intentset/registries.yaml";
 export const DEFAULT_INIT_SCOPE = "product/**/*.md";

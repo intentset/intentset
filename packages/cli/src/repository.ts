@@ -6,10 +6,11 @@
  * they describe and a missing commit is a fact to state, not to invent.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
   type Config,
+  compareStrings,
   type Diagnostic,
   type DocumentInput,
   EMPTY_REGISTRIES,
@@ -44,6 +45,8 @@ export interface Repository {
   configOk: boolean;
   commit: string | null;
   commitUnavailable?: string;
+  /** True when tracked files differ from that commit, so the commit alone does not describe what was read. */
+  uncommitted?: boolean;
 }
 
 /**
@@ -90,35 +93,83 @@ export function loadRepository(root: string, carrier: CarrierName): Repository {
 }
 
 /**
- * Core §11 scope: every regular file under `root` matching a `scope` pattern
- * and no `ignore` pattern, as sorted repository-relative POSIX paths. An
- * ignored directory is not entered. Symbolic links are not followed, so the
- * walk cannot leave the repository or loop.
+ * Core §11 scope: every file `listFiles` returns that matches a `scope`
+ * pattern, as sorted repository-relative POSIX paths.
  */
 export function enumerate(root: string, config: Pick<Config, "scope" | "ignore">): string[] {
+  return listFiles(root, config.ignore).filter((path) => matchAny(config.scope, path));
+}
+
+/**
+ * Every regular file under `root` that no `ignore` pattern matches, sorted.
+ * In a git repository the list is git's own (`ls-files --cached --others
+ * --exclude-standard`): tracked files and untracked ones .gitignore does not
+ * exclude, so build output and untracked worktrees stay out. Elsewhere it is
+ * a directory walk. Either way symbolic links are left out, so nothing read
+ * lies outside the repository, and a tracked file deleted from the working
+ * tree is not listed.
+ */
+export function listFiles(root: string, ignore: readonly string[]): string[] {
+  const listed = gitFiles(root) ?? walk(root, ignore);
+  return listed.filter(
+    (path) => !matchAny(ignore, path) && !ignoredDirectory(ignore, path) && isFile(join(root, path)),
+  );
+}
+
+/** True when some directory containing `path` is ignored, as the walk would never have entered it. */
+function ignoredDirectory(ignore: readonly string[], path: string): boolean {
+  const parts = path.split("/");
+  for (let i = 1; i < parts.length; i++) if (matchAny(ignore, parts.slice(0, i).join("/"))) return true;
+  return false;
+}
+
+function gitFiles(root: string): string[] | null {
+  try {
+    const out = execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: 256 * 1024 * 1024,
+    });
+    return [...new Set(out.split("\0").filter((path) => path !== ""))].sort(compareStrings);
+  } catch {
+    return null;
+  }
+}
+
+/** Every regular file under `root` that no `ignore` pattern matches, by walking; ignored directories are not entered. */
+export function walk(root: string, ignore: readonly string[]): string[] {
   const out: string[] = [];
-  const walk = (relative: string): void => {
+  const visit = (relative: string): void => {
     const entries = readdirSync(relative === "" ? root : join(root, relative), { withFileTypes: true });
     for (const entry of entries) {
       const path = relative === "" ? entry.name : `${relative}/${entry.name}`;
-      if (matchAny(config.ignore, path)) continue;
-      if (entry.isDirectory()) walk(path);
-      else if (entry.isFile() && matchAny(config.scope, path)) out.push(path);
+      if (matchAny(ignore, path)) continue;
+      if (entry.isDirectory()) visit(path);
+      else if (entry.isFile()) out.push(path);
     }
   };
-  walk("");
+  visit("");
   return out.sort(compareStrings);
 }
 
 /** The commit at HEAD in `root`, or null and the reason none could be read. */
-export function readCommit(root: string): { commit: string | null; commitUnavailable?: string } {
+export function readCommit(root: string): { commit: string | null; commitUnavailable?: string; uncommitted?: boolean } {
   try {
     const commit = execFileSync("git", ["rev-parse", "--verify", "--quiet", "HEAD^{commit}"], {
       cwd: root,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     }).trim();
-    if (/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(commit)) return { commit };
+    if (/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(commit)) {
+      // --no-optional-locks: asking whether the tree is clean must not refresh git's index either.
+      const status = execFileSync("git", ["--no-optional-locks", "status", "--porcelain", "--untracked-files=no"], {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      return status.trim() === "" ? { commit } : { commit, uncommitted: true };
+    }
     return { commit: null, commitUnavailable: `git rev-parse printed "${commit}", which is not a commit ID.` };
   } catch (error) {
     return { commit: null, commitUnavailable: commitFailure(error) };
@@ -134,15 +185,11 @@ function commitFailure(error: unknown): string {
   return detail === "" ? "git rev-parse HEAD failed." : `git rev-parse HEAD failed: ${detail}`;
 }
 
+/** A regular file, not a symbolic link to one. */
 function isFile(path: string): boolean {
   try {
-    return statSync(path).isFile();
+    return lstatSync(path).isFile();
   } catch {
     return false;
   }
-}
-
-/** ADR 0005: code-unit order, the one order everything iterated is sorted by. */
-export function compareStrings(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0;
 }

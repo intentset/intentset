@@ -37,6 +37,7 @@
     "@intentset/verification": "^0.1.0",
     "@intentset/publisher": "^0.1.0",
     "@intentset/atlas": "^0.1.0",
-    "@intentset/mcp": "^0.1.0"
+    "@intentset/mcp": "^0.1.0",
+    "@intentset/conformance-suite": "^0.1.0"
   }
 }

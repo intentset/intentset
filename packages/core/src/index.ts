@@ -1,6 +1,7 @@
 export * from "./artifact.ts";
 export * from "./carrier.ts";
 export * from "./config.ts";
+export * from "./context.ts";
 export * from "./diagnostics.ts";
 export * from "./export.ts";
 export * from "./graph.ts";
