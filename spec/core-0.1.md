@@ -138,6 +138,8 @@ A run record MUST include evidence ID, verification ID, source commit, graph has
 
 Only `pass` at the assessed commit and graph hash counts as current passing evidence in v0.1. Any older evidence is stale. This deliberately conservative policy avoids pretending change-impact analysis proves unrelated code safe. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.
 
+*Informative: where run records live.* Because a pass counts only at the assessed commit, a run record committed to the repository it assesses describes a commit that is no longer the latest the moment it lands, and reads as stale. Keep run records in CI artifacts or another store the adopting organization controls, never in the commit under assessment. (Found by the Streamlane pilot, 2026-10-02.)
+
 A claim is “verified in snapshot” only if every applicable required verification linked to it passes. Scenarios and governing rules require their own coverage; a parent behavior pass does not silently satisfy them. Manual and automated coverage MUST be separately countable. Structural validation cannot prove that tests adequately assert the documented behavior.
 
 ## 9. Markset profiles and document publication
@@ -192,7 +194,7 @@ A partial adoption MUST name included capabilities/IDs and show out-of-scope cou
 | CORE004 | Invalid/cyclic decomposition or replacement | Error |
 | CORE005 | Lifecycle/release claim inconsistent | Error |
 | CORE006 | Missing applicable ownership (L2+) | Error |
-| CORE007 | Missing/failing/stale required evidence (L3+) | Error |
+| CORE007 | Missing/failing/stale required evidence (L3+) | Error; a warning for a draft behavior, rule or scenario that no verification definition names |
 | CORE008 | Unauthorized/stale publication (L4+) | Error |
 | CORE009 | Draft unattached artifact | Warning |
 
