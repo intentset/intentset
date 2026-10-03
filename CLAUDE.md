@@ -114,4 +114,21 @@ docs/                 implementation-plan.md, decisions/, requirements/ (frozen 
 
 See `docs/implementation-plan.md` §5 for milestones. Update the list below as milestones land.
 
-- [x] M0 scaffold, specs in `spec/`, example in `examples/`, ADRs 0001–0006
+- [x] M0 scaffold, specs in `spec/`, example in `examples/`, ADRs 0001–0006, the site
+- [x] M1 core: strict carrier reader, typed graph, validator (CORE001–CORE006, CORE009), impact, export, `contextFor`;
+      `tests/core.json`, `tests/export.json`
+- [x] M2 architecture: claims, import graph from TypeScript 7's scanner (ADR 0007), regions, layers, exceptions,
+      baseline, monorepo resolution; `tests/vsa.json`
+- [x] M3 verification: run records, freshness, coverage, Vitest and node TAP adapters; `tests/evidence.json`
+- [x] M4 publisher (`spec/publication.md`, `tests/publication.json`) and Atlas
+- [x] M5 read-only MCP server; the CLI with every command; packed-install smoke test; release workflow
+- [x] Streamlane pilot (Streamlane ADR 0033, branch `intentset-pilot`); findings in `docs/pilot-findings.md`
+- [ ] Not published. Each package needs one manual `npm publish` and its trusted publisher configured before CI can
+      release it (see the release workflow's comment). The site's install-claims test flips only after that.
+- [ ] Four open specification questions from the pilot, `docs/pilot-findings.md`: a slice's surface across packages,
+      scope hiding consumers, where evidence lives, and draft gaps at L3.
+- [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
+      (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
+
+Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
+is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).

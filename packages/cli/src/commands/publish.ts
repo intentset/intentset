@@ -13,7 +13,7 @@ import { join, resolve } from "node:path";
 import { type Visibility, sortDiagnostics } from "@intentset/core";
 import { type PublicationRequest, publish, toChunks } from "@intentset/publisher";
 import { count, formatDiagnostic, type Io } from "../output.ts";
-import { outputProblem } from "../outputs.ts";
+import { outputDirProblem, outputProblem } from "../outputs.ts";
 import type { Session } from "../session.ts";
 
 export interface PublishCliOptions {
@@ -58,6 +58,8 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
   if (existsSync(dir) && readdirSync(dir).length > 0) {
     return fail(`--out ${options.out} is not empty; publish into a new or empty directory so nothing stale survives.`);
   }
+  const where = outputDirProblem(repo, dir);
+  if (where !== null) return fail(`--out ${options.out} ${where}.`);
 
   // The request exactly as given: a dimension left out stays out, and the publisher refuses it (no implicit wildcard).
   const request = {
