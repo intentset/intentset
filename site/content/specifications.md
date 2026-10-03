@@ -36,4 +36,4 @@ Intentset separates product meaning from implementation architecture and platfor
 A conformance report names its scope, snapshot, specification version, checks, and exceptions. Linked evidence is not the same as passing evidence, and passing tests do not prove every documented promise correct.
 
 > [!NOTE]
-> All three documents are initial drafts. The TypeScript reference implementation is planned.
+> All three documents are initial drafts. The TypeScript reference implementation, version 0.1, implements them, and its conformance suite is published for other implementations.

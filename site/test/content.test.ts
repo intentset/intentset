@@ -86,6 +86,18 @@ const PAGE_OF: Record<string, string> = {
   about: "about/index.html",
 };
 
+/**
+ * Headings revised on 2026-10-03, when the 0.1 toolchain was published and the
+ * roadmap's future work became delivered work. The IA document stays frozen as
+ * the handoff; site/content is the copy's source of truth from here, and this
+ * list is what may differ from the handoff.
+ */
+const REVISED_HEADINGS: Record<string, string> = {
+  "Next: validate the model": "Delivered in 0.1: validate the model",
+  "Then: connect the repository": "Delivered in 0.1: connect the repository",
+  "Then: help people and agents review": "Delivered in 0.1: help people and agents review",
+};
+
 test("each page carries the IA document's copy verbatim: its heading, its first paragraph and its section headings", async () => {
   const blocks = await copyBlocks();
   assert.deepEqual([...blocks.keys()].sort(), Object.keys(PAGE_OF).sort(), "every copy section has a page");
@@ -95,32 +107,53 @@ test("each page carries the IA document's copy verbatim: its heading, its first 
     const h1 = text(/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? "");
     assert.equal(h1, block.h1, `${name}: h1`);
     assert.ok(body.includes(block.first), `${name}: first paragraph is not verbatim: ${block.first}`);
-    for (const heading of block.headings) {
+    for (const original of block.headings) {
+      const heading = REVISED_HEADINGS[original] ?? original;
       assert.ok(body.includes(heading), `${name}: section heading is not verbatim: ${heading}`);
     }
   }
 });
 
-test("the status notes the IA names are on their pages, as callouts", async () => {
+test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
   const notes: Array<[string, string]> = [
-    ["index.html", "The specifications are ready for review. The reference toolchain is being designed."],
+    [
+      "index.html",
+      "The specifications are ready for review. A first reference toolchain, version 0.1, is published to try them against.",
+    ],
     ["index.html", "Illustrative model. These links describe the proposed structure, not a live verification report."],
     [
       "start/index.html",
-      "This is a manual adoption guide for the v0.1 draft. There is no installation command in this package.",
+      "This is a manual adoption guide for the v0.1 draft. To check your records as you go, install the reference toolchain with npm install --save-dev @intentset/cli, then run npx intentset init and npx intentset validate.",
     ],
     [
       "specifications/index.html",
-      "All three documents are initial drafts. The TypeScript reference implementation is planned.",
+      "All three documents are initial drafts. The TypeScript reference implementation, version 0.1, implements them, and its conformance suite is published for other implementations.",
     ],
     [
       "markset/index.html",
-      "Upstream Markset compatibility will be pinned and tested before the reference publisher ships.",
+      "The reference publisher pins Markset 0.3.4 and validates every document it generates with Markset before writing it.",
     ],
   ];
   for (const [page, note] of notes) {
     const html = await readFile(join(dist, page), "utf8");
-    const callouts = [...html.matchAll(/<div class="ms-callout-body">([\s\S]*?)<\/div>/g)].map((m) => text(m[1]));
+    // Inline code becomes a space when tags are stripped, so close up the space before punctuation.
+    const callouts = [...html.matchAll(/<div class="ms-callout-body">([\s\S]*?)<\/div>/g)].map((m) =>
+      text(m[1]).replace(/\s+([,.;:])/g, "$1"),
+    );
     assert.ok(callouts.includes(note), `${page}: no callout reads "${note}"`);
+  }
+  // Superseded on 2026-10-03, when 0.1 was published: none may come back.
+  const retired = [
+    "The reference toolchain is being designed",
+    "There is no installation command",
+    "The TypeScript reference implementation is planned",
+    "before the reference publisher ships",
+    "The planned publisher",
+    "not yet presented as finished tools",
+    "The working name is Intentset",
+  ];
+  for (const page of Object.values(PAGE_OF)) {
+    const body = text(await readFile(join(dist, page), "utf8"));
+    for (const phrase of retired) assert.ok(!body.includes(phrase), `${page} still says "${phrase}"`);
   }
 });

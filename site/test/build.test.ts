@@ -128,12 +128,27 @@ test("CNAME names the homepage's host, and the shell links the two stylesheets r
   }
 });
 
-test("no page claims an install path: the toolchain is not shipped (flipped in M5)", () => {
+test("every install command on the site names a published package of this repository", async () => {
+  // Flipped in M5, 2026-10-03, when 0.1.0 reached npm. Before then no page could
+  // name an install path; now each @intentset package a page names must be one
+  // this repository publishes, so the site cannot point at a package that is not.
+  const published = new Set<string>();
+  for (const dir of await readdir(join(root, "packages"))) {
+    const manifest = JSON.parse(await readFile(join(root, "packages", dir, "package.json"), "utf8"));
+    if (!manifest.private) published.add(manifest.name);
+  }
+  let named = 0;
   for (const [page, doc] of html) {
     const body = text(doc.slice(doc.indexOf("<body")));
-    assert.doesNotMatch(body, /npm install/i, page);
-    assert.doesNotMatch(body, /npx intentset/i, page);
+    for (const m of body.matchAll(/npm install[^@]*(@intentset\/[a-z-]+)/g)) {
+      named++;
+      assert.ok(
+        published.has(m[1]),
+        `${page} tells readers to install ${m[1]}, which this repository does not publish`,
+      );
+    }
   }
+  assert.ok(named > 0, "the Start page names the package to install");
 });
 
 test("the only destinations outside the site are the repository, Markset, Coral Reef and the profile's references", () => {

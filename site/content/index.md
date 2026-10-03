@@ -16,7 +16,7 @@ Start with readable files in your repository. Build a product model that people 
 [[Read the draft specification](specifications/index.html)]{.button .primary} [[Explore an example](#example)]{.button}
 
 > [!NOTE]
-> The specifications are ready for review. The reference toolchain is being designed.
+> The specifications are ready for review. A first reference toolchain, version 0.1, is published to try them against.
 
 ::col
 
@@ -140,7 +140,7 @@ The document layer
 {.lead}
 Intentset defines what the product model means. Markset provides the document layer for reading and sharing it.
 
-Intentset profiles add metadata and document conventions without adding product-specific rendering syntax. The planned publisher turns reviewed product knowledge into portable Markset documents for people, support teams, and customer-facing answers.
+Intentset profiles add metadata and document conventions without adding product-specific rendering syntax. The publisher turns reviewed product knowledge into portable Markset documents for people, support teams, and customer-facing answers.
 
 [See how Markset fits](markset/index.html)
 
@@ -168,7 +168,7 @@ Project status
 
 The v0.1 package defines the product model, traceable vertical slices, and a TypeScript + AWS Amplify Gen 2 reference profile.
 
-Validation, change-impact reports, a Product Atlas, and agent context are on the implementation roadmap. They are not yet presented as finished tools.
+Validation, architecture checks, change-impact reports, a Product Atlas, reviewed publication, and agent context ship in the 0.1 reference toolchain. They are early releases, to try against one real capability.
 
 [Read the specifications](specifications/index.html) · [View the roadmap](roadmap/index.html)
 :::

@@ -13,7 +13,7 @@ An Intentset profile defines frontmatter fields, document sections, relationship
 
 ## Publication carries the context
 
-The planned publisher selects reviewed knowledge for a specific audience and release, then produces Markset documents with source provenance. Those documents can support a website, help center, or retrieval system.
+The publisher selects reviewed knowledge for a specific audience and release, then produces Markset documents with source provenance. Those documents can support a website, help center, or retrieval system.
 
 ## Source remains source
 
@@ -22,4 +22,4 @@ Generated pages are views. Product records remain versioned in the repository, a
 [[Read the Markset integration section](../specifications/core/index.html#{{coreMarksetSection}})]{.button .primary} [[Visit Markset]({{markset}})]{.button}
 
 > [!NOTE]
-> Upstream Markset compatibility will be pinned and tested before the reference publisher ships.
+> The reference publisher pins Markset 0.3.4 and validates every document it generates with Markset before writing it.

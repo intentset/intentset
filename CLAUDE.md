@@ -123,8 +123,10 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
 - [x] M4 publisher (`spec/publication.md`, `tests/publication.json`) and Atlas
 - [x] M5 read-only MCP server; the CLI with every command; packed-install smoke test; release workflow
 - [x] Streamlane pilot (Streamlane ADR 0033, branch `intentset-pilot`); findings in `docs/pilot-findings.md`
-- [ ] Not published. Each package needs one manual `npm publish` and its trusted publisher configured before CI can
-      release it (see the release workflow's comment). The site's install-claims test flips only after that.
+- [x] Published 0.1.0, 2026-10-03: all nine packages by hand, trusted publishers configured, so the next release goes
+      from CI on a `v*` tag. The registry smoke test passes. intentset.org deploys from GitHub Actions with HTTPS
+      enforced. The site's copy was revised the same day where it said the toolchain was unbuilt; `site/content` is
+      the copy's source of truth now, and the IA document stays frozen as the handoff.
 - [x] The pilot's four specification questions, decided 2026-10-03 (`docs/pilot-findings.md`): `entrypoints` per
       package, out-of-scope importers as warnings, evidence kept out of the commit it assesses, draft gaps as warnings.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
