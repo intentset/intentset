@@ -386,6 +386,7 @@ export function checkUnclassified(model: Model): Finding[] {
     for (const file of [...files].sort()) {
       if (
         !/\.[cm]?[jt]sx?$/.test(file) ||
+        matchAny(model.config.tests, file) ||
         file === slice.meta.entrypoint ||
         model.underBackend(file) ||
         !model.inScope(file)
