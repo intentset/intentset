@@ -1,0 +1,14 @@
+---
+markset: 0
+---
+
+# Open foundations for a changing way of building software.
+
+{.lead}
+Intentset is being developed as an open-source framework for teams building with humans and AI agents. It starts from a simple need: keep the product's promises connected as implementation changes.
+
+Coral Reef Ventures is the organization behind Intentset, Markset, and Streamlane. Each addresses a different part of the work: documents, product meaning, and work management. Each can be adopted independently.
+
+The working name is Intentset. The specifications are in draft; repository, licensing, and contribution details will be published before the first public release.
+
+[[Explore Coral Reef Ventures]({{coral}})]{.button .primary} [[Read the draft](../specifications/index.html)]{.button}

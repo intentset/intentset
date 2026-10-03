@@ -1,0 +1,277 @@
+/* The intentset.org theme, layered over markset.css the way a theme stylesheet
+ * is layered over a Markset document (Markset spec §6). It sets the tokens the
+ * default stylesheet reads, styles the shell (skip link, header, nav, contents
+ * rail, footer) and the handful of author classes the pages use: the reserved
+ * ones from §5 plus .button, .hero, .model, .example, .adopt, .status,
+ * .closing, .record and .site-back.
+ *
+ * System fonts only, nothing loaded from another origin, no script. Every
+ * color is a light-dark() pair, as in markset.css, so the reader's system
+ * preference picks the scheme and nothing in a document chooses it.
+ *
+ * Structure follows docs/requirements/wireframes/intentset.html: an editorial
+ * hero beside the traceability model, a full-width worked example, three
+ * audience cards, paired sections, four adoption steps, a status band. At
+ * 47.5rem (760px) and below the navigation wraps and the hero and cards stack. */
+
+/* ---- tokens -------------------------------------------------------------- */
+body {
+  --ms-font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ms-font-heading: var(--ms-font-body);
+  --ms-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ms-base: 1.0625rem;
+  --ms-measure: 44rem;
+  --ms-measure-wide: 72.5rem;
+  --ms-radius: 0.375rem;
+
+  --ms-fg: light-dark(#173b38, #e4ebe7);
+  --ms-fg-muted: light-dark(#4f615d, #a6b4ae);
+  --ms-bg: light-dark(#f7f8f1, #121917);
+  --ms-surface: light-dark(#eaf0e7, #1b2422);
+  --ms-border: light-dark(#cfd9d1, #2f3c38);
+  --ms-accent: light-dark(#1f6b5a, #7fcbb0);
+  --ms-tone-info: light-dark(#1f6b5a, #7fcbb0);
+
+  --site-ink: var(--ms-fg);
+  --site-focus: light-dark(#cb5430, #f29a74);
+  --site-gutter: 2rem;
+  --site-section: clamp(2.75rem, 6vw, 4.5rem);
+  line-height: 1.65;
+}
+@media (max-width: 47.5rem) {
+  body { --site-gutter: 1rem; }
+}
+
+/* ---- shell --------------------------------------------------------------- */
+html { scroll-behavior: smooth; overflow-x: clip; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+body { margin: 0; background: var(--ms-bg); color: var(--ms-fg); overflow-wrap: break-word; }
+
+/* Links are ink with an accent underline, which reads on both grounds; the
+ * focus ring is one color everywhere, and always visible. */
+/* Inline links take vertical padding, which an inline box adds to its hit area
+ * without moving the line: a 17px link is then 26px tall rather than 20. */
+a { color: inherit; text-decoration-color: var(--ms-accent); text-decoration-thickness: 1px; text-underline-offset: 0.2em; padding-block: 0.2rem; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--site-focus); outline-offset: 3px; border-radius: 2px; }
+main:focus { outline: none; }
+
+.site-skip {
+  position: absolute;
+  left: 0.75rem;
+  top: -100px;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--ms-bg);
+  color: var(--ms-fg);
+  border: 1px solid var(--ms-fg);
+  border-radius: var(--ms-radius);
+}
+.site-skip:focus { top: 0.75rem; }
+
+.site-header, .site-footer, .site-layout {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--ms-measure-wide);
+  margin-inline: auto;
+  padding-inline: var(--site-gutter);
+}
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1.25rem;
+  /* The rule is drawn inside the gutters, so it starts at the content's left edge. */
+  background: linear-gradient(var(--ms-border), var(--ms-border)) no-repeat center bottom / calc(100% - 2 * var(--site-gutter)) 1px;
+}
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  padding-block: 0.25rem;
+}
+.site-mark { width: 1.75rem; height: 1.75rem; border-radius: 0.4rem; }
+.site-nav { display: flex; flex-wrap: wrap; gap: 0 1.5rem; font-size: 0.95rem; }
+.site-nav a, .site-footer-nav a { display: inline-block; padding-block: 0.5rem; text-decoration: none; color: var(--ms-fg-muted); }
+.site-nav a:hover, .site-nav a[aria-current="page"], .site-footer-nav a:hover, .site-footer-nav a[aria-current="page"] { color: var(--ms-fg); text-decoration: underline; text-decoration-color: var(--ms-accent); }
+.site-nav a[aria-current="page"] { color: var(--ms-fg); }
+
+/* The contents rail, beside the long documents. */
+.site-layout.has-rail { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 2.5rem; align-items: start; }
+.site-layout.has-rail > * { min-width: 0; }
+.site-toc { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; padding-block: 2.5rem; font-size: 0.9rem; }
+.site-toc ul { list-style: none; margin: 0; padding: 0; }
+.site-toc li { margin: 0; }
+.site-toc .toc-3 { padding-left: 1rem; }
+.site-toc a { display: inline-block; padding-block: 0.3rem; color: var(--ms-fg-muted); text-decoration: none; }
+.site-toc a:hover { color: var(--ms-fg); text-decoration: underline; }
+.site-rail-title { margin: 0 0 0.5rem; font-size: 0.72rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ms-fg-muted); }
+@media (max-width: 60rem) {
+  .site-layout.has-rail { grid-template-columns: 1fr; gap: 0; }
+  .site-toc { position: static; max-height: none; padding-block: 1.5rem 0; }
+}
+
+.site-footer {
+  padding-block: 2rem 3rem;
+  font-size: 0.85rem;
+  color: var(--ms-fg-muted);
+  background: linear-gradient(var(--ms-border), var(--ms-border)) no-repeat center top / calc(100% - 2 * var(--site-gutter)) 1px;
+}
+.site-footer-nav { display: flex; flex-wrap: wrap; gap: 0 1.25rem; margin-bottom: 0.75rem; }
+.site-footer p { margin: 0.25rem 0 0; }
+.site-footer strong { color: var(--ms-fg); }
+.site-footer p a { display: inline-block; padding-block: 0.25rem; }
+
+/* ---- document ------------------------------------------------------------ */
+/* The layout box above carries the gutters, so the document runs to its track.
+ * The cap stays at 100%: with margin auto and no cap the main shrink-to-fits
+ * its widest line and overflows the track on a phone (measured: 662px in 358). */
+.ms-document { width: 100%; max-width: 100%; padding: 2.5rem 0 4rem; }
+.ms-document > hr { max-width: none; margin-block: var(--site-section); border: 0; border-top: 1px solid var(--ms-border); }
+.ms-document h1, .ms-document h2, .ms-document h3 { font-weight: 650; letter-spacing: -0.025em; text-wrap: balance; }
+.ms-document h1 { font-size: clamp(2.4rem, 5vw, 4.25rem); line-height: 1.04; letter-spacing: -0.04em; }
+.ms-document h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1.15; }
+.ms-document h3 { font-size: 1.3rem; line-height: 1.3; }
+.ms-document > h1 { max-width: 20ch; }
+.ms-document > h2 { max-width: 24ch; }
+.ms-document :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: 1rem; }
+.ms-document > .lead, .hero .lead { max-width: 60ch; font-size: 1.25rem; line-height: 1.5; }
+.eyebrow { font-family: var(--ms-font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; color: var(--ms-fg-muted); }
+.ms-document > .eyebrow:first-child { margin-top: 0; }
+.ms-document > :is(h1, h2, h3) + p, .ms-document > :is(h1, h2, h3) + ul { margin-top: 1rem; }
+.badge { font-family: var(--ms-font-mono); letter-spacing: 0.04em; }
+
+/* Links inside the document keep the ink/accent treatment; the default sheet
+ * colors them with the accent, which is the one rule overridden here. */
+.ms-document a { color: inherit; }
+.ms-document a:hover { color: var(--ms-accent); }
+
+/* Buttons: a link inside a span classed .button, [[Label](href)]{.button}.
+ * At least 44px tall, which is the primary-target minimum the IA names. */
+.ms-span.button > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid var(--ms-fg);
+  border-radius: var(--ms-radius);
+  background: transparent;
+  color: var(--ms-fg);
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.ms-span.button > a:hover { background: var(--ms-surface); color: var(--ms-fg); }
+.ms-span.button.primary > a { background: var(--ms-fg); color: var(--ms-bg); }
+.ms-span.button.primary > a:hover { background: color-mix(in oklab, var(--ms-fg), var(--ms-bg) 15%); color: var(--ms-bg); }
+p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+@media (max-width: 47.5rem) {
+  p:has(> .ms-span.button) { flex-direction: column; align-items: stretch; }
+  .ms-span.button > a { width: 100%; }
+}
+
+/* Callouts carry the status notes: quiet, not alarming. */
+.ms-callout { background: transparent; border-color: var(--ms-border); border-left-color: var(--ms-accent); }
+.ms-callout-title { font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Cards and grid items share one surface. */
+.ms-card { border: 1px solid var(--ms-border); border-top-width: 1px; background: var(--ms-surface); padding: 1.5rem; }
+.ms-card[data-tone="neutral"] { border-top-color: var(--ms-border); }
+.ms-card-title { font-size: 1.3rem; }
+.ms-grid-item { border: 0; padding: 0; background: none; }
+.ms-grid-item > .ms-card { height: 100%; box-sizing: border-box; }
+.ms-grid-item h2 { font-size: 1.4rem; }
+.ms-grid-item > .ms-card > * + * { margin-top: 0.85rem; }
+.ms-grid-item > .ms-card > p:has(> .ms-span.button) { margin-top: 1.25rem; }
+.ms-grid { gap: 1.5rem; }
+.ms-document > :is(.ms-grid, .ms-columns, .ms-steps, .ms-card) { max-width: none; }
+.ms-document > .ms-grid, .ms-document > .ms-steps { margin-top: 2rem; }
+
+/* ---- home: hero and traceability model ------------------------------------ */
+.ms-columns.hero { align-items: center; gap: clamp(2rem, 5vw, 4.5rem); padding-block: clamp(1rem, 4vw, 3rem) 1rem; }
+.hero .ms-column > * + * { margin-top: 1.25rem; }
+.hero .ms-column > .eyebrow + h1 { margin-top: 0.75rem; }
+.hero .ms-column > p:has(> .ms-span.button) { margin-top: 1.75rem; }
+.hero .ms-column > .ms-callout { margin-top: 1.5rem; }
+.model .ms-steps { margin-top: 1rem; }
+.model .ms-step { background: var(--ms-bg); border: 1px solid var(--ms-border); border-radius: var(--ms-radius); padding: 0.7rem 0.9rem 0.7rem 3rem; min-height: 0; }
+.model .ms-step + .ms-step { margin-top: 0.75rem; }
+.model .ms-step::before { left: 0.9rem; top: 0.85rem; }
+.model .ms-step .badge { display: block; width: fit-content; margin-bottom: 0.2rem; }
+.model > .small { margin-top: 1rem; }
+
+/* The worked example on the home page: prose beside the trace. */
+.example .ms-columns { margin-top: 1rem; }
+.example ul { margin: 0; padding-left: 1.2rem; }
+.example li + li { margin-top: 0.5rem; }
+.example > .ms-callout { margin-top: 1.5rem; }
+
+/* Four adoption steps in a row on a wide screen, a column on a narrow one. */
+@media (min-width: 60rem) {
+  .ms-steps.adopt { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem; }
+  .ms-steps.adopt .ms-step + .ms-step { margin-top: 0; }
+  .ms-steps.adopt .ms-step:not(:last-child)::after { display: none; }
+}
+
+/* The status band: ink ground, paper text, full width. */
+.ms-card.status { background: var(--ms-fg); color: var(--ms-bg); border-color: var(--ms-fg); padding: clamp(1.5rem, 4vw, 2.75rem); }
+.ms-card.status :is(h2, p, a, .eyebrow) { color: inherit; }
+.ms-card.status .eyebrow { opacity: 0.75; }
+.ms-card.status > * + * { margin-top: 1rem; }
+.ms-card.status > .eyebrow + h2 { margin-top: 0.5rem; }
+.ms-card.status a { text-decoration-color: currentColor; }
+.ms-card.status a:hover { color: inherit; opacity: 0.8; }
+
+/* The closing: centered, no surface. */
+.ms-card.closing { background: none; border: 0; padding: 1rem 0 0; text-align: center; }
+.ms-card.closing > * { margin-inline: auto; }
+.ms-card.closing > h2 { max-width: 24ch; }
+.ms-card.closing > .lead { max-width: 60ch; }
+.ms-card.closing > p:has(> .ms-span.button) { justify-content: center; margin-top: 1.75rem; }
+
+/* ---- documents and the worked example ------------------------------------- */
+.site-source { font-size: 0.9rem; color: var(--ms-fg-muted); }
+.site-source a { display: inline-block; padding-block: 0.25rem; }
+.ms-document table { font-size: 0.95rem; }
+.ms-document table a { display: inline-block; padding-block: 0.1rem; }
+.ms-document pre { font-size: 0.85rem; }
+.ms-card.record { padding: 0.5rem 1.25rem; }
+.ms-card.record table { margin: 0; font-size: 0.95rem; }
+.ms-card.record th { display: none; }
+.ms-card.record td { padding: 0.5rem 0.75rem 0.5rem 0; vertical-align: top; }
+.ms-card.record tr:last-child td { border-bottom: 0; }
+.ms-card.record td:first-child { width: 8rem; color: var(--ms-fg-muted); font-size: 0.85rem; }
+.ms-document > .ms-card.record + h1 { margin-top: 2rem; font-size: clamp(2rem, 4vw, 3rem); }
+.site-back { margin-top: var(--site-section); padding-top: 1.5rem; border-top: 1px solid var(--ms-border); }
+.site-back a { display: inline-block; padding-block: 0.25rem; }
+
+/* ---- narrow screens --------------------------------------------------------- */
+@media (max-width: 47.5rem) {
+  .site-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; padding-block: 1rem 0.75rem; }
+  .site-nav { gap: 0 1.25rem; font-size: 0.9rem; }
+  .ms-document { padding-block: 1.75rem 3rem; }
+  .ms-document h1 { font-size: clamp(2.1rem, 9vw, 2.75rem); }
+  .ms-document h2 { font-size: 1.6rem; }
+  .ms-document > .lead, .hero .lead { font-size: 1.1rem; }
+  .ms-columns, .ms-columns.hero { grid-template-columns: 1fr; }
+  .ms-card { padding: 1.25rem; }
+  .ms-card.record td:first-child { width: 6rem; }
+}
+
+/* ---- print ---------------------------------------------------------------- */
+@media print {
+  .site-skip, .site-nav, .site-toc { display: none; }
+  .site-layout.has-rail { display: block; }
+  .ms-card.status { background: none; color: inherit; border: 1px solid var(--ms-border); }
+}

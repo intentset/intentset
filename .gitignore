@@ -6,3 +6,7 @@ packages/*/dist/
 test-results/
 playwright-report/
 .DS_Store
+# Staged by packages/conformance-suite/stage.ts at build time; tests/, spec/ and examples/ are canonical.
+packages/conformance-suite/cases/
+packages/conformance-suite/schemas/
+packages/conformance-suite/examples/

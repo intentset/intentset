@@ -4,9 +4,12 @@
   "private": true,
   "description": "Conformance harness: validates tests/*.json against spec/conformance.schema.json and runs each section's driver against this implementation.",
   "license": "MIT",
+  "homepage": "https://intentset.org/",
   "type": "module",
   "exports": {
-    ".": "./src/harness.ts"
+    ".": "./src/harness.ts",
+    "./fixtures": "./src/fixtures.ts",
+    "./schema": "./src/schema.ts"
   },
   "dependencies": {
     "@intentset/core": "^0.1.0",
