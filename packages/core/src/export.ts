@@ -142,7 +142,7 @@ function sortedSlice(slice: SliceMeta): SliceMeta {
   const out: SliceMeta = {
     kind: slice.kind,
     domain: slice.domain,
-    entrypoint: slice.entrypoint,
+    entrypoints: [...slice.entrypoints].sort(compareStrings),
     layers,
     claims: [...slice.claims]
       .map((claim) => ({ kind: claim.kind, path: claim.path }))

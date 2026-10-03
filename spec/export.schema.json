@@ -354,7 +354,7 @@
     "slice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "domain", "entrypoint", "layers", "claims", "usesResources"],
+      "required": ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"],
       "properties": {
         "kind": {
           "enum": ["product", "technical"]
@@ -365,8 +365,14 @@
         "domain": {
           "type": "string"
         },
-        "entrypoint": {
-          "type": "string"
+        "entrypoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
         },
         "layers": {
           "type": "object",

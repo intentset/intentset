@@ -125,7 +125,11 @@ function sliceSection(model: Model, slice: Artifact): string[] {
     "",
   ];
   const items: string[] = [];
-  if (meta !== undefined) items.push(`- **Entrypoint:** ${code(meta.entrypoint)}`);
+  if (meta !== undefined) {
+    items.push(
+      `- **${meta.entrypoints.length === 1 ? "Entrypoint" : "Entrypoints"}:** ${meta.entrypoints.map(code).join(", ")}`,
+    );
+  }
   if (meta?.rationale !== undefined) items.push(`- **Rationale:** ${text(meta.rationale)}`);
   for (const { kind, label } of RELATIONS) {
     const targets = model.from(id, kind);

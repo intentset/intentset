@@ -396,7 +396,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
     problem(
       `${base}/slice`,
       "A slice must carry the `slice` metadata block.",
-      "Add `slice:` with kind, domain, entrypoint, layers, claims and usesResources (VSA §3).",
+      "Add `slice:` with kind, domain, entrypoints, layers, claims and usesResources (VSA §3).",
     );
   }
   let verification: VerificationMeta | undefined;
@@ -439,6 +439,8 @@ interface ListOptions {
   pattern?: RegExp;
   /** Code for a repeated entry; CORE001 unless the list is a relationship. */
   duplicateCode?: string;
+  /** What to do about a repeated entry, when the list holds something other than IDs. */
+  duplicateRemediation?: string;
 }
 
 /**
@@ -479,7 +481,7 @@ function stringList(
       problem(
         `${field}/${i}`,
         `\`${item}\` appears twice in \`${name}\`.`,
-        "Keep one entry per ID.",
+        options.duplicateRemediation ?? "Keep one entry per ID.",
         options.duplicateCode ?? "CORE001",
       );
       return;
@@ -575,23 +577,25 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     problem(
       field,
       "`slice` must be a mapping.",
-      "Write kind, domain, entrypoint, layers, claims and usesResources under `slice:`.",
+      "Write kind, domain, entrypoints, layers, claims and usesResources under `slice:`.",
     );
     return null;
   }
   let ok = true;
-  const known = ["kind", "rationale", "domain", "entrypoint", "layers", "claims", "usesResources"];
+  const known = ["kind", "rationale", "domain", "entrypoints", "layers", "claims", "usesResources"];
   for (const key of Object.keys(value).sort(compareStrings)) {
     if (!known.includes(key)) {
       problem(
         `${field}/${pointerToken(key)}`,
         `Unknown slice key \`${key}\`.`,
-        `The slice keys are ${known.join(", ")} (VSA §3).`,
+        key === "entrypoint"
+          ? "A slice lists its public surfaces, one per package it spans: write `entrypoints: [path]` (VSA §3)."
+          : `The slice keys are ${known.join(", ")} (VSA §3).`,
       );
       ok = false;
     }
   }
-  for (const key of ["kind", "domain", "entrypoint", "layers", "claims", "usesResources"]) {
+  for (const key of ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"]) {
     if (!Object.hasOwn(value, key) || value[key] === null) {
       problem(`${field}/${key}`, `Slice field \`${key}\` is missing.`, `Add \`${key}\` under slice (VSA §3).`);
       ok = false;
@@ -617,17 +621,22 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
       ok = false;
     }
   }
-  for (const key of ["domain", "entrypoint"] as const) {
-    if (Object.hasOwn(value, key) && value[key] !== null && typeof value[key] !== "string") {
-      problem(
-        `${field}/${key}`,
-        `\`slice.${key}\` must be a string.`,
-        key === "domain"
-          ? "Name the product-oriented grouping the slice belongs to."
-          : "Give the repository-relative path of the slice's public entry module.",
-      );
-      ok = false;
-    }
+  if (Object.hasOwn(value, "domain") && value.domain !== null && typeof value.domain !== "string") {
+    problem(
+      `${field}/domain`,
+      "`slice.domain` must be a string.",
+      "Name the product-oriented grouping the slice belongs to.",
+    );
+    ok = false;
+  }
+  let entrypoints: string[] = [];
+  if (Object.hasOwn(value, "entrypoints") && value.entrypoints !== null) {
+    const list = stringList(value.entrypoints, `${field}/entrypoints`, "entrypoints", problem, {
+      minItems: 1,
+      duplicateRemediation: "List each entrypoint once.",
+    });
+    if (list === null) ok = false;
+    else entrypoints = list;
   }
   const layers: Record<string, string[]> = {};
   if (Object.hasOwn(value, "layers") && value.layers !== null) {
@@ -680,7 +689,7 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
   const slice: SliceMeta = {
     kind: value.kind as SliceMeta["kind"],
     domain: value.domain as string,
-    entrypoint: value.entrypoint as string,
+    entrypoints,
     layers,
     claims,
     usesResources,

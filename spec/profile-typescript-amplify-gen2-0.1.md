@@ -13,7 +13,7 @@ src/
   app/                         # application and route composition
   features/<domain>/<slice>/
     slice.md                   # sole slice metadata record
-    index.ts                   # cross-slice public contract
+    index.ts                   # cross-slice public contract: the slice's entrypoint in this package
     ui/
     client/
     domain/{models,policies,use-cases}/
@@ -37,14 +37,14 @@ This is a reference mapping; directory migrations are not a prerequisite to firs
 
 | Rule | Requirement |
 |---|---|
-| TS001 | A slice's cross-slice contract MUST be its explicit `index.ts` exports |
-| TS002 | Cross-slice imports MUST use an exact configured alias and MUST resolve to that contract |
-| TS003 | Screens MUST NOT be exported from `index.ts`; only the explicitly configured Router may import screen internals directly |
+| TS001 | A slice's cross-slice contract MUST be the explicit exports of its entrypoints, one `index.ts` per package it spans |
+| TS002 | Cross-slice imports MUST use an exact configured alias and MUST resolve to one of those entrypoints |
+| TS003 | Screens MUST NOT be exported from an entrypoint; only the explicitly configured Router may import screen internals directly |
 | TS004 | Type-only imports, dynamic imports, re-exports, and path aliases MUST be included in boundary analysis |
 | TS005 | Runtime resolver/bundler and type-checker MUST agree on alias resolution |
 | TS006 | Wildcard aliases opening another slice's internals MUST NOT be permitted |
 
-Example alias: `@assessment/schedule` → `src/features/assessment/schedule/index.ts`. A repository that lets its router import screens directly MUST name that one file (for example `src/app/routes/Router.tsx`) and MUST NOT widen the exemption to all application files. A separate composition entrypoint is an optional future design requiring an ADR, not the inherited convention. An alias is convenience, not an access-control boundary: the checker must resolve relative and transitive re-export paths too. TypeScript `paths` does not rewrite emitted imports, so bundler/runtime configuration must match it. [TypeScript paths documentation](https://www.typescriptlang.org/tsconfig/paths.html)
+Example alias: `@assessment/schedule` → `src/features/assessment/schedule/index.ts`. A slice that spans packages, its logic in a library package and its UI in an app, has an `index.ts` in each, and a consumer normally imports the one in its own package. A repository that lets its router import screens directly MUST name that one file (for example `src/app/routes/Router.tsx`) and MUST NOT widen the exemption to all application files. A separate composition entrypoint is an optional future design requiring an ADR, not the inherited convention. An alias is convenience, not an access-control boundary: the checker must resolve relative and transitive re-export paths too. TypeScript `paths` does not rewrite emitted imports, so bundler/runtime configuration must match it. [TypeScript paths documentation](https://www.typescriptlang.org/tsconfig/paths.html)
 
 ## 3. Internal layer matrix
 
@@ -60,7 +60,7 @@ Each row may import itself plus listed targets. Test files MAY import their own 
 | `domain/policies` | models |
 | `domain/models` | models |
 | `client` | models |
-| `index.ts` | explicit contract-safe types, constants, policies, use-cases, client functions, and hooks that do not import other slices |
+| `index.ts` (each entrypoint) | explicit contract-safe types, constants, policies, use-cases, client functions, and hooks that do not import other slices |
 
 UI MUST NOT call the backend directly. Policies/models MUST NOT import UI, clients, or cloud SDKs. Client code MAY use technical infrastructure. Use-cases MAY orchestrate declared foreign slice contracts. Shared neutral types/utilities are available to each layer. Features may import neutral infrastructure; backend operations remain restricted to client seams. Shared MUST NOT import infrastructure; infrastructure MAY import shared. Application initialization may configure technical clients but MUST NOT perform product service calls or own stores. The UI matrix encodes a downward flow and one responsibility per folder; type-only dependencies still count for cycle analysis. Pure exported policies MAY be called through another slice's public contract when dependency direction remains valid. Avoid a use-case importing a client that imports the use-case back.
 

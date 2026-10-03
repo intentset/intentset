@@ -193,3 +193,37 @@ test("a scope or ignore pattern the matcher cannot honour is CFG001, not silentl
     ],
   );
 });
+
+test("a slice's entrypoints are a list; the earlier single key is unknown, and each entry is checked as a path", () => {
+  const slice = baseline.find((input) => input.path === "SLICE-ASMT-SCHEDULE.md")!;
+  const entry = "src/features/assessment/schedule/index.ts";
+  const listed = `    entrypoints:\n    - ${entry}\n`;
+  assert.ok(slice.source.includes(listed));
+  const withSource = (source: string) => [
+    ...baseline.filter((input) => input !== slice),
+    plainCarrier(slice.path, source),
+  ];
+
+  const flow = validate(
+    withSource(slice.source.replace(listed, `    entrypoints: [${entry}, apps/web/index.ts]\n`)),
+    registries,
+  );
+  assert.deepEqual(flow.diagnostics, []);
+  assert.deepEqual(flow.graph.artifacts.get("SLICE-ASMT-SCHEDULE")?.meta.slice?.entrypoints, [
+    entry,
+    "apps/web/index.ts",
+  ]);
+
+  const old = readArtifact(plainCarrier(slice.path, slice.source.replace(listed, `    entrypoint: ${entry}\n`)));
+  assert.deepEqual(
+    old.diagnostics.map((d) => `${d.code} ${d.field}`),
+    ["CORE001 /intentset/slice/entrypoint", "CORE001 /intentset/slice/entrypoints"],
+  );
+  assert.match(old.diagnostics[0].remediation, /write `entrypoints: \[path\]`/);
+
+  const climbing = validate(withSource(slice.source.replace(listed, `${listed}    - ../web/index.ts\n`)), registries);
+  assert.deepEqual(
+    climbing.diagnostics.map((d) => `${d.code} ${d.field} ${d.message}`),
+    ["CORE001 /intentset/slice/entrypoints/1 Entrypoint ../web/index.ts contains `..`."],
+  );
+});

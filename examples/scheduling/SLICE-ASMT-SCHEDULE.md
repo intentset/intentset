@@ -23,7 +23,8 @@ intentset:
   slice:
     kind: product
     domain: assessment
-    entrypoint: src/features/assessment/schedule/index.ts
+    entrypoints:
+    - src/features/assessment/schedule/index.ts
     layers:
       presentation:
       - src/features/assessment/schedule/ui/**

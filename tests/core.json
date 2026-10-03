@@ -1035,19 +1035,115 @@
   },
   {
     "section": "core",
-    "name": "CORE001 entrypoint is absolute",
+    "name": "CORE001 an entrypoint is absolute",
     "baseline": "scheduling",
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.slice.entrypoint": "/src/features/assessment/schedule/index.ts"
+          "intentset.slice.entrypoints": [
+            "/src/features/assessment/schedule/index.ts"
+          ]
         }
       }
     },
     "valid": false,
     "diagnostics": [
       "CORE001"
-    ]
+    ],
+    "notes": "VSA §3: every entrypoint is a repository-relative POSIX path. The field is /intentset/slice/entrypoints/0."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 an entrypoint climbs out of the repository with ..",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.entrypoints": [
+            "src/features/assessment/schedule/index.ts",
+            "../lantern-web/src/index.ts"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "VSA §3 forbids `..`; the second entry is reported at /intentset/slice/entrypoints/1 and the first stands."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 entrypoints is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.entrypoints": []
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "VSA §3: a slice has at least one public surface, which may itself be an empty module for a leaf."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 entrypoints is a string rather than a list",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.entrypoints": "src/features/assessment/schedule/index.ts"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "One entrypoint is still written as a one-item list, so the field has one shape."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 an entrypoint listed twice",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.entrypoints": [
+            "src/features/assessment/schedule/index.ts",
+            "src/features/assessment/schedule/index.ts"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The schema's uniqueItems: the repeat is reported at /intentset/slice/entrypoints/1."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 the single entrypoint key of the earlier draft is unknown",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.entrypoints": null,
+          "intentset.slice.entrypoint": "src/features/assessment/schedule/index.ts"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001",
+      "CORE001"
+    ],
+    "notes": "There is no alias for the earlier spelling: `entrypoint` is an unknown slice key, and the required `entrypoints` is missing, so a record written to the earlier draft reports both."
   },
   {
     "section": "core",
@@ -1124,7 +1220,9 @@
           "intentset.slice": {
             "kind": "product",
             "domain": "assessment",
-            "entrypoint": "src/x.ts",
+            "entrypoints": [
+              "src/x.ts"
+            ],
             "layers": {},
             "claims": [],
             "usesResources": []
@@ -2237,7 +2335,7 @@
     "name": "CORE006 two product slices implement one released behavior, at L2",
     "baseline": "scheduling",
     "files": {
-      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoint: src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
+      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -2258,7 +2356,7 @@
     "name": "CORE006 boundary: the same two slices at L1 are not an ownership check",
     "baseline": "scheduling",
     "files": {
-      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoint: src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
+      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -2275,7 +2373,7 @@
     "name": "CORE006 boundary: a draft behavior with two slices at L2",
     "baseline": "scheduling",
     "files": {
-      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoint: src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
+      "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
     },
     "level": "L2",
     "valid": true,

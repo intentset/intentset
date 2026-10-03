@@ -81,3 +81,14 @@ for (const testCase of cases) {
     for (const d of architecture.diagnostics) assert.equal(d.origin, "architecture");
   });
 }
+
+test("VSA003 names the entrypoint in the importer's own package first, since that is the surface it should use", () => {
+  const testCase = cases.find((c) => c.name === "VSA003 a consumer reaches past the entrypoint its own package holds")!;
+  const { architecture } = runVsa(expandCase(testCase, { examplesDir: join(ROOT, "examples"), parseYaml }));
+  const [d] = architecture.diagnostics.filter((x) => x.code === "VSA003");
+  assert.match(
+    d.message,
+    /; its public surface in the package at apps\/web is apps\/web\/src\/features\/results\/index\.ts, and elsewhere src\/features\/assessment\/results\/index\.ts\.$/,
+  );
+  assert.match(d.remediation, /^Import apps\/web\/src\/features\/results\/index\.ts and /);
+});

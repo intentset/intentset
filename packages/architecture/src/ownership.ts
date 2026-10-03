@@ -6,9 +6,11 @@
  * reports the same condition as CORE006 from the graph alone; VSA001 is the
  * architecture's own statement of it, so a VSA report stands by itself.
  *
- * VSA002: every slice's entrypoint is a file in the repository and lies
- * inside one of the slice's own source claims. An empty entrypoint module is
- * allowed for a leaf.
+ * VSA002: each of a slice's entrypoints is a file in the repository and lies
+ * inside one of the slice's own source claims, and no two lie in the same
+ * package (the nearest directory above holding a package.json, or the
+ * repository root): a slice has one public surface per package it spans. An
+ * empty entrypoint module is allowed for a leaf.
  *
  * VSA012 (deleting or splitting a slice dispositions its behavior, paths and
  * contracts) is a diff between two snapshots. This check sees one snapshot,
@@ -20,7 +22,7 @@ import type { Artifact, Graph, Level } from "@intentset/core";
 import { LEVELS } from "@intentset/core";
 import { type Finding, finding } from "./finding.ts";
 import { compareStrings, matchPattern, validatePattern } from "./patterns.ts";
-import type { Model } from "./regions.ts";
+import { describePackage, type Model } from "./regions.ts";
 
 const OWNED_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
 
@@ -62,52 +64,71 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
   }
 
   for (const slice of model.slices) {
-    const entrypoint = slice.meta.entrypoint;
-    const field = "/intentset/slice/entrypoint";
-    if (entrypoint === "" || validatePattern(entrypoint) !== null || entrypoint.includes("*")) {
-      findings.push(
-        finding({
-          code: "VSA002",
-          artifact: slice.id,
-          path: slice.path,
-          field,
-          message: `${slice.id} declares the entrypoint "${entrypoint}", which is not one repository-relative file path.`,
-          remediation:
-            "Name the one file that is the slice's public contract surface, such as its index.ts (VSA002, TS001).",
-        }),
+    // The first entrypoint seen in each package; a second in the same package is reported against it.
+    const byPackage = new Map<string, string>();
+    slice.meta.entrypoints.forEach((entrypoint, i) => {
+      const field = `/intentset/slice/entrypoints/${i}`;
+      if (entrypoint === "" || validatePattern(entrypoint) !== null || entrypoint.includes("*")) {
+        findings.push(
+          finding({
+            code: "VSA002",
+            artifact: slice.id,
+            path: slice.path,
+            field,
+            message: `${slice.id} declares the entrypoint "${entrypoint}", which is not one repository-relative file path.`,
+            remediation:
+              "Name the file that is the slice's public contract surface in its package, such as its index.ts (VSA002, TS001).",
+          }),
+        );
+        return;
+      }
+      const pkg = model.packageOf(entrypoint);
+      const first = byPackage.get(pkg);
+      if (first !== undefined) {
+        findings.push(
+          finding({
+            code: "VSA002",
+            artifact: slice.id,
+            path: slice.path,
+            field,
+            message: `${slice.id} declares two entrypoints in ${describePackage(pkg)}, ${first} and ${entrypoint}; a slice has one public surface per package it spans.`,
+            remediation: `Export what ${entrypoint} offers from ${first} and remove it from entrypoints, or move it into the package it serves (VSA002).`,
+            paths: [first, entrypoint],
+          }),
+        );
+      } else byPackage.set(pkg, entrypoint);
+      if (!model.files.has(entrypoint)) {
+        findings.push(
+          finding({
+            code: "VSA002",
+            artifact: slice.id,
+            path: slice.path,
+            field,
+            message: `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
+            remediation: "Create the entrypoint, empty if the slice exposes nothing yet, or correct the path (VSA002).",
+            paths: [entrypoint],
+          }),
+        );
+        return;
+      }
+      const owned = slice.meta.claims.some(
+        (claim, k) =>
+          claim.kind === "source" && !slice.invalidClaims.includes(k) && matchPattern(claim.path, entrypoint),
       );
-      continue;
-    }
-    if (!model.files.has(entrypoint)) {
-      findings.push(
-        finding({
-          code: "VSA002",
-          artifact: slice.id,
-          path: slice.path,
-          field,
-          message: `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
-          remediation: "Create the entrypoint, empty if the slice exposes nothing yet, or correct the path (VSA002).",
-          paths: [entrypoint],
-        }),
-      );
-      continue;
-    }
-    const owned = slice.meta.claims.some(
-      (claim, i) => claim.kind === "source" && !slice.invalidClaims.includes(i) && matchPattern(claim.path, entrypoint),
-    );
-    if (!owned) {
-      findings.push(
-        finding({
-          code: "VSA002",
-          artifact: slice.id,
-          path: slice.path,
-          field,
-          message: `The entrypoint ${entrypoint} of ${slice.id} lies outside every source claim of the slice.`,
-          remediation: "Move the entrypoint into the slice's source claim, or extend the claim to cover it (VSA002).",
-          paths: [entrypoint],
-        }),
-      );
-    }
+      if (!owned) {
+        findings.push(
+          finding({
+            code: "VSA002",
+            artifact: slice.id,
+            path: slice.path,
+            field,
+            message: `The entrypoint ${entrypoint} of ${slice.id} lies outside every source claim of the slice.`,
+            remediation: "Move the entrypoint into the slice's source claim, or extend the claim to cover it (VSA002).",
+            paths: [entrypoint],
+          }),
+        );
+      }
+    });
   }
 
   return findings;

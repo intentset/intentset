@@ -16,7 +16,7 @@ The architecture regions are composition, product slices, shared neutral abstrac
 | ID | Requirement | Evidence/check |
 |---|---|---|
 | VSA001 | Every adopted non-draft behavior MUST have exactly one accountable product slice | Unique incoming `implements` |
-| VSA002 | Every slice MUST expose one declared public contract surface; it MAY be empty for a leaf | Contract record and entrypoint |
+| VSA002 | Every slice MUST expose one declared public contract surface in each package it spans; a surface MAY be empty for a leaf | Contract record and entrypoints |
 | VSA003 | Consumers MUST NOT import another slice's private implementation | Resolved dependency graph |
 | VSA004 | All cross-slice dependencies MUST be declared; each consumed contract MUST have one exposing owner | Observed vs declared edges |
 | VSA005 | Slice compile-time dependencies MUST be acyclic | Strongly connected components |
@@ -38,7 +38,7 @@ A checker MUST distinguish automatic structural checks from human assertions. It
 slice:
   kind: product
   domain: assessment
-  entrypoint: src/features/assessment/schedule/index.ts
+  entrypoints: [src/features/assessment/schedule/index.ts]
   layers:
     presentation: [src/features/assessment/schedule/ui/**]
     application: [src/features/assessment/schedule/domain/use-cases/**]
@@ -53,7 +53,9 @@ slice:
   usesResources: [RES-ASSESSMENT-DATA]
 ```
 
-`kind` is `product` or `technical`. Product slices MUST implement at least one behavior. Technical slices MUST give a `rationale`, implement none, and MUST NOT absorb product policy. `domain`, `entrypoint`, `layers`, `claims`, and `usesResources` are required; `layers` and `usesResources` may be empty in a platform-neutral profile if absence is explained in Responsibility.
+`kind` is `product` or `technical`. Product slices MUST implement at least one behavior. Technical slices MUST give a `rationale`, implement none, and MUST NOT absorb product policy. `domain`, `entrypoints`, `layers`, `claims`, and `usesResources` are required; `layers` and `usesResources` may be empty in a platform-neutral profile if absence is explained in Responsibility.
+
+`entrypoints` is a nonempty list of unique repository-relative file paths, the slice's public contract surfaces. Each MUST lie inside one of the slice's own `source` claims and resolve to a file, and a slice MUST NOT declare two entrypoints in the same package (VSA002). A file's package is the nearest ancestor directory holding a `package.json` in the repository, or the repository root when there is none. Every entrypoint is a public surface: another slice, composition or unowned code MAY import any of them, and any other file of the slice is private (VSA003). A slice whose logic and UI live in different packages has one surface in each, as a monorepo publishes each package through its own entry. (Decided 2026-10-03 after the Streamlane pilot, whose blocked-work slice keeps its rules in a core package and its components in the web app: with one entrypoint, every import of a component read as a private-file import.)
 
 A claim has `kind` (`source`, `backend`, `contract`, `verification`, `documentation`) and `path`. Paths are repository-relative POSIX paths. v0.1 patterns allow literal segments, `*` within one segment, and `**` across zero or more segments. Absolute paths, `..`, traversal through symlinks outside the repository, brace expansion, and negation are forbidden. Include/exclude precedence is therefore unnecessary. Source enumeration MUST use a versioned ignore list to exclude generated/build/vendor output. A nonempty claim matching no file is an error.
 
@@ -100,8 +102,8 @@ A behavior change review SHOULD include: observable change; rules/scenarios affe
 
 An exception record MUST include ID, rule, exact paths/edges, rationale, accountable owner, approver, creation date, expiration date, and remediation issue. Expired exceptions are errors. Exceptions MUST be visible in reports. A cycle exception means VSA005 failed with a documented exception, not that the dependency graph is acyclic.
 
-Adopt by declared scope. Baseline existing violations, block new violations, and progressively retire the baseline. A baseline is not a blanket waiver for new files or enlarged violations. Migration mode and strict conformance mode MUST be distinguishable.
+Adopt by declared scope. Baseline existing violations, block new violations, and progressively retire the baseline. A baseline is not a blanket waiver for new files or enlarged violations. Migration mode and strict conformance mode MUST be distinguishable. Consumers outside the scope that import a file inside it past a slice's public surfaces are reported as warnings (VSA003, and a profile's screen rule), so a narrow scope cannot hide them and they do not fail the scope's conformance. An entrypoint imported from outside the scope is not reported. (Decided 2026-10-03 after the Streamlane pilot, whose scope of one slice's files hid every consumer that reached past it.)
 
 ## 10. Conformance fixtures
 
-A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; deep import through relative path; alias and re-export bypass; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.1.
+A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; a slice with an entrypoint in each of two packages; two entrypoints in one package; deep import through relative path; a deep import from outside the declared scope; alias and re-export bypass; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.1.
