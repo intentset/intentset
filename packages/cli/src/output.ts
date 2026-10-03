@@ -12,6 +12,8 @@ export interface Io {
   stderr(s: string): void;
   /** The directory the command was run from; relative paths in arguments resolve against it. */
   cwd: string;
+  /** Aborted to stop a long-running command (serve, mcp); the bin aborts it on SIGINT and SIGTERM. */
+  signal?: AbortSignal;
 }
 
 /** The checker identity a report carries (Core §11: publish the checker version). */

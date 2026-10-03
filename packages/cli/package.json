@@ -39,5 +39,8 @@
     "@intentset/atlas": "^0.1.0",
     "@intentset/mcp": "^0.1.0",
     "@intentset/conformance-suite": "^0.1.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0"
   }
 }

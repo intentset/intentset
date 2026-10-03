@@ -5,9 +5,9 @@
  *
  * Exit codes (Core §11, ADR 0004): 0 no errors, 1 validation errors, 2
  * invocation or tool failure. validate, graph, architecture check, impact,
- * context and review never write; graph --out, architecture check
- * --write-baseline, evidence import --out and publish --out write only what
- * they name; init only creates.
+ * context, review, serve and mcp never write; graph --out, architecture
+ * check --write-baseline, evidence import --out, publish --out and serve
+ * --out write only what they name; init only creates.
  */
 import { parseArgs } from "node:util";
 import type { Mode } from "@intentset/architecture";
@@ -19,8 +19,10 @@ import { evidenceImportCommand, evidenceUsageProblem } from "./commands/evidence
 import { graphCommand, graphUsageProblem, parseRelease } from "./commands/graph.ts";
 import { impactCommand } from "./commands/impact.ts";
 import { initCommand } from "./commands/init.ts";
+import { mcpCommand, mcpUsageProblem } from "./commands/mcp.ts";
 import { publishCommand, publishUsageProblem } from "./commands/publish.ts";
 import { reviewCommand } from "./commands/review.ts";
+import { serveCommand } from "./commands/serve.ts";
 import { validateCommand } from "./commands/validate.ts";
 import type { Io } from "./output.ts";
 import { type CarrierName, CARRIERS, findRoot } from "./repository.ts";
@@ -53,8 +55,14 @@ commands
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
         [--published-at <time>]
                             reviewed knowledge for one audience and release, as Markset with provenance
-  serve                     the local Atlas (not built yet)
-  mcp                       the read-only agent interface (not built yet)
+  serve [--port <n>] [--host <address>] [--out <dir>]
+                            the Atlas, the internal review pages, on http://127.0.0.1:3000/ (rebuilt
+                            when a file changes), or written to --out; runs at L2, or L3 with run records
+  mcp --mode engineering [--include-restricted]
+  mcp --mode customer --visibility <public|customer> --audience <a> --product <ID> --release <r>
+        --role <r> --edition <e> [--flag <f>]...
+                            the read-only MCP server on stdio: the engineering graph, or one
+                            publication made in memory as publish makes it, and nothing else
 
 options
   --root <dir>              repository root (default: the nearest directory at or above this one
@@ -69,12 +77,24 @@ options
                             L3 and above: the exact scope evidence is assessed for (default: every scope)
   --mode <migration|strict> --baseline <file>
                             L2 and above: whether a baseline of known violations applies, and which
+                            (for mcp, --mode names the server's mode instead)
   -h, --help                show this help
 
 exit codes: 0 no errors, 1 validation errors, 2 invocation or tool failure`;
 
-const BUILT = ["init", "validate", "graph", "architecture", "evidence", "impact", "context", "review", "publish"];
-const NOT_BUILT = ["serve", "mcp"];
+const COMMANDS = [
+  "init",
+  "validate",
+  "graph",
+  "architecture",
+  "evidence",
+  "impact",
+  "context",
+  "review",
+  "publish",
+  "serve",
+  "mcp",
+];
 
 const GLOBAL = ["root", "json", "carrier", "level", "help"];
 const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline"];
@@ -97,6 +117,21 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
   impact: LEVEL_OPTIONS,
   context: ["include-restricted", ...LEVEL_OPTIONS],
   review: ["base", ...LEVEL_OPTIONS],
+  serve: ["port", "host", "out", ...LEVEL_OPTIONS],
+  mcp: [
+    "mode",
+    "include-restricted",
+    "visibility",
+    "audience",
+    "product",
+    "release",
+    "role",
+    "edition",
+    "flag",
+    "authorized-internal",
+    "authorized-restricted",
+    "published-at",
+  ],
   publish: [
     "visibility",
     "audience",
@@ -136,11 +171,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     return values.help ? 0 : 2;
   }
   // The command is checked before its arguments, so a typo reads as a typo and not as a missing ID.
-  if (NOT_BUILT.includes(command)) {
-    io.stderr(`intentset ${command}: not built yet in this version of the CLI.\n`);
-    return 2;
-  }
-  if (!BUILT.includes(command)) {
+  if (!COMMANDS.includes(command)) {
     io.stderr(`intentset: unknown command "${command}"\n\n${USAGE}\n`);
     return 2;
   }
@@ -178,7 +209,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
   if (levelGiven === "L5") {
     return usage("L5 is a claim about continuous CI, not something one run can check (Core §11).");
   }
-  if (values.mode !== undefined && values.mode !== "migration" && values.mode !== "strict") {
+  if (command !== "mcp" && values.mode !== undefined && values.mode !== "migration" && values.mode !== "strict") {
     return usage(`--mode ${values.mode}: the modes are migration and strict`);
   }
   if (command === "init") {
@@ -187,7 +218,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
 
   // Evidence scope: --product with --release, or graph's --release <product>:<label>.
   let scope: RunScope | null = null;
-  if (command !== "evidence" && command !== "publish") {
+  if (command !== "evidence" && command !== "publish" && command !== "mcp") {
     if (command === "graph") {
       const release = values.release === undefined ? null : parseRelease(values.release);
       scope = release === null ? null : { product: release.product, release: release.label };
@@ -202,7 +233,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     root: values.root,
     carrier: carrier as CarrierName,
     level,
-    mode: values.mode as Mode | undefined,
+    mode: command === "mcp" ? undefined : (values.mode as Mode | undefined),
     baseline: values.baseline,
     evidence: values.evidence,
     scope,
@@ -275,6 +306,37 @@ export async function main(argv: string[], io: Io): Promise<number> {
       if (typeof session === "number") return session;
       return reviewCommand(session, { base: values.base, levelReason: reason }, values.json, io);
     }
+    case "serve": {
+      const port = values.port === undefined ? 3000 : Number(values.port);
+      if (!Number.isInteger(port) || port < 0 || port > 65535 || values.port === "") {
+        return usage(`--port ${values.port}: give a port number from 0 to 65535`);
+      }
+      let level = levelGiven;
+      if (level === undefined) {
+        const root = findRoot(io.cwd, values.root);
+        level = root !== null && evidenceFiles(root, io.cwd, values.evidence).length > 0 ? "L3" : "L2";
+      }
+      return serveCommand({ port, host: values.host ?? "127.0.0.1", out: values.out }, sessionOptions(level), io);
+    }
+    case "mcp": {
+      const options = {
+        mode: values.mode,
+        includeRestricted: values["include-restricted"],
+        visibility: values.visibility,
+        audience: values.audience,
+        product: values.product,
+        release: values.release,
+        role: values.role,
+        edition: values.edition,
+        flags: values.flag ?? [],
+        authorizedInternal: values["authorized-internal"],
+        authorizedRestricted: values["authorized-restricted"],
+        publishedAt: values["published-at"],
+      };
+      const problem = mcpUsageProblem(options);
+      if (problem !== null) return usage(problem);
+      return mcpCommand(options, sessionOptions(levelGiven ?? "L1"), io);
+    }
     default: {
       const options = {
         visibility: values.visibility,
@@ -339,6 +401,8 @@ function parse(argv: string[]) {
       "authorized-restricted": { type: "boolean", default: false },
       html: { type: "boolean", default: false },
       "published-at": { type: "string" },
+      port: { type: "string" },
+      host: { type: "string" },
     },
   });
 }

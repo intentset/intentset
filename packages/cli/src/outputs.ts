@@ -46,3 +46,20 @@ export function outputProblem(repo: Repository, target: string): string | null {
   if (existsSync(target) && (SOURCE.test(path) || MANIFEST.test(path))) return "is a source file or manifest";
   return null;
 }
+
+/**
+ * Why a directory may not receive generated output, or null when it may: it
+ * is the root, or a Markdown file written into it would fall inside the
+ * documents' scope, where generated files would sooner or later be read as
+ * canonical. An ignored directory, such as dist/, is the place for them.
+ */
+export function outputDirProblem(repo: Repository, dir: string): string | null {
+  const path = insideRoot(repo.root, dir);
+  if (path === null) return null;
+  if (path === "") return "is the repository root";
+  const probe = `${path}/generated.md`;
+  if (matchAny(repo.config.scope, probe) && !matchAny(repo.config.ignore, probe)) {
+    return "is inside the documents' scope; write generated output to an ignored directory such as dist/";
+  }
+  return null;
+}

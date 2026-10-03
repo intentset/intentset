@@ -105,17 +105,13 @@ test("a configuration with errors exits 2 with its CFG001", async (t) => {
   assert.match(validate.err, /^\.intentset\/config\.yaml error CFG001 `repository` is required/m);
 });
 
-test("an unknown command exits 2 with the usage; unbuilt commands say so", async (t) => {
+test("an unknown command exits 2 with the usage, and every command is built", async (t) => {
   const dir = await example(t);
   const unknown = await run(dir, "valdiate");
   assert.equal(unknown.code, 2);
   assert.match(unknown.err, /unknown command "valdiate"/);
   assert.match(unknown.err, /usage: intentset <command>/);
-  for (const argv of [["serve"], ["mcp"]]) {
-    const result = await run(dir, ...argv);
-    assert.equal(result.code, 2, argv.join(" "));
-    assert.match(result.err, /not built yet/);
-  }
+  assert.doesNotMatch(unknown.err, /not built yet/);
   const help = await run(dir, "--help");
   assert.equal(help.code, 0);
   assert.match(help.out, /usage: intentset/);
