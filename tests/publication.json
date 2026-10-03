@@ -1,0 +1,1605 @@
+[
+  {
+    "section": "publication",
+    "name": "customer projection publishes the reviewed teacher guidance",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustNotContain": [
+        "Schedule an assessment",
+        "Require a future release time",
+        "Require assignment permission",
+        "Assessment assignment",
+        "Keep backend access behind the slice seam",
+        "Lantern example",
+        "Prepare learning in advance",
+        "Reduce assignment preparation friction",
+        "Assessment scheduling slice",
+        "ScheduleAssessment contract",
+        "Review assessment scheduling behavior",
+        "Accept an eligible schedule",
+        "ADR-ASMT-SEAM.md",
+        "BEH-ASMT-SCHEDULE.md",
+        "CAP-ASMT-ASSIGN.md",
+        "CONTRACT-ASMT-SCHEDULE.md",
+        "INT-PREPARE.md",
+        "OUT-PREPARE.md",
+        "PRD-LANTERN.md",
+        "RULE-ASMT-AUTH.md",
+        "RULE-ASMT-FUTURE.md",
+        "SCN-ASMT-SCHEDULE.md",
+        "SLICE-ASMT-SCHEDULE.md",
+        "TEST-ASMT-SCHEDULE.md",
+        "BEH-ASMT-SCHEDULE",
+        "RULE-ASMT-AUTH",
+        "RULE-ASMT-FUTURE"
+      ]
+    },
+    "notes": "Every explained source is internal, so the provenance counts three withheld sources and names none; the knowledge's own path is omitted below an internal projection."
+  },
+  {
+    "section": "publication",
+    "name": "An authorized internal projection publishes the same knowledge and may name its internal sources",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "internal",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "authorizedInternal": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "Internal projections need explicit authorization (Core §9); with it, the customer knowledge is still eligible, and withheld sources are no longer withheld."
+  },
+  {
+    "section": "publication",
+    "name": "PUB001 an internal projection with authorizedInternal false is refused",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "internal",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "authorizedInternal": false
+    },
+    "valid": false,
+    "published": {
+      "ids": []
+    },
+    "diagnostics": [
+      "PUB001"
+    ]
+  },
+  {
+    "section": "publication",
+    "name": "customer projection admits public knowledge",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.visibility": "public"
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "Customer projection allows public and customer records (Core §9)."
+  },
+  {
+    "section": "publication",
+    "name": "public projection excludes customer knowledge",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "public",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Prepare a scheduled assessment",
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "Not requested by ID, so it is excluded and counted, with no diagnostic."
+  },
+  {
+    "section": "publication",
+    "name": "public projection refuses customer knowledge requested by ID",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "public",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Prepare a scheduled assessment",
+        "Choose a published assessment",
+        "KB-ASMT-SCHEDULE.md"
+      ]
+    },
+    "notes": "The refusal names the ID only: the same message an unknown ID gets, with no path."
+  },
+  {
+    "section": "publication",
+    "name": "P01 draft customer knowledge selected for publication",
+    "baseline": "scheduling",
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P01 draft knowledge is excluded when not requested",
+    "baseline": "scheduling",
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "Boundary: deny by default needs no diagnostic to keep a draft out."
+  },
+  {
+    "section": "publication",
+    "name": "P02 public knowledge links an internal decision",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.visibility": "public"
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment and a future release time. See [the design note](ADR-ASMT-SEAM.md) for why.\n"
+      }
+    },
+    "request": {
+      "visibility": "public",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Keep backend access behind the slice seam",
+        "ADR-ASMT-SEAM.md"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P02 public knowledge names an internal behavior by ID",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.visibility": "public"
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment and a future release time, as BEH-ASMT-SCHEDULE describes.\n"
+      }
+    },
+    "request": {
+      "visibility": "public",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Schedule an assessment",
+        "BEH-ASMT-SCHEDULE.md"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P02 public knowledge links an internal title",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.visibility": "public"
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment. Read [Keep backend access behind the slice seam](ADR-ASMT-SEAM.md) first.\n"
+      }
+    },
+    "request": {
+      "visibility": "public",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008",
+      "PUB002"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Keep backend access behind the slice seam",
+        "ADR-ASMT-SEAM.md"
+      ]
+    },
+    "notes": "Two facts: a link to an excluded source (CORE008) and an excluded title in the text (PUB002)."
+  },
+  {
+    "section": "publication",
+    "name": "P02 a link to an internal file whose path carries no ID",
+    "baseline": "scheduling",
+    "files": {
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/decision/0.1\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy": [
+            "ADR-ASMT-RETRY"
+          ]
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment. Delivery may be retried; see [retries](decisions/retry-policy.md).\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "decisions/retry-policy.md",
+        "Retry failed schedule deliveries twice"
+      ]
+    },
+    "notes": "The behavior is informed by the decision so it is attached. The diagnostic names ADR-ASMT-RETRY, never its path or title."
+  },
+  {
+    "section": "publication",
+    "name": "P03 release mismatch is excluded before rendering",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1",
+        "pilot-2"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-2",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P03 role mismatch requested by ID",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "student",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 governing rule changed after knowledge review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            }
+          },
+          "intentset.links.explains": [
+            "BEH-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "The knowledge explains only the behavior; the rule governs it, so its pin is required too. A literal hash that is not the rule's current one models a rule edited after review."
+  },
+  {
+    "section": "publication",
+    "name": "P04 needs-review knowledge is withheld when not requested",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            }
+          },
+          "intentset.links.explains": [
+            "BEH-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 explained behavior changed after knowledge review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P05 customer request for raw engineering context is denied",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "BEH-ASMT-SCHEDULE",
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustNotContain": [
+        "Schedule an assessment",
+        "BEH-ASMT-SCHEDULE.md",
+        "A teacher submits a future release time"
+      ]
+    },
+    "notes": "The behavior is refused and the authorized knowledge is still published: the index is the customer's context."
+  },
+  {
+    "section": "publication",
+    "name": "P06 missing visibility fails closed",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.visibility": null
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001",
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P06 missing availability fails closed",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.availability": null
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005",
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P06 a request without an edition or flags is refused",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher"
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB001",
+      "PUB001"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "No implicit wildcard: a missing dimension is not read as any, and missing flags are not read as none."
+  },
+  {
+    "section": "publication",
+    "name": "PUB001 internal projection without authorization is refused",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "internal",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB001"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment",
+        "Schedule an assessment",
+        "Require a future release time",
+        "Require assignment permission",
+        "Assessment assignment",
+        "Keep backend access behind the slice seam",
+        "Lantern example",
+        "Prepare learning in advance",
+        "Reduce assignment preparation friction",
+        "Assessment scheduling slice",
+        "ScheduleAssessment contract",
+        "Review assessment scheduling behavior",
+        "Accept an eligible schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "PUB001 restricted projection without authorization is refused",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "restricted",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB001",
+      "PUB001"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "A restricted projection admits internal records too, so it needs both authorizations."
+  },
+  {
+    "section": "publication",
+    "name": "PUB001 an unknown release label is refused rather than guessed",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-9",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB001"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "flag required by the knowledge but not requested",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [
+        "beta-scheduling"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.availability.flags": [
+            "beta-scheduling"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "flag required by the knowledge and requested",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [
+        "beta-scheduling"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.availability.flags": [
+            "beta-scheduling"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [
+        "beta-scheduling"
+      ]
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "edition mismatch requested by ID",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "district",
+        "standard"
+      ],
+      "flags": [],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "district",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "audience mismatch requested by ID",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "product",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "retired knowledge is excluded",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "retired",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005",
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    },
+    "notes": "CORE005 is the validator's warning that a retired artifact names no successor."
+  },
+  {
+    "section": "publication",
+    "name": "knowledge with no reviewer needs review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": null,
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "PUB002 guidance repeats an internal rule title",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment and a class you can manage. Require a future release time when you schedule it.\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB002"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Require a future release time"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "PUB003 guidance that is not valid Markset is not emitted",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment.\n\n:::grid\nA grid holds exactly one list.\n:::\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB003"
+    ],
+    "published": {
+      "ids": []
+    }
+  },
+  {
+    "section": "publication",
+    "name": "PUB004 guidance cannot add a directive",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          }
+        },
+        "body": "\n# Prepare a scheduled assessment\n\n## Guidance\n\nChoose a published assessment.\n\n:::behavior\nA teacher schedules an assessment.\n:::\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB004"
+    ],
+    "published": {
+      "ids": []
+    },
+    "notes": "Markset's own unknown-directive error on the same line is not repeated as PUB003."
+  }
+]
