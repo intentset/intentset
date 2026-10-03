@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { matchGlob } from "../src/glob.ts";
-import { enumerate } from "../src/repository.ts";
+import { enumerate, listFiles } from "../src/repository.ts";
 
 test("a literal pattern matches only its own path", () => {
   assert.equal(matchGlob("product/a.md", "product/a.md"), true);
@@ -71,4 +71,20 @@ test("enumerate honors scope and ignore, sorts, and does not follow symbolic lin
   symlinkSync(join(root, "outside"), join(root, "b", "linked"), "dir");
   const found = enumerate(root, { scope: ["**/*.md"], ignore: ["drafts/**", "outside/**"] });
   assert.deepEqual(found, ["a.md", "b/a.md", "b/z.md"]);
+});
+
+test("a nested checkout or worktree is another repository, and its files are not listed", () => {
+  // Found on Streamlane: git lists an untracked worktree's files one by one, so
+  // .claude/worktrees made every workspace package appear twice.
+  const root = mkdtempSync(join(tmpdir(), "intentset-nested-"));
+  try {
+    for (const dir of ["product", "wt/feature/product"]) mkdirSync(join(root, dir), { recursive: true });
+    writeFileSync(join(root, "product", "A.md"), "a\n");
+    writeFileSync(join(root, "wt", "feature", ".git"), "gitdir: /elsewhere\n");
+    writeFileSync(join(root, "wt", "feature", "product", "A.md"), "a copy\n");
+    writeFileSync(join(root, "wt", "notes.md"), "kept\n");
+    assert.deepEqual(listFiles(root, []), ["product/A.md", "wt/notes.md"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

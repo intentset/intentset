@@ -111,9 +111,33 @@ export function enumerate(root: string, config: Pick<Config, "scope" | "ignore">
  */
 export function listFiles(root: string, ignore: readonly string[]): string[] {
   const listed = gitFiles(root) ?? walk(root, ignore);
+  const nested = nestedCheckouts(root);
   return listed.filter(
-    (path) => !matchAny(ignore, path) && !ignoredDirectory(ignore, path) && isFile(join(root, path)),
+    (path) => !matchAny(ignore, path) && !ignoredDirectory(ignore, path) && !nested(path) && isFile(join(root, path)),
   );
+}
+
+/**
+ * A directory with its own `.git` is another checkout (a nested repository or
+ * a worktree), not part of this one. git lists an untracked worktree's files
+ * one by one, so without this a repository with worktrees under it is read
+ * twice: Streamlane's `.claude/worktrees` made every package appear twice.
+ */
+function nestedCheckouts(root: string): (path: string) => boolean {
+  const cache = new Map<string, boolean>();
+  return (path) => {
+    const parts = path.split("/");
+    for (let i = 1; i < parts.length; i++) {
+      const dir = parts.slice(0, i).join("/");
+      let found = cache.get(dir);
+      if (found === undefined) {
+        found = existsSync(join(root, dir, ".git"));
+        cache.set(dir, found);
+      }
+      if (found) return true;
+    }
+    return false;
+  };
 }
 
 /** True when some directory containing `path` is ignored, as the walk would never have entered it. */
@@ -145,6 +169,7 @@ export function walk(root: string, ignore: readonly string[]): string[] {
     for (const entry of entries) {
       const path = relative === "" ? entry.name : `${relative}/${entry.name}`;
       if (matchAny(ignore, path)) continue;
+      if (entry.isDirectory() && existsSync(join(root, path, ".git"))) continue;
       if (entry.isDirectory()) visit(path);
       else if (entry.isFile()) out.push(path);
     }
