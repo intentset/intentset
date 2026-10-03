@@ -41,6 +41,9 @@ import {
 } from "./types.ts";
 import { parseYamlDetailed, pointerToken } from "./yaml.ts";
 
+/** Core §3's file-size limit for one record. A product record is prose; a megabyte is far beyond any real one. */
+export const DOCUMENT_MAX_BYTES = 1024 * 1024;
+
 export interface ReadDocument {
   artifact: Artifact | null;
   diagnostics: Diagnostic[];
@@ -109,6 +112,17 @@ export function readDocument(input: DocumentInput): ReadDocument {
       }),
     );
   };
+
+  // Core §3: implementations MUST limit file size. Checked before anything is parsed.
+  const bytes = Buffer.byteLength(input.source, "utf8");
+  if (bytes > DOCUMENT_MAX_BYTES) {
+    report({
+      artifact: null,
+      message: `The document is ${bytes} bytes, more than the ${DOCUMENT_MAX_BYTES / 1024 / 1024} MiB a record may be.`,
+      remediation: "Split the record, or move large material such as data or images out of the document and link it.",
+    });
+    return { artifact: null, diagnostics, id: null, locate: NO_LOCATION };
+  }
 
   const frontmatter = input.frontmatter;
   if (frontmatter === null) {

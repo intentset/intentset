@@ -7,6 +7,7 @@
  */
 import type { Diagnostic } from "./diagnostics.ts";
 import { compareStrings, makeDiagnostic } from "./report.ts";
+import { patternProblem } from "./validate.ts";
 import type { Config } from "./types.ts";
 import { parseYamlDetailed } from "./yaml.ts";
 
@@ -23,7 +24,7 @@ export function readConfig(text: string, path: string): { config: Config; diagno
     diagnostics.push(
       makeDiagnostic({
         code: "CFG001",
-        origin: "syntax",
+        origin: "profile",
         artifact: null,
         path,
         location: { line: parsed.error.line },
@@ -69,6 +70,16 @@ export function readConfig(text: string, path: string): { config: Config; diagno
     if (value === undefined || value === null) continue;
     if (Array.isArray(value) && value.every((item) => typeof item === "string" && item !== "")) {
       config[key] = [...(value as string[])];
+      for (const [index, pattern] of (value as string[]).entries()) {
+        const why = patternProblem(pattern);
+        if (why !== null) {
+          report(
+            `/${key}/${index}`,
+            `${key} pattern ${JSON.stringify(pattern)} is not a supported pattern: ${why}`,
+            "Use repository-relative POSIX paths with literal segments, * within a segment and ** across segments.",
+          );
+        }
+      }
     } else {
       report(
         `/${key}`,

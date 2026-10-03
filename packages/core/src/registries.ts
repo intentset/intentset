@@ -15,7 +15,7 @@ const KNOWN_KEYS = new Set<string>([...LIST_KEYS, "resources"]);
 
 /**
  * Core §4 and §7, VSA §3: read registries.yaml. Shape problems are CFG002
- * (origin "profile"); a YAML rejection is CFG002 with origin "syntax". Every
+ * (origin "profile"); a YAML rejection is CFG002, also with origin "profile" (origin "syntax" is Markset's alone). Every
  * list comes back sorted. `null` text means the file is absent.
  */
 export function readRegistries(
@@ -31,7 +31,7 @@ export function readRegistries(
     diagnostics.push(
       makeDiagnostic({
         code: "CFG002",
-        origin: "syntax",
+        origin: "profile",
         artifact: null,
         path,
         location: { line: parsed.error.line },
