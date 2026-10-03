@@ -1,8 +1,8 @@
 /**
  * Section name -> driver. A section present in tests/ but absent here is
  * reported as skipped, so the suite can hold cases for checks that are
- * specified but not yet implemented. `vsa` and `publication` are registered when
- * the architecture and publisher packages land.
+ * specified but not yet implemented. `vsa` is registered when the architecture
+ * package lands.
  */
 import {
   type DocumentInput,
@@ -11,11 +11,13 @@ import {
   type Registries,
   type ValidationResult,
   exportGraph,
+  graphHash,
   plainCarrier,
   readConfig,
   readRegistries,
   validate,
 } from "@intentset/core";
+import { type PublicationRequest, bindReviewPins, publish } from "@intentset/publisher";
 import { checkFixtureEvidence } from "@intentset/verification";
 import { CONFIG_PATH, REGISTRIES_PATH } from "./fixtures.ts";
 import type { Actual, Driver, ExpandedCase } from "./types.ts";
@@ -101,8 +103,39 @@ export const evidenceDriver: Driver = (expanded) => {
   } satisfies Actual;
 };
 
+/** The fixed publication time, so a published document is the same bytes on every run. */
+export const FIXTURE_PUBLISHED_AT = "2026-01-01T00:00:00Z";
+
+/**
+ * Publication over the same validation (Core §9): review pins written as
+ * `@current` bound to the patched sources, then the case's request published
+ * with HTML, and every byte written or reported offered to `mustNotContain`.
+ */
+export const publicationDriver: Driver = (expanded) => {
+  const { result, registries, diagnostics } = validateTree(expanded);
+  const graph = bindReviewPins(result.graph);
+  const published = publish(graph, registries, (expanded.request ?? {}) as unknown as PublicationRequest, {
+    snapshot: { commit: null, graphHash: graphHash(graph) },
+    publishedAt: FIXTURE_PUBLISHED_AT,
+    renderHtml: true,
+  });
+  const all = [...diagnostics, ...published.diagnostics];
+  const text = [
+    ...published.documents.flatMap((document) => [document.markset, document.html ?? ""]),
+    JSON.stringify(published.index),
+    JSON.stringify(published.diagnostics),
+  ].join("\n");
+  return {
+    valid: !all.some((d) => d.severity === "error"),
+    diagnostics: all,
+    artifacts: [...graph.artifacts.keys()].sort(),
+    published: { ids: published.index.published, text },
+  } satisfies Actual;
+};
+
 export const drivers: Record<string, Driver> = {
   core: coreDriver,
   evidence: evidenceDriver,
   export: exportDriver,
+  publication: publicationDriver,
 };
