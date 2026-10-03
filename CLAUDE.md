@@ -6,7 +6,7 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.1.md`, `vsa-0.1.md`, `profile-typescript-amplify-gen2-0.1.md`,
-`frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`. Read the Core spec before implementing
+`frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit.
 `docs/requirements/` is the kickoff handoff as delivered and is not updated; `docs/implementation-plan.md` is the plan;
 `docs/decisions/` holds the ADRs.

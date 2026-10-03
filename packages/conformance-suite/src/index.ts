@@ -70,6 +70,7 @@ export const schemaPaths = {
   conformance: join(packageDir, "schemas", "conformance.schema.json"),
   frontmatter: join(packageDir, "schemas", "frontmatter.schema.json"),
   export: join(packageDir, "schemas", "export.schema.json"),
+  evidence: join(packageDir, "schemas", "evidence.schema.json"),
 } as const;
 
 /** The worked example the cases are built from, `examples/scheduling`. */

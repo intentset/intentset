@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://intentset.org/spec/evidence.schema.json",
+  "title": "Intentset run records",
+  "description": "An array of run records (Core §8): one per run of one verification. A record is evidence, not a definition; only a pass at the assessed commit and graph hash is current. Three requirements are beyond this schema and checked by the reader: a timestamp names a real calendar day, finishedAt is not before startedAt, and no two records share an evidenceId. The literal \"@current\" for commit or graphHash is the conformance fixtures' placeholder for the snapshot under assessment; a driver binds it before classification, and a record still carrying it is never current.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/runRecord" },
+  "$defs": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "token": { "type": "string", "pattern": "^\\S+$" },
+    "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$" },
+    "timestamp": {
+      "type": "string",
+      "description": "UTC, ISO 8601, with a Z suffix and an optional fraction of up to nine digits.",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,9})?Z$"
+    },
+    "runRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidenceId",
+        "verificationId",
+        "commit",
+        "graphHash",
+        "environment",
+        "scope",
+        "tool",
+        "reviewer",
+        "startedAt",
+        "finishedAt",
+        "result",
+        "uri"
+      ],
+      "properties": {
+        "evidenceId": { "$ref": "#/$defs/token", "description": "Unique per run." },
+        "verificationId": { "$ref": "#/$defs/id", "description": "The verification artifact this run executed." },
+        "commit": { "$ref": "#/$defs/token", "description": "The source commit the run executed against." },
+        "graphHash": {
+          "description": "SHA-256 over the canonical graph (ADR 0005), lowercase hex.",
+          "anyOf": [{ "type": "string", "pattern": "^[0-9a-f]{64}$" }, { "const": "@current" }]
+        },
+        "environment": { "$ref": "#/$defs/text" },
+        "scope": {
+          "type": "object",
+          "description": "The exact product and release the run assessed; release labels match exactly (Core §7).",
+          "additionalProperties": false,
+          "required": ["product", "release"],
+          "properties": {
+            "product": { "$ref": "#/$defs/id" },
+            "release": { "$ref": "#/$defs/text" }
+          }
+        },
+        "tool": {
+          "description": "The tool and version that ran an automated check, or null for a review performed by a person alone.",
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "version"],
+              "properties": {
+                "name": { "$ref": "#/$defs/text" },
+                "version": { "$ref": "#/$defs/text" }
+              }
+            }
+          ]
+        },
+        "reviewer": {
+          "description": "The reviewer's identity for a manual review, or null for an automated run.",
+          "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/text" }]
+        },
+        "startedAt": { "$ref": "#/$defs/timestamp" },
+        "finishedAt": { "$ref": "#/$defs/timestamp" },
+        "result": { "enum": ["pass", "fail", "skip", "error"] },
+        "uri": {
+          "type": "string",
+          "description": "Where the run's report lives. Presence is not proof of trustworthy execution (Core §8).",
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:\\S+$"
+        },
+        "rationale": { "$ref": "#/$defs/text", "description": "Required when reviewer is set." },
+        "extensions": {
+          "type": "object",
+          "description": "Namespaced keys, preserved and never interpreted.",
+          "propertyNames": { "pattern": "^[^/]+/.+$" }
+        }
+      },
+      "allOf": [
+        {
+          "description": "A manual record identifies its reviewer and the review rationale.",
+          "if": { "required": ["reviewer"], "properties": { "reviewer": { "type": "string" } } },
+          "then": { "required": ["rationale"] }
+        },
+        {
+          "description": "A record without a reviewer is automated and names its tool.",
+          "if": { "required": ["reviewer"], "properties": { "reviewer": { "type": "null" } } },
+          "then": { "properties": { "tool": { "type": "object" } } }
+        }
+      ]
+    }
+  }
+}

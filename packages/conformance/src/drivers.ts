@@ -1,8 +1,8 @@
 /**
  * Section name -> driver. A section present in tests/ but absent here is
  * reported as skipped, so the suite can hold cases for checks that are
- * specified but not yet implemented. `vsa`, `evidence` and `publication` are
- * registered when the architecture, verification and publisher packages land.
+ * specified but not yet implemented. `vsa` and `publication` are registered when
+ * the architecture and publisher packages land.
  */
 import {
   type DocumentInput,
@@ -16,6 +16,7 @@ import {
   readRegistries,
   validate,
 } from "@intentset/core";
+import { checkFixtureEvidence } from "@intentset/verification";
 import { CONFIG_PATH, REGISTRIES_PATH } from "./fixtures.ts";
 import type { Actual, Driver, ExpandedCase } from "./types.ts";
 
@@ -78,7 +79,30 @@ export const exportDriver: Driver = (expanded) => {
   } satisfies Actual;
 };
 
+/**
+ * Evidence over the same validation (Core §8): run records bound to the case's
+ * snapshot through the `@current` placeholder, classified, and CORE007 at L3+.
+ */
+export const evidenceDriver: Driver = (expanded) => {
+  const { result, diagnostics } = validateTree(expanded);
+  const run = checkFixtureEvidence({
+    graph: result.graph,
+    level: expanded.level,
+    evidence: expanded.evidence,
+    request: expanded.request,
+    documents: expanded.files.keys(),
+    sources: expanded.sources.keys(),
+  });
+  const all = [...diagnostics, ...run.diagnostics];
+  return {
+    valid: !all.some((d) => d.severity === "error"),
+    diagnostics: all,
+    artifacts: [...result.graph.artifacts.keys()].sort(),
+  } satisfies Actual;
+};
+
 export const drivers: Record<string, Driver> = {
   core: coreDriver,
+  evidence: evidenceDriver,
   export: exportDriver,
 };
