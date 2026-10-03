@@ -1,8 +1,7 @@
 /**
  * Section name -> driver. A section present in tests/ but absent here is
  * reported as skipped, so the suite can hold cases for checks that are
- * specified but not yet implemented. `vsa` is registered when the architecture
- * package lands.
+ * specified but not yet implemented.
  */
 import {
   type DocumentInput,
@@ -17,6 +16,7 @@ import {
   readRegistries,
   validate,
 } from "@intentset/core";
+import { checkArchitecture } from "@intentset/architecture";
 import { type PublicationRequest, bindReviewPins, publish } from "@intentset/publisher";
 import { checkFixtureEvidence } from "@intentset/verification";
 import { CONFIG_PATH, REGISTRIES_PATH } from "./fixtures.ts";
@@ -133,9 +133,37 @@ export const publicationDriver: Driver = (expanded) => {
   } satisfies Actual;
 };
 
+/** The day exceptions expire against in fixtures, so an expiry case reads the same on every run. */
+export const FIXTURE_TODAY = "2026-10-02";
+
+/**
+ * Traceable VSA over the same validation: every file of the case, documents
+ * included since a claim may name one, plus its sources, as one tree.
+ */
+export const vsaDriver: Driver = (expanded) => {
+  const { result, registries, diagnostics } = validateTree(expanded);
+  const files = new Map([...expanded.files, ...expanded.sources]);
+  const architecture = checkArchitecture(
+    result.graph,
+    registries,
+    { files },
+    {
+      level: expanded.level,
+      today: FIXTURE_TODAY,
+    },
+  );
+  const all = [...diagnostics, ...architecture.diagnostics];
+  return {
+    valid: !all.some((d) => d.severity === "error"),
+    diagnostics: all,
+    artifacts: [...result.graph.artifacts.keys()].sort(),
+  } satisfies Actual;
+};
+
 export const drivers: Record<string, Driver> = {
   core: coreDriver,
   evidence: evidenceDriver,
   export: exportDriver,
   publication: publicationDriver,
+  vsa: vsaDriver,
 };
