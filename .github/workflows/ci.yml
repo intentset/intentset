@@ -23,4 +23,4 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm test
       - run: npm run conformance
-      - run: node --conditions=intentset-source test/consumer/smoke.ts --packed
+      - run: npm run smoke:packed

@@ -1,0 +1,68 @@
+name: Release
+on:
+  push:
+    tags: ["v[0-9]*"]
+  workflow_dispatch:
+
+# id-token lets npm attach provenance, tying each tarball to this commit and run.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      # A tag can be pushed from anywhere, so the release re-proves everything.
+      - run: npm run lint
+      - run: npm run typecheck
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - run: npm run conformance
+      # The packed tarballs installed into an empty project, used as a consumer would.
+      - run: npm run smoke:packed
+
+      - name: The tag must match the version being published
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package version $version" >&2
+            exit 1
+          fi
+
+      # Safe to repeat: what the registry already has is skipped. The list comes
+      # from the release script, in dependency order, so a package is published
+      # only after everything it points at. No credential is configured on
+      # purpose: trusted publishing exchanges this run's OIDC token, and an
+      # .npmrc with an empty token would stop npm reaching that path. A package
+      # npm has never seen cannot be published this way: publish it once by
+      # hand and configure its trusted publisher first (Markset learned this
+      # twice, at 0.3.0 and 0.3.1).
+      - name: Publish what is not already on the registry
+        run: |
+          npm run build
+          version="$(node -p "require('./package.json').version")"
+          names="$(node -p "require('./package.json').scripts.release.match(/@intentset\/[a-z-]+/g).join(' ')")"
+          for name in $names; do
+            if curl -sf -o /dev/null "https://registry.npmjs.org/${name//\//%2f}/$version"; then
+              echo "$name@$version is already published"
+            else
+              npm publish --workspace "$name" --provenance
+            fi
+          done
+
+      - name: Install the release from the registry and use it
+        run: npm run smoke:registry -- "$(node -p "require('./package.json').version")"
