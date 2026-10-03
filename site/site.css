@@ -5,9 +5,10 @@
  * ones from §5 plus .button, .hero, .model, .example, .adopt, .status,
  * .closing, .record and .site-back.
  *
- * System fonts only, nothing loaded from another origin, no script. Every
- * color is a light-dark() pair, as in markset.css, so the reader's system
- * preference picks the scheme and nothing in a document chooses it.
+ * System fonts only and nothing loaded from another origin. Every color is a
+ * light-dark() pair, as in markset.css, so the reader's system preference picks
+ * the scheme, the header's control can override it on the reader's behalf, and
+ * nothing in a document chooses it.
  *
  * Structure follows docs/requirements/wireframes/intentset.html: an editorial
  * hero beside the traceability model, a full-width worked example, three
@@ -31,6 +32,8 @@ body {
   --ms-border: light-dark(#cfd9d1, #2f3c38);
   --ms-accent: light-dark(#1f6b5a, #7fcbb0);
   --ms-tone-info: light-dark(#1f6b5a, #7fcbb0);
+  /* Intentset's green as coralreefventures.com draws it, for the footer's mark. */
+  --site-accent-bar: light-dark(#468a72, #5aa88c);
 
   --site-ink: var(--ms-fg);
   --site-focus: light-dark(#cb5430, #f29a74);
@@ -81,7 +84,6 @@ main:focus { outline: none; }
 .site-header {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
   gap: 0.5rem 1.5rem;
   padding-block: 1.25rem;
@@ -92,6 +94,7 @@ main:focus { outline: none; }
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+  margin-right: auto;
   font-size: 1.35rem;
   font-weight: 750;
   letter-spacing: -0.03em;
@@ -103,6 +106,30 @@ main:focus { outline: none; }
 .site-nav a, .site-footer-nav a { display: inline-block; padding-block: 0.5rem; text-decoration: none; color: var(--ms-fg-muted); }
 .site-nav a:hover, .site-nav a[aria-current="page"], .site-footer-nav a:hover, .site-footer-nav a[aria-current="page"] { color: var(--ms-fg); text-decoration: underline; text-decoration-color: var(--ms-accent); }
 .site-nav a[aria-current="page"] { color: var(--ms-fg); }
+
+/* The reader's color scheme, the same control as markset.org's. The radio
+ * inputs hold the state, body:has() reads it, and markset.css resolves every
+ * color through color-scheme, so forcing a scheme is one property. The shell's
+ * one script carries the choice to the next page through data-scheme on
+ * <body>; with it blocked, these rules still work for the page they are on.
+ * Collapsed, the control shows only the scheme in force and opens on hover or
+ * focus; the slot reserves the open width so opening it moves nothing. */
+body:has(#ms-scheme-light:checked) { color-scheme: light; }
+body:has(#ms-scheme-dark:checked) { color-scheme: dark; }
+body { --site-scheme-w: 5.6rem; }
+.site-scheme-slot { flex: none; display: flex; justify-content: flex-end; width: var(--site-scheme-w); }
+.site-scheme { display: flex; align-items: center; gap: 1px; padding: 2px; border: 1px solid var(--ms-border); border-radius: 999px; background: var(--ms-bg); }
+.site-scheme-input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.site-scheme-option { display: none; padding: 0.3rem; border-radius: 999px; color: var(--ms-fg-muted); cursor: pointer; }
+.site-scheme-input:checked + .site-scheme-option,
+.site-scheme:hover .site-scheme-option,
+.site-scheme:focus-within .site-scheme-option { display: inline-flex; }
+.site-scheme-option:hover { color: var(--ms-fg); }
+.site-scheme-input:checked + .site-scheme-option { background: var(--ms-surface); color: var(--ms-fg); }
+.site-scheme:not(:hover):not(:focus-within) .site-scheme-option { background: none; }
+.site-scheme-input:focus-visible + .site-scheme-option { outline: 3px solid var(--site-focus); outline-offset: 1px; }
+.site-visually-hidden { display: inline-block; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.site-icon { display: block; width: 1.05rem; height: 1.05rem; }
 
 /* The contents rail, beside the long documents. */
 .site-layout.has-rail { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 2.5rem; align-items: start; }
@@ -120,6 +147,11 @@ main:focus { outline: none; }
 }
 
 .site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
   padding-block: 2rem 3rem;
   font-size: 0.85rem;
   color: var(--ms-fg-muted);
@@ -129,6 +161,12 @@ main:focus { outline: none; }
 .site-footer p { margin: 0.25rem 0 0; }
 .site-footer strong { color: var(--ms-fg); }
 .site-footer p a { display: inline-block; padding-block: 0.25rem; }
+/* The network from coralreefventures.com, small, with Intentset's nodes in its
+ * green and the other products' left quiet. Decoration only. */
+.site-family { flex: none; width: 9.5rem; height: auto; color: color-mix(in oklab, var(--ms-fg-muted), transparent 60%); }
+.site-family path { stroke: currentColor; stroke-width: 1.5; fill: none; }
+.site-family circle { fill: var(--ms-fg-muted); opacity: 0.4; }
+.site-family .own { fill: var(--site-accent-bar); opacity: 1; }
 
 /* ---- document ------------------------------------------------------------ */
 /* The layout box above carries the gutters, so the document runs to its track.
@@ -258,8 +296,10 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
 /* ---- narrow screens --------------------------------------------------------- */
 @media (max-width: 47.5rem) {
-  .site-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; padding-block: 1rem 0.75rem; }
-  .site-nav { gap: 0 1.25rem; font-size: 0.9rem; }
+  /* The brand and the scheme control share the first row; the links wrap below. */
+  .site-header { gap: 0.25rem 1rem; padding-block: 1rem 0.75rem; }
+  .site-nav { order: 3; flex-basis: 100%; gap: 0 1.25rem; font-size: 0.9rem; }
+  .site-family { width: 7rem; }
   .ms-document { padding-block: 1.75rem 3rem; }
   .ms-document h1 { font-size: clamp(2.1rem, 9vw, 2.75rem); }
   .ms-document h2 { font-size: 1.6rem; }
@@ -271,7 +311,7 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {
-  .site-skip, .site-nav, .site-toc { display: none; }
+  .site-skip, .site-nav, .site-toc, .site-scheme-slot, .site-family { display: none; }
   .site-layout.has-rail { display: block; }
   .ms-card.status { background: none; color: inherit; border: 1px solid var(--ms-border); }
 }

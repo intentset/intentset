@@ -13,7 +13,7 @@ Intentset connects what a product is meant to do with the slices that implement 
 
 Start with readable files in your repository. Build a product model that people and agents can follow.
 
-[[Read the draft specification](specifications/index.html)]{.button .primary} [[Explore an example](#example)]{.button}
+[[See how it works](how-it-works/index.html)]{.button .primary} [[Read the draft specification](specifications/index.html)]{.button}
 
 > [!NOTE]
 > The specifications are ready for review. A first reference toolchain, version 0.1, is published to try them against.
@@ -43,13 +43,42 @@ Illustrative connections · not a live coverage report
 {.eyebrow}
 The problem
 
-{#how}
 ## Faster code needs a clearer product model.
 
 {.lead}
 A ticket explains why a change started. A test checks a result. A document describes a promise. Keeping them connected as the product changes is the hard part.
 
 Intentset gives those connections a durable place in the repository—centered on observable product behavior.
+
+***
+
+{.eyebrow}
+What you get
+
+## Six questions your repository can answer.
+
+::::grid{cols=3}
+- :::card[What does the product promise?]
+  Every observable behavior is written down once, with its rules, examples and failure cases, in words a product reviewer can check without reading code.
+  :::
+- :::card[Who owns it in the code?]
+  Each behavior has one accountable slice, and an architecture check keeps other code out of that slice's internals.
+  :::
+- :::card[Is it verified right now?]
+  A pass counts only on the commit under review. Linked checks and current passes are reported apart, so coverage never looks better than it is.
+  :::
+- :::card[What does this change touch?]
+  Before a change merges, see the behaviors, owners, checks and customer explanations it could reach, and the path to each.
+  :::
+- :::card[What should an agent read first?]
+  Hand an agent the bounded context around the code it is about to change: the promises, rules, contracts and decisions, and nothing beyond them.
+  :::
+- :::card[What may we tell customers?]
+  Publish reviewed explanations for one audience and one release. Drafts, internal notes and unreleased work stay out by default.
+  :::
+::::
+
+[See how it works](how-it-works/index.html), step by step, from the first file to a published explanation.
 
 ***
 
@@ -94,55 +123,6 @@ A teacher chooses when a published assessment becomes available to a class.
   Give an agent a bounded set of product context before it edits code. Review the resulting behavior, implementation, tests, and knowledge together.
   :::
 ::::
-
-***
-
-{.eyebrow}
-Repository first
-
-## Open files. Explicit meaning.
-
-::::columns
-Write in Markdown with YAML frontmatter. Give behaviors stable IDs. Link the rules, slices, checks, and explanations that belong together.
-
-The repository stays authoritative. Graphs and review pages are views of those files.
-
-[Explore the Core specification](specifications/core/index.html)
-
-::col
-
-```markdown
----
-markset: 0
-intentset:
-  spec: "0.1"
-  profile: intentset/behavior/0.1
-  id: BEH-ASMT-SCHEDULE
-  type: behavior
-  title: Schedule an assessment
-  # Further required metadata omitted
----
-
-# Schedule an assessment
-
-A promise people can read.
-A connection tools can follow.
-```
-::::
-
-***
-
-{.eyebrow}
-The document layer
-
-## Rich documents, with Markset.
-
-{.lead}
-Intentset defines what the product model means. Markset provides the document layer for reading and sharing it.
-
-Intentset profiles add metadata and document conventions without adding product-specific rendering syntax. The publisher turns reviewed product knowledge into portable Markset documents for people, support teams, and customer-facing answers.
-
-[See how Markset fits](markset/index.html)
 
 ***
 

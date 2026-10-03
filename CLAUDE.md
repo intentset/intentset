@@ -129,6 +129,11 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       the copy's source of truth now, and the IA document stays frozen as the handoff.
 - [x] The pilot's four specification questions, decided 2026-10-03 (`docs/pilot-findings.md`): `entrypoints` per
       package, out-of-scope importers as warnings, evidence kept out of the commit it assesses, draft gaps as warnings.
+- [x] The site, 2026-10-03: How it works is a page of its own (`site/content/how-it-works.md`, with a contents rail)
+      rather than an anchor on the home page, which now keeps to the outcome and six benefits; the home page's file
+      format and Markset sections moved there, headings and all. The header carries markset.org's color-scheme control,
+      whose one script is the only one on a page and sits outside `<main>`; the footer carries the network figure from
+      coralreefventures.com with Intentset's nodes in green.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

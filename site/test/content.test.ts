@@ -77,6 +77,16 @@ async function copyBlocks(): Promise<Map<string, { h1: string; first: string; he
   return out;
 }
 
+/**
+ * Home sections that moved to How it works on 2026-10-03, when it became a page
+ * of its own and the home page kept to the outcome. Their headings are kept,
+ * on the page they moved to.
+ */
+const MOVED_HEADINGS: Record<string, string> = {
+  "Open files. Explicit meaning.": "how-it-works/index.html",
+  "Rich documents, with Markset.": "how-it-works/index.html",
+};
+
 const PAGE_OF: Record<string, string> = {
   home: "index.html",
   start: "start/index.html",
@@ -109,7 +119,10 @@ test("each page carries the IA document's copy verbatim: its heading, its first 
     assert.ok(body.includes(block.first), `${name}: first paragraph is not verbatim: ${block.first}`);
     for (const original of block.headings) {
       const heading = REVISED_HEADINGS[original] ?? original;
-      assert.ok(body.includes(heading), `${name}: section heading is not verbatim: ${heading}`);
+      const moved = MOVED_HEADINGS[original];
+      const where = moved ? await readFile(join(dist, moved), "utf8") : html;
+      const text_ = moved ? text(where.slice(where.indexOf("<main"), where.indexOf("</main>"))) : body;
+      assert.ok(text_.includes(heading), `${name}: section heading is not verbatim: ${heading}`);
     }
   }
 });
