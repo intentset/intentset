@@ -22,7 +22,10 @@
     "build": "rm -rf packages/*/dist && node --conditions=intentset-source packages/conformance-suite/stage.ts && tsc -p packages/core/tsconfig.build.json && tsc -p packages/markset-adapter/tsconfig.build.json && tsc -p packages/architecture/tsconfig.build.json && tsc -p packages/verification/tsconfig.build.json && tsc -p packages/publisher/tsconfig.build.json && tsc -p packages/atlas/tsconfig.build.json && tsc -p packages/mcp/tsconfig.build.json && tsc -p packages/cli/tsconfig.build.json && tsc -p packages/conformance-suite/tsconfig.build.json",
     "site": "node --conditions=intentset-source site/build.ts",
     "site:watch": "node --conditions=intentset-source site/serve.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "release": "npm run build && npm publish --workspace @intentset/core --workspace @intentset/markset-adapter --workspace @intentset/architecture --workspace @intentset/verification --workspace @intentset/publisher --workspace @intentset/atlas --workspace @intentset/mcp --workspace @intentset/cli --workspace @intentset/conformance-suite",
+    "smoke:packed": "npm run build && node --conditions=intentset-source test/consumer/smoke.ts --packed",
+    "smoke:registry": "node --conditions=intentset-source test/consumer/smoke.ts --registry"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.13",

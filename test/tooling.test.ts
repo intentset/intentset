@@ -208,3 +208,23 @@ test("the suite package depends on nothing, and ships its data", async () => {
     assert.match(ignore, new RegExp(`^packages/conformance-suite/${dir}/$`, "mu"), `${dir} is staged, never committed`);
   }
 });
+
+test("the release publishes every published package once, each after everything it depends on", async () => {
+  // release.yml publishes in this order and stops at the first failure, so a
+  // package goes out only after every sibling it points at already exists.
+  const rootPkg = await manifest("package.json");
+  const order = [...(rootPkg.scripts?.release ?? "").matchAll(/--workspace @intentset\/([a-z-]+)/gu)].map((m) => m[1]);
+  assert.equal(new Set(order).size, order.length, "no package is published twice");
+  for (const dir of await packageDirs()) {
+    const pkg = await manifest(`packages/${dir}/package.json`);
+    assert.equal(order.includes(dir), !pkg.private, `${dir} is ${pkg.private ? "private" : "published"}`);
+  }
+  for (const [i, dir] of order.entries()) {
+    const pkg = await manifest(`packages/${dir}/package.json`);
+    for (const dep of Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies })) {
+      if (!dep.startsWith("@intentset/")) continue;
+      const j = order.indexOf(dep.slice("@intentset/".length));
+      assert.ok(j !== -1 && j < i, `${dir} depends on ${dep}, which must be published first`);
+    }
+  }
+});
