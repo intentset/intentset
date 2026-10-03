@@ -6,14 +6,13 @@
  * exits 1.
  */
 import { writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { ID_PATTERN, type Level, exportGraph } from "@intentset/core";
+import { resolve } from "node:path";
+import { ID_PATTERN, exportGraph } from "@intentset/core";
 import type { Io } from "../output.ts";
-import { CONFIG_PATH } from "../repository.ts";
+import { outputProblem } from "../outputs.ts";
 import type { Session } from "../session.ts";
 
 export interface GraphOptions {
-  level: Level;
   format?: string;
   includeBodies: boolean;
   release?: string;
@@ -39,7 +38,7 @@ export function graphUsageProblem(options: GraphOptions): string | null {
 }
 
 /** `<product>:<label>`, split at the first colon; the label is opaque and matched exactly (Core §7). */
-function parseRelease(text: string): { product: string; label: string } | null {
+export function parseRelease(text: string): { product: string; label: string } | null {
   const colon = text.indexOf(":");
   if (colon === -1) return null;
   const product = text.slice(0, colon);
@@ -60,7 +59,7 @@ export function graphCommand(session: Session, options: GraphOptions, io: Io): n
     commit: snapshot.commit,
     ...(snapshot.commitUnavailable === undefined ? {} : { commitUnavailable: snapshot.commitUnavailable }),
     scope: repo.config.scope,
-    level: options.level,
+    level: session.level,
     release,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
     includeBodies: options.includeBodies,
@@ -71,11 +70,9 @@ export function graphCommand(session: Session, options: GraphOptions, io: Io): n
     io.stdout(text);
   } else {
     const target = resolve(io.cwd, options.out);
-    const read = [CONFIG_PATH, ...(repo.config.registries === null ? [] : [repo.config.registries])]
-      .concat(repo.inputs.map((input) => input.path))
-      .map((path) => resolve(join(repo.root, path)));
-    if (read.includes(target)) {
-      io.stderr(`intentset graph: --out ${options.out} is a file the repository reads; tools never rewrite them.\n`);
+    const problem = outputProblem(repo, target);
+    if (problem !== null) {
+      io.stderr(`intentset graph: --out ${options.out} ${problem}; tools never rewrite those.\n`);
       return 2;
     }
     try {

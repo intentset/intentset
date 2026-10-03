@@ -1,82 +1,10 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { test } from "node:test";
-import { type Schema, validateSchema } from "../../conformance/src/schema.ts";
-import { main } from "../src/main.ts";
-
-const REPO = resolve(import.meta.dirname, "..", "..", "..");
-const exportSchema = JSON.parse(readFileSync(join(REPO, "spec", "export.schema.json"), "utf8")) as Schema;
-
-interface Run {
-  code: number;
-  out: string;
-  err: string;
-}
-
-async function run(cwd: string, ...argv: string[]): Promise<Run> {
-  let out = "";
-  let err = "";
-  const code = await main(argv, { stdout: (s) => (out += s), stderr: (s) => (err += s), cwd });
-  return { code, out, err };
-}
-
-function temp(t: { after(fn: () => void): void }): string {
-  const dir = mkdtempSync(join(tmpdir(), "intentset-cli-"));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
-
-/** A temporary repository holding the scheduling example, made by `init --example`. */
-async function example(t: { after(fn: () => void): void }): Promise<string> {
-  const dir = temp(t);
-  const init = await run(dir, "init", "--example", "--repository", "example/lantern");
-  assert.equal(init.code, 0, init.err);
-  return dir;
-}
-
-const RECORD = (root: string, id: string) => join(root, "product", "scheduling", `${id}.md`);
-
-function edit(root: string, id: string, from: string | RegExp, to: string): void {
-  const file = RECORD(root, id);
-  const before = readFileSync(file, "utf8");
-  const after = before.replace(from, to);
-  assert.notEqual(after, before, `edit of ${id} changed nothing`);
-  writeFileSync(file, after);
-}
-
-/** Every file under `root` with its bytes and modification time. */
-function snapshot(root: string): Map<string, { bytes: string; mtime: number }> {
-  const out = new Map<string, { bytes: string; mtime: number }>();
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else out.set(path, { bytes: readFileSync(path).toString("base64"), mtime: statSync(path).mtimeMs });
-    }
-  };
-  walk(root);
-  return out;
-}
-
-function git(cwd: string, ...args: string[]): string {
-  return execFileSync(
-    "git",
-    ["-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", ...args],
-    { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-  ).trim();
-}
+import { validateSchema } from "../../conformance/src/schema.ts";
+import { edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
 
 test("init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
   const dir = temp(t);
@@ -183,14 +111,7 @@ test("an unknown command exits 2 with the usage; unbuilt commands say so", async
   assert.equal(unknown.code, 2);
   assert.match(unknown.err, /unknown command "valdiate"/);
   assert.match(unknown.err, /usage: intentset <command>/);
-  for (const argv of [
-    ["architecture", "check"],
-    ["evidence", "import", "x.json"],
-    ["review"],
-    ["publish"],
-    ["serve"],
-    ["mcp"],
-  ]) {
+  for (const argv of [["serve"], ["mcp"]]) {
     const result = await run(dir, ...argv);
     assert.equal(result.code, 2, argv.join(" "));
     assert.match(result.err, /not built yet/);
@@ -208,7 +129,19 @@ test("invocation errors exit 2 before reading anything", async (t) => {
     [["validate", "--out", "x.json"], /--out is not an option of validate/],
     [["validate", "--carrier", "html"], /the carriers are markset and plain/],
     [["validate", "--level", "L9"], /the levels are L1, L2, L3, L4, L5/],
-    [["validate", "--level", "L3"], /does not run yet/],
+    [["validate", "--level", "L5"], /L5 is a claim about continuous CI, not something one run can check/],
+    [["validate", "--product", "PRD-LANTERN"], /give both or neither/],
+    [["validate", "--level", "L2", "--mode", "lax"], /the modes are migration and strict/],
+    [["architecture"], /the only subcommand is "architecture check"/],
+    [["architecture", "check", "--level", "L1"], /runs at L2 and above/],
+    [["evidence", "import", "r.json", "--from", "jest"], /the reporters are vitest and node-tap/],
+    [["evidence", "import", "--from", "vitest"], /a report file is required/],
+    [
+      ["evidence", "import", "r.json", "--from", "vitest", "--product", "PRD-LANTERN", "--release", "pilot-1"],
+      /--out is required/,
+    ],
+    [["publish", "--visibility", "customer"], /--out <dir> is required/],
+    [["review", "extra"], /unexpected argument "extra"/],
     [["validate", "extra"], /unexpected argument "extra"/],
     [["impact"], /an artifact ID is required/],
     [["graph", "--format", "yaml"], /the only format is json/],
@@ -326,7 +259,7 @@ test("graph --out writes that one file and refuses to write over a file the repo
   const bytes = readFileSync(record, "utf8");
   const refused = await run(dir, "graph", "--out", record);
   assert.equal(refused.code, 2);
-  assert.match(refused.err, /tools never rewrite them/);
+  assert.match(refused.err, /is a file the repository reads; tools never rewrite those/);
   assert.equal(readFileSync(record, "utf8"), bytes);
 });
 
@@ -390,32 +323,44 @@ test("context BEH-ASMT-SCHEDULE holds the owning slice, both rules and the rest,
     "CONTRACT-ASMT-SCHEDULE",
     "ADR-ASMT-SEAM",
     "TEST-ASMT-SCHEDULE",
+    "KB-ASMT-SCHEDULE",
+    "CAP-ASMT-ASSIGN",
   ]) {
     assert.match(context.out, new RegExp(`^### ${id}: `, "m"), id);
     assert.match(context.out, new RegExp(`^- Path: product/scheduling/${id}\\.md$`, "m"), id);
   }
-  assert.doesNotMatch(
-    context.out,
-    /KB-ASMT-SCHEDULE|PRD-LANTERN/,
-    "knowledge and the spine are not engineering context",
-  );
   assert.match(context.out, /The authoritative server time must be earlier/, "bodies are included");
-  assert.ok(context.out.indexOf("## Owning slice") < context.out.indexOf("## Behaviors"));
-  assert.match(context.out, /Included: 8 artifacts\. Withheld: 0 restricted\./);
+  const order = [
+    "## Start",
+    "## Owning slice",
+    "## Rules",
+    "## Scenarios",
+    "## Verification definitions",
+    "## Knowledge",
+  ];
+  const at = order.map((heading) => context.out.indexOf(`\n${heading}\n`));
+  assert.ok(
+    at.every((i, n) => i > 0 && (n === 0 || i > at[n - 1])),
+    `sections in role order: ${at.join(", ")}`,
+  );
+  assert.match(context.out, /Included: 13 artifacts\. Withheld: 0 restricted\./);
 });
 
-test("context from a rule, a slice and a capability reaches the same slice", async (t) => {
+test("context from a rule, a slice and a capability reaches the same slice; other types get their neighbours", async (t) => {
   const dir = await example(t);
   for (const id of ["RULE-ASMT-AUTH", "SLICE-ASMT-SCHEDULE", "CAP-ASMT-ASSIGN"]) {
     const context = JSON.parse((await run(dir, "context", id, "--json")).out);
     const ids = context.artifacts.map((a: { id: string }) => a.id);
     assert.ok(ids.includes("SLICE-ASMT-SCHEDULE"), id);
     assert.ok(ids.includes("BEH-ASMT-SCHEDULE"), id);
-    assert.ok(ids.includes(id), `${id} includes itself`);
+    assert.equal(context.artifacts[0].id, id, `${id} comes first, as the start`);
+    assert.equal(context.artifacts[0].role, "start");
   }
-  const knowledge = await run(dir, "context", "KB-ASMT-SCHEDULE");
-  assert.equal(knowledge.code, 2);
-  assert.match(knowledge.err, /is a knowledge artifact; context starts from/);
+  const knowledge = JSON.parse((await run(dir, "context", "KB-ASMT-SCHEDULE", "--json")).out);
+  assert.deepEqual(
+    knowledge.artifacts.filter((a: { role: string }) => a.role === "neighbour").map((a: { id: string }) => a.id),
+    ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"],
+  );
 });
 
 test("context withholds restricted artifacts unless asked, and says how many", async (t) => {
@@ -423,18 +368,18 @@ test("context withholds restricted artifacts unless asked, and says how many", a
   edit(dir, "RULE-ASMT-AUTH", "visibility: internal", "visibility: restricted");
   const withheld = await run(dir, "context", "BEH-ASMT-SCHEDULE");
   assert.equal(withheld.code, 0);
-  assert.match(withheld.out, /Included: 7 artifacts\. Withheld: 1 restricted; pass --include-restricted/);
+  assert.match(withheld.out, /Included: 12 artifacts\. Withheld: 1 restricted; pass --include-restricted/);
   assert.doesNotMatch(withheld.out, /RULE-ASMT-AUTH|Require assignment permission/);
   const json = JSON.parse((await run(dir, "context", "BEH-ASMT-SCHEDULE", "--json")).out);
   assert.equal(json.withheld, 1);
-  assert.equal(json.included, 7);
+  assert.equal(json.included, 12);
 
   const included = await run(dir, "context", "BEH-ASMT-SCHEDULE", "--include-restricted");
   assert.match(included.out, /^### RULE-ASMT-AUTH: Require assignment permission$/m);
   assert.match(included.out, /Restricted artifacts are included, as asked\./);
 });
 
-test("validate, graph, impact and context change no file's bytes or modification time, and create none", async (t) => {
+test("validate, graph, architecture check, impact and context change no file's bytes or modification time, and create none", async (t) => {
   const dir = await example(t);
   edit(dir, "BEH-ASMT-SCHEDULE", /- RULE-ASMT-AUTH$/m, "- RULE-ASMT-MISSING");
   const before = snapshot(dir);
@@ -446,6 +391,8 @@ test("validate, graph, impact and context change no file's bytes or modification
     ["impact", "BEH-ASMT-SCHEDULE"],
     ["impact", "BEH-ASMT-SCHEDULE", "--json"],
     ["context", "BEH-ASMT-SCHEDULE"],
+    ["architecture", "check"],
+    ["validate", "--level", "L4"],
   ]) {
     await run(dir, ...argv);
   }

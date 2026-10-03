@@ -29,8 +29,6 @@ export function json(value: unknown): string {
   return `${JSON.stringify(sortKeysDeep(value), null, 2)}\n`;
 }
 
-/** Intentset's own codes: a catalog prefix and three digits (CORE001, CFG002, VSA005). */
-
 /** Core §9 and ADR 0004: origin "syntax" is Markset's alone, so the origin decides. */
 export function isMarkset(d: Diagnostic): boolean {
   return d.origin === "syntax";
@@ -54,15 +52,17 @@ export function formatDiagnostic(d: Diagnostic): string {
   return text;
 }
 
-/** "1 artifact", "2 artifacts". */
-export function count(n: number, noun: string): string {
-  return `${n} ${noun}${n === 1 ? "" : "s"}`;
+/** "1 artifact", "2 artifacts"; "1 entry", "2 entries" with the plural given. */
+export function count(n: number, noun: string, plural = `${noun}s`): string {
+  return `${n} ${n === 1 ? noun : plural}`;
 }
 
 /** The snapshot a report describes (Core §10, §11): the commit, or why there is none, and the graph hash. */
 export interface Snapshot {
   commit: string | null;
   commitUnavailable?: string;
+  /** True when tracked files differ from the commit; the graph hash still describes exactly what was read. */
+  uncommitted?: boolean;
   graphHash: string;
 }
 
@@ -71,6 +71,6 @@ export function snapshotLine(snapshot: Snapshot): string {
   const commit =
     snapshot.commit === null
       ? `no commit (${snapshot.commitUnavailable ?? "none was read"})`
-      : `commit ${snapshot.commit}`;
+      : `commit ${snapshot.commit}${snapshot.uncommitted === true ? " plus uncommitted changes" : ""}`;
   return `Snapshot: ${commit}, graph ${snapshot.graphHash}`;
 }
