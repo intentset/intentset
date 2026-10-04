@@ -126,7 +126,7 @@ try {
   const bin = join(process.cwd(), "node_modules", ".bin", "intentset");
   execFileSync(bin, ["init", "--repository", "example/consumer", "--example"], { cwd: work, stdio: "pipe" });
   const out = execFileSync(bin, ["validate"], { cwd: work, encoding: "utf8" });
-  assert.match(out, /13 artifacts, 0 errors, 0 warnings/);
+  assert.match(out, /15 artifacts, 0 errors, 0 warnings/);
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
