@@ -1,6 +1,6 @@
 {
   "name": "@intentset/conformance-suite",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The conformance cases, the export consumer fixtures and the schemas as data, for implementations that are not this one. No dependencies.",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@intentset/markset-adapter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The one place Markset is imported: turns a Markset document into the input core validates, with syntax diagnostics kept separate.",
   "license": "MIT",
   "type": "module",
@@ -28,7 +28,7 @@
     }
   },
   "dependencies": {
-    "@intentset/core": "^0.2.0",
+    "@intentset/core": "^0.3.0",
     "@markset-lang/parser": "0.3.4"
   }
 }
