@@ -23,7 +23,7 @@
  * case can say "reviewed against what is there now" without computing a
  * hash. Unbound, it never equals a hash, so it reads as changed.
  */
-import type { Artifact, Graph } from "@intentset/core";
+import { type Artifact, type Graph, graphHash, type KnowledgeReportSection } from "@intentset/core";
 import { compareStrings, sortedUnique } from "./diagnostic.ts";
 
 export const REVIEW_EXTENSION = "intentset.org/review";
@@ -118,4 +118,32 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nonEmpty(value: string | undefined): string | null {
   return value === undefined || value.trim() === "" ? null : value;
+}
+
+/**
+ * `reports.knowledge` for the export (spec/export.md §4.2): the review status
+ * of every knowledge artifact in the graph, sorted by ID. Computed over the
+ * whole graph, so a withheld source that changed still makes its knowledge
+ * needs-review; the export removes the withheld IDs from the lists.
+ */
+export function knowledgeReport(graph: Graph): KnowledgeReportSection {
+  const ids = [...graph.artifacts.keys()].filter((id) => graph.artifacts.get(id)?.meta.type === "knowledge");
+  return {
+    graphHash: graphHash(graph),
+    artifacts: ids.sort(compareStrings).map((id) => {
+      const artifact = graph.artifacts.get(id) as Artifact;
+      const status = reviewStatus(graph, artifact);
+      return {
+        id,
+        lifecycle: artifact.meta.status,
+        status: status.status,
+        reviewer: status.reviewer,
+        reviewedAt: status.reviewedAt,
+        sources: reviewSources(graph, artifact),
+        changed: [...status.changed].sort(compareStrings),
+        missing: [...status.missing].sort(compareStrings),
+        withheld: 0,
+      };
+    }),
+  };
 }

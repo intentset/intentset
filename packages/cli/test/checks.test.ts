@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
+import { readExport } from "@intentset/core";
 import { edit, example, git, RECORD, REPO, run, snapshot, write } from "./helpers.ts";
 
 type Context = { after(fn: () => void): void };
@@ -100,8 +101,18 @@ test("architecture check on the example with its source tree is clean at L2, and
   assert.equal((await run(dir, "validate", "--level", "L2")).code, 0);
 });
 
-test("architecture check without the source tree reports the missing entrypoint and empty claims", async (t) => {
+test("architecture check without the source tree: a draft slice's paths are planned, an approved slice's are missing", async (t) => {
   const dir = await example(t);
+  const planned = await run(dir, "architecture", "check");
+  assert.equal(planned.code, 1, "the registry resource naming no file is an error whatever the slice's status");
+  assert.match(planned.out, /warning VSA002 \[SLICE-ASMT-SCHEDULE\] .* draft slice .* is not a file yet/);
+  assert.match(
+    planned.out,
+    /warning VSA009 \[SLICE-ASMT-SCHEDULE\] The source claim .* of draft slice .* matches no file yet/,
+  );
+  assert.match(planned.out, /error VSA009 .*RES-ASSESSMENT-DATA/);
+
+  edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: approved");
   const check = await run(dir, "architecture", "check");
   assert.equal(check.code, 1);
   assert.match(check.out, /error VSA002 \[SLICE-ASMT-SCHEDULE\]/);
@@ -128,6 +139,8 @@ test("a deep import into another slice's internals is VSA003 and exits 1", async
 
 test("a baseline written by --write-baseline turns known violations into warnings in migration mode only", async (t) => {
   const dir = await example(t);
+  // Approved, so its missing paths are errors rather than planned warnings, and there is something to baseline.
+  edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: approved");
   const before = snapshot(dir);
   const written = await run(dir, "architecture", "check", "--write-baseline", "baseline.json");
   assert.equal(written.code, 1, "this run's errors are still errors");
@@ -542,4 +555,88 @@ test("validate --level L5 is refused as a claim one run cannot check", async (t)
   const l5 = await run(dir, "validate", "--level", "L5");
   assert.equal(l5.code, 2);
   assert.match(l5.err, /L5 is a claim about continuous CI, not something one run can check \(Core §11\)/);
+});
+
+test("graph --report all at L3 writes every report at the commit, and a consumer's reader accepts it", async (t) => {
+  const dir = await committed(t);
+  const head = git(dir, "rev-parse", "HEAD");
+  write(dir, { "reports/vitest.json": vitestReport("passed") });
+  const imported = await run(
+    dir,
+    "evidence",
+    "import",
+    "--from",
+    "vitest",
+    "reports/vitest.json",
+    "--out",
+    ".intentset/evidence/run-1.json",
+    ...IMPORT,
+  );
+  assert.equal(imported.code, 0, imported.err);
+  edit(dir, "RULE-ASMT-AUTH", "visibility: internal", "visibility: restricted");
+  git(dir, "commit", "-q", "-am", "restrict the authorization rule");
+  const reimported = await run(
+    dir,
+    "evidence",
+    "import",
+    "--from",
+    "vitest",
+    "reports/vitest.json",
+    "--out",
+    ".intentset/evidence/run-2.json",
+    ...IMPORT,
+  );
+  assert.equal(reimported.code, 0, reimported.err);
+  const now = git(dir, "rev-parse", "HEAD");
+  assert.notEqual(now, head);
+
+  const graph = await run(
+    dir,
+    "graph",
+    "--level",
+    "L3",
+    "--release",
+    "PRD-LANTERN:pilot-1",
+    "--report",
+    "all",
+    "--out",
+    "export.json",
+  );
+  assert.equal(graph.code, 0, graph.err);
+  assert.match(graph.err, /reports: evidence, knowledge, impact, ownership; 1 restricted artifact withheld/);
+  const text = readFileSync(join(dir, "export.json"), "utf8");
+  const read = readExport(text, { repository: "example/lantern", product: "PRD-LANTERN" });
+  assert.ok(read.ok, read.ok ? "" : JSON.stringify(read.problems));
+  if (!read.ok) return;
+  const { envelope } = read;
+  assert.deepEqual(read.supplied, ["evidence", "knowledge", "impact", "ownership"]);
+  assert.deepEqual(envelope.source, { commit: now, uncommitted: false });
+  assert.equal(envelope.reports.evidence?.verifications[0].status, "current-pass");
+  assert.equal(envelope.reports.evidence?.verifications[0].atSnapshot.pass, 1, "the run at the old commit is history");
+  assert.ok(
+    envelope.reports.ownership?.files.some(
+      (f) => f.path === "src/features/assessment/schedule/index.ts" && f.owner === "SLICE-ASMT-SCHEDULE",
+    ),
+  );
+  assert.ok(envelope.reports.ownership?.files.some((f) => f.path === TEST_FILE && f.region === "test"));
+  assert.ok(!text.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere");
+
+  const everything = await run(dir, "graph", "--report", "knowledge", "--include-restricted");
+  assert.equal(everything.code, 0, everything.err);
+  assert.ok(everything.out.includes("RULE-ASMT-AUTH"));
+  assert.deepEqual(JSON.parse(everything.out).withholding.visibilities, []);
+});
+
+test("graph refuses a report its level does not read, and a report it does not know", async (t) => {
+  const dir = await withSources(t);
+  const low = await run(dir, "graph", "--report", "evidence");
+  assert.equal(low.code, 2);
+  assert.match(low.err, /--report evidence needs --level L3 or above, where run records are read/);
+  const ownership = await run(dir, "graph", "--report", "ownership");
+  assert.match(ownership.err, /--report ownership needs --level L2 or above/);
+  const unknown = await run(dir, "graph", "--report", "coverage");
+  assert.match(unknown.err, /--report coverage: the reports are evidence, knowledge, impact, ownership, or all/);
+  const all = await run(dir, "graph", "--report", "all");
+  assert.equal(all.code, 0, all.err);
+  assert.deepEqual(Object.keys(JSON.parse(all.out).reports), ["knowledge", "impact"], "all is what L1 reads");
 });

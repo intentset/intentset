@@ -1,7 +1,8 @@
 /**
  * Stage the published suite: every case in tests/*.json expanded into whole
- * files (ADR 0006), the three normative schemas, and the example the cases
- * are built from. Run by `npm run build`; never committed.
+ * files (ADR 0006), the normative schemas, the example the cases are built
+ * from, and the consumer fixtures of tests/consumer/ as they are (spec/export.md
+ * §6). Run by `npm run build`; never committed.
  *
  * The expanded form carries no `baseline`, `patch`, `registries` or `config`:
  * the registries and config are inside `files`, as `registries.yaml` and
@@ -57,6 +58,8 @@ export interface Staged {
   /** Schema names copied, in SCHEMAS order; one not yet written in spec/ is left out. */
   schemas: string[];
   cases: number;
+  /** Consumer fixture files copied, the manifest included. */
+  consumer: number;
 }
 
 export function stage(options: StageOptions): Staged {
@@ -67,7 +70,7 @@ export function stage(options: StageOptions): Staged {
 
   const schema = JSON.parse(readFileSync(join(specDir, "conformance.schema.json"), "utf8"));
 
-  for (const dir of ["cases", "schemas", "examples"]) {
+  for (const dir of ["cases", "schemas", "examples", "consumer"]) {
     rmSync(join(into, dir), { recursive: true, force: true });
     mkdirSync(join(into, dir), { recursive: true });
   }
@@ -101,7 +104,12 @@ export function stage(options: StageOptions): Staged {
     cpSync(join(examplesDir, name), join(into, "examples", name), { recursive: true });
   }
 
-  return { sections, schemas, cases: count };
+  // Already whole envelopes, each read the way a consumer reads it: copied, not expanded.
+  const consumerDir = join(testsDir, "consumer");
+  const consumer = existsSync(consumerDir) ? readdirSync(consumerDir).sort() : [];
+  for (const name of consumer) cpSync(join(consumerDir, name), join(into, "consumer", name));
+
+  return { sections, schemas, cases: count, consumer: consumer.length };
 }
 
 /** One case in its expanded form, keys in STAGED_KEYS order. */
@@ -134,6 +142,6 @@ if (process.argv[1] === import.meta.filename) {
   const staged = stage({ parseYaml });
   process.stdout.write(
     `conformance-suite: staged ${staged.cases} case(s) in ${staged.sections.length} section(s), ` +
-      `${staged.schemas.length} schema(s) and ${EXAMPLES.length} example(s)\n`,
+      `${staged.schemas.length} schema(s), ${EXAMPLES.length} example(s) and ${staged.consumer} consumer fixture file(s)\n`,
   );
 }

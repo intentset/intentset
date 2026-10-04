@@ -7,8 +7,22 @@
  * reason sentence per step. Reachability is recorded, never asserted as
  * proof that runtime behavior changed.
  */
+import { graphHash } from "./hash.ts";
 import { compareStrings } from "./report.ts";
-import type { Edge, Graph, ImpactHit, ImpactReport, ImpactStep, LinkKind } from "./types.ts";
+import type {
+  Edge,
+  ExportImpactHit,
+  Graph,
+  ImpactHit,
+  ImpactReport,
+  ImpactReportSection,
+  ImpactStep,
+  LinkKind,
+} from "./types.ts";
+
+/** Said beside every impact report, because reachability is easy to read as more than it is (Core §10). */
+export const IMPACT_NOTE =
+  "Reachability through authored links marks an artifact for review; it is not proof that runtime behavior changed (Core §10).";
 
 const PHRASES: Record<LinkKind, string> = {
   parent: "has {to} as its navigation parent",
@@ -87,4 +101,31 @@ function toHit(graph: Graph, id: string, path: ImpactStep[]): ImpactHit | null {
   const artifact = graph.artifacts.get(id);
   if (artifact === undefined) return null;
   return { id, type: artifact.meta.type, title: artifact.meta.title, path };
+}
+
+/**
+ * `reports.impact` for the export (spec/export.md §4.3): the impact report from
+ * every artifact in the graph, or from `starts` when given, with each hit
+ * reduced to its ID and path. A consumer joins hits to `artifacts` by ID.
+ */
+export function impactReport(graph: Graph, starts?: Iterable<string>): ImpactReportSection {
+  const ids = [...new Set(starts ?? graph.artifacts.keys())]
+    .filter((id) => graph.artifacts.has(id))
+    .sort(compareStrings);
+  const hit = (h: ImpactHit): ExportImpactHit => ({ id: h.id, path: h.path });
+  return {
+    graphHash: graphHash(graph),
+    note: IMPACT_NOTE,
+    starts: ids.map((id) => {
+      const report = impact(graph, id);
+      return {
+        start: id,
+        direct: report.direct.map(hit),
+        candidates: report.candidates.map(hit),
+        context: report.context.map(hit),
+        ancestors: report.ancestors,
+        withheld: 0,
+      };
+    }),
+  };
 }

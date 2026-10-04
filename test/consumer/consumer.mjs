@@ -6,14 +6,22 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { checkArchitecture } from "@intentset/architecture";
+import { checkArchitecture, ownershipReport } from "@intentset/architecture";
 import { buildAtlas } from "@intentset/atlas";
-import { examplesPath, loadSuite } from "@intentset/conformance-suite";
-import { graphHash, plainCarrier, readRegistries, validate } from "@intentset/core";
+import { examplesPath, loadConsumerFixtures, loadSuite } from "@intentset/conformance-suite";
+import {
+  exportGraph,
+  graphHash,
+  impactReport,
+  plainCarrier,
+  readExport,
+  readRegistries,
+  validate,
+} from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { createIntentsetServer } from "@intentset/mcp";
-import { publish } from "@intentset/publisher";
-import { checkEvidence, readRunRecords } from "@intentset/verification";
+import { knowledgeReport, publish } from "@intentset/publisher";
+import { checkEvidence, evidenceReport, readRunRecords } from "@intentset/verification";
 
 const dir = join(examplesPath, "scheduling");
 const names = readdirSync(dir)
@@ -84,6 +92,28 @@ assert.ok(createIntentsetServer({ mode: "customer", publication: published }));
 const suite = loadSuite();
 for (const section of ["core", "evidence", "export", "publication", "vsa"])
   assert.ok(suite[section]?.length > 0, section);
+
+// an export with every report, read back as a consumer must, and every consumer fixture judged as its manifest says.
+const envelope = exportGraph(result, registries, {
+  repository: "example/scheduling",
+  commit: null,
+  reports: {
+    evidence: evidenceReport(evidence, 0),
+    knowledge: knowledgeReport(result.graph),
+    impact: impactReport(result.graph),
+    ownership: ownershipReport(architecture, { commit: null, graphHash: hash }),
+  },
+});
+const exported = readExport(JSON.stringify(envelope), { repository: "example/scheduling", product: "PRD-LANTERN" });
+assert.ok(exported.ok, JSON.stringify(exported.problems));
+assert.deepEqual(exported.supplied, ["evidence", "knowledge", "impact", "ownership"]);
+const fixtures = loadConsumerFixtures();
+assert.ok(fixtures.cases.length >= 10);
+for (const c of fixtures.cases) {
+  const outcome = readExport(fixtures.read(c.file), c.connection);
+  assert.equal(outcome.ok, c.expect.accept, c.name);
+  if (!c.expect.accept) assert.equal(outcome.category, c.expect.category, c.name);
+}
 
 // the bin: init with the example, then validate, in a fresh directory.
 const work = mkdtempSync(join(tmpdir(), "intentset-bin-"));

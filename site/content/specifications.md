@@ -31,9 +31,15 @@ Intentset separates product meaning from implementation architecture and platfor
   :::
 ::::
 
+## For tools that read a model
+
+The **Export Contract v0.2** fixes the JSON a repository hands to other tools: the graph, optional evidence, knowledge, impact and ownership reports, what is withheld, and what a consumer must check before importing it. Valid and deliberately invalid envelopes for testing a consumer ship with the conformance suite.
+
+[[Read the export contract](export/index.html)]{.button}
+
 ## What conformance means
 
 A conformance report names its scope, snapshot, specification version, checks, and exceptions. Linked evidence is not the same as passing evidence, and passing tests do not prove every documented promise correct.
 
 > [!NOTE]
-> All three documents are initial drafts. The TypeScript reference implementation, version 0.1, implements them, and its conformance suite is published for other implementations.
+> All four documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. Version 0.1 is on npm; the export contract arrives with 0.2.

@@ -88,7 +88,8 @@ test("serve prints the URL, the snapshot and the warning, serves the Atlas, and 
   const lines = serving.output().split("\n");
   assert.equal(lines[0], `Intentset Atlas for example/lantern at ${serving.url}`);
   assert.match(lines[1], /^Snapshot: no commit \(.+\), graph [0-9a-f]{64}$/);
-  assert.match(lines[2], /^13 artifacts, 4 errors, 0 warnings at L2; no run records were given or found/);
+  // The draft slice's missing paths are planned warnings (VSA §3); the resource naming no file is the error.
+  assert.match(lines[2], /^13 artifacts, 1 error, 3 warnings at L2; no run records were given or found/);
   assert.match(serving.output(), /not for publication/);
 
   const index = await raw(serving.url, "/");

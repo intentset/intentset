@@ -39,8 +39,12 @@ commands
                             Never overwrites a file.
   validate                  every check the level asks for; exit 1 when any diagnostic is an error
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
-        [--generated-at <time>]
-                            print the intentset/export/0.1 envelope, or write it to --out
+        [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
+        [--include-restricted]
+                            print the intentset/export/0.2 envelope, or write it to --out;
+                            each --report adds a section (ownership needs L2, evidence L3; all
+                            is every one the level reads). Restricted artifacts are withheld
+                            and counted unless --include-restricted
   architecture check [--mode migration|strict] [--baseline <file>] [--write-baseline <file>]
                             ownership, claims, imports, layers and regions (default level L2)
   evidence import --from vitest|node-tap <report> --out <file> --product <ID> --release <label>
@@ -101,7 +105,18 @@ const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline"];
 const COMMAND_OPTIONS: Record<string, string[]> = {
   init: ["repository", "example"],
   validate: LEVEL_OPTIONS,
-  graph: ["format", "include-bodies", "release", "out", "generated-at", "evidence", "mode", "baseline"],
+  graph: [
+    "format",
+    "include-bodies",
+    "release",
+    "out",
+    "generated-at",
+    "report",
+    "include-restricted",
+    "evidence",
+    "mode",
+    "baseline",
+  ],
   architecture: ["mode", "baseline", "write-baseline"],
   evidence: [
     "from",
@@ -251,8 +266,10 @@ export async function main(argv: string[], io: Io): Promise<number> {
         release: values.release,
         out: values.out,
         generatedAt: values["generated-at"],
+        reports: values.report ?? [],
+        includeRestricted: values["include-restricted"],
       };
-      const problem = graphUsageProblem(options);
+      const problem = graphUsageProblem(options, levelGiven ?? "L1");
       if (problem !== null) return usage(problem);
       const session = openSession(command, sessionOptions(levelGiven ?? "L1"), io);
       return typeof session === "number" ? session : graphCommand(session, options, io);
@@ -379,6 +396,7 @@ function parse(argv: string[]) {
       release: { type: "string" },
       out: { type: "string" },
       "generated-at": { type: "string" },
+      report: { type: "string", multiple: true },
       "include-restricted": { type: "boolean", default: false },
       evidence: { type: "string", multiple: true },
       product: { type: "string" },

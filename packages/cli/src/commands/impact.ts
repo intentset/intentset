@@ -5,13 +5,13 @@
  * decisions as review context; navigation ancestors. Every report names its
  * snapshot and says that reachability is not proof. Never writes.
  */
-import { type ImpactHit, type ImpactReport, impact } from "@intentset/core";
+import { IMPACT_NOTE, type ImpactHit, type ImpactReport, impact } from "@intentset/core";
 import { formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import type { Session } from "../session.ts";
 import { unresolved, validationLine, validationSummary } from "./shared.ts";
 
-export const REACHABILITY_NOTE =
-  "Reachability through authored links marks an artifact for review; it is not proof that runtime behavior changed (Core §10).";
+/** Core's note, under the name the CLI has always used for it. */
+export const REACHABILITY_NOTE = IMPACT_NOTE;
 
 export function impactCommand(session: Session, id: string, asJson: boolean, io: Io): number {
   const { graph } = session.result;

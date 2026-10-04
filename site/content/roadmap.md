@@ -23,7 +23,11 @@ Slice ownership and contracts resolved against the code, test evidence collected
 
 A Product Atlas, reviewed Markset publication, and bounded agent context over a read-only MCP server.
 
-## Next: a second pilot and a stable 1.0
+## Next: tools that read the model
+
+The [export contract](../specifications/export/index.html) fixes what a repository hands to other tools: the graph, with evidence, knowledge, impact and ownership reports, and fixtures for testing a consumer. Streamlane will use it to link work items to the behaviors they change, and Driftline to attribute usage and errors to slices and behaviors.
+
+## Then: a second pilot and a stable 1.0
 
 The first pilot, on Streamlane, changed the specification in four places. A second pilot on a different codebase decides what 1.0 keeps.
 

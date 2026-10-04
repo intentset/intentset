@@ -63,6 +63,7 @@ export {
   type ReviewRecord,
   type ReviewStatus,
   bindReviewPins,
+  knowledgeReport,
   readReviewRecord,
   reviewSources,
   reviewStatus,

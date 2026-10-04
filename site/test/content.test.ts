@@ -140,7 +140,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     ],
     [
       "specifications/index.html",
-      "All three documents are initial drafts. The TypeScript reference implementation, version 0.1, implements them, and its conformance suite is published for other implementations.",
+      "All four documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. Version 0.1 is on npm; the export contract arrives with 0.2.",
     ],
     [
       "markset/index.html",

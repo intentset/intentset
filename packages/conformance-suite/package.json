@@ -1,7 +1,7 @@
 {
   "name": "@intentset/conformance-suite",
-  "version": "0.1.0",
-  "description": "The conformance cases and schemas as data, for implementations that are not this one. No dependencies.",
+  "version": "0.2.0",
+  "description": "The conformance cases, the export consumer fixtures and the schemas as data, for implementations that are not this one. No dependencies.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -26,7 +26,8 @@
     "src",
     "cases",
     "schemas",
-    "examples"
+    "examples",
+    "consumer"
   ],
   "exports": {
     ".": {
@@ -35,7 +36,8 @@
       "default": "./dist/index.js"
     },
     "./cases/*.json": "./cases/*.json",
-    "./schemas/*.json": "./schemas/*.json"
+    "./schemas/*.json": "./schemas/*.json",
+    "./consumer/*": "./consumer/*"
   },
   "scripts": {
     "prepack": "node --conditions=intentset-source stage.ts"

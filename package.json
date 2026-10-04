@@ -2,7 +2,7 @@
   "name": "intentset",
   "private": true,
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Intentset: product intent, behavior, implementation, verification and knowledge, connected in readable files. Reference implementation of the v0.1 specifications.",
   "license": "MIT",
   "workspaces": [
@@ -16,6 +16,7 @@
     "intentset": "node --conditions=intentset-source packages/cli/src/intentset.ts",
     "test": "node --conditions=intentset-source --test packages/*/test/*.test.ts site/test/*.test.ts test/*.test.ts",
     "conformance": "node --conditions=intentset-source packages/conformance/src/cli.ts",
+    "fixtures:consumer": "node --conditions=intentset-source packages/conformance/src/consumer-write.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "biome check .",
     "format": "biome check --write .",

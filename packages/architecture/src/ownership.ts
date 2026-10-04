@@ -10,7 +10,9 @@
  * inside one of the slice's own source claims, and no two lie in the same
  * package (the nearest directory above holding a package.json, or the
  * repository root): a slice has one public surface per package it spans. An
- * empty entrypoint module is allowed for a leaf.
+ * empty entrypoint module is allowed for a leaf. While the slice is draft, an
+ * entrypoint that is not a file yet is a warning: planned, not yet owned
+ * (VSA §3).
  *
  * VSA012 (deleting or splitting a slice dispositions its behavior, paths and
  * contracts) is a diff between two snapshots. This check sees one snapshot,
@@ -98,13 +100,17 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
         );
       } else byPackage.set(pkg, entrypoint);
       if (!model.files.has(entrypoint)) {
+        const planned = slice.artifact.meta.status === "draft";
         findings.push(
           finding({
             code: "VSA002",
+            ...(planned ? { severity: "warning" as const } : {}),
             artifact: slice.id,
             path: slice.path,
             field,
-            message: `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
+            message: planned
+              ? `The entrypoint ${entrypoint} of draft slice ${slice.id} is not a file yet; it is planned, and an error once the slice leaves draft.`
+              : `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
             remediation: "Create the entrypoint, empty if the slice exposes nothing yet, or correct the path (VSA002).",
             paths: [entrypoint],
           }),

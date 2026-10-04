@@ -11,7 +11,15 @@
  * migration mode. What could not be checked is listed in `unresolved` and,
  * for imports, reported as a TS004 warning: never a pass (invariant 6).
  */
-import { type Diagnostic, type Graph, type Level, type Registries, sortDiagnostics } from "@intentset/core";
+import {
+  type Diagnostic,
+  type Graph,
+  type Level,
+  type OwnershipEntry,
+  type OwnershipReportSection,
+  type Registries,
+  sortDiagnostics,
+} from "@intentset/core";
 import { applyBaseline, type BaselineEntry, type Mode } from "./baseline.ts";
 import { checkBoundaries, checkUnclassified } from "./boundaries.ts";
 import { checkClaims } from "./claims.ts";
@@ -76,6 +84,14 @@ export interface ArchitectureResult {
   summary: ArchitectureSummary;
   /** The resolved import graph, for reports and impact views. */
   edges: ImportEdge[];
+  /**
+   * Where every file falls, sorted by path: each production file's region and
+   * owner, every test file with the slice its claims match, and nothing for a
+   * file in the external region (root configuration, scripts, documents that
+   * nothing claims). Out-of-scope files are attributed too: scope decides what
+   * is reported, not who owns what.
+   */
+  ownership: OwnershipEntry[];
 }
 
 /** VSA §2: the rules that are review assertions, snapshot diffs or contract diffs rather than structure. */
@@ -193,5 +209,33 @@ export function checkArchitecture(
     unresolved: [...new Set(unresolved)].sort(compareStrings),
     reviewRequired: [...REVIEW_REQUIRED],
   };
-  return { diagnostics, summary, edges: imports.edges };
+  const ownership: OwnershipEntry[] = [];
+  for (const path of model.files.keys()) {
+    if (model.isTest(path)) {
+      ownership.push({ path, region: "test", owner: model.testOwner(path) });
+      continue;
+    }
+    const region = model.regionOf(path);
+    if (region.kind === "external") continue;
+    ownership.push({ path, region: region.kind, owner: region.owner ?? null });
+  }
+  ownership.sort((a, b) => compareStrings(a.path, b.path));
+  return { diagnostics, summary, edges: imports.edges, ownership };
+}
+
+/**
+ * `reports.ownership` for the export (spec/export.md §4.4): the check's file
+ * attribution, stamped with the snapshot it was read at, so a consumer can
+ * turn a file from a stack frame into a slice, its behaviors and its owner.
+ */
+export function ownershipReport(
+  result: ArchitectureResult,
+  snapshot: { commit: string | null; graphHash: string },
+): OwnershipReportSection {
+  return {
+    commit: snapshot.commit,
+    graphHash: snapshot.graphHash,
+    files: result.ownership.map((entry) => ({ ...entry })),
+    withheld: 0,
+  };
 }
