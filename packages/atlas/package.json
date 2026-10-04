@@ -1,6 +1,6 @@
 {
   "name": "@intentset/atlas",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Static review pages over an export: capabilities, behaviors, ownership, verification, publication readiness.",
   "license": "MIT",
   "type": "module",
@@ -28,8 +28,8 @@
     }
   },
   "dependencies": {
-    "@intentset/core": "^0.3.0",
-    "@intentset/publisher": "^0.3.0",
+    "@intentset/core": "^0.4.0",
+    "@intentset/publisher": "^0.4.0",
     "@markset-lang/parser": "0.3.4",
     "@markset-lang/render-html": "0.3.4"
   }
