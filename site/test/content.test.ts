@@ -150,7 +150,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     ["index.html", "Illustrative model. These links describe the proposed structure, not a live verification report."],
     [
       "start/index.html",
-      "The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as npx -p @intentset/cli -p typescript@7 intentset.",
+      "The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as npx -p @intentset/cli -p typescript@7 intentset, or with pnpm as pnpm dlx --package=@intentset/cli --package=typescript@7 intentset.",
     ],
     [
       "specifications/index.html",

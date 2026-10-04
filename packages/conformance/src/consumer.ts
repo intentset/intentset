@@ -2,7 +2,7 @@
  * The consumer fixtures (spec/export.md §6): envelopes a consumer of the
  * export must accept or reject, and what it must show for each, built from
  * the worked example so they cannot drift from what this implementation
- * produces. `npm run fixtures:consumer` writes them to tests/consumer/; a test
+ * produces. `pnpm run fixtures:consumer` writes them to tests/consumer/; a test
  * fails when the committed copy differs from what this module builds.
  *
  * The accepted envelopes are real exports of examples/scheduling over the VSA

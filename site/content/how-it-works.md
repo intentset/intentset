@@ -197,11 +197,22 @@ Conformance comes in five levels, each including the ones before it. Start at th
 
 ## Try it on the example
 
+:::tabs
+### npm
 ```sh
 npm install --save-dev @intentset/cli
 npx intentset init --example
 npx intentset validate
 npx intentset impact BEH-ASMT-SCHEDULE
 ```
+
+### pnpm
+```sh
+pnpm add --save-dev @intentset/cli
+pnpm exec intentset init --example
+pnpm exec intentset validate
+pnpm exec intentset impact BEH-ASMT-SCHEDULE
+```
+:::
 
 [[Start with one capability](../start/index.html)]{.button .primary} [[Read the Core specification](../specifications/core/index.html)]{.button}

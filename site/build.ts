@@ -13,7 +13,7 @@
  * script on a page is the shell's, and it only remembers the reader's color
  * scheme (SCHEME_SCRIPT).
  *
- *   npm run site
+ *   pnpm run site
  */
 import { cp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, posix, relative, resolve } from "node:path";

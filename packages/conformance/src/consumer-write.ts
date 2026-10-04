@@ -1,5 +1,5 @@
 /**
- * `npm run fixtures:consumer`: write the consumer fixtures to tests/consumer/,
+ * `pnpm run fixtures:consumer`: write the consumer fixtures to tests/consumer/,
  * removing any file there the build no longer makes. Run it after a change to
  * the export, the example or the fixtures' recipe, and commit the result.
  */

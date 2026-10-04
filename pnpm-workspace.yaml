@@ -1,0 +1,8 @@
+packages:
+  - packages/*
+  - site
+
+# Every package asks for its siblings at the version they are released at together (^x.y.z), so the
+# published manifests need no rewriting. This links those ranges to the workspace copy instead of fetching
+# the last release from the registry.
+linkWorkspacePackages: true

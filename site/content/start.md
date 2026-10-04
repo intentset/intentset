@@ -9,10 +9,19 @@ You do not need to reorganize your repository or write records by hand. Set up t
 
 ## 1. Set it up
 
+:::tabs
+### npm
 ```sh
 npm install --save-dev @intentset/cli
 npx intentset init
 ```
+
+### pnpm
+```sh
+pnpm add --save-dev @intentset/cli
+pnpm exec intentset init
+```
+:::
 
 `init` writes a configuration, empty registries, and `.intentset/agents.md`, the guide your agents follow. Point them at it with one line: `@.intentset/agents.md` in CLAUDE.md, or `Before changing code, read .intentset/agents.md and follow it.` in AGENTS.md. Then name your teams, audiences and releases in `.intentset/registries.yaml`. On a TypeScript earlier than 7, use the form in the note at the end of this page rather than installing.
 
@@ -35,10 +44,19 @@ Read the behaviors as a product reviewer would. Is each one a promise you recogn
 
 Add two checks to CI, so every change keeps the model true:
 
+:::tabs
+### npm
 ```sh
 npx intentset validate --level L2
 npx intentset review --base origin/main --fail-on-drift
 ```
+
+### pnpm
+```sh
+pnpm exec intentset validate --level L2
+pnpm exec intentset review --base origin/main --fail-on-drift
+```
+:::
 
 From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear.
 
@@ -49,4 +67,4 @@ Write the model first. A product manager and an agent draft the behaviors, and a
 [[Read about the first pilot](../pilot/index.html)]{.button .primary} [[Open the worked example](../example/index.html)]{.button}
 
 > [!NOTE]
-> The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`.
+> The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.

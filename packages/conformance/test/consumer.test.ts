@@ -17,7 +17,7 @@ const schema = JSON.parse(readFileSync(join(root, "spec", "export.schema.json"),
 const manifest = JSON.parse(readFileSync(join(CONSUMER_DIR, MANIFEST), "utf8")) as ConsumerManifest;
 const read = (file: string) => readFileSync(join(CONSUMER_DIR, file), "utf8");
 
-test("tests/consumer/ is exactly what the recipe builds: run `npm run fixtures:consumer` after changing either", () => {
+test("tests/consumer/ is exactly what the recipe builds: run `pnpm run fixtures:consumer` after changing either", () => {
   const built = buildConsumerFixtures();
   assert.deepEqual(readdirSync(CONSUMER_DIR).sort(), [...built.keys()].sort());
   for (const [name, text] of built) assert.equal(read(name), text, `${name} differs from what the recipe builds`);
