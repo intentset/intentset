@@ -144,6 +144,10 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       ownership reports (`intentset graph --report`), restricted artifacts withheld and counted unless
       `--include-restricted`, `readExport` in core, 16 consumer cases in `tests/consumer/`, shipped in the suite.
       The prerequisite for Streamlane's integration and for Driftline, which maps errors to slices through ownership.
+- [x] Published 0.2.0 from CI, 2026-10-04: the first tagged run stopped with ENEEDAUTH at `@intentset/core` because
+      some packages had no trusted publisher configured; once they were, a rerun published all nine with provenance and
+      the registry smoke test passed. The README's `npx -p @intentset/cli -p typescript@7` route was checked against
+      Streamlane with its own TypeScript 5.9.3 installed.
 - [x] Draft slices plan their paths, 2026-10-03 (VSA §3): while a slice is draft, a missing entrypoint (VSA002) and a
       claim matching no file (VSA009) are warnings, so a product modelled before it is coded (Driftline) keeps L2
       green. Checked on a clone of the Driftline repository from `intentset init` through an L3 export.
