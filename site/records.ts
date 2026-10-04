@@ -141,6 +141,7 @@ export const TYPE_ORDER = [
   "product",
   "intent",
   "outcome",
+  "measure",
   "capability",
   "behavior",
   "rule",

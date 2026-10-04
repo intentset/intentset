@@ -23,7 +23,7 @@ pnpm exec intentset init
 ```
 :::
 
-`init` writes a configuration, empty registries, and `.intentset/agents.md`, the guide your agents follow. Point them at it with one line: `@.intentset/agents.md` in CLAUDE.md, or `Before changing code, read .intentset/agents.md and follow it.` in AGENTS.md. Then name your teams, audiences and releases in `.intentset/registries.yaml`. On a TypeScript earlier than 7, use the form in the note at the end of this page rather than installing.
+`init` writes a configuration, empty registries, and `.intentset/agents.md`, the guide your agents follow. Point them at it with one line: `@.intentset/agents.md` in CLAUDE.md, or `Before changing code, read .intentset/agents.md and follow it.` in AGENTS.md. Then name your teams, audiences, releases and evidence sources in `.intentset/registries.yaml`. On a TypeScript earlier than 7, use the form in the note at the end of this page rather than installing.
 
 ## 2. Have an agent model one capability
 

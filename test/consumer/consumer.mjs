@@ -39,7 +39,7 @@ assert.deepEqual(
 );
 const result = validate(plain, registries, { level: "L1" });
 assert.equal(result.ok, true);
-assert.equal(result.graph.artifacts.size, 13);
+assert.equal(result.graph.artifacts.size, 15);
 const hash = graphHash(result.graph);
 
 // architecture runs over a tree; the example's claims name planned files, so it reports them.
@@ -126,7 +126,7 @@ try {
   const bin = join(process.cwd(), "node_modules", ".bin", "intentset");
   execFileSync(bin, ["init", "--repository", "example/consumer", "--example"], { cwd: work, stdio: "pipe" });
   const out = execFileSync(bin, ["validate"], { cwd: work, encoding: "utf8" });
-  assert.match(out, /13 artifacts, 0 errors, 0 warnings/);
+  assert.match(out, /15 artifacts, 0 errors, 0 warnings/);
 } finally {
   rmSync(work, { recursive: true, force: true });
 }

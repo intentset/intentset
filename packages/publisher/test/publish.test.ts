@@ -163,12 +163,12 @@ test("the index names the request without authorization and counts exclusions", 
   assert.deepEqual(Object.keys(result.index), ["snapshot", "request", "published", "excludedCounts"]);
   assert.equal(Object.hasOwn(result.index.request ?? {}, "authorizedInternal"), false);
   assert.deepEqual(result.index.published, ["KB-ASMT-SCHEDULE"]);
-  assert.deepEqual(result.index.excludedCounts, { "not-knowledge": 12 });
+  assert.deepEqual(result.index.excludedCounts, { "not-knowledge": 14 });
   assert.equal(result.ok, true);
 });
 
 test("a customer index counts only what the customer projection could see", () => {
-  // The example's twelve other records are all internal: an internal index
+  // The example's fourteen other records are all internal: an internal index
   // counts them, and a customer index must not say they exist.
   const result = publishOnce(customer());
   assert.deepEqual(result.index.published, ["KB-ASMT-SCHEDULE"]);

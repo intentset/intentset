@@ -6,7 +6,7 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.1.md`, `vsa-0.1.md`, `profile-typescript-amplify-gen2-0.1.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.2`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
+`export.md` (the export contract other tools pin, `intentset/export/0.3`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit.
 `docs/requirements/` is the kickoff handoff as delivered and is not updated; `docs/implementation-plan.md` is the plan;
 `docs/decisions/` holds the ADRs.
@@ -87,7 +87,7 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE009` (Core §11), `VSA001`–`VSA012`, `TS001`–`TS006`, `AMP001`–`AMP006` (VSA §2,
+- Diagnostic codes: `CORE001`–`CORE009` (Core §11; an outcome with no measure is CORE009 draft, CORE003 active), `VSA001`–`VSA012`, `TS001`–`TS006`, `AMP001`–`AMP006` (VSA §2,
   profile §2, §4), `EVID00n` for evidence, `PUB00n` for publication, `CFG00n` for configuration. Three digits always.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
@@ -197,6 +197,16 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       published**, so the next release needs it published by hand once and its trusted publisher configured before CI
       can carry it (the Markset lesson, twice). Driftline's in-app guidance builds on this; the timing of a tip beyond
       hover is Driftline's, not Intentset's.
+- [x] Success measures, 2026-10-04 (ADR 0012, Core §2, §5, §6, §8): `measure` is the thirteenth type, `parent` an
+      outcome, with a `measure` block (metric, baseline or `unknown`, target, window, `source` from the new
+      `evidenceSources` registry, optional direction) and a Method section. An outcome past draft needs one (CORE003;
+      CORE009 while draft). Verification is not success: Core §6 says so, §8 names the outcome evidence record a later
+      version or Driftline will supply, and nothing reads one yet. **Export is 0.3**: the type, the registry, and
+      `measure` and `tips` on every artifact, which ADR 0011 had deferred to this bump; the consumer fixtures carry a
+      rejected 0.2 envelope, and Streamlane's reader moves its pin when it next updates. The Lantern example has two
+      measures under OUT-PREPARE, so every count that said thirteen says fifteen and the baseline graph hash changed.
+      Not yet released: the next tag is 0.5.0, and `@intentset/help` still needs its first publish by hand before CI
+      can carry it.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://intentset.org/spec/export.schema.json",
-  "title": "Intentset export envelope, intentset/export/0.2",
+  "title": "Intentset export envelope, intentset/export/0.3",
   "description": "The export contract of spec/export.md: the normalized JSON graph of Core §12 and the minimum graph exchange of the integration contract. Artifacts are sorted by id and every list inside the envelope is sorted, so the same validation with the same generatedAt is the same bytes. Restricted artifacts are withheld unless asked for, and every omission is counted. Optional report sections are absent when not supplied, which means not supplied, never zero or pass. Some requirements are beyond a schema and are checked by a consumer's reader (spec/export.md §5): identity, snapshot agreement between the reports and the envelope, withholding, and consistency.",
   "type": "object",
   "additionalProperties": false,
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "contract": {
-      "const": "intentset/export/0.2",
+      "const": "intentset/export/0.3",
       "description": "A consumer rejects any other value (spec/export.md §5)."
     },
     "spec": {
@@ -178,7 +178,7 @@
     "registries": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["owners", "audiences", "releases", "roles", "editions", "flags", "resources"],
+      "required": ["owners", "audiences", "releases", "roles", "editions", "flags", "evidenceSources", "resources"],
       "properties": {
         "owners": {
           "type": "array",
@@ -227,6 +227,15 @@
             "minLength": 1
           },
           "uniqueItems": true
+        },
+        "evidenceSources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "description": "Where a measure's evidence is expected to come from (Core \u00a76)."
         },
         "resources": {
           "type": "array",
@@ -476,6 +485,51 @@
         }
       }
     },
+    "measure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric", "baseline", "target", "window", "source", "direction"],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$"
+        },
+        "baseline": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A value, or the literal unknown."
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An entry in registries.evidenceSources."
+        },
+        "direction": {
+          "enum": ["increase", "decrease", null]
+        }
+      }
+    },
+    "tips": {
+      "type": "object",
+      "description": "Knowledge only (Core \u00a79): one sentence per explained ID.",
+      "propertyNames": {
+        "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+      }
+    },
     "artifact": {
       "type": "object",
       "additionalProperties": false,
@@ -498,6 +552,8 @@
         "availability",
         "slice",
         "verification",
+        "measure",
+        "tips",
         "extensions"
       ],
       "properties": {
@@ -509,6 +565,7 @@
             "product",
             "intent",
             "outcome",
+            "measure",
             "capability",
             "behavior",
             "rule",
@@ -801,6 +858,26 @@
             }
           ]
         },
+        "measure": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/measure"
+            }
+          ]
+        },
+        "tips": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/tips"
+            }
+          ]
+        },
         "extensions": {
           "type": ["object", "null"],
           "propertyNames": {
@@ -857,6 +934,22 @@
             "properties": {
               "profile": {
                 "const": "intentset/outcome/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "measure"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/measure/0.1"
               }
             }
           }

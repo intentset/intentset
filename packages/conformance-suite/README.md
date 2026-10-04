@@ -13,7 +13,7 @@ implementation.
 | `cases/*.json` | One file per section: `core`, `export`, `vsa`, `evidence`, `publication`. Each file is an array of cases. |
 | `schemas/conformance.schema.json` | The normative schema every case file satisfies. |
 | `schemas/frontmatter.schema.json` | The structural schema of a document's frontmatter (Core §3, §4). |
-| `schemas/export.schema.json` | The schema of the `intentset/export/0.2` envelope. |
+| `schemas/export.schema.json` | The schema of the `intentset/export/0.3` envelope. |
 | `schemas/evidence.schema.json` | The schema of run records (Core §8). |
 | `consumer/` | Export envelopes a consumer must accept or reject, and `manifest.json` saying which and why. |
 | `examples/scheduling/` | The worked example the cases are built from, for reading alongside them. |

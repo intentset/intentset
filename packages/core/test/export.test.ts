@@ -42,7 +42,7 @@ function plain(envelope: ExportEnvelope): unknown {
 test("the export of examples/scheduling validates against spec/export.schema.json", () => {
   const envelope = exportGraph(validate(inputs(), registries), registries, META);
   assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
-  assert.equal(envelope.artifacts.length, 13);
+  assert.equal(envelope.artifacts.length, 15);
   assert.equal(envelope.validation.status, "pass");
 });
 
@@ -84,7 +84,7 @@ test("the schema rejects what a consumer must reject", () => {
     "the earlier contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.3")),
+    bad((e) => (e.contract = "intentset/export/0.4")),
     "a later contract version",
   );
   assert.ok(

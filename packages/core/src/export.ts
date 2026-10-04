@@ -57,7 +57,7 @@ export interface ExportMeta {
   reports?: ExportReports;
 }
 
-/** spec/export.md: the `intentset/export/0.2` envelope over a validation result. */
+/** spec/export.md: the `intentset/export/0.3` envelope over a validation result. */
 export function exportGraph(result: ValidationResult, registries: Registries, meta: ExportMeta): ExportEnvelope {
   const { graph } = result;
   const withheld = withheldIds(result, meta.includeRestricted === true);
@@ -220,6 +220,18 @@ function exportArtifact(
             locator: meta.verification.locator,
             selector: meta.verification.selector,
           },
+    measure:
+      meta.measure === undefined
+        ? null
+        : {
+            metric: meta.measure.metric,
+            baseline: meta.measure.baseline,
+            target: meta.measure.target,
+            window: meta.measure.window,
+            source: meta.measure.source,
+            direction: meta.measure.direction ?? null,
+          },
+    tips: meta.tips === undefined ? null : (sortKeysDeep(meta.tips) as Record<string, string>),
     extensions: meta.extensions === undefined ? null : (sortKeysDeep(meta.extensions) as Record<string, unknown>),
   };
   if (includeBody) exported.body = artifact.body;
@@ -329,6 +341,7 @@ function exportRegistries(registries: Registries, withheld: ReadonlySet<string>)
     roles: [...registries.roles].sort(compareStrings),
     editions: [...registries.editions].sort(compareStrings),
     flags: [...registries.flags].sort(compareStrings),
+    evidenceSources: [...registries.evidenceSources].sort(compareStrings),
     resources: [...registries.resources]
       .map((resource) => ({
         id: resource.id,

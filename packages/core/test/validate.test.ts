@@ -31,13 +31,13 @@ test("the scheduling example validates at L1 and L2 with no diagnostics", () => 
     const result = validate(baseline, registries, { level });
     assert.deepEqual(result.diagnostics, []);
     assert.equal(result.ok, true);
-    assert.equal(result.graph.artifacts.size, 13);
+    assert.equal(result.graph.artifacts.size, 15);
   }
 });
 
 test("every authored edge has one derived inverse, marked derived", () => {
   const { graph } = validate(baseline, registries);
-  assert.equal(graph.edges.length, 17);
+  assert.equal(graph.edges.length, 19);
   assert.equal(graph.derived.length, graph.edges.length);
   assert.ok(graph.edges.every((e) => !e.derived));
   assert.ok(graph.derived.every((e) => e.derived));

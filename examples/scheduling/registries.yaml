@@ -12,6 +12,9 @@ roles:
 editions:
 - standard
 flags: []
+evidenceSources:
+- product-analytics
+- task-study
 resources:
 - id: RES-ASSESSMENT-DATA
   path: amplify/data/resource.ts

@@ -53,10 +53,11 @@ authorization.
 | Behaviors, their availability and flags | `artifacts[]` of type `behavior` with `availability` (products, releases, roles, editions, flags); `registries.flags` |
 | A stack frame's file to a slice, its behaviors and its team | `reports.ownership.files[]` (`path` to `region` and `owner`), then the slice's `links.implements` and `owner` |
 | Affected behaviors for an incident | the owning slice's `links.implements`, then `reports.impact` from each behavior for what depends on it |
-| Outcomes and their measures | `artifacts[]` of type `outcome`; the Measure section is in `body` with `--include-bodies` |
+| Outcomes and their measures | `artifacts[]` of type `outcome`, and of type `measure` with `parent` naming the outcome and `measure` carrying metric, baseline, target, window and source; `registries.evidenceSources` names where readings come from |
 | Beta explanations | knowledge artifacts and `reports.knowledge` (only `current` knowledge is fit to show users) |
 | Its own model, written before its code | VSA §3: draft slices plan their paths as warnings, so L2 holds from the first commit |
 
 Driftline's usage-evidence specification, keyed to Intentset IDs, is planned as an Intentset extension and is not
-part of 0.2. Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
+part of 0.3; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
+time, URI, target met). Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
 authored.

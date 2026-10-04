@@ -253,7 +253,7 @@ test("a dotted-path patch edits one key and leaves every other byte of the docum
     },
     { examplesDir, parseYaml },
   );
-  assert.equal(expanded.files.size, 13);
+  assert.equal(expanded.files.size, 15);
   assert.ok(expanded.files.get("BEH-ASMT-SCHEDULE.md")?.includes("    - CAP-ASMT-ASSIGN\n"));
   assert.ok(expanded.registriesText?.startsWith("owners:\n"));
   assert.equal(expanded.configText, null);
