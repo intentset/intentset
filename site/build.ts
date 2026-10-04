@@ -78,7 +78,6 @@ export const SPECS: Array<{ slug: string; file: string }> = [
   { slug: "export", file: "export.md" },
 ];
 
-const ROADMAP_DOC = "docs/requirements/roadmap/05-implementation-roadmap.md";
 const EXAMPLE_DIR = "examples/scheduling";
 
 /** The content pages: output path and source file under site/content/. */
@@ -152,13 +151,10 @@ async function writeSite(out: string): Promise<string[]> {
     // Markset profiles. The anchor is read from the rendered document rather
     // than written by hand, so renumbering the section cannot break the link.
     coreMarksetSection: sectionAnchor(specs[0], /markset/i),
-    // The roadmap's link to the profile's areas, read the same way.
-    profileAreasSection: sectionAnchor(specs[2], /areas/i),
   };
   const pages: Page[] = [
     ...(await Promise.all(CONTENT_PAGES.map(([path, file]) => contentPage(path, file, tokens)))),
     ...specs,
-    await roadmapDocPage(),
     exampleIndex(records),
     ...records.map((record) => recordPage(record, records)),
   ];
@@ -212,31 +208,13 @@ async function specPage(spec: { slug: string; file: string }): Promise<Page> {
   return documentPage(`specifications/${spec.slug}/index.html`, join("spec", spec.file));
 }
 
-/**
- * The roadmap Intentset was planned from. It is part of the frozen handoff in
- * docs/requirements/ and is never edited, so the page says above it what has
- * changed since: without that, a reader meets "not currently installable" and a
- * working name on a site whose toolchain is on npm.
- */
-export const ROADMAP_DOC_NOTE = `> [!NOTE] Kept as it was handed over
-> This is the roadmap Intentset was planned from, unchanged. The toolchain it describes shipped in 0.1, and the questions it leaves open are settled: the name is Intentset, the licence is MIT, and the commands it proposes are installable from \`@intentset/cli\`. What came after is on the [roadmap](../index.html).`;
-
-async function roadmapDocPage(): Promise<Page> {
-  return documentPage("roadmap/implementation/index.html", ROADMAP_DOC, ROADMAP_DOC_NOTE);
-}
-
-async function documentPage(path: string, file: string, note?: string): Promise<Page> {
+async function documentPage(path: string, file: string): Promise<Page> {
   const absolute = join(root, file);
   const parsed = parseDocument(await readFile(absolute, "utf8"));
   failOnErrors(parsed.diagnostics, absolute);
   rewriteLinks(parsed.ast, file);
   const ast = addHeadingIds(parsed.ast);
-  let banner = `<p class="site-source">Rendered from <a href="${REPO}/blob/main/${file}"><code>${esc(file)}</code></a> in the repository.</p>\n`;
-  if (note !== undefined) {
-    const parsedNote = parseDocument(note);
-    failOnErrors(parsedNote.diagnostics, absolute);
-    banner += `${renderHtml(parsedNote.ast, { diagrams: false, charts: false })}\n`;
-  }
+  const banner = `<p class="site-source">Rendered from <a href="${REPO}/blob/main/${file}"><code>${esc(file)}</code></a> in the repository.</p>\n`;
   return {
     path,
     title: firstHeading(ast) ?? basename(file, ".md"),
@@ -259,8 +237,6 @@ function rewriteLinks(tree: Root, file: string): void {
     const spec = SPECS.find((s) => posix.join("spec", s.file) === inRepo);
     if (spec) {
       link.url = `../${spec.slug}/index.html${fragment ? `#${fragment}` : ""}`;
-    } else if (inRepo === ROADMAP_DOC) {
-      link.url = `../implementation/index.html${fragment ? `#${fragment}` : ""}`;
     } else {
       link.url = `${REPO}/blob/main/${inRepo}${fragment ? `#${fragment}` : ""}`;
     }

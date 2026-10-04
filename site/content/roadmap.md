@@ -2,45 +2,36 @@
 markset: 0
 ---
 
-# Build the connections before building more workflow.
+# Where Intentset is going.
 
 {.lead}
-The first goal is practical: take one real product behavior from readable source to implementation ownership, current evidence, and reviewed knowledge.
+Intentset is in draft. You can use it today on a real capability, and what people find doing that decides what version 1.0 keeps.
 
-## Available in this draft
+## Where it stands
 
-Core and architecture specifications, a TypeScript + Amplify profile, a publication profile, an export contract, a worked model, an adoption roadmap, and the 0.3 reference toolchain on npm, with a conformance suite other implementations can use.
+The [specifications](../specifications/index.html) are v0.1 drafts. The reference toolchain is at 0.3 on npm, with a conformance suite for other implementations. Everything [How it works](../how-it-works/index.html) describes is in that release: validation, architecture checks, evidence, impact, the Atlas, reviewed publication, agent context and the export.
 
-## Delivered in 0.1: validate the model
+The Core model does not depend on a language or platform. The architecture check reads TypeScript, and its one reference profile is TypeScript with AWS Amplify Gen 2.
 
-Safe parsing, typed relationships, stable diagnostics, and independent conformance fixtures.
+Drafts can still change, and each change is recorded with its reason in the repository. The export carries its contract version, so a tool that reads it can refuse a version it does not support rather than misread it.
 
-## Delivered in 0.1: connect the repository
+## Toward 1.0
 
-Slice ownership and contracts resolved against the code, test evidence collected per snapshot, and the impact of a change explained.
+1.0 is the version you can build on without expecting breaking changes. Real codebases decide what it keeps:
 
-## Delivered in 0.1: help people and agents review
+- **Streamlane**, a work management product, where the first pilot changed the specifications in four places.
+- **Driftline**, built with Intentset from its first commit, so the model comes before the code.
+- **At least one outside adopter**, on a codebase we did not write.
 
-A Product Atlas, reviewed Markset publication, and bounded agent context over a read-only MCP server.
+## Not planned
 
-## Delivered in 0.2: tools that read the model
+- **A hosted service.** Intentset needs no server and no database; the repository stays the source of truth.
+- **Deciding the product is correct.** Intentset reports what is linked, owned and verified now. People judge whether a check is adequate.
+- **Replacing your issue tracker.** Tickets describe changes; records describe the behavior that persists after them.
+- **All or nothing.** The Core model stands on its own, and ownership, evidence and publication are added when they help.
 
-The [export contract](../specifications/export/index.html) fixes what a repository hands to other tools: the graph, with evidence, knowledge, impact and ownership reports, restricted records withheld and counted, and fixtures for testing a consumer. A product can be modelled before its code: while a slice is a draft, the paths it plans are warnings.
+## Shape it
 
-## Delivered in 0.3: backends past CloudFormation's limits
+The most useful feedback is a capability that is hard to model, a boundary that is hard to enforce, or an explanation that is hard to publish safely. Try the model against one behavior and bring back what did not fit.
 
-The reference profile's [areas](../specifications/profile-typescript-amplify-gen2/index.html#{{profileAreasSection}}) split an Amplify backend that outgrows one CloudFormation deployment into several behind one AppSync Merged API, and the architecture check keeps each slice, schema and import inside its area. The rules come from a production application that made the split, and from Streamlane, which reached the limit.
-
-## Next: Streamlane and Driftline read the model
-
-Streamlane will import the export to link work items to the behaviors they change. Driftline is built with Intentset from its first commit, and will attribute usage and errors to slices and behaviors.
-
-## Then: a second pilot and a stable 1.0
-
-The first pilot, on Streamlane, changed the specification in four places. A second pilot on a different codebase decides what 1.0 keeps.
-
-## Bring a real example
-
-The most useful early feedback is a capability that is difficult to model, a boundary that is hard to enforce, or an explanation that is hard to publish safely.
-
-[[Read the original implementation roadmap](implementation/index.html)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}
+[[Start with one behavior](../start/index.html)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}

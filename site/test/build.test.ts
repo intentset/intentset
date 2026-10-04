@@ -52,7 +52,6 @@ test("the page list is the information architecture's, plus one page per record"
   const expected = [
     ...CONTENT_PAGES.map(([path]) => path),
     ...SPECS.map((s) => `specifications/${s.slug}/index.html`),
-    "roadmap/implementation/index.html",
     "example/index.html",
     ...records.map((r) => `example/${r.id}/index.html`),
   ].sort();
@@ -240,10 +239,7 @@ function renderedHeadings(page: string): string[] {
 }
 
 test("the specification pages carry exactly the headings their source files declare, in order, with a contents rail", async () => {
-  const docs = [
-    ...SPECS.map((s) => [`specifications/${s.slug}/index.html`, join("spec", s.file)]),
-    ["roadmap/implementation/index.html", "docs/requirements/roadmap/05-implementation-roadmap.md"],
-  ];
+  const docs = SPECS.map((s) => [`specifications/${s.slug}/index.html`, join("spec", s.file)]);
   for (const [page, file] of docs) {
     assert.deepEqual(renderedHeadings(page), await sourceHeadings(file), page);
     const doc = html.get(page) ?? "";

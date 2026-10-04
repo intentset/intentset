@@ -110,10 +110,19 @@ const REVISED_HEADINGS: Record<string, string> = {
   "Specifications first. A reference toolchain next.": "Specifications in review. A toolchain to try them with.",
 };
 
+/**
+ * Pages rewritten rather than revised, so none of the handoff's copy is held
+ * on them. The roadmap, 2026-10-04: its copy was a plan of the owner's work,
+ * milestone by milestone, and a reader needs what is stable, what 1.0 waits
+ * on, what is not planned and how to influence it.
+ */
+const REWRITTEN = new Set(["roadmap"]);
+
 test("each page carries the IA document's copy verbatim: its heading, its first paragraph and its section headings", async () => {
   const blocks = await copyBlocks();
   assert.deepEqual([...blocks.keys()].sort(), Object.keys(PAGE_OF).sort(), "every copy section has a page");
   for (const [name, block] of blocks) {
+    if (REWRITTEN.has(name)) continue;
     const html = await readFile(join(dist, PAGE_OF[name]), "utf8");
     const body = text(html.slice(html.indexOf("<main"), html.indexOf("</main>")));
     const h1 = text(/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? "");
@@ -145,10 +154,6 @@ test("the status notes are on their pages, as callouts, and none still says the 
       "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.3 on npm.",
     ],
     [
-      "roadmap/implementation/index.html",
-      "This is the roadmap Intentset was planned from, unchanged. The toolchain it describes shipped in 0.1, and the questions it leaves open are settled: the name is Intentset, the licence is MIT, and the commands it proposes are installable from @intentset/cli. What came after is on the roadmap.",
-    ],
-    [
       "markset/index.html",
       "The reference publisher pins Markset 0.3.4 and validates every document it generates with Markset before writing it.",
     ],
@@ -176,6 +181,9 @@ test("the status notes are on their pages, as callouts, and none still says the 
     "the export contract arrives with 0.2",
     "A reference toolchain next",
     "All four documents",
+    // The roadmap as a plan of the work, retired 2026-10-04.
+    "Delivered in 0.1",
+    "implementation roadmap",
   ];
   for (const page of Object.values(PAGE_OF)) {
     const body = text(await readFile(join(dist, page), "utf8"));
