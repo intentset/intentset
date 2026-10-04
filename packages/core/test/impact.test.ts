@@ -97,6 +97,8 @@ test("everything that navigates to the product, and its dependents, is a candida
     "BEH-ASMT-SCHEDULE",
     "CAP-ASMT-ASSIGN",
     "KB-ASMT-SCHEDULE",
+    "MEAS-PREPARE-ADOPTION",
+    "MEAS-PREPARE-MINUTES",
     "OUT-PREPARE",
     "SCN-ASMT-SCHEDULE",
     "SLICE-ASMT-SCHEDULE",

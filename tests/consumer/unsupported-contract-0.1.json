@@ -10,7 +10,7 @@
     "commit": null,
     "commitUnavailable": "The fixture describes no commit."
   },
-  "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+  "graphHash": "a3ca70d9009b3c5068a20701e1deba4fc2455f678f29f562409f209e10ebe683",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -274,7 +274,7 @@
       "profile": "intentset/outcome/0.1",
       "revision": 1,
       "path": "OUT-PREPARE.md",
-      "sourceHash": "aaeb9082b73bc091c7b6ff4471cc11deebc7db49cb6985f09d4b81d22844e244",
+      "sourceHash": "a33a948ec853801e7ac5c7462082da0cb1757ae9e76cf07813e7db3be2f7b7aa",
       "parent": "INT-PREPARE",
       "links": {},
       "derived": {

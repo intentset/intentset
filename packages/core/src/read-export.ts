@@ -26,10 +26,14 @@ import {
   ID_PATTERN,
   LEVELS,
   LINK_KINDS,
+  MEASURE_DIRECTIONS,
+  METRIC_PATTERN,
   OWNERSHIP_REGIONS,
   STATUSES,
   SUPPORTED_EXPORT_CONTRACTS,
   ARTIFACT_TYPES,
+  TIP_MAX_LENGTH,
+  TIP_PATTERN,
   VISIBILITIES,
 } from "./types.ts";
 
@@ -364,9 +368,18 @@ class Shape {
 
   registries(value: unknown): void {
     const at = "/registries";
-    const r = this.object(value, at, ["owners", "audiences", "releases", "roles", "editions", "flags", "resources"]);
+    const r = this.object(value, at, [
+      "owners",
+      "audiences",
+      "releases",
+      "roles",
+      "editions",
+      "flags",
+      "evidenceSources",
+      "resources",
+    ]);
     if (r === null) return;
-    for (const key of ["owners", "audiences", "releases", "roles", "editions", "flags"])
+    for (const key of ["owners", "audiences", "releases", "roles", "editions", "flags", "evidenceSources"])
       this.strings(r[key], `${at}/${key}`);
     this.array(r.resources, `${at}/resources`, (resource, p) => {
       const x = this.object(resource, p, ["id", "path", "owner", "consumers"]);
@@ -401,6 +414,8 @@ class Shape {
         "availability",
         "slice",
         "verification",
+        "measure",
+        "tips",
         "extensions",
       ],
       ["body"],
@@ -443,6 +458,27 @@ class Shape {
       this.oneOf(v.method, `${p}/method`, ["automated", "manual"]);
       this.string(v.locator, `${p}/locator`);
       this.string(v.selector, `${p}/selector`);
+    });
+    this.nullable(a.measure, `${at}/measure`, (x, p) => {
+      const m = this.object(x, p, ["metric", "baseline", "target", "window", "source", "direction"]);
+      if (m === null) return;
+      this.string(m.metric, `${p}/metric`, METRIC_PATTERN, "a metric identifier such as median_time_to_intervention");
+      for (const key of ["baseline", "target", "window", "source"]) this.string(m[key], `${p}/${key}`);
+      this.nullable(m.direction, `${p}/direction`, (d, q) => this.oneOf(d, q, MEASURE_DIRECTIONS));
+    });
+    this.nullable(a.tips, `${at}/tips`, (x, p) => {
+      if (!isRecord(x)) {
+        this.fail(p, "Expected an object of tips by explained ID.");
+        return;
+      }
+      for (const key of Object.keys(x).sort(compareStrings)) {
+        const q = `${p}/${key}`;
+        if (!ID_PATTERN.test(key)) this.fail(q, "Expected an artifact ID as the key.");
+        const tip = x[key];
+        if (typeof tip !== "string" || tip.length > TIP_MAX_LENGTH || !TIP_PATTERN.test(tip)) {
+          this.fail(q, `Expected one line of plain text, at most ${TIP_MAX_LENGTH} characters.`);
+        }
+      }
     });
     this.nullable(a.extensions, `${at}/extensions`, (x, p) => this.extensions(x, p));
     if (Object.hasOwn(a, "body") && typeof a.body !== "string") this.fail(`${at}/body`, "Expected a string.");

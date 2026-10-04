@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.3",
+  "contract": "intentset/export/0.2",
   "spec": "0.1",
   "generatedAt": "2026-10-03T12:00:00Z",
   "repository": "example/scheduling",
@@ -53,10 +53,6 @@
       "standard"
     ],
     "flags": [],
-    "evidenceSources": [
-      "product-analytics",
-      "task-study"
-    ],
     "resources": [
       {
         "id": "RES-ASSESSMENT-DATA",
@@ -95,8 +91,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -152,8 +146,6 @@
       },
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -182,8 +174,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -212,8 +202,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -242,8 +230,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -286,74 +272,6 @@
       },
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
-      "extensions": null
-    },
-    {
-      "id": "MEAS-PREPARE-ADOPTION",
-      "type": "measure",
-      "title": "Assignments scheduled a day or more ahead",
-      "status": "draft",
-      "owner": "team-assessment",
-      "visibility": "internal",
-      "audiences": [
-        "engineering",
-        "product"
-      ],
-      "profile": "intentset/measure/0.1",
-      "revision": 1,
-      "path": "MEAS-PREPARE-ADOPTION.md",
-      "sourceHash": "5c5cfdfb9a89c49ed9ca435b67bc2a1dca39162fa7a83e386476101755a394b9",
-      "parent": "OUT-PREPARE",
-      "links": {},
-      "derived": {},
-      "withheldLinks": 0,
-      "availability": null,
-      "slice": null,
-      "verification": null,
-      "measure": {
-        "metric": "assignments_scheduled_ahead",
-        "baseline": "unknown",
-        "target": "60% of assignments scheduled at least one day before they open",
-        "window": "90 days after pilot-1",
-        "source": "product-analytics",
-        "direction": "increase"
-      },
-      "tips": null,
-      "extensions": null
-    },
-    {
-      "id": "MEAS-PREPARE-MINUTES",
-      "type": "measure",
-      "title": "Teacher minutes spent preparing an assignment",
-      "status": "draft",
-      "owner": "team-assessment",
-      "visibility": "internal",
-      "audiences": [
-        "engineering",
-        "product"
-      ],
-      "profile": "intentset/measure/0.1",
-      "revision": 1,
-      "path": "MEAS-PREPARE-MINUTES.md",
-      "sourceHash": "21a0b1e6eaf6b723b9f02d5d2e3ea4e1ea01df8bea5281de54ad88f5b88ffa48",
-      "parent": "OUT-PREPARE",
-      "links": {},
-      "derived": {},
-      "withheldLinks": 0,
-      "availability": null,
-      "slice": null,
-      "verification": null,
-      "measure": {
-        "metric": "teacher_prep_minutes",
-        "baseline": "unknown",
-        "target": "20% below the measured pilot baseline",
-        "window": "90 days after pilot-1",
-        "source": "task-study",
-        "direction": "decrease"
-      },
-      "tips": null,
       "extensions": null
     },
     {
@@ -375,17 +293,13 @@
       "links": {},
       "derived": {
         "parent": [
-          "CAP-ASMT-ASSIGN",
-          "MEAS-PREPARE-ADOPTION",
-          "MEAS-PREPARE-MINUTES"
+          "CAP-ASMT-ASSIGN"
         ]
       },
       "withheldLinks": 0,
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -414,8 +328,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -450,8 +362,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -484,8 +394,6 @@
       "availability": null,
       "slice": null,
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -556,8 +464,6 @@
         ]
       },
       "verification": null,
-      "measure": null,
-      "tips": null,
       "extensions": null
     },
     {
@@ -592,8 +498,6 @@
         "locator": "TEST-ASMT-SCHEDULE.md",
         "selector": "schedule-review-v1"
       },
-      "measure": null,
-      "tips": null,
       "extensions": null
     }
   ],

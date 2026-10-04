@@ -51,15 +51,16 @@ export function configText(repository: string): string {
 }
 
 export const EMPTY_REGISTRIES_TEXT = [
-  "# Intentset registries (Core §4, §7; VSA §3): the owners, audiences, release dimensions",
-  "# and shared resources records may name. An empty registry reads as not declared, and",
-  "# validate warns (CORE005) when a record names a value it could not check.",
+  "# Intentset registries (Core §4, §6, §7; VSA §3): the owners, audiences, release dimensions,",
+  "# evidence sources and shared resources records may name. An empty registry reads as not",
+  "# declared, and validate warns (CORE005) when a record names a value it could not check.",
   "owners: []",
   "audiences: []",
   "releases: []",
   "roles: []",
   "editions: []",
   "flags: []",
+  "evidenceSources: []",
   "resources: []",
   "",
 ].join("\n");

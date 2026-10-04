@@ -20,4 +20,6 @@ intentset:
 
 ## Measure
 
-Metric: teacher minutes spent preparing an assignment. Baseline: unknown. Proposed target: 20% reduction from the measured pilot baseline. Method: observed task study before and after the pilot; product review required.
+Success is judged two ways: teachers spend less time preparing an assignment, read by an observed task study, and
+more assignments are scheduled ahead of the day they open, read from product analytics. Each has a measure record
+under this outcome with its metric, baseline, target, window and source; both are read 90 days after the pilot.

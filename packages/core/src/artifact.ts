@@ -25,12 +25,17 @@ import {
   type ArtifactMeta,
   type ArtifactType,
   type Availability,
+  BASELINE_UNKNOWN,
   CLAIM_KINDS,
   type Claim,
   type DocumentInput,
   ID_PATTERN,
   LINK_KINDS,
   type LinkKind,
+  MEASURE_DIRECTIONS,
+  METRIC_PATTERN,
+  type MeasureDirection,
+  type MeasureMeta,
   PARENT_TARGETS,
   REQUIRED_SECTIONS,
   SPEC_VERSION,
@@ -77,6 +82,7 @@ const OPTIONAL_COMMON = [
   "tips",
   "slice",
   "verification",
+  "measure",
 ] as const;
 const KNOWN_KEYS = new Set<string>([...REQUIRED_COMMON, ...OPTIONAL_COMMON]);
 const LINK_FIELDS = LINK_KINDS.filter((kind) => kind !== "parent") as Exclude<LinkKind, "parent">[];
@@ -424,6 +430,16 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       "Add `verification:` with method, locator and selector (Core §8).",
     );
   }
+  let measure: MeasureMeta | undefined;
+  if (Object.hasOwn(s, "measure") && s.measure !== null) {
+    measure = readMeasure(s.measure, `${base}/measure`, problem) ?? undefined;
+  } else if (!Object.hasOwn(s, "measure") && type === "measure") {
+    problem(
+      `${base}/measure`,
+      "A measure must carry the `measure` metadata block.",
+      "Add `measure:` with metric, baseline, target, window and source (Core §6).",
+    );
+  }
 
   if (!usable || type === null || audiences === null) return null;
   const meta: ArtifactMeta = {
@@ -447,6 +463,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
   if (tips !== undefined) meta.tips = tips;
   if (slice !== undefined) meta.slice = slice;
   if (verification !== undefined) meta.verification = verification;
+  if (measure !== undefined) meta.measure = measure;
   return meta;
 }
 
@@ -843,6 +860,73 @@ function readVerification(value: unknown, field: string, problem: Problem): Veri
     locator: value.locator as string,
     selector: value.selector as string,
   };
+}
+
+const MEASURE_KEYS = ["metric", "baseline", "target", "window", "source", "direction"] as const;
+
+function readMeasure(value: unknown, field: string, problem: Problem): MeasureMeta | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`measure` must be a mapping with metric, baseline, target, window and source.",
+      "Write the five keys under `measure:`; `direction` is optional (Core §6).",
+    );
+    return null;
+  }
+  let ok = true;
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    if (!(MEASURE_KEYS as readonly string[]).includes(key)) {
+      problem(
+        `${field}/${pointerToken(key)}`,
+        `Unknown measure key \`${key}\`.`,
+        "The keys are metric, baseline, target, window, source and direction.",
+      );
+      ok = false;
+    }
+  }
+  if (typeof value.metric !== "string" || !METRIC_PATTERN.test(value.metric)) {
+    problem(
+      `${field}/metric`,
+      "`measure.metric` must be an identifier: lower case letters and digits, words joined by `_` or `-`.",
+      "Name the metric the way the evidence source names it, such as median_time_to_intervention.",
+    );
+    ok = false;
+  }
+  const guidance: Record<"baseline" | "target" | "window" | "source", string> = {
+    baseline: `Give the value before the change, or the literal ${BASELINE_UNKNOWN} when none has been taken.`,
+    target: "Give the value or threshold that would show the outcome was achieved.",
+    window: "Say when the measure is read, such as `90 days after pilot-1`.",
+    source: "Name an entry in registries.yaml's evidenceSources, where the evidence is expected to come from.",
+  };
+  for (const key of ["baseline", "target", "window", "source"] as const) {
+    if (typeof value[key] !== "string" || value[key] === "") {
+      problem(`${field}/${key}`, `\`measure.${key}\` must be a non-empty string.`, guidance[key]);
+      ok = false;
+    }
+  }
+  let direction: MeasureDirection | undefined;
+  if (Object.hasOwn(value, "direction") && value.direction !== null) {
+    if (typeof value.direction === "string" && (MEASURE_DIRECTIONS as readonly string[]).includes(value.direction)) {
+      direction = value.direction as MeasureDirection;
+    } else {
+      problem(
+        `${field}/direction`,
+        "`measure.direction` must be increase or decrease.",
+        "Say which way the metric moves when the outcome is achieved, or leave `direction` out.",
+      );
+      ok = false;
+    }
+  }
+  if (!ok) return null;
+  const measure: MeasureMeta = {
+    metric: value.metric as string,
+    baseline: value.baseline as string,
+    target: value.target as string,
+    window: value.window as string,
+    source: value.source as string,
+  };
+  if (direction !== undefined) measure.direction = direction;
+  return measure;
 }
 
 /** Core §6: a level-one heading equal to the title and the type's level-two sections, outside code fences. */

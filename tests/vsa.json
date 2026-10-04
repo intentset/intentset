@@ -1271,6 +1271,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -1331,6 +1335,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -1699,6 +1707,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -1760,6 +1772,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2451,6 +2467,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2526,6 +2546,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2606,6 +2630,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2683,6 +2711,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2759,6 +2791,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2835,6 +2871,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2911,6 +2951,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2987,6 +3031,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -3063,6 +3111,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -3139,6 +3191,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -3215,6 +3271,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -3291,6 +3351,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",

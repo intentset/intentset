@@ -10,6 +10,7 @@ export const ARTIFACT_TYPES = [
   "product",
   "intent",
   "outcome",
+  "measure",
   "capability",
   "behavior",
   "rule",
@@ -75,6 +76,7 @@ export const LINK_ENDPOINTS: Record<
 export const PARENT_TARGETS: Partial<Record<ArtifactType, readonly ArtifactType[]>> = {
   intent: ["product"],
   outcome: ["intent"],
+  measure: ["outcome"],
   capability: ["outcome", "capability"],
   behavior: ["capability"],
 };
@@ -84,6 +86,7 @@ export const REQUIRED_SECTIONS: Record<ArtifactType, readonly string[]> = {
   product: ["Scope"],
   intent: ["Rationale"],
   outcome: ["Measure"],
+  measure: ["Method"],
   capability: ["Overview"],
   behavior: ["Behavior", "Preconditions", "Outcomes"],
   rule: ["Constraint"],
@@ -135,6 +138,28 @@ export interface VerificationMeta {
   selector: string;
 }
 
+export const MEASURE_DIRECTIONS = ["increase", "decrease"] as const;
+export type MeasureDirection = (typeof MEASURE_DIRECTIONS)[number];
+
+/** Core §6: a metric identifier, lower case, words joined by `_` or `-`. */
+export const METRIC_PATTERN = /^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$/;
+
+/** The literal a measure's baseline carries when none has been taken yet (Core §6). */
+export const BASELINE_UNKNOWN = "unknown";
+
+/** Core §6 measure metadata: how the parent outcome is judged. */
+export interface MeasureMeta {
+  metric: string;
+  /** A value, or `unknown` (BASELINE_UNKNOWN). */
+  baseline: string;
+  target: string;
+  /** When the measure is read, relative to a release or a date; prose, not parsed. */
+  window: string;
+  /** An entry in the repository's `evidenceSources` registry. */
+  source: string;
+  direction?: MeasureDirection;
+}
+
 /** The `intentset` block of a document's frontmatter after validation, Core §4. */
 export interface ArtifactMeta {
   spec: typeof SPEC_VERSION;
@@ -158,6 +183,7 @@ export interface ArtifactMeta {
   tips?: Record<string, string>;
   slice?: SliceMeta;
   verification?: VerificationMeta;
+  measure?: MeasureMeta;
 }
 
 export interface Heading {
@@ -234,6 +260,8 @@ export interface Registries {
   roles: string[];
   editions: string[];
   flags: string[];
+  /** Where a measure's evidence is expected to come from (Core §6): an analytics product, a study, a survey. */
+  evidenceSources: string[];
   resources: Resource[];
 }
 
@@ -244,6 +272,7 @@ export const EMPTY_REGISTRIES: Registries = {
   roles: [],
   editions: [],
   flags: [],
+  evidenceSources: [],
   resources: [],
 };
 
@@ -303,11 +332,12 @@ export interface ImpactReport {
 }
 
 /**
- * The versioned export envelope (spec/export.md; spec/export.schema.json). 0.2 is
- * the first version a consumer may pin: 0.1 carried untyped report slots and
- * restricted artifacts by default (ADR 0008).
+ * The versioned export envelope (spec/export.md; spec/export.schema.json). 0.2 was
+ * the first version a consumer could pin: 0.1 carried untyped report slots and
+ * restricted artifacts by default (ADR 0008). 0.3 added the measure type, the
+ * `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012).
  */
-export const EXPORT_CONTRACT = "intentset/export/0.2";
+export const EXPORT_CONTRACT = "intentset/export/0.3";
 
 /** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
 export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];
@@ -338,6 +368,10 @@ export interface ExportArtifact {
   availability: Availability | null;
   slice: SliceMeta | null;
   verification: VerificationMeta | null;
+  /** Null unless the artifact is a measure; `direction` is null when the author set none. */
+  measure: (Omit<MeasureMeta, "direction"> & { direction: MeasureDirection | null }) | null;
+  /** Null unless the artifact is knowledge with tips (Core §9). */
+  tips: Record<string, string> | null;
   extensions: Record<string, unknown> | null;
   /** Present only when the export was asked to include bodies. */
   body?: string;

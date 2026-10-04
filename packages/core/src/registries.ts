@@ -1,6 +1,6 @@
 /**
- * The repository registries (Core §4, §7; VSA §3): owners, audiences, the
- * four release dimensions, and the shared-resource inventory. The file is
+ * The repository registries (Core §4, §6, §7; VSA §3): owners, audiences, the
+ * four release dimensions, the evidence sources measures name, and the shared-resource inventory. The file is
  * `registries.yaml` in the shape of examples/scheduling/registries.yaml.
  * A missing or empty file is empty registries, which the validator reads as
  * "not declared" rather than "nothing allowed".
@@ -10,7 +10,7 @@ import { compareStrings, isRecord, makeDiagnostic } from "./report.ts";
 import { EMPTY_REGISTRIES, ID_PATTERN, type Registries, type Resource } from "./types.ts";
 import { parseYamlDetailed } from "./yaml.ts";
 
-const LIST_KEYS = ["owners", "audiences", "releases", "roles", "editions", "flags"] as const;
+const LIST_KEYS = ["owners", "audiences", "releases", "roles", "editions", "flags", "evidenceSources"] as const;
 const KNOWN_KEYS = new Set<string>([...LIST_KEYS, "resources"]);
 
 /**

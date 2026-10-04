@@ -12,6 +12,8 @@
       "CONTRACT-ASMT-SCHEDULE",
       "INT-PREPARE",
       "KB-ASMT-SCHEDULE",
+      "MEAS-PREPARE-ADOPTION",
+      "MEAS-PREPARE-MINUTES",
       "OUT-PREPARE",
       "PRD-LANTERN",
       "RULE-ASMT-AUTH",
@@ -20,7 +22,7 @@
       "SLICE-ASMT-SCHEDULE",
       "TEST-ASMT-SCHEDULE"
     ],
-    "notes": "Every draft piece is attached: both rules are governed by the behavior, the scenario, verification and knowledge carry their outgoing links, the slice implements the behavior, the contract is exposed and the decision informs the slice. Every registry the documents use is declared, and no flag value is used, so the empty flags registry is never consulted."
+    "notes": "Every draft piece is attached: the outcome has its two measures, both rules are governed by the behavior, the scenario, verification and knowledge carry their outgoing links, the slice implements the behavior, the contract is exposed and the decision informs the slice. Every registry the documents use is declared, and no flag value is used, so the empty flags registry is never consulted."
   },
   {
     "section": "core",
@@ -61,6 +63,16 @@
         }
       },
       "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "MEAS-PREPARE-ADOPTION.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "MEAS-PREPARE-MINUTES.md": {
         "frontmatter": {
           "intentset.status": "approved"
         }
@@ -870,6 +882,278 @@
     "diagnostics": [
       "CORE001"
     ]
+  },
+  {
+    "section": "core",
+    "name": "C01 boundary: a measure without direction is valid",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.direction": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Core §6: direction is optional. Metric, baseline, target, window and source are not."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure metadata missing",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure metadata on an outcome",
+    "baseline": "scheduling",
+    "patch": {
+      "OUT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.measure": {
+            "metric": "teacher_prep_minutes",
+            "baseline": "unknown",
+            "target": "20% below the pilot baseline",
+            "window": "90 days after pilot-1",
+            "source": "task-study"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The block belongs on a measure record under the outcome, not on the outcome. The outcome's own Measure section stays prose (Core §6)."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure metric is not an identifier",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.metric": "Teacher Minutes"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure baseline missing",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.baseline": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "A baseline nobody has taken is written as the literal unknown, never left out: the gap is part of the record."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure target is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.target": ""
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure direction is not increase or decrease",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.direction": "sideways"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure has an unknown key",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.owner": "team-assessment"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 measure Method section missing",
+    "baseline": "scheduling",
+    "files": {
+      "MEAS-PREPARE-MINUTES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/measure/0.1\n  id: MEAS-PREPARE-MINUTES\n  type: measure\n  title: Teacher minutes spent preparing an assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n  measure:\n    metric: teacher_prep_minutes\n    baseline: unknown\n    target: '20% below the measured pilot baseline'\n    window: '90 days after pilot-1'\n    source: task-study\n    direction: decrease\n---\n\n# Teacher minutes spent preparing an assignment\n\nAn observed task study before and after the pilot.\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 measure parent is not an outcome",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.parent": "INT-PREPARE"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE004 measure without a parent",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.parent": null
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE004"
+    ],
+    "notes": "A measure judges one outcome; without a parent it judges nothing and its chain reaches no product (Core §5)."
+  },
+  {
+    "section": "core",
+    "name": "CORE005 measure source is not in the evidenceSources registry",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-MINUTES.md": {
+        "frontmatter": {
+          "intentset.measure.source": "teacher-survey"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: no evidenceSources registry is a warning, not a pass",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE005"
+    ],
+    "notes": "An empty or absent registry reads as not declared: the two sources could not be checked, and the warning says so."
+  },
+  {
+    "section": "core",
+    "name": "CORE003 an approved outcome with no measure",
+    "baseline": "scheduling",
+    "files": {
+      "MEAS-PREPARE-ADOPTION.md": null,
+      "MEAS-PREPARE-MINUTES.md": null
+    },
+    "patch": {
+      "OUT-PREPARE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ],
+    "notes": "Core §6: an outcome past draft says how it will be judged, as a measure record. Verification of the behaviors below it does not stand in for one."
+  },
+  {
+    "section": "core",
+    "name": "CORE009 a draft outcome with no measure",
+    "baseline": "scheduling",
+    "files": {
+      "MEAS-PREPARE-ADOPTION.md": null,
+      "MEAS-PREPARE-MINUTES.md": null
+    },
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
+    ],
+    "notes": "While the outcome is draft the missing measure is a warning, the same way a draft rule nothing governs is."
   },
   {
     "section": "core",
@@ -2127,6 +2411,10 @@
       "flags": [
         "beta-scheduling"
       ],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2177,6 +2465,10 @@
       ],
       "flags": [
         "beta-scheduling"
+      ],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
       ],
       "resources": [
         {
@@ -2553,6 +2845,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",
@@ -2595,6 +2891,10 @@
         "standard"
       ],
       "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
       "resources": [
         {
           "id": "RES-ASSESSMENT-DATA",

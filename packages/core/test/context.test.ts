@@ -125,6 +125,8 @@ test("any other type: the artifact and its direct authored and derived neighbour
     "start OUT-PREPARE",
     "neighbour CAP-ASMT-ASSIGN",
     "neighbour INT-PREPARE",
+    "neighbour MEAS-PREPARE-ADOPTION",
+    "neighbour MEAS-PREPARE-MINUTES",
   ]);
 });
 

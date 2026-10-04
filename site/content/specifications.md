@@ -42,9 +42,9 @@ Intentset separates product meaning from implementation architecture and platfor
   [[Read the publication profile](publication/index.html)]{.button}
   :::
 - :::card
-  ### Export Contract v0.2
+  ### Export Contract v0.3
 
-  The JSON a repository hands to other tools: the graph, optional evidence, knowledge, impact and ownership reports, what is withheld, and what a consumer must check before importing it. Valid and deliberately invalid envelopes for testing a consumer ship with the conformance suite.
+  The JSON a repository hands to other tools: the graph with its outcomes and measures, optional evidence, knowledge, impact and ownership reports, what is withheld, and what a consumer must check before importing it. Valid and deliberately invalid envelopes for testing a consumer ship with the conformance suite.
 
   [[Read the export contract](export/index.html)]{.button}
   :::

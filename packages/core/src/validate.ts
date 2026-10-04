@@ -414,6 +414,18 @@ function checkLifecycle(context: Context): void {
         });
       }
     }
+    if (meta.measure !== undefined) {
+      if (registries.evidenceSources.length === 0) use("evidenceSources");
+      else if (!registries.evidenceSources.includes(meta.measure.source)) {
+        reportOn(context, artifact, {
+          code: "CORE005",
+          field: "/intentset/measure/source",
+          message: `measure source ${meta.measure.source} is not in the evidenceSources registry.`,
+          remediation:
+            "Add the analytics product, study or survey to registries.yaml evidenceSources, or name a registered source.",
+        });
+      }
+    }
     meta.slice?.usesResources.forEach((resource, i) => {
       if (registries.resources.length === 0) use("resources");
       else if (!resourceIds.has(resource)) {
@@ -465,12 +477,22 @@ interface Requirement {
   remediation: string;
   /** Core §5 names no active obligation for this type; only the draft warning applies. */
   draftOnly?: boolean;
+  /** Only edges from these types count: an outcome is judged by its measures, not by the capabilities under it. */
+  fromTypes?: readonly ArtifactType[];
 }
 
 function requirement(artifact: Artifact): Requirement | null {
   const { meta } = artifact;
   const id = meta.id;
   switch (meta.type) {
+    case "outcome":
+      return {
+        kinds: ["parent"],
+        direction: "in",
+        fromTypes: ["measure"],
+        message: "no measure names it as parent, so nothing says how it will be judged",
+        remediation: `Add a measure record with \`parent: ${id}\` carrying metric, baseline, target, window and source (Core §6).`,
+      };
     case "rule":
       return {
         kinds: ["governedBy"],
@@ -529,18 +551,27 @@ function requirement(artifact: Artifact): Requirement | null {
 }
 
 /**
- * Core §5 and VSA §3: active rules, scenarios, verifications, knowledge and
- * product slices are attached (CORE003). Their drafts, and draft contracts
- * and decisions nothing refers to, are unattached drafts (CORE009, warning).
+ * Core §5, §6 and VSA §3: active rules, scenarios, verifications, knowledge and
+ * product slices are attached, and an active outcome has a measure (CORE003).
+ * Their drafts, and draft contracts and decisions nothing refers to, are
+ * unattached drafts (CORE009, warning).
  */
 function checkAttachment(context: Context): void {
   const { graph } = context;
   for (const artifact of sortedArtifacts(graph)) {
     const need = requirement(artifact);
     if (need === null || artifact.meta.status === "retired") continue;
-    const edges = need.kinds.flatMap((kind) =>
-      need.direction === "in" ? incomingEdges(graph, artifact.meta.id, kind) : outgoing(graph, artifact.meta.id, kind),
-    );
+    const edges = need.kinds
+      .flatMap((kind) =>
+        need.direction === "in"
+          ? incomingEdges(graph, artifact.meta.id, kind)
+          : outgoing(graph, artifact.meta.id, kind),
+      )
+      .filter((edge) => {
+        if (need.fromTypes === undefined) return true;
+        const from = graph.artifacts.get(edge.from);
+        return from !== undefined && need.fromTypes.includes(from.meta.type);
+      });
     if (edges.length > 0) continue;
     const field = need.direction === "out" ? `/intentset/links/${need.kinds[0]}` : undefined;
     if (artifact.meta.status === "draft") {
@@ -572,7 +603,7 @@ export function patternProblem(pattern: string): string | null {
   return null;
 }
 
-/** VSA §3 and Core §8: type-specific blocks on their own type only; technical slices give a rationale and implement nothing; patterns are plain. */
+/** VSA §3, Core §6 and §8: type-specific blocks on their own type only; technical slices give a rationale and implement nothing; patterns are plain. */
 function checkSlices(context: Context): void {
   const { graph } = context;
   for (const artifact of sortedArtifacts(graph)) {
@@ -584,6 +615,13 @@ function checkSlices(context: Context): void {
         "/intentset/verification",
         `${id} is ${aType(artifact.meta.type)} and carries verification metadata, which only a verification has.`,
         "Remove the verification block, or change the type (Core §8).",
+      );
+    }
+    if (artifact.meta.measure !== undefined && artifact.meta.type !== "measure") {
+      profile(
+        "/intentset/measure",
+        `${id} is ${aType(artifact.meta.type)} and carries measure metadata, which only a measure has.`,
+        "Remove the measure block, or change the type (Core §6).",
       );
     }
     const slice = artifact.meta.slice;

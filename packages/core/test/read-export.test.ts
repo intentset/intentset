@@ -103,7 +103,14 @@ test("bytes, text and parsed values read alike; invalid UTF-8, oversize and trun
 });
 
 test("a missing or unknown contract is unsupported-contract before any shape check", () => {
-  for (const contract of [undefined, 3, "intentset/export/0.1", "intentset/export/0.3", "other/export/0.2"]) {
+  for (const contract of [
+    undefined,
+    3,
+    "intentset/export/0.1",
+    "intentset/export/0.2",
+    "intentset/export/0.4",
+    "other/export/0.3",
+  ]) {
     const value = { ...full, contract };
     const read = readExport(value);
     assert.equal(!read.ok && read.category, "unsupported-contract", String(contract));
