@@ -171,7 +171,9 @@ export function buildModel(
       validatePattern(resource.path) === null ? production.filter((file) => matchPattern(resource.path, file)) : [],
   }));
 
-  const underBackend = (path: string) => matchAny(config.backendRoots, path);
+  // An area's backend is backend for AMP001, AMP002 and AMP004 as the unified one is (profile §9).
+  const backendPatterns = [...config.backendRoots, ...config.areas.flatMap((area) => area.backend)];
+  const underBackend = (path: string) => matchAny(backendPatterns, path);
   const regions = new Map<string, Region>();
   const regionOf = (path: string): Region => {
     const cached = regions.get(path);

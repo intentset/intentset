@@ -38,6 +38,7 @@
  * so a narrow scope cannot hide its consumers and they do not fail it
  * (VSA §9). They count toward no edge total and no slice dependency.
  */
+import { isAreaSchema } from "./areas.ts";
 import { type Finding, finding, listSome } from "./finding.ts";
 import type { ImportEdge } from "./imports.ts";
 import { inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
@@ -281,9 +282,27 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
     if (!model.inScope(to) && target === undefined) continue;
     const subject = { edges: [{ from, to }, ...(source && target ? [{ from: source.id, to: target.id }] : [])] };
 
-    // 1. AMP001
-    if (model.underBackend(to) && !model.underBackend(from)) {
+    // 1. AMP001, and AMP011 for an area repository's schema bridge (profile §9). The shared backend
+    // package is backend code: what it may import is AMP008's question.
+    if (model.underBackend(to) && !model.underBackend(from) && !matchAny(config.sharedBackend, from)) {
       const seam = source !== undefined && inSeam(source, from);
+      if (edge.typeOnly && isAreaSchema(config.areas, to)) {
+        if (from !== config.schemaBridge) {
+          findings.push(
+            finding({
+              code: "AMP011",
+              artifact,
+              path: from,
+              location,
+              message: `${from} ${how(edge)}, the schema of an area, and only the schema bridge${config.schemaBridge === null ? ", which this repository has not declared," : ` ${config.schemaBridge}`} may.`,
+              remediation:
+                "Import the client and its types from the schema bridge, which joins every area's schema into one type (profile §9, AMP011).",
+              ...subject,
+            }),
+          );
+        }
+        continue;
+      }
       if (!(seam && matchAny(config.responseParserModules, to))) {
         findings.push(
           finding({

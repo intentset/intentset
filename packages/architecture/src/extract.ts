@@ -342,3 +342,153 @@ export function extractImports(path: string, text: string): Extraction {
 
   return { imports, problems };
 }
+
+/** What an Amplify schema declares at its top level (profile §9, AMP009). */
+export const SCHEMA_KINDS = ["model", "enum", "query", "mutation", "subscription", "customType"] as const;
+export type SchemaKind = (typeof SCHEMA_KINDS)[number];
+
+export interface SchemaDeclaration {
+  name: string;
+  /** Null when the value is not a builder call this reader recognizes, such as a variable defined elsewhere. */
+  kind: SchemaKind | null;
+  line: number;
+}
+
+/** A relationship or reference by name inside a schema (AMP010): `belongsTo("X")`, `hasMany`, `hasOne`, `ref`. */
+export interface SchemaReference {
+  target: string;
+  via: "belongsTo" | "hasMany" | "hasOne" | "ref";
+  line: number;
+}
+
+export interface SchemaExtraction {
+  /** False when the file holds no `<builder>.schema({ ... })` call at all. */
+  found: boolean;
+  declarations: SchemaDeclaration[];
+  references: SchemaReference[];
+  problems: ExtractProblem[];
+}
+
+const REFERENCE_CALLS = new Set(["belongsTo", "hasMany", "hasOne", "ref"]);
+const OPENERS = new Set<SyntaxKind>([
+  SyntaxKind.OpenBraceToken,
+  SyntaxKind.OpenParenToken,
+  SyntaxKind.OpenBracketToken,
+]);
+const CLOSERS = new Set<SyntaxKind>([
+  SyntaxKind.CloseBraceToken,
+  SyntaxKind.CloseParenToken,
+  SyntaxKind.CloseBracketToken,
+]);
+
+/**
+ * The top-level names an Amplify Gen 2 schema file declares, and the names its
+ * relationships and references point at, read from TypeScript's tokens as
+ * imports are. Every `<builder>.schema({ ... })` object literal counts: each
+ * key at its top level is a declaration, its kind read from a `<builder>.<kind>(`
+ * value or from a `const Name = <builder>.<kind>(` elsewhere in the file. A
+ * spread, or a value that is neither, is a problem rather than a guess.
+ */
+export function extractSchema(path: string, text: string): SchemaExtraction {
+  const { tokens, problems } = tokenize(path, text);
+  const declarations: SchemaDeclaration[] = [];
+  const references: SchemaReference[] = [];
+  const word = (i: number, value?: string): boolean => {
+    const token = tokens[i];
+    return (
+      token !== undefined && tokenIsIdentifierOrKeyword(token.kind) && (value === undefined || token.text === value)
+    );
+  };
+  const is = (i: number, kind: SyntaxKind): boolean => tokens[i]?.kind === kind;
+  /** `<builder>.<kind>(` starting at i, as the kind, or null. */
+  const builderCall = (i: number): SchemaKind | null => {
+    if (!word(i) || !is(i + 1, SyntaxKind.DotToken) || !word(i + 2) || !is(i + 3, SyntaxKind.OpenParenToken))
+      return null;
+    const kind = tokens[i + 2].text;
+    return (SCHEMA_KINDS as readonly string[]).includes(kind) ? (kind as SchemaKind) : null;
+  };
+  const bound = new Map<string, SchemaKind>();
+  for (let i = 0; i + 3 < tokens.length; i++) {
+    if ((word(i, "const") || word(i, "let")) && word(i + 1) && is(i + 2, SyntaxKind.EqualsToken)) {
+      const kind = builderCall(i + 3);
+      if (kind !== null) bound.set(tokens[i + 1].text, kind);
+    }
+  }
+
+  let found = false;
+  for (let i = 0; i + 4 < tokens.length; i++) {
+    if (!(word(i) && is(i + 1, SyntaxKind.DotToken) && word(i + 2, "schema"))) continue;
+    if (!(is(i + 3, SyntaxKind.OpenParenToken) && is(i + 4, SyntaxKind.OpenBraceToken))) continue;
+    found = true;
+    let depth = 0;
+    let k = i + 5;
+    for (; k < tokens.length; k++) {
+      const token = tokens[k];
+      if (CLOSERS.has(token.kind)) {
+        if (depth === 0) break;
+        depth--;
+        continue;
+      }
+      if (OPENERS.has(token.kind)) {
+        depth++;
+        continue;
+      }
+      if (
+        word(k) &&
+        REFERENCE_CALLS.has(token.text) &&
+        is(k - 1, SyntaxKind.DotToken) &&
+        is(k + 1, SyntaxKind.OpenParenToken)
+      ) {
+        if (is(k + 2, SyntaxKind.StringLiteral)) {
+          references.push({ target: tokens[k + 2].value, via: token.text as SchemaReference["via"], line: token.line });
+        }
+        continue;
+      }
+      if (depth !== 0) continue;
+      const startsMember = is(k - 1, SyntaxKind.OpenBraceToken) || is(k - 1, SyntaxKind.CommaToken);
+      if (!startsMember) continue;
+      if (is(k, SyntaxKind.DotDotDotToken)) {
+        problems.push({
+          line: token.line,
+          message: "the schema spreads another object in, and its members were not read",
+        });
+        continue;
+      }
+      const isKey = word(k) || is(k, SyntaxKind.StringLiteral);
+      if (!isKey) continue;
+      const name = is(k, SyntaxKind.StringLiteral) ? token.value : token.text;
+      if (is(k + 1, SyntaxKind.ColonToken)) {
+        const direct = builderCall(k + 2);
+        const named = word(k + 2) && !is(k + 3, SyntaxKind.DotToken) ? (bound.get(tokens[k + 2].text) ?? null) : null;
+        const kind = direct ?? named;
+        if (kind === null) {
+          problems.push({ line: token.line, message: `the kind of the schema member ${name} could not be read` });
+        }
+        declarations.push({ name, kind, line: token.line });
+      } else if (is(k + 1, SyntaxKind.CommaToken) || is(k + 1, SyntaxKind.CloseBraceToken)) {
+        const kind = bound.get(name) ?? null;
+        if (kind === null) {
+          problems.push({ line: token.line, message: `the kind of the schema member ${name} could not be read` });
+        }
+        declarations.push({ name, kind, line: token.line });
+      }
+    }
+    i = k;
+  }
+  return { found, declarations, references, problems };
+}
+
+/** 1-based lines where `name` is called, as `name(` or `name<T>(`, not as a method and not where it is declared. */
+export function findCalls(path: string, text: string, name: string): number[] {
+  const { tokens } = tokenize(path, text);
+  const lines: number[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (!tokenIsIdentifierOrKeyword(token.kind) || token.text !== name) continue;
+    const before = tokens[i - 1];
+    if (before !== undefined && (before.kind === SyntaxKind.DotToken || before.text === "function")) continue;
+    const next = tokens[i + 1]?.kind;
+    if (next === SyntaxKind.OpenParenToken || next === SyntaxKind.LessThanToken) lines.push(token.line);
+  }
+  return lines;
+}

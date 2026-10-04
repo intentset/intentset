@@ -4,6 +4,7 @@
  * (spec/profile-typescript-amplify-gen2-0.1.md). `checkArchitecture` is the
  * whole check; the rest is exported for reports, tools and tests.
  */
+export { AREA_REVIEW_REQUIRED, areaOf, backendAreaOf, checkAreas, isAreaSchema } from "./areas.ts";
 export {
   applyBaseline,
   type BaselineEntry,
@@ -25,8 +26,10 @@ export {
 export { checkClaims } from "./claims.ts";
 export {
   ARCHITECTURE_CONFIG_PATH,
+  type AreaConfig,
   type ArchitectureConfig,
   DEFAULT_ARCHITECTURE_CONFIG,
+  MAX_AREAS,
   readArchitectureConfig,
   resolveConfig,
 } from "./config.ts";
@@ -40,7 +43,18 @@ export {
   readExceptionRecord,
   readExceptions,
 } from "./exceptions.ts";
-export { type Extraction, extractImports, type RawImport } from "./extract.ts";
+export {
+  type Extraction,
+  extractImports,
+  extractSchema,
+  findCalls,
+  type RawImport,
+  SCHEMA_KINDS,
+  type SchemaDeclaration,
+  type SchemaExtraction,
+  type SchemaKind,
+  type SchemaReference,
+} from "./extract.ts";
 export type { Finding, SubjectEdge } from "./finding.ts";
 export { buildImportGraph, type ImportEdge, type ImportGraph, type UnresolvedImport } from "./imports.ts";
 export { inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";

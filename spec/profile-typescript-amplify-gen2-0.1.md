@@ -31,7 +31,7 @@ architecture/{decisions,resources,exceptions}/
 .intentset/                    # registry/config, not secrets or generated truth
 ```
 
-This is a reference mapping; directory migrations are not a prerequisite to first adoption. A repository MAY group slices under named domains with one alias per group (for example `@assessment/*`), and folders a slice does not need stay absent rather than empty.
+This is a reference mapping; directory migrations are not a prerequisite to first adoption. A repository MAY group slices under named domains with one alias per group (for example `@assessment/*`), and folders a slice does not need stay absent rather than empty. A backend too large for one CloudFormation deployment is split into areas, each its own Amplify backend behind one AppSync Merged API; §9 gives that layout and its rules.
 
 ## 2. TypeScript boundaries
 
@@ -79,9 +79,11 @@ Intentset imposes the following additional constraints:
 | AMP005 | Backend authorization and product invariants MUST be verified independently of frontend validation |
 | AMP006 | Generated client/configuration and runtime SDK types MUST NOT leak into domain policy/model layers |
 
+AMP007 to AMP013 apply only to a repository split into areas (§9).
+
 **Inherited exception — response envelope only:** feature `client/` modules MAY import `parseResolverResponse` from `@/amplify/shared/lambda-core/`. A repository adopting this profile names that one module explicitly. Treat it as a narrow named exception, not permission to import handlers or resource definitions. Preserve one authoritative backend contract; do not manually copy transport types.
 
-**Optional proposed extension — schema type bridge:** AWS's exported `Schema` pattern may motivate a type-only bridge, but this profile does not authorize one by default. The default profile therefore forbids frontend imports of `amplify/data/resource.ts`, including type-only imports. An adopting repository MAY approve a precisely scoped ADR for a type-only bridge, with no value imports and checks proving backend runtime code is absent from the browser bundle. Report this as an explicit exception to the baseline, not inherited conformance. Alternatively evaluate a generated declaration-only contract package; generation must preserve the backend authority and must not be described as already implemented.
+**Optional proposed extension — schema type bridge:** AWS's exported `Schema` pattern may motivate a type-only bridge, but this profile does not authorize one by default. A repository split into areas declares exactly one bridge, because its one client spans every area's schema (§9, AMP011). The default profile therefore forbids frontend imports of `amplify/data/resource.ts`, including type-only imports. An adopting repository MAY approve a precisely scoped ADR for a type-only bridge, with no value imports and checks proving backend runtime code is absent from the browser bundle. Report this as an explicit exception to the baseline, not inherited conformance. Alternatively evaluate a generated declaration-only contract package; generation must preserve the backend authority and must not be described as already implemented.
 
 The initial draft incorrectly treated the type bridge as an existing permitted seam. This revision removes that assumption. Actual client initialization and contract generation must be inspected during implementation before choosing an adapter; no source-project SDK code was audited here.
 
@@ -131,3 +133,55 @@ The first repository adoption MUST test against locked TypeScript, Amplify, test
 ## 8. Reference implementation acceptance
 
 Acceptance requires a clean sample repository, deliberate failing fixtures, one deployed sandbox journey, tenant/role denial tests, current evidence export, absence of backend resources from the browser bundle, deterministic graph output, and a reviewed Markset publication. These checks are roadmap work; no AWS deployment or TypeScript package compilation was performed for this document package.
+
+## 9. Areas: more than one backend
+
+Amplify Gen 2 deploys a backend as one CloudFormation root stack with nested stacks. CloudFormation caps each stack at 500 resources and each deployment at 2,500 resources across the whole nested hierarchy, and neither limit can be raised. Gen 2 generates a pipeline resolver and a function configuration for every model operation, about 16 resources per model with subscriptions, plus one per global secondary index, and each Lambda function costs about 5. Gen 2 offers no supported way to choose the nested stack a model's or function's resources land in. A large product therefore reaches a limit with one backend whatever its slices look like. (Added 2026-10-04 from a production application that split into four areas at about 2,500 resources, and Streamlane, whose single backend reached 510 resources in one nested stack at 85 custom operations.)
+
+A repository MAY split its backend into **areas**. An area is one Amplify backend, with its own `backend.ts`, its own `data/resource.ts` and its own CloudFormation deployment and source AppSync API, together with the frontend slices whose behavior it serves. One AppSync Merged API joins the areas' source APIs (`AUTO_MERGE`, at most 10 per Merged API), and the frontend talks only to it. A repository with one backend is not affected by this section. Once a repository declares areas, every rule below is normative for it.
+
+```text
+src/features/<area>/<slice>/      # alias @<area>/*; the area's slices
+src/infrastructure/amplify/client.ts   # the schema bridge: the one generateClient
+amplify-<area>/amplify/
+  backend.ts
+  data/resource.ts                # this area's whole schema
+  functions/<name>/{resource.ts,handler.ts}
+packages/amplify-shared/          # domain-neutral backend code, imported by every area
+merged-api/                       # the Merged API (CDK; Gen 2 has no native Merged API)
+```
+
+Areas are declared in `.intentset/architecture.yaml`:
+
+```yaml
+areas:
+  - name: platform
+    backend: [amplify-platform/amplify/**]
+    schema: amplify-platform/amplify/data/resource.ts
+    frontend: [src/features/platform/**]
+  - name: assessment
+    backend: [amplify-assessment/amplify/**]
+    schema: amplify-assessment/amplify/data/resource.ts
+    frontend: [src/features/assessment/**]
+sharedBackend: [packages/amplify-shared/**]
+schemaBridge: src/infrastructure/amplify/client.ts
+```
+
+A slice's `domain` names its area. An area's backend counts as backend for AMP001, AMP002 and AMP004, so its functions and resources are claimed by one slice or recorded technical owner as anywhere else.
+
+| Rule | Requirement |
+|---|---|
+| AMP007 | A slice MUST name a declared area as its `domain`, and its claims MUST NOT reach into another area's frontend or backend |
+| AMP008 | An area's backend MUST NOT import another area's backend. Backend code more than one area needs lives in the declared shared backend package, which MUST NOT import any area |
+| AMP009 | Each model, enum, query, mutation and subscription MUST be declared in exactly one area's schema, because the Merged API joins every area into one type namespace and refuses a field two sources resolve. A custom type declared in two areas SHOULD be renamed (a warning) |
+| AMP010 | Schema relationships (`belongsTo`, `hasMany`, `hasOne`) and references (`ref`) MUST NOT name another area's type. A cross-area link is an ID field, resolved by a function of the area that needs it |
+| AMP011 | The frontend MUST reach every area through one client on the Merged API: only the declared schema bridge MAY import an area's schema, type-only, and only it MAY call `generateClient` |
+| AMP012 | Backend code MUST reach another area's data through that area's published resource names and the AWS SDK, never through GraphQL or a copy of its schema, and deploy-time dependencies between areas MUST form an acyclic order |
+| AMP013 | One authorizer, configured on the Merged API, MUST decide every request to every area, and MUST deny a model or operation it does not list |
+
+AMP007 to AMP011 are checked from source. AMP012 and AMP013 are review assertions: one is a property of deployment wiring and the other of an authorizer's policy, neither of which an import graph shows.
+
+**Budget.** Ownership follows data access, not headroom: a model belongs to the area whose functions read and write it, never to a smaller backend because it has room. An area SHOULD be split, or a new area added, before its deployment passes about 1,500 resources or any nested stack about 300, rather than after a deploy fails. Spreading one area's resources over more nested stacks buys headroom without changing ownership, but it meets other walls (a stack's 200 parameters, a template's 1 MB) and is a stopgap, not a substitute for an area.
+
+**Deployment.** One area, conventionally the one holding identity and tenancy, deploys first and depends on no other area at deploy time. The rest MAY read its published resource names at deploy time; every other cross-area reference is resolved at run time from published names, so that the deploy order stays acyclic (AMP012). The Merged API deploys after every area. Generated client configuration is the union of the areas' outputs with the Merged API's endpoint, and generation MUST fail on a name two areas both declare (AMP009), before the Merged API would.
+

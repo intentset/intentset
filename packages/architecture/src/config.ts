@@ -11,6 +11,21 @@ import { compareStrings, validatePattern } from "./patterns.ts";
 
 export const ARCHITECTURE_CONFIG_PATH = ".intentset/architecture.yaml";
 
+/** One area (profile §9): an Amplify backend of its own and the frontend slices it serves. */
+export interface AreaConfig {
+  /** Lowercase name; a slice names its area in `domain`. */
+  name: string;
+  /** Patterns for the area's backend: its own CloudFormation deployment and source API. */
+  backend: string[];
+  /** The area's schema file, `data/resource.ts`: the one place its models and operations are declared (AMP009). */
+  schema: string;
+  /** Patterns for the area's frontend slices, such as src/features/<area>/**. May be empty. */
+  frontend: string[];
+}
+
+/** AppSync joins at most this many source APIs into one Merged API. */
+export const MAX_AREAS = 10;
+
 export interface ArchitectureConfig {
   /** Declared scope (VSA §9, Core §11): files outside it are counted, never reported one by one. */
   scope: string[];
@@ -40,6 +55,12 @@ export interface ArchitectureConfig {
   layerMatrix: Record<string, string[]>;
   /** Export conditions tried first when resolving a workspace package's entry, before types, import and default. */
   conditions: string[];
+  /** Areas (profile §9). Empty for a repository with one backend, which none of AMP007 to AMP013 concern. */
+  areas: AreaConfig[];
+  /** Domain-neutral backend code every area may import, which imports no area (AMP008). */
+  sharedBackend: string[];
+  /** The one frontend file that may import area schemas, type-only, and call generateClient (AMP011). */
+  schemaBridge: string | null;
 }
 
 export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
@@ -63,6 +84,9 @@ export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
     external: ["external", "model"],
   },
   conditions: [],
+  areas: [],
+  sharedBackend: [],
+  schemaBridge: null,
 };
 
 const LIST_KEYS = [
@@ -78,6 +102,7 @@ const LIST_KEYS = [
   "tests",
   "backendSdks",
   "conditions",
+  "sharedBackend",
 ] as const;
 
 /** Keys whose entries are path patterns and must pass validatePattern. */
@@ -93,9 +118,10 @@ const PATTERN_KEYS = new Set<string>([
   "ignore",
   "tests",
   "screensGlob",
+  "sharedBackend",
 ]);
 
-const KNOWN_KEYS = [...LIST_KEYS, "screensGlob", "layerMatrix"].sort(compareStrings);
+const KNOWN_KEYS = [...LIST_KEYS, "screensGlob", "layerMatrix", "areas", "schemaBridge"].sort(compareStrings);
 
 /** The defaults with a partial configuration laid over them; a key given replaces the default whole. */
 export function resolveConfig(...layers: (Partial<ArchitectureConfig> | undefined)[]): ArchitectureConfig {
@@ -166,6 +192,25 @@ export function readArchitectureConfig(
       } else config.screensGlob = value as string;
       continue;
     }
+    if (key === "schemaBridge") {
+      const why = typeof value === "string" ? literalPath(value) : "is not a string";
+      if (why !== null) {
+        report(
+          field,
+          at(field),
+          `schemaBridge ${why}.`,
+          "Name the one file, such as src/infrastructure/amplify/client.ts.",
+        );
+      } else config.schemaBridge = value as string;
+      continue;
+    }
+    if (key === "areas") {
+      const read = readAreas(value);
+      if (typeof read === "string") {
+        report(field, at(field), `areas ${read}.`, AREAS_REMEDIATION);
+      } else config.areas = read;
+      continue;
+    }
     if (key === "layerMatrix") {
       const matrix = readMatrix(value);
       if (matrix === null) {
@@ -209,4 +254,50 @@ function readMatrix(value: unknown): Record<string, string[]> | null {
     matrix[layer] = [...(targets as string[])];
   }
   return matrix;
+}
+
+const AREAS_REMEDIATION =
+  "Write each area as a mapping of name, backend (a list of patterns), schema (one file) and frontend (a list of patterns), as profile §9 shows.";
+const AREA_NAME = /^[a-z][a-z0-9-]*$/;
+
+/** `areas` as a list of AreaConfig, or why it is not one. */
+function readAreas(value: unknown): AreaConfig[] | string {
+  if (!Array.isArray(value)) return "must be a list of areas";
+  if (value.length > MAX_AREAS) {
+    return `names ${value.length} areas, and an AppSync Merged API joins at most ${MAX_AREAS} source APIs`;
+  }
+  const areas: AreaConfig[] = [];
+  for (const [i, entry] of value.entries()) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return `entry ${i} is not a mapping`;
+    const record = entry as Record<string, unknown>;
+    const unknown = Object.keys(record).filter((key) => !["name", "backend", "schema", "frontend"].includes(key));
+    if (unknown.length > 0) return `entry ${i} has the unknown key \`${unknown[0]}\``;
+    const { name, backend, schema, frontend = [] } = record;
+    if (typeof name !== "string" || !AREA_NAME.test(name)) return `entry ${i} needs a lowercase name such as platform`;
+    if (areas.some((area) => area.name === name)) return `name the area ${name} twice`;
+    const patterns = (list: unknown, what: string, required: boolean): string[] | string => {
+      if (!Array.isArray(list) || !list.every((item) => typeof item === "string" && item !== "")) {
+        return `entry ${name} needs ${what} as a list of patterns`;
+      }
+      if (required && list.length === 0) return `entry ${name} needs at least one ${what} pattern`;
+      const bad = (list as string[]).find((pattern) => validatePattern(pattern) !== null);
+      return bad === undefined
+        ? [...(list as string[])]
+        : `entry ${name}: the ${what} pattern ${bad} ${validatePattern(bad)}`;
+    };
+    const backendList = patterns(backend, "backend", true);
+    if (typeof backendList === "string") return backendList;
+    const frontendList = patterns(frontend, "frontend", false);
+    if (typeof frontendList === "string") return frontendList;
+    const why = typeof schema === "string" ? literalPath(schema) : "is missing";
+    if (why !== null) return `entry ${name}: schema ${why}`;
+    areas.push({ name, backend: backendList, schema: schema as string, frontend: frontendList });
+  }
+  return areas;
+}
+
+/** Null for one repository-relative file path with no wildcard, or why it is not one. */
+function literalPath(value: string): string | null {
+  if (value.includes("*")) return "must name one file, not a pattern";
+  return validatePattern(value);
 }

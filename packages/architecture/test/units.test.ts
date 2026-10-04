@@ -14,6 +14,9 @@ import {
   matchPattern,
   parseBaseline,
   plainMessage,
+  extractSchema,
+  findCalls,
+  MAX_AREAS,
   readArchitectureConfig,
   readExceptionRecord,
   resolveConfig,
@@ -433,6 +436,59 @@ describe("baseline (VSA §9)", () => {
   });
 });
 
+describe("area schemas (profile §9)", () => {
+  test("extractSchema reads top-level members by builder, by const and by shorthand, and every reference by name", () => {
+    const text = `import { a } from "@aws-amplify/backend";
+const Organization = a.model({ name: a.string() });
+const schema = a.schema({
+  Organization,
+  "Quoted": a.enum(["x"]),
+  Member: a.model({ organization: a.belongsTo("Organization", "organizationId"), tags: a.ref("Tag").array() }),
+  lookup: a.query().returns(a.ref("LookupResult")).handler(a.handler.function(fn)),
+  LookupResult: a.customType({ id: a.id() }),
+  Later: someOtherValue,
+  ...extra,
+});
+const notASchema = { Ignored: a.model({}) };
+`;
+    const read = extractSchema("data/resource.ts", text);
+    assert.equal(read.found, true);
+    assert.deepEqual(
+      read.declarations.map((d) => [d.name, d.kind]),
+      [
+        ["Organization", "model"],
+        ["Quoted", "enum"],
+        ["Member", "model"],
+        ["lookup", "query"],
+        ["LookupResult", "customType"],
+        ["Later", null],
+      ],
+    );
+    assert.deepEqual(
+      read.references.map((r) => `${r.via}:${r.target}`),
+      ["belongsTo:Organization", "ref:Tag", "ref:LookupResult"],
+    );
+    assert.deepEqual(
+      read.problems.map((p) => p.message),
+      [
+        "the kind of the schema member Later could not be read",
+        "the schema spreads another object in, and its members were not read",
+      ],
+    );
+    assert.equal(extractSchema("x.ts", "export const x = 1;\n").found, false);
+  });
+
+  test("findCalls finds generateClient calls, typed or not, and not its import, a method or its declaration", () => {
+    const text = `import { generateClient } from "aws-amplify/data";
+export function generateClient() {}
+const a = generateClient<Schema>();
+const b = generateClient();
+const c = api.generateClient();
+`;
+    assert.deepEqual(findCalls("x.ts", text, "generateClient"), [3, 4]);
+  });
+});
+
 describe("configuration", () => {
   test("readArchitectureConfig: known keys read, unknown keys and bad patterns are CFG001 with origin architecture", () => {
     const { config, diagnostics } = readArchitectureConfig(
@@ -453,6 +509,47 @@ describe("configuration", () => {
     const { diagnostics } = readArchitectureConfig("a: 1\na: 2\n");
     assert.equal(diagnostics[0].code, "CFG001");
     assert.equal(diagnostics[0].location?.line, 2);
+  });
+
+  test("areas: read with their schema and patterns; a bad entry, a pattern schema or an eleventh area is CFG001", () => {
+    const area = (name: string) =>
+      `- name: ${name}\n  backend:\n  - amplify-${name}/amplify/**\n  schema: amplify-${name}/amplify/data/resource.ts\n`;
+    const good = readArchitectureConfig(
+      `areas:\n${area("platform")}  frontend:\n  - src/features/platform/**\n${area("content")}sharedBackend:\n- packages/shared/**\nschemaBridge: src/client.ts\n`,
+    );
+    assert.deepEqual(good.diagnostics, []);
+    assert.deepEqual(good.config.areas, [
+      {
+        name: "platform",
+        backend: ["amplify-platform/amplify/**"],
+        schema: "amplify-platform/amplify/data/resource.ts",
+        frontend: ["src/features/platform/**"],
+      },
+      {
+        name: "content",
+        backend: ["amplify-content/amplify/**"],
+        schema: "amplify-content/amplify/data/resource.ts",
+        frontend: [],
+      },
+    ]);
+    assert.deepEqual(good.config.sharedBackend, ["packages/shared/**"]);
+    assert.equal(good.config.schemaBridge, "src/client.ts");
+
+    const messages = (text: string) => readArchitectureConfig(text).diagnostics.map((d) => `${d.field} ${d.message}`);
+    const eleven = Array.from({ length: MAX_AREAS + 1 }, (_, i) => area(`a${i}`)).join("");
+    assert.match(
+      messages(`areas:\n${eleven}`)[0],
+      /^\/areas areas names 11 areas, and an AppSync Merged API joins at most 10/,
+    );
+    assert.match(messages(`areas:\n${area("x")}${area("x")}`)[0], /name the area x twice/);
+    assert.match(messages("areas:\n- name: Platform\n  backend: [a/**]\n  schema: a/r.ts\n")[0], /lowercase name/);
+    assert.match(messages("areas:\n- name: p\n  backend: [a/**]\n  schema: a/**\n")[0], /schema must name one file/);
+    assert.match(messages("areas:\n- name: p\n  backend: []\n  schema: a/r.ts\n")[0], /at least one backend pattern/);
+    assert.match(
+      messages("areas:\n- name: p\n  backend: [a/**]\n  schema: a/r.ts\n  stack: x\n")[0],
+      /unknown key `stack`/,
+    );
+    assert.match(messages("schemaBridge: src/**\n")[0], /^\/schemaBridge schemaBridge must name one file/);
   });
 
   test("resolveConfig lays partial configurations over the defaults, later winning", () => {
