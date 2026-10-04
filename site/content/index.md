@@ -16,7 +16,7 @@ Start with readable files in your repository. Build a product model that people 
 [[See how it works](how-it-works/index.html)]{.button .primary} [[Read the draft specification](specifications/index.html)]{.button}
 
 > [!NOTE]
-> The specifications are ready for review. A first reference toolchain, version 0.1, is published to try them against.
+> The specifications are ready for review. The reference toolchain, version 0.3, is published to try them against.
 
 ::col
 
@@ -144,11 +144,11 @@ Keep your existing workflow. Expand the model as its value becomes clear.
 {.eyebrow}
 Project status
 
-## Specifications first. A reference toolchain next.
+## Specifications in review. A toolchain to try them with.
 
-The v0.1 package defines the product model, traceable vertical slices, and a TypeScript + AWS Amplify Gen 2 reference profile.
+The v0.1 specifications define the product model, traceable vertical slices, a TypeScript + AWS Amplify Gen 2 reference profile and reviewed publication. An export contract fixes what other tools read from a model.
 
-Validation, architecture checks, change-impact reports, a Product Atlas, reviewed publication, and agent context ship in the 0.1 reference toolchain. They are early releases, to try against one real capability.
+The reference toolchain is at 0.3 on npm. 0.1 brought validation, architecture checks, change-impact reports, a Product Atlas, reviewed publication and agent context. 0.2 added the export other tools import, and 0.3 added areas, for Amplify backends too large for one CloudFormation stack. They are early releases, to try against one real capability.
 
 [Read the specifications](specifications/index.html) · [View the roadmap](roadmap/index.html)
 :::

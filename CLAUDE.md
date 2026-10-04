@@ -156,6 +156,11 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       `.intentset/architecture.yaml`; AMP007 to AMP011 checked from source (`packages/architecture/src/areas.ts`,
       schema members read by `extractSchema` from scanner tokens), AMP012 and AMP013 review-required. Checked clean
       against a four-area production application's tree; Streamlane will need the same split.
+- [x] The site caught up with 0.3, 2026-10-04: the status copy names 0.3 rather than 0.1, How it works covers draft
+      slices, areas and the export, the publication profile has a page under /specifications/ beside the export
+      contract, the roadmap lists 0.2 and 0.3 as delivered, and About and the footer name Driftline. The implementation
+      roadmap page renders a frozen handoff document, so `ROADMAP_DOC_NOTE` in `site/build.ts` says above it what has
+      changed since rather than editing it.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

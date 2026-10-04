@@ -21,6 +21,7 @@ This page walks through it in the order you would meet it: the files, the model 
 4. **Attach evidence.** Test runs from CI are tied to a commit, and only a pass on the commit under review counts.
 5. **Review the impact.** Before a change merges, see every behavior, owner, check and explanation it could reach.
 6. **Publish safely.** Reviewed explanations go out for one audience and one release, and nothing internal leaks through.
+7. **Hand it on.** Other tools read the model through one versioned export, with restricted records left out.
 :::
 
 ## Open files. Explicit meaning.
@@ -114,7 +115,11 @@ The slice record says which files it owns, which entrypoints are its public surf
 - two slices claiming the same file
 - product behavior living in shared or infrastructure code
 
-A real codebase rarely starts clean, so adoption is by scope. Record today's violations as a baseline, block new ones, and retire the baseline over time. The reference profile maps all of this onto TypeScript and AWS Amplify Gen 2.
+A real codebase rarely starts clean, so adoption is by scope. Record today's violations as a baseline, block new ones, and retire the baseline over time.
+
+A product can also be modelled before it is built. While a slice is a draft, an entrypoint that does not exist yet and a claim that matches no file are warnings, so the check passes from the first commit. Approving the slice makes them errors.
+
+The reference profile maps all of this onto TypeScript and AWS Amplify Gen 2. A large Amplify backend reaches CloudFormation's resource limits whatever its slices look like, so the profile also covers a backend split into areas, each its own Amplify backend behind one AppSync Merged API. The architecture check then keeps each slice, schema and import inside its area.
 
 ## Verified means passing now
 
@@ -132,6 +137,12 @@ Keep run records in CI or another store you control, never in the commit they as
 `intentset impact` starts at any record and follows the links outward: the behaviors that depend on it, the slices that own them, the checks that verify them and the knowledge that explains them. Governing rules, contracts and decisions come along as context for the reviewer. Direct effects are kept apart from candidates further away, and every result says which path reached it. Reaching something is a reason to look at it, not proof that it changed.
 
 `intentset review --base main` gathers the same picture for a branch: the checks, the coverage, and the impact of everything that changed.
+
+## Hand the model to other tools
+
+`intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
+
+A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Streamlane will use the export to link work items to the behaviors they change, and Driftline to attribute usage and errors to slices and behaviors. [Read the export contract](../specifications/export/index.html).
 
 ## Context for agents, with limits
 

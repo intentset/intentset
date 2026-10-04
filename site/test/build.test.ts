@@ -250,7 +250,8 @@ test("the specification pages carry exactly the headings their source files decl
     assert.match(doc, /<aside class="site-toc"><nav aria-label="Contents">/, page);
     const toc = doc.slice(doc.indexOf("<aside"), doc.indexOf("</aside>"));
     const entries = [...toc.matchAll(/<a href="#([^"]+)">/g)].map((m) => m[1]);
-    assert.ok(entries.length >= 5, `${page}: rail has ${entries.length} entries`);
+    // The publication profile is the shortest, at four sections.
+    assert.ok(entries.length >= 4, `${page}: rail has ${entries.length} entries`);
     for (const id of entries)
       assert.ok(doc.includes(`<h2 id="${id}">`) || doc.includes(`<h3 id="${id}">`), `${page}: #${id}`);
     assert.match(doc, new RegExp(`<a href="${REPO}/blob/main/${file}">`), `${page}: names its source`);

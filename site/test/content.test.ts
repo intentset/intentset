@@ -98,14 +98,16 @@ const PAGE_OF: Record<string, string> = {
 
 /**
  * Headings revised on 2026-10-03, when the 0.1 toolchain was published and the
- * roadmap's future work became delivered work. The IA document stays frozen as
- * the handoff; site/content is the copy's source of truth from here, and this
- * list is what may differ from the handoff.
+ * roadmap's future work became delivered work, and on 2026-10-04, when the home
+ * page's status stopped calling the toolchain the next thing. The IA document
+ * stays frozen as the handoff; site/content is the copy's source of truth from
+ * here, and this list is what may differ from the handoff.
  */
 const REVISED_HEADINGS: Record<string, string> = {
   "Next: validate the model": "Delivered in 0.1: validate the model",
   "Then: connect the repository": "Delivered in 0.1: connect the repository",
   "Then: help people and agents review": "Delivered in 0.1: help people and agents review",
+  "Specifications first. A reference toolchain next.": "Specifications in review. A toolchain to try them with.",
 };
 
 test("each page carries the IA document's copy verbatim: its heading, its first paragraph and its section headings", async () => {
@@ -131,16 +133,20 @@ test("the status notes are on their pages, as callouts, and none still says the 
   const notes: Array<[string, string]> = [
     [
       "index.html",
-      "The specifications are ready for review. A first reference toolchain, version 0.1, is published to try them against.",
+      "The specifications are ready for review. The reference toolchain, version 0.3, is published to try them against.",
     ],
     ["index.html", "Illustrative model. These links describe the proposed structure, not a live verification report."],
     [
       "start/index.html",
-      "This is a manual adoption guide for the v0.1 draft. To check your records as you go, install the reference toolchain with npm install --save-dev @intentset/cli, then run npx intentset init and npx intentset validate.",
+      "This is a manual adoption guide for the v0.1 draft. To check your records as you go, install the reference toolchain with npm install --save-dev @intentset/cli, then run npx intentset init and npx intentset validate. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain as npx -p @intentset/cli -p typescript@7 intentset.",
     ],
     [
       "specifications/index.html",
-      "All four documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. Version 0.1 is on npm; the export contract arrives with 0.2.",
+      "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.3 on npm.",
+    ],
+    [
+      "roadmap/implementation/index.html",
+      "This is the roadmap Intentset was planned from, unchanged. The toolchain it describes shipped in 0.1, and the questions it leaves open are settled: the name is Intentset, the licence is MIT, and the commands it proposes are installable from @intentset/cli. What came after is on the roadmap.",
     ],
     [
       "markset/index.html",
@@ -164,6 +170,12 @@ test("the status notes are on their pages, as callouts, and none still says the 
     "The planned publisher",
     "not yet presented as finished tools",
     "The working name is Intentset",
+    // Superseded on 2026-10-04, when 0.3 was out and the export with it.
+    "A first reference toolchain, version 0.1",
+    "Version 0.1 is on npm",
+    "the export contract arrives with 0.2",
+    "A reference toolchain next",
+    "All four documents",
   ];
   for (const page of Object.values(PAGE_OF)) {
     const body = text(await readFile(join(dist, page), "utf8"));
