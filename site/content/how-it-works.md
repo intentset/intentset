@@ -167,6 +167,8 @@ Knowledge records are explanations written for an audience, such as teachers. Ea
 
 `intentset publish` builds what one audience may see for one release. It denies by default, intersects every availability dimension, leaves out drafts and retired records, and never reveals the title or path of anything it excluded. The output is a set of Markset documents that carry their provenance: the source IDs and revisions, the snapshot and the reviewer. When a source changes, the explanations that depend on it are marked for review before they can be published again. Customer-facing tools read only this publication, never the engineering graph.
 
+A knowledge record can also carry tips: one sentence per behavior it explains, for the product to show beside the control that delivers it. They are reviewed and published with the record, so a tooltip cannot outlive the behavior it describes. Each publication writes them to a `help.json` the product reads with `@intentset/help`, which binds every tip to the element naming its behavior and reports the behaviors that have no tip yet.
+
 Markset provides the document format, and Intentset adds metadata and meaning to it without adding any syntax. [See how Markset fits](../markset/index.html).
 
 ## The Atlas: the model, for review
