@@ -65,9 +65,9 @@ export function atlasOf(session: Session): Map<string, string> {
 
 /**
  * Every file a build read as text, and the directories holding them, absolute:
- * a newer modification time on any of them means rebuild. A directory's time
- * changes when a file is added to it or removed, which is how a new record is
- * noticed.
+ * a different modification time or size on any of them means rebuild. A
+ * directory's time changes when a file is added to it or removed, which is how
+ * a new record is noticed.
  */
 function watched(session: Session, evidence: readonly string[]): string[] {
   const { repo } = session;
@@ -93,14 +93,31 @@ function watched(session: Session, evidence: readonly string[]): string[] {
   return [...files];
 }
 
-function changedSince(paths: readonly string[], since: number): string | null {
-  for (const path of paths) {
-    try {
-      if (statSync(path).mtimeMs > since) return path;
-    } catch {
-      // Absent now: a file the build read was removed, or an optional file never existed.
-    }
+/**
+ * Each path's modification time and size, or "absent". Compared with itself
+ * later rather than with a clock: a wall-clock start time in whole milliseconds
+ * is earlier than a file written in the same millisecond, and a file system's
+ * clock is coarser than the process's, so comparing the two calls a file
+ * written before the build "changed" (the 0.3.0 release run did, on Linux).
+ */
+function stamps(paths: readonly string[]): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const path of paths) out.set(path, stamp(path));
+  return out;
+}
+
+function stamp(path: string): string {
+  try {
+    const stat = statSync(path);
+    return `${stat.mtimeMs}:${stat.size}`;
+  } catch {
+    // Absent: a file the build read was removed, or an optional file never existed.
+    return "absent";
   }
+}
+
+function changedSince(recorded: ReadonlyMap<string, string>): string | null {
+  for (const [path, before] of recorded) if (stamp(path) !== before) return path;
   return null;
 }
 
@@ -118,7 +135,6 @@ export function requestPath(url: string | undefined): string | null {
 
 export async function serveCommand(options: ServeOptions, sessionOptions: SessionOptions, io: Io): Promise<number> {
   const given = sessionOptions.evidence;
-  let builtAt = Date.now();
   const first = openSession("serve", sessionOptions, io);
   if (typeof first === "number") return first;
   let session: Session = first;
@@ -131,6 +147,7 @@ export async function serveCommand(options: ServeOptions, sessionOptions: Sessio
   }
   const evidence = () => evidenceFiles(session.repo.root, io.cwd, given);
   let paths = watched(session, evidence());
+  let recorded = stamps(paths);
   const levelLine = `${count(session.result.graph.artifacts.size, "artifact")}, ${count(session.errors, "error")}, ${count(session.warnings, "warning")} at ${session.level}${
     session.evidence === undefined
       ? `; no run records were given or found in ${EVIDENCE_DIR}/, so L3 was not checked`
@@ -141,9 +158,10 @@ export async function serveCommand(options: ServeOptions, sessionOptions: Sessio
 
   /** Rebuild when a file the last build read has changed; keep serving the last good build if a rebuild fails. */
   const refresh = (): string | null => {
-    const changed = changedSince(paths, builtAt);
+    const changed = changedSince(recorded);
     if (changed === null) return null;
-    const started = Date.now();
+    // Stamped before the build reads anything, so an edit made while it runs shows as a change next time.
+    const before = stamps(paths);
     const next = openSession("serve", sessionOptions, io);
     if (typeof next === "number") return "the repository could not be read; the terminal says why";
     try {
@@ -152,8 +170,10 @@ export async function serveCommand(options: ServeOptions, sessionOptions: Sessio
       return `the Atlas could not be built: ${(error as Error).message}`;
     }
     session = next;
-    builtAt = started;
     paths = watched(session, evidence());
+    const after = stamps(paths);
+    for (const [path, value] of before) if (after.has(path)) after.set(path, value);
+    recorded = after;
     io.stdout(
       `rebuilt: ${changed.slice(session.repo.root.length + 1) || "."} changed. ${snapshotLine(session.snapshot)}\n`,
     );
