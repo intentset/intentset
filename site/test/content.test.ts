@@ -154,7 +154,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     ],
     [
       "specifications/index.html",
-      "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.4 on npm.",
+      "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.5 on npm.",
     ],
     [
       "markset/index.html",

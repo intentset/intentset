@@ -1,6 +1,6 @@
 {
   "name": "@intentset/publisher",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Audience and release projection of reviewed knowledge into Markset documents with provenance.",
   "license": "MIT",
   "type": "module",
@@ -28,8 +28,8 @@
     }
   },
   "dependencies": {
-    "@intentset/core": "^0.4.0",
-    "@intentset/markset-adapter": "^0.4.0",
+    "@intentset/core": "^0.5.0",
+    "@intentset/markset-adapter": "^0.5.0",
     "@markset-lang/parser": "0.3.4",
     "@markset-lang/render-html": "0.3.4"
   }
