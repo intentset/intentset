@@ -1,8 +1,9 @@
 /**
  * `intentset publish` (Core §9): the deny-by-default projection of reviewed
  * knowledge for one audience, release and entitlement, as generated Markset
- * with provenance, optional HTML, the index a customer tool may read, and
- * retrieval chunks that carry the same filters. Refuses outright when the
+ * with provenance, optional HTML, the index a customer tool may read, the
+ * help file a product's runtime reads, and retrieval chunks that carry the
+ * same filters. Refuses outright when the
  * graph does not validate. Review pins are read as written: a real pin is a
  * literal hash, and the fixtures' `@current` is never bound here, so an
  * unbound one reads as changed. Writes only into the --out directory, which
@@ -11,7 +12,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type Visibility, sortDiagnostics } from "@intentset/core";
-import { type PublicationRequest, publish, toChunks } from "@intentset/publisher";
+import { HELP_FILE, type PublicationRequest, publish, toChunks } from "@intentset/publisher";
 import { count, formatDiagnostic, type Io } from "../output.ts";
 import { outputDirProblem, outputProblem } from "../outputs.ts";
 import type { Session } from "../session.ts";
@@ -86,6 +87,7 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
       if (document.html !== undefined) outputs.set(`${document.id}.html`, document.html);
     }
     outputs.set("index.json", `${JSON.stringify(published.index, null, 2)}\n`);
+    outputs.set(HELP_FILE, `${JSON.stringify(published.help, null, 2)}\n`);
     const chunks = toChunks(published.documents);
     outputs.set("chunks.jsonl", chunks.map((chunk) => `${JSON.stringify(chunk)}\n`).join(""));
   }

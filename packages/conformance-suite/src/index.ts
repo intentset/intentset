@@ -55,8 +55,8 @@ export interface SuiteCase {
   artifacts?: string[];
   /** Fields of the export envelope that must match, as a deep partial. */
   export?: Record<string, unknown>;
-  /** Knowledge IDs that must be published and text that must not appear anywhere in the output. */
-  published?: { ids?: string[]; mustNotContain?: string[] };
+  /** Knowledge IDs that must be published, text that must appear in the output, and text that must not. */
+  published?: { ids?: string[]; mustContain?: string[]; mustNotContain?: string[] };
   notes?: string;
 }
 

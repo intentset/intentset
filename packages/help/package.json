@@ -1,0 +1,36 @@
+{
+  "name": "@intentset/help",
+  "version": "0.4.0",
+  "description": "Reads the help file intentset publish writes and binds its tips to the controls of a product's interface. No dependencies, runs in a browser.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentset/intentset.git",
+    "directory": "packages/help"
+  },
+  "homepage": "https://intentset.org/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "intentset",
+    "help",
+    "tooltips",
+    "in-app-guidance"
+  ],
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "intentset-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

@@ -12,6 +12,9 @@
  * what is actually being published, so a document that links to one refused
  * here is refused in turn; this repeats until nothing more is refused.
  *
+ * The help file (help.ts) carries every published document's tips, keyed by
+ * the ID each explains, for a product's runtime.
+ *
  * The index is what a customer-facing tool may read (Core §10): the snapshot,
  * the request without its authorization flags, the published IDs, and the
  * number of artifacts excluded for each reason. It names nothing that was not
@@ -34,6 +37,7 @@ import { parseDocument } from "@markset-lang/parser";
 import { defaultStylesheetPath, renderPage } from "@markset-lang/render-html";
 import { compareStrings } from "./diagnostic.ts";
 import { type GeneratedDocument, type PublicationMeta, generateDocument } from "./generate.ts";
+import { type HelpFile, helpFile } from "./help.ts";
 import { type ExclusionReason, type Snapshot, project } from "./project.ts";
 import { checkReferences, checkTitles } from "./references.ts";
 import { type IndexedRequest, type PublicationRequest, admits, indexedRequest } from "./request.ts";
@@ -68,6 +72,8 @@ export interface PublicationIndex {
 export interface PublishResult {
   documents: PublishedDocument[];
   index: PublicationIndex;
+  /** The help file (spec/publication.md §5), or null when the request was refused. */
+  help: HelpFile | null;
   diagnostics: Diagnostic[];
   ok: boolean;
 }
@@ -138,6 +144,15 @@ export function publish(
   const sorted = sortDiagnostics(diagnostics);
   return {
     documents,
+    help:
+      req === null
+        ? null
+        : helpFile(
+            graph,
+            documents.map((document) => document.id),
+            req,
+            options,
+          ),
     index: {
       snapshot: { commit: options.snapshot.commit, graphHash: options.snapshot.graphHash },
       request: req === null ? null : indexedRequest(req),

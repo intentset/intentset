@@ -109,7 +109,8 @@ export const FIXTURE_PUBLISHED_AT = "2026-01-01T00:00:00Z";
 /**
  * Publication over the same validation (Core §9): review pins written as
  * `@current` bound to the patched sources, then the case's request published
- * with HTML, and every byte written or reported offered to `mustNotContain`.
+ * with HTML, and every byte written or reported offered to `mustContain` and
+ * `mustNotContain`.
  */
 export const publicationDriver: Driver = (expanded) => {
   const { result, registries, diagnostics } = validateTree(expanded);
@@ -123,6 +124,7 @@ export const publicationDriver: Driver = (expanded) => {
   const text = [
     ...published.documents.flatMap((document) => [document.markset, document.html ?? ""]),
     JSON.stringify(published.index),
+    JSON.stringify(published.help),
     JSON.stringify(published.diagnostics),
   ].join("\n");
   return {

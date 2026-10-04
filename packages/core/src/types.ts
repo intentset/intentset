@@ -95,6 +95,10 @@ export const REQUIRED_SECTIONS: Record<ArtifactType, readonly string[]> = {
   decision: ["Context", "Decision", "Consequences"],
 };
 
+/** Core §9: a tip is one line of plain text, no leading or trailing whitespace, at most this many characters. */
+export const TIP_MAX_LENGTH = 160;
+export const TIP_PATTERN = /^\S(?:[^\r\n]*\S)?$/u;
+
 export interface Availability {
   products: string[];
   releases: string[];
@@ -150,6 +154,8 @@ export interface ArtifactMeta {
   reviewedBy?: string;
   /** Namespaced extensions, preserved and never interpreted. */
   extensions?: Record<string, unknown>;
+  /** Knowledge only (Core §9): one sentence per explained ID, keys sorted. */
+  tips?: Record<string, string>;
   slice?: SliceMeta;
   verification?: VerificationMeta;
 }

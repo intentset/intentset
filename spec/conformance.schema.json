@@ -142,10 +142,16 @@
       },
       "published": {
         "type": "object",
-        "description": "Optional, publication cases: knowledge IDs that must be published and text that must not appear anywhere in the output.",
+        "description": "Optional, publication cases: knowledge IDs that must be published, text that must appear somewhere in the output, and text that must not appear anywhere in it.",
         "additionalProperties": false,
         "properties": {
           "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mustContain": {
             "type": "array",
             "items": {
               "type": "string"

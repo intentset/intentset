@@ -112,6 +112,7 @@ export function validate(
   const graph = buildGraph(artifacts);
   const context: Context = { graph, registries, unreadable, locators, diagnostics, levelIndex: LEVELS.indexOf(level) };
   checkRelationships(context);
+  checkTips(context);
   checkCycles(context);
   checkLifecycle(context);
   checkAttachment(context);
@@ -257,6 +258,24 @@ function checkRelationships(context: Context): void {
             remediation: `Point ${kind} at ${describeTypes(allowed)}, or use the relationship that fits.`,
           });
         }
+      });
+    }
+  }
+}
+
+/** Core §9: every tip on a knowledge record is keyed by an ID the record explains (CORE003). */
+function checkTips(context: Context): void {
+  for (const artifact of sortedArtifacts(context.graph)) {
+    const { meta } = artifact;
+    if (meta.tips === undefined) continue;
+    const explained = new Set(meta.links.explains ?? []);
+    for (const key of Object.keys(meta.tips).sort(compareStrings)) {
+      if (explained.has(key)) continue;
+      reportOn(context, artifact, {
+        code: "CORE003",
+        field: `/intentset/tips/${key}`,
+        message: `${meta.id} tips ${key}, which it does not explain.`,
+        remediation: `Add ${key} to links.explains, or key the tip by an ID the knowledge explains (Core §9).`,
       });
     }
   }

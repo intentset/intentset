@@ -36,7 +36,7 @@ export interface ConformanceCase {
   diagnostics?: string[];
   artifacts?: string[];
   export?: Record<string, unknown>;
-  published?: { ids?: string[]; mustNotContain?: string[] };
+  published?: { ids?: string[]; mustContain?: string[]; mustNotContain?: string[] };
   notes?: string;
 }
 
