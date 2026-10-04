@@ -16,8 +16,10 @@ npx intentset graph --level L3 --release <PRD-ID>:<label> --report all --out int
 
 Upload `intentset-export.json` as a CI artifact; never commit it or the run records, which are stale at the next
 commit. At L2 (no run records) `--report all` gives knowledge, impact and ownership; evidence is then not supplied,
-which a consumer shows as such. The architecture check needs TypeScript 7: a repository on 5.x runs the CLI as
-`npx -p @intentset/cli -p typescript@7 intentset …`.
+which a consumer shows as such. With pnpm and the CLI installed, the commands are `pnpm exec intentset …`. The
+architecture check needs TypeScript 7: a repository on 5.x runs the CLI as
+`npx -p @intentset/cli -p typescript@7 intentset …`, or with pnpm as
+`pnpm dlx --package=@intentset/cli --package=typescript@7 intentset …`.
 
 ## Reading it
 

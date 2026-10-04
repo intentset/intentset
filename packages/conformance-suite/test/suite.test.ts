@@ -113,7 +113,7 @@ test("staging copies the schemas and the example verbatim", async () => {
 
 test("the copy that would actually be packed matches too", async () => {
   // Staging into a temporary directory proves the function; it is the working
-  // copy that npm packs, and that copy is gitignored, so no diff would show it
+  // copy that is packed, and that copy is gitignored, so no diff would show it
   // drifting. Compare it when it exists.
   const packageDir = resolve(import.meta.dirname, "..");
   const staged = await readdir(join(packageDir, "cases")).catch(() => null);

@@ -186,7 +186,7 @@ test("every install command on the site names a published package of this reposi
   let named = 0;
   for (const [page, doc] of html) {
     const body = text(doc.slice(doc.indexOf("<body")));
-    for (const m of body.matchAll(/npm install[^@]*(@intentset\/[a-z-]+)/g)) {
+    for (const m of body.matchAll(/(?:npm install|pnpm add)[^@]*(@intentset\/[a-z-]+)/g)) {
       named++;
       assert.ok(
         published.has(m[1]),

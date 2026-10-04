@@ -20,7 +20,30 @@ export const AGENT_POINTERS: Array<[string, string]> = [
   ["AGENTS.md", `Before changing code, read ${AGENT_GUIDE_PATH} and follow it.`],
 ];
 
-export function agentGuide(scope: readonly string[]): string {
+/** How the guide runs the CLI: through the package manager the repository uses. */
+export type PackageManager = "npm" | "pnpm";
+
+/** pnpm when the repository says so (its lockfile, workspace file or packageManager field), npm otherwise. */
+export function detectPackageManager(files: {
+  has(path: string): boolean;
+  packageJson: string | null;
+}): PackageManager {
+  if (files.has("pnpm-lock.yaml") || files.has("pnpm-workspace.yaml")) return "pnpm";
+  try {
+    const manager = (JSON.parse(files.packageJson ?? "{}") as { packageManager?: unknown }).packageManager;
+    if (typeof manager === "string" && manager.startsWith("pnpm@")) return "pnpm";
+  } catch {
+    // An unreadable package.json says nothing about the package manager.
+  }
+  return "npm";
+}
+
+export function agentGuide(scope: readonly string[], manager: PackageManager = "npm"): string {
+  const run = manager === "pnpm" ? "pnpm exec intentset" : "npx intentset";
+  const isolated =
+    manager === "pnpm"
+      ? "pnpm dlx --package=@intentset/cli --package=typescript@7 intentset ..."
+      : "npx -p @intentset/cli -p typescript@7 intentset ...";
   const where = scope.map((pattern) => `\`${pattern}\``).join(", ");
   const sections = ARTIFACT_TYPES.map(
     (type) => `| ${type} | ${REQUIRED_SECTIONS[type].map((section) => `## ${section}`).join(", ")} |`,
@@ -33,15 +56,15 @@ which code delivers it and how it is checked. You keep them true as part of ever
 code, so that people can review what the product does without reading every line of what changed.
 
 Written by \`intentset init\` (${TOOL.name} ${TOOL.version}). To refresh it, delete it and run
-\`npx intentset init --agents\`.
+\`${run} init --agents\`.
 
 ## Before you change code
 
 Load what the code you are about to change promises:
 
 \`\`\`sh
-npx intentset context <a file you will edit>
-npx intentset context <an ID, such as BEH-...>
+${run} context <a file you will edit>
+${run} context <an ID, such as BEH-...>
 \`\`\`
 
 The result is the owning slice, its behaviors, rules, scenarios, contracts, decisions and checks, with their paths.
@@ -88,14 +111,14 @@ commit answers it. Use it only when no behavior changed: a reviewer reads it as 
 ## Before you finish
 
 \`\`\`sh
-npx intentset validate
-npx intentset architecture check     # when .intentset/architecture.yaml exists
-npx intentset review --base main
+${run} validate
+${run} architecture check     # when .intentset/architecture.yaml exists
+${run} review --base main
 \`\`\`
 
 Fix every error. Resolve each slice \`review\` lists under "Code changed, records unchanged", by updating its records
 or with the trailer. The architecture check needs TypeScript 7; on an earlier TypeScript, run the toolchain as
-\`npx -p @intentset/cli -p typescript@7 intentset ...\`.
+\`${isolated}\`.
 
 ## Record format
 

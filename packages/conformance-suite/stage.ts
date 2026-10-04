@@ -2,7 +2,7 @@
  * Stage the published suite: every case in tests/*.json expanded into whole
  * files (ADR 0006), the normative schemas, the example the cases are built
  * from, and the consumer fixtures of tests/consumer/ as they are (spec/export.md
- * §6). Run by `npm run build`; never committed.
+ * §6). Run by `pnpm run build`; never committed.
  *
  * The expanded form carries no `baseline`, `patch`, `registries` or `config`:
  * the registries and config are inside `files`, as `registries.yaml` and

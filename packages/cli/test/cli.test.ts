@@ -61,6 +61,27 @@ test("init --agents writes only the guide, for the scope the config names, and n
   assert.equal((await run(dir, "init", "--agents", "--example")).code, 2);
 });
 
+test("the guide runs the CLI through the package manager the repository uses", async (t) => {
+  const npm = temp(t);
+  assert.equal((await run(npm, "init")).code, 0);
+  const npmGuide = readFileSync(join(npm, ".intentset", "agents.md"), "utf8");
+  assert.match(npmGuide, /^npx intentset validate$/m);
+  assert.match(npmGuide, /npx -p @intentset\/cli -p typescript@7 intentset/);
+
+  const pnpm = temp(t);
+  writeFileSync(join(pnpm, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  assert.equal((await run(pnpm, "init")).code, 0);
+  const pnpmGuide = readFileSync(join(pnpm, ".intentset", "agents.md"), "utf8");
+  assert.match(pnpmGuide, /^pnpm exec intentset validate$/m);
+  assert.match(pnpmGuide, /pnpm dlx --package=@intentset\/cli --package=typescript@7 intentset/);
+  assert.doesNotMatch(pnpmGuide, /\bnpx\b/);
+
+  const declared = temp(t);
+  writeFileSync(join(declared, "package.json"), JSON.stringify({ packageManager: "pnpm@11.24.0" }));
+  assert.equal((await run(declared, "init", "--agents")).code, 0);
+  assert.match(readFileSync(join(declared, ".intentset", "agents.md"), "utf8"), /pnpm exec intentset init --agents/);
+});
+
 test("the guide's behavior template validates once its placeholders name real values", async (t) => {
   const dir = await example(t);
   const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
