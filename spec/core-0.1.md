@@ -18,6 +18,7 @@ MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY express requirements in this draft. 
 | `product` | Product identity and scope | What system are we describing? |
 | `intent` | Strategic purpose | Why should this product exist or change? |
 | `outcome` | Desired measurable change | What improvement will show success? |
+| `measure` | How one outcome is judged: metric, baseline, target, window, source | What reading will tell us the outcome was achieved? |
 | `capability` | Stable product ability | What can a user accomplish? |
 | `behavior` | Observable action or response under stated conditions | What exactly does the system do? |
 | `rule` | Constraint governing behavior | What must remain true? |
@@ -30,7 +31,7 @@ MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY express requirements in this draft. 
 
 A capability MAY contain many behaviors and map to several slices. A behavior SHOULD contain one recognizable promise, including its failure response. Split it when release, ownership, availability, or independent review differ. A rule MAY govern many behaviors; it MUST NOT be duplicated solely to appear in multiple capability pages. A scenario is an example, not proof that all cases work.
 
-Recommended human decomposition is product → intent → outcome → capability → behavior. This is a navigation spine in a typed graph, not a demand that reality form one tree. Technical detail belongs in rules, scenarios, decisions, and implementation views; strategic reviewers should start at capabilities and drill down.
+Recommended human decomposition is product → intent → outcome → capability → behavior, with each outcome's measures beside it. This is a navigation spine in a typed graph, not a demand that reality form one tree. Technical detail belongs in rules, scenarios, decisions, and implementation views; strategic reviewers should start at capabilities and drill down.
 
 ## 3. Authoritative representation
 
@@ -67,7 +68,7 @@ intentset:
 
 ## 4. Common fields and identity
 
-Required common fields are `spec`, `profile`, `id`, `type`, `title`, `status`, `owner`, `visibility`, and `audiences`. `spec` is the string `0.1`. `profile` MUST equal `intentset/<type>/0.1`. `id` MUST match `^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$` and be unique within the product graph. IDs are case-sensitive, immutable, independent of title/path, and MUST never be reused. Recommended prefixes are PRD, INT, OUT, CAP, BEH, RULE, SCN, SLICE, CONTRACT, TEST, KB, ADR. Prefixes aid humans; `type` determines semantics.
+Required common fields are `spec`, `profile`, `id`, `type`, `title`, `status`, `owner`, `visibility`, and `audiences`. `spec` is the string `0.1`. `profile` MUST equal `intentset/<type>/0.1`. `id` MUST match `^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$` and be unique within the product graph. IDs are case-sensitive, immutable, independent of title/path, and MUST never be reused. Recommended prefixes are PRD, INT, OUT, MEAS, CAP, BEH, RULE, SCN, SLICE, CONTRACT, TEST, KB, ADR. Prefixes aid humans; `type` determines semantics.
 
 `owner` is one accountable team/role identifier from the repository's owner registry. `audiences` is a nonempty array from its audience registry. These are documentation audiences, not runtime authorization. `visibility` is `public`, `customer`, `internal`, or `restricted`. Missing access information MUST fail closed for publication.
 
@@ -81,7 +82,7 @@ Relationships are authored once, in the direction below. Reverse edges are deriv
 
 | Field / relationship | Source → target | Cardinality and meaning |
 |---|---|---|
-| `parent` | intent → product; outcome → intent; capability → outcome or capability; behavior → capability | Exactly one except product; navigation parent |
+| `parent` | intent → product; outcome → intent; measure → outcome; capability → outcome or capability; behavior → capability | Exactly one except product; navigation parent |
 | `governedBy` | behavior → rule | Zero or more constraints |
 | `illustrates` | scenario → behavior | One or more behaviors exemplified |
 | `implements` | slice → behavior | One or more for product slices; authoritative ownership |
@@ -95,7 +96,7 @@ Relationships are authored once, in the direction below. Reverse edges are deriv
 | `supports` | outcome → intent; capability → outcome | Additional associations beyond the navigation parent |
 | `replacedBy` | retired artifact → same type | One or more successors when applicable |
 
-All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in `parent`, cycles in `replacedBy`, and cycles in `requires` are errors. Other cycles are evaluated by the relevant profile; `dependsOn` is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming `governedBy`; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. Draft unattached artifacts produce warnings.
+All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in `parent`, cycles in `replacedBy`, and cycles in `requires` are errors. Other cycles are evaluated by the relevant profile; `dependsOn` is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming `governedBy`; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. An active outcome MUST have at least one measure whose `parent` it is: an outcome past draft says how it will be judged, and the capabilities under it do not say that. Draft unattached artifacts, and a draft outcome with no measure, produce warnings.
 
 At VSA adoption, an approved, implemented, released, or deprecated behavior MUST have exactly one accountable product slice through `implements`. Other collaborating slices appear through slice dependencies and contracts. This resolves the earlier discussion's “one or more owners” ambiguity while retaining multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.
 
@@ -108,6 +109,7 @@ Every document MUST contain a level-one heading matching its title and substanti
 | product | Scope |
 | intent | Rationale |
 | outcome | Measure |
+| measure | Method |
 | capability | Overview |
 | behavior | Behavior; Preconditions; Outcomes |
 | rule | Constraint |
@@ -118,7 +120,11 @@ Every document MUST contain a level-one heading matching its title and substanti
 | knowledge | Guidance |
 | decision | Context; Decision; Consequences |
 
-A behavior MUST identify actor, trigger, observable success response, and meaningful failure response in these sections. An outcome's Measure MUST state metric, baseline or “unknown,” target, and measurement method. A verification's Procedure MUST identify automation or a reproducible manual review; neither a filename nor a test count is sufficient.
+A behavior MUST identify actor, trigger, observable success response, and meaningful failure response in these sections. An intent's Rationale MUST name the problem or opportunity the change answers: the reason a reader would start the work at all, not a restatement of the title. An outcome's Measure summarizes how the outcome will be judged and which measures judge it; the metric, baseline, target, window and source live in the outcome's measure records, below. A measure's Method MUST say how the reading is taken, by whom or by what, and what would make it untrustworthy. A verification's Procedure MUST identify automation or a reproducible manual review; neither a filename nor a test count is sufficient.
+
+A measure judges one outcome, its `parent`, and carries a `measure` metadata block: `metric`, an identifier in lower case with words joined by `_` or `-`, named the way the evidence source names it; `baseline`, the value before the change or the literal `unknown` when none has been taken, never omitted; `target`, the value or threshold that would show the outcome was achieved; `window`, when the reading is taken, relative to a release or a date; `source`, an entry in the repository's `evidenceSources` registry naming where the evidence is expected to come from (an analytics product, a study, a survey); and optionally `direction`, `increase` or `decrease`, which way the metric moves when the outcome is achieved. Values other than `metric` and `direction` are prose, not parsed: a target of `under 2 days` and a window of `90 days after pilot-1` are complete. A `measure` block on any other type is an error, as a `verification` block is (§8). Intentset defines what success means; it does not collect telemetry, run queries or compute a metric, which belong to the systems the registry names.
+
+Verification (§8) and measurement answer different questions and neither stands in for the other. Verification asks whether the behavior was built as described; a measure asks whether building it produced the outcome. A behavior can be implemented correctly, pass every check and ship, and the outcome above it can still fail; the model MUST be able to say so, which is why an outcome's measures are records of their own rather than a sentence in the outcome.
 
 ## 7. Lifecycle, release, and version semantics
 
@@ -139,6 +145,8 @@ A run record MUST include evidence ID, verification ID, source commit, graph has
 Only `pass` at the assessed commit and graph hash counts as current passing evidence in v0.1. Any older evidence is stale. This deliberately conservative policy avoids pretending change-impact analysis proves unrelated code safe. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.
 
 *Informative: where run records live.* Because a pass counts only at the assessed commit, a run record committed to the repository it assesses describes a commit that is no longer the latest the moment it lands, and reads as stale. Keep run records in CI artifacts or another store the adopting organization controls, never in the commit under assessment. (Found by the Streamlane pilot, 2026-10-02.)
+
+*Outcome evidence.* A measure's reading is evidence of a different kind from a run record, and no v0.1 tool reads one. When a later version or an external system such as a usage product supplies it, an outcome evidence record names the measure ID, the window it was read in, the observed value, the source it came from, the time of the reading and an evidence URI, and it says whether the target was met. It is never current in the sense a run record is: a reading is bound to a window, not to a commit and graph hash, and an outcome met in one window may be missed in the next. Until that record is specified, such evidence travels in namespaced `extensions`, which every tool preserves and none interprets.
 
 A claim is “verified in snapshot” only if every applicable required verification linked to it passes. Scenarios and governing rules require their own coverage; a parent behavior pass does not silently satisfy them. Manual and automated coverage MUST be separately countable. Structural validation cannot prove that tests adequately assert the documented behavior.
 
@@ -194,13 +202,13 @@ A partial adoption MUST name included capabilities/IDs and show out-of-scope cou
 |---|---|---|
 | CORE001 | Invalid carrier, schema, or required section | Error |
 | CORE002 | Duplicate/reused ID | Error |
-| CORE003 | Unresolved or wrong-type relationship | Error |
+| CORE003 | Unresolved, wrong-type or missing required relationship | Error |
 | CORE004 | Invalid/cyclic decomposition or replacement | Error |
 | CORE005 | Lifecycle/release claim inconsistent | Error |
 | CORE006 | Missing applicable ownership (L2+) | Error |
 | CORE007 | Missing/failing/stale required evidence (L3+) | Error; a warning for a draft behavior, rule or scenario that no verification definition names |
 | CORE008 | Unauthorized/stale publication (L4+) | Error |
-| CORE009 | Draft unattached artifact | Warning |
+| CORE009 | Draft unattached artifact, or draft outcome with no measure | Warning |
 
 Diagnostics MUST identify code, severity, artifact, path, field/location, explanation, and remediation. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. Proposed CLI exits: 0 pass, 1 validation failure, 2 invocation/tool failure. JSON reports MUST preserve warnings separately.
 

@@ -28,6 +28,7 @@
             "product",
             "intent",
             "outcome",
+            "measure",
             "capability",
             "behavior",
             "rule",
@@ -326,6 +327,37 @@
               "minLength": 1
             }
           }
+        },
+        "measure": {
+          "type": "object",
+          "description": "Measure only (Core \u00a76): how the parent outcome is judged. baseline is a value or the literal unknown; source names an entry in the repository's evidenceSources registry, which the validator checks (CORE005).",
+          "additionalProperties": false,
+          "required": ["metric", "baseline", "target", "window", "source"],
+          "properties": {
+            "metric": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$"
+            },
+            "baseline": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1
+            },
+            "window": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "direction": {
+              "enum": ["increase", "decrease"]
+            }
+          }
         }
       },
       "allOf": [
@@ -373,6 +405,22 @@
             "properties": {
               "profile": {
                 "const": "intentset/outcome/0.1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "measure"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "const": "intentset/measure/0.1"
               }
             }
           }
@@ -567,6 +615,18 @@
           },
           "then": {
             "required": ["verification"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "measure"
+              }
+            }
+          },
+          "then": {
+            "required": ["measure", "parent"]
           }
         },
         {

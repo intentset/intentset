@@ -262,6 +262,20 @@ What stays with Driftline: when a person sees help beyond hover, chat over the p
 moved anyone to the next behavior. The `data-behavior` binding is the usage event it meters, so a product instrumented
 for help is instrumented for adoption.
 
+### After 0.4: success measures (2026-10-04)
+
+The model could say why a change was made and whether it was built as described, and not whether building it worked.
+ADR 0012 adds the record that says so:
+
+- `measure`, the thirteenth type, under an outcome (Core §2, §5, §6): metric, baseline or `unknown`, target, window,
+  a `source` from the new `evidenceSources` registry, and a Method section. An outcome past draft needs one.
+- Core §6 separates verification (was the behavior built right) from measurement (did it produce the outcome), and
+  Core §8 names the outcome evidence record a later version will read, so Driftline designs against the words.
+- Export 0.3: the type, the registry, and `measure` and `tips` on every artifact.
+
+What stays outside Intentset: collecting telemetry, running the query, computing the metric, the dashboard. The
+registry names the systems that do, and a reading comes back to the measure record as evidence when that record exists.
+
 ## 6. Conformance fixtures
 
 Markset's rule applies: no check ships without its cases, and the cases are written first. Format, in

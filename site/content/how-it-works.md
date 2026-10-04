@@ -84,11 +84,11 @@ Keeping the model in files is a deliberate choice, and it has consequences worth
 
 ## A typed model, centered on behavior
 
-There are twelve record types. They fall into five groups, each answering a different kind of question:
+There are thirteen record types. They fall into five groups, each answering a different kind of question:
 
 | Group | Types | The question it answers |
 |---|---|---|
-| Why | product, intent, outcome | What are we building, why, and what measurable change would show that it worked? |
+| Why | product, intent, outcome, measure | What are we building, why, what change would show that it worked, and what reading will tell us? |
 | What | capability, behavior, rule, scenario | What can users do, exactly what does the system do, what must stay true, and what is a concrete example? |
 | Where | slice, contract, decision | Which part of the code delivers it, what may other parts rely on, and why was it built this way? |
 | Proof | verification | How is a claim checked? |
@@ -97,6 +97,21 @@ There are twelve record types. They fall into five groups, each answering a diff
 The behavior is the center of the model. It is one recognizable promise, including how it fails: *schedule an assessment for a future time*, rather than *assessments*. When parts of a behavior would be released, owned or reviewed separately, they are separate behaviors. A rule can govern many behaviors and is written once, not copied into each. A scenario is a worked example; it shows the promise, and it does not prove every case.
 
 People arrive from different ends and meet at the same records. A product reviewer starts at the top and drills down, from product to intent, outcome, capability and behavior. An engineer starts from the slice they are working in. Both end up reading the same behavior.
+
+## Intent, outcome, measure, verification
+
+The four records above a behavior and below it answer four questions that are easy to run together, and keeping them apart is most of the point:
+
+| Record | The question | Lantern's answer |
+|---|---|---|
+| Intent | Why are we changing the product? Its Rationale names the problem or opportunity. | Teachers do last-minute administrative work; prepare learning in advance. |
+| Outcome | What observable change do we expect if the work succeeds? | Teachers spend less effort preparing an assignment. |
+| Measure | What reading, against what baseline and target, in what window, from what source, will tell us? | Teacher minutes per assignment, baseline unknown, target 20% below the pilot baseline, read 90 days after the pilot, from an observed task study. |
+| Verification | Was the behavior built as described? | A reviewed procedure over scheduling: valid requests recorded, invalid ones rejected without a schedule. |
+
+A measure is a record of its own, under its outcome, with its metric, baseline, target, window and source in frontmatter. The baseline may be the word `unknown`, and that is the honest record of a gap rather than a reason to leave the field out. The source must be in the repository's registry of evidence sources, so a measure names where its evidence is expected to come from before anyone collects it. An outcome past draft needs at least one measure.
+
+Verification and measurement never stand in for each other. A behavior can be implemented correctly, pass every check and ship, and the outcome above it can still be missed. Intentset says what success means and keeps that beside the behaviors meant to produce it. Collecting telemetry, running the query and computing the metric belong to the systems the registry names, and the reading can come back to the record later as outcome evidence.
 
 ## Every link is written once
 

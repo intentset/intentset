@@ -50,9 +50,10 @@ export function agentGuide(scope: readonly string[], manager: PackageManager = "
   );
   return `# Keeping the product model current
 
-This repository keeps an Intentset product model: one Markdown file per product behavior, rule, scenario, slice,
-contract, decision, verification and knowledge article, under ${where}. The records say what the product promises,
-which code delivers it and how it is checked. You keep them true as part of every change, in the same commit as the
+This repository keeps an Intentset product model: one Markdown file per product intent, outcome, measure, capability,
+behavior, rule, scenario, slice, contract, decision, verification and knowledge article, under ${where}. The records
+say why the product is changing, what the change should produce and how that will be measured, what the product
+promises, which code delivers it and how it is checked. You keep them true as part of every change, in the same commit as the
 code, so that people can review what the product does without reading every line of what changed.
 
 Written by \`intentset init\` (${TOOL.name} ${TOOL.version}). To refresh it, delete it and run
@@ -103,8 +104,10 @@ commit answers it. Use it only when no behavior changed: a reviewer reads it as 
   is not approval.
 - Change an ID or reuse a retired one. Moving or renaming a file keeps its ID; splitting a behavior retires the old
   one with \`replacedBy\`.
-- Name an owner, audience, release, role, edition or flag that is not in \`.intentset/registries.yaml\`. Ask
-  instead.
+- Name an owner, audience, release, role, edition, flag or evidence source that is not in
+  \`.intentset/registries.yaml\`. Ask instead.
+- Treat a passing check as the outcome achieved. Verification says the behavior was built as described; a measure
+  says whether building it produced the outcome, and only evidence read in its window answers that.
 - Commit run evidence (\`.intentset/evidence/\`) or an export. They describe one commit and are stale once it lands.
 - Edit generated output: an export, the Atlas, published pages.
 
@@ -172,6 +175,25 @@ product shows beside the control that delivers that behavior once the knowledge 
   tips:
     BEH-AREA-NAME: What this control does, in one sentence.
     RULE-AREA-LIMIT: The limit, and what happens at it.
+\`\`\`
+
+Above the behaviors sit the reasons for them. An intent says why the product is changing (its Rationale names the
+problem or opportunity), an outcome says what observable change is expected, and a measure under the outcome says
+how that change will be read: a metric, the baseline before the change or the literal \`unknown\`, a target, the
+window in which it is read and the source the evidence comes from, which must be in the registry. An outcome past
+draft needs at least one measure. Write a measure when you add an outcome, before the capabilities under it.
+
+\`\`\`yaml
+  id: MEAS-AREA-NAME
+  type: measure
+  parent: OUT-...
+  measure:
+    metric: median_time_to_intervention
+    baseline: 5 days
+    target: under 2 days
+    window: 90 days after <a release from the registry>
+    source: <an evidence source from the registry>
+    direction: decrease
 \`\`\`
 
 Each type requires these level-two sections:

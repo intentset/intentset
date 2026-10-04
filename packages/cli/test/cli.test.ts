@@ -99,15 +99,15 @@ test("the guide's behavior template validates once its placeholders name real va
   writeFileSync(join(dir, "product", "scheduling", "BEH-ASMT-NEW.md"), record);
   const validate = await run(dir, "validate");
   assert.equal(validate.code, 0, validate.out + validate.err);
-  assert.match(validate.out, /^14 artifacts, 0 errors/);
+  assert.match(validate.out, /^16 artifacts, 0 errors/);
 });
 
-test("init --example then validate: 13 artifacts and no diagnostics", async (t) => {
+test("init --example then validate: 15 artifacts and no diagnostics", async (t) => {
   const dir = await example(t);
-  assert.equal(readdirSync(join(dir, "product", "scheduling")).length, 13);
+  assert.equal(readdirSync(join(dir, "product", "scheduling")).length, 15);
   const validate = await run(dir, "validate");
   assert.equal(validate.code, 0, validate.out);
-  assert.equal(validate.out, "13 artifacts, 0 errors, 0 warnings (level L1, scope: product/**/*.md)\n");
+  assert.equal(validate.out, "15 artifacts, 0 errors, 0 warnings (level L1, scope: product/**/*.md)\n");
   assert.equal(validate.err, "");
 });
 
@@ -122,7 +122,7 @@ test("a broken record exits 1 with its code, location, artifact, fix and field",
   );
   assert.match(validate.out, /^ {2}fix: .+$/m);
   assert.match(validate.out, /^ {2}field: \/intentset\/links\/governedBy\/1$/m);
-  assert.match(validate.out, /13 artifacts, 1 error, 1 warning \(level L1, scope: product\/\*\*\/\*\.md\)\n$/);
+  assert.match(validate.out, /15 artifacts, 1 error, 1 warning \(level L1, scope: product\/\*\*\/\*\.md\)\n$/);
 });
 
 test("Markset's own diagnostics are marked as Markset's in text and keep origin syntax in JSON", async (t) => {
@@ -157,7 +157,7 @@ test("the root is found from a subdirectory, and --root names it from anywhere",
   const dir = await example(t);
   const nested = await run(join(dir, "product", "scheduling"), "validate");
   assert.equal(nested.code, 0);
-  assert.match(nested.out, /^13 artifacts/);
+  assert.match(nested.out, /^15 artifacts/);
   const elsewhere = await run(tmpdir(), "validate", "--root", dir);
   assert.equal(elsewhere.out, nested.out);
 });
@@ -230,7 +230,7 @@ test("validate --json parses, counts warnings apart from errors, and is the same
   assert.equal(report.commit, null);
   assert.match(report.commitUnavailable, /not inside a git repository/);
   assert.match(report.graphHash, /^[0-9a-f]{64}$/);
-  assert.deepEqual(report.summary, { artifacts: 13, documents: 13, errors: 1, warnings: 1 });
+  assert.deepEqual(report.summary, { artifacts: 15, documents: 15, errors: 1, warnings: 1 });
   assert.deepEqual(
     report.diagnostics.map((d: { code: string; severity: string }) => [d.code, d.severity]),
     [
@@ -258,7 +258,7 @@ test("graph prints an envelope that matches spec/export.schema.json", async (t) 
   const envelope = JSON.parse(graph.out);
   assert.deepEqual(validateSchema(exportSchema, envelope), []);
   assert.equal(envelope.repository, "example/lantern");
-  assert.equal(envelope.artifacts.length, 13);
+  assert.equal(envelope.artifacts.length, 15);
   assert.deepEqual(envelope.validation.scope, ["product/**/*.md"]);
   assert.equal(envelope.validation.status, "pass");
   assert.equal(envelope.source.commit, null);

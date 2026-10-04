@@ -10,7 +10,7 @@ import type { Model } from "../model.ts";
 import type { PageSource } from "../page.ts";
 import { badge, code, idLink, link, ofTotal, plural, table, text } from "../text.ts";
 
-const SPINE: readonly ArtifactType[] = ["product", "intent", "outcome", "capability"];
+const SPINE: readonly ArtifactType[] = ["product", "intent", "outcome", "measure", "capability"];
 
 export function overviewPage(model: Model): PageSource {
   const behaviors = model.ofType("behavior");
@@ -68,7 +68,8 @@ export function overviewPage(model: Model): PageSource {
     const parent = a.meta.parent;
     return parent === undefined || !model.graph.artifacts.has(parent);
   });
-  if (roots.length === 0) body.push("No product, intent, outcome or capability records are in this snapshot.", "");
+  if (roots.length === 0)
+    body.push("No product, intent, outcome, measure or capability records are in this snapshot.", "");
   else {
     body.push(...spine(model, roots, new Set()), "");
   }

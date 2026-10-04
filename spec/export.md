@@ -1,7 +1,7 @@
-# Intentset Export Contract v0.2
+# Intentset Export Contract v0.3
 
-**Status:** initial normative draft for review • **Date:** 2026-10-03
-**Contract ID:** `intentset/export/0.2` • **Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) •
+**Status:** initial normative draft for review • **Date:** 2026-10-04
+**Contract ID:** `intentset/export/0.3` • **Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) •
 **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
@@ -21,7 +21,7 @@ hit's `path` from the start. The same validation with the same `generatedAt` is 
 
 | Field | Meaning |
 |---|---|
-| `contract` | `intentset/export/0.2`. A consumer MUST reject any other value (§5). |
+| `contract` | `intentset/export/0.3`. A consumer MUST reject any other value (§5). |
 | `spec` | The Core version the model is written against: `0.1`. |
 | `generatedAt` | ISO 8601 time of generation. Outside every hash; two exports of one snapshot differ only here. |
 | `repository` | The stable repository identity from `.intentset/config.yaml`. |
@@ -31,7 +31,7 @@ hit's `path` from the start. The same validation with the same `generatedAt` is 
 | `release` | The exact product and release label the export was made for, or null. |
 | `validation` | The level and scope validated, `status` (`fail` exactly when `errors` is above zero), the error and warning totals over the whole validation, and the diagnostics about exported artifacts (§3). |
 | `withholding` | What was left out, and how much (§3). |
-| `registries` | Owners, audiences, release dimensions, flags and shared resources, as declared. |
+| `registries` | Owners, audiences, release dimensions, flags, evidence sources and shared resources, as declared. |
 | `artifacts` | One per exported artifact (§2). |
 | `reports` | Optional sections (§4). An absent section means not supplied: never zero, none or pass. |
 
@@ -42,7 +42,7 @@ second import of it as the same snapshot rather than a new one.
 ## 2. Artifacts
 
 Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`, `status`, `owner`, `visibility`,
-`audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `extensions`), its source `path` and
+`audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `extensions`), its source `path` and
 `sourceHash`, its `parent`, its authored `links` by kind, and `derived`: the inverse edges by the authored kind, so
 `derived.governedBy` on a rule lists the behaviors that name it. Derived edges are never authored (Core §5).
 `withheldLinks` counts the link targets and sources left out because the artifact at the other end is withheld.
@@ -173,8 +173,11 @@ schema and the committed fixtures in agreement, and fail when the fixtures diffe
 
 The contract version changes whenever a reader of the previous version would reject or misread an envelope: a new
 required member, a removed one, or a changed meaning. A producer writes exactly one version; a consumer names the
-versions it supports and rejects the rest (§5). 0.2 is the first version a consumer may pin. 0.1 carried untyped report
-slots and exported restricted artifacts by default, and no consumer was built against it (ADR 0008).
+versions it supports and rejects the rest (§5). 0.2 was the first version a consumer could pin. 0.1 carried untyped
+report slots and exported restricted artifacts by default, and no consumer was built against it (ADR 0008). 0.3 added
+the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
+0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
+unannounced.
 
 ## 8. Producing an export
 

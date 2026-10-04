@@ -302,8 +302,23 @@ export function buildConsumerFixtures(): Map<string, string> {
     "Nothing is withheld. A consumer that accepts this must enforce restricted visibility itself before any search or display.",
   );
 
+  /** What 0.3 added (ADR 0012), taken back out so an earlier envelope is what its reader would have written. */
+  const before03 = (e: Json) => {
+    delete e.registries.evidenceSources;
+    const measures = new Set(e.artifacts.filter((a: Json) => a.type === "measure").map((a: Json) => a.id));
+    e.artifacts = e.artifacts.filter((a: Json) => !measures.has(a.id));
+    for (const artifact of e.artifacts) {
+      delete artifact.measure;
+      delete artifact.tips;
+      for (const kind of Object.keys(artifact.derived)) {
+        artifact.derived[kind] = artifact.derived[kind].filter((id: string) => !measures.has(id));
+        if (artifact.derived[kind].length === 0) delete artifact.derived[kind];
+      }
+    }
+  };
   const v01 = mutate(minimal, (e) => {
     e.contract = "intentset/export/0.1";
+    before03(e);
     delete e.withholding;
     delete e.reports;
     delete e.source.uncommitted;
@@ -315,6 +330,19 @@ export function buildConsumerFixtures(): Map<string, string> {
     "unsupported-contract-0.1.json",
     "unsupported-contract",
     "0.1 had untyped reports and exported restricted artifacts. Reject it with an understandable error and keep the prior snapshot.",
+  );
+  files.set(
+    "unsupported-contract-0.2.json",
+    mutate(minimal, (e) => {
+      e.contract = "intentset/export/0.2";
+      before03(e);
+    }),
+  );
+  reject(
+    "the previous contract version",
+    "unsupported-contract-0.2.json",
+    "unsupported-contract",
+    "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A 0.3 reader rejects it rather than guess what an outcome's measures were.",
   );
   files.set(
     "unsupported-contract-future.json",

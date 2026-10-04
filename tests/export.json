@@ -6,7 +6,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "contract": "intentset/export/0.2",
+      "contract": "intentset/export/0.3",
       "spec": "0.1",
       "generatedAt": "2026-01-01T00:00:00Z",
       "repository": "example/scheduling",
@@ -48,6 +48,12 @@
           "id": "KB-ASMT-SCHEDULE"
         },
         {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
           "id": "OUT-PREPARE"
         },
         {
@@ -78,7 +84,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "graphHash": "507d45e13510b80935ae1349f4bc0caecfbf76ac3dc07d16638f84a9cde23e0e"
+      "graphHash": "b53ff3af09e0bf0f1f495be2a47ffe062937bb1c88b2c0451683bdb983ef1f23"
     },
     "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
   },
@@ -90,6 +96,8 @@
     "diagnostics": [],
     "export": {
       "artifacts": [
+        {},
+        {},
         {},
         {},
         {},
@@ -177,6 +185,12 @@
         {},
         {},
         {},
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
         {},
         {},
         {},
@@ -189,7 +203,7 @@
   },
   {
     "section": "export",
-    "name": "export slice and verification metadata",
+    "name": "export slice, verification and measure metadata, and tips",
     "baseline": "scheduling",
     "valid": true,
     "diagnostics": [],
@@ -201,6 +215,32 @@
         {},
         {},
         {},
+        {
+          "id": "MEAS-PREPARE-ADOPTION",
+          "measure": {
+            "metric": "assignments_scheduled_ahead",
+            "baseline": "unknown",
+            "target": "60% of assignments scheduled at least one day before they open",
+            "window": "90 days after pilot-1",
+            "source": "product-analytics",
+            "direction": "increase"
+          },
+          "tips": null,
+          "slice": null,
+          "verification": null
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES",
+          "measure": {
+            "metric": "teacher_prep_minutes",
+            "baseline": "unknown",
+            "target": "20% below the measured pilot baseline",
+            "window": "90 days after pilot-1",
+            "source": "task-study",
+            "direction": "decrease"
+          },
+          "tips": null
+        },
         {},
         {},
         {},
@@ -238,7 +278,8 @@
           }
         }
       ]
-    }
+    },
+    "notes": "Every artifact carries slice, verification, measure and tips, null where the type has none; a measure's direction is null when the author set none."
   },
   {
     "section": "export",
@@ -267,6 +308,10 @@
           "standard"
         ],
         "flags": [],
+        "evidenceSources": [
+          "product-analytics",
+          "task-study"
+        ],
         "resources": [
           {
             "id": "RES-ASSESSMENT-DATA",
@@ -312,6 +357,12 @@
         {},
         {},
         {},
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
         {},
         {},
         {},
@@ -434,6 +485,12 @@
           "id": "KB-ASMT-SCHEDULE"
         },
         {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
           "id": "OUT-PREPARE"
         },
         {
@@ -477,6 +534,12 @@
         {},
         {},
         {},
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
         {},
         {},
         {},
@@ -551,6 +614,12 @@
         },
         {
           "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
         },
         {
           "id": "OUT-PREPARE"

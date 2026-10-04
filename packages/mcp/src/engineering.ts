@@ -117,6 +117,8 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
             availability: meta.availability ?? null,
             slice: meta.slice ?? null,
             verification: meta.verification ?? null,
+            measure: meta.measure ?? null,
+            tips: meta.tips ?? null,
             reviewedBy: meta.reviewedBy ?? null,
             reviewedAt: meta.reviewedAt ?? null,
             path: artifact.path,
