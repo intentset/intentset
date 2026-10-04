@@ -2650,5 +2650,204 @@
     "diagnostics": [
       "CFG001"
     ]
+  },
+  {
+    "section": "core",
+    "name": "C01 tips on knowledge, keyed by what it explains, are accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "Core §9: a tip is one sentence per explained ID, written on the knowledge record."
+  },
+  {
+    "section": "core",
+    "name": "CORE003 a tip for an artifact the knowledge does not explain",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "CAP-ASMT-ASSIGN": "Assign assessments to your classes here."
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ],
+    "notes": "The key must be in links.explains; the capability is not."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a tip is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": ""
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a tip begins with whitespace",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": " Pick a published assessment."
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a tip breaks a line",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment.\nThen choose a class."
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a tip longer than 160 characters",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a release time in the future, then review the whole schedule before you confirm it so that nothing goes out early."
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "A tip is a tooltip's worth; the Guidance section carries the rest."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 boundary: a tip of exactly 160 characters is accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a tip is not a string",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": [
+              "Pick a published assessment."
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a tip key is not an ID",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "schedule": "Pick a published assessment."
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 tips is a list rather than a mapping",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": [
+            "Pick a published assessment."
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 tips on a behavior",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Only knowledge carries tips; a behavior's prose is for another audience (Core §9)."
   }
 ]

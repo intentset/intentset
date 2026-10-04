@@ -185,6 +185,9 @@ export function compareCase(expected: ConformanceCase, actual: Actual): AspectRe
         const diff = compareIds(expected.published.ids, actual.published.ids);
         if (diff) details.push(`ids: ${diff}`);
       }
+      for (const text of expected.published.mustContain ?? []) {
+        if (!actual.published.text.includes(text)) details.push(`output lacks ${JSON.stringify(text)}`);
+      }
       for (const text of expected.published.mustNotContain ?? []) {
         if (actual.published.text.includes(text)) details.push(`output contains ${JSON.stringify(text)}`);
       }

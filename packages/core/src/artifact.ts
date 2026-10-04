@@ -35,6 +35,8 @@ import {
   REQUIRED_SECTIONS,
   SPEC_VERSION,
   STATUSES,
+  TIP_MAX_LENGTH,
+  TIP_PATTERN,
   type SliceMeta,
   VISIBILITIES,
   type VerificationMeta,
@@ -72,6 +74,7 @@ const OPTIONAL_COMMON = [
   "reviewedAt",
   "reviewedBy",
   "extensions",
+  "tips",
   "slice",
   "verification",
 ] as const;
@@ -399,6 +402,18 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       "Add `slice:` with kind, domain, entrypoints, layers, claims and usesResources (VSA §3).",
     );
   }
+  let tips: Record<string, string> | undefined;
+  if (Object.hasOwn(s, "tips") && s.tips !== null) {
+    if (type !== null && type !== "knowledge") {
+      problem(
+        `${base}/tips`,
+        `\`tips\` is written on ${aType(type)}; only knowledge carries tips.`,
+        "Move the tips to the knowledge record that explains this artifact (Core §9).",
+      );
+    } else {
+      tips = readTips(s.tips, `${base}/tips`, problem) ?? undefined;
+    }
+  }
   let verification: VerificationMeta | undefined;
   if (Object.hasOwn(s, "verification") && s.verification !== null) {
     verification = readVerification(s.verification, `${base}/verification`, problem) ?? undefined;
@@ -429,6 +444,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
   if (reviewedAt !== undefined) meta.reviewedAt = reviewedAt;
   if (reviewedBy !== undefined) meta.reviewedBy = reviewedBy;
   if (extensions !== undefined) meta.extensions = extensions;
+  if (tips !== undefined) meta.tips = tips;
   if (slice !== undefined) meta.slice = slice;
   if (verification !== undefined) meta.verification = verification;
   return meta;
@@ -570,6 +586,58 @@ function readAvailability(value: unknown, field: string, problem: Problem): Avai
     else out[key] = list;
   }
   return ok ? (out as Availability) : null;
+}
+
+/**
+ * Core §9: `tips` on knowledge, a mapping from an explained ID to one sentence
+ * of plain text. Keys are checked here for shape and in the validator for
+ * membership in `links.explains` (CORE003). A bad entry is reported and left
+ * out, so the others still publish; null when the value is not a mapping.
+ */
+function readTips(value: unknown, field: string, problem: Problem): Record<string, string> | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`tips` must be a mapping from an explained ID to one sentence of plain text.",
+      "Write `tips:` with one `ID: sentence` line per explained behavior, rule or capability (Core §9).",
+    );
+    return null;
+  }
+  const tips: Record<string, string> = {};
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    const at = `${field}/${pointerToken(key)}`;
+    if (!ID_PATTERN.test(key)) {
+      problem(at, `Tip key \`${key}\` is not an ID.`, "Key each tip by the ID of an artifact in links.explains.");
+      continue;
+    }
+    const text = value[key];
+    if (typeof text !== "string") {
+      problem(
+        at,
+        `The tip for ${key} must be a string.`,
+        "Write one sentence of plain text; quote it if it holds a colon.",
+      );
+      continue;
+    }
+    if (!TIP_PATTERN.test(text)) {
+      problem(
+        at,
+        `The tip for ${key} must be one line of text with no leading or trailing whitespace.`,
+        "Write one sentence on one line; a longer explanation belongs in the Guidance section.",
+      );
+      continue;
+    }
+    if ([...text].length > TIP_MAX_LENGTH) {
+      problem(
+        at,
+        `The tip for ${key} is ${[...text].length} characters; a tip is at most ${TIP_MAX_LENGTH}.`,
+        "Shorten it to one sentence a tooltip can show; the Guidance section carries the rest.",
+      );
+      continue;
+    }
+    tips[key] = text;
+  }
+  return tips;
 }
 
 function readSlice(value: unknown, field: string, problem: Problem): SliceMeta | null {

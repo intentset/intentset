@@ -1601,5 +1601,192 @@
       "ids": []
     },
     "notes": "Markset's own unknown-directive error on the same line is not repeated as PUB003."
+  },
+  {
+    "section": "publication",
+    "name": "the help file carries each published document's tips, keyed by what they explain",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"profile\":\"intentset/help/0.1\"",
+        "\"knowledge\":[{\"id\":\"KB-ASMT-SCHEDULE\",\"title\":\"Prepare a scheduled assessment\",\"path\":\"KB-ASMT-SCHEDULE.md\"}]",
+        "\"tips\":{\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"},\"RULE-ASMT-FUTURE\":{\"text\":\"The release time must be in the future.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}}"
+      ],
+      "mustNotContain": [
+        "Schedule an assessment",
+        "Require a future release time",
+        "Require assignment permission",
+        "BEH-ASMT-SCHEDULE.md",
+        "RULE-ASMT-FUTURE.md"
+      ]
+    },
+    "notes": "Publication §5: a tip's key is the explained artifact's ID whatever its visibility, and nothing else of that artifact is carried: not its title, not its path."
+  },
+  {
+    "section": "publication",
+    "name": "the help file is written with no tips when nothing is published",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"tips\":{}"
+      ],
+      "mustNotContain": [
+        "Pick a published assessment, a class you manage and a future release time."
+      ]
+    },
+    "notes": "The knowledge is draft, so its document is not published and its tip goes with it; the file is still written, so a runtime can rely on it."
+  },
+  {
+    "section": "publication",
+    "name": "a tip is withheld with its document when the knowledge needs review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"tips\":{}"
+      ],
+      "mustNotContain": [
+        "Pick a published assessment, a class you manage and a future release time."
+      ]
+    },
+    "notes": "What gates a tip is what gates its document: a changed source marks the knowledge needs-review and nothing of it, the tip included, is published."
+  },
+  {
+    "section": "publication",
+    "name": "two published documents tip one ID: the lower knowledge ID wins",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/knowledge/0.1\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-CLASSES",
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"BEH-ASMT-SCHEDULE\":{\"text\":\"Choose the class first.\",\"knowledge\":\"KB-ASMT-CLASSES\"}"
+      ],
+      "mustNotContain": [
+        "Pick a published assessment, a class you manage and a future release time."
+      ]
+    },
+    "notes": "Deterministic rather than diagnosed: a product that wants one tip per control writes one."
   }
 ]

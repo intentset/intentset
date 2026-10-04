@@ -162,6 +162,18 @@ What must be true first.
 Success: what happens. Failure: what is rejected, and what is left unchanged.
 \`\`\`
 
+A knowledge record explains behaviors, rules or capabilities to one audience, in that audience's words rather than
+the behavior's. It may carry \`tips\`: one plain sentence per explained ID, at most 160 characters, which the
+product shows beside the control that delivers that behavior once the knowledge is reviewed and published.
+
+\`\`\`yaml
+  links:
+    explains: [BEH-AREA-NAME, RULE-AREA-LIMIT]
+  tips:
+    BEH-AREA-NAME: What this control does, in one sentence.
+    RULE-AREA-LIMIT: The limit, and what happens at it.
+\`\`\`
+
 Each type requires these level-two sections:
 
 | Type | Required sections |

@@ -71,4 +71,4 @@ jobs:
           done
 
       - name: Install the release from the registry and use it
-        run: pnpm run smoke:registry -- "$(node -p "require('./package.json').version")"
+        run: pnpm run smoke:registry "$(node -p "require('./package.json').version")"

@@ -100,3 +100,29 @@ one of `not-requested`, `not-knowledge`, `draft`, `retired`, `visibility`, `audi
 `product`, `release`, `role`, `edition`, `flag`, `needs-review` (the first that applies, in that order), or, for an
 eligible document refused later, `reference`, `title`, `directive`, `markset`. The index counts an exclusion only when the projection admits the excluded artifact's visibility, so a public
 or customer index never reveals how many internal or restricted records exist; a refused request counts nothing.
+
+## 5. The help file
+
+Beside the documents, a publication writes `help.json`: every tip (Core §9) of every document published in the run,
+keyed by the ID it explains, for a product's runtime to show beside the control that delivers that behavior. It is
+one UTF-8 JSON object with its keys sorted, written whenever the request is accepted, so a runtime can rely on it
+being there, and the same bytes for the same inputs.
+
+| Field | Value |
+|---|---|
+| `profile` | `intentset/help/0.1` |
+| `derived` | `true` |
+| `projection` | the request's visibility |
+| `snapshot` | `commit` and `graphHash`, as in §2 |
+| `audience` | the request's audience |
+| `availability` | `product`, `release`, `role`, `edition` and `flags` from the request |
+| `publishedAt` | the publication timestamp |
+| `knowledge` | one entry per published document, sorted by `id`: `id`, `title`, `path` (`<ID>.md`) |
+| `tips` | by explained ID: `text`, the tip as written, and `knowledge`, the ID of the document it comes from |
+
+A tip is written exactly when its knowledge was published in the same run, so what gates a tip is what gates its
+document: status, visibility, audience, availability and review. The key is the explained artifact's ID whatever that
+artifact's visibility, because a product that binds a control to the ID has already written it where the same reader
+can see it, and the file carries nothing else of that artifact: never its title, path, status or prose. When two
+published documents tip the same ID, the tip from the knowledge with the lower ID is written. A retrieval system MUST
+NOT index the help file as knowledge; its text is already in the documents it points at.
