@@ -161,6 +161,11 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       contract, and About and the footer name Driftline. The same day the roadmap was rewritten for readers (where it
       stands, toward 1.0, not planned, shape it) and the page rendering the handoff's implementation roadmap was
       removed: both were a plan of the owner's work, and no use to a reader. Release history belongs in release notes.
+- [x] Agents keep the model current, 2026-10-04 (ADR 0010, Core §10): `init` writes `.intentset/agents.md`
+      (`packages/cli/src/agents.ts`, `init --agents` for the guide alone), `context <path>` resolves a file to its
+      slice, and `review` lists slices whose code changed while none of their describing records did
+      (`packages/cli/src/slices.ts`), acknowledged by an `Intentset-Unchanged` commit trailer, failing with
+      `--fail-on-drift`.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

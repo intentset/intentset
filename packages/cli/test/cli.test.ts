@@ -12,7 +12,10 @@ test("init writes a config and empty registries, and validate passes on the empt
   assert.equal(init.code, 0, init.err);
   assert.match(init.out, /created \.intentset\/config\.yaml/);
   assert.match(init.out, /created \.intentset\/registries\.yaml/);
-  assert.deepEqual(readdirSync(join(dir, ".intentset")).sort(), ["config.yaml", "registries.yaml"]);
+  assert.match(init.out, /created \.intentset\/agents\.md/);
+  assert.deepEqual(readdirSync(join(dir, ".intentset")).sort(), ["agents.md", "config.yaml", "registries.yaml"]);
+  assert.match(init.out, /CLAUDE\.md: @\.intentset\/agents\.md/);
+  assert.match(init.out, /AGENTS\.md: Before changing code, read \.intentset\/agents\.md and follow it\./);
   assert.match(readFileSync(join(dir, ".intentset", "config.yaml"), "utf8"), /- "product\/\*\*\/\*\.md"/);
 
   const validate = await run(dir, "validate");
@@ -35,6 +38,47 @@ test("init refuses to overwrite, and writes nothing when it refuses", async (t) 
   const again = await run(second, "init");
   assert.equal(again.code, 2);
   assert.match(again.err, /config\.yaml, \.intentset\/registries\.yaml/);
+});
+
+test("init --agents writes only the guide, for the scope the config names, and never over an existing one", async (t) => {
+  const dir = temp(t);
+  mkdirSync(join(dir, ".intentset"));
+  writeFileSync(
+    join(dir, ".intentset", "config.yaml"),
+    'repository: "acme/app"\nscope:\n  - "docs/model/**/*.md"\nregistries: null\nignore: []\n',
+  );
+  const init = await run(dir, "init", "--agents");
+  assert.equal(init.code, 0, init.err);
+  assert.deepEqual(readdirSync(join(dir, ".intentset")).sort(), ["agents.md", "config.yaml"]);
+  const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
+  assert.match(guide, /under `docs\/model\/\*\*\/\*\.md`/);
+  assert.match(guide, /^Intentset-Unchanged: SLICE-\.\.\.$/m);
+  assert.match(guide, /^\| behavior \| ## Behavior, ## Preconditions, ## Outcomes \|$/m);
+
+  const again = await run(dir, "init", "--agents");
+  assert.equal(again.code, 2);
+  assert.match(again.err, /refusing to overwrite \.intentset\/agents\.md/);
+  assert.equal((await run(dir, "init", "--agents", "--example")).code, 2);
+});
+
+test("the guide's behavior template validates once its placeholders name real values", async (t) => {
+  const dir = await example(t);
+  const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
+  const template = /```markdown\n([\s\S]*?)```/.exec(guide)?.[1] ?? "";
+  const record = template
+    .replace("BEH-AREA-NAME", "BEH-ASMT-NEW")
+    .replace("<an owner from the registry>", "team-assessment")
+    .replace("CAP-...", "CAP-ASMT-ASSIGN")
+    .replace("RULE-...", "RULE-ASMT-FUTURE")
+    .replace("PRD-...", "PRD-LANTERN")
+    .replace("<a release from the registry>", "pilot-1")
+    .replace("<a role>", "teacher")
+    .replace("<an edition>", "standard");
+  assert.doesNotMatch(record, /\.\.\.|<[a-z]/, "every placeholder was replaced");
+  writeFileSync(join(dir, "product", "scheduling", "BEH-ASMT-NEW.md"), record);
+  const validate = await run(dir, "validate");
+  assert.equal(validate.code, 0, validate.out + validate.err);
+  assert.match(validate.out, /^14 artifacts, 0 errors/);
 });
 
 test("init --example then validate: 13 artifacts and no diagnostics", async (t) => {

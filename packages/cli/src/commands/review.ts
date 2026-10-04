@@ -7,13 +7,19 @@
  * touches, a changed record to its own artifact and a changed source file
  * through the claiming slice to that slice's behaviors, each start's direct
  * dependents shown apart from its candidates. Markdown by default. Read-only.
+ *
+ * It also lists every slice whose code changed while none of the records that
+ * describe it did (Core §10: an agent updates affected semantics in the same
+ * review). A refactor changes code and no behavior, so the list is a prompt,
+ * not an error: a commit says so with an Intentset-Unchanged trailer, and
+ * `--fail-on-drift` fails only on slices no commit has spoken for.
  */
 import { type Graph, impact, compareStrings } from "@intentset/core";
-import { type Changes, changedFiles, chooseBase } from "../git.ts";
-import { matchGlob } from "../glob.ts";
+import { acknowledgedSlices, type Changes, changedFiles, chooseBase, UNCHANGED_TRAILER } from "../git.ts";
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import { levelJson, levelSections } from "../reports.ts";
 import type { Session } from "../session.ts";
+import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "../slices.ts";
 import { pathText, REACHABILITY_NOTE } from "./impact.ts";
 
 export interface Attribution {
@@ -27,9 +33,6 @@ export interface Attribution {
 export function attribute(graph: Graph, changed: readonly string[]): { starts: Attribution[]; unattributed: string[] } {
   const byPath = new Map<string, string>();
   for (const [id, artifact] of graph.artifacts) byPath.set(artifact.path, id);
-  const slices = [...graph.artifacts.values()]
-    .filter((a) => a.meta.type === "slice" && a.meta.status !== "retired" && a.meta.slice !== undefined)
-    .sort((a, b) => compareStrings(a.meta.id, b.meta.id));
   const starts = new Map<string, Set<string>>();
   const add = (id: string, reason: string) => {
     const set = starts.get(id) ?? new Set<string>();
@@ -43,7 +46,7 @@ export function attribute(graph: Graph, changed: readonly string[]): { starts: A
       add(id, `${path} is its record`);
       continue;
     }
-    const owners = slices.filter((slice) => slice.meta.slice?.claims.some((claim) => matchGlob(claim.path, path)));
+    const owners = claimingSlices(graph, path);
     let attributed = false;
     for (const slice of owners) {
       for (const behavior of slice.meta.links.implements ?? []) {
@@ -62,9 +65,46 @@ export function attribute(graph: Graph, changed: readonly string[]): { starts: A
   };
 }
 
+export interface Drift {
+  slice: string;
+  title: string;
+  /** The slice's changed code: files its source, backend or contract claims match. */
+  code: string[];
+  /** The records that describe the slice, none of which changed. */
+  records: string[];
+  /** True when a commit after the base names the slice in an Intentset-Unchanged trailer. */
+  acknowledged: boolean;
+}
+
+export const DRIFT_NOTE =
+  "Slices whose code changed while none of the records that describe them did: the slice, its behaviors, their " +
+  "rules, scenarios and verifications, its contracts and their decisions. If behavior changed, update those records " +
+  `in this change. If it did not, say so in a commit with the trailer \`${UNCHANGED_TRAILER}: <slice ID>\`.`;
+
+/** Each slice whose code is among the changed files while none of its describing records is, sorted by slice ID. */
+export function drift(graph: Graph, changed: readonly string[], acknowledged: ReadonlySet<string>): Drift[] {
+  const records = new Set([...graph.artifacts.values()].map((artifact) => artifact.path));
+  const touched = new Set(changed);
+  const out: Drift[] = [];
+  for (const slice of activeSlices(graph)) {
+    const code = changed.filter((path) => !records.has(path) && isSliceCode(slice, path));
+    if (code.length === 0) continue;
+    const describing = describingRecords(graph, slice);
+    if (describing.some((id) => touched.has(graph.artifacts.get(id)?.path ?? ""))) continue;
+    out.push({
+      slice: slice.meta.id,
+      title: slice.meta.title,
+      code,
+      records: describing,
+      acknowledged: acknowledged.has(slice.meta.id),
+    });
+  }
+  return out;
+}
+
 export function reviewCommand(
   session: Session,
-  options: { base?: string; levelReason: string },
+  options: { base?: string; levelReason: string; failOnDrift?: boolean },
   asJson: boolean,
   io: Io,
 ): number {
@@ -80,6 +120,9 @@ export function reviewCommand(
   if ("unavailable" in chosen) changes.baseUnavailable = chosen.unavailable;
   const changed = [...new Set([...changes.committed, ...changes.uncommitted])].sort(compareStrings);
   const { starts, unattributed } = attribute(graph, changed);
+  const drifted = drift(graph, changed, new Set(acknowledgedSlices(repo.root, base)));
+  const failing = options.failOnDrift === true && drifted.some((item) => !item.acknowledged);
+  const exit = session.errors > 0 || failing ? 1 : 0;
   const impacts = starts.map(({ start, because }) => {
     const artifact = graph.artifacts.get(start);
     const report = impact(graph, start);
@@ -108,10 +151,11 @@ export function reviewCommand(
         ...levelJson(session),
         note: REACHABILITY_NOTE,
         impact: impacts,
+        drift: drifted,
         unattributed,
       }),
     );
-    return session.errors > 0 ? 1 : 0;
+    return exit;
   }
 
   const baseLine =
@@ -147,9 +191,22 @@ export function reviewCommand(
     if (item.candidates.length === 0) out.push("- none");
     for (const hit of item.candidates) out.push(`- ${hit.id} (${hit.type}): \`${pathText(item.start, hit)}\``);
   }
+  const open = drifted.filter((item) => !item.acknowledged).length;
+  out.push("", `## Code changed, records unchanged (${drifted.length}, ${open} not acknowledged)`, "", DRIFT_NOTE);
+  if (drifted.length === 0) out.push("", "None.");
+  for (const item of drifted) {
+    out.push("", `### ${item.slice}: ${item.title}`, "");
+    out.push(
+      item.acknowledged
+        ? `- Acknowledged: a commit since the base says this changes no behavior (${UNCHANGED_TRAILER}).`
+        : "- Not acknowledged: update the records below, or say in a commit that no behavior changed.",
+    );
+    out.push(...item.code.map((path) => `- Code changed: ${path}`));
+    out.push(`- Records describing it, none changed: ${item.records.join(", ")}`);
+  }
   out.push("", `## Changed files no artifact accounts for (${unattributed.length})`, "");
   if (unattributed.length === 0) out.push("None.");
   else out.push(...unattributed.map((path) => `- ${path}`));
   io.stdout(`${out.join("\n")}\n`);
-  return session.errors > 0 ? 1 : 0;
+  return exit;
 }

@@ -33,10 +33,12 @@ export type { Io } from "./output.ts";
 export const USAGE = `usage: intentset <command> [options]
 
 commands
-  init [--repository <name>] [--example]
-                            create .intentset/config.yaml and an empty .intentset/registries.yaml;
-                            --example adds the scheduling example under product/scheduling/.
-                            Never overwrites a file.
+  init [--repository <name>] [--example] [--agents]
+                            create .intentset/config.yaml, an empty .intentset/registries.yaml and
+                            .intentset/agents.md, the guide that tells coding agents how to keep the
+                            model current; --example adds the scheduling example under
+                            product/scheduling/; --agents writes only the guide, for a repository
+                            already initialized. Never overwrites a file.
   validate                  every check the level asks for; exit 1 when any diagnostic is an error
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
@@ -52,9 +54,14 @@ commands
         [--tool-version <v>]
                             turn a test report into run records bound to this commit and graph
   impact <ID>               what depends on an artifact: direct, candidates, review context, ancestors
-  context <ID> [--include-restricted]
-                            the bounded engineering context of an artifact, with paths and bodies
-  review [--base <ref>]     the local review report: checks, coverage, and the impact of what changed
+  context <ID|path> [--include-restricted]
+                            the bounded engineering context of an artifact, with paths and bodies;
+                            given a file a slice claims, the context of that slice
+  review [--base <ref>] [--fail-on-drift]
+                            the local review report: checks, coverage, the impact of what changed,
+                            and each slice whose code changed while its records did not;
+                            --fail-on-drift exits 1 for any such slice no commit acknowledged with
+                            an Intentset-Unchanged trailer
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
         [--published-at <time>]
@@ -84,7 +91,8 @@ options
                             (for mcp, --mode names the server's mode instead)
   -h, --help                show this help
 
-exit codes: 0 no errors, 1 validation errors, 2 invocation or tool failure`;
+exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift, unacknowledged drift),
+            2 invocation or tool failure`;
 
 const COMMANDS = [
   "init",
@@ -103,7 +111,7 @@ const COMMANDS = [
 const GLOBAL = ["root", "json", "carrier", "level", "help"];
 const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline"];
 const COMMAND_OPTIONS: Record<string, string[]> = {
-  init: ["repository", "example"],
+  init: ["repository", "example", "agents"],
   validate: LEVEL_OPTIONS,
   graph: [
     "format",
@@ -131,7 +139,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
   ],
   impact: LEVEL_OPTIONS,
   context: ["include-restricted", ...LEVEL_OPTIONS],
-  review: ["base", ...LEVEL_OPTIONS],
+  review: ["base", "fail-on-drift", ...LEVEL_OPTIONS],
   serve: ["port", "host", "out", ...LEVEL_OPTIONS],
   mcp: [
     "mode",
@@ -168,7 +176,7 @@ const POSITIONALS: Record<string, { sub?: string; count: number; what?: string }
   architecture: { sub: "check", count: 0 },
   evidence: { sub: "import", count: 1, what: "a report file" },
   impact: { count: 1, what: "an artifact ID" },
-  context: { count: 1, what: "an artifact ID" },
+  context: { count: 1, what: "an artifact ID or a file path" },
 };
 
 export async function main(argv: string[], io: Io): Promise<number> {
@@ -228,7 +236,12 @@ export async function main(argv: string[], io: Io): Promise<number> {
     return usage(`--mode ${values.mode}: the modes are migration and strict`);
   }
   if (command === "init") {
-    return initCommand({ root: values.root, repository: values.repository, example: values.example }, io);
+    if (values.agents && values.example)
+      return usage("--agents writes only the guide; it does not combine with --example");
+    return initCommand(
+      { root: values.root, repository: values.repository, example: values.example, agentsOnly: values.agents },
+      io,
+    );
   }
 
   // Evidence scope: --product with --release, or graph's --release <product>:<label>.
@@ -321,7 +334,12 @@ export async function main(argv: string[], io: Io): Promise<number> {
       }
       const session = openSession(command, sessionOptions(level), io);
       if (typeof session === "number") return session;
-      return reviewCommand(session, { base: values.base, levelReason: reason }, values.json, io);
+      return reviewCommand(
+        session,
+        { base: values.base, levelReason: reason, failOnDrift: values["fail-on-drift"] },
+        values.json,
+        io,
+      );
     }
     case "serve": {
       const port = values.port === undefined ? 3000 : Number(values.port);
@@ -391,6 +409,8 @@ function parse(argv: string[]) {
       help: { type: "boolean", short: "h", default: false },
       repository: { type: "string" },
       example: { type: "boolean", default: false },
+      agents: { type: "boolean", default: false },
+      "fail-on-drift": { type: "boolean", default: false },
       format: { type: "string" },
       "include-bodies": { type: "boolean", default: false },
       release: { type: "string" },

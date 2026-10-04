@@ -1,16 +1,20 @@
 /**
  * `intentset init`: the one command that writes, and it only creates. It
- * writes `.intentset/config.yaml` and an empty-but-valid
- * `.intentset/registries.yaml`, and with `--example` the scheduling example's
- * records under `product/scheduling/` and its registries in place of the
- * empty ones. Every target is checked before anything is written, and each
- * file is opened with exclusive create, so an existing file is never
+ * writes `.intentset/config.yaml`, an empty-but-valid
+ * `.intentset/registries.yaml` and `.intentset/agents.md`, the guide coding
+ * agents follow to keep the model current, and with `--example` the
+ * scheduling example's records under `product/scheduling/` and its
+ * registries in place of the empty ones. `--agents` writes the guide alone,
+ * for a repository initialized before there was one, with the scope its
+ * config already names. Every target is checked before anything is written,
+ * and each file is opened with exclusive create, so an existing file is never
  * overwritten, not even by a race.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareStrings, DEFAULT_IGNORE, readConfig, readRegistries } from "@intentset/core";
+import { AGENT_GUIDE_PATH, AGENT_POINTERS, agentGuide } from "../agents.ts";
 import type { Io } from "../output.ts";
 import { CONFIG_PATH } from "../repository.ts";
 
@@ -22,6 +26,8 @@ export interface InitOptions {
   root?: string;
   repository?: string;
   example: boolean;
+  /** Write only the agent guide. */
+  agentsOnly?: boolean;
 }
 
 /** YAML double-quoted scalar; the strict reader takes JSON's escapes. */
@@ -82,6 +88,8 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
     return 2;
   }
 
+  if (options.agentsOnly === true) return writeGuideOnly(root, io);
+
   // Everything to write, decided before anything is written.
   const files = new Map<string, string>([[CONFIG_PATH, configText(repository)]]);
   let registries = EMPTY_REGISTRIES_TEXT;
@@ -103,6 +111,7 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
     }
   }
   files.set(REGISTRIES_PATH, registries);
+  files.set(AGENT_GUIDE_PATH, agentGuide([DEFAULT_INIT_SCOPE]));
 
   // What init writes must read back clean, or it has handed the user a broken repository.
   const config = readConfig(files.get(CONFIG_PATH) as string, CONFIG_PATH);
@@ -112,6 +121,28 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
     return 2;
   }
 
+  if (!create(root, files, io)) return 2;
+  const scope = options.example ? `${files.size - 3} example records in scope` : "an empty scope";
+  io.stdout(`Initialized ${quote(repository)} with ${scope}. Next: intentset validate\n`);
+  pointers(io);
+  return 0;
+}
+
+/** `init --agents`: the guide alone, for the scope the repository's config names, or the default with no config. */
+function writeGuideOnly(root: string, io: Io): number {
+  let scope = [DEFAULT_INIT_SCOPE];
+  const configFile = join(root, CONFIG_PATH);
+  if (existsSync(configFile)) {
+    const { config, diagnostics } = readConfig(readFileSync(configFile, "utf8"), CONFIG_PATH);
+    if (diagnostics.length === 0 && config.scope.length > 0) scope = config.scope;
+  }
+  if (!create(root, new Map([[AGENT_GUIDE_PATH, agentGuide(scope)]]), io)) return 2;
+  pointers(io);
+  return 0;
+}
+
+/** Create every file or none: refuse if any exists, then write each with exclusive create. */
+function create(root: string, files: Map<string, string>, io: Io): boolean {
   const ordered = [...files.keys()].sort(compareStrings);
   const existing = ordered.filter((path) => existsSync(join(root, path)));
   if (existing.length > 0) {
@@ -119,7 +150,7 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
       `intentset init: refusing to overwrite ${existing.join(", ")}; init only creates files.\n` +
         "Remove them first if a fresh start is what you want.\n",
     );
-    return 2;
+    return false;
   }
   for (const path of ordered) {
     const target = join(root, path);
@@ -128,11 +159,15 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
       writeFileSync(target, files.get(path) as string, { flag: "wx" });
     } catch (error) {
       io.stderr(`intentset init: could not create ${path}: ${(error as Error).message}\n`);
-      return 2;
+      return false;
     }
     io.stdout(`created ${path}\n`);
   }
-  const scope = options.example ? `${files.size - 2} example records in scope` : "an empty scope";
-  io.stdout(`Initialized ${quote(repository)} with ${scope}. Next: intentset validate\n`);
-  return 0;
+  return true;
+}
+
+/** How to point a repository's agents at the guide. init never edits a file it did not create, so it says rather than does. */
+function pointers(io: Io): void {
+  io.stdout(`\nPoint your coding agents at ${AGENT_GUIDE_PATH} with one line in the file they read:\n`);
+  for (const [file, line] of AGENT_POINTERS) io.stdout(`  ${file}: ${line}\n`);
 }

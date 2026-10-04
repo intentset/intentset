@@ -172,6 +172,8 @@ Impact reports MUST show direct changes separately from candidate downstream eff
 
 Before an agent edits implementation it SHOULD load the owning slice, behaviors, rules, scenarios, contracts, and decisions. Afterward it SHOULD update affected semantics and checks in the same review. Agents MUST NOT self-approve release/publication simply because validation passes. MCP and CLI context results MUST identify snapshot and source paths; customer tools MUST use the restricted publication index, never raw engineering context.
 
+A review of a change SHOULD list each slice whose implementation changed while none of the records describing it did. A slice's implementation is what its `source`, `backend`, and `contract` claims match, record files excepted. The records describing it are the slice, the behaviors it implements, the rules governing them, the scenarios illustrating them, the verifications of any of those, the contracts it exposes, and the decisions informing the slice, its behaviors, or its contracts. The list is a prompt for review, not a failure: a change that alters no behavior MAY say so for named slices where its reviewer reads it, such as a commit trailer, and a tool MAY then treat those slices as acknowledged, but MUST still list them.
+
 ## 11. Conformance and diagnostics
 
 Conformance is a claim about a declared repository scope and snapshot, not a universal product certification. Publish the spec/profile versions, scope, exclusions, waiver count, checker version, and report hash.

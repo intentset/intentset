@@ -79,3 +79,18 @@ export function changedFiles(root: string, base: Base | null): Omit<Changes, "ba
     uncommitted: [...new Set(uncommitted)].sort(compareStrings),
   };
 }
+
+/**
+ * The trailer a commit carries to say it changes a slice's code without
+ * changing its behavior: `Intentset-Unchanged: SLICE-A, SLICE-B`. A reviewer
+ * reads it in the commit, so the claim is made where it can be questioned.
+ */
+export const UNCHANGED_TRAILER = "Intentset-Unchanged";
+
+/** The slice IDs named in an Intentset-Unchanged trailer of any commit after the base, sorted. */
+export function acknowledgedSlices(root: string, base: Base | null): string[] {
+  if (base === null) return [];
+  const out = git(root, ["log", `--format=%(trailers:key=${UNCHANGED_TRAILER},valueonly)`, `${base.commit}..HEAD`]);
+  if (out === null) return [];
+  return [...new Set(out.split(/[\s,]+/).filter((id) => id !== ""))].sort(compareStrings);
+}

@@ -439,6 +439,83 @@ test("review of a changed rule lists its behavior, verification and knowledge as
   assert.equal((await run(dir, "review", "--base", "no-such-ref")).code, 2);
 });
 
+const POLICY = "src/features/assessment/schedule/domain/policies/release-time.ts";
+const STRICTER =
+  'import type { ScheduleRequest } from "../models/schedule";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime() + 1000;\n}\n';
+
+test("review lists a slice whose code changed while none of its records did, and --fail-on-drift fails on it", async (t) => {
+  const dir = await committed(t);
+  write(dir, { [POLICY]: STRICTER });
+  git(dir, "commit", "-q", "-am", "stricter release time");
+
+  const review = await run(dir, "review");
+  assert.equal(review.code, 0, "drift is a prompt, not an error, without --fail-on-drift");
+  assert.match(review.out, /^## Code changed, records unchanged \(1, 1 not acknowledged\)$/m);
+  const section = review.out.slice(
+    review.out.indexOf("### SLICE-ASMT-SCHEDULE"),
+    review.out.indexOf("## Changed files"),
+  );
+  assert.match(section, /- Not acknowledged: update the records below/);
+  assert.match(section, new RegExp(`- Code changed: ${POLICY.replaceAll(".", "\\.")}`));
+  assert.match(
+    section,
+    /- Records describing it, none changed: ADR-ASMT-SEAM, BEH-ASMT-SCHEDULE, CONTRACT-ASMT-SCHEDULE, RULE-ASMT-AUTH, RULE-ASMT-FUTURE, SCN-ASMT-SCHEDULE, SLICE-ASMT-SCHEDULE, TEST-ASMT-SCHEDULE/,
+  );
+  assert.equal((await run(dir, "review", "--fail-on-drift")).code, 1);
+
+  const json = JSON.parse((await run(dir, "review", "--json")).out);
+  assert.deepEqual(
+    json.drift.map((item: { slice: string; code: string[]; acknowledged: boolean }) => [
+      item.slice,
+      item.code,
+      item.acknowledged,
+    ]),
+    [["SLICE-ASMT-SCHEDULE", [POLICY], false]],
+  );
+
+  // A commit after the base says no behavior changed: acknowledged, still listed, and no longer failing.
+  write(dir, { [POLICY]: `${STRICTER}// one second of tolerance, as before\n` });
+  git(dir, "commit", "-q", "-am", "comment the tolerance\n\nIntentset-Unchanged: SLICE-ASMT-SCHEDULE");
+  const acknowledged = await run(dir, "review", "--base", "HEAD~2", "--fail-on-drift");
+  assert.equal(acknowledged.code, 0, acknowledged.out);
+  assert.match(acknowledged.out, /\(1, 0 not acknowledged\)/);
+  assert.match(acknowledged.out, /- Acknowledged: a commit since the base says this changes no behavior/);
+});
+
+test("review lists no drift when a record describing the slice changed with its code, or when nothing it claims as code did", async (t) => {
+  const dir = await committed(t);
+  write(dir, { [POLICY]: STRICTER });
+  edit(dir, "RULE-ASMT-FUTURE", "must be earlier", "must be strictly earlier");
+  const both = await run(dir, "review", "--fail-on-drift");
+  assert.equal(both.code, 0, both.out);
+  assert.match(both.out, /^## Code changed, records unchanged \(0, 0 not acknowledged\)$/m);
+
+  const other = await committed(t);
+  write(other, { "amplify/data/resource.ts": "export const data = {};\n", "NOTES.txt": "scratch\n" });
+  const unclaimed = await run(other, "review", "--fail-on-drift");
+  assert.equal(unclaimed.code, 0, unclaimed.out);
+  assert.match(unclaimed.out, /\(0, 0 not acknowledged\)/);
+});
+
+test("context of a file a slice claims is that slice's context, and of an unclaimed file a CORE003", async (t) => {
+  const dir = await withSources(t);
+  const context = await run(dir, "context", POLICY);
+  assert.equal(context.code, 0, context.err);
+  assert.match(context.out, /^# Context for SLICE-ASMT-SCHEDULE$/m);
+  assert.match(context.out, new RegExp(`${POLICY.replaceAll(".", "\\.")} is claimed by SLICE-ASMT-SCHEDULE`));
+  assert.match(context.out, /### BEH-ASMT-SCHEDULE: Schedule an assessment/);
+
+  const nested = await run(join(dir, "src", "features"), "context", "assessment/schedule/index.ts", "--json");
+  assert.equal(nested.code, 0, nested.err);
+  const json = JSON.parse(nested.out);
+  assert.equal(json.start, "SLICE-ASMT-SCHEDULE");
+  assert.equal(json.resolvedFrom, "src/features/assessment/schedule/index.ts");
+
+  const unclaimed = await run(dir, "context", "NOTES.txt");
+  assert.equal(unclaimed.code, 1);
+  assert.match(unclaimed.err, /CORE003/);
+});
+
 test("review runs at L4 when run records are present", async (t) => {
   const dir = await committed(t);
   write(dir, { "reports/vitest.json": vitestReport("passed") });
