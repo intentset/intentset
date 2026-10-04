@@ -298,7 +298,8 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 @media (max-width: 47.5rem) {
   /* The brand and the scheme control share the first row; the links wrap below. */
   .site-header { gap: 0.25rem 1rem; padding-block: 1rem 0.75rem; }
-  .site-nav { order: 3; flex-basis: 100%; gap: 0 1.25rem; font-size: 0.9rem; }
+  /* Five links on one row at 375px and up, spread to the row's width; narrower phones wrap. */
+  .site-nav { order: 3; flex-basis: 100%; gap: 0 0.5rem; justify-content: space-between; font-size: 0.85rem; }
   .site-family { width: 7rem; }
   .ms-document { padding-block: 1.75rem 3rem; }
   .ms-document h1 { font-size: clamp(2.1rem, 9vw, 2.75rem); }

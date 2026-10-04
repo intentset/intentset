@@ -100,7 +100,7 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
   }
 });
 
-test("the navigation carries the four items the IA names, and the footer its five, with their copy", () => {
+test("the navigation carries the IA's four items and Start, and the footer its links, with their copy", () => {
   for (const [page, doc] of html) {
     const nav = doc.slice(doc.indexOf('<nav class="site-nav"'), doc.indexOf("</nav>"));
     const labels = [...nav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]);
@@ -109,7 +109,7 @@ test("the navigation carries the four items the IA names, and the footer its fiv
       NAV.map(([label]) => label),
       page,
     );
-    assert.deepEqual(labels, ["How it works", "Specifications", "Markset", "Roadmap"]);
+    assert.deepEqual(labels, ["How it works", "Start", "Specifications", "Markset", "Roadmap"]);
     assert.match(nav, /href="(\.\/|(\.\.\/)+)how-it-works\/index\.html"/, `${page}: How it works is a page`);
     const footer = doc.slice(doc.indexOf("<footer"), doc.indexOf("</footer>"));
     const footerNav = footer.slice(0, footer.indexOf("</nav>"));

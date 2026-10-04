@@ -43,12 +43,15 @@ export const EXTERNAL = {
 export const SITE_NAME = "Intentset";
 
 /**
- * The bar, as the information architecture names it. How it works was an anchor
- * on the home page and is a page of its own since 2026-10-03, so the home page
- * can stay with the outcome and the explanation can take the room it needs.
+ * The bar, as the information architecture names it, plus two pages. How it
+ * works was an anchor on the home page and is a page of its own since
+ * 2026-10-03, so the home page can stay with the outcome and the explanation
+ * can take the room it needs. Start joined the bar on 2026-10-04, once it was
+ * the way to adopt Intentset rather than a manual guide only the footer led to.
  */
 export const NAV: Array<[string, string]> = [
   ["How it works", "how-it-works/index.html"],
+  ["Start", "start/index.html"],
   ["Specifications", "specifications/index.html"],
   ["Markset", "markset/index.html"],
   ["Roadmap", "roadmap/index.html"],
