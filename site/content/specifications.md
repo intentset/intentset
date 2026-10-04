@@ -25,21 +25,34 @@ Intentset separates product meaning from implementation architecture and platfor
 - :::card
   ## TypeScript + AWS Amplify Gen 2 Reference Profile v0.1
 
-  A concrete mapping for slice folders, import boundaries, backend seams, and logically owned cloud resources.
+  A concrete mapping for slice folders, import boundaries, backend seams, and logically owned cloud resources, with areas for a backend too large for one CloudFormation stack.
 
   [[Read the reference profile](profile-typescript-amplify-gen2/index.html)]{.button}
   :::
 ::::
 
-## For tools that read a model
+## Publishing and export
 
-The **Export Contract v0.2** fixes the JSON a repository hands to other tools: the graph, optional evidence, knowledge, impact and ownership reports, what is withheld, and what a consumer must check before importing it. Valid and deliberately invalid envelopes for testing a consumer ship with the conformance suite.
+::::grid{cols=2}
+- :::card
+  ### Publication Profile v0.1
 
-[[Read the export contract](export/index.html)]{.button}
+  The fields that carry a published document's provenance, the review record that decides when an explanation needs review again, and the publisher's diagnostics.
+
+  [[Read the publication profile](publication/index.html)]{.button}
+  :::
+- :::card
+  ### Export Contract v0.2
+
+  The JSON a repository hands to other tools: the graph, optional evidence, knowledge, impact and ownership reports, what is withheld, and what a consumer must check before importing it. Valid and deliberately invalid envelopes for testing a consumer ship with the conformance suite.
+
+  [[Read the export contract](export/index.html)]{.button}
+  :::
+::::
 
 ## What conformance means
 
 A conformance report names its scope, snapshot, specification version, checks, and exceptions. Linked evidence is not the same as passing evidence, and passing tests do not prove every documented promise correct.
 
 > [!NOTE]
-> All four documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. Version 0.1 is on npm; the export contract arrives with 0.2.
+> All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.3 on npm.
