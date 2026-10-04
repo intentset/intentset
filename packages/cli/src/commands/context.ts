@@ -9,7 +9,12 @@
  *
  * `restricted` artifacts are withheld unless asked for, and the report says
  * how many, so a short context never reads as a complete one. Never writes.
+ *
+ * Given a file rather than an ID, it reads the context of the slice whose
+ * claims include the file, since an agent about to edit code knows the file
+ * and not the ID of what it promises.
  */
+import { isAbsolute, relative, resolve, sep } from "node:path";
 import {
   type Artifact,
   type ContextArtifact,
@@ -21,7 +26,28 @@ import {
 } from "@intentset/core";
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import type { Session } from "../session.ts";
+import { claimingSlices } from "../slices.ts";
 import { unresolved, validationLine, validationSummary } from "./shared.ts";
+
+/**
+ * The artifact a `context` argument names: itself when it is an ID, else the
+ * one slice whose claims include it as a file path, relative to the working
+ * directory. Several claiming slices are an overlap VSA reports; the caller
+ * is asked to choose.
+ */
+export function resolveTarget(
+  session: Session,
+  argument: string,
+  cwd: string,
+): { id: string; path: string | null } | { path: string; slices: string[] } {
+  const graph = session.result.graph;
+  if (graph.artifacts.has(argument)) return { id: argument, path: null };
+  const absolute = isAbsolute(argument) ? argument : resolve(cwd, argument);
+  const path = relative(session.repo.root, absolute).split(sep).join("/");
+  const slices = claimingSlices(graph, path).map((slice) => slice.meta.id);
+  if (slices.length === 1) return { id: slices[0], path };
+  return { path, slices };
+}
 
 const HEADINGS: Record<ContextRole, string> = {
   start: "Start",
@@ -39,12 +65,22 @@ const HEADINGS: Record<ContextRole, string> = {
 
 export function contextCommand(
   session: Session,
-  id: string,
+  argument: string,
   includeRestricted: boolean,
   asJson: boolean,
   io: Io,
 ): number {
   const { graph } = session.result;
+  const target = resolveTarget(session, argument, io.cwd);
+  if ("slices" in target && target.slices.length > 1) {
+    io.stderr(
+      `intentset context: ${target.path} is claimed by ${target.slices.join(" and ")}, an overlap VSA reports; ` +
+        "name one of them.\n",
+    );
+    return 2;
+  }
+  const via = "id" in target ? target.path : null;
+  const id = "id" in target ? target.id : argument;
   const bundle = contextFor(graph, id, { includeRestricted });
   if (bundle === null) {
     const diagnostic = unresolved(id, session);
@@ -73,6 +109,7 @@ export function contextCommand(
         snapshot: session.snapshot,
         validation: validationSummary(session, session.level),
         start: id,
+        ...(via === null ? {} : { resolvedFrom: via }),
         included: bundle.artifacts.length,
         withheld: bundle.withheld,
         restrictedIncluded: includeRestricted,
@@ -93,6 +130,7 @@ export function contextCommand(
     `# Context for ${id}`,
     "",
     `Bounded engineering context (Core §10) for ${start.meta.type} ${id}, "${start.meta.title}".`,
+    ...(via === null ? [] : ["", `${via} is claimed by ${id}, so this is that slice's context.`]),
     "",
     `- ${snapshotLine(session.snapshot)}`,
     `- ${validationLine(session, session.level)}`,

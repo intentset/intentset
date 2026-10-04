@@ -38,6 +38,17 @@ npm run intentset -- impact BEH-ASMT-SCHEDULE --root <dir>
 Commands: `init`, `validate` (levels L1 to L4), `graph`, `impact`, `context`, `architecture check`,
 `evidence import`, `review`, `publish`, `serve` (the Atlas), and `mcp` (a read-only context server).
 
+## Keep the model current with agents
+
+The records are written and updated by the coding agents that change the code, in the same commit, and reviewed by
+people. `init` writes `.intentset/agents.md`, the guide an agent follows (`init --agents` writes it alone in a
+repository already set up); point agents at it with `@.intentset/agents.md` in CLAUDE.md or a line in AGENTS.md.
+
+- `intentset context <file>` gives an agent the slice that owns the file it is about to edit, with its behaviors,
+  rules, scenarios, contracts, decisions and checks.
+- `intentset review --base main` lists each slice whose code changed while none of its records did. A refactor says
+  so with an `Intentset-Unchanged: <slice ID>` commit trailer; `--fail-on-drift` makes anything else fail CI.
+
 ## Read a model from another tool
 
 `intentset graph` writes the export another tool imports: the graph, and on request evidence, knowledge, impact and
