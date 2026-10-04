@@ -74,6 +74,7 @@ export const SPECS: Array<{ slug: string; file: string }> = [
   { slug: "core", file: "core-0.1.md" },
   { slug: "vsa", file: "vsa-0.1.md" },
   { slug: "profile-typescript-amplify-gen2", file: "profile-typescript-amplify-gen2-0.1.md" },
+  { slug: "export", file: "export.md" },
 ];
 
 const ROADMAP_DOC = "docs/requirements/roadmap/05-implementation-roadmap.md";

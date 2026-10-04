@@ -19,6 +19,7 @@ export {
   type ArchitectureSummary,
   type CheckOptions,
   checkArchitecture,
+  ownershipReport,
   REVIEW_REQUIRED,
 } from "./check.ts";
 export { checkClaims } from "./claims.ts";

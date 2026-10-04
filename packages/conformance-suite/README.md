@@ -13,7 +13,9 @@ implementation.
 | `cases/*.json` | One file per section: `core`, `export`, `vsa`, `evidence`, `publication`. Each file is an array of cases. |
 | `schemas/conformance.schema.json` | The normative schema every case file satisfies. |
 | `schemas/frontmatter.schema.json` | The structural schema of a document's frontmatter (Core §3, §4). |
-| `schemas/export.schema.json` | The schema of the `intentset/export/0.1` envelope. |
+| `schemas/export.schema.json` | The schema of the `intentset/export/0.2` envelope. |
+| `schemas/evidence.schema.json` | The schema of run records (Core §8). |
+| `consumer/` | Export envelopes a consumer must accept or reject, and `manifest.json` saying which and why. |
 | `examples/scheduling/` | The worked example the cases are built from, for reading alongside them. |
 
 The JSON is the artifact. Read it off disk in whatever language you are working in:
@@ -80,6 +82,25 @@ need no patch logic:
 
 An aspect a case does not state is not judged. A section your implementation does not yet cover should be reported
 as skipped, not passed: a closed vocabulary of checks is only worth having when a report says which ones ran.
+
+## Testing a consumer of the export
+
+`consumer/` is for tools that import an export rather than produce one (spec/export.md §6). `manifest.json` lists
+each case: the envelope's `file`, the `connection` it is read against, and `expect`. An accepted case gives the
+snapshot pair, the validation status, the reports supplied, the withheld count and each verification's evidence
+status; a rejected one gives the category (`not-json`, `unsupported-contract`, `malformed`, `identity-mismatch`,
+`mixed-snapshot`, `forbidden-content`, `inconsistent-report`). Every rejected envelope is an accepted one with one
+deliberate defect, and several are schema-valid: a schema validator alone is not a consumer.
+
+```js
+import { loadConsumerFixtures } from "@intentset/conformance-suite";
+
+const fixtures = loadConsumerFixtures();
+for (const c of fixtures.cases) {
+  const outcome = yourImporter(fixtures.read(c.file), c.connection);
+  // accepted when c.expect.accept, otherwise rejected with c.expect.category, and the prior snapshot kept
+}
+```
 
 ## Where the rules are
 

@@ -1,7 +1,8 @@
 /**
  * Path and resource ownership (VSA §3, §7; VSA009; profile AMP004).
  *
- * - A nonempty claim that matches no file is VSA009.
+ * - A nonempty claim that matches no file is VSA009: a warning while the
+ *   slice is draft (planned, not yet owned), an error once it is not.
  * - Two slices resolving one file is VSA009, once per pair of claims, naming
  *   both slices, both claims and the files.
  * - A file claimed by a slice and recorded as a registry resource has two
@@ -46,13 +47,17 @@ export function checkClaims(model: Model, graph: Graph, registriesPath: string):
         return;
       }
       if (slice.claimFiles[i].length === 0) {
+        const planned = slice.artifact.meta.status === "draft";
         findings.push(
           finding({
             code: "VSA009",
+            ...(planned ? { severity: "warning" as const } : {}),
             artifact: slice.id,
             path: slice.path,
             field,
-            message: `The ${claim.kind} claim ${claim.path} of ${slice.id} matches no file in the repository.`,
+            message: planned
+              ? `The ${claim.kind} claim ${claim.path} of draft slice ${slice.id} matches no file yet; it is planned, and an error once the slice leaves draft.`
+              : `The ${claim.kind} claim ${claim.path} of ${slice.id} matches no file in the repository.`,
             remediation:
               "Correct the path, add the files it promises, or remove the claim; an empty claim is not ownership (VSA §3).",
           }),

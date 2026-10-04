@@ -6,7 +6,7 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.1.md`, `vsa-0.1.md`, `profile-typescript-amplify-gen2-0.1.md`,
-`frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
+`export.md` (the export contract other tools pin, `intentset/export/0.2`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit.
 `docs/requirements/` is the kickoff handoff as delivered and is not updated; `docs/implementation-plan.md` is the plan;
 `docs/decisions/` holds the ADRs.
@@ -59,7 +59,11 @@ readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] 
 readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[] }
 validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline
 impact(graph: Graph, id: string): ImpactReport
-exportGraph(result: ValidationResult, registries, meta): ExportEnvelope
+impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
+exportGraph(result: ValidationResult, registries, meta): ExportEnvelope   // meta.reports, meta.includeRestricted (spec/export.md)
+readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, envelope, supplied } | { ok: false, category, problems }
+// the consumer's checks of spec/export.md §5; shape checks mirror export.schema.json (a mutant test holds them equal)
+// report builders live with their checks: evidenceReport (verification), knowledgeReport (publisher), ownershipReport (architecture)
 graphHash(graph): string; canonicalJson(value): string; sha256Hex(input): string
 sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
 ```
@@ -84,6 +88,8 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 ```
 spec/                 normative documents and schemas
 tests/                conformance fixtures, one JSON file per section (core, export, vsa, evidence, publication)
+tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `npm run fixtures:consumer`
+                      from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
 examples/scheduling/  the worked example, the fixtures' baseline and the site's example
 packages/
   core/               carrier reader, types, graph, validator, impact, export. No dependencies.
@@ -94,7 +100,7 @@ packages/
   atlas/              M4: static review pages over an export
   cli/                `intentset`
   conformance/        private harness
-  conformance-suite/  published cases and schemas as data
+  conformance-suite/  published cases, consumer fixtures and schemas as data
   mcp/                M5: read-only context server
 site/                 intentset.org
 docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff)
@@ -134,6 +140,13 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       format and Markset sections moved there, headings and all. The header carries markset.org's color-scheme control,
       whose one script is the only one on a page and sits outside `<main>`; the footer carries the network figure from
       coralreefventures.com with Intentset's nodes in green.
+- [x] Export 0.2 for consumers, 2026-10-03 (ADR 0008, `spec/export.md`): typed evidence, knowledge, impact and
+      ownership reports (`intentset graph --report`), restricted artifacts withheld and counted unless
+      `--include-restricted`, `readExport` in core, 16 consumer cases in `tests/consumer/`, shipped in the suite.
+      The prerequisite for Streamlane's integration and for Driftline, which maps errors to slices through ownership.
+- [x] Draft slices plan their paths, 2026-10-03 (VSA §3): while a slice is draft, a missing entrypoint (VSA002) and a
+      claim matching no file (VSA009) are warnings, so a product modelled before it is coded (Driftline) keeps L2
+      green. Checked on a clone of the Driftline repository from `intentset init` through an L3 export.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

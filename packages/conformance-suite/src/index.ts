@@ -76,6 +76,58 @@ export const schemaPaths = {
 /** The worked example the cases are built from, `examples/scheduling`. */
 export const examplesPath: string = join(packageDir, "examples");
 
+/**
+ * The export consumer fixtures (spec/export.md §6): envelopes a consumer must
+ * accept or reject, each named in `manifest.json` with the connection it is
+ * read against and what the consumer must do with it.
+ */
+export const consumerPath: string = join(packageDir, "consumer");
+
+/** One consumer fixture: which envelope, read against which connection, and the outcome required. */
+export interface ConsumerCase {
+  name: string;
+  /** The envelope's file name under `consumer/`. */
+  file: string;
+  connection: { repository: string; product: string };
+  expect:
+    | {
+        accept: true;
+        /** Same commit and graph hash means the same snapshot: import it once. */
+        snapshot: { commit: string | null; graphHash: string };
+        validation: "pass" | "fail";
+        /** Report sections present; every other one is "not supplied", never zero, none or pass. */
+        supplied: Array<"evidence" | "knowledge" | "impact" | "ownership">;
+        withheldArtifacts: number;
+        /** Each verification's evidence status, when the evidence report is supplied. */
+        evidence?: Record<string, string>;
+      }
+    | {
+        accept: false;
+        category:
+          | "not-json"
+          | "unsupported-contract"
+          | "malformed"
+          | "identity-mismatch"
+          | "mixed-snapshot"
+          | "forbidden-content"
+          | "inconsistent-report";
+      };
+  notes: string;
+}
+
+/** The consumer fixtures' manifest, and a reader of each envelope's text. */
+export function loadConsumerFixtures(dir: string = consumerPath): {
+  contract: string;
+  cases: ConsumerCase[];
+  read(file: string): string;
+} {
+  const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as {
+    contract: string;
+    cases: ConsumerCase[];
+  };
+  return { ...manifest, read: (file) => readFileSync(join(dir, file), "utf8") };
+}
+
 /** Section names, sorted, as the file basenames. */
 export function sections(dir: string = suitePath): string[] {
   return readdirSync(dir)

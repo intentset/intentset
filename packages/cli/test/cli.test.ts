@@ -410,7 +410,7 @@ test("in a git repository the commit is read, and an empty repository says why t
   assert.equal(report.commit, head);
   assert.equal(report.commitUnavailable, undefined);
   const envelope = JSON.parse((await run(dir, "graph")).out);
-  assert.deepEqual(envelope.source, { commit: head });
+  assert.deepEqual(envelope.source, { commit: head, uncommitted: false });
   assert.deepEqual(validateSchema(exportSchema, envelope), []);
   assert.match(
     (await run(dir, "impact", "BEH-ASMT-SCHEDULE")).out,

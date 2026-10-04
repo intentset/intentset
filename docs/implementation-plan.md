@@ -147,7 +147,8 @@ decisions in §8 are recorded or explicitly deferred with a date.
   generation time, validation scope and status, artifacts with ID, type, title, status, authored and derived edges,
   source path and hash, body excluded unless `--include-bodies`. Schema in `spec/export.schema.json`. This is what
   Streamlane's STL-002 imports, so its valid and invalid fixtures (unsupported version, mismatched identity) are
-  written here and shared.
+  written here and shared. (Shipped in 0.2 rather than 0.1, with the contract typed and renamed `intentset/export/0.2`: see "After 0.1"
+  below.)
 - `cli`: `intentset validate [dir] [--json]`, `intentset graph --format json`, `intentset init`. Config discovery
   from `.intentset/config.yaml` (scope globs, registries path, ignore list). A validation command never writes.
 - Fixtures: `tests/core.json` covering C01–C09 plus the minimum per rule (valid, each error, each warning), and
@@ -229,6 +230,24 @@ contains no internal title or path, checked by grepping the output for every int
 - The adoption guide on the site replaces "no installation command exists" with the real one, and only then.
 
 Exit: the roadmap's definition of alpha done, with an external adopter.
+
+### After 0.1: what the export's consumers need (0.2, 2026-10-03)
+
+0.1 shipped every milestone but left the export's report slots untyped and no fixture for a consumer, which is what
+Streamlane's integration (its increments 1 to 5) and Driftline (errors and usage attributed to slices) wait on.
+0.2 closes that, recorded in ADR 0008 and `spec/export.md`:
+
+- The contract is `intentset/export/0.2`: typed `evidence`, `knowledge`, `impact` and `ownership` reports, each built
+  by the package that owns the check and asked for with `intentset graph --report`; restricted artifacts withheld and
+  counted unless `--include-restricted`; `source.uncommitted`.
+- `readExport` in `@intentset/core` makes every check spec/export.md §5 asks of a consumer, and 16 consumer cases in
+  `tests/consumer/` (shipped in the suite's `consumer/`) cover each rejection category and the states a consumer must
+  show: not supplied, stale, failing validation, withheld.
+- VSA §3: a draft slice's missing entrypoint and empty claims are warnings, so a product modelled before it is coded
+  keeps L2 green. Driftline is the first.
+
+What stays with the consumers: their read models, authorization per reader, atomic promotion, idempotent re-import
+and the screens, in their own repositories and under their own rules.
 
 ## 6. Conformance fixtures
 

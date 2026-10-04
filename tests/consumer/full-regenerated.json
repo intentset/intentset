@@ -1,0 +1,1472 @@
+{
+  "contract": "intentset/export/0.2",
+  "spec": "0.1",
+  "generatedAt": "2026-10-03T18:05:00Z",
+  "repository": "example/scheduling",
+  "products": [
+    "PRD-LANTERN"
+  ],
+  "source": {
+    "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+    "uncommitted": false
+  },
+  "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+  "release": {
+    "product": "PRD-LANTERN",
+    "label": "pilot-1"
+  },
+  "validation": {
+    "level": "L3",
+    "scope": [
+      "**/*.md"
+    ],
+    "status": "pass",
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": []
+  },
+  "withholding": {
+    "visibilities": [
+      "restricted"
+    ],
+    "artifacts": 1,
+    "diagnostics": 0
+  },
+  "registries": {
+    "owners": [
+      "team-assessment",
+      "team-platform"
+    ],
+    "audiences": [
+      "engineering",
+      "product",
+      "teacher"
+    ],
+    "releases": [
+      "pilot-1"
+    ],
+    "roles": [
+      "teacher"
+    ],
+    "editions": [
+      "standard"
+    ],
+    "flags": [],
+    "resources": [
+      {
+        "id": "RES-ASSESSMENT-DATA",
+        "path": "amplify/data/resource.ts",
+        "owner": "team-platform",
+        "consumers": [
+          "SLICE-ASMT-SCHEDULE"
+        ]
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "ADR-ASMT-SEAM",
+      "type": "decision",
+      "title": "Keep backend access behind the slice seam",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/decision/0.1",
+      "revision": 1,
+      "path": "ADR-ASMT-SEAM.md",
+      "sourceHash": "5c105fa32fe64820f3a7a4b4fa83634b234c89a80e299dd16597fbdacfdbfdf7",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "informedBy": [
+          "SLICE-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "BEH-ASMT-SCHEDULE",
+      "type": "behavior",
+      "title": "Schedule an assessment",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/behavior/0.1",
+      "revision": 1,
+      "path": "BEH-ASMT-SCHEDULE.md",
+      "sourceHash": "2f533532d2e56ed34014a7de677290cd8964b591a13eaac1f9997fb30931945e",
+      "parent": "CAP-ASMT-ASSIGN",
+      "links": {
+        "governedBy": [
+          "RULE-ASMT-FUTURE"
+        ]
+      },
+      "derived": {
+        "illustrates": [
+          "SCN-ASMT-SCHEDULE"
+        ],
+        "implements": [
+          "SLICE-ASMT-SCHEDULE"
+        ],
+        "verifies": [
+          "TEST-ASMT-SCHEDULE"
+        ],
+        "explains": [
+          "KB-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 1,
+      "availability": {
+        "products": [
+          "PRD-LANTERN"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": []
+      },
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "CAP-ASMT-ASSIGN",
+      "type": "capability",
+      "title": "Assessment assignment",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/capability/0.1",
+      "revision": 1,
+      "path": "CAP-ASMT-ASSIGN.md",
+      "sourceHash": "1cc8fd7ded5d82e6d5f80cd1a7cb26df3e375b89e6807800501481540693650e",
+      "parent": "OUT-PREPARE",
+      "links": {},
+      "derived": {
+        "parent": [
+          "BEH-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "CONTRACT-ASMT-SCHEDULE",
+      "type": "contract",
+      "title": "ScheduleAssessment contract",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/contract/0.1",
+      "revision": 1,
+      "path": "CONTRACT-ASMT-SCHEDULE.md",
+      "sourceHash": "4e4c974176594c0ef616612b84416dc1a8bcc4bc65828186b8faf59eee0eb428",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "exposes": [
+          "SLICE-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "INT-PREPARE",
+      "type": "intent",
+      "title": "Prepare learning in advance",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/intent/0.1",
+      "revision": 1,
+      "path": "INT-PREPARE.md",
+      "sourceHash": "7778a7a181fa71611f043d61a6386da84be9239101ef99ce8a5cf52f64722015",
+      "parent": "PRD-LANTERN",
+      "links": {},
+      "derived": {
+        "parent": [
+          "OUT-PREPARE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "KB-ASMT-SCHEDULE",
+      "type": "knowledge",
+      "title": "Prepare a scheduled assessment",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "customer",
+      "audiences": [
+        "teacher"
+      ],
+      "profile": "intentset/knowledge/0.1",
+      "revision": 1,
+      "path": "KB-ASMT-SCHEDULE.md",
+      "sourceHash": "5799c5b53a261ab182db498f73165a9211aa43bb2a1184460eb7240fc7c20a23",
+      "parent": null,
+      "links": {
+        "explains": [
+          "BEH-ASMT-SCHEDULE",
+          "RULE-ASMT-FUTURE"
+        ]
+      },
+      "derived": {},
+      "withheldLinks": 1,
+      "availability": {
+        "products": [
+          "PRD-LANTERN"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": []
+      },
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "OUT-PREPARE",
+      "type": "outcome",
+      "title": "Reduce assignment preparation friction",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/outcome/0.1",
+      "revision": 1,
+      "path": "OUT-PREPARE.md",
+      "sourceHash": "aaeb9082b73bc091c7b6ff4471cc11deebc7db49cb6985f09d4b81d22844e244",
+      "parent": "INT-PREPARE",
+      "links": {},
+      "derived": {
+        "parent": [
+          "CAP-ASMT-ASSIGN"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "PRD-LANTERN",
+      "type": "product",
+      "title": "Lantern example",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/product/0.1",
+      "revision": 1,
+      "path": "PRD-LANTERN.md",
+      "sourceHash": "6d0fea6f2ba28e7f7fbe114ccc599d0093ffe53870a171c8df7592337f29005d",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "parent": [
+          "INT-PREPARE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "RULE-ASMT-FUTURE",
+      "type": "rule",
+      "title": "Require a future release time",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/rule/0.1",
+      "revision": 1,
+      "path": "RULE-ASMT-FUTURE.md",
+      "sourceHash": "e39f8756c8783312666924df3f6d2f09ad59cd6982d6ae834ea3e8d95812b35a",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "governedBy": [
+          "BEH-ASMT-SCHEDULE"
+        ],
+        "verifies": [
+          "TEST-ASMT-SCHEDULE"
+        ],
+        "explains": [
+          "KB-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "SCN-ASMT-SCHEDULE",
+      "type": "scenario",
+      "title": "Accept an eligible schedule",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/scenario/0.1",
+      "revision": 1,
+      "path": "SCN-ASMT-SCHEDULE.md",
+      "sourceHash": "7fee65e3e0b8185f62a160083df319f5f283f4363beed9f3cdc8f176de473ad8",
+      "parent": null,
+      "links": {
+        "illustrates": [
+          "BEH-ASMT-SCHEDULE"
+        ]
+      },
+      "derived": {
+        "verifies": [
+          "TEST-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "SLICE-ASMT-SCHEDULE",
+      "type": "slice",
+      "title": "Assessment scheduling slice",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/slice/0.1",
+      "revision": 1,
+      "path": "SLICE-ASMT-SCHEDULE.md",
+      "sourceHash": "04b42b2b03e467368b45fa357948c1e6d17ec4e1340ed5c32b8012400483b905",
+      "parent": null,
+      "links": {
+        "implements": [
+          "BEH-ASMT-SCHEDULE"
+        ],
+        "exposes": [
+          "CONTRACT-ASMT-SCHEDULE"
+        ],
+        "informedBy": [
+          "ADR-ASMT-SEAM"
+        ]
+      },
+      "derived": {},
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": {
+        "kind": "product",
+        "domain": "assessment",
+        "entrypoints": [
+          "src/features/assessment/schedule/index.ts"
+        ],
+        "layers": {
+          "application": [
+            "src/features/assessment/schedule/domain/use-cases/**"
+          ],
+          "external": [
+            "src/features/assessment/schedule/client/**"
+          ],
+          "model": [
+            "src/features/assessment/schedule/domain/models/**"
+          ],
+          "policy": [
+            "src/features/assessment/schedule/domain/policies/**"
+          ],
+          "presentation": [
+            "src/features/assessment/schedule/ui/**"
+          ]
+        },
+        "claims": [
+          {
+            "kind": "backend",
+            "path": "amplify/functions/schedule-assessment/**"
+          },
+          {
+            "kind": "source",
+            "path": "src/features/assessment/schedule/**"
+          }
+        ],
+        "usesResources": [
+          "RES-ASSESSMENT-DATA"
+        ]
+      },
+      "verification": null,
+      "extensions": null
+    },
+    {
+      "id": "TEST-ASMT-SCHEDULE",
+      "type": "verification",
+      "title": "Review assessment scheduling behavior",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/verification/0.1",
+      "revision": 1,
+      "path": "TEST-ASMT-SCHEDULE.md",
+      "sourceHash": "9fdcbd48e547268983e5ecabfd2e584b76d8119161cb995ec61edf1404a7dd71",
+      "parent": null,
+      "links": {
+        "verifies": [
+          "BEH-ASMT-SCHEDULE",
+          "RULE-ASMT-FUTURE",
+          "SCN-ASMT-SCHEDULE"
+        ]
+      },
+      "derived": {},
+      "withheldLinks": 1,
+      "availability": null,
+      "slice": null,
+      "verification": {
+        "method": "manual",
+        "locator": "TEST-ASMT-SCHEDULE.md",
+        "selector": "schedule-review-v1"
+      },
+      "extensions": null
+    }
+  ],
+  "reports": {
+    "evidence": {
+      "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+      "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+      "scope": {
+        "product": "PRD-LANTERN",
+        "release": "pilot-1"
+      },
+      "records": 2,
+      "verifications": [
+        {
+          "id": "TEST-ASMT-SCHEDULE",
+          "method": "manual",
+          "status": "current-pass",
+          "note": null,
+          "latest": {
+            "evidenceId": "review-0002",
+            "verificationId": "TEST-ASMT-SCHEDULE",
+            "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+            "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+            "environment": "staging",
+            "scope": {
+              "product": "PRD-LANTERN",
+              "release": "pilot-1"
+            },
+            "tool": null,
+            "reviewer": "qa-lead@example.org",
+            "startedAt": "2026-10-03T11:40:00Z",
+            "finishedAt": "2026-10-03T11:40:30Z",
+            "result": "pass",
+            "uri": "https://reviews.example.org/review-0002",
+            "rationale": "Scheduled an assessment for tomorrow and one for yesterday; the second was refused with the stated reason."
+          },
+          "atSnapshot": {
+            "pass": 1,
+            "fail": 0,
+            "skip": 0,
+            "error": 0
+          },
+          "runs": 2,
+          "outOfScope": 0
+        }
+      ],
+      "claims": [
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "type": "behavior",
+          "lifecycle": "draft",
+          "required": false,
+          "linked": true,
+          "verified": true,
+          "verifications": [
+            "TEST-ASMT-SCHEDULE"
+          ],
+          "withheld": 0
+        },
+        {
+          "id": "RULE-ASMT-FUTURE",
+          "type": "rule",
+          "lifecycle": "draft",
+          "required": false,
+          "linked": true,
+          "verified": true,
+          "verifications": [
+            "TEST-ASMT-SCHEDULE"
+          ],
+          "withheld": 0
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE",
+          "type": "scenario",
+          "lifecycle": "draft",
+          "required": false,
+          "linked": true,
+          "verified": true,
+          "verifications": [
+            "TEST-ASMT-SCHEDULE"
+          ],
+          "withheld": 0
+        }
+      ]
+    },
+    "knowledge": {
+      "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+      "artifacts": [
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "lifecycle": "draft",
+          "status": "needs-review",
+          "reviewer": null,
+          "reviewedAt": null,
+          "sources": [
+            "BEH-ASMT-SCHEDULE",
+            "RULE-ASMT-FUTURE"
+          ],
+          "changed": [],
+          "missing": [
+            "BEH-ASMT-SCHEDULE",
+            "RULE-ASMT-FUTURE"
+          ],
+          "withheld": 2
+        }
+      ]
+    },
+    "impact": {
+      "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+      "note": "Reachability through authored links marks an artifact for review; it is not proof that runtime behavior changed (Core §10).",
+      "starts": [
+        {
+          "start": "ADR-ASMT-SEAM",
+          "direct": [
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "informedBy←",
+                  "reason": "SLICE-ASMT-SCHEDULE is informed by ADR-ASMT-SEAM."
+                }
+              ]
+            }
+          ],
+          "candidates": [],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "BEH-ASMT-SCHEDULE",
+          "direct": [
+            {
+              "id": "KB-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "KB-ASMT-SCHEDULE",
+                  "via": "explains←",
+                  "reason": "KB-ASMT-SCHEDULE explains BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SCN-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "SCN-ASMT-SCHEDULE",
+                  "via": "illustrates←",
+                  "reason": "SCN-ASMT-SCHEDULE illustrates BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "implements←",
+                  "reason": "SLICE-ASMT-SCHEDULE implements BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies BEH-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "candidates": [],
+          "context": [
+            {
+              "id": "RULE-ASMT-FUTURE",
+              "path": [
+                {
+                  "id": "RULE-ASMT-FUTURE",
+                  "via": "governedBy→",
+                  "reason": "BEH-ASMT-SCHEDULE is governed by RULE-ASMT-FUTURE."
+                }
+              ]
+            }
+          ],
+          "ancestors": [
+            "CAP-ASMT-ASSIGN",
+            "OUT-PREPARE",
+            "INT-PREPARE",
+            "PRD-LANTERN"
+          ],
+          "withheld": 1
+        },
+        {
+          "start": "CAP-ASMT-ASSIGN",
+          "direct": [
+            {
+              "id": "BEH-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                }
+              ]
+            }
+          ],
+          "candidates": [
+            {
+              "id": "KB-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "KB-ASMT-SCHEDULE",
+                  "via": "explains←",
+                  "reason": "KB-ASMT-SCHEDULE explains BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SCN-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SCN-ASMT-SCHEDULE",
+                  "via": "illustrates←",
+                  "reason": "SCN-ASMT-SCHEDULE illustrates BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "implements←",
+                  "reason": "SLICE-ASMT-SCHEDULE implements BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies BEH-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "context": [],
+          "ancestors": [
+            "OUT-PREPARE",
+            "INT-PREPARE",
+            "PRD-LANTERN"
+          ],
+          "withheld": 0
+        },
+        {
+          "start": "CONTRACT-ASMT-SCHEDULE",
+          "direct": [
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "exposes←",
+                  "reason": "SLICE-ASMT-SCHEDULE exposes CONTRACT-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "candidates": [],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "INT-PREPARE",
+          "direct": [
+            {
+              "id": "OUT-PREPARE",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                }
+              ]
+            }
+          ],
+          "candidates": [
+            {
+              "id": "BEH-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                }
+              ]
+            },
+            {
+              "id": "CAP-ASMT-ASSIGN",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                }
+              ]
+            },
+            {
+              "id": "KB-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "KB-ASMT-SCHEDULE",
+                  "via": "explains←",
+                  "reason": "KB-ASMT-SCHEDULE explains BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SCN-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SCN-ASMT-SCHEDULE",
+                  "via": "illustrates←",
+                  "reason": "SCN-ASMT-SCHEDULE illustrates BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "implements←",
+                  "reason": "SLICE-ASMT-SCHEDULE implements BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies BEH-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "context": [],
+          "ancestors": [
+            "PRD-LANTERN"
+          ],
+          "withheld": 0
+        },
+        {
+          "start": "KB-ASMT-SCHEDULE",
+          "direct": [],
+          "candidates": [],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "OUT-PREPARE",
+          "direct": [
+            {
+              "id": "CAP-ASMT-ASSIGN",
+              "path": [
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                }
+              ]
+            }
+          ],
+          "candidates": [
+            {
+              "id": "BEH-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                }
+              ]
+            },
+            {
+              "id": "KB-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "KB-ASMT-SCHEDULE",
+                  "via": "explains←",
+                  "reason": "KB-ASMT-SCHEDULE explains BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SCN-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SCN-ASMT-SCHEDULE",
+                  "via": "illustrates←",
+                  "reason": "SCN-ASMT-SCHEDULE illustrates BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "implements←",
+                  "reason": "SLICE-ASMT-SCHEDULE implements BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies BEH-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "context": [],
+          "ancestors": [
+            "INT-PREPARE",
+            "PRD-LANTERN"
+          ],
+          "withheld": 0
+        },
+        {
+          "start": "PRD-LANTERN",
+          "direct": [
+            {
+              "id": "INT-PREPARE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                }
+              ]
+            }
+          ],
+          "candidates": [
+            {
+              "id": "BEH-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                }
+              ]
+            },
+            {
+              "id": "CAP-ASMT-ASSIGN",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                }
+              ]
+            },
+            {
+              "id": "KB-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "KB-ASMT-SCHEDULE",
+                  "via": "explains←",
+                  "reason": "KB-ASMT-SCHEDULE explains BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "OUT-PREPARE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                }
+              ]
+            },
+            {
+              "id": "SCN-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SCN-ASMT-SCHEDULE",
+                  "via": "illustrates←",
+                  "reason": "SCN-ASMT-SCHEDULE illustrates BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "implements←",
+                  "reason": "SLICE-ASMT-SCHEDULE implements BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "INT-PREPARE",
+                  "via": "parent←",
+                  "reason": "INT-PREPARE has PRD-LANTERN as its navigation parent."
+                },
+                {
+                  "id": "OUT-PREPARE",
+                  "via": "parent←",
+                  "reason": "OUT-PREPARE has INT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "CAP-ASMT-ASSIGN",
+                  "via": "parent←",
+                  "reason": "CAP-ASMT-ASSIGN has OUT-PREPARE as its navigation parent."
+                },
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "parent←",
+                  "reason": "BEH-ASMT-SCHEDULE has CAP-ASMT-ASSIGN as its navigation parent."
+                },
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies BEH-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "RULE-ASMT-FUTURE",
+          "direct": [
+            {
+              "id": "BEH-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "governedBy←",
+                  "reason": "BEH-ASMT-SCHEDULE is governed by RULE-ASMT-FUTURE."
+                }
+              ]
+            },
+            {
+              "id": "KB-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "KB-ASMT-SCHEDULE",
+                  "via": "explains←",
+                  "reason": "KB-ASMT-SCHEDULE explains RULE-ASMT-FUTURE."
+                }
+              ]
+            },
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies RULE-ASMT-FUTURE."
+                }
+              ]
+            }
+          ],
+          "candidates": [
+            {
+              "id": "SCN-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "governedBy←",
+                  "reason": "BEH-ASMT-SCHEDULE is governed by RULE-ASMT-FUTURE."
+                },
+                {
+                  "id": "SCN-ASMT-SCHEDULE",
+                  "via": "illustrates←",
+                  "reason": "SCN-ASMT-SCHEDULE illustrates BEH-ASMT-SCHEDULE."
+                }
+              ]
+            },
+            {
+              "id": "SLICE-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "BEH-ASMT-SCHEDULE",
+                  "via": "governedBy←",
+                  "reason": "BEH-ASMT-SCHEDULE is governed by RULE-ASMT-FUTURE."
+                },
+                {
+                  "id": "SLICE-ASMT-SCHEDULE",
+                  "via": "implements←",
+                  "reason": "SLICE-ASMT-SCHEDULE implements BEH-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "SCN-ASMT-SCHEDULE",
+          "direct": [
+            {
+              "id": "TEST-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "TEST-ASMT-SCHEDULE",
+                  "via": "verifies←",
+                  "reason": "TEST-ASMT-SCHEDULE verifies SCN-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "candidates": [],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "SLICE-ASMT-SCHEDULE",
+          "direct": [],
+          "candidates": [],
+          "context": [
+            {
+              "id": "ADR-ASMT-SEAM",
+              "path": [
+                {
+                  "id": "ADR-ASMT-SEAM",
+                  "via": "informedBy→",
+                  "reason": "SLICE-ASMT-SCHEDULE is informed by ADR-ASMT-SEAM."
+                }
+              ]
+            },
+            {
+              "id": "CONTRACT-ASMT-SCHEDULE",
+              "path": [
+                {
+                  "id": "CONTRACT-ASMT-SCHEDULE",
+                  "via": "exposes→",
+                  "reason": "SLICE-ASMT-SCHEDULE exposes CONTRACT-ASMT-SCHEDULE."
+                }
+              ]
+            }
+          ],
+          "ancestors": [],
+          "withheld": 0
+        },
+        {
+          "start": "TEST-ASMT-SCHEDULE",
+          "direct": [],
+          "candidates": [],
+          "context": [],
+          "ancestors": [],
+          "withheld": 0
+        }
+      ]
+    },
+    "ownership": {
+      "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+      "graphHash": "fb898902c1a10e0ecdf57fde5c44d578ac2154cb29097a85a0f551fbb8d94f3f",
+      "files": [
+        {
+          "path": "amplify/data/resource.ts",
+          "region": "resource",
+          "owner": "RES-ASSESSMENT-DATA"
+        },
+        {
+          "path": "amplify/functions/schedule-assessment/handler.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "amplify/functions/schedule-assessment/resource.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/app/App.tsx",
+          "region": "composition",
+          "owner": null
+        },
+        {
+          "path": "src/features/assessment/schedule/client/schedule-client.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/features/assessment/schedule/domain/models/schedule.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/features/assessment/schedule/domain/policies/release-time.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/features/assessment/schedule/index.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/features/assessment/schedule/ui/hooks/use-schedule.ts",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "path": "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx",
+          "region": "slice",
+          "owner": "SLICE-ASMT-SCHEDULE"
+        }
+      ],
+      "withheld": 0
+    }
+  }
+}

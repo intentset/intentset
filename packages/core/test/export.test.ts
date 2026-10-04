@@ -4,9 +4,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 import {
   type ExportEnvelope,
+  IMPACT_NOTE,
   canonicalJson,
   exportGraph,
   graphHash,
+  impactReport,
   plainCarrier,
   readRegistries,
   sha256Hex,
@@ -78,8 +80,12 @@ test("the schema rejects what a consumer must reject", () => {
     return validateSchema(exportSchema, copy).length > 0;
   };
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.2")),
-    "unsupported contract version",
+    bad((e) => (e.contract = "intentset/export/0.1")),
+    "the earlier contract version",
+  );
+  assert.ok(
+    bad((e) => (e.contract = "intentset/export/0.3")),
+    "a later contract version",
   );
   assert.ok(
     bad((e) => (e.repository = "")),
@@ -136,4 +142,85 @@ test("canonical JSON sorts keys recursively, keeps array order and has no whites
   assert.equal(canonicalJson({ b: 1, a: { d: [3, 1], c: null } }), '{"a":{"c":null,"d":[3,1]},"b":1}');
   assert.equal(canonicalJson({ a: undefined, b: "é" }), '{"b":"é"}');
   assert.equal(sha256Hex(""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+});
+
+/** The example with RULE-ASMT-AUTH made restricted: a rule governing the behavior, verified, and explained. */
+function withRestrictedRule() {
+  return inputs().map((input) =>
+    input.path === "RULE-ASMT-AUTH.md"
+      ? plainCarrier(input.path, input.source.replace("visibility: internal", "visibility: restricted"))
+      : input,
+  );
+}
+
+test("a restricted artifact is withheld by default: absent, unlinked, counted, and still in the graph hash", () => {
+  const result = validate(withRestrictedRule(), registries);
+  const envelope = exportGraph(result, registries, META);
+  assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
+  assert.deepEqual(envelope.withholding, { visibilities: ["restricted"], artifacts: 1, diagnostics: 0 });
+  assert.ok(!envelope.artifacts.some((a) => a.id === "RULE-ASMT-AUTH"));
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere");
+  const behavior = envelope.artifacts.find((a) => a.id === "BEH-ASMT-SCHEDULE");
+  assert.deepEqual(behavior?.links.governedBy, ["RULE-ASMT-FUTURE"]);
+  assert.equal(behavior?.withheldLinks, 1);
+  assert.equal(envelope.graphHash, graphHash(result.graph));
+  const everything = exportGraph(result, registries, { ...META, includeRestricted: true });
+  assert.deepEqual(everything.withholding, { visibilities: [], artifacts: 0, diagnostics: 0 });
+  assert.ok(everything.artifacts.some((a) => a.id === "RULE-ASMT-AUTH" && a.visibility === "restricted"));
+  assert.equal(everything.graphHash, envelope.graphHash);
+});
+
+test("a diagnostic about a withheld artifact is counted, not listed; one naming it elsewhere is redacted", () => {
+  const result = validate(withRestrictedRule(), registries);
+  const about = (artifact: string, message: string) => ({
+    code: "CORE009",
+    severity: "warning" as const,
+    origin: "graph" as const,
+    artifact,
+    path: `${artifact}.md`,
+    message,
+    remediation: `Review ${message.includes("RULE-ASMT-AUTH") ? "RULE-ASMT-AUTH" : artifact}.`,
+  });
+  const diagnostics = [
+    about("BEH-ASMT-SCHEDULE", "BEH-ASMT-SCHEDULE is governed by RULE-ASMT-AUTH, which is a draft."),
+    about("RULE-ASMT-AUTH", "RULE-ASMT-AUTH is a draft."),
+  ];
+  const envelope = exportGraph({ ...result, diagnostics, ok: true }, registries, META);
+  assert.equal(envelope.validation.warnings, 2, "the totals stay whole");
+  assert.equal(envelope.withholding.diagnostics, 1);
+  assert.deepEqual(
+    envelope.validation.diagnostics.map((d) => [d.artifact, d.message, d.remediation]),
+    [
+      [
+        "BEH-ASMT-SCHEDULE",
+        "BEH-ASMT-SCHEDULE is governed by a withheld artifact, which is a draft.",
+        "Review a withheld artifact.",
+      ],
+    ],
+  );
+});
+
+test("reports are withheld inside as the artifacts are, and each omission is counted beside the list it shortened", () => {
+  const result = validate(withRestrictedRule(), registries);
+  const envelope = exportGraph(result, registries, { ...META, reports: { impact: impactReport(result.graph) } });
+  const impact = envelope.reports.impact;
+  assert.ok(impact !== undefined);
+  assert.ok(!impact.starts.some((entry) => entry.start === "RULE-ASMT-AUTH"));
+  const fromBehavior = impact.starts.find((entry) => entry.start === "BEH-ASMT-SCHEDULE");
+  assert.equal(fromBehavior?.withheld, 1, "the governing rule left the review context");
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"));
+  assert.equal(impact.note, IMPACT_NOTE);
+  assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
+});
+
+test("an uncommitted tree is said so, and never alongside a null commit", () => {
+  const result = validate(inputs(), registries);
+  const dirty = exportGraph(result, registries, {
+    ...META,
+    commit: "0123456789abcdef0123456789abcdef01234567",
+    uncommitted: true,
+  });
+  assert.deepEqual(dirty.source, { commit: "0123456789abcdef0123456789abcdef01234567", uncommitted: true });
+  const none = exportGraph(result, registries, { ...META, uncommitted: true });
+  assert.equal(none.source.uncommitted, false);
 });

@@ -296,8 +296,19 @@ export interface ImpactReport {
   ancestors: string[];
 }
 
-/** The versioned export envelope (integration contract; spec/export.schema.json). */
-export const EXPORT_CONTRACT = "intentset/export/0.1";
+/**
+ * The versioned export envelope (spec/export.md; spec/export.schema.json). 0.2 is
+ * the first version a consumer may pin: 0.1 carried untyped report slots and
+ * restricted artifacts by default (ADR 0008).
+ */
+export const EXPORT_CONTRACT = "intentset/export/0.2";
+
+/** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
+export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];
+
+/** The optional report sections, in the order they are written. An absent section means not supplied. */
+export const EXPORT_REPORTS = ["evidence", "knowledge", "impact", "ownership"] as const;
+export type ExportReportName = (typeof EXPORT_REPORTS)[number];
 
 export interface ExportArtifact {
   id: string;
@@ -311,10 +322,13 @@ export interface ExportArtifact {
   revision: number | null;
   path: string;
   sourceHash: string;
+  /** Null when there is none, or when the parent is withheld (and counted in `withheldLinks`). */
   parent: string | null;
   links: Partial<Record<Exclude<LinkKind, "parent">, string[]>>;
   /** Inverse edges, keyed by the authored kind, marked derived by living here. */
   derived: Partial<Record<LinkKind, string[]>>;
+  /** Link targets and sources left out because the artifact at the other end is withheld: authored, derived and parent. */
+  withheldLinks: number;
   availability: Availability | null;
   slice: SliceMeta | null;
   verification: VerificationMeta | null;
@@ -323,35 +337,211 @@ export interface ExportArtifact {
   body?: string;
 }
 
+/** A run record as the evidence report carries it: spec/evidence.schema.json's record, unchanged. */
+export interface ExportRunRecord {
+  evidenceId: string;
+  verificationId: string;
+  commit: string;
+  graphHash: string;
+  environment: string;
+  scope: { product: string; release: string };
+  tool: { name: string; version: string } | null;
+  reviewer: string | null;
+  startedAt: string;
+  finishedAt: string;
+  result: "pass" | "fail" | "skip" | "error";
+  uri: string;
+  rationale?: string;
+  extensions?: Record<string, unknown>;
+}
+
+/** Core §8 freshness, as the evidence check classifies it. Only current-pass is a pass. */
+export const EXPORT_EVIDENCE_STATUSES = [
+  "current-pass",
+  "current-fail",
+  "stale",
+  "skip",
+  "error",
+  "missing",
+  "unresolved",
+] as const;
+export type ExportEvidenceStatus = (typeof EXPORT_EVIDENCE_STATUSES)[number];
+
+/** `reports.evidence`: every verification classified at the envelope's snapshot, and every claim's coverage. */
+export interface EvidenceReportSection {
+  /** The snapshot the records were classified against: the envelope's own. */
+  commit: string | null;
+  graphHash: string;
+  /** The exact product and release assessed, or null when records of every scope were considered. */
+  scope: { product: string; release: string } | null;
+  /** Run records read, before classification. */
+  records: number;
+  /** One per verification artifact, sorted by ID. */
+  verifications: ExportVerificationEvidence[];
+  /** One per behavior, rule and scenario that is not retired, sorted by ID. */
+  claims: ExportClaimCoverage[];
+}
+
+export interface ExportVerificationEvidence {
+  id: string;
+  method: "automated" | "manual";
+  status: ExportEvidenceStatus;
+  /** Why the status is qualified, or what was set aside; null when nothing was. */
+  note: string | null;
+  /** The record that decided the status: the latest at the snapshot, else the latest in scope; null when none. */
+  latest: ExportRunRecord | null;
+  /** Results of the records at the snapshot, so a failure followed by a pass is still countable. */
+  atSnapshot: { pass: number; fail: number; skip: number; error: number };
+  /** In-scope records for this verification, at any snapshot. */
+  runs: number;
+  /** Records for this verification that named another product or release and were not considered. */
+  outOfScope: number;
+}
+
+export interface ExportClaimCoverage {
+  id: string;
+  type: "behavior" | "rule" | "scenario";
+  /** The claim's lifecycle status: an editorial claim, never a test result. */
+  lifecycle: Status;
+  /** True when the level asks for evidence (L3 and above) and the claim is not a draft. */
+  required: boolean;
+  /** At least one applicable verification names the claim. */
+  linked: boolean;
+  /** At least one applicable verification, and every one of them a current pass. */
+  verified: boolean;
+  /** Applicable verifications naming the claim, sorted. */
+  verifications: string[];
+  /** Verifications left out of that list because they are withheld. */
+  withheld: number;
+}
+
+/** `reports.knowledge`: the review status of every knowledge artifact (Core §9). */
+export interface KnowledgeReportSection {
+  graphHash: string;
+  /** One per knowledge artifact, sorted by ID. */
+  artifacts: ExportKnowledgeReview[];
+}
+
+export interface ExportKnowledgeReview {
+  id: string;
+  lifecycle: Status;
+  /** current only while every source still has the hash it was reviewed against and a reviewer and time are named. */
+  status: "current" | "needs-review";
+  reviewer: string | null;
+  reviewedAt: string | null;
+  /** What a review must pin: the explained artifacts and the rules governing each explained behavior. Sorted. */
+  sources: string[];
+  /** Sources whose hash differs from the pin, or that are gone. Sorted. */
+  changed: string[];
+  /** Sources the review record does not pin. Sorted. */
+  missing: string[];
+  /** Entries left out of sources, changed and missing because they are withheld. */
+  withheld: number;
+}
+
+/** One hit in the impact report: the artifact and the path that reached it. Join to `artifacts` by ID. */
+export interface ExportImpactHit {
+  id: string;
+  path: ImpactStep[];
+}
+
+export interface ExportImpactEntry {
+  start: string;
+  direct: ExportImpactHit[];
+  candidates: ExportImpactHit[];
+  context: ExportImpactHit[];
+  ancestors: string[];
+  /** Hits and ancestors left out because they, or a step on their path, are withheld. */
+  withheld: number;
+}
+
+/** `reports.impact`: Core §10 impact from every exported artifact. A start absent here was not computed. */
+export interface ImpactReportSection {
+  graphHash: string;
+  /** Reachability marks an artifact for review; it is not proof that runtime behavior changed. */
+  note: string;
+  /** One per exported artifact, sorted by start. */
+  starts: ExportImpactEntry[];
+}
+
+/**
+ * Where a file falls (VSA §1, §3, §5): the region kinds of the architecture
+ * check, plus "test" for a test file, whose owner is the slice its claims
+ * match or null.
+ */
+export const OWNERSHIP_REGIONS = [
+  "slice",
+  "composition",
+  "shared",
+  "infrastructure",
+  "resource",
+  "backend",
+  "unowned",
+  "test",
+] as const;
+export type OwnershipRegion = (typeof OWNERSHIP_REGIONS)[number];
+
+export interface OwnershipEntry {
+  path: string;
+  region: OwnershipRegion;
+  /** The slice ID for "slice" and "test", the resource ID for "resource", otherwise null. */
+  owner: string | null;
+}
+
+/** `reports.ownership`: every file the architecture check attributed, at the envelope's snapshot (L2 and above). */
+export interface OwnershipReportSection {
+  commit: string | null;
+  graphHash: string;
+  /** Sorted by path. Files outside the source and backend roots that nothing claims are not listed. */
+  files: OwnershipEntry[];
+  /** Files left out because the slice that owns them is withheld. */
+  withheld: number;
+}
+
+export interface ExportReports {
+  evidence?: EvidenceReportSection;
+  knowledge?: KnowledgeReportSection;
+  impact?: ImpactReportSection;
+  ownership?: OwnershipReportSection;
+}
+
 export interface ExportEnvelope {
   contract: typeof EXPORT_CONTRACT;
   spec: typeof SPEC_VERSION;
   generatedAt: string;
   /** Stable identity of the repository, from config (e.g. "intentset/intentset"). */
   repository: string;
+  /** Product artifact IDs in the export, sorted. */
   products: string[];
   source: {
     /** The commit the export describes, or null with a reason when none could be read. */
     commit: string | null;
     commitUnavailable?: string;
+    /** True when tracked files differed from the commit, so the commit alone does not describe what was read. */
+    uncommitted: boolean;
   };
-  /** SHA-256 over the canonical graph (ADR 0005). */
+  /** SHA-256 over the canonical graph (ADR 0005), withheld artifacts included: it names the snapshot, not the projection. */
   graphHash: string;
   release: { product: string; label: string } | null;
   validation: {
     level: Level;
     scope: string[];
     status: "pass" | "fail";
+    /** Totals over the whole validation, withheld artifacts included, so the status is never flattered. */
     errors: number;
     warnings: number;
+    /** The diagnostics about exported artifacts; those about withheld ones are counted in `withholding`. */
     diagnostics: Diagnostic[];
+  };
+  /** What the export leaves out, so a short export never reads as a complete one. */
+  withholding: {
+    /** The visibilities withheld: ["restricted"] by default, [] when restricted artifacts were asked for. */
+    visibilities: Visibility[];
+    artifacts: number;
+    diagnostics: number;
   };
   registries: Registries;
   artifacts: ExportArtifact[];
   /** Optional report sections. Absent means "not supplied", never zero or pass. */
-  reports?: {
-    evidence?: unknown;
-    knowledge?: unknown;
-    impact?: unknown;
-  };
+  reports: ExportReports;
 }

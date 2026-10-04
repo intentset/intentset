@@ -13,3 +13,4 @@ export * from "./coverage.ts";
 export * from "./fixture.ts";
 export * from "./placeholders.ts";
 export * from "./records.ts";
+export * from "./report.ts";

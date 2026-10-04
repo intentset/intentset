@@ -6,7 +6,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "contract": "intentset/export/0.1",
+      "contract": "intentset/export/0.2",
       "spec": "0.1",
       "generatedAt": "2026-01-01T00:00:00Z",
       "repository": "example/scheduling",
@@ -502,5 +502,110 @@
         "PRD-LANTERN"
       ]
     }
+  },
+  {
+    "section": "export",
+    "name": "export withholds a restricted artifact by default, and counts what it left out",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "products": [
+        "PRD-LANTERN"
+      ],
+      "withholding": {
+        "visibilities": [
+          "restricted"
+        ],
+        "artifacts": 1,
+        "diagnostics": 0
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "links": {
+            "governedBy": [
+              "RULE-ASMT-FUTURE"
+            ]
+          },
+          "withheldLinks": 1
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE",
+          "links": {
+            "verifies": [
+              "BEH-ASMT-SCHEDULE",
+              "RULE-ASMT-FUTURE",
+              "SCN-ASMT-SCHEDULE"
+            ]
+          },
+          "withheldLinks": 1
+        }
+      ],
+      "reports": {}
+    },
+    "notes": "spec/export.md §3: a restricted artifact is absent, its ID is removed from every link that named it, and each removal is counted. The graph hash still covers it."
+  },
+  {
+    "section": "export",
+    "name": "export withholds a restricted product from products too",
+    "baseline": "scheduling",
+    "patch": {
+      "PRD-LANTERN.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "products": [],
+      "withholding": {
+        "visibilities": [
+          "restricted"
+        ],
+        "artifacts": 1,
+        "diagnostics": 0
+      }
+    },
+    "notes": "spec/export.md §3: a withheld product is not listed, so a connection made for it fails identity rather than reading a product it may not see."
   }
 ]

@@ -10,3 +10,4 @@ playwright-report/
 packages/conformance-suite/cases/
 packages/conformance-suite/schemas/
 packages/conformance-suite/examples/
+packages/conformance-suite/consumer/
