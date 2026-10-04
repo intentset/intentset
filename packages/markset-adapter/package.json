@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@intentset/core": "^0.4.0",
-    "@markset-lang/parser": "0.3.4"
+    "@markset-lang/parser": "0.3.4",
+    "@types/mdast": "^4.0.4"
   }
 }

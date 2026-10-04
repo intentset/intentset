@@ -14,7 +14,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareStrings, DEFAULT_IGNORE, readConfig, readRegistries } from "@intentset/core";
-import { AGENT_GUIDE_PATH, AGENT_POINTERS, agentGuide } from "../agents.ts";
+import { AGENT_GUIDE_PATH, AGENT_POINTERS, agentGuide, detectPackageManager } from "../agents.ts";
 import type { Io } from "../output.ts";
 import { CONFIG_PATH } from "../repository.ts";
 
@@ -111,7 +111,7 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
     }
   }
   files.set(REGISTRIES_PATH, registries);
-  files.set(AGENT_GUIDE_PATH, agentGuide([DEFAULT_INIT_SCOPE]));
+  files.set(AGENT_GUIDE_PATH, agentGuide([DEFAULT_INIT_SCOPE], managerAt(root)));
 
   // What init writes must read back clean, or it has handed the user a broken repository.
   const config = readConfig(files.get(CONFIG_PATH) as string, CONFIG_PATH);
@@ -136,9 +136,18 @@ function writeGuideOnly(root: string, io: Io): number {
     const { config, diagnostics } = readConfig(readFileSync(configFile, "utf8"), CONFIG_PATH);
     if (diagnostics.length === 0 && config.scope.length > 0) scope = config.scope;
   }
-  if (!create(root, new Map([[AGENT_GUIDE_PATH, agentGuide(scope)]]), io)) return 2;
+  if (!create(root, new Map([[AGENT_GUIDE_PATH, agentGuide(scope, managerAt(root))]]), io)) return 2;
   pointers(io);
   return 0;
+}
+
+/** The package manager the repository at root uses, so the guide's commands are ones it can run. */
+function managerAt(root: string) {
+  const packageJson = join(root, "package.json");
+  return detectPackageManager({
+    has: (path) => existsSync(join(root, path)),
+    packageJson: existsSync(packageJson) ? readFileSync(packageJson, "utf8") : null,
+  });
 }
 
 /** Create every file or none: refuse if any exists, then write each with exclusive create. */

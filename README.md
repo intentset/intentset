@@ -26,13 +26,15 @@ npx intentset validate
 npx intentset impact BEH-ASMT-SCHEDULE
 ```
 
-From a checkout of this repository:
+With pnpm, `pnpm add --save-dev @intentset/cli`, then `pnpm exec intentset` wherever `npx intentset` appears.
+
+From a checkout of this repository, which uses pnpm (pinned in `package.json`; `corepack enable` provides it):
 
 ```sh
-npm install
-npm run intentset -- init --repository you/repo --example --root <dir>   # <dir> an empty directory
-npm run intentset -- validate --root <dir>
-npm run intentset -- impact BEH-ASMT-SCHEDULE --root <dir>
+pnpm install
+pnpm run intentset init --repository you/repo --example --root <dir>   # <dir> an empty directory
+pnpm run intentset validate --root <dir>
+pnpm run intentset impact BEH-ASMT-SCHEDULE --root <dir>
 ```
 
 Commands: `init`, `validate` (levels L1 to L4), `graph`, `impact`, `context`, `architecture check`,
@@ -63,16 +65,18 @@ npx intentset graph --level L3 --release PRD-X:<label> --report all --out intent
 A consumer reads it with `readExport` from `@intentset/core`, which has no dependencies, and tests itself against
 the valid and deliberately invalid envelopes in `@intentset/conformance-suite/consumer/`. The architecture check
 needs TypeScript 7; a repository on an earlier TypeScript runs it as
-`npx -p @intentset/cli -p typescript@7 intentset …`.
+`npx -p @intentset/cli -p typescript@7 intentset …`, or with pnpm as
+`pnpm dlx --package=@intentset/cli --package=typescript@7 intentset …`. With pnpm and the CLI installed, the CI
+commands above are `pnpm exec intentset …`.
 
 ## Develop
 
 ```sh
-npm test            # unit tests, fixtures, site and browser checks
-npm run conformance # the suite against this implementation, per section
-npm run typecheck
-npm run lint
-npm run site        # build intentset.org into dist/
+pnpm test             # unit tests, fixtures, site and browser checks
+pnpm run conformance  # the suite against this implementation, per section
+pnpm run typecheck
+pnpm run lint
+pnpm run site         # build intentset.org into dist/
 ```
 
 `CLAUDE.md` holds the design invariants and working rules; `docs/implementation-plan.md` the plan;

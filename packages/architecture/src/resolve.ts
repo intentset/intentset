@@ -46,7 +46,7 @@ const JS_REWRITES: [string, string[]][] = [
 const APPENDED = [".ts", ".tsx", ".d.ts", ".js", ".jsx", ".mts", ".cts", ".mjs", ".cjs"];
 const INDEXES = ["index.ts", "index.tsx", "index.d.ts", "index.js", "index.jsx"];
 
-/** A bare specifier that npm or node could serve: `name`, `name/sub`, `@scope/name/sub`, `node:fs`. */
+/** A bare specifier that a package manager or node could serve: `name`, `name/sub`, `@scope/name/sub`, `node:fs`. */
 const PACKAGE_NAME = /^(?:node:)?(?:@[a-z0-9][\w.~-]*\/)?[a-z0-9][\w.~-]*(?:\/.*)?$/i;
 
 export class Resolver {

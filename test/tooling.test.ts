@@ -79,8 +79,8 @@ test("every workspace manifest carries the root version, and every published one
 
   for (const [path, pkg] of await allManifests()) {
     assert.equal(pkg.version, rootPkg.version, `${path} is on ${pkg.version}`);
-    // The homepage is the link npm shows on the package page, so a stale copy
-    // sends every reader arriving through npm to the wrong site. A private
+    // The homepage is the link npmjs.com shows on the package page, so a stale
+    // copy sends every reader arriving through the registry to the wrong site. A private
     // package has no npm page; if it carries one anyway it must still agree.
     if (!pkg.private) assert.equal(pkg.homepage, rootPkg.homepage, `${path} homepage must match the root`);
     else if (pkg.homepage !== undefined) assert.equal(pkg.homepage, rootPkg.homepage, `${path} homepage disagrees`);
@@ -213,7 +213,7 @@ test("the release publishes every published package once, each after everything 
   // release.yml publishes in this order and stops at the first failure, so a
   // package goes out only after every sibling it points at already exists.
   const rootPkg = await manifest("package.json");
-  const order = [...(rootPkg.scripts?.release ?? "").matchAll(/--workspace @intentset\/([a-z-]+)/gu)].map((m) => m[1]);
+  const order = [...(rootPkg.scripts?.release ?? "").matchAll(/--filter @intentset\/([a-z-]+)/gu)].map((m) => m[1]);
   assert.equal(new Set(order).size, order.length, "no package is published twice");
   for (const dir of await packageDirs()) {
     const pkg = await manifest(`packages/${dir}/package.json`);

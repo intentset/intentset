@@ -43,7 +43,7 @@ anything. When code and spec disagree, the spec wins, or the spec changes first 
 - Determinism: same inputs, same bytes. Canonical JSON for anything hashed. Sort everything you iterate.
 - Don't add dependencies without asking. Approved so far: `@markset-lang/parser` and `@markset-lang/render-html` at
   exactly 0.3.4 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
-  architecture, Playwright and Biome as dev dependencies. `npm install` is run by whoever owns the root; agents working
+  architecture, Playwright and Biome as dev dependencies. `pnpm install` is run by whoever owns the root; agents working
   in parallel do not run it.
 - Nothing from the Streamlane pilot enters this repository. Its records live in the Streamlane repository.
 - The example product is Lantern, invented. Nothing in this repository names a real product.
@@ -88,7 +88,7 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 ```
 spec/                 normative documents and schemas
 tests/                conformance fixtures, one JSON file per section (core, export, vsa, evidence, publication)
-tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `npm run fixtures:consumer`
+tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `pnpm run fixtures:consumer`
                       from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
 examples/scheduling/  the worked example, the fixtures' baseline and the site's example
 packages/
@@ -109,8 +109,14 @@ docs/                 implementation-plan.md, decisions/, requirements/ (frozen 
 ## Toolchain
 
 - Node ≥ 22.18, TypeScript run directly by type stripping: erasable syntax only, explicit `.ts` import extensions.
-- npm workspaces. `npm test` (node --test), `npm run conformance`, `npm run typecheck`, `npm run lint`,
-  `npm run format`, `npm run site`, `npm run site:watch`, `npm run build` (publishing only, to `dist/`).
+- pnpm workspaces (`pnpm-workspace.yaml`; pnpm pinned by `packageManager`). `pnpm test` (node --test),
+  `pnpm run conformance`, `pnpm run typecheck`, `pnpm run lint`, `pnpm run format`, `pnpm run site`,
+  `pnpm run site:watch`, `pnpm run build` (publishing only, to `dist/`). Moved from npm on 2026-10-04 with the lockfile
+  imported, so no version changed. Siblings keep `^<version>` ranges, linked by `linkWorkspacePackages`. A file may
+  import only what its own package declares: the root links every workspace package for the tests, and
+  `markset-adapter` declares `@types/mdast`, which its declarations import. The release publishes with
+  `pnpm --filter <name> publish --provenance`, pnpm's own trusted publishing; the smoke test packs with pnpm and
+  installs into a pnpm project. `init` writes the agent guide with `pnpm exec` in a pnpm repository, `npx` otherwise.
 - Every published manifest lists the `intentset-source` export condition first, pointing at `src`, so this repository
   runs TypeScript while an installed consumer gets `dist`.
 - Biome config is `biome.jsonc`, deliberately not `.json`.
