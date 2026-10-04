@@ -114,9 +114,12 @@ const REVISED_HEADINGS: Record<string, string> = {
  * Pages rewritten rather than revised, so none of the handoff's copy is held
  * on them. The roadmap, 2026-10-04: its copy was a plan of the owner's work,
  * milestone by milestone, and a reader needs what is stable, what 1.0 waits
- * on, what is not planned and how to influence it.
+ * on, what is not planned and how to influence it. Home and Start, the same
+ * day: the handoff pictured a person writing records by hand, and Intentset's
+ * records are written by the agents that change the code and reviewed by
+ * people, which is the reason to use it and the way to adopt it.
  */
-const REWRITTEN = new Set(["roadmap"]);
+const REWRITTEN = new Set(["roadmap", "home", "start"]);
 
 test("each page carries the IA document's copy verbatim: its heading, its first paragraph and its section headings", async () => {
   const blocks = await copyBlocks();
@@ -142,16 +145,16 @@ test("the status notes are on their pages, as callouts, and none still says the 
   const notes: Array<[string, string]> = [
     [
       "index.html",
-      "The specifications are ready for review. The reference toolchain, version 0.3, is published to try them against.",
+      "The specifications are ready for review. The reference toolchain, version 0.4, is published to try them against.",
     ],
     ["index.html", "Illustrative model. These links describe the proposed structure, not a live verification report."],
     [
       "start/index.html",
-      "This is a manual adoption guide for the v0.1 draft. To check your records as you go, install the reference toolchain with npm install --save-dev @intentset/cli, then run npx intentset init and npx intentset validate. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain as npx -p @intentset/cli -p typescript@7 intentset.",
+      "The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as npx -p @intentset/cli -p typescript@7 intentset.",
     ],
     [
       "specifications/index.html",
-      "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.3 on npm.",
+      "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.4 on npm.",
     ],
     [
       "markset/index.html",
@@ -184,6 +187,10 @@ test("the status notes are on their pages, as callouts, and none still says the 
     // The roadmap as a plan of the work, retired 2026-10-04.
     "Delivered in 0.1",
     "implementation roadmap",
+    // Records written by hand, and 0.3, retired 2026-10-04.
+    "manual adoption guide",
+    "version 0.3",
+    "at 0.3 on npm",
   ];
   for (const page of Object.values(PAGE_OF)) {
     const body = text(await readFile(join(dist, page), "utf8"));

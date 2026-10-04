@@ -9,7 +9,7 @@ Intentset is in draft. You can use it today on a real capability, and what peopl
 
 ## Where it stands
 
-The [specifications](../specifications/index.html) are v0.1 drafts. The reference toolchain is at 0.3 on npm, with a conformance suite for other implementations. Everything [How it works](../how-it-works/index.html) describes is in that release: validation, architecture checks, evidence, impact, the Atlas, reviewed publication, agent context and the export.
+The [specifications](../specifications/index.html) are v0.1 drafts. The reference toolchain is at 0.4 on npm, with a conformance suite for other implementations. Everything [How it works](../how-it-works/index.html) describes is in that release: validation, architecture checks, evidence, impact, the Atlas, reviewed publication, agent context, the export, and the guide and drift check that let agents keep the model.
 
 The Core model does not depend on a language or platform. The architecture check reads TypeScript, and its one reference profile is TypeScript with AWS Amplify Gen 2.
 
@@ -19,7 +19,7 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 1.0 is the version you can build on without expecting breaking changes. Real codebases decide what it keeps:
 
-- **Streamlane**, a work management product, where the first pilot changed the specifications in four places.
+- **Streamlane**, a work management product, where [the first pilot](../pilot/index.html) changed the specifications in four places.
 - **Driftline**, built with Intentset from its first commit, so the model comes before the code.
 - **At least one outside adopter**, on a codebase we did not write.
 
@@ -32,6 +32,6 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 ## Shape it
 
-The most useful feedback is a capability that is hard to model, a boundary that is hard to enforce, or an explanation that is hard to publish safely. Try the model against one behavior and bring back what did not fit.
+The most useful feedback is a capability that is hard to model, a boundary that is hard to enforce, or an explanation that is hard to publish safely. Try the model against one capability and bring back what did not fit.
 
-[[Start with one behavior](../start/index.html)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}
+[[Start with one capability](../start/index.html)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}

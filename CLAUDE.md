@@ -166,6 +166,11 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       slice, and `review` lists slices whose code changed while none of their describing records did
       (`packages/cli/src/slices.ts`), acknowledged by an `Intentset-Unchanged` commit trailer, failing with
       `--fail-on-drift`.
+- [x] The site says why and how, 2026-10-04: the home page leads with agentic development (the hero, the problem, the
+      loop of six steps, questions by role, architecture, the pilot), Start is two paths in which an agent models one
+      capability or the model comes first, How it works gains "Written by agents, reviewed by people", and
+      `site/content/pilot.md` is the first pilot as a case study, from `docs/pilot-findings.md`. Home and Start join the
+      roadmap as rewritten rather than held to the handoff's copy.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 
