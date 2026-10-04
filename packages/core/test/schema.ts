@@ -1,7 +1,7 @@
 /**
  * A small JSON Schema (draft 2020-12) evaluator for the subset the project's
  * schemas use (ADR 0002): type, enum, const, pattern, required, properties,
- * additionalProperties, items, uniqueItems, minItems, minLength, minimum,
+ * additionalProperties, items, uniqueItems, minItems, minLength, maxLength, minimum,
  * propertyNames, if/then, allOf, anyOf, oneOf, not, and local $ref into $defs.
  * It is a test instrument: the typed checks in src/ are the implementation,
  * and this is how the test proves they agree with the normative schema.
@@ -53,6 +53,8 @@ function evaluate(schema: Schema, value: unknown, path: string, root: Schema, er
       fail("pattern", `does not match ${schema.pattern}`);
     if (typeof schema.minLength === "number" && [...value].length < schema.minLength)
       fail("minLength", `shorter than ${schema.minLength}`);
+    if (typeof schema.maxLength === "number" && [...value].length > schema.maxLength)
+      fail("maxLength", `longer than ${schema.maxLength}`);
   }
   if (typeof value === "number") {
     if (typeof schema.minimum === "number" && value < schema.minimum) fail("minimum", `below ${schema.minimum}`);

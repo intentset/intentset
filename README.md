@@ -69,6 +69,21 @@ needs TypeScript 7; a repository on an earlier TypeScript runs it as
 `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset …`. With pnpm and the CLI installed, the CI
 commands above are `pnpm exec intentset …`.
 
+## Show help inside the product
+
+A knowledge record may carry `tips`, one sentence per behavior it explains. `intentset publish` writes them to
+`help.json` beside the published documents, and `@intentset/help` puts each on the control that names its behavior:
+
+```ts
+import { bindTips, readHelp } from "@intentset/help";
+
+const read = readHelp(await (await fetch("/help/help.json")).text());
+if (read.ok) bindTips(document, read.help); // every element with data-behavior="BEH-..." gets its tip as a title
+```
+
+The file was published for one audience, release, role, edition and set of flags, so a product serves each person
+the one published for their entitlement. `bindTips` reports the behaviors on the page that have no tip yet.
+
 ## Develop
 
 ```sh

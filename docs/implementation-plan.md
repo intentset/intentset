@@ -249,6 +249,19 @@ Streamlane's integration (its increments 1 to 5) and Driftline (errors and usage
 What stays with the consumers: their read models, authorization per reader, atomic promotion, idempotent re-import
 and the screens, in their own repositories and under their own rules.
 
+### After 0.4: help in the product (2026-10-04)
+
+The knowledge a product shows inside its own interface, a tooltip on a control or a panel for a page, had no place in
+the model, and words typed into an interface are the documentation that goes stale first. ADR 0011 gives it one:
+
+- `tips` on knowledge records (Core §9), one sentence per explained ID, gated by everything that gates the record.
+- `help.json` beside every publication (publication §5), and `@intentset/help`, a dependency-free runtime that binds
+  tips to elements carrying `data-behavior` and reports what has no tip yet.
+
+What stays with Driftline: when a person sees help beyond hover, chat over the published knowledge, and whether a tip
+moved anyone to the next behavior. The `data-behavior` binding is the usage event it meters, so a product instrumented
+for help is instrumented for adoption.
+
 ## 6. Conformance fixtures
 
 Markset's rule applies: no check ships without its cases, and the cases are written first. Format, in

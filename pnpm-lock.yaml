@@ -29,6 +29,9 @@ importers:
       '@intentset/core':
         specifier: workspace:*
         version: link:packages/core
+      '@intentset/help':
+        specifier: workspace:*
+        version: link:packages/help
       '@intentset/markset-adapter':
         specifier: workspace:*
         version: link:packages/markset-adapter
@@ -130,6 +133,8 @@ importers:
   packages/conformance-suite: {}
 
   packages/core: {}
+
+  packages/help: {}
 
   packages/markset-adapter:
     dependencies:

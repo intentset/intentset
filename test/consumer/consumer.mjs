@@ -20,6 +20,7 @@ import {
 } from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { createIntentsetServer } from "@intentset/mcp";
+import { bindTips, readHelp } from "@intentset/help";
 import { knowledgeReport, publish } from "@intentset/publisher";
 import { checkEvidence, evidenceReport, readRunRecords } from "@intentset/verification";
 
@@ -71,6 +72,10 @@ const published = publish(
   { snapshot: { commit: null, graphHash: hash }, publishedAt: "2026-01-01T00:00:00Z" },
 );
 assert.deepEqual(published.index.published, []);
+// help: the file the publisher writes reads back, and binds nothing for a run that published nothing.
+const help = readHelp(JSON.stringify(published.help));
+assert.equal(help.ok, true, help.problems.join("; "));
+assert.deepEqual(bindTips({ querySelectorAll: () => [] }, help.help), { bound: [], missing: [] });
 
 // atlas renders, with no script anywhere.
 const atlas = buildAtlas({

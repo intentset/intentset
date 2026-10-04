@@ -24,7 +24,11 @@ const PACKAGES = [...release.matchAll(/--filter (@intentset\/[a-z-]+)/gu)].map((
 /** The architecture package's peer, which a consumer supplies: TypeScript 7, for its scanner (ADR 0007). */
 const PEERS = ["typescript@7"];
 
-const mode = process.argv[2];
+// pnpm run hands a "--" on to the script, where npm swallowed it, and a release
+// asked the registry for version "--" for twenty minutes before this filtered it.
+const args = process.argv.slice(2).filter((arg) => arg !== "--");
+const mode = args[0];
+const version = args[1] ?? "";
 const project = mkdtempSync(join(tmpdir(), "intentset-consumer-"));
 const run = (command: string, args: string[], cwd = project) =>
   execFileSync(command, args, { cwd, stdio: ["ignore", "pipe", "inherit"], encoding: "utf8" });
@@ -52,8 +56,8 @@ try {
         return `  "${name}": "file:${file}"`;
       }),
     );
-  } else if (mode === "--registry" && process.argv[3]) {
-    specs = PACKAGES.map((name) => `${name}@${process.argv[3]}`);
+  } else if (mode === "--registry" && /^\d+\.\d+\.\d+(-[\w.]+)?$/u.test(version)) {
+    specs = PACKAGES.map((name) => `${name}@${version}`);
   } else {
     throw new Error("usage: smoke.ts --packed | --registry <version>");
   }

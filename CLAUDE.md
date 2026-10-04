@@ -69,6 +69,17 @@ sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
 ```
 
 ```ts
+// @intentset/publisher
+publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, diagnostics, ok }
+// help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
+
+// @intentset/help  (no dependencies; a browser runtime)
+readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
+tipFor(help, id); helpForPage(help, ids)                    // one control, or one page: tips, their articles, what has no tip
+bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-behavior="BEH-..." by default; title + data-help-knowledge
+```
+
+```ts
 // @intentset/markset-adapter
 MARKSET_VERSION = "0.3.4"
 marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; a test asserts they agree on every example
@@ -96,7 +107,9 @@ packages/
   markset-adapter/    the one Markset import
   architecture/       M2: claims, import graph, layers, resources, exceptions, baseline
   verification/       M3: run records, freshness, reporter adapters
-  publisher/          M4: projection and generated Markset
+  publisher/          M4: projection and generated Markset, and the help file (publication §5)
+  help/               reads help.json and binds tips to the controls of a product's interface. No dependencies, runs in
+                      a browser; the binder takes any root with querySelectorAll, so it is tested without a DOM
   atlas/              M4: static review pages over an export
   cli/                `intentset`
   conformance/        private harness
@@ -177,6 +190,13 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       capability or the model comes first, How it works gains "Written by agents, reviewed by people", and
       `site/content/pilot.md` is the first pilot as a case study, from `docs/pilot-findings.md`. Home and Start join the
       roadmap as rewritten rather than held to the handoff's copy.
+- [x] Tips and the help file, 2026-10-04 (ADR 0011, Core §9, publication §5): `tips` on knowledge records, one
+      sentence per explained ID, reviewed and published with the record; `intentset publish` writes `help.json` beside
+      the documents; `@intentset/help` is the tenth package, the runtime a product binds tips with. Eleven core and four
+      publication cases, and `published.mustContain` in the conformance schema. **A tenth package has never been
+      published**, so the next release needs it published by hand once and its trusted publisher configured before CI
+      can carry it (the Markset lesson, twice). Driftline's in-app guidance builds on this; the timing of a tip beyond
+      hover is Driftline's, not Intentset's.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 

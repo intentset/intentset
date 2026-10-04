@@ -569,10 +569,13 @@ test("publish from the all-draft example publishes nothing and says why", async 
   assert.match(published.out, /Excluded, among what this projection may see \(draft 1\)/);
   const index = JSON.parse(readFileSync(join(dir, "published", "index.json"), "utf8"));
   assert.deepEqual(index.published, []);
-  assert.deepEqual(readdirSync(join(dir, "published")).sort(), ["chunks.jsonl", "index.json"]);
+  assert.deepEqual(readdirSync(join(dir, "published")).sort(), ["chunks.jsonl", "help.json", "index.json"]);
+  const help = JSON.parse(readFileSync(join(dir, "published", "help.json"), "utf8"));
+  assert.equal(help.profile, "intentset/help/0.1");
+  assert.deepEqual(help.tips, {});
 });
 
-test("publish writes reviewed knowledge with provenance, HTML, an index and chunks, naming no internal source", async (t) => {
+test("publish writes reviewed knowledge with provenance, HTML, an index, a help file and chunks, naming no internal source", async (t) => {
   const dir = await example(t);
   approveKnowledge(dir);
   const published = await run(dir, "publish", ...REQUEST, "--html", "--out", "out/kb");
@@ -583,6 +586,7 @@ test("publish writes reviewed knowledge with provenance, HTML, an index and chun
     "KB-ASMT-SCHEDULE.html",
     "KB-ASMT-SCHEDULE.md",
     "chunks.jsonl",
+    "help.json",
     "index.json",
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");

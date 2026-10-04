@@ -296,6 +296,19 @@
             }
           }
         },
+        "tips": {
+          "type": "object",
+          "description": "Knowledge only (Core \u00a79): one sentence of plain text per explained ID, for a product to show beside the control that delivers it. Each key must be in links.explains, which the validator checks (CORE003).",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+          }
+        },
         "verification": {
           "type": "object",
           "additionalProperties": false,
@@ -602,6 +615,18 @@
           },
           "then": {
             "required": ["parent"]
+          }
+        },
+        {
+          "if": {
+            "required": ["tips"]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "knowledge"
+              }
+            }
           }
         }
       ]

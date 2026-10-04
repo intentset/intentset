@@ -19,6 +19,15 @@ export {
   publicationMeta,
 } from "./generate.ts";
 export {
+  HELP_FILE,
+  HELP_PROFILE,
+  type HelpFile,
+  type HelpKnowledge,
+  type HelpOptions,
+  type HelpTip,
+  helpFile,
+} from "./help.ts";
+export {
   EXCLUSION_REASONS,
   type Exclusion,
   type ExclusionReason,

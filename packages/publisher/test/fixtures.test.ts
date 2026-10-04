@@ -44,6 +44,9 @@ for (const testCase of cases) {
       );
     }
     const text = outputText(result);
+    for (const required of testCase.published?.mustContain ?? []) {
+      assert.ok(text.includes(required), `output lacks ${JSON.stringify(required)}`);
+    }
     for (const forbidden of testCase.published?.mustNotContain ?? []) {
       assert.ok(!text.includes(forbidden), `output contains ${JSON.stringify(forbidden)}`);
     }

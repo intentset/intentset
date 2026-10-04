@@ -35,7 +35,7 @@ export interface PublicationCase {
   request?: Record<string, unknown>;
   valid: boolean;
   diagnostics?: string[];
-  published?: { ids?: string[]; mustNotContain?: string[] };
+  published?: { ids?: string[]; mustContain?: string[]; mustNotContain?: string[] };
   notes?: string;
 }
 
@@ -81,11 +81,12 @@ export function run(
   return { ...built, result };
 }
 
-/** Every byte the publication wrote or reported: documents, pages, index and diagnostics. */
+/** Every byte the publication wrote or reported: documents, pages, index, help file and diagnostics. */
 export function outputText(result: PublishResult): string {
   return [
     ...result.documents.flatMap((document) => [document.markset, document.html ?? ""]),
     JSON.stringify(result.index),
+    JSON.stringify(result.help),
     JSON.stringify(result.diagnostics),
   ].join("\n");
 }

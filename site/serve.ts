@@ -3,7 +3,7 @@
  * reload client. Serves dist/, rebuilds when anything the build reads changes.
  * Node built-ins only, so there is nothing to install.
  *
- *   pnpm run site:watch -- --port 4000
+ *   pnpm run site:watch --port 4000
  */
 import { spawn } from "node:child_process";
 import { watch } from "node:fs";
