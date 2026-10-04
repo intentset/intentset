@@ -1,6 +1,6 @@
 {
   "name": "@intentset/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Intentset core: the frontmatter carrier, typed graph, validator, impact traversal and export. No dependencies.",
   "license": "MIT",
   "type": "module",
