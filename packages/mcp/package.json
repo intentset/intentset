@@ -1,6 +1,6 @@
 {
   "name": "@intentset/mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Read-only MCP server over an Intentset export, with the publication projection for customer context.",
   "license": "MIT",
   "type": "module",
@@ -28,8 +28,8 @@
     }
   },
   "dependencies": {
-    "@intentset/core": "^0.3.0",
-    "@intentset/publisher": "^0.3.0",
+    "@intentset/core": "^0.4.0",
+    "@intentset/publisher": "^0.4.0",
     "@modelcontextprotocol/sdk": "^1.32.0"
   }
 }
