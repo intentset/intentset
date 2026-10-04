@@ -20,6 +20,7 @@ import {
   type Registries,
   sortDiagnostics,
 } from "@intentset/core";
+import { AREA_REVIEW_REQUIRED, checkAreas } from "./areas.ts";
 import { applyBaseline, type BaselineEntry, type Mode } from "./baseline.ts";
 import { checkBoundaries, checkUnclassified } from "./boundaries.ts";
 import { checkClaims } from "./claims.ts";
@@ -165,6 +166,9 @@ export function checkArchitecture(
   const boundaries = checkBoundaries(model, imports.edges, resolver);
   findings.push(...boundaries.findings);
   findings.push(...checkUnclassified(model));
+  const areaCheck = checkAreas(model, imports.edges);
+  findings.push(...areaCheck.findings);
+  unresolved.push(...areaCheck.unresolved);
   const dependencies = checkDependencies(model, graph, boundaries.sliceEdges);
   findings.push(...dependencies.findings);
 
@@ -207,7 +211,7 @@ export function checkArchitecture(
     baselined: baseline.baselined,
     baselineStale: baseline.stale.length,
     unresolved: [...new Set(unresolved)].sort(compareStrings),
-    reviewRequired: [...REVIEW_REQUIRED],
+    reviewRequired: [...REVIEW_REQUIRED, ...(config.areas.length > 0 ? AREA_REVIEW_REQUIRED : [])],
   };
   const ownership: OwnershipEntry[] = [];
   for (const path of model.files.keys()) {

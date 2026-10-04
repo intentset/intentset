@@ -151,6 +151,11 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
 - [x] Draft slices plan their paths, 2026-10-03 (VSA §3): while a slice is draft, a missing entrypoint (VSA002) and a
       claim matching no file (VSA009) are warnings, so a product modelled before it is coded (Driftline) keeps L2
       green. Checked on a clone of the Driftline repository from `intentset init` through an L3 export.
+- [x] Areas, 2026-10-04 (profile §9, ADR 0009): a backend past CloudFormation's limits splits into areas, each its own
+      Amplify backend behind one AppSync Merged API. `areas`, `sharedBackend` and `schemaBridge` in
+      `.intentset/architecture.yaml`; AMP007 to AMP011 checked from source (`packages/architecture/src/areas.ts`,
+      schema members read by `extractSchema` from scanner tokens), AMP012 and AMP013 review-required. Checked clean
+      against a four-area production application's tree; Streamlane will need the same split.
 - [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
       (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
 
