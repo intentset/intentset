@@ -125,10 +125,7 @@ test("the navigation carries the four items the IA names, and the footer its fiv
 });
 
 test("tab titles follow the family's pattern: the home page names Intentset first, every other page last", () => {
-  assert.match(
-    html.get("index.html") ?? "",
-    /<title>Intentset · Keep product intent connected to what you ship<\/title>/,
-  );
+  assert.match(html.get("index.html") ?? "", /<title>Intentset · Keep control of what your agents build<\/title>/);
   for (const [page, doc] of html) {
     if (page === "index.html") continue;
     assert.match(doc, /<title>[^<]*[^.] · Intentset<\/title>/, page);
@@ -289,15 +286,25 @@ test("the example index lists every record under its type, and each record page 
   assert.ok(text(index).includes("No running product, passing evidence, or publication is claimed."));
 });
 
-test("home: the hero, worked example, audience cards, adoption steps and status are the constructs the layout asks for", () => {
+test("home: the hero, the loop, the role cards, the worked example and status are the constructs the layout asks for", () => {
   const home = main("index.html");
   assert.match(home, /<div class="ms-columns hero"/);
   assert.match(home, /<section class="ms-card example"/);
-  assert.match(home, /<div class="ms-grid" data-cols="3"/);
-  assert.equal(
-    (home.match(/<section class="ms-card" data-tone="neutral">\n<h3 class="ms-card-title">For /g) ?? []).length,
-    3,
+  assert.match(home, /<div class="ms-grid" data-cols="2"/);
+  const roles = [...home.matchAll(/<h3 class="ms-card-title">(For [^<]+)<\/h3>\s*<ul>([\s\S]*?)<\/ul>/g)];
+  assert.deepEqual(
+    roles.map((m) => m[1]),
+    ["For product managers", "For engineers", "For customer knowledge", "For agents"],
   );
+  for (const [, role, list] of roles) {
+    const questions = [...list.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
+    assert.equal(questions.length, 3, role);
+    assert.ok(
+      questions.every((q) => q.endsWith("?")),
+      `${role}: every item is a question the model can answer`,
+    );
+  }
+  assert.match(home, /<a href="pilot\/index\.html">/, "the home page leads to the pilot");
   assert.match(home, /<ol class="ms-steps adopt">/);
   assert.match(home, /<section class="ms-card status"/);
   assert.match(home, /<div class="ms-callout" data-type="note"/);
@@ -305,11 +312,6 @@ test("home: the hero, worked example, audience cards, adoption steps and status 
   assert.match(
     home,
     /<span class="ms-span button"><a href="specifications\/index\.html">Read the draft specification<\/a>/,
-  );
-  assert.equal(
-    (home.match(/<h3 class="ms-card-title">[^<]*\?<\/h3>/g) ?? []).length,
-    6,
-    "the benefits are six cards, each a question the repository can answer",
   );
 });
 

@@ -8,14 +8,14 @@ How it works
 # How Intentset works.
 
 {.lead}
-Intentset has two halves. One is a set of conventions for writing down what your product does, as ordinary files in your repository. The other is a toolchain that reads those files and tells you, plainly, whether the code, the tests and the explanations you publish still agree with them.
+Intentset has two halves. One is a set of conventions for writing down what your product does, as ordinary files your agents keep beside the code. The other is a toolchain that reads those files and tells you, plainly, whether the code, the tests and the explanations you publish still agree with them.
 
 This page walks through it in the order you would meet it: the files, the model they form, how ownership and evidence attach to it, and what the tools do with the result.
 
 ## The short version
 
 :::steps
-1. **Write records.** Each behavior, rule, slice and check is a Markdown file with YAML frontmatter, reviewed in pull requests like the code beside it.
+1. **Write records.** Each behavior, rule, slice and check is a Markdown file with YAML frontmatter, written by the agent that changes the code and reviewed in the same pull request.
 2. **Link them once.** A record names what it points at. Intentset works out the reverse, so every behavior knows its rules, its owner, its checks and its explanations.
 3. **Give each behavior one owner.** A slice of your code is accountable for it, and an architecture check keeps other code out of that slice's internals.
 4. **Attach evidence.** Test runs from CI are tied to a commit, and only a pass on the commit under review counts.
@@ -23,6 +23,19 @@ This page walks through it in the order you would meet it: the files, the model 
 6. **Publish safely.** Reviewed explanations go out for one audience and one release, and nothing internal leaks through.
 7. **Hand it on.** Other tools read the model through one versioned export, with restricted records left out.
 :::
+
+## Written by agents, reviewed by people
+
+The records are meant to be written by the coding agents that change the code, in the same commit, and read by people. That division is the point. A change that runs to thousands of lines of code is a few dozen lines of records, in product language, that a person can review and question.
+
+`intentset init` writes `.intentset/agents.md`, the guide an agent follows, and one line in CLAUDE.md or AGENTS.md points your agents at it. It tells them to:
+
+- load what the code promises before changing it: `intentset context <file>` gives the slice that owns the file, with its behaviors, rules, scenarios, contracts, decisions and checks;
+- update those records and their checks in the same commit when behavior changes, and start anything new as a draft;
+- say so in the commit when behavior does not change, with an `Intentset-Unchanged` trailer naming the slice;
+- never approve, publish, or invent an owner, audience or release.
+
+`intentset review` lists every slice whose code changed while none of its records did. A refactor answers with the trailer, where the reviewer reads it; with `--fail-on-drift`, anything left unanswered fails CI. Approval stays with people: only a person moves a record from draft to approved, and validation passing never counts as approval.
 
 ## Open files. Explicit meaning.
 
@@ -146,9 +159,7 @@ A tool reads it with `readExport` from `@intentset/core`, which rejects an expor
 
 ## Context for agents, with limits
 
-An agent about to change code should know what that code promises. `intentset context` and the read-only MCP server hand it the owning slice and its behaviors, rules, scenarios, contracts and decisions, with the snapshot and source paths they came from, and nothing outside that boundary.
-
-The agent is expected to update the records and checks its change affects, in the same review. Validation passing does not let it approve its own release or publication.
+An agent about to change code should know what that code promises, and nothing it has no business reading. `intentset context` and the read-only MCP server hand it the owning slice and its behaviors, rules, scenarios, contracts and decisions, with the snapshot and source paths they came from, and nothing outside that boundary. Restricted records are withheld unless an operator includes them.
 
 ## Rich documents, with Markset.
 
@@ -181,9 +192,10 @@ Conformance comes in five levels, each including the ones before it. Start at th
 - It does not prove the product correct. A linked, passing test can still assert the wrong thing, and people judge whether a check is adequate.
 - It does not need a database, a hosted service, a particular test framework or a cloud.
 - It does not replace your issue tracker. Tickets describe changes; records describe the behavior that persists after them.
+- It is not a plan for one task. A spec written to drive one change is useful for that change and then goes stale. Records describe the product as it stands, outlive every change, and are checked on every commit.
 - It does not run your code, call the network or edit your files when it validates, builds the graph, checks architecture or reports impact.
 
-## Try it on one behavior
+## Try it on the example
 
 ```sh
 npm install --save-dev @intentset/cli
@@ -192,4 +204,4 @@ npx intentset validate
 npx intentset impact BEH-ASMT-SCHEDULE
 ```
 
-[[Start with one behavior](../start/index.html)]{.button .primary} [[Read the Core specification](../specifications/core/index.html)]{.button}
+[[Start with one capability](../start/index.html)]{.button .primary} [[Read the Core specification](../specifications/core/index.html)]{.button}

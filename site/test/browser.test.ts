@@ -19,6 +19,7 @@ const PAGES = [
   "start/index.html",
   "specifications/index.html",
   "specifications/core/index.html",
+  "pilot/index.html",
   "example/index.html",
   "example/BEH-ASMT-SCHEDULE/index.html",
 ];

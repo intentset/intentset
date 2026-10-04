@@ -11,8 +11,8 @@
  * nothing in a document chooses it.
  *
  * Structure follows docs/requirements/wireframes/intentset.html: an editorial
- * hero beside the traceability model, a full-width worked example, three
- * audience cards, paired sections, four adoption steps, a status band. At
+ * hero beside a change as its reviewer reads it, a full-width worked example, four
+ * role cards, paired sections, the six steps of the loop, a status band. At
  * 47.5rem (760px) and below the navigation wraps and the hero and cards stack. */
 
 /* ---- tokens -------------------------------------------------------------- */
@@ -255,9 +255,9 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .example li + li { margin-top: 0.5rem; }
 .example > .ms-callout { margin-top: 1.5rem; }
 
-/* Four adoption steps in a row on a wide screen, a column on a narrow one. */
+/* The six steps of the loop in two rows of three on a wide screen, a column on a narrow one. */
 @media (min-width: 60rem) {
-  .ms-steps.adopt { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem; }
+  .ms-steps.adopt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem 2.5rem; }
   .ms-steps.adopt .ms-step + .ms-step { margin-top: 0; }
   .ms-steps.adopt .ms-step:not(:last-child)::after { display: none; }
 }

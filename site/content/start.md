@@ -2,32 +2,51 @@
 markset: 0
 ---
 
-# Start with one behavior.
+# Start with one capability.
 
 {.lead}
-You do not need to reorganize your repository to try the model. Choose one observable promise, then connect the evidence around it.
+You do not need to reorganize your repository or write records by hand. Set up the toolchain, have an agent model one capability from what the repository already holds, and review what it wrote.
 
-### 1. Write the promise
+## 1. Set it up
 
-Describe the actor, trigger, successful result, and meaningful failure response. Give the behavior a stable ID. If two parts can be released or owned independently, consider separate behaviors.
+```sh
+npm install --save-dev @intentset/cli
+npx intentset init
+```
 
-### 2. State the constraints
+`init` writes a configuration, empty registries, and `.intentset/agents.md`, the guide your agents follow. Point them at it with one line: `@.intentset/agents.md` in CLAUDE.md, or `Before changing code, read .intentset/agents.md and follow it.` in AGENTS.md. Then name your teams, audiences and releases in `.intentset/registries.yaml`. On a TypeScript earlier than 7, use the form in the note at the end of this page rather than installing.
 
-Add rules and concrete scenarios. Reuse a shared rule through a link rather than copying its wording into every behavior.
+## 2. Have an agent model one capability
 
-### 3. Find the owner
+Choose a capability your product already has, small enough to review in one sitting, and ask your agent to write it down:
 
-Identify the slice accountable for delivering the behavior. Record its public contract and implementation paths, including backend resources that live elsewhere. If the code does not exist yet, keep the slice a draft: paths it plans are warnings until you approve it.
+```text
+Read .intentset/agents.md. Model the <capability> capability from its code, tests and
+decision records: its behaviors, their rules and scenarios, the slice that owns the code,
+and a verification record for each test that checks it. Leave every record a draft.
+Run intentset validate and fix what it reports.
+```
 
-### 4. Connect the checks
+## 3. Review what it wrote
 
-Name the verification procedure and its stable selector. A linked test is useful, but a current passing run is a separate claim. Keep that distinction visible.
+Read the behaviors as a product reviewer would. Is each one a promise you recognize, including how it fails? Is anything missing? Then look at what the model shows: rules with no test, behaviors checked only by hand, code no slice owns. Those gaps were already there; now they are listed. Approve the records you agree with.
 
-### 5. Review the explanation
+## 4. Keep it current
 
-Write audience-safe guidance for an exact release. Keep internal decisions and implementation details out of the customer projection unless they help the customer act.
+Add two checks to CI, so every change keeps the model true:
 
-[[Open the worked example](../example/index.html)]{.button .primary} [[Read the Core specification](../specifications/core/index.html)]{.button}
+```sh
+npx intentset validate --level L2
+npx intentset review --base origin/main --fail-on-drift
+```
+
+From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear.
+
+## Starting a new product?
+
+Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved.
+
+[[Read about the first pilot](../pilot/index.html)]{.button .primary} [[Open the worked example](../example/index.html)]{.button}
 
 > [!NOTE]
-> This is a manual adoption guide for the v0.1 draft. To check your records as you go, install the reference toolchain with `npm install --save-dev @intentset/cli`, then run `npx intentset init` and `npx intentset validate`. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain as `npx -p @intentset/cli -p typescript@7 intentset`.
+> The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`.

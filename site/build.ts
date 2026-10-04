@@ -85,6 +85,7 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["index.html", "index.md"],
   ["how-it-works/index.html", "how-it-works.md"],
   ["start/index.html", "start.md"],
+  ["pilot/index.html", "pilot.md"],
   ["specifications/index.html", "specifications.md"],
   ["markset/index.html", "markset.md"],
   ["roadmap/index.html", "roadmap.md"],
