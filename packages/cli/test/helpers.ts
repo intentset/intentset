@@ -75,10 +75,28 @@ export function snapshot(root: string): Map<string, { bytes: string; mtime: numb
   return out;
 }
 
+/**
+ * git in a test repository. Automatic maintenance is off: after a commit git may
+ * start it in the background, and its lock files appearing and vanishing under
+ * .git race the tests that snapshot the whole tree (CI, 2026-10-04: ENOENT on
+ * .git/objects/maintenance.lock).
+ */
 export function git(cwd: string, ...args: string[]): string {
   return execFileSync(
     "git",
-    ["-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", ...args],
+    [
+      "-c",
+      "user.name=Test",
+      "-c",
+      "user.email=test@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      "gc.auto=0",
+      "-c",
+      "maintenance.auto=false",
+      ...args,
+    ],
     { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
   ).trim();
 }
