@@ -1,8 +1,14 @@
+---
+title: Intentset Export Contract v0.3
+id: intentset/export/0.3
+status: draft
+revision: 2026-10-05
+implementation: 0.6.0
+---
+
 # Intentset Export Contract v0.3
 
-**Status:** initial normative draft for review • **Date:** 2026-10-04
-**Contract ID:** `intentset/export/0.3` • **Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) •
-**Schema:** [export.schema.json](export.schema.json)
+**Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
 behaviors, a usage product attributing errors to slices, a second implementation comparing graphs. This document fixes
@@ -178,6 +184,10 @@ report slots and exported restricted artifacts by default, and no consumer was b
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
 unannounced.
+
+The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
+to Core that invalidates an existing conformance case moves `intentset.spec` (Core §1), which an envelope carries in
+`spec`; the contract version moves only by the rule above, and every change to either is recorded in the CHANGELOG.
 
 ## 8. Producing an export
 

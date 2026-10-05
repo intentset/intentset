@@ -14,6 +14,12 @@ import type { Nodes, Root } from "mdast";
 /** The upstream version this adapter is written and tested against. Change it only with the pin in package.json. */
 export const MARKSET_VERSION = "0.4.1";
 
+/**
+ * Markset's guide to writing its syntax, for agents and people. A record is a
+ * Markset document, so the agent guide and every Markset diagnostic point at it.
+ */
+export const MARKSET_GUIDE_URL = "https://markset.org/guide.md";
+
 export function marksetCarrier(path: string, source: string): DocumentInput {
   const parsed = parseDocument(source);
   const first = parsed.ast.children[0];
@@ -63,7 +69,7 @@ function toDiagnostic(d: MarksetDiagnostic, path: string, source: string): Diagn
     path,
     location: lineColumn(source, d.start),
     message: d.message,
-    remediation: "Fix the Markset syntax; see the Markset specification for the construct named in the message.",
+    remediation: `Fix the Markset syntax; Markset's guide, ${MARKSET_GUIDE_URL}, explains the construct named in the message and the code.`,
   };
 }
 

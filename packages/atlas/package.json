@@ -2,6 +2,13 @@
   "name": "@intentset/atlas",
   "version": "0.6.0",
   "description": "Static review pages over an export: capabilities, behaviors, ownership, verification, publication readiness.",
+  "keywords": [
+    "intentset",
+    "atlas",
+    "review",
+    "traceability",
+    "static-site"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {

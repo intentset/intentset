@@ -13,6 +13,7 @@ interface Manifest {
   version: string;
   private?: boolean;
   homepage?: string;
+  keywords?: string[];
   license?: string;
   files?: string[];
   exports?: Record<string, string | Record<string, string>>;
@@ -227,4 +228,65 @@ test("the release publishes every published package once, each after everything 
       assert.ok(j !== -1 && j < i, `${dir} depends on ${dep}, which must be published first`);
     }
   }
+});
+
+test("the changelog has an entry for the version in package.json, and every entry says what moved", async () => {
+  // Consumers pin export 0.3 and @intentset/core, and before 2026-10-05 nothing
+  // told them what changed per version: the release history was the status list
+  // in CLAUDE.md, and ADR 0012 made a valid repository invalid inside Core 0.1
+  // without a word anywhere a consumer reads.
+  const { version } = await manifest("package.json");
+  const changelog = await readFile(join(root, "CHANGELOG.md"), "utf8");
+  assert.match(
+    changelog,
+    new RegExp(`^## ${version.replace(/\./g, "\\.")} — \\d{4}-\\d{2}-\\d{2}$`, "mu"),
+    `the changelog has no entry for ${version}`,
+  );
+  const entries = changelog.split(/^## /mu).slice(1);
+  assert.ok(entries.length >= 6, "the changelog goes back to 0.2.0");
+  for (const entry of entries) {
+    const [heading, ...rest] = entry.split("\n");
+    assert.match(heading, /^(Unreleased|\d+\.\d+\.\d+ — \d{4}-\d{2}-\d{2})$/u, `"${heading}" is not a release heading`);
+    const lead = rest
+      .join("\n")
+      .trim()
+      .split(/\n\s*\n/u)[0]
+      .replace(/\s+/gu, " ");
+    // One bold sentence on what changed, then what moved: the specifications,
+    // the suite and the export are what another tool pins.
+    assert.match(lead, /^\*\*[^*]+[.!?]\*\* /u, `${heading}: the entry opens with one bold sentence`);
+    assert.match(lead, /\b(specifications?|Core|VSA|profile)\b/u, `${heading}: say whether the specifications moved`);
+    assert.match(lead, /\b(suite|case|cases)\b/u, `${heading}: say whether the suite moved`);
+    assert.match(lead, /\bexport\b/u, `${heading}: say whether the export moved`);
+  }
+});
+
+/** The packages that go to npm, by directory. */
+async function publishedDirs(): Promise<string[]> {
+  const out: string[] = [];
+  for (const dir of await packageDirs()) if (!(await manifest(`packages/${dir}/package.json`)).private) out.push(dir);
+  return out;
+}
+
+test("every published package has a README that names it, and keywords", async () => {
+  // npm shows the README as the package page, and nine of the ten shipped 0.6.0
+  // with none, so an adopter or an agent resolving a dependency landed on a
+  // blank page. Markset made the same mistake at 0.3.0, and this is its test.
+  for (const dir of await publishedDirs()) {
+    const readme = await readFile(join(root, "packages", dir, "README.md"), "utf8").catch(() => "");
+    assert.match(readme, new RegExp(`^# @intentset/${dir}$`, "mu"), `${dir} has no README naming it`);
+    assert.ok(readme.includes("https://intentset.org/"), `${dir}'s README does not link to intentset.org`);
+    const { keywords } = await manifest(`packages/${dir}/package.json`);
+    assert.ok(keywords?.includes("intentset"), `${dir} has no keywords, or not "intentset" among them`);
+  }
+});
+
+test("the README names every published package, so its count cannot go stale", async () => {
+  const readme = await readFile(join(root, "README.md"), "utf8");
+  const sentence = /^(\w+) packages are published under the `@intentset` scope: (.*)$/mu.exec(readme);
+  assert.ok(sentence, "the README has the sentence that lists the published packages");
+  const words: Record<string, number> = { eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+  const published = await publishedDirs();
+  assert.equal(words[sentence[1].toLowerCase()], published.length, `the count says ${sentence[1]}`);
+  for (const dir of published) assert.ok(sentence[2].includes(`\`${dir}\``), `the README does not name ${dir}`);
 });

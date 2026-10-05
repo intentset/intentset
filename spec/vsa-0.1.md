@@ -1,7 +1,14 @@
+---
+title: Intentset Traceable Vertical Slice Architecture Specification v0.1
+id: intentset/vsa/0.1
+status: draft
+revision: 2026-10-05
+implementation: 0.6.0
+---
+
 # Intentset Traceable Vertical Slice Architecture Specification v0.1
 
-**Status:** initial normative draft • **Specification ID:** `intentset/vsa/0.1`  
-Depends on [Core v0.1](core-0.1.md). MUST/SHOULD have the same meaning.
+Depends on [Core v0.1](core-0.1.md), whose §1 gives MUST and SHOULD their meaning and the change policy this document follows.
 
 ## 1. Architecture model
 
@@ -27,8 +34,11 @@ The architecture regions are composition, product slices, shared neutral abstrac
 | VSA010 | Backend access MUST pass through the slice's declared external-access seam | SDK/network access analysis + review |
 | VSA011 | Public contract changes MUST include compatibility assessment and consumer verification | Contract diff + review record |
 | VSA012 | Deleting or splitting a slice MUST disposition all owned behavior, paths, and contracts | Snapshot graph diff |
+| VSA013 | Exception records MUST be complete, unique and current (§9) | Exception record check |
 
 A checker MUST distinguish automatic structural checks from human assertions. It cannot reliably infer “business-neutral” from names or prove absence of dynamic network behavior. Reviews of VSA007 and unresolvable dynamic dependencies are required; unresolved checks cannot be represented as passed.
+
+VSA007, VSA008, VSA010, VSA011 and VSA012 are review assertions in v0.1: no reference check reports them, and the conformance suite has no case for them. A reviewer asserts each, and one not yet reviewed is unresolved, never passed (Core §11).
 
 ## 3. Slice metadata
 
@@ -82,7 +92,7 @@ The portable invariant is that presentation/composition MUST NOT become a depend
 | Shared | Shared neutral abstractions | Infrastructure, slices, composition, owned business policy |
 | Infrastructure | Infrastructure, shared neutral abstractions, external libraries | Slices or composition |
 
-The dependency direction is infrastructure → shared, never shared → infrastructure. Product-specific behavior remains slice-owned. The earlier draft reversed this direction; this revision corrects that error.
+The dependency direction is infrastructure → shared, never shared → infrastructure. Product-specific behavior remains slice-owned. An import that crosses a region the wrong way, shared importing infrastructure, composition or a slice, infrastructure importing composition or a slice, or a slice importing composition, is REG001, an error. It is checked from the import graph; VSA007 asks the different question of who owns business behavior, which no import shows.
 
 ## 6. Composition and screens
 
@@ -102,7 +112,7 @@ A behavior change review SHOULD include: observable change; rules/scenarios affe
 
 ## 9. Exceptions and adoption
 
-An exception record MUST include ID, rule, exact paths/edges, rationale, accountable owner, approver, creation date, expiration date, and remediation issue. Expired exceptions are errors. Exceptions MUST be visible in reports. A cycle exception means VSA005 failed with a documented exception, not that the dependency graph is acyclic.
+An exception record MUST include ID, rule, exact paths/edges, rationale, accountable owner, approver, creation date, expiration date, and remediation issue. A record that is incomplete or malformed, or repeats another record's ID, is a VSA013 error and covers nothing. An expired exception is a VSA013 error, and what it covered is an error again. A current exception that covers no diagnostic is a VSA013 warning, so a retired violation retires its exception too. A diagnostic a current exception covers is kept as a warning naming the exception, never hidden. Exceptions MUST be visible in reports. A cycle exception means VSA005 failed with a documented exception, not that the dependency graph is acyclic.
 
 Adopt by declared scope. Baseline existing violations, block new violations, and progressively retire the baseline. A baseline is not a blanket waiver for new files or enlarged violations. Migration mode and strict conformance mode MUST be distinguishable. Consumers outside the scope that import a file inside it past a slice's public surfaces are reported as warnings (VSA003, and a profile's screen rule), so a narrow scope cannot hide them and they do not fail the scope's conformance. An entrypoint imported from outside the scope is not reported. (Decided 2026-10-03 after the Streamlane pilot, whose scope of one slice's files hid every consumer that reached past it.)
 

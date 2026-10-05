@@ -61,6 +61,41 @@ test("init --agents writes only the guide, for the scope the config names, and n
   assert.equal((await run(dir, "init", "--agents", "--example")).code, 2);
 });
 
+test("guide prints the guide init --agents writes, for the config's scope, and writes nothing", async (t) => {
+  const dir = temp(t);
+  mkdirSync(join(dir, ".intentset"));
+  writeFileSync(
+    join(dir, ".intentset", "config.yaml"),
+    'repository: "acme/app"\nscope:\n  - "docs/model/**/*.md"\nregistries: null\nignore: []\n',
+  );
+  mkdirSync(join(dir, "src"));
+  const printed = await run(join(dir, "src"), "guide");
+  assert.equal(printed.code, 0, printed.err);
+  assert.equal(printed.err, "");
+  assert.deepEqual(readdirSync(join(dir, ".intentset")), ["config.yaml"], "guide writes nothing");
+  assert.match(printed.out, /under `docs\/model\/\*\*\/\*\.md`/);
+
+  assert.equal((await run(dir, "init", "--agents")).code, 0);
+  assert.equal(printed.out, readFileSync(join(dir, ".intentset", "agents.md"), "utf8"), "the same text init writes");
+
+  // With no configuration anywhere above it, init's default scope.
+  const bare = await run(temp(t), "guide");
+  assert.equal(bare.code, 0, bare.err);
+  assert.match(bare.out, /under `product\/\*\*\/\*\.md`/);
+  assert.equal((await run(dir, "guide", "extra")).code, 2);
+});
+
+test("the guide says records are Markset documents, and where Markset's own guide is", async (t) => {
+  const npm = (await run(temp(t), "guide")).out;
+  assert.match(npm, /A record is a Markset document/);
+  assert.ok(npm.includes("https://markset.org/guide.md"), "the guide names Markset's guide");
+  assert.ok(npm.includes("`npx @markset-lang/cli guide`"));
+  assert.match(npm, /`npx intentset guide` prints it without writing a file/);
+  const pnpm = temp(t);
+  writeFileSync(join(pnpm, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  assert.ok((await run(pnpm, "guide")).out.includes("`pnpm dlx @markset-lang/cli guide`"));
+});
+
 test("the guide runs the CLI through the package manager the repository uses", async (t) => {
   const npm = temp(t);
   assert.equal((await run(npm, "init")).code, 0);

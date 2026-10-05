@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { MARKSET_VERSION, marksetCarrier } from "../src/index.ts";
+import { MARKSET_GUIDE_URL, MARKSET_VERSION, marksetCarrier } from "../src/index.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
 
@@ -27,7 +27,10 @@ test("frontmatter, headings and syntax diagnostics come out in the shared shape"
     assert.equal(d.origin, "syntax");
     assert.equal(d.path, "a.md");
     assert.ok(d.location && d.location.line >= 21, JSON.stringify(d));
+    // The code is Markset's, so the fix points at Markset's guide, which names every code it reports.
+    assert.ok(d.remediation.includes(MARKSET_GUIDE_URL), d.remediation);
   }
+  assert.equal(MARKSET_GUIDE_URL, "https://markset.org/guide.md");
 });
 
 test("Markset reads a sequence at its key's indentation, and still reports an unsupported version", () => {

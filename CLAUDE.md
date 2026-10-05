@@ -7,9 +7,10 @@ suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.1.md`, `vsa-0.1.md`, `profile-typescript-amplify-gen2-0.1.md`,
 `export.md` (the export contract other tools pin, `intentset/export/0.3`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
-anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit.
+anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
+frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
 `docs/requirements/` is the kickoff handoff as delivered and is not updated; `docs/implementation-plan.md` is the plan;
-`docs/decisions/` holds the ADRs.
+`docs/decisions/` holds the ADRs; `CHANGELOG.md` the release history.
 
 ## Design invariants
 
@@ -35,11 +36,16 @@ anything. When code and spec disagree, the spec wins, or the spec changes first 
 
 ## Working rules
 
+- Family conventions: reef's [`docs/conventions.md`](https://github.com/Coral-Reef-Ventures/reef/blob/main/docs/conventions.md)
+  (commits, releasing and the first-publish trap, CHANGELOG, ADRs, README, this file's shape, tooling tests, the site
+  baseline). Departures: none yet; one is written here with its reason.
 - **Fixtures before code.** A check ships with its cases in `tests/<section>.json`: one passing case, one failing case
   per condition in the spec's sentence, one boundary case. Catalog IDs (C01, V02, E03, P04) prefix the case name.
 - **Spec, fixtures and implementation change in the same commit.**
 - Diagnostics are specified behavior: code, severity, origin, artifact, path, location when known, field as a JSON
-  pointer, message, remediation. Sorted by `compareDiagnostics`. Codes are stable within v0.1.
+  pointer, message, remediation. Sorted by `compareDiagnostics`. Every code is defined in a spec, and one no check
+  reports is called a review assertion there (`test/codes.test.ts` holds both). A change that alters an existing
+  case's `valid` or `diagnostics` is breaking: it moves `intentset.spec` (Core §1) and says so in the CHANGELOG.
 - Determinism: same inputs, same bytes. Canonical JSON for anything hashed. Sort everything you iterate.
 - Don't add dependencies without asking. Approved so far: `@markset-lang/parser` and `@markset-lang/render-html` at
   exactly 0.4.1 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
@@ -82,17 +88,21 @@ bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-beha
 ```ts
 // @intentset/markset-adapter
 MARKSET_VERSION = "0.4.1"
+MARKSET_GUIDE_URL = "https://markset.org/guide.md"   // the agent guide and every syntax remediation point at it
 marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; a test asserts they agree on every example
 ```
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE009` (Core §11; an outcome with no measure is CORE009 draft, CORE003 active), `VSA001`–`VSA012`, `TS001`–`TS006`, `AMP001`–`AMP006` (VSA §2,
-  profile §2, §4), `EVID00n` for evidence, `PUB00n` for publication, `CFG00n` for configuration. Three digits always.
+- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID003` (Core §11; an outcome with no
+  measure is CORE009 draft, CORE003 active), `VSA001`–`VSA013` and `REG001` (VSA §2, §5, §9), `TS001`–`TS006` and
+  `AMP001`–`AMP013` (profile §2, §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
+- A release bumps every manifest, each spec's `implementation`, and adds its `CHANGELOG.md` entry: one bold sentence,
+  then whether the specs, the suite or the export moved (tests hold all three). A spec's `revision` is the date its
+  text last changed.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
 - Site output uses Markset's `ms-` classes and `site/site.css` layered over `markset.css`. No script inside `<main>`.
-- Commit messages are one plain sentence saying what changed and why, as in Markset.
 
 ## Layout
 
@@ -116,7 +126,10 @@ packages/
   conformance-suite/  published cases, consumer fixtures and schemas as data
   mcp/                M5: read-only context server
 site/                 intentset.org
-docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff)
+test/                 tooling.test.ts (the repository's shape), codes.test.ts (spec, suite and code agree on codes),
+                      harness.test.ts, consumer/smoke.ts (install the packed or published packages and use them)
+docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff), pilot-findings.md, consumers.md
+CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICENSE
 ```
 
 ## Toolchain
@@ -137,81 +150,20 @@ docs/                 implementation-plan.md, decisions/, requirements/ (frozen 
 
 ## Status
 
-See `docs/implementation-plan.md` §5 for milestones. Update the list below as milestones land.
+Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; milestones are
+`docs/implementation-plan.md` §5. What an agent needs to know of what exists:
 
-- [x] M0 scaffold, specs in `spec/`, example in `examples/`, ADRs 0001–0006, the site
-- [x] M1 core: strict carrier reader, typed graph, validator (CORE001–CORE006, CORE009), impact, export, `contextFor`;
-      `tests/core.json`, `tests/export.json`
-- [x] M2 architecture: claims, import graph from TypeScript 7's scanner (ADR 0007), regions, layers, exceptions,
-      baseline, monorepo resolution; `tests/vsa.json`
-- [x] M3 verification: run records, freshness, coverage, Vitest and node TAP adapters; `tests/evidence.json`
-- [x] M4 publisher (`spec/publication.md`, `tests/publication.json`) and Atlas
-- [x] M5 read-only MCP server; the CLI with every command; packed-install smoke test; release workflow
-- [x] Streamlane pilot (Streamlane ADR 0033, branch `intentset-pilot`); findings in `docs/pilot-findings.md`
-- [x] Published 0.1.0, 2026-10-03: all nine packages by hand, trusted publishers configured, so the next release goes
-      from CI on a `v*` tag. The registry smoke test passes. intentset.org deploys from GitHub Actions with HTTPS
-      enforced. The site's copy was revised the same day where it said the toolchain was unbuilt; `site/content` is
-      the copy's source of truth now, and the IA document stays frozen as the handoff.
-- [x] The pilot's four specification questions, decided 2026-10-03 (`docs/pilot-findings.md`): `entrypoints` per
-      package, out-of-scope importers as warnings, evidence kept out of the commit it assesses, draft gaps as warnings.
-- [x] The site, 2026-10-03: How it works is a page of its own (`site/content/how-it-works.md`, with a contents rail)
-      rather than an anchor on the home page, which now keeps to the outcome and six benefits; the home page's file
-      format and Markset sections moved there, headings and all. The header carries markset.org's color-scheme control,
-      whose one script is the only one on a page and sits outside `<main>`; the footer carries the network figure from
-      coralreefventures.com with Intentset's nodes in green.
-- [x] Export 0.2 for consumers, 2026-10-03 (ADR 0008, `spec/export.md`): typed evidence, knowledge, impact and
-      ownership reports (`intentset graph --report`), restricted artifacts withheld and counted unless
-      `--include-restricted`, `readExport` in core, 16 consumer cases in `tests/consumer/`, shipped in the suite.
-      The prerequisite for Streamlane's integration and for Driftline, which maps errors to slices through ownership.
-- [x] Published 0.2.0 from CI, 2026-10-04: the first tagged run stopped with ENEEDAUTH at `@intentset/core` because
-      some packages had no trusted publisher configured; once they were, a rerun published all nine with provenance and
-      the registry smoke test passed. The README's `npx -p @intentset/cli -p typescript@7` route was checked against
-      Streamlane with its own TypeScript 5.9.3 installed.
-- [x] Draft slices plan their paths, 2026-10-03 (VSA §3): while a slice is draft, a missing entrypoint (VSA002) and a
-      claim matching no file (VSA009) are warnings, so a product modelled before it is coded (Driftline) keeps L2
-      green. Checked on a clone of the Driftline repository from `intentset init` through an L3 export.
-- [x] Areas, 2026-10-04 (profile §9, ADR 0009): a backend past CloudFormation's limits splits into areas, each its own
-      Amplify backend behind one AppSync Merged API. `areas`, `sharedBackend` and `schemaBridge` in
-      `.intentset/architecture.yaml`; AMP007 to AMP011 checked from source (`packages/architecture/src/areas.ts`,
-      schema members read by `extractSchema` from scanner tokens), AMP012 and AMP013 review-required. Checked clean
-      against a four-area production application's tree; Streamlane will need the same split.
-- [x] The site caught up with 0.3, 2026-10-04: the status copy names 0.3 rather than 0.1, How it works covers draft
-      slices, areas and the export, the publication profile has a page under /specifications/ beside the export
-      contract, and About and the footer name Driftline. The same day the roadmap was rewritten for readers (where it
-      stands, toward 1.0, not planned, shape it) and the page rendering the handoff's implementation roadmap was
-      removed: both were a plan of the owner's work, and no use to a reader. Release history belongs in release notes.
-- [x] Agents keep the model current, 2026-10-04 (ADR 0010, Core §10): `init` writes `.intentset/agents.md`
-      (`packages/cli/src/agents.ts`, `init --agents` for the guide alone), `context <path>` resolves a file to its
-      slice, and `review` lists slices whose code changed while none of their describing records did
-      (`packages/cli/src/slices.ts`), acknowledged by an `Intentset-Unchanged` commit trailer, failing with
-      `--fail-on-drift`.
-- [x] The site says why and how, 2026-10-04: the home page leads with agentic development (the hero, the problem, the
-      loop of six steps, questions by role, architecture, the pilot), Start is two paths in which an agent models one
-      capability or the model comes first, How it works gains "Written by agents, reviewed by people", and
-      `site/content/pilot.md` is the first pilot as a case study, from `docs/pilot-findings.md`. Home and Start join the
-      roadmap as rewritten rather than held to the handoff's copy.
-- [x] Tips and the help file, 2026-10-04 (ADR 0011, Core §9, publication §5): `tips` on knowledge records, one
-      sentence per explained ID, reviewed and published with the record; `intentset publish` writes `help.json` beside
-      the documents; `@intentset/help` is the tenth package, the runtime a product binds tips with. Eleven core and four
-      publication cases, and `published.mustContain` in the conformance schema. **A tenth package has never been
-      published**, so the next release needs it published by hand once and its trusted publisher configured before CI
-      can carry it (the Markset lesson, twice). Driftline's in-app guidance builds on this; the timing of a tip beyond
-      hover is Driftline's, not Intentset's.
-- [x] Success measures, 2026-10-04 (ADR 0012, Core §2, §5, §6, §8): `measure` is the thirteenth type, `parent` an
-      outcome, with a `measure` block (metric, baseline or `unknown`, target, window, `source` from the new
-      `evidenceSources` registry, optional direction) and a Method section. An outcome past draft needs one (CORE003;
-      CORE009 while draft). Verification is not success: Core §6 says so, §8 names the outcome evidence record a later
-      version or Driftline will supply, and nothing reads one yet. **Export is 0.3**: the type, the registry, and
-      `measure` and `tips` on every artifact, which ADR 0011 had deferred to this bump; the consumer fixtures carry a
-      rejected 0.2 envelope, and Streamlane's reader moves its pin when it next updates. The Lantern example has two
-      measures under OUT-PREPARE, so every count that said thirteen says fifteen and the baseline graph hash changed.
-      Released in 0.6.0.
-- [x] The Markset pin moved 0.3.4 -> 0.4.1 (indentless-sequence fix, Markset commit 3601c8c): the adapter no longer
-      drops FRONTMATTER_UNPARSEABLE, and the workaround's test went with it.
-- [x] Published 0.5.0, 2026-10-04, all ten packages on npm including `@intentset/help`, and
-      0.6.0 the same day: success measures and export 0.3, the JSX-text fix in the import extractor, and Markset 0.4.1.
-      Before 1.0 a changed export envelope is a minor bump. Streamlane's export reader can move its pin to 0.3 against
-      0.6.0.
+- M0 to M5 are done: specs, core, architecture, verification, publisher, help, Atlas, the MCP server and the CLI with
+  every command. Ten packages are on npm, released from CI on a `v*` tag; a new package's first publish is by hand
+  (family conventions). intentset.org deploys from GitHub Actions.
+- `site/content` is the site copy's source of truth. The IA document in `docs/requirements/` stays frozen as the
+  handoff; `site/test/content.test.ts` lists what may differ from it.
+- The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
+- The export is 0.3. Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline
+  read exports and move their pins when they update.
+- One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
+  next such change moves `intentset.spec` to `0.2`.
+- Open: nothing.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
 is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).

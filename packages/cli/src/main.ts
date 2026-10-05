@@ -5,7 +5,7 @@
  *
  * Exit codes (Core §11, ADR 0004): 0 no errors, 1 validation errors, 2
  * invocation or tool failure. validate, graph, architecture check, impact,
- * context, review, serve and mcp never write; graph --out, architecture
+ * context, review, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
  * --out write only what they name; init only creates.
  */
@@ -17,6 +17,7 @@ import { architectureCommand } from "./commands/architecture.ts";
 import { contextCommand } from "./commands/context.ts";
 import { evidenceImportCommand, evidenceUsageProblem } from "./commands/evidence.ts";
 import { graphCommand, graphUsageProblem, parseRelease } from "./commands/graph.ts";
+import { guideCommand } from "./commands/guide.ts";
 import { impactCommand } from "./commands/impact.ts";
 import { initCommand } from "./commands/init.ts";
 import { mcpCommand, mcpUsageProblem } from "./commands/mcp.ts";
@@ -39,6 +40,8 @@ commands
                             model current; --example adds the scheduling example under
                             product/scheduling/; --agents writes only the guide, for a repository
                             already initialized. Never overwrites a file.
+  guide                     print that guide for this repository, for the scope its config names,
+                            without writing anything
   validate                  every check the level asks for; exit 1 when any diagnostic is an error
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
@@ -96,6 +99,7 @@ exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift, u
 
 const COMMANDS = [
   "init",
+  "guide",
   "validate",
   "graph",
   "architecture",
@@ -112,6 +116,7 @@ const GLOBAL = ["root", "json", "carrier", "level", "help"];
 const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline"];
 const COMMAND_OPTIONS: Record<string, string[]> = {
   init: ["repository", "example", "agents"],
+  guide: [],
   validate: LEVEL_OPTIONS,
   graph: [
     "format",
@@ -235,6 +240,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
   if (command !== "mcp" && values.mode !== undefined && values.mode !== "migration" && values.mode !== "strict") {
     return usage(`--mode ${values.mode}: the modes are migration and strict`);
   }
+  if (command === "guide") return guideCommand({ root: values.root }, io);
   if (command === "init") {
     if (values.agents && values.example)
       return usage("--agents writes only the guide; it does not combine with --example");

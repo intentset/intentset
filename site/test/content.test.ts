@@ -98,8 +98,10 @@ const PAGE_OF: Record<string, string> = {
 
 /**
  * Headings revised on 2026-10-03, when the 0.1 toolchain was published and the
- * roadmap's future work became delivered work, and on 2026-10-04, when the home
- * page's status stopped calling the toolchain the next thing. The IA document
+ * roadmap's future work became delivered work, on 2026-10-04, when the home
+ * page's status stopped calling the toolchain the next thing, and on
+ * 2026-10-05, when the specifications index took its card titles from each
+ * document's frontmatter. The IA document
  * stays frozen as the handoff; site/content is the copy's source of truth from
  * here, and this list is what may differ from the handoff.
  */
@@ -108,6 +110,7 @@ const REVISED_HEADINGS: Record<string, string> = {
   "Then: connect the repository": "Delivered in 0.1: connect the repository",
   "Then: help people and agents review": "Delivered in 0.1: help people and agents review",
   "Specifications first. A reference toolchain next.": "Specifications in review. A toolchain to try them with.",
+  "Traceable Vertical Slice Architecture v0.1": "Traceable Vertical Slice Architecture Specification v0.1",
 };
 
 /**
@@ -154,7 +157,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     ],
     [
       "specifications/index.html",
-      "All five documents are initial drafts. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.6 on npm.",
+      "All five documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.6 on npm.",
     ],
     [
       "markset/index.html",

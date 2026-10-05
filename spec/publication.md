@@ -1,7 +1,14 @@
+---
+title: Intentset Publication Profile v0.1
+id: intentset/publication/0.1
+status: draft
+revision: 2026-10-05
+implementation: 0.6.0
+---
+
 # Intentset Publication Profile v0.1
 
-**Status:** initial normative draft for review • **Date:** 2026-10-02
-**Profile ID:** `intentset/publication/0.1` • **Extends:** [Core §9](core-0.1.md#9-markset-profiles-and-document-publication)
+**Extends:** [Core §9](core-0.1.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
 
 Core §9 names the generated publication profile and lists the provenance a published knowledge document must retain.
 This note fixes the fields that carry it, the review record that decides `needs-review`, and the diagnostics a

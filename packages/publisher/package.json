@@ -2,6 +2,13 @@
   "name": "@intentset/publisher",
   "version": "0.6.0",
   "description": "Audience and release projection of reviewed knowledge into Markset documents with provenance.",
+  "keywords": [
+    "intentset",
+    "publishing",
+    "documentation",
+    "markset",
+    "knowledge-base"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {

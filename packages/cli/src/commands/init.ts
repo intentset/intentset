@@ -129,15 +129,24 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
   return 0;
 }
 
-/** `init --agents`: the guide alone, for the scope the repository's config names, or the default with no config. */
-function writeGuideOnly(root: string, io: Io): number {
+/**
+ * The agent guide for the repository at root: for the scope its config names,
+ * or the default with no readable config, and run through its package manager.
+ * What `init --agents` writes and `intentset guide` prints.
+ */
+export function guideFor(root: string): string {
   let scope = [DEFAULT_INIT_SCOPE];
   const configFile = join(root, CONFIG_PATH);
   if (existsSync(configFile)) {
     const { config, diagnostics } = readConfig(readFileSync(configFile, "utf8"), CONFIG_PATH);
     if (diagnostics.length === 0 && config.scope.length > 0) scope = config.scope;
   }
-  if (!create(root, new Map([[AGENT_GUIDE_PATH, agentGuide(scope, managerAt(root))]]), io)) return 2;
+  return agentGuide(scope, managerAt(root));
+}
+
+/** `init --agents`: the guide alone. */
+function writeGuideOnly(root: string, io: Io): number {
+  if (!create(root, new Map([[AGENT_GUIDE_PATH, guideFor(root)]]), io)) return 2;
   pointers(io);
   return 0;
 }

@@ -20,7 +20,7 @@ import { basename, dirname, join, posix, relative, resolve } from "node:path";
 import type { Heading, Link, Nodes, Root } from "mdast";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
-import { type ExampleRecord, loadRecords, typeRank } from "./records.ts";
+import { type ExampleRecord, loadRecords, readYaml, splitFrontmatter, typeRank } from "./records.ts";
 
 const root = resolve(import.meta.dirname, "..");
 
@@ -79,6 +79,38 @@ export const SPECS: Array<{ slug: string; file: string }> = [
   { slug: "publication", file: "publication.md" },
   { slug: "export", file: "export.md" },
 ];
+
+/**
+ * What a specification says about itself, in its frontmatter (Core §1's change
+ * policy): its title, its ID, its status, the date its text last changed and
+ * the reference release that implements that revision. The page's banner and
+ * the specifications index's cards are rendered from it, so neither can drift
+ * from the document.
+ */
+export interface SpecMeta {
+  title: string;
+  id: string;
+  status: string;
+  revision: string;
+  implementation: string;
+}
+
+export const SPEC_META_KEYS = ["title", "id", "status", "revision", "implementation"] as const;
+
+/** Read a specification's frontmatter. Throws when a key is missing or is not text, so a build cannot ship a blank banner. */
+export function readSpecMeta(source: string, file: string): SpecMeta {
+  const { yaml } = splitFrontmatter(source);
+  const meta = readYaml(yaml);
+  for (const key of SPEC_META_KEYS) {
+    if (typeof meta[key] !== "string" || meta[key] === "") throw new Error(`${file}: frontmatter has no ${key}`);
+  }
+  return meta as unknown as SpecMeta;
+}
+
+/** A specification's status for a reader: `draft` reads as Draft. */
+export function statusLabel(status: string): string {
+  return capitalize(status);
+}
 
 const EXAMPLE_DIR = "examples/scheduling";
 
@@ -144,9 +176,23 @@ async function writeSite(out: string): Promise<string[]> {
   await cp(join(root, "site", "site.css"), join(out, "css", "site.css"));
   await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
 
-  const specs = await Promise.all(SPECS.map(specPage));
+  const metas = await Promise.all(
+    SPECS.map(async (spec) => {
+      const file = join("spec", spec.file);
+      return readSpecMeta(await readFile(join(root, file), "utf8"), file);
+    }),
+  );
+  const specs = await Promise.all(SPECS.map((spec, i) => specPage(spec, metas[i])));
   const records = await loadRecords(join(root, EXAMPLE_DIR));
+  // The specifications index's cards: each document's title and status line,
+  // from its frontmatter. `spec.core.title`, `spec.core.meta`, and so on.
+  const specTokens: Record<string, string> = {};
+  for (const [i, spec] of SPECS.entries()) {
+    specTokens[`spec.${spec.slug}.title`] = cardTitle(metas[i]);
+    specTokens[`spec.${spec.slug}.meta`] = cardMeta(metas[i]);
+  }
   const tokens = {
+    ...specTokens,
     repo: REPO,
     markset: EXTERNAL.markset,
     coral: EXTERNAL.coralReef,
@@ -182,7 +228,7 @@ async function contentPage(path: string, file: string, tokens: Record<string, st
   const source = join(root, "site", "content", file);
   let text = await readFile(source, "utf8");
   for (const [name, value] of Object.entries(tokens)) text = text.replaceAll(`{{${name}}}`, value);
-  const leftover = /\{\{\w+\}\}/.exec(text);
+  const leftover = /\{\{[\w.-]+\}\}/.exec(text);
   if (leftover) throw new Error(`${relative(root, source)}: unsubstituted token ${leftover[0]}`);
   return renderPage(path, text, source, {}, RAIL_PAGES.has(path));
 }
@@ -207,17 +253,17 @@ function renderPage(path: string, source: string, file: string, extra: Partial<P
  * the documents become links between their pages; a link to anything else in
  * the repository goes to the repository.
  */
-async function specPage(spec: { slug: string; file: string }): Promise<Page> {
-  return documentPage(`specifications/${spec.slug}/index.html`, join("spec", spec.file));
+async function specPage(spec: { slug: string; file: string }, meta: SpecMeta): Promise<Page> {
+  return documentPage(`specifications/${spec.slug}/index.html`, join("spec", spec.file), meta);
 }
 
-async function documentPage(path: string, file: string): Promise<Page> {
+async function documentPage(path: string, file: string, meta: SpecMeta): Promise<Page> {
   const absolute = join(root, file);
   const parsed = parseDocument(await readFile(absolute, "utf8"));
   failOnErrors(parsed.diagnostics, absolute);
   rewriteLinks(parsed.ast, file);
   const ast = addHeadingIds(parsed.ast);
-  const banner = `<p class="site-source">Rendered from <a href="${REPO}/blob/main/${file}"><code>${esc(file)}</code></a> in the repository.</p>\n`;
+  const banner = `<p class="site-source"><span class="ms-span badge">${esc(statusLabel(meta.status))}</span> <code>${esc(meta.id)}</code> · revision ${esc(meta.revision)} · implemented by ${esc(meta.implementation)} · Rendered from <a href="${REPO}/blob/main/${file}"><code>${esc(file)}</code></a> in the repository.</p>\n`;
   return {
     path,
     title: firstHeading(ast) ?? basename(file, ".md"),
@@ -226,6 +272,16 @@ async function documentPage(path: string, file: string): Promise<Page> {
     toc: tableOfContents(ast, 2, 3),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
   };
+}
+
+/** A card's heading on the specifications index: the document's title without the project's name. */
+export function cardTitle(meta: SpecMeta): string {
+  return meta.title.replace(/^Intentset /, "");
+}
+
+/** A card's status line, as Markset source: the status as a badge, the ID and the revision. */
+export function cardMeta(meta: SpecMeta): string {
+  return `[${md(statusLabel(meta.status))}]{.badge} \`${meta.id}\` · revision ${md(meta.revision)}`;
 }
 
 /** Point a document's relative links at the site where it has a page, and at the repository otherwise. */
