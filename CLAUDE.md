@@ -118,7 +118,8 @@ packages/
   conformance/        private harness
   conformance-suite/  published cases, consumer fixtures and schemas as data
   mcp/                M5: read-only context server
-site/                 intentset.org
+site/                 intentset.org: build.ts (pages, rails, sitemap, 404, /guide.md, /llms.txt, schemas under /spec/),
+                      content/*.md, site.css over markset.css, serve.ts for site:watch
 docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff)
 ```
 
@@ -136,11 +137,33 @@ docs/                 implementation-plan.md, decisions/, requirements/ (frozen 
 - Every published manifest lists the `intentset-source` export condition first, pointing at `src`, so this repository
   runs TypeScript while an installed consumer gets `dist`.
 - Biome config is `biome.jsonc`, deliberately not `.json`.
-- The site's browser checks run Playwright (Chromium) at 390px and 1440px.
+- The site's browser checks run Playwright (Chromium) at 390px and 1440px, over a small HTTP server rather than
+  file URLs, so the 404 page (linked from the root, served by Pages at any missing address) is checked as served.
 - **Everything that parses Markset also runs under micromark's development build**, as Markset does: `pnpm test` ends
   with `test:development`, `conformance:development` runs beside `conformance` in CI and the release, and the smoke
   test runs its consumer a second time with `--conditions=development`. Vite, Vitest and Next resolve that asserting
   build by default, and Markset 0.3.3 passed every production run and threw on any link under it.
+
+## The site
+
+- **The bar is five sections by what a reader came to do** (2026-10-05, after markset.org's): Start, Tools,
+  Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
+  each section's pages, shown beside every page in it: Start (start, How it works, the agent guide), Tools (all
+  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (the worked example,
+  the pilot). No URL moved when the bar changed. `site/test/rail.test.ts` requires every page to be named by the bar,
+  a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
+  rail.
+- `{{version}}` in a content page is the root `package.json` version; a test fails on a typed `at 0.x` or
+  `version 0.x`. `{{usage}}` is the CLI's `USAGE`, so the command page cannot drift from `--help`.
+- Beside the pages: `/guide.md` is `agentGuide()` from `@intentset/cli` with a placeholder scope (also rendered at
+  `/guide/`), `/llms.txt` points agents at it and at markset.org/guide.md, every `spec/*.schema.json` is copied to
+  `/spec/` where its `$id` points, and `sitemap.xml`, `robots.txt` and `404.html` come from the page list.
+  `/conformance/` is generated from `tests/`.
+- **Colours.** The accent is coralreefventures.com's Intentset token (`--crv-intentset-text`,
+  `light-dark(#2c6a54, #7cc3a8)`), so the product reads in the same green on both sites. The neutrals are
+  Intentset's own green-tinted ground and ink, **deliberately**: markset.org keeps its cool white and
+  coralreefventures.com its cream, decided 2026-10-05. Do not "fix" them to match.
+- The footer links the sibling site, markset.org, once, as markset.org's links this one.
 
 ## Status
 
@@ -225,6 +248,10 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       §11), and the export stays 0.3 as a defect fix (export.md §7): consumers upgrade `@intentset/core`, not their
       pin. Conformance cases gain `carrier: markset` for cases about what Markset reports, with one core case and the
       `syntax-diagnostic.json` consumer fixture. Also the development-build runs above, and `intentset --version`.
+- [x] The site by task, 2026-10-05 (the consistency pass with markset.org): the five-section bar and rails, a Tools
+      section with a page for the command, a conformance page from `tests/`, the agent guide at `/guide.md` and
+      `/guide/` with `/llms.txt`, the schemas at their `$id`, a sitemap, robots.txt and a 404 page, `{{version}}`, the
+      CRV accent and a footer link to markset.org. See "The site" above.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
 is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).

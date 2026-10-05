@@ -16,7 +16,7 @@ People review the product rather than the diff, and steer it where it needs to g
 [[See how it works](how-it-works/index.html)]{.button .primary} [[Read the draft specification](specifications/index.html)]{.button}
 
 > [!NOTE]
-> The specifications are ready for review. The reference toolchain, version 0.4, is published to try them against.
+> The specifications are ready for review. The reference toolchain, version {{version}}, is published to try them against.
 
 ::col
 
@@ -159,7 +159,7 @@ Project status
 
 The v0.1 specifications define the product model, traceable vertical slices, a TypeScript + AWS Amplify Gen 2 reference profile and reviewed publication. An export contract fixes what other tools read from a model.
 
-The reference toolchain is at 0.6 on npm: validation, architecture checks, evidence, change impact, a Product Atlas, reviewed publication with tips for the product's own interface, agent context and the export, with a guide and a drift check for the agents that keep the model. They are early releases, to try against one real capability.
+The reference toolchain is at {{version}} on npm: validation, architecture checks, evidence, change impact, a Product Atlas, reviewed publication with tips for the product's own interface, agent context and the export, with a guide and a drift check for the agents that keep the model. They are early releases, to try against one real capability.
 
 [Read the specifications](specifications/index.html) · [View the roadmap](roadmap/index.html)
 :::
