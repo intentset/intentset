@@ -2,7 +2,7 @@
   "name": "intentset",
   "private": true,
   "type": "module",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Intentset: product intent, behavior, implementation, verification and knowledge, connected in readable files. Reference implementation of the v0.1 specifications.",
   "license": "MIT",
   "engines": {

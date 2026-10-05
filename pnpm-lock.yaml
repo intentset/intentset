@@ -60,7 +60,7 @@ importers:
   packages/architecture:
     dependencies:
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       typescript:
         specifier: ^7.0.2
@@ -69,10 +69,10 @@ importers:
   packages/atlas:
     dependencies:
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       '@intentset/publisher':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../publisher
       '@markset-lang/parser':
         specifier: 0.4.1
@@ -84,28 +84,28 @@ importers:
   packages/cli:
     dependencies:
       '@intentset/architecture':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../architecture
       '@intentset/atlas':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../atlas
       '@intentset/conformance-suite':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../conformance-suite
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       '@intentset/markset-adapter':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../markset-adapter
       '@intentset/mcp':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../mcp
       '@intentset/publisher':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../publisher
       '@intentset/verification':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../verification
     devDependencies:
       '@modelcontextprotocol/sdk':
@@ -115,19 +115,19 @@ importers:
   packages/conformance:
     dependencies:
       '@intentset/architecture':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../architecture
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       '@intentset/markset-adapter':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../markset-adapter
       '@intentset/publisher':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../publisher
       '@intentset/verification':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../verification
 
   packages/conformance-suite: {}
@@ -139,7 +139,7 @@ importers:
   packages/markset-adapter:
     dependencies:
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       '@markset-lang/parser':
         specifier: 0.4.1
@@ -151,10 +151,10 @@ importers:
   packages/mcp:
     dependencies:
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       '@intentset/publisher':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../publisher
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.0
@@ -163,10 +163,10 @@ importers:
   packages/publisher:
     dependencies:
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
       '@intentset/markset-adapter':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../markset-adapter
       '@markset-lang/parser':
         specifier: 0.4.1
@@ -178,7 +178,7 @@ importers:
   packages/verification:
     dependencies:
       '@intentset/core':
-        specifier: ^0.5.0
+        specifier: ^0.6.0
         version: link:../core
 
   site:
