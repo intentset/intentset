@@ -35,8 +35,8 @@ slice across `packages/core`, `amplify/` and `apps/web`, eight verification reco
 - **Asset imports read as unresolved.** `import styles from "./x.module.css"` was a TS004 because the CLI gave the
   checker code files only; the tree now carries every file path, with empty text for non-code files.
 - **Markset 0.3.4 rejected a block sequence at its key's indentation**, valid YAML and how every record is written,
-  with FRONTMATTER_UNPARSEABLE. Fixed in Markset (commit 3601c8c, unreleased); the adapter drops that one code until
-  the pin moves past 0.3.4, and a test removes the workaround with the bump.
+  with FRONTMATTER_UNPARSEABLE. Fixed in Markset (commit 3601c8c) and released in 0.4.0; the pin is 0.4.1 and the adapter's
+  workaround for it is gone.
 - **TypeScript 7 has no in-process parser.** The import graph comes from TypeScript's scanner (ADR 0007).
 
 ## Observed, no change needed

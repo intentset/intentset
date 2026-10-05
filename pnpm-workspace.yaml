@@ -6,3 +6,10 @@ packages:
 # published manifests need no rewriting. This links those ranges to the workspace copy instead of fetching
 # the last release from the registry.
 linkWorkspacePackages: true
+
+# Markset 0.4.1 was published 2026-10-04, inside the default release-age window.
+minimumReleaseAgeExclude:
+  - '@markset-lang/chart-table@0.4.1'
+  - '@markset-lang/diagram-ascii@0.4.1'
+  - '@markset-lang/parser@0.4.1'
+  - '@markset-lang/render-html@0.4.1'

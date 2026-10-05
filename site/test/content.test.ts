@@ -158,7 +158,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     ],
     [
       "markset/index.html",
-      "The reference publisher pins Markset 0.3.4 and validates every document it generates with Markset before writing it.",
+      "The reference publisher pins Markset 0.4.1 and validates every document it generates with Markset before writing it.",
     ],
   ];
   for (const [page, note] of notes) {
