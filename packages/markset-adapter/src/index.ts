@@ -12,19 +12,7 @@ import { parseDocument, type Diagnostic as MarksetDiagnostic } from "@markset-la
 import type { Nodes, Root } from "mdast";
 
 /** The upstream version this adapter is written and tested against. Change it only with the pin in package.json. */
-export const MARKSET_VERSION = "0.3.4";
-
-/**
- * Markset 0.3.4's frontmatter reader rejects a block sequence written at its
- * key's indentation, which is valid YAML and how every Intentset record is
- * written, and reports FRONTMATTER_UNPARSEABLE for it. Fixed upstream in
- * Markset after 0.3.4 (markset commit 3601c8c). Until the pin moves to a
- * release with the fix, that one code is dropped here; Intentset's strict
- * reader is authoritative for the carrier either way. A test fails once the
- * pin moves past 0.3.4 while this set is still non-empty, so the workaround is
- * removed in the same commit as the bump.
- */
-export const DROPPED_MARKSET_CODES: ReadonlySet<string> = new Set(["FRONTMATTER_UNPARSEABLE"]);
+export const MARKSET_VERSION = "0.4.1";
 
 export function marksetCarrier(path: string, source: string): DocumentInput {
   const parsed = parseDocument(source);
@@ -36,9 +24,7 @@ export function marksetCarrier(path: string, source: string): DocumentInput {
     source,
     frontmatter,
     headings: collectHeadings(parsed.ast),
-    syntax: parsed.diagnostics
-      .filter((d) => !DROPPED_MARKSET_CODES.has(d.code))
-      .map((d) => toDiagnostic(d, path, source)),
+    syntax: parsed.diagnostics.map((d) => toDiagnostic(d, path, source)),
   };
 }
 

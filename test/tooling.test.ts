@@ -6,7 +6,7 @@ import { test } from "node:test";
 const root = resolve(import.meta.dirname, "..");
 
 /** The Markset version every package that renders or parses is pinned to (CLAUDE.md). */
-const MARKSET_VERSION = "0.3.4";
+const MARKSET_VERSION = "0.4.1";
 
 interface Manifest {
   name: string;
