@@ -33,6 +33,8 @@ stays 0.3.
   `.intentset/agents.md`, without writing anything. The guide now says that records are Markset documents and points
   at Markset's own guide, https://markset.org/guide.md, for the syntax, as does the remediation on every Markset
   diagnostic the adapter passes through.
+- **`agentGuide`, `AGENT_GUIDE_PATH` and `AGENT_POINTERS` are exported from `@intentset/cli`**, so intentset.org
+  serves the same guide at `/guide.md`, with `/llms.txt` pointing agents at it (#12).
 - **A README for every published package**, with keywords, so the npm page says what each package is. Tests require
   a README naming each published package and the root README to name all ten. Every command a README shows names
   `@intentset/cli`, as `npx -p @intentset/cli intentset …` or after installing it, because only the CLI has the

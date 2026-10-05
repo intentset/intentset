@@ -129,7 +129,8 @@ packages/
   conformance/        private harness
   conformance-suite/  published cases, consumer fixtures and schemas as data
   mcp/                M5: read-only context server
-site/                 intentset.org
+site/                 intentset.org: build.ts (pages, rails, sitemap, 404, /guide.md, /llms.txt, schemas under /spec/),
+                      content/*.md, site.css over markset.css, serve.ts for site:watch
 test/                 tooling.test.ts (the repository's shape), codes.test.ts (spec, suite and code agree on codes),
                       harness.test.ts, consumer/smoke.ts (install the packed or published packages and use them)
 docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff), pilot-findings.md, consumers.md
@@ -150,11 +151,33 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 - Every published manifest lists the `intentset-source` export condition first, pointing at `src`, so this repository
   runs TypeScript while an installed consumer gets `dist`.
 - Biome config is `biome.jsonc`, deliberately not `.json`.
-- The site's browser checks run Playwright (Chromium) at 390px and 1440px.
+- The site's browser checks run Playwright (Chromium) at 390px and 1440px, over a small HTTP server rather than
+  file URLs, so the 404 page (linked from the root, served by Pages at any missing address) is checked as served.
 - **Everything that parses Markset also runs under micromark's development build**, as Markset does: `pnpm test` ends
   with `test:development`, `conformance:development` runs beside `conformance` in CI and the release, and the smoke
   test runs its consumer a second time with `--conditions=development`. Vite, Vitest and Next resolve that asserting
   build by default, and Markset 0.3.3 passed every production run and threw on any link under it.
+
+## The site
+
+- **The bar is five sections by what a reader came to do** (2026-10-05, after markset.org's): Start, Tools,
+  Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
+  each section's pages, shown beside every page in it: Start (start, How it works, the agent guide), Tools (all
+  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (the worked example,
+  the pilot). No URL moved when the bar changed. `site/test/rail.test.ts` requires every page to be named by the bar,
+  a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
+  rail.
+- `{{version}}` in a content page is the root `package.json` version; a test fails on a typed `at 0.x` or
+  `version 0.x`. `{{usage}}` is the CLI's `USAGE`, so the command page cannot drift from `--help`.
+- Beside the pages: `/guide.md` is `agentGuide()` from `@intentset/cli` with a placeholder scope (also rendered at
+  `/guide/`), `/llms.txt` points agents at it and at markset.org/guide.md, every `spec/*.schema.json` is copied to
+  `/spec/` where its `$id` points, and `sitemap.xml`, `robots.txt` and `404.html` come from the page list.
+  `/conformance/` is generated from `tests/`.
+- **Colours.** The accent is coralreefventures.com's Intentset token (`--crv-intentset-text`,
+  `light-dark(#2c6a54, #7cc3a8)`), so the product reads in the same green on both sites. The neutrals are
+  Intentset's own green-tinted ground and ink, **deliberately**: markset.org keeps its cool white and
+  coralreefventures.com its cream, decided 2026-10-05. Do not "fix" them to match.
+- The footer links the sibling site, markset.org, once, as markset.org's links this one.
 
 ## Status
 
@@ -174,6 +197,7 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   installed packages also run under micromark's development build.
 - One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
   next such change, to any spec, moves `intentset.spec` to `0.2`.
+- The site is organized by task, as markset.org is (2026-10-05): see "The site" above.
 - Open: nothing.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record

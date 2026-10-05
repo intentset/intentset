@@ -3,12 +3,17 @@
  * desktop): nothing scrolls sideways, nothing in the shell or the document is
  * clipped, every link is a usable target, and the keyboard reaches the skip
  * link first. Skipped, with the reason, when Chromium cannot launch here.
+ *
+ * Served over HTTP from the build's root, the way Pages serves it, rather than
+ * opened as files: the 404 page links from the root, and Pages answers any
+ * missing address with it, which only a server can show.
  */
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { extname, join, normalize } from "node:path";
 import { after, test } from "node:test";
 import { type Browser, chromium } from "@playwright/test";
 import { build } from "../build.ts";
@@ -17,15 +22,44 @@ const WIDTHS = [390, 1440];
 const PAGES = [
   "index.html",
   "start/index.html",
+  "how-it-works/index.html",
+  "guide/index.html",
+  "tools/index.html",
+  "tools/cli/index.html",
   "specifications/index.html",
   "specifications/core/index.html",
+  "markset/index.html",
+  "conformance/index.html",
   "pilot/index.html",
   "example/index.html",
   "example/BEH-ASMT-SCHEDULE/index.html",
+  "roadmap/index.html",
+  "no/such/page/",
 ];
 
 const dist = await mkdtemp(join(tmpdir(), "intentset-browser-"));
 await build(dist);
+
+const TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml",
+};
+/** A static server over the build, answering a missing address with 404.html as Pages does. */
+const server = createServer(async (request, response) => {
+  let path = normalize(decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname)).slice(1);
+  if (path === "" || path.endsWith("/")) path += "index.html";
+  try {
+    const body = await readFile(join(dist, path));
+    response.writeHead(200, { "content-type": TYPES[extname(path)] ?? "application/octet-stream" });
+    response.end(body);
+  } catch {
+    response.writeHead(404, { "content-type": TYPES[".html"] });
+    response.end(await readFile(join(dist, "404.html")));
+  }
+});
+await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
+const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`;
 let browser: Browser | null = null;
 let launchError = "";
 try {
@@ -35,10 +69,11 @@ try {
 }
 after(async () => {
   await browser?.close();
+  await new Promise((done) => server.close(done));
   await rm(dist, { recursive: true, force: true });
 });
 
-const url = (page: string) => pathToFileURL(join(dist, page)).href;
+const url = (page: string) => new URL(page, origin).href;
 
 interface Measure {
   scrollWidth: number;
@@ -142,6 +177,46 @@ test("Tab from the top lands on the skip link, which moves focus to main; the ne
     assert.equal(next.tag, "A");
     assert.equal(next.outline, "solid 3px", `the first link after main has a focus ring at ${width}px`);
     await tab.close();
+  }
+});
+
+test("a missing address, however deep, gets the 404 page in the site's shell and styles", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  const tab = await browser.newPage({ viewport: { width: 390, height: 900 } });
+  const response = await tab.goto(url("no/such/page/"));
+  assert.equal(response?.status(), 404);
+  const result = await tab.evaluate(() => ({
+    h1: document.querySelector("h1")?.textContent,
+    styled: getComputedStyle(document.querySelector(".site-header")!).display === "flex",
+    home: (document.querySelector(".ms-span.button.primary > a") as HTMLAnchorElement).href,
+  }));
+  await tab.close();
+  assert.equal(result.h1, "Page not found.");
+  assert.ok(result.styled, "the stylesheets load from the root");
+  assert.equal(result.home, url("index.html"));
+});
+
+test("the rail beside a page in a section names the section and marks the page", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  for (const width of WIDTHS) {
+    const tab = await browser.newPage({ viewport: { width, height: 900 } });
+    await tab.goto(url("tools/cli/index.html"));
+    const result = await tab.evaluate(() => {
+      const rail = document.querySelector(".site-rail")!;
+      const main = document.querySelector("main")!.getBoundingClientRect();
+      const box = rail.getBoundingClientRect();
+      return {
+        title: rail.querySelector(".site-rail-title")?.textContent,
+        current: rail.querySelector('[aria-current="page"]')?.textContent,
+        beside: box.right <= main.left + 1,
+        above: box.bottom <= main.top + 1,
+      };
+    });
+    await tab.close();
+    assert.equal(result.title, "Tools", `at ${width}px`);
+    assert.equal(result.current, "The intentset command", `at ${width}px`);
+    if (width >= 1440) assert.ok(result.beside, "on a desktop the rail sits beside the page");
+    else assert.ok(result.above, "on a phone the rail stacks above the page");
   }
 });
 

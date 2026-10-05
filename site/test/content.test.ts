@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { after, test } from "node:test";
 import { parseDocument } from "@markset-lang/parser";
-import { build, CONTENT_PAGES } from "../build.ts";
+import { build, CONTENT_PAGES, VERSION } from "../build.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
 const contentDir = join(root, "site", "content");
@@ -148,16 +148,16 @@ test("the status notes are on their pages, as callouts, and none still says the 
   const notes: Array<[string, string]> = [
     [
       "index.html",
-      "The specifications are ready for review. The reference toolchain, version 0.4, is published to try them against.",
+      `The specifications are ready for review. The reference toolchain, version ${VERSION}, is published to try them against.`,
     ],
     ["index.html", "Illustrative model. These links describe the proposed structure, not a live verification report."],
     [
       "start/index.html",
-      "The reference toolchain is an early release, at 0.6. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as npx -p @intentset/cli -p typescript@7 intentset, or with pnpm as pnpm dlx --package=@intentset/cli --package=typescript@7 intentset.",
+      `The reference toolchain is an early release, at ${VERSION}. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as npx -p @intentset/cli -p typescript@7 intentset, or with pnpm as pnpm dlx --package=@intentset/cli --package=typescript@7 intentset.`,
     ],
     [
       "specifications/index.html",
-      "All five documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at 0.6 on npm.",
+      `All five documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
     ],
     [
       "markset/index.html",

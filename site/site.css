@@ -3,7 +3,8 @@
  * default stylesheet reads, styles the shell (skip link, header, nav, contents
  * rail, footer) and the handful of author classes the pages use: the reserved
  * ones from §5 plus .button, .hero, .model, .example, .adopt, .status,
- * .closing, .record and .site-back.
+ * .closing, .record and .site-back. The shell's rail carries the section a page
+ * sits in (.site-rail) above its contents.
  *
  * System fonts only and nothing loaded from another origin. Every color is a
  * light-dark() pair, as in markset.css, so the reader's system preference picks
@@ -30,8 +31,11 @@ body {
   --ms-bg: light-dark(#f7f8f1, #121917);
   --ms-surface: light-dark(#eaf0e7, #1b2422);
   --ms-border: light-dark(#cfd9d1, #2f3c38);
-  --ms-accent: light-dark(#1f6b5a, #7fcbb0);
-  --ms-tone-info: light-dark(#1f6b5a, #7fcbb0);
+  /* The accent text is coralreefventures.com's --crv-intentset-text, so the
+   * product reads in the same green on both sites (2026-10-05). The neutrals
+   * above stay Intentset's own green-tinted ones, on purpose: see CLAUDE.md. */
+  --ms-accent: light-dark(#2c6a54, #7cc3a8);
+  --ms-tone-info: light-dark(#2c6a54, #7cc3a8);
   /* Intentset's green as coralreefventures.com draws it, for the footer's mark. */
   --site-accent-bar: light-dark(#468a72, #5aa88c);
 
@@ -131,7 +135,7 @@ body { --site-scheme-w: 5.6rem; }
 .site-visually-hidden { display: inline-block; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .site-icon { display: block; width: 1.05rem; height: 1.05rem; }
 
-/* The contents rail, beside the long documents. */
+/* The rail: the section a page sits in, then what is on the page. */
 .site-layout.has-rail { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 2.5rem; align-items: start; }
 .site-layout.has-rail > * { min-width: 0; }
 .site-toc { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; padding-block: 2.5rem; font-size: 0.9rem; }
@@ -141,6 +145,8 @@ body { --site-scheme-w: 5.6rem; }
 .site-toc a { display: inline-block; padding-block: 0.3rem; color: var(--ms-fg-muted); text-decoration: none; }
 .site-toc a:hover { color: var(--ms-fg); text-decoration: underline; }
 .site-rail-title { margin: 0 0 0.5rem; font-size: 0.72rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ms-fg-muted); }
+.site-toc nav + nav { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--ms-border); }
+.site-rail a[aria-current="page"] { color: var(--ms-fg); font-weight: 650; }
 @media (max-width: 60rem) {
   .site-layout.has-rail { grid-template-columns: 1fr; gap: 0; }
   .site-toc { position: static; max-height: none; padding-block: 1.5rem 0; }

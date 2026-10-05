@@ -11,9 +11,11 @@ import {
   FOOTER,
   FOOTER_LINKS,
   NAV,
+  NOT_FOUND,
   readSpecMeta,
   REPO,
   SCHEME_SCRIPT,
+  SIBLING,
   SITE_HOST,
   SPEC_META_KEYS,
   SPECS,
@@ -52,10 +54,12 @@ function main(page: string): string {
   return doc.slice(doc.indexOf("<main"), doc.indexOf("</main>"));
 }
 
-test("the page list is the information architecture's, plus one page per record", () => {
+test("the page list is the content pages, the specifications, the guide, conformance and one page per record", () => {
   const expected = [
     ...CONTENT_PAGES.map(([path]) => path),
     ...SPECS.map((s) => `specifications/${s.slug}/index.html`),
+    "guide/index.html",
+    "conformance/index.html",
     "example/index.html",
     ...records.map((r) => `example/${r.id}/index.html`),
   ].sort();
@@ -69,13 +73,16 @@ test("every internal link resolves to a page that was built, and every fragment 
   for (const [page, doc] of html) {
     // Code blocks show example markup; the links they contain are not the site's.
     const outsideCode = doc.replace(/<pre[\s\S]*?<\/pre>/g, "");
-    for (const [, href] of outsideCode.matchAll(/href="([^"]+)"/g)) {
+    for (const [, href] of outsideCode.matchAll(/(?:href|src)="([^"]+)"/g)) {
       if (/^[a-z][a-z0-9+.-]*:/i.test(href)) continue;
-      assert.ok(!href.startsWith("/"), `${page}: root-relative link ${href}`);
+      // Pages serves the 404 page at whatever address was missing, so its links
+      // start at the root and every other page's are relative.
+      if (page === NOT_FOUND) assert.ok(/^\/|^#/.test(href), `${page}: relative link ${href}`);
+      else assert.ok(!href.startsWith("/"), `${page}: root-relative link ${href}`);
       const [path, fragment] = href.split("#");
       let target = page;
       if (path !== "") {
-        target = normalize(join(dirname(page), path));
+        target = path.startsWith("/") ? normalize(path.slice(1)) : normalize(join(dirname(page), path));
         if (target.endsWith("/")) target += "index.html";
         await access(join(dist, target)).catch(() => assert.fail(`${page}: ${href} does not resolve`));
       }
@@ -104,7 +111,7 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
   }
 });
 
-test("the navigation carries the IA's four items and Start, and the footer its links, with their copy", () => {
+test("the bar is the five sections by what a reader came to do, and the footer the bar and About, with their copy", () => {
   for (const [page, doc] of html) {
     const nav = doc.slice(doc.indexOf('<nav class="site-nav"'), doc.indexOf("</nav>"));
     const labels = [...nav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]);
@@ -113,8 +120,7 @@ test("the navigation carries the IA's four items and Start, and the footer its l
       NAV.map(([label]) => label),
       page,
     );
-    assert.deepEqual(labels, ["How it works", "Start", "Specifications", "Markset", "Roadmap"]);
-    assert.match(nav, /href="(\.\/|(\.\.\/)+)how-it-works\/index\.html"/, `${page}: How it works is a page`);
+    assert.deepEqual(labels, ["Start", "Tools", "Reference", "Examples", "Roadmap"]);
     const footer = doc.slice(doc.indexOf("<footer"), doc.indexOf("</footer>"));
     const footerNav = footer.slice(0, footer.indexOf("</nav>"));
     assert.deepEqual(
@@ -129,6 +135,14 @@ test("the navigation carries the IA's four items and Start, and the footer its l
       `${page}: the footer makes no claim about adopting the products separately`,
     );
     assert.match(footer, new RegExp(`<a href="${REPO}">${FOOTER.repository}</a>`), page);
+    assert.deepEqual(
+      [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
+      ["Start", "Tools", "Reference", "Examples", "Roadmap", "About"],
+      `${page}: About stays in the footer's row`,
+    );
+    // The sibling site, once, in the footer, as markset.org links this one.
+    assert.ok(footer.includes(`Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a>`), page);
+    assert.equal(SIBLING.url, EXTERNAL.markset);
   }
 });
 
@@ -140,13 +154,14 @@ test("tab titles follow the family's pattern: the home page names Intentset firs
   }
 });
 
-test("How it works is a page of its own, with a contents rail, and the home page leads to it", () => {
+test("How it works is a page of its own, in Start's rail with its contents, and the home page leads to it", () => {
   const page = html.get("how-it-works/index.html") ?? "";
-  assert.match(page, /<aside class="site-toc">/, "the explanation has a contents rail");
+  assert.match(page, /<nav aria-label="Contents">/, "the explanation has a contents rail");
   assert.match(
     page,
-    /<nav class="site-nav"[\s\S]*?<a href="\.\.\/how-it-works\/index\.html" aria-current="page">How it works<\/a>/,
+    /<nav class="site-rail" aria-label="Start">[\s\S]*?<a href="\.\.\/how-it-works\/index\.html" aria-current="page">How it works<\/a>/,
   );
+  assert.match(page, /<nav class="site-nav"[\s\S]*?<a href="\.\.\/start\/index\.html" aria-current="page">Start<\/a>/);
   const home = main("index.html");
   assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/index\.html">See how it works<\/a>/);
   assert.doesNotMatch(html.get("index.html") ?? "", /index\.html#how/, "nothing points at the old anchor");
@@ -168,7 +183,7 @@ test("CNAME names the homepage's host, and the shell links the two stylesheets r
   assert.equal(SITE_HOST, "intentset.org");
   for (const [page, doc] of html) {
     const depth = page.split("/").length - 1;
-    const up = depth === 0 ? "./" : "../".repeat(depth);
+    const up = page === NOT_FOUND ? "/" : depth === 0 ? "./" : "../".repeat(depth);
     assert.ok(doc.includes(`<link rel="stylesheet" href="${up}css/markset.css">`), page);
     assert.ok(doc.includes(`<link rel="stylesheet" href="${up}css/site.css">`), page);
     assert.ok(doc.includes(`<link rel="icon" type="image/svg+xml" href="${up}icon.svg">`), page);
@@ -248,8 +263,9 @@ test("the specification pages carry exactly the headings their source files decl
   for (const [page, file] of docs) {
     assert.deepEqual(renderedHeadings(page), await sourceHeadings(file), page);
     const doc = html.get(page) ?? "";
-    assert.match(doc, /<aside class="site-toc"><nav aria-label="Contents">/, page);
-    const toc = doc.slice(doc.indexOf("<aside"), doc.indexOf("</aside>"));
+    assert.match(doc, /<aside class="site-toc"><nav class="site-rail" aria-label="Reference">/, page);
+    const toc = doc.slice(doc.indexOf('<nav aria-label="Contents">'), doc.indexOf("</aside>"));
+    assert.ok(toc.length > 0, `${page}: no contents rail`);
     const entries = [...toc.matchAll(/<a href="#([^"]+)">/g)].map((m) => m[1]);
     // The publication profile is the shortest, at four sections.
     assert.ok(entries.length >= 4, `${page}: rail has ${entries.length} entries`);
