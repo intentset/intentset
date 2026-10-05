@@ -67,4 +67,4 @@ Write the model first. A product manager and an agent draft the behaviors, and a
 [[Read about the first pilot](../pilot/index.html)]{.button .primary} [[Open the worked example](../example/index.html)]{.button}
 
 > [!NOTE]
-> The reference toolchain is an early release, at 0.4. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.
+> The reference toolchain is an early release, at 0.6. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.

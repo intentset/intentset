@@ -9,7 +9,7 @@ Intentset is in draft. You can use it today on a real capability, and what peopl
 
 ## Where it stands
 
-The [specifications](../specifications/index.html) are v0.1 drafts. The reference toolchain is at 0.5 on npm, with a conformance suite for other implementations. Everything [How it works](../how-it-works/index.html) describes is in that release: validation, architecture checks, evidence, impact, the Atlas, reviewed publication with tips for the product's own interface, agent context, the export, and the guide and drift check that let agents keep the model.
+The [specifications](../specifications/index.html) are v0.1 drafts. The reference toolchain is at 0.6 on npm, with a conformance suite for other implementations. Everything [How it works](../how-it-works/index.html) describes is in that release: validation, architecture checks, evidence, impact, the Atlas, reviewed publication with tips for the product's own interface, agent context, the export, and the guide and drift check that let agents keep the model.
 
 The Core model does not depend on a language or platform. The architecture check reads TypeScript, and its one reference profile is TypeScript with AWS Amplify Gen 2.
 
