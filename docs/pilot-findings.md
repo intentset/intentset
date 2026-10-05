@@ -37,6 +37,12 @@ slice across `packages/core`, `amplify/` and `apps/web`, eight verification reco
 - **Markset 0.3.4 rejected a block sequence at its key's indentation**, valid YAML and how every record is written,
   with FRONTMATTER_UNPARSEABLE. Fixed in Markset (commit 3601c8c, unreleased); the adapter drops that one code until
   the pin moves past 0.3.4, and a test removes the workaround with the bump.
+- **A slash in JSX text read as an unterminated regular expression**, so three Streamlane files whose JSX holds a
+  `/` breadcrumb separator or the help text "Use + - * /" were TS004 warnings, "not checked, so not a pass". The
+  extractor lexed JSX as code, where the same mistake could also read `//` in a URL as a comment and drop an import
+  later on its line. It now reads an element through its closing tag with the scanner's JSX methods, so text and
+  attribute strings are skipped and only expression containers are code; a `<` that does not read as an element,
+  such as `<T,>(x: T) => x`, is rescanned as code.
 - **TypeScript 7 has no in-process parser.** The import graph comes from TypeScript's scanner (ADR 0007).
 
 ## Observed, no change needed

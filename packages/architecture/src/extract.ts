@@ -15,9 +15,16 @@
  *   export * from "x"                    export * as ns from "x"
  *   import("x")                          require("x")
  *
- * The scanner leaves two decisions to its parser: whether `/` starts a
- * regular expression, and whether `}` resumes a template literal. Both are
- * made here from the preceding token and a stack of template brace depths.
+ * The scanner leaves three decisions to its parser: whether `/` starts a
+ * regular expression, whether `}` resumes a template literal, and, in a .tsx
+ * or .jsx file, whether `<` opens a JSX element. The first two are made here
+ * from the preceding token and a stack of template brace depths. The third is
+ * made the same way and then confirmed by reading the element through its
+ * closing tag with the scanner's JSX methods, so JSX text and attribute strings
+ * are never lexed as code (a `/` in text is not a regular expression, `//` is
+ * not a comment) while expression containers still are. What does not read as
+ * an element, such as the type parameters of `<T,>(x: T) => x`, is rescanned
+ * as code from the `<`.
  * Anything this module cannot read is returned as a problem, never dropped:
  * a dynamic import with a computed specifier, or a token the scanner could
  * not terminate (invariant 6).
@@ -115,56 +122,213 @@ function tokenize(path: string, text: string): { tokens: Token[]; problems: Extr
   };
   const tokens: Token[] = [];
   const problems: ExtractProblem[] = [];
-  /** Open brace depth inside each `${` of an unfinished template literal. */
-  const templates: number[] = [];
   let previous: Token | undefined;
   let lastEnd = -1;
-  for (;;) {
-    let kind = scanner.scan();
-    if (kind === SyntaxKind.EndOfFile) break;
-    // TypeScript 7's scanner can return a token without advancing: JSX text
-    // such as `#{n}` scans as an empty private identifier at the `#`, forever.
-    // A token that ends where the last one did makes no progress, so step over
-    // one character. In JSX that costs nothing, since no import is written in
-    // JSX text; anywhere else it is reported, because something was skipped.
-    if (scanner.getTokenEnd() <= lastEnd) {
-      if (!jsx) {
-        problems.push({
-          line: lineOf(lastEnd),
-          message: "the scanner could not advance here, so one character was skipped",
-        });
-      }
-      lastEnd++;
-      scanner.resetTokenState(lastEnd);
-      continue;
-    }
-    lastEnd = scanner.getTokenEnd();
-    if ((kind === SyntaxKind.SlashToken || kind === SyntaxKind.SlashEqualsToken) && regexAllowed(previous)) {
-      kind = scanner.reScanSlashToken();
-    } else if (kind === SyntaxKind.OpenBraceToken && templates.length > 0) {
-      templates[templates.length - 1]++;
-    } else if (kind === SyntaxKind.CloseBraceToken && templates.length > 0) {
-      if (templates[templates.length - 1] === 0) {
-        kind = scanner.reScanTemplateToken(false);
-        if (kind === SyntaxKind.TemplateTail) templates.pop();
-      } else templates[templates.length - 1]--;
-    }
-    if (kind === SyntaxKind.TemplateHead) templates.push(0);
-    const line = lineOf(scanner.getTokenStart());
-    if (scanner.isUnterminated()) {
-      // In JSX, text such as `Don't` scans as a string that runs to the end of its line and no further;
-      // it costs at most that line, and no import is written inside JSX text.
-      if (!(jsx && kind === SyntaxKind.StringLiteral)) {
-        problems.push({ line, message: `the scanner could not terminate a ${describe(kind)} that starts here` });
-      }
-    }
+
+  const push = (kind: SyntaxKind, line = lineOf(scanner.getTokenStart())): void => {
     const token: Token = { kind, text: scanner.getTokenText(), value: scanner.getTokenValue(), line };
     tokens.push(token);
     previous = token;
-  }
-  if (templates.length > 0) {
-    problems.push({ line: previous?.line ?? 1, message: "a template literal is still open at the end of the file" });
-  }
+  };
+
+  /** The next token of code, stepping over any token that does not advance. */
+  const next = (): SyntaxKind => {
+    for (;;) {
+      const kind = scanner.scan();
+      if (kind === SyntaxKind.EndOfFile) return kind;
+      // TypeScript 7's scanner can return a token without advancing: text such
+      // as `#{n}` scans as an empty private identifier at the `#`, forever. A
+      // token that ends where the last one did makes no progress, so step over
+      // one character, and report it outside JSX, because something was skipped.
+      if (scanner.getTokenEnd() <= lastEnd) {
+        if (!jsx) {
+          problems.push({
+            line: lineOf(lastEnd),
+            message: "the scanner could not advance here, so one character was skipped",
+          });
+        }
+        lastEnd++;
+        scanner.resetTokenState(lastEnd);
+        continue;
+      }
+      lastEnd = scanner.getTokenEnd();
+      return kind;
+    }
+  };
+
+  /**
+   * Code up to the end of the file, or, inside a JSX expression container, up
+   * to the `}` that closes it. Returns false when the file ends first.
+   */
+  const code = (container: boolean): boolean => {
+    /** Open brace depth inside each `${` of an unfinished template literal. */
+    const templates: number[] = [];
+    let depth = 0;
+    for (;;) {
+      let kind = next();
+      if (kind === SyntaxKind.EndOfFile) {
+        if (templates.length > 0) {
+          problems.push({
+            line: previous?.line ?? 1,
+            message: "a template literal is still open at the end of the file",
+          });
+        }
+        return false;
+      }
+      if ((kind === SyntaxKind.SlashToken || kind === SyntaxKind.SlashEqualsToken) && regexAllowed(previous)) {
+        kind = scanner.reScanSlashToken();
+        lastEnd = scanner.getTokenEnd();
+      } else if (kind === SyntaxKind.OpenBraceToken) {
+        if (templates.length > 0) templates[templates.length - 1]++;
+        else depth++;
+      } else if (kind === SyntaxKind.CloseBraceToken) {
+        if (templates.length > 0) {
+          if (templates[templates.length - 1] === 0) {
+            kind = scanner.reScanTemplateToken(false);
+            lastEnd = scanner.getTokenEnd();
+            if (kind === SyntaxKind.TemplateTail) templates.pop();
+          } else templates[templates.length - 1]--;
+        } else if (container && depth === 0) {
+          push(kind);
+          return true;
+        } else depth--;
+      } else if (kind === SyntaxKind.LessThanToken && jsx && regexAllowed(previous) && element()) {
+        continue;
+      }
+      if (kind === SyntaxKind.TemplateHead) templates.push(0);
+      const line = lineOf(scanner.getTokenStart());
+      if (scanner.isUnterminated()) {
+        // In JSX, text such as `Don't` that is not read as JSX (an element the
+        // reader gave up on) scans as a string that runs to the end of its line
+        // and no further; it costs at most that line.
+        if (!(jsx && kind === SyntaxKind.StringLiteral)) {
+          problems.push({ line, message: `the scanner could not terminate a ${describe(kind)} that starts here` });
+        }
+      }
+      push(kind, line);
+    }
+  };
+
+  /** A JSX tag name after its first identifier: `a-b`, `A.B.C`, `a:b`. Leaves the token after it current. */
+  const tagName = (): { name: string; kind: SyntaxKind } => {
+    const from = scanner.getTokenStart();
+    scanner.scanJsxIdentifier();
+    lastEnd = scanner.getTokenEnd();
+    let to = lastEnd;
+    let kind = next();
+    while (kind === SyntaxKind.DotToken || kind === SyntaxKind.ColonToken) {
+      if (!tokenIsIdentifierOrKeyword(next())) return { name: "", kind: SyntaxKind.Unknown };
+      scanner.scanJsxIdentifier();
+      lastEnd = scanner.getTokenEnd();
+      to = lastEnd;
+      kind = next();
+    }
+    return { name: text.slice(from, to), kind };
+  };
+
+  /** A JSX expression container, its `{` current: its contents are code. */
+  const container = (): boolean => {
+    push(SyntaxKind.OpenBraceToken);
+    return code(true);
+  };
+
+  /**
+   * Read a JSX element or fragment as JSX rather than as code, its `<` the
+   * current token: text and attribute strings are skipped, expression
+   * containers are read as code. Returns false, with the scanner, tokens and
+   * problems as they were before the `<`, when what follows is not an element
+   * (a type parameter list such as `<T,>(x: T) => x`), or never closes.
+   */
+  const element = (): boolean => {
+    const at = scanner.getTokenEnd();
+    const saved = { tokens: tokens.length, problems: problems.length, previous };
+    const start = scanner.getTokenStart();
+    const line = lineOf(start);
+    if (read()) {
+      tokens.push({ kind: SyntaxKind.JsxElement, text: text.slice(start, lastEnd), value: "", line });
+      previous = tokens[tokens.length - 1];
+      return true;
+    }
+    tokens.length = saved.tokens;
+    problems.length = saved.problems;
+    previous = saved.previous;
+    lastEnd = at;
+    scanner.resetTokenState(at);
+    return false;
+  };
+
+  /** The element after its `<`, through its closing tag. */
+  const read = (): boolean => {
+    let kind = next();
+    let name = "";
+    if (kind !== SyntaxKind.GreaterThanToken) {
+      if (!tokenIsIdentifierOrKeyword(kind)) return false;
+      // A type parameter list, as TypeScript's parser decides in a .tsx file.
+      const nameStart = scanner.getTokenStart();
+      const second = next();
+      if (second === SyntaxKind.CommaToken || second === SyntaxKind.EqualsToken) return false;
+      if (second === SyntaxKind.ExtendsKeyword) {
+        const third = next();
+        if (
+          third !== SyntaxKind.EqualsToken &&
+          third !== SyntaxKind.GreaterThanToken &&
+          third !== SyntaxKind.SlashToken
+        ) {
+          return false;
+        }
+      }
+      lastEnd = nameStart;
+      scanner.resetTokenState(nameStart);
+      next();
+      ({ name, kind } = tagName());
+      if (name === "") return false;
+      // Attributes, up to `>` or `/>`.
+      for (;;) {
+        if (kind === SyntaxKind.GreaterThanToken) break;
+        if (kind === SyntaxKind.SlashToken) return next() === SyntaxKind.GreaterThanToken;
+        if (kind === SyntaxKind.OpenBraceToken) {
+          if (!container()) return false;
+          kind = next();
+          continue;
+        }
+        if (!tokenIsIdentifierOrKeyword(kind)) return false;
+        const attribute = tagName();
+        if (attribute.name === "") return false;
+        kind = attribute.kind;
+        if (kind !== SyntaxKind.EqualsToken) continue;
+        const value = scanner.scanJsxAttributeValue();
+        lastEnd = scanner.getTokenEnd();
+        if (value === SyntaxKind.StringLiteral) {
+          if (scanner.isUnterminated()) return false;
+        } else if (value === SyntaxKind.OpenBraceToken) {
+          if (!container()) return false;
+        } else if (value === SyntaxKind.LessThanToken) {
+          if (!element()) return false;
+        } else return false;
+        kind = next();
+      }
+    }
+    // Children, up to the closing tag.
+    for (;;) {
+      const child = scanner.scanJsxToken();
+      if (child === SyntaxKind.EndOfFile) return false;
+      lastEnd = scanner.getTokenEnd();
+      if (child === SyntaxKind.OpenBraceToken) {
+        if (!container()) return false;
+      } else if (child === SyntaxKind.LessThanToken) {
+        if (!element()) return false;
+      } else if (child === SyntaxKind.LessThanSlashToken) {
+        let closing = next();
+        let closingName = "";
+        if (closing !== SyntaxKind.GreaterThanToken) {
+          if (!tokenIsIdentifierOrKeyword(closing)) return false;
+          ({ name: closingName, kind: closing } = tagName());
+        }
+        return closing === SyntaxKind.GreaterThanToken && closingName === name;
+      }
+    }
+  };
+  code(false);
   return { tokens, problems };
 }
 
