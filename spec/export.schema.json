@@ -309,10 +309,32 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["code", "severity", "origin", "artifact", "path", "message", "remediation"],
+      "description": "The code's shape follows the origin (\u00a71): Markset's own code, such as DIRECTIVE_UNKNOWN_NAME, when the origin is syntax, and Intentset's AREA### for every other origin.",
+      "if": {
+        "required": ["origin"],
+        "properties": {
+          "origin": {
+            "const": "syntax"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "code": {
+            "pattern": "^[A-Z]+[0-9]{3}$"
+          }
+        }
+      },
       "properties": {
         "code": {
-          "type": "string",
-          "pattern": "^[A-Z]+[0-9]{3}$"
+          "type": "string"
         },
         "severity": {
           "enum": ["error", "warning"]

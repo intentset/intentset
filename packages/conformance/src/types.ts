@@ -13,6 +13,9 @@ export interface PublicationRequest {
   ids?: string[];
 }
 
+/** How a case's documents are read (ADR 0003): without a Markdown parser, or with Markset's. */
+export type Carrier = "plain" | "markset";
+
 /** One edit to a baseline document: dotted-path frontmatter changes and an optional body. */
 export interface Patch {
   frontmatter?: Record<string, unknown>;
@@ -30,6 +33,8 @@ export interface ConformanceCase {
   sources?: Record<string, string | null>;
   config?: Record<string, unknown>;
   level?: Level;
+  /** How documents are read: plain (the default) or markset, whose diagnostics carry origin syntax. */
+  carrier?: Carrier;
   evidence?: Record<string, unknown>[];
   request?: PublicationRequest;
   valid: boolean;
@@ -54,6 +59,7 @@ export interface ExpandedCase {
   /** Non-document files for VSA and evidence cases, sorted. */
   sources: Map<string, string>;
   level: Level;
+  carrier: Carrier;
   evidence: Record<string, unknown>[];
   request: PublicationRequest | null;
 }

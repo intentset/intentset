@@ -3149,5 +3149,21 @@
       "CORE001"
     ],
     "notes": "Only knowledge carries tips; a behavior's prose is for another audience (Core §9)."
+  },
+  {
+    "section": "core",
+    "name": "COLUMNS_SINGLE a Markset warning passes through with Markset's code and origin syntax",
+    "baseline": "scheduling",
+    "carrier": "markset",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "body": "\n# Assessment assignment\n\n## Overview\n\n:::columns\nTeachers prepare and distribute published assessments to classes.\n:::\n"
+      }
+    },
+    "valid": true,
+    "diagnostics": [
+      "COLUMNS_SINGLE"
+    ],
+    "notes": "Read with the Markset carrier, a columns block with one column is Markset's COLUMNS_SINGLE warning. It keeps Markset's code, which is not AREA###, and origin syntax; Intentset neither renames it nor adds a code of its own, and a warning does not fail validation (Core §11)."
   }
 ]

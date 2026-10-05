@@ -33,6 +33,7 @@ import {
   sortDiagnostics,
   validate,
 } from "@intentset/core";
+import { marksetCarrier } from "@intentset/markset-adapter";
 import { knowledgeReport } from "@intentset/publisher";
 import { checkEvidence, evidenceReport, readRunRecords } from "@intentset/verification";
 import { FIXTURE_TODAY } from "./drivers.ts";
@@ -108,6 +109,8 @@ interface BuildOptions {
   reports: readonly ExportReportName[];
   includeRestricted?: boolean;
   generatedAt?: string;
+  /** Read the documents with Markset's parser, whose diagnostics carry origin syntax; plainly by default. */
+  carrier?: "plain" | "markset";
 }
 
 /** One real export: validation, then each level's checks folded in as the CLI does, then the envelope. */
@@ -128,7 +131,7 @@ function build(options: BuildOptions): ExportEnvelope {
   );
   const inputs = [...expanded.files]
     .filter(([path]) => path.endsWith(".md"))
-    .map(([path, text]) => plainCarrier(path, text));
+    .map(([path, text]) => (options.carrier === "markset" ? marksetCarrier : plainCarrier)(path, text));
   const registries = readRegistries(expanded.registriesText, REGISTRIES_PATH).registries;
   const validated = validate(inputs, registries, { level: options.level });
   const graph = validated.graph;
@@ -233,6 +236,17 @@ export function buildConsumerFixtures(): Map<string, string> {
     reports: ["knowledge", "impact"],
   });
   const restricted = build({ level: "L1", commit: COMMIT, reports: ["knowledge"], includeRestricted: true });
+  const syntax = build({
+    level: "L1",
+    commit: COMMIT,
+    carrier: "markset",
+    patch: {
+      "CAP-ASMT-ASSIGN.md": {
+        body: "\n# Assessment assignment\n\n## Overview\n\n:::columns\nTeachers prepare and distribute published assessments to classes.\n:::\n",
+      },
+    },
+    reports: [],
+  });
 
   const files = new Map<string, unknown>();
   const cases: ConsumerCase[] = [];
@@ -300,6 +314,12 @@ export function buildConsumerFixtures(): Map<string, string> {
     "restricted-included.json",
     restricted,
     "Nothing is withheld. A consumer that accepts this must enforce restricted visibility itself before any search or display.",
+  );
+  accept(
+    "a Markset diagnostic, with Markset's own code",
+    "syntax-diagnostic.json",
+    syntax,
+    "A record's columns block has one column, which Markset reports as COLUMNS_SINGLE with origin syntax. Accept it: Markset's codes are AREA_NAME, not AREA###, and are shown as written, never renamed. A warning leaves validation passing.",
   );
 
   /** What 0.3 added (ADR 0012), taken back out so an earlier envelope is what its reader would have written. */

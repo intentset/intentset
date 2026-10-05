@@ -23,7 +23,10 @@ for (const section of ["core", "export"]) {
   });
 
   for (const testCase of cases) {
-    test(`${section}: ${testCase.name}`, () => {
+    // Core reads plainly and has no Markdown parser (CLAUDE.md invariant 8), so a
+    // case about what Markset reports is the harness's to run, with the adapter.
+    const skip = testCase.carrier === "markset" && "read with the Markset carrier; the conformance harness runs it";
+    test(`${section}: ${testCase.name}`, { skip }, () => {
       const run = runCase(expandCase(testCase));
       assert.deepEqual(codes(run.diagnostics), [...(testCase.diagnostics ?? [])].sort());
       assert.equal(!run.diagnostics.some((d) => d.severity === "error"), testCase.valid);

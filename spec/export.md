@@ -1,6 +1,6 @@
 # Intentset Export Contract v0.3
 
-**Status:** initial normative draft for review • **Date:** 2026-10-04
+**Status:** initial normative draft for review • **Date:** 2026-10-05
 **Contract ID:** `intentset/export/0.3` • **Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) •
 **Schema:** [export.schema.json](export.schema.json)
 
@@ -34,6 +34,11 @@ hit's `path` from the start. The same validation with the same `generatedAt` is 
 | `registries` | Owners, audiences, release dimensions, flags, evidence sources and shared resources, as declared. |
 | `artifacts` | One per exported artifact (§2). |
 | `reports` | Optional sections (§4). An absent section means not supplied: never zero, none or pass. |
+
+A diagnostic's `code` takes its shape from its `origin`. Intentset codes are AREA###, Markset's are AREA_NAME; a host
+never renames the other's. So a diagnostic with origin `syntax`, which is Markset's alone (Core §9), carries Markset's
+own code, such as `DIRECTIVE_UNKNOWN_NAME`, and every other origin carries Intentset's, such as `CORE003`. The schema
+keys the pattern on the origin, and a consumer MUST accept both.
 
 The **snapshot** an envelope describes is the pair (`source.commit`, `graphHash`) under one `repository`. Two
 envelopes with the same pair describe the same snapshot whatever their `generatedAt`, and a consumer MUST treat a
@@ -178,6 +183,12 @@ report slots and exported restricted artifacts by default, and no consumer was b
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
 unannounced.
+
+Keying the code's shape on the origin (§1, 2026-10-05) was a defect fix inside 0.3, not a new version. A 0.3 producer
+already wrote Markset's codes under origin `syntax`, since the adapter passes them through unchanged, while the schema
+and `readExport` accepted only AREA###, so such an envelope was rejected as malformed although it meant exactly what
+0.3 says. Nothing a producer writes changed. A reader built against the earlier schema, `@intentset/core` 0.6.0 and
+before among them, still rejects these envelopes, so a consumer upgrades its reader (0.6.1) rather than its pin.
 
 ## 8. Producing an export
 
