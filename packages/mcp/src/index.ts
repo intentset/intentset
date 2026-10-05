@@ -31,7 +31,7 @@ export { NOT_IN_SNAPSHOT, SEARCH_LIMIT, type EngineeringSnapshot } from "./engin
 export type { Tool, ToolDefinition, ToolResult } from "./tool.ts";
 
 /** The package version, reported to clients as the server's version. A test holds it to package.json. */
-export const VERSION = "0.6.0";
+export const VERSION = "0.6.1";
 
 export interface EngineeringOptions {
   mode: "engineering";

@@ -75,6 +75,10 @@ try {
   }
   copyFileSync(join(import.meta.dirname, "consumer.mjs"), join(project, "consumer.mjs"));
   process.stdout.write(run("node", ["consumer.mjs"]));
+  // Again under the development condition, which is how a consumer's dev server
+  // (Vite, Vitest, Next) resolves every package, micromark's asserting build
+  // included. Markset 0.3.3 passed every production run and threw on any link here.
+  process.stdout.write(run("node", ["--conditions=development", "consumer.mjs"]));
 } finally {
   rmSync(project, { recursive: true, force: true });
 }

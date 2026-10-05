@@ -17,6 +17,7 @@ import {
   validate,
 } from "@intentset/core";
 import { checkArchitecture } from "@intentset/architecture";
+import { marksetCarrier } from "@intentset/markset-adapter";
 import { type PublicationRequest, bindReviewPins, publish } from "@intentset/publisher";
 import { checkFixtureEvidence } from "@intentset/verification";
 import { CONFIG_PATH, REGISTRIES_PATH } from "./fixtures.ts";
@@ -40,9 +41,12 @@ interface Validated {
 }
 
 function validateTree(expanded: ExpandedCase): Validated {
+  // A case names the Markset carrier when it is about what Markset reports; the
+  // rest read plainly, so their diagnostics are Intentset's alone.
+  const carrier = expanded.carrier === "markset" ? marksetCarrier : plainCarrier;
   const inputs: DocumentInput[] = [];
   for (const [path, source] of expanded.files) {
-    if (path.endsWith(".md")) inputs.push(plainCarrier(path, source));
+    if (path.endsWith(".md")) inputs.push(carrier(path, source));
   }
 
   const extra: Diagnostic[] = [];

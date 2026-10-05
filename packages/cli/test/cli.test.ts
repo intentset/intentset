@@ -183,6 +183,24 @@ test("an unknown command exits 2 with the usage, and every command is built", as
   assert.equal((await run(dir)).code, 2);
 });
 
+test("--version prints the tool and its version, the one a report names, and exits 0", async (t) => {
+  const dir = temp(t);
+  const { version } = JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf8")) as {
+    version: string;
+  };
+  for (const argv of [["--version"], ["validate", "--version"], ["--version", "--json"]]) {
+    const result = await run(dir, ...argv);
+    assert.equal(result.code, 0, argv.join(" "));
+    assert.equal(result.out, `intentset ${version}\n`, argv.join(" "));
+    assert.equal(result.err, "", argv.join(" "));
+  }
+  // Asked for both, help answers: it already names --version.
+  const both = await run(dir, "--version", "--help");
+  assert.equal(both.code, 0);
+  assert.match(both.out, /usage: intentset/);
+  assert.match(both.out, /--version/);
+});
+
 test("invocation errors exit 2 before reading anything", async (t) => {
   const dir = await example(t);
   const cases: [string[], RegExp][] = [

@@ -86,6 +86,48 @@ test("the reader's shape checks agree with spec/export.schema.json on every sing
   assert.ok(compared > 2000, `only ${compared} mutants compared`);
 });
 
+test("a diagnostic's code shape follows its origin: Markset's codes under syntax, Intentset's under every other", () => {
+  const origins = ["syntax", "profile", "graph", "architecture", "evidence", "publication", "render"];
+  const codes = [
+    "DIRECTIVE_UNKNOWN_NAME",
+    "COLUMNS_SINGLE",
+    "CORE003",
+    "TS004",
+    "CORE_003",
+    "directive_unknown",
+    "DIRECTIVE",
+  ];
+  const markset = new Set(["DIRECTIVE_UNKNOWN_NAME", "COLUMNS_SINGLE", "CORE_003"]);
+  const intentset = new Set(["CORE003", "TS004"]);
+  for (const origin of origins) {
+    for (const code of codes) {
+      const value = structuredClone(full) as unknown as ExportEnvelope;
+      value.validation.warnings = 1;
+      value.validation.diagnostics = [
+        {
+          code,
+          severity: "warning",
+          origin: origin as ExportEnvelope["validation"]["diagnostics"][number]["origin"],
+          artifact: null,
+          path: "CAP-ASMT-ASSIGN.md",
+          location: { line: 9, column: 1 },
+          message: "A message.",
+          remediation: "A remediation.",
+        },
+      ];
+      const expected = origin === "syntax" ? markset.has(code) : intentset.has(code);
+      const schemaSays = validateSchema(schema, value).length === 0;
+      const read = readExport(value);
+      assert.equal(schemaSays, expected, `schema, ${origin} ${code}`);
+      assert.equal(read.ok, expected, `reader, ${origin} ${code}`);
+      if (!read.ok) {
+        assert.equal(read.category, "malformed");
+        assert.equal(read.problems[0].pointer, "/validation/diagnostics/0/code");
+      }
+    }
+  }
+});
+
 test("bytes, text and parsed values read alike; invalid UTF-8, oversize and truncation are not-json", () => {
   const text = fixture("full.json");
   const fromText = readExport(text);

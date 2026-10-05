@@ -8,7 +8,8 @@ suite, the reference implementation in TypeScript, and the intentset.org site.
 **`spec/` is the source of truth**: `core-0.1.md`, `vsa-0.1.md`, `profile-typescript-amplify-gen2-0.1.md`,
 `export.md` (the export contract other tools pin, `intentset/export/0.3`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit.
-`docs/requirements/` is the kickoff handoff as delivered and is not updated; `docs/implementation-plan.md` is the plan;
+`docs/requirements/` is the kickoff handoff as delivered and is not updated (`markset/` in it is the half delivered to
+Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `docs/implementation-plan.md` is the plan;
 `docs/decisions/` holds the ADRs.
 
 ## Design invariants
@@ -89,6 +90,8 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 
 - Diagnostic codes: `CORE001`–`CORE009` (Core §11; an outcome with no measure is CORE009 draft, CORE003 active), `VSA001`–`VSA012`, `TS001`–`TS006`, `AMP001`–`AMP006` (VSA §2,
   profile §2, §4), `EVID00n` for evidence, `PUB00n` for publication, `CFG00n` for configuration. Three digits always.
+  Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
+  schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
 - Site output uses Markset's `ms-` classes and `site/site.css` layered over `markset.css`. No script inside `<main>`.
@@ -136,6 +139,10 @@ docs/                 implementation-plan.md, decisions/, requirements/ (frozen 
 - Biome config is `biome.jsonc`, deliberately not `.json`.
 - The site's browser checks run Playwright (Chromium) at 390px and 1440px, over a small HTTP server rather than
   file URLs, so the 404 page (linked from the root, served by Pages at any missing address) is checked as served.
+- **Everything that parses Markset also runs under micromark's development build**, as Markset does: `pnpm test` ends
+  with `test:development`, `conformance:development` runs beside `conformance` in CI and the release, and the smoke
+  test runs its consumer a second time with `--conditions=development`. Vite, Vitest and Next resolve that asserting
+  build by default, and Markset 0.3.3 passed every production run and threw on any link under it.
 
 ## The site
 
@@ -235,6 +242,12 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       0.6.0 the same day: success measures and export 0.3, the JSX-text fix in the import extractor, and Markset 0.4.1.
       Before 1.0 a changed export envelope is a minor bump. Streamlane's export reader can move its pin to 0.3 against
       0.6.0.
+- [x] 0.6.1, 2026-10-05, a patch: an export carrying a Markset diagnostic was rejected as malformed, because the export
+      schema, the conformance schema and `readExport` accepted only AREA### codes while the adapter passes Markset's
+      AREA_NAME codes through with origin `syntax`. The code's shape is now keyed on the origin (export.md §1, Core
+      §11), and the export stays 0.3 as a defect fix (export.md §7): consumers upgrade `@intentset/core`, not their
+      pin. Conformance cases gain `carrier: markset` for cases about what Markset reports, with one core case and the
+      `syntax-diagnostic.json` consumer fixture. Also the development-build runs above, and `intentset --version`.
 - [x] The site by task, 2026-10-05 (the consistency pass with markset.org): the five-section bar and rails, a Tools
       section with a page for the command, a conformance page from `tests/`, the agent guide at `/guide.md` and
       `/guide/` with `/llms.txt`, the schemas at their `$id`, a sitemap, robots.txt and a 404 page, `{{version}}`, the
