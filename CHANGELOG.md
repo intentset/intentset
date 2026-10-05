@@ -36,25 +36,6 @@ stays 0.3.
 - **A README for every published package**, with keywords, so the npm page says what each package is. Tests require
   a README naming each published package and the root README to name all ten.
 
-## 0.6.1 — 2026-10-05
-
-**An export carrying a Markset diagnostic is no longer rejected as malformed.** The export stays 0.3, as a defect
-fix; the conformance schema accepts Markset's codes and gains one core case and one consumer fixture; Core §11 and
-the export contract's §1 and §7 say why. Consumers must upgrade `@intentset/core` to 0.6.1; their export pin stays
-0.3.
-
-- **Markset's codes in exports.** `@intentset/markset-adapter` passes Markset's diagnostics through with their own
-  codes, such as `COLUMNS_SINGLE`, under origin `syntax`. The export schema, the conformance schema and `readExport`
-  accepted only `AREA###` codes, so one Markset warning in one record made a consumer reject the whole export. The
-  code's shape is now keyed on its origin: `syntax` takes Markset's `AREA_NAME`, and every other origin keeps
-  `AREA###`. A reader on `@intentset/core` 0.6.0 or earlier still rejects these envelopes.
-- **Cases about what Markset reports** carry `carrier: "markset"`, so the harness reads their documents through the
-  adapter; core's own run skips them, since core parses no Markdown.
-- **The tests, the suite and the installed packages also run under micromark's development build**, which Vite,
-  Vitest and Next resolve by default and which asserts what the production build does not. Markset 0.3.3 passed every
-  production run and threw on any link under it.
-- **`intentset --version`** prints `intentset <version>`, the checker version a report names.
-
 ## 0.6.0 — 2026-10-04
 
 **Success measures as records under outcomes, and the export at 0.3.** Core changed, with one breaking revision inside
