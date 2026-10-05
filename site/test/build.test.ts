@@ -119,7 +119,11 @@ test("the navigation carries the IA's four items and Start, and the footer its l
       page,
     );
     assert.ok(text(footer).includes(FOOTER.statement), page);
-    assert.ok(text(footer).includes(FOOTER.independence), page);
+    assert.doesNotMatch(
+      text(footer),
+      /adopted independently/i,
+      `${page}: the footer makes no claim about adopting the products separately`,
+    );
     assert.match(footer, new RegExp(`<a href="${REPO}">${FOOTER.repository}</a>`), page);
   }
 });
