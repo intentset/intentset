@@ -68,7 +68,6 @@ export const FOOTER_LINKS: Array<[string, string]> = [
 
 export const FOOTER = {
   statement: "An open-source project in development from Coral Reef Ventures.",
-  independence: "Markset, Intentset, Streamlane, and Driftline can be adopted independently.",
   repository: "Contribute on GitHub",
 };
 
@@ -399,7 +398,6 @@ ${page.body}</main>
 ${footerLinks}
 </nav>
 <p><strong>${SITE_NAME}</strong> · ${esc(FOOTER.statement)} <a href="${REPO}">${esc(FOOTER.repository)}</a></p>
-<p>${esc(FOOTER.independence)}</p>
 </div>
 ${FAMILY_MARK}</footer>
 </body>
