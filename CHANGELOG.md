@@ -39,7 +39,8 @@ stays 0.3.
 
 **An export carrying a Markset diagnostic is no longer rejected as malformed.** The export stays 0.3, as a defect
 fix; the conformance schema accepts Markset's codes and gains one core case and one consumer fixture; Core §11 and
-the export contract's §1 and §7 say why. Consumers upgrade `@intentset/core`, not their pin.
+the export contract's §1 and §7 say why. Consumers must upgrade `@intentset/core` to 0.6.1; their export pin stays
+0.3.
 
 - **Markset's codes in exports.** `@intentset/markset-adapter` passes Markset's diagnostics through with their own
   codes, such as `COLUMNS_SINGLE`, under origin `syntax`. The export schema, the conformance schema and `readExport`
@@ -62,12 +63,13 @@ consumer envelope, and its baseline graph hash changed. The export moved from 0.
 
 - **`measure` is the thirteenth artifact type** (ADR 0012, Core §2, §5, §6, §8). A measure judges one outcome, its
   `parent`, with a `measure` block (metric, baseline or `unknown`, target, window, a `source` from the new
-  `evidenceSources` registry, optional direction) and a Method section. An outcome past draft needs one (CORE003);
-  while it is draft, a missing measure is a CORE009 warning. Verification is not success: Core §6 says so, and §8
+  `evidenceSources` registry, optional direction) and a Method section.
+- **Breaking, Core 0.1 revision 2026-10-04: an outcome past draft needs a measure** (CORE003); while it is draft, a
+  missing measure is a CORE009 warning. Add a measure under each approved outcome, or the repository fails L1. Verification is not success: Core §6 says so, and §8
   names the outcome evidence record a later version will read.
 - **Export 0.3** carries the type, the registry, and `measure` and `tips` on every artifact. A 0.2 reader would reject
-  an envelope naming a type it did not know, so the version moved. Streamlane's reader moves its pin to 0.3 against
-  this release.
+  an envelope naming a type it did not know, so the version moved. Consumers must move their pin to 0.3 and upgrade
+  `@intentset/core` to read it.
 - **The import extractor reads JSX as JSX**, so a slash in JSX text is no longer an unterminated regular expression,
   and `//` in JSX text no longer hides an import later on its line. Found as three TS004 warnings in Streamlane.
 - **Markset 0.4.1**, pinned exactly as before. Its indentless-sequence fix let the adapter drop its
