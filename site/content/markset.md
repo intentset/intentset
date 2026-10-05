@@ -22,4 +22,4 @@ Generated pages are views. Product records remain versioned in the repository, a
 [[Read the Markset integration section](../specifications/core/index.html#{{coreMarksetSection}})]{.button .primary} [[Visit Markset]({{markset}})]{.button}
 
 > [!NOTE]
-> The reference publisher pins Markset 0.3.4 and validates every document it generates with Markset before writing it.
+> The reference publisher pins Markset 0.4.1 and validates every document it generates with Markset before writing it.

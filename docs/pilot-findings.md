@@ -35,8 +35,8 @@ slice across `packages/core`, `amplify/` and `apps/web`, eight verification reco
 - **Asset imports read as unresolved.** `import styles from "./x.module.css"` was a TS004 because the CLI gave the
   checker code files only; the tree now carries every file path, with empty text for non-code files.
 - **Markset 0.3.4 rejected a block sequence at its key's indentation**, valid YAML and how every record is written,
-  with FRONTMATTER_UNPARSEABLE. Fixed in Markset (commit 3601c8c, unreleased); the adapter drops that one code until
-  the pin moves past 0.3.4, and a test removes the workaround with the bump.
+  with FRONTMATTER_UNPARSEABLE. Fixed in Markset (commit 3601c8c) and released in 0.4.0; the pin is 0.4.1 and the adapter's
+  workaround for it is gone.
 - **A slash in JSX text read as an unterminated regular expression**, so three Streamlane files whose JSX holds a
   `/` breadcrumb separator or the help text "Use + - * /" were TS004 warnings, "not checked, so not a pass". The
   extractor lexed JSX as code, where the same mistake could also read `//` in a URL as a comment and drop an import

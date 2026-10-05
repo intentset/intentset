@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { DROPPED_MARKSET_CODES, MARKSET_VERSION, marksetCarrier } from "../src/index.ts";
+import { MARKSET_VERSION, marksetCarrier } from "../src/index.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
 
@@ -30,17 +30,7 @@ test("frontmatter, headings and syntax diagnostics come out in the shared shape"
   }
 });
 
-test("the workaround for Markset 0.3.4's YAML reader goes when the pin moves past it", () => {
-  if (MARKSET_VERSION !== "0.3.4") {
-    assert.equal(
-      DROPPED_MARKSET_CODES.size,
-      0,
-      "remove DROPPED_MARKSET_CODES: the pinned Markset reads indentless sequences",
-    );
-  }
-});
-
-test("Markset's opinion of the YAML is dropped; its opinion of the version is kept", () => {
+test("Markset reads a sequence at its key's indentation, and still reports an unsupported version", () => {
   const unindented = "---\nmarkset: 0\nintentset:\n  audiences:\n  - engineering\n---\n\n# T\n";
   assert.deepEqual(marksetCarrier("c.md", unindented).syntax, []);
   const badVersion = "---\nmarkset: 7\n---\n\n# T\n";

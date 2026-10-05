@@ -75,11 +75,11 @@ importers:
         specifier: ^0.5.0
         version: link:../publisher
       '@markset-lang/parser':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
       '@markset-lang/render-html':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
 
   packages/cli:
     dependencies:
@@ -142,8 +142,8 @@ importers:
         specifier: ^0.5.0
         version: link:../core
       '@markset-lang/parser':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4
@@ -169,11 +169,11 @@ importers:
         specifier: ^0.5.0
         version: link:../markset-adapter
       '@markset-lang/parser':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
       '@markset-lang/render-html':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
 
   packages/verification:
     dependencies:
@@ -184,11 +184,11 @@ importers:
   site:
     dependencies:
       '@markset-lang/parser':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
       '@markset-lang/render-html':
-        specifier: 0.3.4
-        version: 0.3.4
+        specifier: 0.4.1
+        version: 0.4.1
 
 packages:
 
@@ -255,20 +255,20 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@markset-lang/chart-table@0.3.4':
-    resolution: {integrity: sha512-IUI9onMuhr8LRTnAYyEaWBov2c4Y6FY58TrefOg19r8i+WkJ/JLq4yXfOTbldHjIQx2B4aYSxli1hAebb7Ay2g==}
+  '@markset-lang/chart-table@0.4.1':
+    resolution: {integrity: sha512-v2/zgM/izqVT5CHzXYnNwFn6ZraJRx9SSc6LOI98Y6Z2toz6bwIW7iKlRFqkEZfnXIpUjRN2T7fgtuf175t+ng==}
     engines: {node: '>=22.18'}
 
-  '@markset-lang/diagram-ascii@0.3.4':
-    resolution: {integrity: sha512-vR/iXCi8Easub+AZZ/I1Uokt9Jq6sfilMl9xWLPAmpJe9r/gIsWfYLYFfbGDIh2LQEZ44WQTSMHnBJYpZIeTfg==}
+  '@markset-lang/diagram-ascii@0.4.1':
+    resolution: {integrity: sha512-vsSDb6M3RwwCGXYDjk7M4gmXO1VP2IEAQk5WpVGawv1d23bhjhpd/B/qZeFSnzkaVMuCvEhBSaAao+T/Q1HuWg==}
     engines: {node: '>=22.18'}
 
-  '@markset-lang/parser@0.3.4':
-    resolution: {integrity: sha512-CxH1S/UlpR+bBquUhKjhLfz5peBv/4+cOm7A2qZNwteDenHS/9tUDrtKMXxGc/X/eF6r6EcLAqslqVCxIoq9qw==}
+  '@markset-lang/parser@0.4.1':
+    resolution: {integrity: sha512-ucQStwt1hPYCDcvC/hCW3rbE/BJeKkingHoLt3aoRnAGca+m/tW73lSS6C6Q5b0RjoKkllIHdi7ukw08Czxq+A==}
     engines: {node: '>=22.18'}
 
-  '@markset-lang/render-html@0.3.4':
-    resolution: {integrity: sha512-c1h1BssmHVf+1nQu4DNsFMavgrcC0ObmaLIvFPXKKDJExr60RB3jHolTNDkP24h+qk0E1nSgLSxlKktY2qyhig==}
+  '@markset-lang/render-html@0.4.1':
+    resolution: {integrity: sha512-FEMqd/tpbAWYJ1RAZjne7zRWJvxtoj4lxDzWvkXae+9ynANJ5sIUCdEKKnFUrKb8C3f54RiY1OgVE8aeFNSdMg==}
     engines: {node: '>=22.18'}
 
   '@modelcontextprotocol/sdk@1.32.0':
@@ -699,6 +699,9 @@ packages:
   mdast-util-to-markdown@2.1.3:
     resolution: {integrity: sha512-wgyJtgUkUcdU7zci7uuwc/tzoAhm0TswWhaXuvnWolqug+8jY7bgNkBBL0dYBnHgc/tHL7lCzRdPsdUxUKKBqw==}
 
+  mdast-util-to-markdown@2.2.0:
+    resolution: {integrity: sha512-2Jn/ADrHFFyyniBMi0bncTbJqU78K3/TEYvzvwrWWzD9MYPUa/Gm4r3nOeKFQg/PDM5BsbDYdc8ackW4NTY6NA==}
+
   mdast-util-to-string@4.0.0:
     resolution: {integrity: sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg==}
 
@@ -1020,30 +1023,34 @@ snapshots:
     dependencies:
       hono: 4.13.12
 
-  '@markset-lang/chart-table@0.3.4': {}
+  '@markset-lang/chart-table@0.4.1': {}
 
-  '@markset-lang/diagram-ascii@0.3.4': {}
+  '@markset-lang/diagram-ascii@0.4.1': {}
 
-  '@markset-lang/parser@0.3.4':
+  '@markset-lang/parser@0.4.1':
     dependencies:
+      '@types/mdast': 4.0.4
       mdast-util-from-markdown: 2.0.3
       mdast-util-frontmatter: 2.0.1
       mdast-util-gfm-table: 2.0.0
-      mdast-util-to-markdown: 2.1.3
+      mdast-util-to-markdown: 2.2.0
       micromark: 4.0.3
       micromark-extension-frontmatter: 2.0.0
       micromark-extension-gfm-table: 2.1.2
       micromark-factory-space: 2.1.0
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
+      micromark-util-types: 2.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@markset-lang/render-html@0.3.4':
+  '@markset-lang/render-html@0.4.1':
     dependencies:
-      '@markset-lang/chart-table': 0.3.4
-      '@markset-lang/diagram-ascii': 0.3.4
-      '@markset-lang/parser': 0.3.4
+      '@markset-lang/chart-table': 0.4.1
+      '@markset-lang/diagram-ascii': 0.4.1
+      '@markset-lang/parser': 0.4.1
+      '@types/hast': 3.0.5
+      '@types/mdast': 4.0.4
       hast-util-to-html: 9.0.5
       mdast-util-to-hast: 13.2.1
     transitivePeerDependencies:
@@ -1482,6 +1489,20 @@ snapshots:
       vfile: 6.0.3
 
   mdast-util-to-markdown@2.1.3:
+    dependencies:
+      '@types/mdast': 4.0.4
+      '@types/unist': 3.0.3
+      longest-streak: 3.1.0
+      mdast-util-phrasing: 4.1.0
+      mdast-util-to-string: 4.0.0
+      micromark-util-character: 2.1.1
+      micromark-util-classify-character: 2.0.1
+      micromark-util-decode-string: 2.0.1
+      micromark-util-html-tag-name: 2.0.1
+      unist-util-visit: 5.1.0
+      zwitch: 2.0.4
+
+  mdast-util-to-markdown@2.2.0:
     dependencies:
       '@types/mdast': 4.0.4
       '@types/unist': 3.0.3
