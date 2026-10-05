@@ -19,6 +19,7 @@ yaml node's raw text, so Markset still owns finding the fence.
 
 ## Consequences
 
-Two readers exist across the two projects, each the size of its own contract. If Markset's expansion backlog lands a
-strict mode, the adapter can delegate without changing core's API. Fixture C06 and the unsafe-YAML cases in the catalog
-are this reader's conformance cases.
+Two readers exist across the two projects, each the size of its own contract. If Markset's expansion backlog
+([`docs/requirements/markset/`](../requirements/markset/implementation-backlog.md)) lands a strict mode, the adapter
+can delegate without changing core's API. Fixture C06 and the unsafe-YAML cases in the catalog are this reader's
+conformance cases.

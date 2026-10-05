@@ -19,3 +19,8 @@ Implementation aids: [example](examples/README.md), [schema](schemas/frontmatter
 **Since 2026-10-02 the normative documents live in [`spec/`](../../spec/)** and the example in
 [`examples/scheduling/`](../../examples/scheduling/). This folder is the kickoff handoff as delivered and is not
 updated when the specification changes; `spec/` is the source of truth.
+
+**Since 2026-10-05 [`markset/`](markset/README.md)** holds the half of the kickoff delivered to Markset (its
+integration requirements MKS-001 to MKS-008, the profile adapter contract and its backlog), moved here from Markset's
+`docs/expansion-requirements/` so that Intentset keeps the one copy. The shared contract it links is
+[`integration-contract.md`](integration-contract.md), which the two handoffs carried identically.
