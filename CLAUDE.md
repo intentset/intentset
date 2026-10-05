@@ -44,8 +44,9 @@ frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the sit
 - **Spec, fixtures and implementation change in the same commit.**
 - Diagnostics are specified behavior: code, severity, origin, artifact, path, location when known, field as a JSON
   pointer, message, remediation. Sorted by `compareDiagnostics`. Every code is defined in a spec, and one no check
-  reports is called a review assertion there (`test/codes.test.ts` holds both). A change that alters an existing
-  case's `valid` or `diagnostics` is breaking: it moves `intentset.spec` (Core §1) and says so in the CHANGELOG.
+  reports is called a review assertion there (`test/codes.test.ts` holds both). A change that invalidates an existing
+  case, in any section and against any spec, is breaking: it moves `intentset.spec` (Core §1) and says so in the
+  CHANGELOG. Relaxing a case so that nothing which conformed stops conforming is not.
 - Determinism: same inputs, same bytes. Canonical JSON for anything hashed. Sort everything you iterate.
 - Don't add dependencies without asking. Approved so far: `@markset-lang/parser` and `@markset-lang/render-html` at
   exactly 0.4.1 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
@@ -162,7 +163,7 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - The export is 0.3. Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline
   read exports and move their pins when they update.
 - One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
-  next such change moves `intentset.spec` to `0.2`.
+  next such change, to any spec, moves `intentset.spec` to `0.2`.
 - Open: nothing.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record

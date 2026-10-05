@@ -3,7 +3,7 @@
 Every release of the `@intentset/*` packages, newest first. Each entry says whether the specifications, the
 conformance suite or the export contract moved, because those are what another tool pins. Core §1 says what kind of
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
-case moves `intentset.spec` from `0.1`.
+case, in any section of the suite, moves `intentset.spec` from `0.1`.
 
 ## Unreleased
 
@@ -13,8 +13,9 @@ stays 0.3.
 
 - **This changelog**, backfilled from 0.2.0, and a test that requires an entry for the version in `package.json`.
 - **A change policy in Core §1**, with one line in the export contract's §7. The suite decides what kind of change a
-  revision is, and the next change that invalidates an existing case moves `intentset.spec` to `0.2`. Core §1 also
-  lists the one breaking revision made inside `0.1` so far, on 2026-10-04 (see 0.6.0).
+  revision is, and the next change that invalidates an existing case, in any section and against any specification,
+  moves `intentset.spec` to `0.2`. Core §1 also lists the one breaking revision made inside `0.1` so far, on
+  2026-10-04 (see 0.6.0).
 - **Each specification opens with frontmatter**: `title`, `id`, `status`, `revision` and `implementation`. The site's
   banner on each specification and the cards on the specifications index are rendered from it, and a test holds the
   title to the heading, the implementation to `package.json` and the revision to a real date. Core's handwritten

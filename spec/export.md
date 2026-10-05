@@ -186,8 +186,9 @@ the `measure` artifact type, the `evidenceSources` registry, and `measure` and `
 unannounced.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
-to Core that invalidates an existing conformance case moves `intentset.spec` (Core §1), which an envelope carries in
-`spec`; the contract version moves only by the rule above, and every change to either is recorded in the CHANGELOG.
+that invalidates an existing conformance case, in any section of the suite and against any specification, moves
+`intentset.spec` (Core §1), which an envelope carries in `spec`; the contract version moves only by the rule above,
+and every change to either is recorded in the CHANGELOG.
 
 ## 8. Producing an export
 
