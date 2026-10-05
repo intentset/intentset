@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The intentset.org site: every page a Markset document rendered by the Markset reference implementation.",
   "dependencies": {
+    "@intentset/cli": "workspace:*",
     "@markset-lang/parser": "0.4.1",
     "@markset-lang/render-html": "0.4.1"
   }

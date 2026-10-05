@@ -23,7 +23,7 @@ pnpm exec intentset init
 ```
 :::
 
-`init` writes a configuration, empty registries, and `.intentset/agents.md`, the guide your agents follow. Point them at it with one line: `@.intentset/agents.md` in CLAUDE.md, or `Before changing code, read .intentset/agents.md and follow it.` in AGENTS.md. Then name your teams, audiences, releases and evidence sources in `.intentset/registries.yaml`. On a TypeScript earlier than 7, use the form in the note at the end of this page rather than installing.
+`init` writes a configuration, empty registries, and `.intentset/agents.md`, [the guide](../guide/index.html) your agents follow. Point them at it with one line: `@.intentset/agents.md` in CLAUDE.md, or `Before changing code, read .intentset/agents.md and follow it.` in AGENTS.md. Then name your teams, audiences, releases and evidence sources in `.intentset/registries.yaml`. On a TypeScript earlier than 7, use the form in the note at the end of this page rather than installing.
 
 ## 2. Have an agent model one capability
 
@@ -67,4 +67,4 @@ Write the model first. A product manager and an agent draft the behaviors, and a
 [[Read about the first pilot](../pilot/index.html)]{.button .primary} [[Open the worked example](../example/index.html)]{.button}
 
 > [!NOTE]
-> The reference toolchain is an early release, at 0.6. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.
+> The reference toolchain is an early release, at {{version}}. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.

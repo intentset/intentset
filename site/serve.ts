@@ -15,8 +15,12 @@ import { parseArgs } from "node:util";
 const root = resolve(import.meta.dirname, "..");
 const out = join(root, "dist");
 
-/** Watched for changes, relative to the repository root: everything the build reads. */
-export const WATCHED = ["site", "spec", "examples", "docs/requirements/roadmap"];
+/**
+ * Watched for changes, relative to the repository root: everything the build
+ * reads. tests/ is the conformance page's source and packages/cli/src the
+ * agent guide's and the command page's usage.
+ */
+export const WATCHED = ["site", "spec", "examples", "tests", "packages/cli/src"];
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -27,6 +31,7 @@ const TYPES: Record<string, string> = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
 };
 
@@ -69,8 +74,15 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     });
     res.end(body);
   } catch {
-    res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-    res.end(`not found: ${url}\n`);
+    // Pages answers a missing address with the site's 404 page; so does this.
+    const notFound = await readFile(join(out, "404.html")).catch(() => null);
+    if (notFound) {
+      res.writeHead(404, { "content-type": contentType("404.html"), "cache-control": "no-store" });
+      res.end(notFound);
+    } else {
+      res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      res.end(`not found: ${url}\n`);
+    }
   }
 }
 

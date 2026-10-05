@@ -3,10 +3,14 @@
  * rendered by the Markset reference implementation and wrapped in a shell that
  * carries the header, the navigation, an optional contents rail and the footer.
  *
- * Three kinds of page: the content pages, written in site/content/*.md with the
- * copy from the information architecture document; the normative documents,
- * rendered from spec/ so the site cannot drift from the specification; and the
- * worked example, rendered from examples/scheduling/ one record per page.
+ * Five kinds of page: the content pages, written in site/content/*.md; the
+ * normative documents, rendered from spec/ so the site cannot drift from the
+ * specification; the worked example, rendered from examples/scheduling/ one
+ * record per page; the agent guide, rendered from the generator `intentset
+ * init` writes it with; and the conformance page, generated from tests/.
+ *
+ * Beside the pages: /guide.md and /llms.txt for agents, every schema under
+ * /spec/ at the URL its $id names, sitemap.xml, robots.txt and a 404 page.
  *
  * Output: dist/ with relative links, so it works at any base path as well as on
  * the custom domain. Nothing rendered from a document carries a script; the one
@@ -15,9 +19,10 @@
  *
  *   pnpm run site
  */
-import { cp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, posix, relative, resolve } from "node:path";
 import type { Heading, Link, Nodes, Root } from "mdast";
+import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
 import { type ExampleRecord, loadRecords, typeRank } from "./records.ts";
@@ -28,11 +33,20 @@ const root = resolve(import.meta.dirname, "..");
 const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as {
   repository: { url: string };
   homepage: string;
+  version: string;
 };
 export const REPO = pkg.repository.url.replace(/^git\+/, "").replace(/\.git$/, "");
 export const CANONICAL = new URL(pkg.homepage).href;
 /** The host the site is served from, for the CNAME file Pages reads. */
 export const SITE_HOST = new URL(pkg.homepage).host;
+/** The release the pages name, read from package.json as {{version}} so no page can name a stale one. */
+export const VERSION = pkg.version;
+/** Pages serves 404.html for any address it has nothing at; see shell() for why its links start at the root. */
+export const NOT_FOUND = "404.html";
+/** Where a page lives once published: the address canonical, og:url and the sitemap give for it. */
+export function canonicalUrl(path: string): string {
+  return new URL(path.replace(/(^|\/)index\.html$/, "$1"), CANONICAL).href;
+}
 
 /** The two confirmed destinations outside this site. */
 export const EXTERNAL = {
@@ -40,31 +54,87 @@ export const EXTERNAL = {
   coralReef: "https://coralreefventures.com/",
 };
 
+/**
+ * The sibling site, linked from the footer (decided 2026-10-05), as markset.org
+ * links this one. Intentset's records are Markset documents.
+ */
+export const SIBLING = { name: "Markset", url: EXTERNAL.markset };
+
 export const SITE_NAME = "Intentset";
 
 /**
- * The bar, as the information architecture names it, plus two pages. How it
- * works was an anchor on the home page and is a page of its own since
- * 2026-10-03, so the home page can stay with the outcome and the explanation
- * can take the room it needs. Start joined the bar on 2026-10-04, once it was
- * the way to adopt Intentset rather than a manual guide only the footer led to.
+ * The bar: five sections, by what a reader came to do, as markset.org's is
+ * (decided 2026-10-05). Five is the phone's limit, and home is the wordmark.
+ * Until then the bar was by topic, from the handoff's IA: How it works, Start,
+ * Specifications, Markset and Roadmap, which gave a slot to the sibling's page
+ * while the tools had no page at all. How it works moved into Start's rail, the
+ * Markset page into Reference's, and Roadmap took the slot markset.org gives its
+ * Playground, because an early release's reader asks first where it stands.
+ * Every page kept its URL: Reference is the specifications index, Examples the
+ * worked example's.
  */
 export const NAV: Array<[string, string]> = [
-  ["How it works", "how-it-works/index.html"],
   ["Start", "start/index.html"],
-  ["Specifications", "specifications/index.html"],
-  ["Markset", "markset/index.html"],
+  ["Tools", "tools/index.html"],
+  ["Reference", "specifications/index.html"],
+  ["Examples", "example/index.html"],
   ["Roadmap", "roadmap/index.html"],
 ];
 
-export const FOOTER_LINKS: Array<[string, string]> = [
-  ["How it works", "how-it-works/index.html"],
-  ["Start", "start/index.html"],
-  ["Specifications", "specifications/index.html"],
-  ["Roadmap", "roadmap/index.html"],
-  ["Markset", "markset/index.html"],
-  ["About", "about/index.html"],
+/**
+ * The rails: the pages that belong to each bar item, listed beside every page
+ * in that section. The bar cannot hold everything, and a page reached only from
+ * a sentence is one most readers never find, so the rest are here. A test
+ * requires every page to be in the bar, a rail or the footer's row.
+ */
+export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
+  {
+    title: "Start",
+    items: [
+      ["Start with one capability", "start/index.html"],
+      ["How it works", "how-it-works/index.html"],
+      ["The agent guide", "guide/index.html"],
+    ],
+  },
+  {
+    title: "Tools",
+    items: [
+      ["All tools", "tools/index.html"],
+      ["The intentset command", "tools/cli/index.html"],
+    ],
+  },
+  {
+    title: "Reference",
+    items: [
+      ["Specifications", "specifications/index.html"],
+      ["Core", "specifications/core/index.html"],
+      ["Traceable VSA", "specifications/vsa/index.html"],
+      ["TypeScript + Amplify Gen 2", "specifications/profile-typescript-amplify-gen2/index.html"],
+      ["Publication profile", "specifications/publication/index.html"],
+      ["Export contract", "specifications/export/index.html"],
+      ["Markset", "markset/index.html"],
+      ["Conformance", "conformance/index.html"],
+    ],
+  },
+  {
+    title: "Examples",
+    items: [
+      ["The worked example", "example/index.html"],
+      ["The first pilot", "pilot/index.html"],
+    ],
+  },
 ];
+
+/** The rail a page sits in: the one listing it, or, for a record of the worked example, Examples. */
+export function railFor(path: string): (typeof RAILS)[number] | undefined {
+  return (
+    RAILS.find((rail) => rail.items.some(([, href]) => href === path)) ??
+    (path.startsWith("example/") ? RAILS.find((rail) => rail.title === "Examples") : undefined)
+  );
+}
+
+/** The footer's row: the bar again, and About, which is in no rail. */
+export const FOOTER_LINKS: Array<[string, string]> = [...NAV, ["About", "about/index.html"]];
 
 export const FOOTER = {
   statement: "An open-source project in development from Coral Reef Ventures.",
@@ -88,11 +158,25 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["how-it-works/index.html", "how-it-works.md"],
   ["start/index.html", "start.md"],
   ["pilot/index.html", "pilot.md"],
+  ["tools/index.html", "tools.md"],
+  ["tools/cli/index.html", "cli.md"],
   ["specifications/index.html", "specifications.md"],
   ["markset/index.html", "markset.md"],
   ["roadmap/index.html", "roadmap.md"],
   ["about/index.html", "about.md"],
+  [NOT_FOUND, "404.md"],
 ];
+
+/**
+ * The agent guide as the site serves it: what `intentset init` writes to
+ * .intentset/agents.md, from the same generator, with a placeholder where a
+ * repository's scope goes. A static copy cannot know a repository's scope,
+ * which is why init generates the real one.
+ */
+export const GUIDE_SCOPE = "<the scope in .intentset/config.yaml>";
+export function siteGuide(): string {
+  return agentGuide([GUIDE_SCOPE]);
+}
 
 interface Page {
   /** Output path relative to dist/, e.g. "start/index.html". */
@@ -143,6 +227,17 @@ async function writeSite(out: string): Promise<string[]> {
   await cp(defaultStylesheetPath, join(out, "css", "markset.css"));
   await cp(join(root, "site", "site.css"), join(out, "css", "site.css"));
   await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
+  // Every schema at the address its $id names (https://intentset.org/spec/...),
+  // so a validator that dereferences one finds it.
+  await mkdir(join(out, "spec"), { recursive: true });
+  for (const name of (await readdir(join(root, "spec"))).filter((f) => f.endsWith(".schema.json")).sort()) {
+    await cp(join(root, "spec", name), join(out, "spec", name));
+  }
+  // For agents: the guide as a file, and llms.txt, the conventional place an
+  // agent looks first on a site, pointing at it.
+  await writeFile(join(out, "guide.md"), siteGuide());
+  await writeFile(join(out, "llms.txt"), llmsTxt());
+  await writeFile(join(out, "robots.txt"), robotsTxt());
 
   const specs = await Promise.all(SPECS.map(specPage));
   const records = await loadRecords(join(root, EXAMPLE_DIR));
@@ -150,6 +245,9 @@ async function writeSite(out: string): Promise<string[]> {
     repo: REPO,
     markset: EXTERNAL.markset,
     coral: EXTERNAL.coralReef,
+    version: VERSION,
+    // The command's own help, so the CLI page cannot drift from it.
+    usage: USAGE,
     // The Markset page's CTA points into the Core specification's section on
     // Markset profiles. The anchor is read from the rendered document rather
     // than written by hand, so renumbering the section cannot break the link.
@@ -158,6 +256,8 @@ async function writeSite(out: string): Promise<string[]> {
   const pages: Page[] = [
     ...(await Promise.all(CONTENT_PAGES.map(([path, file]) => contentPage(path, file, tokens)))),
     ...specs,
+    guidePage(),
+    await conformancePage(),
     exampleIndex(records),
     ...records.map((record) => recordPage(record, records)),
   ];
@@ -169,13 +269,53 @@ async function writeSite(out: string): Promise<string[]> {
     await writeFile(file, shell(page));
     written.push(page.path);
   }
+  await writeFile(join(out, "sitemap.xml"), sitemapXml(written));
   return written;
+}
+
+/** /llms.txt: what an agent needs to keep a model, and where the guide is. */
+function llmsTxt(): string {
+  const site = CANONICAL.replace(/\/$/, "");
+  return `# ${SITE_NAME}
+
+> Product intent, behavior, implementation ownership, verification and published knowledge, kept connected as
+> readable Markdown records in the repository. The records are written by the coding agents that change the code and
+> reviewed by people.
+
+To keep a repository's model current, read the agent guide and follow it. In a repository that has run
+\`intentset init\`, the same guide is at \`.intentset/agents.md\` with the repository's own scope: read that copy
+when it exists. The records are Markset documents, so Markset's authoring guide covers their syntax.
+
+- [Agent guide](${site}/guide.md): before and after a change, the record format, and what an agent never does
+- [Specifications](${site}/specifications/): the source of truth
+- [The intentset command](${site}/tools/cli/): every command, option and exit code
+- [Markset authoring guide](${EXTERNAL.markset}guide.md): the document syntax the records are written in
+`;
+}
+
+/** /robots.txt: everything may be crawled, and the sitemap says what there is. */
+function robotsTxt(): string {
+  return `User-agent: *\nAllow: /\n\nSitemap: ${new URL("sitemap.xml", CANONICAL).href}\n`;
+}
+
+/**
+ * /sitemap.xml: every page the build wrote, at its canonical address, and
+ * nothing else. No lastmod: a build cannot know when a page last changed, and
+ * one stamped with the build's own date claims every page changed every time.
+ */
+function sitemapXml(paths: string[]): string {
+  const urls = paths
+    .filter((path) => path !== NOT_FOUND)
+    .sort()
+    .map((path) => `<url><loc>${esc(canonicalUrl(path))}</loc></url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
 // ---------------------------------------------------------------------------
 
 /** Content pages long enough to want the contents rail the specifications have. */
-const RAIL_PAGES = new Set(["how-it-works/index.html"]);
+const RAIL_PAGES = new Set(["how-it-works/index.html", "start/index.html", "tools/index.html"]);
 
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
@@ -226,6 +366,119 @@ async function documentPage(path: string, file: string): Promise<Page> {
     toc: tableOfContents(ast, 2, 3),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
   };
+}
+
+/**
+ * The agent guide, rendered: the same text as /guide.md, with a line saying what
+ * it is and where the file is.
+ */
+function guidePage(): Page {
+  const page = renderPage("guide/index.html", siteGuide(), join(root, "packages", "cli", "src", "agents.ts"), {}, true);
+  const banner = `<p class="site-source">The guide <code>intentset init</code> writes to <code>.intentset/agents.md</code>, generated by the same code, with <code>${esc(GUIDE_SCOPE)}</code> where your repository's scope goes. As a file for an agent: <a href="../guide.md">guide.md</a>.</p>\n`;
+  return { ...page, body: banner + page.body };
+}
+
+interface Case {
+  section: string;
+  name: string;
+  level?: string;
+  valid?: boolean;
+  diagnostics?: string[];
+}
+
+/** The order the conformance page lists the sections in: the specifications' order. */
+const SUITE_SECTIONS = ["core", "vsa", "evidence", "export", "publication"];
+
+/**
+ * The conformance page, generated from tests/ so it cannot drift from the suite:
+ * what each section holds, every code a case expects and how many cases expect
+ * it, and the export consumer fixtures. Generated as Markset source and
+ * rendered, like the example index. It does not render the cases themselves,
+ * which are whole repository trees.
+ */
+async function conformancePage(): Promise<Page> {
+  const files = (await readdir(join(root, "tests"))).filter((f) => f.endsWith(".json")).sort();
+  const sections = new Map<string, Case[]>();
+  for (const file of files) {
+    sections.set(basename(file, ".json"), JSON.parse(await readFile(join(root, "tests", file), "utf8")) as Case[]);
+  }
+  const order = [...sections.keys()].sort(
+    (a, b) => rank(SUITE_SECTIONS, a) - rank(SUITE_SECTIONS, b) || a.localeCompare(b),
+  );
+  const total = [...sections.values()].reduce((n, cases) => n + cases.length, 0);
+  const sectionRows = order.map((name) => {
+    const cases = sections.get(name) ?? [];
+    const valid = cases.filter((c) => c.valid === true).length;
+    const invalid = cases.filter((c) => c.valid === false).length;
+    const codes = new Set(cases.flatMap((c) => c.diagnostics ?? []));
+    return `| [\`${name}.json\`](${REPO}/blob/main/tests/${name}.json) | ${cases.length} | ${valid} | ${invalid} | ${codes.size} |`;
+  });
+  const codes = new Map<string, { sections: Set<string>; cases: number }>();
+  for (const name of order) {
+    for (const c of sections.get(name) ?? []) {
+      for (const code of new Set(c.diagnostics ?? [])) {
+        const entry = codes.get(code) ?? { sections: new Set<string>(), cases: 0 };
+        entry.sections.add(name);
+        entry.cases++;
+        codes.set(code, entry);
+      }
+    }
+  }
+  const codeRows = [...codes.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([code, entry]) => `| \`${code}\` | ${[...entry.sections].join(", ")} | ${entry.cases} |`);
+  const manifest = JSON.parse(await readFile(join(root, "tests", "consumer", "manifest.json"), "utf8")) as {
+    contract: string;
+    cases: Array<{ expect: { accept: boolean } }>;
+  };
+  const accepted = manifest.cases.filter((c) => c.expect.accept).length;
+  const source = `---
+markset: 0
+---
+
+# The conformance suite.
+
+{.lead}
+Every check in the specifications is held to cases: ${total} of them in ${order.length} sections, each naming the diagnostics an implementation must report for one repository. They are published as data, for implementations that are not this one.
+
+:::tabs
+### npm
+\`\`\`sh
+npm install --save-dev @intentset/conformance-suite
+\`\`\`
+
+### pnpm
+\`\`\`sh
+pnpm add --save-dev @intentset/conformance-suite
+\`\`\`
+:::
+
+The package holds the cases, the schemas and the worked example they are built from, and no code an implementation must use. A case's \`diagnostics\` are compared as a multiset of codes, errors and warnings alike; messages, locations and remediation are the implementation's own. The canonical copy is \`tests/\` in the [repository](${REPO}), where the reference implementation runs every case.
+
+## Sections
+
+| Section | Cases | Valid | Invalid | Codes |
+|---|---|---|---|---|
+${sectionRows.join("\n")}
+
+## Every code a case expects
+
+The number of cases that expect each code at least once. The [specifications](../specifications/index.html) define what each code means.
+
+| Code | Sections | Cases |
+|---|---|---|
+${codeRows.join("\n")}
+
+## Testing a consumer of the export
+
+A tool that imports an export rather than producing one is checked against ${manifest.cases.length} envelopes for \`${manifest.contract}\`: ${accepted} it must accept and ${manifest.cases.length - accepted} it must reject. Every rejected envelope is an accepted one with one deliberate defect, and several are valid against the schema, so a schema validator alone is not a consumer. The [export contract](../specifications/export/index.html) says what a consumer checks.
+`;
+  return renderPage("conformance/index.html", source, join(root, "tests", "index.json"));
+}
+
+function rank(order: string[], name: string): number {
+  const at = order.indexOf(name);
+  return at === -1 ? order.length : at;
 }
 
 /** Point a document's relative links at the site where it has a page, and at the repository otherwise. */
@@ -342,26 +595,65 @@ function md(text: string): string {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Pages serves 404.html for any address it has nothing at, however deep, so a
+ * relative link on it would resolve against the missing address. Its links are
+ * written from the site's root path instead. Not with a `<base>`: that would
+ * also resolve the skip link's `#main` against the root, and a keyboard user on
+ * the 404 page would be sent to the home page.
+ */
+function fromRoot(html: string, rootPath: string): string {
+  return html.replace(
+    /\b(href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)([^"]*)"/gi,
+    (_, name: string, url: string) => `${name}="${rootPath}${url}"`,
+  );
+}
+
 function shell(page: Page): string {
   const depth = page.path.split("/").length - 1;
-  const rel = depth === 0 ? "./" : "../".repeat(depth);
+  const notFound = page.path === NOT_FOUND;
+  const rel = notFound ? new URL(CANONICAL).pathname : depth === 0 ? "./" : "../".repeat(depth);
+  const section = railFor(page.path);
   const nav = NAV.map(([label, href]) => {
-    const section = href.replace(/index\.html(#.*)?$/, "");
-    const active = page.path === href || (section !== "" && page.path.startsWith(section));
+    // A bar item is current for its whole section, not just its own page, or
+    // the bar goes blank the moment a reader follows the rail into one.
+    const active = page.path === href || (section !== undefined && section.items[0][1] === href);
     return `<a href="${rel}${href}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("\n");
   const footerLinks = FOOTER_LINKS.map(
     ([label, href]) => `<a href="${rel}${href}"${page.path === href ? ' aria-current="page"' : ""}>${esc(label)}</a>`,
   ).join("\n");
-  const rail = page.toc
-    ? `<aside class="site-toc"><nav aria-label="Contents"><p class="site-rail-title">On this page</p>\n${page.toc}</nav></aside>\n`
+  // Where am I, then what is on this page: the section first, because it
+  // answers the question a reader arriving from a search result has.
+  const sectionNav = section
+    ? `<nav class="site-rail" aria-label="${esc(section.title)}"><p class="site-rail-title">${esc(section.title)}</p>\n<ul>\n${section.items
+        .map(
+          ([label, href]) =>
+            `<li><a href="${rel}${href}"${href === page.path ? ' aria-current="page"' : ""}>${esc(label)}</a></li>`,
+        )
+        .join("\n")}\n</ul></nav>\n`
     : "";
+  const contentsNav = page.toc
+    ? `<nav aria-label="Contents"><p class="site-rail-title">On this page</p>\n${page.toc}</nav>\n`
+    : "";
+  const rail = sectionNav || contentsNav ? `<aside class="site-toc">${sectionNav}${contentsNav}</aside>\n` : "";
   // The pattern all four sites share (Streamlane's): the home page is "Intentset
   // · what it is", every other page "Page · Intentset", and a heading's closing
   // period is dropped, since a title is a label rather than a sentence.
   const label = page.title.replace(/\.$/, "");
   const title = page.path === "index.html" ? `${SITE_NAME} · ${label}` : `${label} · ${SITE_NAME}`;
-  const canonical = new URL(page.path.replace(/index\.html$/, ""), CANONICAL).href;
+  const canonical = canonicalUrl(page.path);
+  // The 404 page has no address of its own, and asks not to be indexed.
+  const meta = notFound
+    ? `<meta name="robots" content="noindex">\n`
+    : `<link rel="canonical" href="${esc(canonical)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${SITE_NAME}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(page.description)}">
+<meta property="og:url" content="${esc(canonical)}">
+<meta name="twitter:card" content="summary">
+`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -369,14 +661,7 @@ function shell(page: Page): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(page.description)}">
-<link rel="canonical" href="${esc(canonical)}">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="${SITE_NAME}">
-<meta property="og:title" content="${esc(title)}">
-<meta property="og:description" content="${esc(page.description)}">
-<meta property="og:url" content="${esc(canonical)}">
-<meta name="twitter:card" content="summary">
-<link rel="icon" type="image/svg+xml" href="${rel}icon.svg">
+${meta}<link rel="icon" type="image/svg+xml" href="${rel}icon.svg">
 <link rel="stylesheet" href="${rel}css/markset.css">
 <link rel="stylesheet" href="${rel}css/site.css">
 </head>
@@ -390,7 +675,7 @@ ${nav}
 ${SCHEME_CONTROL}</header>
 <div class="site-layout${rail ? " has-rail" : ""}">
 ${rail}<main id="main" class="ms-document" tabindex="-1">
-${page.body}</main>
+${notFound ? fromRoot(page.body, rel) : page.body}</main>
 </div>
 <footer class="site-footer">
 <div>
@@ -398,6 +683,7 @@ ${page.body}</main>
 ${footerLinks}
 </nav>
 <p><strong>${SITE_NAME}</strong> · ${esc(FOOTER.statement)} <a href="${REPO}">${esc(FOOTER.repository)}</a></p>
+<p>Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a></p>
 </div>
 ${FAMILY_MARK}</footer>
 </body>

@@ -183,6 +183,9 @@ importers:
 
   site:
     dependencies:
+      '@intentset/cli':
+        specifier: workspace:*
+        version: link:../packages/cli
       '@markset-lang/parser':
         specifier: 0.4.1
         version: 0.4.1
