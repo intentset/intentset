@@ -89,8 +89,9 @@ for Markset and wrong for Intentset. A general YAML library can be configured to
 and a far larger grammar than the carrier needs. Decision: a strict reader in `core` for the subset the frontmatter
 uses (block maps, block and flow sequences, quoted and plain scalars, comments), erroring on everything else with a
 line number. It parses the yaml node's raw text that the adapter hands over, so Markset still owns finding the
-fence. Markset's own expansion backlog lists "duplicate key / unsafe YAML rejected at the authoring boundary"; if that
-lands upstream Intentset can delegate, and until then it does not wait.
+fence. Markset's own expansion backlog
+([`docs/requirements/markset/`](requirements/markset/implementation-backlog.md)) lists "duplicate key / unsafe YAML
+rejected at the authoring boundary"; if that lands upstream Intentset can delegate, and until then it does not wait.
 
 **ADR 0002, schema validation without a JSON Schema engine.** `schemas/frontmatter.schema.json` is normative for
 shape, and a second implementation needs it. The reference implementation checks the same constraints in typed code
@@ -331,7 +332,7 @@ rail.
 | 5 | Domain | `CNAME` and `homepage` | **Decided:** intentset.org, owned; `homepage` in `package.json` and `CNAME` written from it, as Markset does |
 | 6 | The pilot | M2 and M3 need real slices, tests and owners | **Decided:** Streamlane. Its product records live in that repository and `intentset validate` runs in its CI; nothing from it enters this repository (INT-007 is about runtime independence, not about who pilots) |
 | 7 | Whether `spec/` becomes the source of truth | §3 moves the specifications and example out of the frozen handoff | Yes, in M0, with `docs/requirements` left as delivered |
-| 8 | Markset upstream work | Markset's expansion backlog (`docs/expansion-requirements` there) proposes a profile hook and strict carrier rejection | Intentset does not wait for either; the adapter package is where delegation happens later |
+| 8 | Markset upstream work | Markset's expansion backlog ([`docs/requirements/markset/`](requirements/markset/), moved here from Markset's `docs/expansion-requirements` 2026-10-05) proposes a profile hook and strict carrier rejection | Intentset does not wait for either; the adapter package is where delegation happens later |
 
 ## 9. Risks and how the plan answers them
 
