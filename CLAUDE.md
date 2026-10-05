@@ -42,7 +42,7 @@ anything. When code and spec disagree, the spec wins, or the spec changes first 
   pointer, message, remediation. Sorted by `compareDiagnostics`. Codes are stable within v0.1.
 - Determinism: same inputs, same bytes. Canonical JSON for anything hashed. Sort everything you iterate.
 - Don't add dependencies without asking. Approved so far: `@markset-lang/parser` and `@markset-lang/render-html` at
-  exactly 0.3.4 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
+  exactly 0.4.1 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
   architecture, Playwright and Biome as dev dependencies. `pnpm install` is run by whoever owns the root; agents working
   in parallel do not run it.
 - Nothing from the Streamlane pilot enters this repository. Its records live in the Streamlane repository.
@@ -81,7 +81,7 @@ bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-beha
 
 ```ts
 // @intentset/markset-adapter
-MARKSET_VERSION = "0.3.4"
+MARKSET_VERSION = "0.4.1"
 marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; a test asserts they agree on every example
 ```
 
@@ -207,8 +207,8 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       measures under OUT-PREPARE, so every count that said thirteen says fifteen and the baseline graph hash changed.
       Not yet released: the next tag is 0.5.0, and `@intentset/help` still needs its first publish by hand before CI
       can carry it.
-- [ ] The Markset adapter drops FRONTMATTER_UNPARSEABLE until Markset releases the indentless-sequence fix
-      (Markset commit 3601c8c) and the pin moves past 0.3.4; a test removes the workaround with the bump.
+- [x] The Markset pin moved 0.3.4 -> 0.4.1 (indentless-sequence fix, Markset commit 3601c8c): the adapter no longer
+      drops FRONTMATTER_UNPARSEABLE, and the workaround's test went with it.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
 is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).

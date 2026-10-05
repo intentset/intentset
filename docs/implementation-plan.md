@@ -35,7 +35,7 @@ none of it is needed here; INT-007 requires independence from Streamlane anyway.
 | Lint/format | Biome, `biome.jsonc` (not `.json`, comments drop members silently) | markset, streamlane |
 | Types | `tsc --noEmit` for development, `tsconfig.build.json` per package for publishing to `dist/` | markset |
 | Source condition | an `intentset-source` export condition listing `src` first, so the repo runs TypeScript and a consumer gets `dist` | markset's `markset-source` |
-| Markdown | `@markset-lang/parser` ^0.3.4 from the registry, pinned exactly in one adapter package | coral-reef-site consumes it the same way |
+| Markdown | `@markset-lang/parser` ^0.4.1 from the registry, pinned exactly in one adapter package | coral-reef-site consumes it the same way |
 | HTML output | `@markset-lang/render-html` for the publisher, Atlas and site | coral-reef-site, markset site |
 | Site generator | one `site/build.ts`, every page a Markset document, `site.css` layered over `markset.css`, staging directory renamed into place | coral-reef-site (the smallest copy), markset `site/` |
 | Site checks | puppeteer at 390px and 1440px: scroll width, nothing outside the viewport, link target height | coral-reef-site `test/browser.test.ts` |
