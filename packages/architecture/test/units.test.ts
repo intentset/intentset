@@ -914,3 +914,100 @@ v
   assert.deepEqual(vsa009, []);
   assert.equal(result.summary.filesClaimed, 1, "the source claim owns index.ts, not the test beside it");
 });
+
+describe("JSX is not lexed as code (found on Streamlane: a slash in JSX text read as an unterminated regex)", () => {
+  /** Specifiers and problems, for a file whose last line imports "./after". */
+  const read = (path: string, text: string) => {
+    const out = extractImports(path, text);
+    return { specifiers: out.imports.map((i) => i.specifier), problems: out.problems };
+  };
+
+  test("a slash alone on its line of JSX text", () => {
+    // Streamlane's TeamSectionPage.tsx and CompanyRoadmap.tsx: a breadcrumb separator.
+    const text =
+      'import a from "./a";\nconst slash = (\n  <Text span c="dimmed" inherit>\n    /\n  </Text>\n);\nimport b from "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./a", "./after"], problems: [] });
+  });
+
+  test("a slash alone between tags on one line", () => {
+    const text = 'export const v = <Text c="dimmed">/</Text>;\nimport b from "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("operators in JSX text, '+ - * /'", () => {
+    // Streamlane's ComputedFields.tsx: help text naming the operators.
+    const text =
+      '<Text size="xs" c="dimmed" mt={4}>\n  Use + - * / and comparisons, and the functions {functionList}.\n</Text>;\nimport b from "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("a closing tag right after a slash, and siblings after it", () => {
+    const text =
+      'const v = (\n  <Group>\n    <Text>a/</Text>\n    <Text>/b</Text>\n  </Group>\n);\nimport "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("a URL in JSX text does not comment out the rest of its line", () => {
+    const text = 'const v = <p>see https://example.com</p>; const w = import("./later");\nimport "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./later", "./after"], problems: [] });
+  });
+
+  test("a backtick and quotes in JSX text open nothing", () => {
+    const text = 'const v = <p>press ` then "q</p>;\nimport "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("attribute strings are attribute values, slashes and all", () => {
+    const text =
+      'const v = <a href="/docs/" title=\'a / b\' aria-label="it\'s" data-x={1 / 2}>x</a>;\nimport "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("expression containers are still code: imports, regexes and division in them are read", () => {
+    const text = [
+      'const v = <div title={a / b}>{/<\\/p>/.test(s) ? "y" : "n"}{import("./lazy")}</div>;',
+      "const w = <A render={() => <B>/</B>} {...rest} />;",
+      'import "./after";',
+      "",
+    ].join("\n");
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./lazy", "./after"], problems: [] });
+  });
+
+  test("a computed import inside an expression container is still a problem", () => {
+    const out = extractImports("x.tsx", "const v = <div>{import(name)}</div>;\n");
+    assert.equal(out.problems.length, 1);
+    assert.match(out.problems[0].message, /computed specifier/);
+  });
+
+  test("fragments, nested and self-closing elements, member and namespaced names", () => {
+    const text =
+      'const v = <><Menu.Item a:b="c" icon={<Icon />}>1 / 2</Menu.Item><br/><my-el>/</my-el></>;\nimport "./after";\n';
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("regular expressions and division keep working in a .tsx file", () => {
+    const text = [
+      "const r = /<\\/Text>/g;",
+      "const d = a / b / c;",
+      "const e = (x) / 2;",
+      "const ok = x < y && y > z;",
+      "const f = <T,>(x: T) => x;",
+      "const g = <T extends object>(x: T): T => x;",
+      "let h: <T>(x: T) => T = (x) => x;",
+      "const m = list.filter((s) => /^a\\/b$/.test(s));",
+      'import "./after";',
+      "",
+    ].join("\n");
+    assert.deepEqual(read("x.tsx", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("a .ts file has no JSX: a comparison before a slash is not an element", () => {
+    const text = 'const a = x < y / 2;\nconst t = <string>v;\nimport "./after";\n';
+    assert.deepEqual(read("x.ts", text), { specifiers: ["./after"], problems: [] });
+  });
+
+  test("an element left open is no worse than before: the code after it is still read", () => {
+    const text = 'const v = <p>never closed;\nimport "./after";\n';
+    assert.deepEqual(read("x.tsx", text).specifiers, ["./after"]);
+  });
+});
