@@ -81,7 +81,10 @@ const COMMIT = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
 const GENERATED_AT = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$/;
 const TIMESTAMP =
   /^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]{1,9})?Z$/;
+/** Intentset's codes, for every origin but syntax. */
 const CODE = /^[A-Z]+[0-9]{3}$/;
+/** Markset's own codes, which a diagnostic with origin syntax carries unchanged (§1): a host never renames them. */
+const MARKSET_CODE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
 const POINTER = /^(?:\/.*)?$/;
 const PROFILE = /^intentset\/[a-z]+\/0\.1$/;
 const EXTENSION_KEY = /^[^/]+\/.+$/;
@@ -338,7 +341,16 @@ class Shape {
       ["location", "field"],
     );
     if (d === null) return;
-    this.string(d.code, `${at}/code`, CODE, "a diagnostic code such as CORE003");
+    if (d.origin === "syntax") {
+      this.string(
+        d.code,
+        `${at}/code`,
+        MARKSET_CODE,
+        "a Markset code such as DIRECTIVE_UNKNOWN_NAME, as the origin is syntax",
+      );
+    } else {
+      this.string(d.code, `${at}/code`, CODE, "an Intentset code such as CORE003");
+    }
     this.oneOf(d.severity, `${at}/severity`, ["error", "warning"]);
     this.oneOf(d.origin, `${at}/origin`, [
       "syntax",

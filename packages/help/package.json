@@ -1,6 +1,6 @@
 {
   "name": "@intentset/help",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Reads the help file intentset publish writes and binds its tips to the controls of a product's interface. No dependencies, runs in a browser.",
   "license": "MIT",
   "type": "module",

@@ -25,7 +25,7 @@ import { publishCommand, publishUsageProblem } from "./commands/publish.ts";
 import { reviewCommand } from "./commands/review.ts";
 import { serveCommand } from "./commands/serve.ts";
 import { validateCommand } from "./commands/validate.ts";
-import type { Io } from "./output.ts";
+import { type Io, TOOL } from "./output.ts";
 import { type CarrierName, CARRIERS, findRoot } from "./repository.ts";
 import { EVIDENCE_DIR, evidenceFiles, openSession, type SessionOptions } from "./session.ts";
 
@@ -93,6 +93,7 @@ options
                             L2 and above: whether a baseline of known violations applies, and which
                             (for mcp, --mode names the server's mode instead)
   -h, --help                show this help
+  --version                 print "intentset <version>", the checker version a report names
 
 exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift, unacknowledged drift),
             2 invocation or tool failure`;
@@ -112,7 +113,7 @@ const COMMANDS = [
   "mcp",
 ];
 
-const GLOBAL = ["root", "json", "carrier", "level", "help"];
+const GLOBAL = ["root", "json", "carrier", "level", "help", "version"];
 const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline"];
 const COMMAND_OPTIONS: Record<string, string[]> = {
   init: ["repository", "example", "agents"],
@@ -194,6 +195,10 @@ export async function main(argv: string[], io: Io): Promise<number> {
   }
   const { values, positionals, tokens } = parsed;
   const [command, ...rest] = positionals;
+  if (values.version && !values.help) {
+    io.stdout(`${TOOL.name} ${TOOL.version}\n`);
+    return 0;
+  }
   if (values.help || command === undefined) {
     io.stdout(`${USAGE}\n`);
     return values.help ? 0 : 2;
@@ -413,6 +418,7 @@ function parse(argv: string[]) {
       carrier: { type: "string" },
       level: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
+      version: { type: "boolean", default: false },
       repository: { type: "string" },
       example: { type: "boolean", default: false },
       agents: { type: "boolean", default: false },

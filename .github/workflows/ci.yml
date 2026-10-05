@@ -26,4 +26,9 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
       - run: pnpm run conformance
+      # The same cases against micromark's development build, which asserts its
+      # tokenizer contract where the production build does not. Vite, Vitest and
+      # Next resolve that build by default, so a consumer's dev server runs it.
+      # pnpm test ends with test:development for the unit tests.
+      - run: pnpm run conformance:development
       - run: pnpm run smoke:packed

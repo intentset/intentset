@@ -3,7 +3,7 @@ title: Intentset Core Specification v0.1
 id: intentset/core/0.1
 status: draft
 revision: 2026-10-05
-implementation: 0.6.0
+implementation: 0.6.1
 ---
 
 # Intentset Core Specification v0.1
@@ -233,7 +233,7 @@ Configuration and run records have codes of their own, reported before or beside
 | EVID002 | A run record names an ID that is not a verification in the graph, so it is evidence for nothing | Warning |
 | EVID003 | A verification's `locator` is not a file in the repository tree | Warning |
 
-Diagnostics MUST identify code, severity, origin, artifact, path, field/location, explanation, and remediation. `origin` names the stage that reported it, and keeps Markset's diagnostics apart from Intentset's: `syntax` (Markset, §9), `profile` (the carrier, frontmatter, required sections, configuration and registries), `graph` (identity, relationships and lifecycle across records), `architecture` (VSA and its profiles), `evidence` (run records, §8), `publication` (the [publication profile](publication.md)), and `render` (a renderer, reserved: no v0.1 check reports it). No other value is valid. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. CLI exits are 0 pass, 1 validation failure, 2 invocation/tool failure (ADR 0004). JSON reports MUST preserve warnings separately.
+Diagnostics MUST identify code, severity, origin, artifact, path, field/location, explanation, and remediation. `origin` names the stage that reported it, and keeps Markset's diagnostics apart from Intentset's: `syntax` (Markset, §9), `profile` (the carrier, frontmatter, required sections, configuration and registries), `graph` (identity, relationships and lifecycle across records), `architecture` (VSA and its profiles), `evidence` (run records, §8), `publication` (the [publication profile](publication.md)), and `render` (a renderer, reserved: no v0.1 check reports it). No other value is valid. Intentset codes are AREA###, Markset's are AREA_NAME; a host never renames the other's. A diagnostic with origin `syntax` is Markset's (§9) and keeps Markset's own code, such as `DIRECTIVE_UNKNOWN_NAME`; every other origin carries an Intentset code from the tables here and in the profiles. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. CLI exits are 0 pass, 1 validation failure, 2 invocation/tool failure (ADR 0004). JSON reports MUST preserve warnings separately.
 
 ## 12. Portability and exclusions
 

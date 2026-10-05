@@ -3,7 +3,7 @@ title: Intentset Traceable Vertical Slice Architecture Specification v0.1
 id: intentset/vsa/0.1
 status: draft
 revision: 2026-10-05
-implementation: 0.6.0
+implementation: 0.6.1
 ---
 
 # Intentset Traceable Vertical Slice Architecture Specification v0.1

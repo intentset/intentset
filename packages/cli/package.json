@@ -1,6 +1,6 @@
 {
   "name": "@intentset/cli",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "The intentset command: validate, graph, architecture check, evidence, impact, review, publish, serve, context, mcp, guide.",
   "keywords": [
     "intentset",
@@ -39,14 +39,14 @@
     "intentset": "./dist/intentset.js"
   },
   "dependencies": {
-    "@intentset/core": "^0.6.0",
-    "@intentset/markset-adapter": "^0.6.0",
-    "@intentset/architecture": "^0.6.0",
-    "@intentset/verification": "^0.6.0",
-    "@intentset/publisher": "^0.6.0",
-    "@intentset/atlas": "^0.6.0",
-    "@intentset/mcp": "^0.6.0",
-    "@intentset/conformance-suite": "^0.6.0"
+    "@intentset/core": "^0.6.1",
+    "@intentset/markset-adapter": "^0.6.1",
+    "@intentset/architecture": "^0.6.1",
+    "@intentset/verification": "^0.6.1",
+    "@intentset/publisher": "^0.6.1",
+    "@intentset/atlas": "^0.6.1",
+    "@intentset/mcp": "^0.6.1",
+    "@intentset/conformance-suite": "^0.6.1"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.0"

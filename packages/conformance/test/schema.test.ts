@@ -177,7 +177,17 @@ test("the three normative schemas are within the subset, and the example documen
   );
   assert.deepEqual(
     errors(conformance, [{ section: "core", name: "x", valid: true, diagnostics: ["core3"], extra: 1 }]),
-    ['/0/diagnostics/0: "core3" does not match /^[A-Z]+[0-9]{3}$/', "/0/extra: unexpected property"],
+    [
+      '/0/diagnostics/0: "core3" does not match /^(?:[A-Z]+[0-9]{3}|[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)$/',
+      "/0/extra: unexpected property",
+    ],
+  );
+  // A Markset code is a case's to expect too, under the markset carrier (Core §11).
+  assert.deepEqual(
+    errors(conformance, [
+      { section: "core", name: "x", carrier: "markset", valid: true, diagnostics: ["COLUMNS_SINGLE", "CORE009"] },
+    ]),
+    [],
   );
 
   const frontmatter = schemas.find(([name]) => name === "frontmatter")?.[1] as Schema;

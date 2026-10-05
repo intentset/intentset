@@ -98,6 +98,8 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 - Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID003` (Core §11; an outcome with no
   measure is CORE009 draft, CORE003 active), `VSA001`–`VSA013` and `REG001` (VSA §2, §5, §9), `TS001`–`TS006` and
   `AMP001`–`AMP013` (profile §2, §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
+  Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
+  schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
 - A release bumps every manifest, each spec's `implementation`, and adds its `CHANGELOG.md` entry: one bold sentence,
   then whether the specs, the suite or the export moved (tests hold all three). A spec's `revision` is the date its
   text last changed.
@@ -148,6 +150,10 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   runs TypeScript while an installed consumer gets `dist`.
 - Biome config is `biome.jsonc`, deliberately not `.json`.
 - The site's browser checks run Playwright (Chromium) at 390px and 1440px.
+- **Everything that parses Markset also runs under micromark's development build**, as Markset does: `pnpm test` ends
+  with `test:development`, `conformance:development` runs beside `conformance` in CI and the release, and the smoke
+  test runs its consumer a second time with `--conditions=development`. Vite, Vitest and Next resolve that asserting
+  build by default, and Markset 0.3.3 passed every production run and threw on any link under it.
 
 ## Status
 
@@ -162,6 +168,9 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
 - The export is 0.3. Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline
   read exports and move their pins when they update.
+- A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
+  inside export 0.3); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
+  installed packages also run under micromark's development build.
 - One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
   next such change, to any spec, moves `intentset.spec` to `0.2`.
 - Open: nothing.
