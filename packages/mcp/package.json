@@ -2,6 +2,13 @@
   "name": "@intentset/mcp",
   "version": "0.6.1",
   "description": "Read-only MCP server over an Intentset export, with the publication projection for customer context.",
+  "keywords": [
+    "intentset",
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "traceability"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {

@@ -35,7 +35,7 @@
           "column": 1
         },
         "message": "columns has a single column; add ::col to separate columns",
-        "remediation": "Fix the Markset syntax; see the Markset specification for the construct named in the message."
+        "remediation": "Fix the Markset syntax; Markset's guide, https://markset.org/guide.md, explains the construct named in the message and the code."
       }
     ]
   },

@@ -9,6 +9,7 @@
  * the trailer can never disagree with the toolchain that wrote it.
  */
 import { ARTIFACT_TYPES, REQUIRED_SECTIONS } from "@intentset/core";
+import { MARKSET_GUIDE_URL } from "@intentset/markset-adapter";
 import { UNCHANGED_TRAILER } from "./git.ts";
 import { TOOL } from "./output.ts";
 
@@ -40,6 +41,7 @@ export function detectPackageManager(files: {
 
 export function agentGuide(scope: readonly string[], manager: PackageManager = "npm"): string {
   const run = manager === "pnpm" ? "pnpm exec intentset" : "npx intentset";
+  const markset = manager === "pnpm" ? "pnpm dlx @markset-lang/cli guide" : "npx @markset-lang/cli guide";
   const isolated =
     manager === "pnpm"
       ? "pnpm dlx --package=@intentset/cli --package=typescript@7 intentset ..."
@@ -57,7 +59,7 @@ promises, which code delivers it and how it is checked. You keep them true as pa
 code, so that people can review what the product does without reading every line of what changed.
 
 Written by \`intentset init\` (${TOOL.name} ${TOOL.version}). To refresh it, delete it and run
-\`${run} init --agents\`.
+\`${run} init --agents\`; \`${run} guide\` prints it without writing a file.
 
 ## Before you change code
 
@@ -125,8 +127,12 @@ or with the trailer. The architecture check needs TypeScript 7; on an earlier Ty
 
 ## Record format
 
-A record is Markdown with YAML frontmatter under \`intentset:\`, and its level-one heading repeats its title. An
-existing record of the same type in this repository is the best template; a new behavior looks like this, one
+A record is a Markset document: Markdown with YAML frontmatter under \`intentset:\` beside \`markset: 0\`, and its
+level-one heading repeats its title. Plain Markdown is valid Markset. For the rest of Markset's syntax, the cards,
+callouts, tables and other constructs a record may use and the codes \`validate\` reports for them, read Markset's
+guide at ${MARKSET_GUIDE_URL}, or print it with \`${markset}\`.
+
+An existing record of the same type in this repository is the best template; a new behavior looks like this, one
 recognizable promise including how it fails:
 
 \`\`\`markdown

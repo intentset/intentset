@@ -8,6 +8,7 @@ where to find things.
 ## Producing the export in CI
 
 ```sh
+npm install --save-dev @intentset/cli   # only the CLI has the `intentset` binary
 # after the tests, with a JSON reporter writing reports/vitest.json
 npx intentset evidence import --from vitest reports/vitest.json --out .intentset/evidence/ci.json \
   --product <PRD-ID> --release <label>

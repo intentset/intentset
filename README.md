@@ -5,7 +5,10 @@ that implement it, the checks that verify it, and the knowledge you share with c
 in your repository. The graph, reports, Atlas and published knowledge are views of those files.
 
 **Status: v0.1 draft.** The specifications are ready for review, and the reference implementation is on npm as
-`@intentset/*`, early releases to try against one real capability.
+`@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
+release changed, and whether the specifications, the conformance suite or the export contract moved.
+
+Ten packages are published under the `@intentset` scope: `core`, `markset-adapter`, `architecture`, `verification`, `publisher`, `help`, `atlas`, `mcp`, `conformance-suite` and `cli`.
 
 - Specifications: [`spec/core-0.1.md`](spec/core-0.1.md), [`spec/vsa-0.1.md`](spec/vsa-0.1.md),
   [`spec/profile-typescript-amplify-gen2-0.1.md`](spec/profile-typescript-amplify-gen2-0.1.md),
@@ -38,13 +41,16 @@ pnpm run intentset impact BEH-ASMT-SCHEDULE --root <dir>
 ```
 
 Commands: `init`, `validate` (levels L1 to L4), `graph`, `impact`, `context`, `architecture check`,
-`evidence import`, `review`, `publish`, `serve` (the Atlas), and `mcp` (a read-only context server).
+`evidence import`, `review`, `publish`, `serve` (the Atlas), `mcp` (a read-only context server), and `guide` (the
+agent guide, printed).
 
 ## Keep the model current with agents
 
 The records are written and updated by the coding agents that change the code, in the same commit, and reviewed by
 people. `init` writes `.intentset/agents.md`, the guide an agent follows (`init --agents` writes it alone in a
 repository already set up); point agents at it with `@.intentset/agents.md` in CLAUDE.md or a line in AGENTS.md.
+`intentset guide` prints the same guide without writing anything. The records are Markset documents, and Markset's
+own guide to its syntax is https://markset.org/guide.md.
 
 - `intentset context <file>` gives an agent the slice that owns the file it is about to edit, with its behaviors,
   rules, scenarios, contracts, decisions and checks.
@@ -94,7 +100,7 @@ pnpm run lint
 pnpm run site         # build intentset.org into dist/
 ```
 
-`CLAUDE.md` holds the design invariants and working rules; `docs/implementation-plan.md` the plan;
+`CLAUDE.md` holds the design invariants and working rules; `CHANGELOG.md` the release history; `docs/implementation-plan.md` the plan;
 `docs/decisions/` the ADRs; `docs/pilot-findings.md` what the first pilot asked of the specification.
 
 ## Licence

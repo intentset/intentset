@@ -1,8 +1,14 @@
+---
+title: Intentset Export Contract v0.3
+id: intentset/export/0.3
+status: draft
+revision: 2026-10-05
+implementation: 0.6.1
+---
+
 # Intentset Export Contract v0.3
 
-**Status:** initial normative draft for review • **Date:** 2026-10-05
-**Contract ID:** `intentset/export/0.3` • **Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) •
-**Schema:** [export.schema.json](export.schema.json)
+**Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
 behaviors, a usage product attributing errors to slices, a second implementation comparing graphs. This document fixes
@@ -189,6 +195,11 @@ already wrote Markset's codes under origin `syntax`, since the adapter passes th
 and `readExport` accepted only AREA###, so such an envelope was rejected as malformed although it meant exactly what
 0.3 says. Nothing a producer writes changed. A reader built against the earlier schema, `@intentset/core` 0.6.0 and
 before among them, still rejects these envelopes, so a consumer upgrades its reader (0.6.1) rather than its pin.
+
+The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
+that invalidates an existing conformance case, in any section of the suite and against any specification, moves
+`intentset.spec` (Core §1), which an envelope carries in `spec`; the contract version moves only by the rule above,
+and every change to either is recorded in the CHANGELOG.
 
 ## 8. Producing an export
 

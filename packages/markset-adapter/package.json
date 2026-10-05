@@ -2,6 +2,12 @@
   "name": "@intentset/markset-adapter",
   "version": "0.6.1",
   "description": "The one place Markset is imported: turns a Markset document into the input core validates, with syntax diagnostics kept separate.",
+  "keywords": [
+    "intentset",
+    "markset",
+    "markdown",
+    "frontmatter"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {

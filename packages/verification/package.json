@@ -2,6 +2,13 @@
   "name": "@intentset/verification",
   "version": "0.6.1",
   "description": "Run records, evidence freshness classification, and test-reporter adapters.",
+  "keywords": [
+    "intentset",
+    "verification",
+    "test-evidence",
+    "vitest",
+    "traceability"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {

@@ -1,7 +1,12 @@
-# Intentset Core Specification v0.1
+---
+title: Intentset Core Specification v0.1
+id: intentset/core/0.1
+status: draft
+revision: 2026-10-05
+implementation: 0.6.1
+---
 
-**Status:** initial normative draft for review • **Date:** 2026-10-05  
-**Specification ID:** `intentset/core/0.1` • **Working name:** Intentset
+# Intentset Core Specification v0.1
 
 ## 1. Purpose and scope
 
@@ -9,7 +14,15 @@ Intentset is an open framework for keeping product intent, observable behavior, 
 
 This specification defines product semantics and interchange. The [VSA specification](vsa-0.1.md) adds implementation ownership and architecture constraints. The [reference profile](profile-typescript-amplify-gen2-0.1.md) maps those constraints to TypeScript and Amplify Gen 2. Core adoption does not require either architecture or platform.
 
-MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY express requirements in this draft. SHOULD departures require a recorded reason. Examples are informative unless a rule explicitly makes them normative. The CLI, Atlas, publisher, and MCP interface described here are implementation targets, not shipped software.
+MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY express requirements in this draft. SHOULD departures require a recorded reason. Examples are informative unless a rule explicitly makes them normative. The CLI, Atlas, publisher, and MCP server named here ship in the TypeScript reference implementation (`@intentset/*` on npm), whose conformance suite is published for other implementations; this specification, not that implementation, is normative.
+
+**Change policy.** The five Intentset specifications are drafts. Each opens with its `id`, `status`, `revision` (the date its text last changed) and `implementation` (the reference release that implements that revision), and every change is recorded in the repository's CHANGELOG. The conformance suite decides what kind of change a revision is, in every section of it (`core`, `vsa`, `evidence`, `publication` and `export`), whichever specification the case belongs to: one that invalidates an existing case, changing its `valid` or `diagnostics` so that a repository which conformed before no longer does, is breaking; one that leaves every existing case as it was, such as a new optional field, a new check with cases of its own, or a clarification, is not, and neither is one that only relaxes a case so that nothing which conformed stops conforming, as 0.2.0 did when VSA §3 made two errors warnings for draft slices. `intentset.spec` is the one version a record declares, so it answers for all of them: while the specifications are drafts, the next breaking change to any specification, VSA, the reference profile and the publication profile as much as Core, moves `intentset.spec` from `0.1` to `0.2`, and documents declare the new value; until 2026-10-05 breaking changes stayed inside `0.1`, and one did. The export envelope versions separately ([export contract §7](export.md#7-versioning)).
+
+Breaking revisions within `0.1`, recorded so that a reader who conformed earlier knows why they no longer do:
+
+| Revision | Change |
+|---|---|
+| 2026-10-04 | An active outcome MUST have a measure (§5, CORE003; ADR 0012). A repository with an outcome past draft and no measure validated on 2026-10-03 and fails from this revision; while the outcome is draft it is a CORE009 warning. |
 
 ## 2. Semantic model and granularity
 
@@ -35,7 +48,7 @@ Recommended human decomposition is product → intent → outcome → capability
 
 ## 3. Authoritative representation
 
-Each artifact MUST have exactly one authoritative UTF-8 Markdown document with YAML frontmatter in the declared repository scope. Slice documents are named `slice.md` in this profile; other filenames are not identity. This consolidates the conversation's alternative YAML manifests and Markdown records into one v0.1 carrier. A later standalone YAML binding MAY be specified; v0.1 tools MUST NOT silently merge duplicate records.
+Each artifact MUST have exactly one authoritative UTF-8 Markdown document with YAML frontmatter in the declared repository scope. Slice documents are named `slice.md` in this profile; other filenames are not identity. Markdown with frontmatter is the one v0.1 carrier, so records and their explanation travel together. A later standalone YAML binding MAY be specified; v0.1 tools MUST NOT silently merge duplicate records.
 
 Frontmatter MUST be the first block between `---` delimiters. It MUST decode to a JSON-compatible object. Reject duplicate keys, custom YAML tags, merge keys, aliases, and non-finite numbers. Quote dates and version strings. Implementations MUST limit file size, nesting, and parser resource use. Document bodies MUST NOT execute code or templates. Ordinary code fences remain inert text.
 
@@ -98,7 +111,7 @@ Relationships are authored once, in the direction below. Reverse edges are deriv
 
 All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in `parent`, cycles in `replacedBy`, and cycles in `requires` are errors. Other cycles are evaluated by the relevant profile; `dependsOn` is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming `governedBy`; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. An active outcome MUST have at least one measure whose `parent` it is: an outcome past draft says how it will be judged, and the capabilities under it do not say that. Draft unattached artifacts, and a draft outcome with no measure, produce warnings.
 
-At VSA adoption, an approved, implemented, released, or deprecated behavior MUST have exactly one accountable product slice through `implements`. Other collaborating slices appear through slice dependencies and contracts. This resolves the earlier discussion's “one or more owners” ambiguity while retaining multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.
+At VSA adoption, an approved, implemented, released, or deprecated behavior MUST have exactly one accountable product slice through `implements`. Other collaborating slices appear through slice dependencies and contracts. Exactly one owner keeps accountability unambiguous while still allowing multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.
 
 ## 6. Required narrative by artifact type
 
@@ -140,7 +153,7 @@ A release may include deprecated behavior; prospective documentation MAY describ
 
 Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. `verification` metadata contains `method` (`automated` or `manual`), `locator` (repository-relative path), and `selector` (stable test or review case identifier).
 
-A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization.
+A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
 
 Only `pass` at the assessed commit and graph hash counts as current passing evidence in v0.1. Any older evidence is stale. This deliberately conservative policy avoids pretending change-impact analysis proves unrelated code safe. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.
 
@@ -156,7 +169,7 @@ Intentset owns metadata, required sections, semantic validation, graph resolutio
 
 The profiles are `intentset/<type>/0.1`, plus generated `intentset/atlas/0.1` and `intentset/publication/0.1`. Generated profiles are publication outputs, not canonical graph nodes. Metadata validation and Markset validation MUST produce separately identifiable diagnostics. A successful render MUST NOT imply semantic conformance.
 
-Use ordinary Markdown links with repository-relative paths for authored cross-references. ID resolution is an Intentset graph function. Symbolic-reference syntax and a Markset-native profile registry are deferred; no new syntax is assumed in v0.1. This package uses plain Markdown bodies to avoid reliance on unverified Markset directives. Markset integration details are provisional until the upstream specification and parser version are pinned (see [sources](../docs/requirements/SOURCES.md)).
+Use ordinary Markdown links with repository-relative paths for authored cross-references. ID resolution is an Intentset graph function. Symbolic-reference syntax and a Markset-native profile registry are deferred; no new syntax is assumed in v0.1. Bodies MAY use any construct in Markset's closed vocabulary, which Markset validates; the records in the worked example are plain Markdown. The reference implementation pins Markset's parser and renderer to one exact version, named by its adapter, and moves the pin deliberately, so two packages never read one document with two parsers. Markset's own guide for writing its syntax is [markset.org/guide.md](https://markset.org/guide.md).
 
 Publication pipeline:
 
@@ -210,7 +223,17 @@ A partial adoption MUST name included capabilities/IDs and show out-of-scope cou
 | CORE008 | Unauthorized/stale publication (L4+) | Error |
 | CORE009 | Draft unattached artifact, or draft outcome with no measure | Warning |
 
-Diagnostics MUST identify code, severity, artifact, path, field/location, explanation, and remediation. Intentset codes are AREA###, Markset's are AREA_NAME; a host never renames the other's. A diagnostic with origin `syntax` is Markset's (§9) and keeps Markset's own code, such as `DIRECTIVE_UNKNOWN_NAME`; every other origin carries an Intentset code from the tables here and in the profiles. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. Proposed CLI exits: 0 pass, 1 validation failure, 2 invocation/tool failure. JSON reports MUST preserve warnings separately.
+Configuration and run records have codes of their own, reported before or beside the checks above. A configuration error stops the run it configures; a run record with a problem is never evidence.
+
+| Code | Condition | Default |
+|---|---|---|
+| CFG001 | `.intentset/config.yaml` (origin `profile`) or `.intentset/architecture.yaml` (origin `architecture`) does not parse, names an unknown key, or gives a key the wrong shape or an invalid pattern | Error |
+| CFG002 | The registries file does not parse, names an unknown registry, or a registry is not a list of unique non-empty strings (`resources`: a list of resource records with known keys and unique IDs) | Error |
+| EVID001 | A run record is malformed (§8: a required field missing or of the wrong type, the file not an array of records, an evidence ID repeated), or a manual run names no reviewer or rationale | Error |
+| EVID002 | A run record names an ID that is not a verification in the graph, so it is evidence for nothing | Warning |
+| EVID003 | A verification's `locator` is not a file in the repository tree | Warning |
+
+Diagnostics MUST identify code, severity, origin, artifact, path, field/location, explanation, and remediation. `origin` names the stage that reported it, and keeps Markset's diagnostics apart from Intentset's: `syntax` (Markset, §9), `profile` (the carrier, frontmatter, required sections, configuration and registries), `graph` (identity, relationships and lifecycle across records), `architecture` (VSA and its profiles), `evidence` (run records, §8), `publication` (the [publication profile](publication.md)), and `render` (a renderer, reserved: no v0.1 check reports it). No other value is valid. Intentset codes are AREA###, Markset's are AREA_NAME; a host never renames the other's. A diagnostic with origin `syntax` is Markset's (§9) and keeps Markset's own code, such as `DIRECTIVE_UNKNOWN_NAME`; every other origin carries an Intentset code from the tables here and in the profiles. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. CLI exits are 0 pass, 1 validation failure, 2 invocation/tool failure (ADR 0004). JSON reports MUST preserve warnings separately.
 
 ## 12. Portability and exclusions
 

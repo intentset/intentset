@@ -1,7 +1,15 @@
 {
   "name": "@intentset/cli",
   "version": "0.6.1",
-  "description": "The intentset command: validate, graph, architecture check, evidence, impact, review, publish, serve, context, mcp.",
+  "description": "The intentset command: validate, graph, architecture check, evidence, impact, review, publish, serve, context, mcp, guide.",
+  "keywords": [
+    "intentset",
+    "cli",
+    "requirements",
+    "traceability",
+    "product-model",
+    "ai-agents"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {

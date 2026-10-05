@@ -13,6 +13,7 @@ interface Manifest {
   version: string;
   private?: boolean;
   homepage?: string;
+  keywords?: string[];
   license?: string;
   files?: string[];
   exports?: Record<string, string | Record<string, string>>;
@@ -251,4 +252,97 @@ test("the release publishes every published package once, each after everything 
       assert.ok(j !== -1 && j < i, `${dir} depends on ${dep}, which must be published first`);
     }
   }
+});
+
+test("the changelog has an entry for the version in package.json, and every entry says what moved", async () => {
+  // Consumers pin export 0.3 and @intentset/core, and before 2026-10-05 nothing
+  // told them what changed per version: the release history was the status list
+  // in CLAUDE.md, and ADR 0012 made a valid repository invalid inside Core 0.1
+  // without a word anywhere a consumer reads.
+  const { version } = await manifest("package.json");
+  const changelog = await readFile(join(root, "CHANGELOG.md"), "utf8");
+  assert.match(
+    changelog,
+    new RegExp(`^## ${version.replace(/\./g, "\\.")} — \\d{4}-\\d{2}-\\d{2}$`, "mu"),
+    `the changelog has no entry for ${version}`,
+  );
+  const entries = changelog.split(/^## /mu).slice(1);
+  assert.ok(entries.length >= 6, "the changelog goes back to 0.2.0");
+  for (const entry of entries) {
+    const [heading, ...rest] = entry.split("\n");
+    assert.match(heading, /^(Unreleased|\d+\.\d+\.\d+ — \d{4}-\d{2}-\d{2})$/u, `"${heading}" is not a release heading`);
+    const lead = rest
+      .join("\n")
+      .trim()
+      .split(/\n\s*\n/u)[0]
+      .replace(/\s+/gu, " ");
+    // One bold sentence on what changed, then what moved: the specifications,
+    // the suite and the export are what another tool pins.
+    assert.match(lead, /^\*\*[^*]+[.!?]\*\* /u, `${heading}: the entry opens with one bold sentence`);
+    assert.match(lead, /\b(specifications?|Core|VSA|profile)\b/u, `${heading}: say whether the specifications moved`);
+    assert.match(lead, /\b(suite|case|cases)\b/u, `${heading}: say whether the suite moved`);
+    assert.match(lead, /\bexport\b/u, `${heading}: say whether the export moved`);
+  }
+});
+
+/** The packages that go to npm, by directory. */
+async function publishedDirs(): Promise<string[]> {
+  const out: string[] = [];
+  for (const dir of await packageDirs()) if (!(await manifest(`packages/${dir}/package.json`)).private) out.push(dir);
+  return out;
+}
+
+test("every published package has a README that names it, and keywords", async () => {
+  // npm shows the README as the package page, and nine of the ten shipped 0.6.0
+  // with none, so an adopter or an agent resolving a dependency landed on a
+  // blank page. Markset made the same mistake at 0.3.0, and this is its test.
+  for (const dir of await publishedDirs()) {
+    const readme = await readFile(join(root, "packages", dir, "README.md"), "utf8").catch(() => "");
+    assert.match(readme, new RegExp(`^# @intentset/${dir}$`, "mu"), `${dir} has no README naming it`);
+    assert.ok(readme.includes("https://intentset.org/"), `${dir}'s README does not link to intentset.org`);
+    const { keywords } = await manifest(`packages/${dir}/package.json`);
+    assert.ok(keywords?.includes("intentset"), `${dir} has no keywords, or not "intentset" among them`);
+  }
+});
+
+test("the README names every published package, so its count cannot go stale", async () => {
+  const readme = await readFile(join(root, "README.md"), "utf8");
+  const sentence = /^(\w+) packages are published under the `@intentset` scope: (.*)$/mu.exec(readme);
+  assert.ok(sentence, "the README has the sentence that lists the published packages");
+  const words: Record<string, number> = { eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+  const published = await publishedDirs();
+  assert.equal(words[sentence[1].toLowerCase()], published.length, `the count says ${sentence[1]}`);
+  for (const dir of published) assert.ok(sentence[2].includes(`\`${dir}\``), `the README does not name ${dir}`);
+});
+
+test("no README runs a bare `npx intentset` that could fetch someone else's package", async () => {
+  // `intentset` unscoped on the registry is not ours. Only @intentset/cli has the
+  // `intentset` binary, so `npx intentset` after installing any other package
+  // (or none) makes npx fetch and run the unscoped one. Every command a README
+  // shows either names the CLI (`npx -p @intentset/cli intentset ...`) or comes
+  // after the README installs @intentset/cli; `pnpm dlx` always fetches, so it
+  // must name the CLI wherever it appears.
+  const readmes = ["README.md", ...(await packageDirs()).map((dir) => `packages/${dir}/README.md`)];
+  let seen = 0;
+  for (const path of readmes) {
+    const raw = await readFile(join(root, path), "utf8").catch(() => "");
+    // An MCP client's configuration spells the command as JSON: read it as the command line it runs.
+    const text = raw.replace(
+      /"command"\s*:\s*"([\w-]+)"\s*,\s*"args"\s*:\s*\[([^\]]*)\]/gu,
+      (_, command: string, args: string) =>
+        `${command} ${[...args.matchAll(/"([^"]*)"/gu)].map((m) => m[1]).join(" ")}`,
+    );
+    const install = /\b(?:npm (?:install|i)|pnpm add)\b[^\n`]*@intentset\/cli\b/u.exec(text);
+    for (const m of text.matchAll(
+      /\b(npx|npm exec|pnpm dlx|yarn dlx)((?:[ \t]+[^\s`]+)*?)[ \t]+intentset(?=[\s`'"]|$)/gmu,
+    )) {
+      seen++;
+      const [command, runner, flags] = m;
+      if (/(?:^|\s)(?:-p|--package)(?:\s+|=)@intentset\/cli(?:@\S+)?(?=\s|$)/u.test(flags)) continue;
+      const installedFirst =
+        runner !== "pnpm dlx" && runner !== "yarn dlx" && install !== null && install.index < m.index;
+      assert.ok(installedFirst, `${path} runs \`${command.trim()}\` without naming @intentset/cli`);
+    }
+  }
+  assert.ok(seen > 0, "the READMEs show commands, so the pattern above should find some");
 });

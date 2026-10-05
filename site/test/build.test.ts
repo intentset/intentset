@@ -6,16 +6,20 @@ import { after, test } from "node:test";
 import {
   build,
   CONTENT_PAGES,
+  cardTitle,
   EXTERNAL,
   FOOTER,
   FOOTER_LINKS,
   NAV,
   NOT_FOUND,
+  readSpecMeta,
   REPO,
   SCHEME_SCRIPT,
   SIBLING,
   SITE_HOST,
+  SPEC_META_KEYS,
   SPECS,
+  statusLabel,
 } from "../build.ts";
 import { loadRecords } from "../records.ts";
 
@@ -275,6 +279,58 @@ test("the specification pages carry exactly the headings their source files decl
   assert.match(core, /href="\.\.\/profile-typescript-amplify-gen2\/index\.html"/);
   // The one .md link left is the banner's, to the source in the repository.
   assert.doesNotMatch(core, /href="(?!https?:)[^"]*\.md"/, "a .md link survived into the core page");
+});
+
+/**
+ * Each specification says what it is in its frontmatter (Core §1's change
+ * policy), and the site renders the banner and the index cards from it rather
+ * than from a copy. Before 2026-10-05 the banners were hand-written in each
+ * document, and Core's still said 2026-10-02 two revisions later.
+ */
+test("each specification's frontmatter names it, and its page and index card show what it says", async () => {
+  const version = (JSON.parse(await readFile(join(root, "package.json"), "utf8")) as { version: string }).version;
+  const index = main("specifications/index.html");
+  const today = new Date().toISOString().slice(0, 10);
+  const ids = new Set<string>();
+  for (const spec of SPECS) {
+    const file = join("spec", spec.file);
+    const source = await readFile(join(root, file), "utf8");
+    assert.match(source, /^---\n/u, `${file} opens with frontmatter`);
+    const meta = readSpecMeta(source, file);
+    const keys = Object.keys(meta).sort();
+    assert.deepEqual(
+      keys,
+      [...SPEC_META_KEYS].sort(),
+      `${file}: frontmatter carries exactly ${SPEC_META_KEYS.join(", ")}`,
+    );
+
+    const h1 = /^# (.+)$/mu.exec(source)?.[1];
+    assert.equal(meta.title, h1, `${file}: title is the document's heading`);
+    assert.match(meta.id, /^intentset\/[a-z0-9-]+\/\d+\.\d+$/u, `${file}: id`);
+    assert.ok(!ids.has(meta.id), `${file}: id ${meta.id} is taken`);
+    ids.add(meta.id);
+    assert.ok(meta.title.endsWith(` v${meta.id.split("/").at(-1)}`), `${file}: title and id name one version`);
+    assert.equal(meta.status, "draft", `${file}: every specification is a draft until Core §1 says otherwise`);
+    assert.match(meta.revision, /^\d{4}-\d{2}-\d{2}$/u, `${file}: revision is a date`);
+    assert.equal(new Date(`${meta.revision}T00:00:00Z`).toISOString().slice(0, 10), meta.revision, file);
+    assert.ok(meta.revision <= today, `${file}: revision ${meta.revision} is in the future`);
+    assert.equal(meta.implementation, version, `${file}: implementation names the release in package.json`);
+    // The handwritten header the frontmatter replaced must not come back beside it.
+    assert.doesNotMatch(source, /^\*\*Status:\*\*/mu, `${file} still carries a handwritten status line`);
+
+    const page = main(`specifications/${spec.slug}/index.html`);
+    const banner = text(/<p class="site-source">([\s\S]*?)<\/p>/u.exec(page)?.[1] ?? "");
+    for (const part of [statusLabel(meta.status), meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
+      assert.ok(banner.includes(part), `${spec.slug}: banner "${banner}" does not say ${part}`);
+    }
+    const card = text(index);
+    assert.ok(card.includes(cardTitle(meta)), `the index has no card titled ${cardTitle(meta)}`);
+    assert.ok(
+      card.includes(`${meta.id} · revision ${meta.revision}`),
+      `the ${spec.slug} card does not name its revision`,
+    );
+  }
+  assert.doesNotMatch(index, /\{\{/u, "a token survived into the index");
 });
 
 test("the example index lists every record under its type, and each record page carries its metadata and links", () => {
