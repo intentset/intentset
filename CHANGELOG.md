@@ -34,7 +34,10 @@ stays 0.3.
   at Markset's own guide, https://markset.org/guide.md, for the syntax, as does the remediation on every Markset
   diagnostic the adapter passes through.
 - **A README for every published package**, with keywords, so the npm page says what each package is. Tests require
-  a README naming each published package and the root README to name all ten.
+  a README naming each published package and the root README to name all ten. Every command a README shows names
+  `@intentset/cli`, as `npx -p @intentset/cli intentset …` or after installing it, because only the CLI has the
+  `intentset` binary and npx asked for `intentset` alone fetches an unrelated unscoped package; a test holds every
+  README to that, the MCP client configuration included.
 
 ## 0.6.1 — 2026-10-05
 

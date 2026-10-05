@@ -13,13 +13,18 @@ pnpm add @intentset/verification
 
 ## Example
 
-In CI, after the tests, turn the report into run records bound to this commit and graph:
+In CI, after the tests, turn the report into run records bound to this commit and graph, through the CLI,
+`@intentset/cli`:
 
 ```sh
-npx intentset evidence import --from vitest reports/vitest.json --out .intentset/evidence/ci.json \
-  --product PRD-X --release <label>
-npx intentset validate --level L3 --product PRD-X --release <label>
+npx -p @intentset/cli intentset evidence import --from vitest reports/vitest.json \
+  --out .intentset/evidence/ci.json --product PRD-X --release <label>
+npx -p @intentset/cli intentset validate --level L3 --product PRD-X --release <label>
 ```
+
+With pnpm, `pnpm dlx --package=@intentset/cli intentset …`, or `pnpm exec intentset …` once `@intentset/cli` is
+installed. The command is always `@intentset/cli`'s: this package has no `intentset` binary, and npx asked
+for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
 From code:
 

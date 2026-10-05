@@ -13,10 +13,16 @@ pnpm add @intentset/publisher
 
 ## Example
 
+Most repositories publish through the CLI, `@intentset/cli`:
+
 ```sh
-npx intentset publish --visibility customer --audience teacher --product PRD-LANTERN --release pilot-1 \
-  --role teacher --edition standard --out published/ --html
+npx -p @intentset/cli intentset publish --visibility customer --audience teacher --product PRD-LANTERN \
+  --release pilot-1 --role teacher --edition standard --out published/ --html
 ```
+
+With pnpm, `pnpm dlx --package=@intentset/cli intentset …`, or `pnpm exec intentset …` once `@intentset/cli` is
+installed. The command is always `@intentset/cli`'s: this package has no `intentset` binary, and npx asked
+for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
 From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the index, the help
 file and the diagnostics, and refuses the whole request when any field is missing or undeclared (PUB001).

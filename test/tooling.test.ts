@@ -314,3 +314,35 @@ test("the README names every published package, so its count cannot go stale", a
   assert.equal(words[sentence[1].toLowerCase()], published.length, `the count says ${sentence[1]}`);
   for (const dir of published) assert.ok(sentence[2].includes(`\`${dir}\``), `the README does not name ${dir}`);
 });
+
+test("no README runs a bare `npx intentset` that could fetch someone else's package", async () => {
+  // `intentset` unscoped on the registry is not ours. Only @intentset/cli has the
+  // `intentset` binary, so `npx intentset` after installing any other package
+  // (or none) makes npx fetch and run the unscoped one. Every command a README
+  // shows either names the CLI (`npx -p @intentset/cli intentset ...`) or comes
+  // after the README installs @intentset/cli; `pnpm dlx` always fetches, so it
+  // must name the CLI wherever it appears.
+  const readmes = ["README.md", ...(await packageDirs()).map((dir) => `packages/${dir}/README.md`)];
+  let seen = 0;
+  for (const path of readmes) {
+    const raw = await readFile(join(root, path), "utf8").catch(() => "");
+    // An MCP client's configuration spells the command as JSON: read it as the command line it runs.
+    const text = raw.replace(
+      /"command"\s*:\s*"([\w-]+)"\s*,\s*"args"\s*:\s*\[([^\]]*)\]/gu,
+      (_, command: string, args: string) =>
+        `${command} ${[...args.matchAll(/"([^"]*)"/gu)].map((m) => m[1]).join(" ")}`,
+    );
+    const install = /\b(?:npm (?:install|i)|pnpm add)\b[^\n`]*@intentset\/cli\b/u.exec(text);
+    for (const m of text.matchAll(
+      /\b(npx|npm exec|pnpm dlx|yarn dlx)((?:[ \t]+[^\s`]+)*?)[ \t]+intentset(?=[\s`'"]|$)/gmu,
+    )) {
+      seen++;
+      const [command, runner, flags] = m;
+      if (/(?:^|\s)(?:-p|--package)(?:\s+|=)@intentset\/cli(?:@\S+)?(?=\s|$)/u.test(flags)) continue;
+      const installedFirst =
+        runner !== "pnpm dlx" && runner !== "yarn dlx" && install !== null && install.index < m.index;
+      assert.ok(installedFirst, `${path} runs \`${command.trim()}\` without naming @intentset/cli`);
+    }
+  }
+  assert.ok(seen > 0, "the READMEs show commands, so the pattern above should find some");
+});

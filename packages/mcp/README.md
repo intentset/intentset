@@ -13,15 +13,22 @@ pnpm add @intentset/mcp
 
 ## Example
 
-Run it through the CLI, from the repository root, in your MCP client's configuration:
+Run it through the CLI, `@intentset/cli`, from the repository root, in your MCP client's configuration:
 
 ```json
 {
   "mcpServers": {
-    "intentset": { "command": "npx", "args": ["intentset", "mcp", "--mode", "engineering"] }
+    "intentset": {
+      "command": "npx",
+      "args": ["-y", "-p", "@intentset/cli", "intentset", "mcp", "--mode", "engineering"]
+    }
   }
 }
 ```
+
+The `-p @intentset/cli` matters: this package has no `intentset` binary, and npx asked for `intentset` alone would
+fetch an unrelated unscoped package from the registry. With `@intentset/cli` installed in the repository, `"command":
+"pnpm", "args": ["exec", "intentset", "mcp", "--mode", "engineering"]` runs the installed copy.
 
 From code, `createIntentsetServer(options)` builds the server and `runStdio(server)` serves it on stdio.
 

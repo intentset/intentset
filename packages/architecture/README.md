@@ -13,12 +13,16 @@ pnpm add @intentset/architecture
 
 ## Example
 
-Most repositories run it through the CLI, at L2:
+Most repositories run it through the CLI, `@intentset/cli`, at L2:
 
 ```sh
-npx intentset architecture check                 # pnpm exec intentset architecture check
-npx intentset architecture check --mode strict   # no baseline: every violation fails
+npx -p @intentset/cli intentset architecture check
+npx -p @intentset/cli intentset architecture check --mode strict   # no baseline: every violation fails
 ```
+
+With pnpm, `pnpm dlx --package=@intentset/cli intentset …`, or `pnpm exec intentset …` once `@intentset/cli` is
+installed. The command is always `@intentset/cli`'s: this package has no `intentset` binary, and npx asked
+for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
 From code, after core's validation:
 

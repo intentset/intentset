@@ -13,10 +13,16 @@ pnpm add @intentset/atlas
 
 ## Example
 
+Most repositories run it through the CLI, `@intentset/cli`:
+
 ```sh
-npx intentset serve                 # http://127.0.0.1:3000/, rebuilt when a file changes
-npx intentset serve --out atlas/    # or write the pages, for CI to publish internally
+npx -p @intentset/cli intentset serve                 # http://127.0.0.1:3000/, rebuilt when a file changes
+npx -p @intentset/cli intentset serve --out atlas/    # or write the pages, for CI to publish internally
 ```
+
+With pnpm, `pnpm dlx --package=@intentset/cli intentset …`, or `pnpm exec intentset …` once `@intentset/cli` is
+installed. The command is always `@intentset/cli`'s: this package has no `intentset` binary, and npx asked
+for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
 From code, `buildAtlas(input)` returns a map of page path to HTML, where `input` holds the graph, the registries, the
 diagnostics and the snapshot, and optionally classified evidence and an architecture check's result.
