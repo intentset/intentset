@@ -64,6 +64,11 @@
         "enum": ["L1", "L2", "L3", "L4", "L5"],
         "default": "L1"
       },
+      "carrier": {
+        "enum": ["plain", "markset"],
+        "default": "plain",
+        "description": "How the documents are read (ADR 0003). plain reads frontmatter and headings without a Markdown parser and reports nothing of its own; markset reads them with a Markset parser, whose diagnostics pass through with origin syntax and Markset's codes (Core \u00a711)."
+      },
       "evidence": {
         "type": "array",
         "description": "Run records (Core \u00a78) supplied to the evidence check.",
@@ -123,10 +128,10 @@
       },
       "diagnostics": {
         "type": "array",
-        "description": "Every diagnostic code the case must produce, errors and warnings, as a multiset. Omitted on a valid case means none.",
+        "description": "Every diagnostic code the case must produce, errors and warnings, as a multiset. Omitted on a valid case means none. Intentset's codes are AREA###; a Markset diagnostic (origin syntax, only with the markset carrier) keeps Markset's own AREA_NAME code.",
         "items": {
           "type": "string",
-          "pattern": "^[A-Z]+[0-9]{3}$"
+          "pattern": "^(?:[A-Z]+[0-9]{3}|[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)$"
         }
       },
       "artifacts": {

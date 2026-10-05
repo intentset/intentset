@@ -135,6 +135,30 @@ test("the development workflow asks for source, in every script that runs node, 
   assert.deepEqual(ts.compilerOptions.customConditions, ["intentset-source"]);
 });
 
+test("the tests, the suite and the installed packages also run under micromark's development build", async () => {
+  // Vite, Vitest and Next resolve micromark's development build, which asserts
+  // its tokenizer contract where the production build does not. Markset 0.3.3
+  // passed every production run and threw on any link under it, and the
+  // adapter, publisher and Atlas all parse Markset.
+  const scripts = (await manifest("package.json")).scripts ?? {};
+  assert.match(scripts.test, /&& pnpm run test:development$/u, "pnpm test ends with the development pass");
+  for (const name of ["test:development", "conformance:development"]) {
+    assert.match(scripts[name] ?? "", /--conditions=development/u, `${name} asks for the development build`);
+    assert.equal(
+      scripts[name].replace(" --conditions=development", ""),
+      scripts[name.replace(":development", "")].split(" && ")[0].replace(/ site\/test\/\S+| test\/\*\.test\.ts/gu, ""),
+      `${name} runs what ${name.replace(":development", "")} runs`,
+    );
+  }
+  for (const workflow of ["ci.yml", "release.yml"]) {
+    const text = await readFile(join(root, ".github", "workflows", workflow), "utf8");
+    assert.match(text, /- run: pnpm test\n/u, `${workflow} runs pnpm test`);
+    assert.match(text, /- run: pnpm run conformance:development\n/u, `${workflow} runs the suite under development`);
+  }
+  const smoke = await readFile(join(root, "test", "consumer", "smoke.ts"), "utf8");
+  assert.match(smoke, /run\("node", \["--conditions=development", "consumer\.mjs"\]\)/u);
+});
+
 test("the build compiles each package after everything it depends on", async () => {
   // The build config has no source condition, so a package's import of a
   // sibling resolves to that sibling's dist/index.d.ts, which exists only if

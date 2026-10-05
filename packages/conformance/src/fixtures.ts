@@ -73,6 +73,7 @@ export function expandCase(testCase: ConformanceCase, options: ExpandOptions): E
     configText: tree.get(CONFIG_PATH) ?? null,
     sources: new Map([...sources].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))),
     level: (testCase.level ?? "L1") as Level,
+    carrier: testCase.carrier ?? "plain",
     evidence: testCase.evidence ?? [],
     request: testCase.request ?? null,
   };

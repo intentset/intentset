@@ -64,6 +64,9 @@ need no patch logic:
 - `sources` holds non-document files (TypeScript sources, a `tsconfig.json`, test output) for the VSA and evidence
   sections.
 - `level` is the conformance level to validate at. Checks above it must not run, and must not report.
+- `carrier`, when present, is `markset`: read the documents with a Markset parser and pass its diagnostics through with
+  origin `syntax` and Markset's own codes (`COLUMNS_SINGLE`, not AREA###). Absent means `plain`: frontmatter and headings
+  only, and no diagnostic of the reader's own.
 - `evidence` carries run records (Core §8) and `request` a publication request, for the sections that need them.
 
 ## What you must match
@@ -71,7 +74,7 @@ need no patch logic:
 - `valid`: false when at least one diagnostic is an error.
 - `diagnostics`: every code, errors and warnings alike, as a **multiset** in any order. Absent means none are
   permitted. Messages, locations and remediation text are yours to write; codes are Core §11 and the VSA and
-  profile specifications, and are stable within v0.1.
+  profile specifications, and are stable within v0.1. A `markset` case's syntax codes are Markset's own.
 - `artifacts`, when present: the IDs in the graph, compared sorted.
 - `export`, when present: a deep partial match against your envelope. Only the fields named are compared, so
   `generatedAt`, `source.commit` and `graphHash` are checked only by a case that names them. Where a case names

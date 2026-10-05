@@ -1,6 +1,6 @@
 {
   "name": "@intentset/architecture",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Traceable VSA checks: path claims, import graph, layer matrix, resources, exceptions, baseline.",
   "license": "MIT",
   "type": "module",
@@ -28,7 +28,7 @@
     }
   },
   "dependencies": {
-    "@intentset/core": "^0.6.0"
+    "@intentset/core": "^0.6.1"
   },
   "peerDependencies": {
     "typescript": "^7.0.2"

@@ -1,6 +1,6 @@
 # Intentset Core Specification v0.1
 
-**Status:** initial normative draft for review • **Date:** 2026-10-02  
+**Status:** initial normative draft for review • **Date:** 2026-10-05  
 **Specification ID:** `intentset/core/0.1` • **Working name:** Intentset
 
 ## 1. Purpose and scope
@@ -210,7 +210,7 @@ A partial adoption MUST name included capabilities/IDs and show out-of-scope cou
 | CORE008 | Unauthorized/stale publication (L4+) | Error |
 | CORE009 | Draft unattached artifact, or draft outcome with no measure | Warning |
 
-Diagnostics MUST identify code, severity, artifact, path, field/location, explanation, and remediation. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. Proposed CLI exits: 0 pass, 1 validation failure, 2 invocation/tool failure. JSON reports MUST preserve warnings separately.
+Diagnostics MUST identify code, severity, artifact, path, field/location, explanation, and remediation. Intentset codes are AREA###, Markset's are AREA_NAME; a host never renames the other's. A diagnostic with origin `syntax` is Markset's (§9) and keeps Markset's own code, such as `DIRECTIVE_UNKNOWN_NAME`; every other origin carries an Intentset code from the tables here and in the profiles. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. Proposed CLI exits: 0 pass, 1 validation failure, 2 invocation/tool failure. JSON reports MUST preserve warnings separately.
 
 ## 12. Portability and exclusions
 
