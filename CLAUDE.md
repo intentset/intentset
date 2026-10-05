@@ -205,10 +205,13 @@ See `docs/implementation-plan.md` §5 for milestones. Update the list below as m
       `measure` and `tips` on every artifact, which ADR 0011 had deferred to this bump; the consumer fixtures carry a
       rejected 0.2 envelope, and Streamlane's reader moves its pin when it next updates. The Lantern example has two
       measures under OUT-PREPARE, so every count that said thirteen says fifteen and the baseline graph hash changed.
-      Not yet released: the next tag is 0.5.0, and `@intentset/help` still needs its first publish by hand before CI
-      can carry it.
+      Released in 0.6.0.
 - [x] The Markset pin moved 0.3.4 -> 0.4.1 (indentless-sequence fix, Markset commit 3601c8c): the adapter no longer
       drops FRONTMATTER_UNPARSEABLE, and the workaround's test went with it.
+- [x] Published 0.5.0, 2026-10-04, all ten packages on npm including `@intentset/help`, and
+      0.6.0 the same day: success measures and export 0.3, the JSX-text fix in the import extractor, and Markset 0.4.1.
+      Before 1.0 a changed export envelope is a minor bump. Streamlane's export reader can move its pin to 0.3 against
+      0.6.0.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
 is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).
