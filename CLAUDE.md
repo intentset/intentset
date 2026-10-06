@@ -177,7 +177,10 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   `light-dark(#2c6a54, #7cc3a8)`), so the product reads in the same green on both sites. The neutrals are
   Intentset's own green-tinted ground and ink, **deliberately**: markset.org keeps its cool white and
   coralreefventures.com its cream, decided 2026-10-05. Do not "fix" them to match.
-- The footer links the sibling site, markset.org, once, as markset.org's links this one.
+- **The footer is the family's** (2026-10-06, the same on markset.org): the row (the bar and About), then one line,
+  `Intentset · Keep control of what your agents build. · Source on GitHub · A Coral Reef Ventures project · Sibling
+  project: Markset`, then the family's mark. It links the sibling site, markset.org, once, as markset.org's links this
+  one. `site/test/build.test.ts` holds the shape.
 
 ## Status
 

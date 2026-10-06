@@ -136,9 +136,15 @@ export function railFor(path: string): (typeof RAILS)[number] | undefined {
 /** The footer's row: the bar again, and About, which is in no rail. */
 export const FOOTER_LINKS: Array<[string, string]> = [...NAV, ["About", "about/index.html"]];
 
+/**
+ * The footer's one line, the family's (decided 2026-10-06, the same on
+ * markset.org): the name, what it is in one sentence (the approved tagline),
+ * the source, the company and the sibling site.
+ */
 export const FOOTER = {
-  statement: "An open-source project in development from Coral Reef Ventures.",
-  repository: "Contribute on GitHub",
+  statement: "Keep control of what your agents build.",
+  repository: "Source on GitHub",
+  company: "A Coral Reef Ventures project",
 };
 
 /** The normative documents, each rendered from its single source under /specifications/. */
@@ -738,8 +744,7 @@ ${notFound ? fromRoot(page.body, rel) : page.body}</main>
 <nav class="site-footer-nav" aria-label="Footer">
 ${footerLinks}
 </nav>
-<p><strong>${SITE_NAME}</strong> · ${esc(FOOTER.statement)} <a href="${REPO}">${esc(FOOTER.repository)}</a></p>
-<p>Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a></p>
+<p><strong>${SITE_NAME}</strong> · ${esc(FOOTER.statement)} · <a href="${REPO}">${esc(FOOTER.repository)}</a> · <a href="${EXTERNAL.coralReef}">${esc(FOOTER.company)}</a> · Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a></p>
 </div>
 ${FAMILY_MARK}</footer>
 </body>
@@ -750,9 +755,9 @@ ${FAMILY_MARK}</footer>
 // ---------------------------------------------------------------------------
 
 /**
- * The network figure from coralreefventures.com, which draws the three
- * products as clusters of nodes: Markset's two, Intentset's two, Streamlane's
- * one, and two unaffiliated. Here Intentset's nodes carry the accent and the
+ * The network figure from coralreefventures.com, which draws the four
+ * products as nodes: Markset's two, Intentset's two, Streamlane's one,
+ * Driftline's one, and one unaffiliated. Here Intentset's nodes carry the accent and the
  * rest stay quiet: the family's mark, worn by one member. Inline so its colors
  * are tokens and follow the reader's scheme; decoration, so hidden from
  * assistive technology.
