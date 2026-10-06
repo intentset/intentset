@@ -111,7 +111,7 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
   }
 });
 
-test("the bar is the five sections by what a reader came to do, and the footer the bar and About, with their copy", () => {
+test("the bar is the five sections by what a reader came to do", () => {
   for (const [page, doc] of html) {
     const nav = doc.slice(doc.indexOf('<nav class="site-nav"'), doc.indexOf("</nav>"));
     const labels = [...nav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]);
@@ -121,28 +121,45 @@ test("the bar is the five sections by what a reader came to do, and the footer t
       page,
     );
     assert.deepEqual(labels, ["Start", "Tools", "Reference", "Examples", "Roadmap"]);
-    const footer = doc.slice(doc.indexOf("<footer"), doc.indexOf("</footer>"));
-    const footerNav = footer.slice(0, footer.indexOf("</nav>"));
+  }
+});
+
+test("the footer is the family's: the bar and About, then one line, then the family's mark", () => {
+  // Decided 2026-10-06 for both product sites: a row of links, then one line
+  // naming the product, what it is, its source, the company and the sibling.
+  assert.equal(FOOTER.statement, "Keep control of what your agents build.");
+  assert.equal(FOOTER.repository, "Source on GitHub");
+  assert.equal(FOOTER.company, "A Coral Reef Ventures project");
+  assert.equal(SIBLING.url, EXTERNAL.markset);
+  const line =
+    `<p><strong>Intentset</strong> · ${FOOTER.statement}` +
+    ` · <a href="${REPO}">${FOOTER.repository}</a>` +
+    ` · <a href="${EXTERNAL.coralReef}">${FOOTER.company}</a>` +
+    ` · Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a></p>`;
+  for (const [page, doc] of html) {
+    const footer = doc.slice(doc.indexOf('<footer class="site-footer">'), doc.indexOf("</footer>"));
+    const navStart = footer.indexOf('<nav class="site-footer-nav" aria-label="Footer">');
+    assert.notEqual(navStart, -1, `${page}: the footer has its row`);
+    const footerNav = footer.slice(navStart, footer.indexOf("</nav>"));
     assert.deepEqual(
       [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
       FOOTER_LINKS.map(([label]) => label),
       page,
     );
-    assert.ok(text(footer).includes(FOOTER.statement), page);
-    assert.doesNotMatch(
-      text(footer),
-      /adopted independently/i,
-      `${page}: the footer makes no claim about adopting the products separately`,
-    );
-    assert.match(footer, new RegExp(`<a href="${REPO}">${FOOTER.repository}</a>`), page);
     assert.deepEqual(
       [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
       ["Start", "Tools", "Reference", "Examples", "Roadmap", "About"],
       `${page}: About stays in the footer's row`,
     );
-    // The sibling site, once, in the footer, as markset.org links this one.
-    assert.ok(footer.includes(`Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a>`), page);
-    assert.equal(SIBLING.url, EXTERNAL.markset);
+    const afterNav = footer.slice(footer.indexOf("</nav>") + "</nav>".length);
+    assert.equal((afterNav.match(/<p[\s>]/g) ?? []).length, 1, `${page}: one line`);
+    assert.ok(afterNav.includes(line), `${page}: the line, in order`);
+    assert.ok(afterNav.indexOf(line) < afterNav.indexOf('<svg class="site-family"'), `${page}: the mark comes last`);
+    assert.doesNotMatch(
+      text(footer),
+      /adopted independently/i,
+      `${page}: the footer makes no claim about adopting the products separately`,
+    );
   }
 });
 

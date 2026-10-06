@@ -102,7 +102,9 @@ Review the draft. Walk through the example. Try the model against one real capab
 **Primary:** Read the draft specification  
 **Secondary:** Start with one behavior
 
-**Footer:** Intentset · An open-source project in development from Coral Reef Ventures. (The sentence saying the products can be adopted independently was removed on 2026-10-05 at the product owner's request.)
+**Footer:** a link row (the menu, then About), then one line: Intentset · Keep control of what your agents build. ·
+Source on GitHub · A Coral Reef Ventures project · Sibling project: Markset (the family footer, Gary's decision of
+2026-10-06, reef `docs/conventions.md`). (The sentence saying the products can be adopted independently was removed on 2026-10-05 at the product owner's request.)
 
 ## Start page copy
 
