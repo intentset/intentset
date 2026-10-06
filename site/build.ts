@@ -757,8 +757,8 @@ ${FAMILY_MARK}</footer>
 /**
  * The network figure from coralreefventures.com, which draws the four
  * products as nodes: Markset's two, Intentset's two, Streamlane's one,
- * Driftline's one, and one unaffiliated. Here Intentset's nodes carry the accent and the
- * rest stay quiet: the family's mark, worn by one member. Inline so its colors
+ * Driftline's one, and one unaffiliated. Here Intentset's nodes carry the
+ * accent and the rest stay quiet: the family's mark, worn by one member. Inline so its colors
  * are tokens and follow the reader's scheme; decoration, so hidden from
  * assistive technology.
  */
