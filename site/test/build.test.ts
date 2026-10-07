@@ -416,3 +416,21 @@ test("the build leaves no placeholder behind", async () => {
   const written = await readdir(dist);
   assert.ok(!written.some((name) => name.includes("staging")), "a staging directory was left in dist");
 });
+
+test("the adoption log: the counts first, dated chapters newest first, and no link into the products", () => {
+  const page = main("pilot/index.html");
+  const chapters = [...page.matchAll(/<h2 id="[^"]*">([^<]*)<\/h2>/g)].map((m) => m[1]);
+  const dated = chapters.filter((heading) => /^\d{4}-\d{2}-\d{2}/.test(heading));
+  assert.equal(chapters[0], "Where it stands", "the counts come before the first chapter");
+  assert.ok(dated.length >= 2, "the log has dated chapters");
+  assert.deepEqual(dated, chapters.slice(1), "every chapter after the counts is dated");
+  // A chapter spanning days is placed by its last date.
+  const last = dated.map((heading) => [...heading.matchAll(/\d{4}-\d{2}-\d{2}/g)].at(-1)?.[0] ?? "");
+  assert.deepEqual(last, [...last].sort().reverse(), "chapters are newest first");
+  const counts = page.slice(page.indexOf('id="where-it-stands"'), page.indexOf(`>${dated[0]}<`));
+  assert.match(counts, /class="ms-metrics"/, "the counts are a metrics block");
+  // The products' sites are locked and their repositories private, so the log counts and describes, never links.
+  for (const [, href] of page.matchAll(/href="([^"]*)"/g)) {
+    assert.doesNotMatch(href, /streamlane|driftline/i, href);
+  }
+});
