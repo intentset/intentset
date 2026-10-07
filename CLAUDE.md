@@ -63,8 +63,6 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
   and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
   record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
   may be quoted, with operation names replaced by `<operation>`.
-  New or changed copy on it is proposed in a draft pull request and merged only once Gary approves it, because
-  `pages.yml` deploys every push to `main`.
 
 ## Core API (the contract every package builds against)
 
