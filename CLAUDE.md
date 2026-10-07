@@ -53,12 +53,16 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
   exactly 0.4.1 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
   architecture, Playwright and Biome as dev dependencies. `pnpm install` is run by whoever owns the root; agents working
   in parallel do not run it.
-- Nothing from the Streamlane pilot enters this repository. Its records live in the Streamlane repository.
+- No Streamlane record or code enters this repository; the adoption log describes them. Its records live in the
+  Streamlane repository.
 - The example product is Lantern, invented. Nothing in this repository names a real product, except the adoption
   log (`site/content/pilot.md`, served at `/pilot/`), which names Streamlane and Driftline by Gary's decision of
   2026-10-06. It shows Intentset's side: records, check output and counts, each with its source and date, and the
   friction as well as what worked. Never the products' insides (screens, prices, roadmap detail, account ids,
-  internal names), never a link into their private repositories, and no quoted code beyond a one-line identifier.
+  operation, function and log names, unreleased capabilities' names), never a link into their private repositories,
+  and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
+  record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
+  may be quoted, with operation names replaced by `<operation>`.
   New or changed copy on it is proposed in a draft pull request and merged only once Gary approves it, because
   `pages.yml` deploys every push to `main`.
 
