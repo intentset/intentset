@@ -160,6 +160,8 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 
 ## The site
 
+- **Copy can be written and changed without approval** (Gary, 2026-10-06). It never invents a fact: no domain, link,
+  contact address, price, legal or privacy claim, or claim that is not true today, such as a tool not yet released.
 - **The bar is five sections by what a reader came to do** (2026-10-05, after markset.org's): Start, Tools,
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
   each section's pages, shown beside every page in it: Start (start, How it works, the agent guide), Tools (all
@@ -191,7 +193,7 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   every command. Ten packages are on npm, released from CI on a `v*` tag; a new package's first publish is by hand
   (family conventions). intentset.org deploys from GitHub Actions.
 - `site/content` is the site copy's source of truth. The IA document in `docs/requirements/` stays frozen as the
-  handoff; `site/test/content.test.ts` lists what may differ from it.
+  handoff, and the site's words need not match it.
 - The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
 - The export is 0.3. Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline
   read exports and move their pins when they update.
