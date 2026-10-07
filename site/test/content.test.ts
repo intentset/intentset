@@ -41,15 +41,15 @@ test("every content page parses as Markset with no error diagnostics", async () 
   }
 });
 
-/** The pages the status notes and the retired phrases are checked on. */
-const PAGE_OF: Record<string, string> = {
-  home: "index.html",
-  start: "start/index.html",
-  specifications: "specifications/index.html",
-  markset: "markset/index.html",
-  roadmap: "roadmap/index.html",
-  about: "about/index.html",
-};
+/** The pages the retired phrases are checked on. */
+const RETIRED_PHRASE_PAGES = [
+  "index.html",
+  "start/index.html",
+  "specifications/index.html",
+  "markset/index.html",
+  "roadmap/index.html",
+  "about/index.html",
+];
 
 test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
   const notes: Array<[string, string]> = [
@@ -102,7 +102,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     "version 0.3",
     "at 0.3 on npm",
   ];
-  for (const page of Object.values(PAGE_OF)) {
+  for (const page of RETIRED_PHRASE_PAGES) {
     const body = text(await readFile(join(dist, page), "utf8"));
     for (const phrase of retired) assert.ok(!body.includes(phrase), `${page} still says "${phrase}"`);
   }
