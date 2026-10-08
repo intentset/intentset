@@ -84,7 +84,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "graphHash": "b53ff3af09e0bf0f1f495be2a47ffe062937bb1c88b2c0451683bdb983ef1f23"
+      "graphHash": "ce8f27a986463815fee6c81d9b66efd64cb03193f2fa1b20882f7fa0c435c9a6"
     },
     "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
   },
@@ -444,7 +444,7 @@
     "name": "export an unreadable record is absent from the artifacts",
     "baseline": "scheduling",
     "files": {
-      "TEST-ASMT-SCHEDULE.md": "\n# Review assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
+      "TEST-ASMT-SCHEDULE.md": "\n# Review student assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
     },
     "valid": false,
     "diagnostics": [
@@ -516,7 +516,7 @@
     "name": "export a duplicate ID keeps one record, the first by path",
     "baseline": "scheduling",
     "files": {
-      "BEH-ASMT-SCHEDULE-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule an assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule an assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
+      "BEH-ASMT-SCHEDULE-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/behavior/0.1\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule a student assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule a student assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
     },
     "valid": false,
     "diagnostics": [

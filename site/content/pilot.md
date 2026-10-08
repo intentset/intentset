@@ -5,7 +5,7 @@ markset: 0
 {.eyebrow}
 In practice
 
-# The adoption log: Streamlane and Driftline.
+# The adoption log: Streamlane and Driftline
 
 {.lead}
 Coral Reef Ventures is adopting Intentset in two of its own products: Streamlane, a work management product, and Driftline, which watches how a product is used. Neither is released. This log records what Intentset caught in them, what it cost and what it changed, newest first.

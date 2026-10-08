@@ -426,7 +426,7 @@ test("review of a changed rule lists its behavior, verification and knowledge as
 
   assert.match(
     review.out,
-    /### BEH-ASMT-SCHEDULE: Schedule an assessment\n\n- Changed: src\/features\/assessment\/schedule\/domain\/policies\/release-time\.ts is claimed by SLICE-ASMT-SCHEDULE, which implements it/,
+    /### BEH-ASMT-SCHEDULE: Schedule a student assessment\n\n- Changed: src\/features\/assessment\/schedule\/domain\/policies\/release-time\.ts is claimed by SLICE-ASMT-SCHEDULE, which implements it/,
   );
   assert.match(review.out, /## Changed files no artifact accounts for \(1\)\n\n- NOTES\.txt/);
   assert.deepEqual(snapshot(dir), before, "review writes nothing, inside .git included");
@@ -503,7 +503,7 @@ test("context of a file a slice claims is that slice's context, and of an unclai
   assert.equal(context.code, 0, context.err);
   assert.match(context.out, /^# Context for SLICE-ASMT-SCHEDULE$/m);
   assert.match(context.out, new RegExp(`${POLICY.replaceAll(".", "\\.")} is claimed by SLICE-ASMT-SCHEDULE`));
-  assert.match(context.out, /### BEH-ASMT-SCHEDULE: Schedule an assessment/);
+  assert.match(context.out, /### BEH-ASMT-SCHEDULE: Schedule a student assessment/);
 
   const nested = await run(join(dir, "src", "features"), "context", "assessment/schedule/index.ts", "--json");
   assert.equal(nested.code, 0, nested.err);
@@ -591,7 +591,7 @@ test("publish writes reviewed knowledge with provenance, HTML, an index, a help 
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");
   assert.match(markset, /intentset\/publication\/0\.1/);
-  for (const internal of ["Schedule an assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
+  for (const internal of ["Schedule a student assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
     for (const file of readdirSync(out))
       assert.ok(!readFileSync(join(out, file), "utf8").includes(internal), `${file}: ${internal}`);
   }

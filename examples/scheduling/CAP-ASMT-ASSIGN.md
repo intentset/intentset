@@ -5,7 +5,7 @@ intentset:
   profile: intentset/capability/0.1
   id: CAP-ASMT-ASSIGN
   type: capability
-  title: Assessment assignment
+  title: Student assessment assignment
   status: draft
   owner: team-assessment
   visibility: internal
@@ -16,7 +16,7 @@ intentset:
   parent: OUT-PREPARE
 ---
 
-# Assessment assignment
+# Student assessment assignment
 
 ## Overview
 

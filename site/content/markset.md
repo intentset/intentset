@@ -2,7 +2,7 @@
 markset: 0
 ---
 
-# Product meaning, in documents people can read.
+# Product meaning, in documents people can read
 
 {.lead}
 Intentset and Markset have different jobs. Intentset defines the relationships between product intent, behavior, implementation, evidence, and knowledge. Markset supports portable, expressive documents.

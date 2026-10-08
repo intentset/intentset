@@ -5,7 +5,7 @@ markset: 0
 {.eyebrow}
 How it works
 
-# How Intentset works.
+# How Intentset works
 
 {.lead}
 Intentset has two halves. One is a set of conventions for writing down what your product does, as ordinary files your agents keep beside the code. The other is a toolchain that reads those files and tells you, plainly, whether the code, the tests and the explanations you publish still agree with them.
@@ -49,7 +49,7 @@ intentset:
   profile: intentset/behavior/0.1
   id: BEH-ASMT-SCHEDULE
   type: behavior
-  title: Schedule an assessment
+  title: Schedule a student assessment
   status: draft
   owner: team-assessment
   visibility: internal
@@ -60,10 +60,10 @@ intentset:
   # availability: the products, releases, roles and editions it applies to
 ---
 
-# Schedule an assessment
+# Schedule a student assessment
 
 ## Behavior
-A teacher submits a future release time for a published assessment and a class.
+A teacher submits a future release time for a published student assessment and a class.
 
 ## Preconditions
 The teacher may assign to the class, the assessment is published,
@@ -94,7 +94,7 @@ There are thirteen record types. They fall into five groups, each answering a di
 | Proof | verification | How is a claim checked? |
 | Words | knowledge | What may we tell a given audience? |
 
-The behavior is the center of the model. It is one recognizable promise, including how it fails: *schedule an assessment for a future time*, rather than *assessments*. When parts of a behavior would be released, owned or reviewed separately, they are separate behaviors. A rule can govern many behaviors and is written once, not copied into each. A scenario is a worked example; it shows the promise, and it does not prove every case.
+The behavior is the center of the model. It is one recognizable promise, including how it fails: *schedule a student assessment for a future time*, rather than *student assessments*. When parts of a behavior would be released, owned or reviewed separately, they are separate behaviors. A rule can govern many behaviors and is written once, not copied into each. A scenario is a worked example; it shows the promise, and it does not prove every case.
 
 People arrive from different ends and meet at the same records. A product reviewer starts at the top and drills down, from product to intent, outcome, capability and behavior. An engineer starts from the slice they are working in. Both end up reading the same behavior.
 

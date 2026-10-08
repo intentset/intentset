@@ -130,9 +130,14 @@ test("serve rebuilds when a record changes, so a reload shows the edit, and writ
   await raw(serving.url, "/");
   assert.doesNotMatch(serving.output(), /^rebuilt:/m, "nothing changed, so nothing was rebuilt");
 
-  edit(dir, "BEH-ASMT-SCHEDULE", "title: Schedule an assessment\n", "title: Schedule an assessment for a class\n");
-  edit(dir, "BEH-ASMT-SCHEDULE", "# Schedule an assessment\n", "# Schedule an assessment for a class\n");
-  assert.match((await raw(serving.url, page)).body, /Schedule an assessment for a class/);
+  edit(
+    dir,
+    "BEH-ASMT-SCHEDULE",
+    "title: Schedule a student assessment\n",
+    "title: Schedule a student assessment for a class\n",
+  );
+  edit(dir, "BEH-ASMT-SCHEDULE", "# Schedule a student assessment\n", "# Schedule a student assessment for a class\n");
+  assert.match((await raw(serving.url, page)).body, /Schedule a student assessment for a class/);
   assert.match(serving.output(), /^rebuilt: product\/scheduling\/BEH-ASMT-SCHEDULE\.md changed\. Snapshot: /m);
   assert.equal(await serving.stop(), 0);
 
@@ -245,7 +250,7 @@ test("mcp customer serves only the two knowledge tools over one publication", as
   assert.deepEqual(tools, ["knowledge_get", "knowledge_search"]);
   const found = text(await client.callTool({ name: "knowledge_search", arguments: { query: "release time" } }));
   assert.match(found, /KB-ASMT-SCHEDULE/);
-  for (const internal of ["Schedule an assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
+  for (const internal of ["Schedule a student assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
     assert.ok(!found.includes(internal), internal);
   }
 });

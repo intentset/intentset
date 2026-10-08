@@ -19,4 +19,4 @@ intentset:
 
 ## Scope
 
-An illustrative assessment workflow used to review Intentset. Lantern is an invented product; nothing here describes a real system.
+An illustrative student assessment workflow used to review Intentset. Lantern is an invented product; nothing here describes a real system.

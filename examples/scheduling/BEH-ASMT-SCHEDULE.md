@@ -5,7 +5,7 @@ intentset:
   profile: intentset/behavior/0.1
   id: BEH-ASMT-SCHEDULE
   type: behavior
-  title: Schedule an assessment
+  title: Schedule a student assessment
   status: draft
   owner: team-assessment
   visibility: internal
@@ -30,7 +30,7 @@ intentset:
     flags: []
 ---
 
-# Schedule an assessment
+# Schedule a student assessment
 
 ## Behavior
 

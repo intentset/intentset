@@ -153,7 +153,7 @@ export function example(
 
 /** A knowledge body with the example's heading and section around the given guidance. */
 export function guidance(text: string): string {
-  return `\n# Prepare a scheduled assessment\n\n## Guidance\n\n${text}\n`;
+  return `\n# Prepare a scheduled student assessment\n\n## Guidance\n\n${text}\n`;
 }
 
 /** The fixture snapshot of a graph. */

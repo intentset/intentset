@@ -6,7 +6,7 @@ markset: 0
 {.eyebrow}
 Product truth for agentic development · v0.1 draft
 
-# Keep control of what your agents build.
+# Keep control of what your agents build
 
 {.lead}
 Agents write code faster than anyone can read it. Intentset keeps what your product promises, which code delivers each promise and how it is checked, in readable records your agents update with every change.
@@ -26,7 +26,7 @@ One change · what the reviewer reads
 
 :::steps
 1. [Code]{.badge} 2,140 lines changed in 31 files
-2. [Behavior]{.badge .info} Schedule an assessment: its failure outcome rewritten
+2. [Behavior]{.badge .info} Schedule a student assessment: its failure outcome rewritten
 3. [Rule]{.badge} Future release time: tightened
 4. [Checks]{.badge} Two updated; one passes on this commit, one has not run
 5. [Knowledge]{.badge} The teachers' guide is held for review
@@ -118,17 +118,17 @@ A worked model
 {#example}
 ## One behavior. A connected view.
 
-:::::card[Example: Schedule an assessment]{.example}
+:::::card[Example: Schedule a student assessment]{.example}
 ::::columns{ratio="2:3"}
-A teacher chooses when a published assessment becomes available to a class.
+A teacher chooses when a published student assessment becomes available to a class.
 
 [[Read the worked example](example/index.html)]{.button}
 
 ::col
 
 - **Intent:** Help teachers prepare learning in advance.
-- **Behavior:** Schedule an assessment for a future time.
-- **Rule:** The assessment must be published and the teacher must be allowed to assign it.
+- **Behavior:** Schedule a student assessment for a future time.
+- **Rule:** The student assessment must be published and the teacher must be allowed to assign it.
 - **Implementation:** One accountable slice, with explicit contracts and backend ownership.
 - **Verification:** Named checks, with evidence tied to a particular snapshot.
 - **Knowledge:** Reviewed guidance for the right audience and release.
@@ -143,11 +143,16 @@ A teacher chooses when a published assessment becomes available to a class.
 {.eyebrow}
 In practice
 
-## The first pilot.
+## Two products adopting it, in the open.
 
-An agent modelled one capability of Streamlane, a work management product, from the code, tests and decision records the repository already held. The model validated and its slice passed the architecture check, and it showed what nobody had listed: two of three rules had no test, and three behaviors were checked only in the browser.
+{.lead}
+Coral Reef Ventures is adopting Intentset in two of its own products, and recording what it catches, what it costs and what it changes.
 
-[Read about the pilot](pilot/index.html), and what it changed in the specifications.
+In Streamlane, a work management product, the model is a required check on every pull request. The first capability modelled, from the code, tests and decision records the repository already held, listed what nobody had: two of three rules had no test, and three behaviors were checked only in the browser. The check now runs against 37 slices and 86 records, over a baseline of the violations that were already there, which may shrink and may not grow.
+
+Driftline was modelled before any of its code existed, and its first package was checked against what had been approved. It now reads Streamlane back: Streamlane's backend names the behaviors each call delivers, and Driftline counts what each behavior saw.
+
+[Read the adoption log](pilot/index.html), and what it changed in the specifications.
 
 ***
 

@@ -191,7 +191,7 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
     home: (document.querySelector(".ms-span.button.primary > a") as HTMLAnchorElement).href,
   }));
   await tab.close();
-  assert.equal(result.h1, "Page not found.");
+  assert.equal(result.h1, "Page not found");
   assert.ok(result.styled, "the stylesheets load from the root");
   assert.equal(result.home, url("index.html"));
 });
@@ -240,4 +240,34 @@ test("the navigation wraps below the brand at phone width and sits beside it on 
   const desktop = await position(1440);
   assert.ok(!desktop.navBelowBrand, "at 1440px the nav sits beside the brand");
   assert.equal(desktop.columns, 2, "at 1440px the hero has two columns");
+});
+
+test("every code block gets a Copy button that copies the block, and only the block", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  // The button is made by the shell's script, so it exists only where the
+  // clipboard does, and a reader with scripting off never meets a dead control.
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    permissions: ["clipboard-read", "clipboard-write"],
+  });
+  const tab = await context.newPage();
+  await tab.goto(url("start/index.html"));
+  const counts = await tab.evaluate(() => ({
+    blocks: document.querySelectorAll("#main pre > code").length,
+    buttons: document.querySelectorAll("#main .site-copy").length,
+    outside: document.querySelectorAll(".site-copy:not(#main .site-copy)").length,
+  }));
+  assert.ok(counts.blocks > 0, "the Start page has code blocks");
+  assert.equal(counts.buttons, counts.blocks, "one button per code block");
+  assert.equal(counts.outside, 0, "and none outside main");
+
+  const first = tab.locator(".site-copy").first();
+  assert.equal((await first.boundingBox())!.height >= 24, true, "the button is a usable target");
+  await first.click();
+  await tab.waitForFunction(() => document.querySelector(".site-copy")!.hasAttribute("data-copied"));
+  assert.equal(await first.textContent(), "Copied", "the button says so");
+  const written = await tab.evaluate(() => navigator.clipboard.readText());
+  const source = await tab.locator("#main pre > code").first().textContent();
+  assert.equal(written, source, "what was copied is the block, with nothing of the button in it");
+  await context.close();
 });

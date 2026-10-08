@@ -2,7 +2,7 @@
 markset: 0
 ---
 
-# A small set of specifications. A shared product model.
+# A small set of specifications, one shared product model
 
 {.lead}
 Intentset separates product meaning from implementation architecture and platform choices. Adopt the Core model on its own, or connect it to traceable vertical slices.

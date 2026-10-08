@@ -28,12 +28,19 @@ body {
 
   --ms-fg: light-dark(#173b38, #e4ebe7);
   --ms-fg-muted: light-dark(#4f615d, #a6b4ae);
-  --ms-bg: light-dark(#f7f8f1, #121917);
-  --ms-surface: light-dark(#eaf0e7, #1b2422);
-  --ms-border: light-dark(#cfd9d1, #2f3c38);
+  /* The ground carries the mark's own green, faintly, in both schemes. The dark
+   * ground always did (hue 163 against the tile's 168); the light one was a
+   * yellow-green at hue 69, which walked across the wheel as it darkened -- ground
+   * 69, surface 100, border 132, accent 159, tile 168 -- so the page read as a
+   * different green from the mark on it. All three light values are now the tile's
+   * hue, at the lightness they already had: the contrast is unchanged to a
+   * hundredth (fg 11.43 to 11.47). 2026-10-07. */
+  --ms-bg: light-dark(#f3f9f8, #121917);
+  --ms-surface: light-dark(#e6f0ed, #1b2422);
+  --ms-border: light-dark(#cddad7, #2f3c38);
   /* The accent text is coralreefventures.com's --crv-intentset-text, so the
    * product reads in the same green on both sites (2026-10-05). The neutrals
-   * above stay Intentset's own green-tinted ones, on purpose: see CLAUDE.md. */
+   * above are Intentset's own, on purpose: see CLAUDE.md. */
   --ms-accent: light-dark(#2c6a54, #7cc3a8);
   --ms-tone-info: light-dark(#2c6a54, #7cc3a8);
   /* Intentset's green as coralreefventures.com draws it, for the footer's mark. */
@@ -300,6 +307,70 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .site-back { margin-top: var(--site-section); padding-top: 1.5rem; border-top: 1px solid var(--ms-border); }
 .site-back a { display: inline-block; padding-block: 0.25rem; }
 
+/* ---- a record, open on the worked example's page ---------------------------- */
+/* Markset's folding callout is a <details>, so a record opens where it stands and
+ * the page needs no script. These are records rather than notes: the tone colour,
+ * the uppercase title and the accent edge the site gives a callout would read as
+ * an aside, when this is the thing the page is about. The fields table is the
+ * record's frontmatter, laid out as on the record's own page. */
+.record-fold.ms-callout { border-left-color: var(--ms-border); }
+.record-fold > .ms-callout-title {
+  font-family: var(--ms-font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ms-fg);
+}
+.record-fold > .ms-callout-title code { font-size: 0.85em; color: var(--ms-accent); }
+.record-fold[open] > .ms-callout-title { margin-bottom: 0.25rem; }
+.record-fold table { margin: 0 0 0.25rem; font-size: 0.95rem; }
+.record-fold th { display: none; }
+.record-fold td { padding: 0.4rem 0.75rem 0.4rem 0; vertical-align: top; }
+.record-fold td:first-child { width: 8rem; color: var(--ms-fg-muted); }
+.record-fold h4 { font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ms-fg-muted); }
+/* The way to the record's own page, last in the body: a target a thumb can hit. */
+.record-fold .ms-callout-body > p:last-child { font-size: 0.9rem; }
+.record-fold .ms-callout-body > p:last-child a { display: inline-block; padding-block: 0.3rem; }
+
+/* ---- code blocks run to the document's width -------------------------------- */
+/* markset.css stops every direct child of the document at the reading measure and
+ * lets the layout constructs (a grid, a table, tabs) run to the wide one. Prose
+ * wants the shorter line; a command does not wrap, so the reading measure turns a
+ * line that would have fitted into a sideways scroll, and the same block inside a
+ * tabs construct was already full width. A code block is read the way a table is,
+ * so it runs to the same edge, wrapped by the script or not. */
+.ms-document > :is(pre, .site-code) { max-width: none; }
+
+/* ---- the copy button on a code block ---------------------------------------- */
+/* The shell's script wraps each `pre` in `.site-code` and puts the button there:
+ * `pre` scrolls sideways (markset.css), so a button inside it would scroll away
+ * with the code. The wrapper takes the flow margins a `pre` would have had, so
+ * the rhythm is unchanged whether the script ran or not. The button sits over the
+ * block's top right corner on its own background rather than reserving a column:
+ * reserving one narrows every block for the sake of a control most readers never
+ * use, and it was enough to put the widest block back into a sideways scroll. It
+ * is always visible, because a phone has no hover to reveal it with. */
+.ms-document .site-code { position: relative; margin: 0; }
+.ms-document * + .site-code { margin-top: var(--ms-space); }
+.site-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--ms-fg-muted);
+  background: var(--ms-bg);
+  border: 1px solid var(--ms-border);
+  border-radius: calc(var(--ms-radius) / 2);
+  cursor: pointer;
+}
+.site-copy:hover { color: var(--ms-fg); border-color: var(--ms-fg-muted); }
+.site-copy[data-copied] { color: var(--ms-accent); border-color: var(--ms-accent); }
+
 /* ---- narrow screens --------------------------------------------------------- */
 @media (max-width: 47.5rem) {
   /* The brand and the scheme control share the first row; the links wrap below. */
@@ -318,7 +389,7 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {
-  .site-skip, .site-nav, .site-toc, .site-scheme-slot, .site-family { display: none; }
+  .site-skip, .site-nav, .site-toc, .site-scheme-slot, .site-family, .site-copy { display: none; }
   .site-layout.has-rail { display: block; }
   .ms-card.status { background: none; color: inherit; border: 1px solid var(--ms-border); }
 }

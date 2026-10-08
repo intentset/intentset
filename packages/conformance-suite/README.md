@@ -44,7 +44,7 @@ for (const [section, cases] of Object.entries(loadSuite())) {
   "section": "core",
   "name": "C03 governedBy targets a capability",
   "files": {
-    "BEH-ASMT-SCHEDULE.md": "---\nmarkset: 0\nintentset:\n  ...\n---\n\n# Schedule an assessment\n...",
+    "BEH-ASMT-SCHEDULE.md": "---\nmarkset: 0\nintentset:\n  ...\n---\n\n# Schedule a student assessment\n...",
     "CAP-ASMT-ASSIGN.md": "...",
     "registries.yaml": "owners:\n- team-assessment\n..."
   },

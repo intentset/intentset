@@ -140,7 +140,7 @@ test("lookup gives metadata, path and body, after the snapshot and the source pa
   assert.deepEqual(json.snapshot, snapshot);
   assert.deepEqual(json.sources, ["examples/scheduling/BEH-ASMT-SCHEDULE.md"]);
   const artifact = json.artifact as Record<string, unknown>;
-  assert.equal(artifact.title, "Schedule an assessment");
+  assert.equal(artifact.title, "Schedule a student assessment");
   assert.equal(artifact.parent, "CAP-ASMT-ASSIGN");
   assert.deepEqual(artifact.links, { governedBy: ["RULE-ASMT-FUTURE", "RULE-ASMT-AUTH"] });
   assert.deepEqual(artifact.linkedFrom, {
@@ -149,7 +149,7 @@ test("lookup gives metadata, path and body, after the snapshot and the source pa
     implements: ["SLICE-ASMT-SCHEDULE"],
     verifies: ["TEST-ASMT-SCHEDULE"],
   });
-  assert.match(artifact.body as string, /^# Schedule an assessment$/m);
+  assert.match(artifact.body as string, /^# Schedule a student assessment$/m);
   assert.equal(json.withheld, 0);
   await client.close();
 });

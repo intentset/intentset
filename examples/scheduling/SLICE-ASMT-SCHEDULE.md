@@ -5,7 +5,7 @@ intentset:
   profile: intentset/slice/0.1
   id: SLICE-ASMT-SCHEDULE
   type: slice
-  title: Assessment scheduling slice
+  title: Student assessment scheduling slice
   status: draft
   owner: team-assessment
   visibility: internal
@@ -45,7 +45,7 @@ intentset:
     - RES-ASSESSMENT-DATA
 ---
 
-# Assessment scheduling slice
+# Student assessment scheduling slice
 
 ## Responsibility
 

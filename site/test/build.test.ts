@@ -5,6 +5,9 @@ import { dirname, join, normalize, resolve } from "node:path";
 import { after, test } from "node:test";
 import {
   build,
+  CARD,
+  CARD_ALT,
+  cardUrl,
   CONTENT_PAGES,
   cardTitle,
   EXTERNAL,
@@ -12,6 +15,8 @@ import {
   FOOTER_LINKS,
   NAV,
   NOT_FOUND,
+  COPY_SCRIPT,
+  EXAMPLE_ACTS,
   readSpecMeta,
   REPO,
   SCHEME_SCRIPT,
@@ -93,17 +98,20 @@ test("every internal link resolves to a page that was built, and every fragment 
   }
 });
 
-test("every page has exactly one h1, a skip link to main, and no script but the scheme's", () => {
-  // The one script is the shell's, and all it does is remember the reader's
-  // color scheme across pages, as markset.org's does. It sits ahead of the
-  // header; nothing inside <main>, which is rendered from a document, has one.
+test("every page has exactly one h1, a skip link to main, and no script but the shell's two", () => {
+  // Both scripts are the shell's: one remembers the reader's color scheme across
+  // pages, as markset.org's does, and one puts a Copy button on each code block.
+  // They sit ahead of the header; nothing inside <main>, which is rendered from a
+  // document, has one, and neither is rendered from a document.
   for (const [page, doc] of html) {
     assert.equal((doc.match(/<h1[\s>]/g) ?? []).length, 1, `${page}: h1 count`);
     assert.match(doc, /<a class="site-skip" href="#main">Skip to content<\/a>/, page);
     assert.match(doc, /<main id="main" class="ms-document" tabindex="-1">/, page);
-    assert.equal((doc.match(/<script/gi) ?? []).length, 1, `${page}: one script`);
-    assert.ok(doc.includes(SCHEME_SCRIPT), `${page}: and it is the scheme script`);
+    assert.equal((doc.match(/<script/gi) ?? []).length, 2, `${page}: two scripts`);
+    assert.ok(doc.includes(SCHEME_SCRIPT), `${page}: and one is the scheme script`);
+    assert.ok(doc.includes(COPY_SCRIPT), `${page}: and one is the copy script`);
     assert.ok(doc.indexOf(SCHEME_SCRIPT) < doc.indexOf('<header class="site-header">'), `${page}: ahead of the header`);
+    assert.ok(doc.indexOf(COPY_SCRIPT) < doc.indexOf('<header class="site-header">'), `${page}: ahead of the header`);
     assert.doesNotMatch(doc.slice(doc.indexOf("<main"), doc.indexOf("</main>")), /<script/i, page);
     assert.doesNotMatch(doc, /<form/i, page);
     assert.match(doc, /<html lang="en">/, page);
@@ -219,8 +227,11 @@ test("every install command on the site names a published package of this reposi
   // name an install path; now each @intentset package a page names must be one
   // this repository publishes, so the site cannot point at a package that is not.
   const published = new Set<string>();
-  for (const dir of await readdir(join(root, "packages"))) {
-    const manifest = JSON.parse(await readFile(join(root, "packages", dir, "package.json"), "utf8"));
+  // Directories only: a workspace folder holds whatever the machine leaves in it
+  // (macOS writes .DS_Store on any Finder visit), and a stray file is not a package.
+  for (const entry of await readdir(join(root, "packages"), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const manifest = JSON.parse(await readFile(join(root, "packages", entry.name, "package.json"), "utf8"));
     if (!manifest.private) published.add(manifest.name);
   }
   let named = 0;
@@ -350,13 +361,45 @@ test("each specification's frontmatter names it, and its page and index card sho
   assert.doesNotMatch(index, /\{\{/u, "a token survived into the index");
 });
 
-test("the example index lists every record under its type, and each record page carries its metadata and links", () => {
+test("the worked example opens every record on the page, in the act it belongs to, and keeps a page per record", () => {
+  // The page used to be thirteen headings over fifteen links: it said what the
+  // records were called and nothing about what they do, and reading one meant
+  // leaving. Now each act explains what that part of the model is doing, and the
+  // records are open on the page in Markset's folding callout, which is a
+  // <details> and so needs no script.
   const index = main("example/index.html");
-  const types = [...index.matchAll(/<h2 id="[^"]+">([^<]+)<\/h2>/g)].map((m) => m[1].toLowerCase());
+  const folds = [...index.matchAll(/<details class="ms-callout record-fold"[^>]*>([\s\S]*?)<\/details>/g)].map(
+    (m) => m[1],
+  );
+  assert.equal(folds.length, records.length, "one fold per record");
+  assert.equal((index.match(/<h1[\s>]/g) ?? []).length, 1, "a record's own h1 is dropped inside its fold");
+
+  for (const [n, act] of EXAMPLE_ACTS.entries()) {
+    assert.ok(text(index).includes(`${n + 1}. ${act.title}`), `the page has act ${n + 1}`);
+  }
+
   for (const record of records) {
-    assert.ok(types.includes(record.type), `index has no ${record.type} group`);
-    assert.match(index, new RegExp(`<a href="${record.id}/index.html">${record.id}</a> — ${record.title}`));
-    assert.ok(text(index).includes(record.status));
+    const fold = folds.find((f) => f.includes(`<code>${record.id}</code>`));
+    assert.ok(fold, `${record.id} is not open on the page`);
+    const summary = /<summary class="ms-callout-title">([\s\S]*?)<\/summary>/.exec(fold)?.[1] ?? "";
+    assert.ok(text(summary).includes(record.title), `${record.id}: the fold is named by its title`);
+    const read = text(fold);
+    for (const value of [record.type, record.status, record.owner, record.visibility, ...record.audiences]) {
+      assert.ok(read.includes(value), `${record.id}: the fold lacks ${value}`);
+    }
+    // Its own sections and the opening of its text are there, so the fold holds the
+    // record and not only its fields. Whitespace is collapsed on both sides: a record
+    // wraps its paragraphs in the file and the rendered page does not.
+    const flat = (s: string) => s.replace(/\s+/g, " ").trim();
+    for (const [, heading] of record.body.matchAll(/^## (.+)$/gm)) {
+      assert.ok(flat(read).includes(heading.toUpperCase()) || flat(read).includes(heading), `${record.id}: ${heading}`);
+    }
+    const opening = flat(record.body.split(/\n## [^\n]+\n/)[1] ?? "").replace(/[`*]/g, "");
+    assert.ok(opening.length > 20, `${record.id}: nothing to compare`);
+    assert.ok(flat(read).includes(opening.slice(0, 60)), `${record.id}: the fold lacks its body`);
+    // And the way to the record's own page, which the deep links and the search results use.
+    assert.match(fold, new RegExp(`<a href="${record.id}/index\\.html">`), `${record.id}: no way to its own page`);
+
     const page = main(`example/${record.id}/index.html`);
     const card = page.slice(page.indexOf('<section class="ms-card record"'), page.indexOf("</section>"));
     const cardText = text(card);
@@ -376,7 +419,8 @@ test("the example index lists every record under its type, and each record page 
     assert.doesNotMatch(page, /<pre/, `${record.id}: frontmatter rendered as a code block`);
   }
   // Nothing on the example claims a running system or passing evidence.
-  assert.ok(text(index).includes("No running product, passing evidence, or publication is claimed."));
+  assert.ok(text(index).includes("Lantern is invented and nothing here runs."));
+  assert.ok(text(index).includes("the check has not been executed and nothing has been published"));
 });
 
 test("home: the hero, the loop, the role cards, the worked example and status are the constructs the layout asks for", () => {
@@ -433,4 +477,29 @@ test("the adoption log: the counts first, dated chapters newest first, and no li
   for (const [, href] of page.matchAll(/href="([^"]*)"/g)) {
     assert.doesNotMatch(href, /streamlane|driftline/i, href);
   }
+});
+
+test("every page points at the social card, and the committed card is the size it claims", async () => {
+  // Without a card a link to the site previews as text. The file is drawn by hand
+  // (`pnpm run social-card`) and committed, so no deploy needs a browser; this
+  // holds the picture to the size the pages tell a reader to expect, which is what
+  // a client lays the preview out from before it has the bytes.
+  for (const [page, doc] of html) {
+    if (page === NOT_FOUND) {
+      assert.doesNotMatch(doc, /og:image/, "the 404 page asks not to be indexed and claims no card");
+      continue;
+    }
+    assert.ok(doc.includes(`<meta property="og:image" content="${cardUrl()}">`), `${page}: names the card`);
+    assert.ok(doc.includes(`<meta property="og:image:width" content="${CARD.width}">`), `${page}: its width`);
+    assert.ok(doc.includes(`<meta property="og:image:height" content="${CARD.height}">`), `${page}: its height`);
+    assert.ok(doc.includes(`<meta property="og:image:alt" content="${CARD_ALT}">`), `${page}: what it says`);
+    assert.ok(doc.includes('<meta name="twitter:card" content="summary_large_image">'), `${page}: shown large`);
+  }
+  // A PNG declares its size in the IHDR chunk, the first after the signature.
+  const png = await readFile(join(dist, CARD.file));
+  assert.equal(png.subarray(1, 4).toString("ascii"), "PNG", "the card is a PNG");
+  const ratio = png.readUInt32BE(16) / CARD.width;
+  assert.equal(png.readUInt32BE(16), CARD.width * ratio, `the card is ${CARD.width} wide, or a whole multiple of it`);
+  assert.equal(png.readUInt32BE(20), CARD.height * ratio, `and ${CARD.height} tall at the same scale`);
+  assert.ok(Number.isInteger(ratio) && ratio >= 1, `drawn at ${ratio}x`);
 });

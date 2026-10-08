@@ -114,7 +114,9 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
   text last changed.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
-- Site output uses Markset's `ms-` classes and `site/site.css` layered over `markset.css`. No script inside `<main>`.
+- Site output uses Markset's `ms-` classes and `site/site.css` layered over `markset.css`. No script inside `<main>`:
+  the only two are the shell's, ahead of `<main>` (the colour scheme, and the Copy button each code block gets at
+  runtime), and nothing rendered from a document carries one. A test holds the count at two.
 
 ## Layout
 
@@ -150,6 +152,7 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 - Node ≥ 22.18, TypeScript run directly by type stripping: erasable syntax only, explicit `.ts` import extensions.
 - pnpm workspaces (`pnpm-workspace.yaml`; pnpm pinned by `packageManager`). `pnpm test` (node --test),
   `pnpm run conformance`, `pnpm run typecheck`, `pnpm run lint`, `pnpm run format`, `pnpm run site`,
+  `pnpm run social-card`,
   `pnpm run site:watch`, `pnpm run build` (publishing only, to `dist/`). Moved from npm on 2026-10-04 with the lockfile
   imported, so no version changed. Siblings keep `^<version>` ranges, linked by `linkWorkspacePackages`. A file may
   import only what its own package declares: the root links every workspace package for the tests, and
@@ -185,8 +188,28 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   `/conformance/` is generated from `tests/`.
 - **Colours.** The accent is coralreefventures.com's Intentset token (`--crv-intentset-text`,
   `light-dark(#2c6a54, #7cc3a8)`), so the product reads in the same green on both sites. The neutrals are
-  Intentset's own green-tinted ground and ink, **deliberately**: markset.org keeps its cool white and
-  coralreefventures.com its cream, decided 2026-10-05. Do not "fix" them to match.
+  Intentset's own green-tinted ground and ink, **deliberately**: each family site's ground carries its own mark's
+  color, decided 2026-10-05 and amended 2026-10-07, when markset.org left its cool white for a violet-tinted ground
+  and coralreefventures.com's dark ground became warm. Do not "fix" them to one neutral. This site's light ground
+  moved the same day for the same reason: it was a yellow-green (hue 69) under a tile at hue 168, and the scheme
+  walked across the wheel as it darkened (ground 69, surface 100, border 132, accent 159, tile 168). All three light
+  values are the tile's hue now, at the lightness they already had, so the contrast is unchanged to a hundredth. The
+  dark ground was already the mark's hue and did not move.
+- **The worked example is a walkthrough** (`EXAMPLE_ACTS` in `site/build.ts`, 2026-10-07): five acts of the model's
+  chain, each with its own prose, and every record open on the page in a folding callout (Markset §4.1, a `<details>`
+  with no script) rather than a link to a page a reader has to leave for. A new record goes in an act; the build
+  throws when one is in none. Each record keeps its own page, and each fold links to it.
+- **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
+  label, not a sentence. The h2s below it are written as sentences and keep theirs.
+- **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose
+  wants the shorter measure and a command, which cannot wrap, does not.
+- **The line saying where a rendered document comes from sits under the h1**, never above it (`underHeading` in
+  `site/build.ts`): the agent guide and every specification page.
+- **The social card is drawn by hand and committed** (2026-10-07): `pnpm run social-card` writes
+  `site/social-card.png` from `site/social-card.ts`, the build copies it, and every page but the 404 names it as
+  `og:image` with `twitter:card` at `summary_large_image`. It is drawn rather than generated at build time because
+  CI and the deploy should not need a browser; redraw it when the mark, the tagline or the tokens change.
+  `site/test/build.test.ts` holds the committed file to the size the pages claim.
 - **The footer is the family's** (2026-10-06, the same on markset.org): the row (the bar and About), then one line,
   `Intentset · Keep control of what your agents build. · Source on GitHub · A Coral Reef Ventures project · Sibling
   project: Markset`, then the family's mark. It links the sibling site, markset.org, once, as markset.org's links this

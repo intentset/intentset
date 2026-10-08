@@ -59,7 +59,7 @@ test("a behavior's bundle: owner, rules, scenarios, verifications, contracts, de
   assert.deepEqual(bundle?.artifacts[0], {
     id: "BEH-ASMT-SCHEDULE",
     type: "behavior",
-    title: "Schedule an assessment",
+    title: "Schedule a student assessment",
     status: "draft",
     visibility: "internal",
     path: "examples/scheduling/BEH-ASMT-SCHEDULE.md",
