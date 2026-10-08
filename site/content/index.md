@@ -43,7 +43,7 @@ Illustrative · not a live report
 {.eyebrow}
 The problem
 
-## Agents write faster than anyone can read.
+## Agents write faster than anyone can read
 
 {.lead}
 A team used to understand its product because it wrote the code. Now agents write most of it, in changes too long to read line by line.
@@ -57,7 +57,7 @@ Intentset gives that knowledge a durable place in the repository, centered on ob
 {.eyebrow}
 How it fits
 
-## Your agents keep the model. You keep control.
+## Your agents keep the model. You keep control
 
 :::steps{.adopt}
 1. **Agree the promise.** A product manager and an agent draft the behaviors and rules for what comes next, as draft records in the repository.
@@ -76,7 +76,7 @@ Records are short, written in product language, and diff cleanly: a few dozen li
 {.eyebrow}
 What you can ask
 
-## Questions only a connected model can answer.
+## Questions only a connected model can answer
 
 ::::grid{cols=2}
 - :::card[For product managers]
@@ -106,7 +106,7 @@ What you can ask
 {.eyebrow}
 Architecture
 
-## Keep the architecture yours.
+## Keep the architecture yours
 
 Agents follow the shape of the code they are shown. Intentset gives every behavior one owning slice and checks the boundaries between slices on every change: another slice's private files, dependencies nobody declared, layers out of order, product rules hiding in shared code. Today's violations become a baseline that may shrink and may not grow, so debt is a number you can watch fall. An agent handed one slice's context makes a change that stays in that slice.
 
@@ -116,7 +116,7 @@ Agents follow the shape of the code they are shown. Intentset gives every behavi
 A worked model
 
 {#example}
-## One behavior. A connected view.
+## One behavior. A connected view
 
 :::::card[Example: Schedule a student assessment]{.example}
 ::::columns{ratio="2:3"}
@@ -143,7 +143,7 @@ A teacher chooses when a published student assessment becomes available to a cla
 {.eyebrow}
 In practice
 
-## Two products adopting it, in the open.
+## Two products adopting it, in the open
 
 {.lead}
 Coral Reef Ventures is adopting Intentset in two of its own products, and recording what it catches, what it costs and what it changes.
@@ -160,7 +160,7 @@ Driftline was modelled before any of its code existed, and its first package was
 {.eyebrow}
 Project status
 
-## Specifications in review. A toolchain to try them with.
+## Specifications in review. A toolchain to try them with
 
 The v0.1 specifications define the product model, traceable vertical slices, a TypeScript + AWS Amplify Gen 2 reference profile and reviewed publication. An export contract fixes what other tools read from a model.
 
@@ -172,7 +172,7 @@ The reference toolchain is at {{version}} on npm: validation, architecture check
 ***
 
 :::card{.closing}
-## Try it on one capability.
+## Try it on one capability
 
 {.lead}
 Let an agent model one capability from your code and tests, review what it wrote, and see what it finds.
