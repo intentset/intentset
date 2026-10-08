@@ -37,7 +37,7 @@ The records are meant to be written by the coding agents that change the code, i
 
 `intentset review` lists every slice whose code changed while none of its records did. A refactor answers with the trailer, where the reviewer reads it; with `--fail-on-drift`, anything left unanswered fails CI. Approval stays with people: only a person moves a record from draft to approved, and validation passing never counts as approval.
 
-## Open files. Explicit meaning.
+## Open files. Explicit meaning
 
 Every artifact in the model is one Markdown file with YAML frontmatter. The frontmatter is the part tools read: a stable ID, a type, a status, an owner, the audiences it is written for, and its links. The body is the part people read, with the sections its type requires. A behavior, for example, has to say who acts, what triggers it, what happens when it succeeds, and what happens when it fails.
 
@@ -176,7 +176,7 @@ A tool reads it with `readExport` from `@intentset/core`, which rejects an expor
 
 An agent about to change code should know what that code promises, and nothing it has no business reading. `intentset context` and the read-only MCP server hand it the owning slice and its behaviors, rules, scenarios, contracts and decisions, with the snapshot and source paths they came from, and nothing outside that boundary. Restricted records are withheld unless an operator includes them.
 
-## Rich documents, with Markset.
+## Rich documents, with Markset
 
 Knowledge records are explanations written for an audience, such as teachers. Each carries a visibility (public, customer, internal or restricted) and the products, releases, roles, editions and feature flags it applies to.
 
