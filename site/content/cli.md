@@ -2,7 +2,7 @@
 markset: 0
 ---
 
-# The intentset command.
+# The intentset command
 
 {.lead}
 `intentset` reads the records in a repository and reports on them. `validate`, `graph`, `architecture check`, `impact` and `review` execute nothing, reach no network and never change a record; publishing and serving are separate commands you run on purpose.

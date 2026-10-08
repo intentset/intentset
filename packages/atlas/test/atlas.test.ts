@@ -281,8 +281,8 @@ test("record text cannot open markup: titles and bodies are escaped", () => {
     edit: (name, source) =>
       name === "BEH-ASMT-SCHEDULE.md"
         ? source
-            .replace("title: Schedule an assessment", `title: '${hostile}'`)
-            .replace("# Schedule an assessment", `# ${hostile}\n\n:::nope\n<script>x</script>\n:::`)
+            .replace("title: Schedule a student assessment", `title: '${hostile}'`)
+            .replace("# Schedule a student assessment", `# ${hostile}\n\n:::nope\n<script>x</script>\n:::`)
         : source,
   });
   const atlas = buildAtlas(input);

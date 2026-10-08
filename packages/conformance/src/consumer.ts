@@ -242,7 +242,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     carrier: "markset",
     patch: {
       "CAP-ASMT-ASSIGN.md": {
-        body: "\n# Assessment assignment\n\n## Overview\n\n:::columns\nTeachers prepare and distribute published assessments to classes.\n:::\n",
+        body: "\n# Student assessment assignment\n\n## Overview\n\n:::columns\nTeachers prepare and distribute published assessments to classes.\n:::\n",
       },
     },
     reports: [],

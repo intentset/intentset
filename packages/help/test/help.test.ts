@@ -84,7 +84,7 @@ test("the file the publisher writes reads back, as text and as bytes, and carrie
   assert.equal(help.profile, HELP_PROFILE);
   assert.deepEqual(Object.keys(help.tips), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
   assert.deepEqual(help.knowledge, [
-    { id: "KB-ASMT-SCHEDULE", title: "Prepare a scheduled assessment", path: "KB-ASMT-SCHEDULE.md" },
+    { id: "KB-ASMT-SCHEDULE", title: "Prepare a scheduled student assessment", path: "KB-ASMT-SCHEDULE.md" },
   ]);
   const bytes = new TextEncoder().encode(JSON.stringify(help));
   const read = readHelp(bytes);
@@ -213,7 +213,7 @@ test("bindTips takes another attribute and another renderer", () => {
   });
   assert.deepEqual(binding, { bound: ["RULE-ASMT-FUTURE"], missing: [] });
   assert.deepEqual(rendered, [
-    "RULE-ASMT-FUTURE: The release time must be in the future. (Prepare a scheduled assessment)",
+    "RULE-ASMT-FUTURE: The release time must be in the future. (Prepare a scheduled student assessment)",
   ]);
   assert.equal(control.getAttribute("aria-description"), RULE_TIP);
   assert.equal(control.hasAttribute("title"), false);

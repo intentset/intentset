@@ -143,7 +143,7 @@ intentset:
   profile: intentset/behavior/0.1
   id: BEH-AREA-NAME
   type: behavior
-  title: The promise in a few words, such as Schedule an assessment
+  title: The promise in a few words, such as Schedule a student assessment
   status: draft
   owner: <an owner from the registry>
   visibility: internal
@@ -159,7 +159,7 @@ intentset:
     flags: []
 ---
 
-# The promise in a few words, such as Schedule an assessment
+# The promise in a few words, such as Schedule a student assessment
 
 ## Behavior
 Who acts, and what the system does.

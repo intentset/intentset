@@ -382,7 +382,7 @@ test("impact BEH-ASMT-SCHEDULE lists the slice, the verification and the knowled
   const impact = await run(dir, "impact", "BEH-ASMT-SCHEDULE");
   assert.equal(impact.code, 0, impact.err);
   const lines = impact.out.split("\n");
-  assert.equal(lines[0], 'Impact of BEH-ASMT-SCHEDULE, behavior "Schedule an assessment"');
+  assert.equal(lines[0], 'Impact of BEH-ASMT-SCHEDULE, behavior "Schedule a student assessment"');
   assert.match(lines[1], /^Snapshot: no commit \(.+\), graph [0-9a-f]{64}$/);
   assert.match(impact.out, /not proof that runtime behavior changed/);
   const direct = impact.out.slice(impact.out.indexOf("Direct"), impact.out.indexOf("Candidates"));

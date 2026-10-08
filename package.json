@@ -21,6 +21,7 @@
     "build": "rm -rf packages/*/dist && node --conditions=intentset-source packages/conformance-suite/stage.ts && tsc -p packages/core/tsconfig.build.json && tsc -p packages/markset-adapter/tsconfig.build.json && tsc -p packages/architecture/tsconfig.build.json && tsc -p packages/verification/tsconfig.build.json && tsc -p packages/publisher/tsconfig.build.json && tsc -p packages/help/tsconfig.build.json && tsc -p packages/atlas/tsconfig.build.json && tsc -p packages/mcp/tsconfig.build.json && tsc -p packages/conformance-suite/tsconfig.build.json && tsc -p packages/cli/tsconfig.build.json",
     "site": "node --conditions=intentset-source site/build.ts",
     "site:watch": "node --conditions=intentset-source site/serve.ts",
+    "social-card": "node --conditions=intentset-source site/social-card.ts",
     "e2e": "playwright test",
     "release": "pnpm run build && pnpm --filter @intentset/core --filter @intentset/markset-adapter --filter @intentset/architecture --filter @intentset/verification --filter @intentset/publisher --filter @intentset/help --filter @intentset/atlas --filter @intentset/mcp --filter @intentset/conformance-suite --filter @intentset/cli publish",
     "smoke:packed": "pnpm run build && node --conditions=intentset-source test/consumer/smoke.ts --packed",

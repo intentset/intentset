@@ -10,7 +10,7 @@
     "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
     "uncommitted": false
   },
-  "graphHash": "a3ca70d9009b3c5068a20701e1deba4fc2455f678f29f562409f209e10ebe683",
+  "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -101,7 +101,7 @@
     {
       "id": "BEH-ASMT-SCHEDULE",
       "type": "behavior",
-      "title": "Schedule an assessment",
+      "title": "Schedule a student assessment",
       "status": "draft",
       "owner": "team-assessment",
       "visibility": "internal",
@@ -112,7 +112,7 @@
       "profile": "intentset/behavior/0.1",
       "revision": 1,
       "path": "BEH-ASMT-SCHEDULE.md",
-      "sourceHash": "2f533532d2e56ed34014a7de677290cd8964b591a13eaac1f9997fb30931945e",
+      "sourceHash": "1cb64613c917d4adbb85fa8a28898e13d4450b9c2840ee80f66fcba1673fc02e",
       "parent": "CAP-ASMT-ASSIGN",
       "links": {
         "governedBy": [
@@ -158,7 +158,7 @@
     {
       "id": "CAP-ASMT-ASSIGN",
       "type": "capability",
-      "title": "Assessment assignment",
+      "title": "Student assessment assignment",
       "status": "draft",
       "owner": "team-assessment",
       "visibility": "internal",
@@ -169,7 +169,7 @@
       "profile": "intentset/capability/0.1",
       "revision": 1,
       "path": "CAP-ASMT-ASSIGN.md",
-      "sourceHash": "1cc8fd7ded5d82e6d5f80cd1a7cb26df3e375b89e6807800501481540693650e",
+      "sourceHash": "c1a2bfde4d63c2141d9fbad6bbd4abbc89c236c5014d406fa2b0a9b4c83937fc",
       "parent": "OUT-PREPARE",
       "links": {},
       "derived": {
@@ -248,7 +248,7 @@
     {
       "id": "KB-ASMT-SCHEDULE",
       "type": "knowledge",
-      "title": "Prepare a scheduled assessment",
+      "title": "Prepare a scheduled student assessment",
       "status": "draft",
       "owner": "team-assessment",
       "visibility": "customer",
@@ -258,7 +258,7 @@
       "profile": "intentset/knowledge/0.1",
       "revision": 1,
       "path": "KB-ASMT-SCHEDULE.md",
-      "sourceHash": "5799c5b53a261ab182db498f73165a9211aa43bb2a1184460eb7240fc7c20a23",
+      "sourceHash": "50d8dfd5216b6f04befbe896c405ff428be900515389e51379af133600e87a9c",
       "parent": null,
       "links": {
         "explains": [
@@ -401,7 +401,7 @@
       "profile": "intentset/product/0.1",
       "revision": 1,
       "path": "PRD-LANTERN.md",
-      "sourceHash": "6d0fea6f2ba28e7f7fbe114ccc599d0093ffe53870a171c8df7592337f29005d",
+      "sourceHash": "cfed95d80f47d70565b580dbfb4c904b99d0889c2a491ca3ba12b760596128a9",
       "parent": null,
       "links": {},
       "derived": {
@@ -490,7 +490,7 @@
     {
       "id": "SLICE-ASMT-SCHEDULE",
       "type": "slice",
-      "title": "Assessment scheduling slice",
+      "title": "Student assessment scheduling slice",
       "status": "draft",
       "owner": "team-assessment",
       "visibility": "internal",
@@ -501,7 +501,7 @@
       "profile": "intentset/slice/0.1",
       "revision": 1,
       "path": "SLICE-ASMT-SCHEDULE.md",
-      "sourceHash": "04b42b2b03e467368b45fa357948c1e6d17ec4e1340ed5c32b8012400483b905",
+      "sourceHash": "884635463313785b9d0dc91759661cb5d7439fa01db9176d4a21c1d307a7e1ba",
       "parent": null,
       "links": {
         "implements": [
@@ -562,7 +562,7 @@
     {
       "id": "TEST-ASMT-SCHEDULE",
       "type": "verification",
-      "title": "Review assessment scheduling behavior",
+      "title": "Review student assessment scheduling behavior",
       "status": "draft",
       "owner": "team-assessment",
       "visibility": "internal",
@@ -573,7 +573,7 @@
       "profile": "intentset/verification/0.1",
       "revision": 1,
       "path": "TEST-ASMT-SCHEDULE.md",
-      "sourceHash": "9fdcbd48e547268983e5ecabfd2e584b76d8119161cb995ec61edf1404a7dd71",
+      "sourceHash": "53680b8343acc518a757aebc5556f8dda09a1db4f0003647d62a59d3c19e6b49",
       "parent": null,
       "links": {
         "verifies": [
@@ -599,7 +599,7 @@
   "reports": {
     "evidence": {
       "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-      "graphHash": "a3ca70d9009b3c5068a20701e1deba4fc2455f678f29f562409f209e10ebe683",
+      "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
       "scope": {
         "product": "PRD-LANTERN",
         "release": "pilot-1"

@@ -2,7 +2,7 @@
 markset: 0
 ---
 
-# Where Intentset is going.
+# Where Intentset is going
 
 {.lead}
 Intentset is in draft. You can use it today on a real capability, and what people find doing that decides what version 1.0 keeps.
@@ -19,8 +19,8 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 1.0 is the version you can build on without expecting breaking changes. Real codebases decide what it keeps:
 
-- **Streamlane**, a work management product, where [the first pilot](../pilot/index.html) changed the specifications in four places.
-- **Driftline**, built with Intentset from its first commit, so the model comes before the code.
+- **Streamlane**, a work management product, where the model is a required check on every pull request, and [what it has caught](../pilot/index.html) has already changed the specifications and the toolchain.
+- **Driftline**, modelled before any of its code existed, so the model comes before the code.
 - **At least one outside adopter**, on a codebase we did not write.
 
 ## Not planned

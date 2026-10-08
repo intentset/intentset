@@ -2,7 +2,7 @@
 title: Intentset Core Specification v0.1
 id: intentset/core/0.1
 status: draft
-revision: 2026-10-05
+revision: 2026-10-07
 implementation: 0.6.1
 ---
 
@@ -60,7 +60,7 @@ intentset:
   profile: intentset/behavior/0.1
   id: BEH-ASMT-SCHEDULE
   type: behavior
-  title: Schedule an assessment
+  title: Schedule a student assessment
   status: approved
   owner: team-assessment
   visibility: internal

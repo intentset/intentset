@@ -2,7 +2,7 @@
 markset: 0
 ---
 
-# Start with one capability.
+# Start with one capability
 
 {.lead}
 You do not need to reorganize your repository or write records by hand. Set up the toolchain, have an agent model one capability from what the repository already holds, and review what it wrote.
@@ -64,7 +64,7 @@ From then on, the agent that changes the code updates the records in the same co
 
 Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved.
 
-[[Read about the first pilot](../pilot/index.html)]{.button .primary} [[Open the worked example](../example/index.html)]{.button}
+[[Read the adoption log](../pilot/index.html)]{.button .primary} [[Open the worked example](../example/index.html)]{.button}
 
 > [!NOTE]
 > The reference toolchain is an early release, at {{version}}. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.

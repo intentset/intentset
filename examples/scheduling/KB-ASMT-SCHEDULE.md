@@ -5,7 +5,7 @@ intentset:
   profile: intentset/knowledge/0.1
   id: KB-ASMT-SCHEDULE
   type: knowledge
-  title: Prepare a scheduled assessment
+  title: Prepare a scheduled student assessment
   status: draft
   owner: team-assessment
   visibility: customer
@@ -29,7 +29,7 @@ intentset:
     flags: []
 ---
 
-# Prepare a scheduled assessment
+# Prepare a scheduled student assessment
 
 ## Guidance
 

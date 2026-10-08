@@ -5,7 +5,7 @@ intentset:
   profile: intentset/verification/0.1
   id: TEST-ASMT-SCHEDULE
   type: verification
-  title: Review assessment scheduling behavior
+  title: Review student assessment scheduling behavior
   status: draft
   owner: team-assessment
   visibility: internal
@@ -25,7 +25,7 @@ intentset:
     selector: schedule-review-v1
 ---
 
-# Review assessment scheduling behavior
+# Review student assessment scheduling behavior
 
 ## Procedure
 

@@ -7,6 +7,49 @@ case, in any section of the suite, moves `intentset.spec` from `0.1`.
 
 ## Unreleased
 
+**The worked example says "student assessment", and intentset.org gained a Copy button.** Of the specifications
+only Core moved, and only in an illustrative example: no conformance case changed, `intentset.spec` stays `0.1` and
+the export stays 0.3. The suite's baseline bytes did change, so a consumer that pins the export's graph hash reads a
+new one.
+
+- **"Schedule an assessment" is "Schedule a student assessment"**, and the capability, slice, knowledge and
+  verification records that named an assessment alone now say whose. Standing on its own — in the home page's
+  reviewer card, in a title, in a list of records — the bare word read as an assessment of something on the page
+  rather than as the example's subject. Record IDs are unchanged, so no URL moved and no ID a consumer holds
+  changed. The baseline the suite ships carries the new titles, `tests/consumer/` was rebuilt from the recipe, and
+  the export's baseline graph hash moved to
+  `ce8f27a986463815fee6c81d9b66efd64cb03193f2fa1b20882f7fa0c435c9a6`: Core's own note says a change to any baseline
+  byte changes it. Core §1's illustrative frontmatter carries the new title, which is why Core's revision is
+  2026-10-07; the example is informative and no rule moved.
+- **A Copy button on every code block on intentset.org**, made by the shell's script rather than rendered, so it
+  exists only where the clipboard does and a reader with scripting off never meets a control that cannot work. The
+  built HTML inside `<main>` still holds no script.
+- **The home page leads with the adoption log** rather than the first pilot alone: two products, the gate on every
+  pull request, and the model read back from what Streamlane's backend records at runtime. The Start and Roadmap
+  pages name the log the way the bar does.
+- **The worked example is worked, not listed.** `/example/` was thirteen headings over fifteen links: it said what
+  the records were called and nothing about what they do, and reading one meant leaving the page. It is now five
+  steps of the model's own chain — why the product is changing, what it promises, where that is delivered, how it is
+  checked, what a customer may be told — each explained, with its records open on the page in Markset's folding
+  callout, which is a `<details>` and so needs no script. Every record keeps the page of its own that deep links and
+  search results use, and each fold links to it.
+- **The ground carries the mark's green.** The light ground was a yellow-green under a teal-green tile, and the
+  light scheme walked across the color wheel as it darkened: ground at hue 69, surface 100, border 132, accent 159,
+  the mark's tile 168. Ground, surface and border are the tile's hue now, at the lightness they already had, so the
+  contrast is unchanged to a hundredth (text on the ground, 11.43 to 11.47). The dark ground was already the mark's
+  hue and did not move. markset.org and coralreefventures.com were brought to the same rule the same day.
+- **A social card.** intentset.org names an `og:image`, so a link to it previews as a picture rather than as text.
+  `site/social-card.ts` draws `site/social-card.png` from the mark, the footer's statement and the site's own dark
+  tokens; it is run by hand (`pnpm run social-card`) and committed, so neither CI nor a deploy needs a browser, and a
+  test holds the committed file to the size the pages tell a client to expect.
+- **A code block runs to the document's width**, as a table does. markset.css stops a document's direct children at
+  the reading measure, which is right for prose and wrong for a line that cannot wrap: the same block inside a tabs
+  construct was already full width, and the one on the Start page scrolled sideways for want of 100px.
+- **A page's h1 does not end in a period.** A title is a label, not a sentence.
+- **The line saying where a rendered document comes from sits under the h1**, on the agent guide and on each
+  specification, so the first thing on the page is the page's name.
+- **`site/test/build.test.ts` reads `packages/` by directory**, so a `.DS_Store` no longer fails the suite on a Mac.
+
 **A changelog, a change policy, and specifications that say what they are.** The specifications changed in wording
 and in what they document, not in what any check does: no case changed, `intentset.spec` stays `0.1`, and the export
 stays 0.3.

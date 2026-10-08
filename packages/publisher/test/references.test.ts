@@ -85,12 +85,16 @@ test("titles: three or more words, case-sensitive, across a line break, and neve
   assert.ok(titlePattern("Require a future release time").test("you Require a\nfuture  release time."));
   assert.ok(!titlePattern("Require a future release time").test("require a future release time"));
   assert.ok(!titlePattern("Require a future release time").test("Require a future release times"));
+  // Every title in the example now runs to three words or more, so the capability
+  // is given a two-word one here: a short title is common phrasing, and matching
+  // it in prose would report a reference nobody made.
   const { graph } = example({
     kb: reviewed(),
-    body: guidance("Require assignment permission. Assessment assignment. Schedule an assessment."),
+    patch: { "CAP-ASMT-ASSIGN.md": { frontmatter: { title: "Assessment assignment" } } },
+    body: guidance("Require assignment permission. Assessment assignment. Schedule a student assessment."),
   });
   const request = customer();
-  const found = checkTitles(kb(graph), graph, request, new Set(["Prepare a scheduled assessment"]));
+  const found = checkTitles(kb(graph), graph, request, new Set(["Prepare a scheduled student assessment"]));
   assert.deepEqual(
     found.map((d) => d.message),
     [
@@ -100,7 +104,7 @@ test("titles: three or more words, case-sensitive, across a line break, and neve
     "the two-word capability title is not checked",
   );
   assert.deepEqual(
-    checkTitles(kb(graph), graph, request, new Set(["Schedule an assessment", "Require assignment permission"])),
+    checkTitles(kb(graph), graph, request, new Set(["Schedule a student assessment", "Require assignment permission"])),
     [],
   );
 });
@@ -119,7 +123,7 @@ test("no reference diagnostic carries the referenced title or path", () => {
     "Keep backend access behind the slice seam",
     "ADR-ASMT-SEAM.md",
     "SLICE-ASMT-SCHEDULE.md",
-    "Assessment scheduling slice",
+    "Student assessment scheduling slice",
   ]) {
     assert.ok(!text.includes(leak), leak);
   }
