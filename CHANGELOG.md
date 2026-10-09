@@ -21,6 +21,13 @@ new one.
   `ce8f27a986463815fee6c81d9b66efd64cb03193f2fa1b20882f7fa0c435c9a6`: Core's own note says a change to any baseline
   byte changes it. Core §1's illustrative frontmatter carries the new title, which is why Core's revision is
   2026-10-07; the example is informative and no rule moved.
+- **A page for the person running the adoption**, `/adopt/`, in the Start rail between How it works and the agent
+  guide. The Start page models one capability; this page is for the rest of a product, run by one person through many
+  agents working unattended: the three boundaries ("sandbox" names all of them) that have to be in place before
+  automation widens, what to set up, how to split work between sessions in worktrees, workflows, subagents and
+  routines, what to settle before a long run so nobody has to stay, what a change proves before it lands, and a
+  permissions ladder paid for step by step. The practices are written for any agent; one dated table maps them to
+  Claude Code's pieces, checked against its documentation on 2026-10-09.
 - **A Copy button on every code block on intentset.org**, made by the shell's script rather than rendered, so it
   exists only where the clipboard does and a reader with scripting off never meets a control that cannot work. The
   built HTML inside `<main>` still holds no script.
