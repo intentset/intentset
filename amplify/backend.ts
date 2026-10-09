@@ -7,13 +7,18 @@ import {
   ResponseTransferMode,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
+import { Alarm, ComparisonOperator, Metric, TreatMissingData } from "aws-cdk-lib/aws-cloudwatch";
+import { SnsAction } from "aws-cdk-lib/aws-cloudwatch-actions";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import type { CfnFunction } from "aws-cdk-lib/aws-lambda";
+import { Topic } from "aws-cdk-lib/aws-sns";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 import { limits, model } from "./functions/ask/limits.ts";
+import { METRIC_NAMESPACE } from "./functions/ask/log.ts";
 import { ask } from "./functions/ask/resource.ts";
-import { allowedOrigins } from "./settings.ts";
+import { ALARM_EMAIL, allowedOrigins } from "./settings.ts";
 
 /**
  * The chat's backend (SLICE-ASK), all in us-east-2 in the coral-reef project: the function, two tables, an API
@@ -129,6 +134,44 @@ new CfnWebACLAssociation(stack, "AskWebAclAssociation", {
   resourceArn: api.deploymentStage.stageArn,
   webAclArn: webAcl.attrArn,
 });
+
+// Alarms, to an inbox on the branch (a sandbox's topic has no subscriber): an error or a throttle on the function, the
+// day's estimated spend past 80% of its budget, the chat refusing for the budget, and the firewall blocking a flood.
+const notices = new Topic(stack, "AskNotices", { topicName: named("intentset-ask-notices") });
+if (branch) notices.addSubscription(new EmailSubscription(ALARM_EMAIL));
+const fiveMinutes = Duration.minutes(5);
+const alarm = (id: string, metric: Metric, threshold: number) =>
+  new Alarm(stack, id, {
+    alarmName: named(`intentset-ask-${id}`),
+    metric,
+    threshold,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  }).addAlarmAction(new SnsAction(notices));
+alarm("errors", fn.metricErrors({ period: fiveMinutes, statistic: "Sum" }), 1);
+alarm("throttles", fn.metricThrottles({ period: fiveMinutes, statistic: "Sum" }), 1);
+alarm(
+  "spend",
+  new Metric({ namespace: METRIC_NAMESPACE, metricName: "CostMicros", statistic: "Sum", period: Duration.days(1) }),
+  limits.dailyBudgetUsd * 1_000_000 * 0.8,
+);
+alarm(
+  "budget-refused",
+  new Metric({ namespace: METRIC_NAMESPACE, metricName: "BudgetRefused", statistic: "Sum", period: fiveMinutes }),
+  1,
+);
+alarm(
+  "waf-blocked",
+  new Metric({
+    namespace: "AWS/WAFV2",
+    metricName: "BlockedRequests",
+    dimensionsMap: { WebACL: webAclName, Region: Aws.REGION, Rule: "ALL" },
+    statistic: "Sum",
+    period: fiveMinutes,
+  }),
+  50,
+);
 
 new CfnOutput(stack, "AskUrl", { value: `${api.url}ask` });
 backend.addOutput({ custom: { askUrl: `${api.url}ask` } });

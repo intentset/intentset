@@ -33,6 +33,8 @@ new one.
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
 - **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
   text.
+- **The chat's alarms.** Errors, throttles, the day's estimated spend past 80% of its budget, a refusal for the budget,
+  and the firewall blocking a flood each email the family's inbox from the branch.
 - **Ready to launch the chat.** The privacy page (approved) is built, and linked from the footer, only with the chat;
   a test holds it to the backend's retention periods. A workflow deploys the chat's backend from main once its
   Amplify app and role are named in the repository's variables. intentset.org is unchanged until `ASK_URL` is set.
