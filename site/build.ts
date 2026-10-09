@@ -361,6 +361,7 @@ when it exists. The records are Markset documents, so Markset's authoring guide 
 - [Agent guide](${site}/guide.md): before and after a change, the record format, and what an agent never does
 - [Specifications](${site}/specifications/): the source of truth
 - [The intentset command](${site}/tools/cli/): every command, option and exit code
+- [Run the adoption](${site}/adopt/): how one person runs an adoption through many agents, and how to set that up
 - [Markset authoring guide](${EXTERNAL.markset}guide.md): the document syntax the records are written in
 `;
 }
