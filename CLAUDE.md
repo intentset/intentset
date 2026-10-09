@@ -149,7 +149,7 @@ packages/
   conformance-suite/  published cases, consumer fixtures and schemas as data
   mcp/                M5: read-only context server
 site/                 intentset.org: build.ts (pages, rails, sitemap, 404, /guide.md, /llms.txt, schemas under /spec/),
-                      content/*.md, site.css over markset.css, serve.ts for site:watch
+                      content/*.md, site.css over markset.css, serve.ts for site:watch, corpus.ts (the chat's corpus)
 test/                 tooling.test.ts (the repository's shape), codes.test.ts (spec, suite and code agree on codes),
                       harness.test.ts, consumer/smoke.ts (install the packed or published packages and use them)
 docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff), pilot-findings.md, consumers.md
@@ -161,7 +161,7 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 - Node ≥ 22.18, TypeScript run directly by type stripping: erasable syntax only, explicit `.ts` import extensions.
 - pnpm workspaces (`pnpm-workspace.yaml`; pnpm pinned by `packageManager`). `pnpm test` (node --test),
   `pnpm run conformance`, `pnpm run typecheck`, `pnpm run lint`, `pnpm run format`, `pnpm run site`,
-  `pnpm run social-card`,
+  `pnpm run social-card`, `pnpm run corpus`,
   `pnpm run site:watch`, `pnpm run build` (publishing only, to `dist/`). Moved from npm on 2026-10-04 with the lockfile
   imported, so no version changed. Siblings keep `^<version>` ranges, linked by `linkWorkspacePackages`. A file may
   import only what its own package declares: the root links every workspace package for the tests, and
@@ -219,6 +219,12 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   `og:image` with `twitter:card` at `summary_large_image`. It is drawn rather than generated at build time because
   CI and the deploy should not need a browser; redraw it when the mark, the tagline or the tokens change.
   `site/test/build.test.ts` holds the committed file to the size the pages claim.
+- **The chat's corpus is the site** (2026-10-09): `site/corpus.ts` builds what the chat on intentset.org answers from
+  out of `siteInputs()`, the same sources, tokens and addresses the pages are built from: every content page but the
+  404, the specifications, the agent guide and the example's records, each with its canonical URL. It is written to
+  `amplify/functions/ask/corpus.json` by `pnpm run corpus` and never committed; the backend's deploy builds it from
+  the commit it deploys. The whole corpus is sent, cached, with every question, so `site/test/corpus.test.ts` holds it
+  under `TOKEN_BUDGET` (about 46k of 100k estimated tokens at first). A new page joins it by joining the site.
 - **The footer is the family's** (2026-10-06, the same on markset.org): the row (the bar and About), then one line,
   `Intentset · Keep control of what your agents build. · Source on GitHub · A Coral Reef Ventures project · Sibling
   project: Markset`, then the family's mark. It links the sibling site, markset.org, once, as markset.org's links this
@@ -239,6 +245,11 @@ from source (the installed bin points at `dist/`, which only the build writes).
   design invariant 8 is held by the architecture check as well as by the manifests: core, help and the suite depend on
   no slice. The site is composition. Layers are empty, because a package has no presentation, policy or model layer;
   the check warns about that (VSA006) on every slice.
+- **The chat on intentset.org is SLICE-ASK** (`product/model/slices/ask/`, 2026-10-09), with its intent, two outcomes,
+  two capabilities, six behaviors and four rules: answers only from what is published, nothing kept identifies a
+  visitor, questions kept 90 days, and spend capped. The slice claims `amplify/` and `site/chat/`, so the site's
+  composition region is listed around `site/chat/`. It is a draft whose paths are planned, which the check reports as
+  warnings until the code exists.
 - **The design invariants are rules** (`product/model/rules/`), and the specifications stay the normative text: a
   record points at a section, never restates one.
 - **The gate**: the `model` job in `ci.yml` runs `pnpm run model:validate` (L2, migration mode, with

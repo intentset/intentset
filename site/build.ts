@@ -233,7 +233,7 @@ export function siteGuide(): string {
   return agentGuide([GUIDE_SCOPE]);
 }
 
-interface Page {
+export interface Page {
   /** Output path relative to dist/, e.g. "start/index.html". */
   path: string;
   title: string;
@@ -273,30 +273,18 @@ export async function build(outDir: string = join(root, "dist")): Promise<string
   }
 }
 
-async function writeSite(out: string): Promise<string[]> {
-  await mkdir(join(out, "css"), { recursive: true });
-  // Pages reads the custom domain from a CNAME file at the root of what it
-  // serves. The host comes from package.json's homepage, so there is one place
-  // to change it.
-  await writeFile(join(out, "CNAME"), `${SITE_HOST}\n`);
-  await cp(defaultStylesheetPath, join(out, "css", "markset.css"));
-  await cp(join(root, "site", "site.css"), join(out, "css", "site.css"));
-  await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
-  // The social card, drawn by hand with `pnpm run social-card` and committed, so
-  // neither CI nor a deploy needs a browser to produce it. See site/social-card.ts.
-  await cp(join(root, "site", CARD.file), join(out, CARD.file));
-  // Every schema at the address its $id names (https://intentset.org/spec/...),
-  // so a validator that dereferences one finds it.
-  await mkdir(join(out, "spec"), { recursive: true });
-  for (const name of (await readdir(join(root, "spec"))).filter((f) => f.endsWith(".schema.json")).sort()) {
-    await cp(join(root, "spec", name), join(out, "spec", name));
-  }
-  // For agents: the guide as a file, and llms.txt, the conventional place an
-  // agent looks first on a site, pointing at it.
-  await writeFile(join(out, "guide.md"), siteGuide());
-  await writeFile(join(out, "llms.txt"), llmsTxt());
-  await writeFile(join(out, "robots.txt"), robotsTxt());
-
+/**
+ * What the pages are made from: each specification's frontmatter and rendered
+ * page, the worked example's records, and the tokens the content pages
+ * substitute. The site and the chat's corpus (site/corpus.ts) both read it, so
+ * the chat answers from exactly what the site publishes.
+ */
+export async function siteInputs(): Promise<{
+  metas: SpecMeta[];
+  specs: Page[];
+  records: ExampleRecord[];
+  tokens: Record<string, string>;
+}> {
   const metas = await Promise.all(
     SPECS.map(async (spec) => {
       const file = join("spec", spec.file);
@@ -325,6 +313,44 @@ async function writeSite(out: string): Promise<string[]> {
     // than written by hand, so renumbering the section cannot break the link.
     coreMarksetSection: sectionAnchor(specs[0], /markset/i),
   };
+  return { metas, specs, records, tokens };
+}
+
+/** A content page's source with its tokens substituted. Throws on a token left over. */
+export async function contentSource(file: string, tokens: Record<string, string>): Promise<string> {
+  const source = join(root, "site", "content", file);
+  let text = await readFile(source, "utf8");
+  for (const [name, value] of Object.entries(tokens)) text = text.replaceAll(`{{${name}}}`, value);
+  const leftover = /\{\{[\w.-]+\}\}/.exec(text);
+  if (leftover) throw new Error(`${relative(root, source)}: unsubstituted token ${leftover[0]}`);
+  return text;
+}
+
+async function writeSite(out: string): Promise<string[]> {
+  await mkdir(join(out, "css"), { recursive: true });
+  // Pages reads the custom domain from a CNAME file at the root of what it
+  // serves. The host comes from package.json's homepage, so there is one place
+  // to change it.
+  await writeFile(join(out, "CNAME"), `${SITE_HOST}\n`);
+  await cp(defaultStylesheetPath, join(out, "css", "markset.css"));
+  await cp(join(root, "site", "site.css"), join(out, "css", "site.css"));
+  await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
+  // The social card, drawn by hand with `pnpm run social-card` and committed, so
+  // neither CI nor a deploy needs a browser to produce it. See site/social-card.ts.
+  await cp(join(root, "site", CARD.file), join(out, CARD.file));
+  // Every schema at the address its $id names (https://intentset.org/spec/...),
+  // so a validator that dereferences one finds it.
+  await mkdir(join(out, "spec"), { recursive: true });
+  for (const name of (await readdir(join(root, "spec"))).filter((f) => f.endsWith(".schema.json")).sort()) {
+    await cp(join(root, "spec", name), join(out, "spec", name));
+  }
+  // For agents: the guide as a file, and llms.txt, the conventional place an
+  // agent looks first on a site, pointing at it.
+  await writeFile(join(out, "guide.md"), siteGuide());
+  await writeFile(join(out, "llms.txt"), llmsTxt());
+  await writeFile(join(out, "robots.txt"), robotsTxt());
+
+  const { specs, records, tokens } = await siteInputs();
   const pages: Page[] = [
     ...(await Promise.all(CONTENT_PAGES.map(([path, file]) => contentPage(path, file, tokens)))),
     ...specs,
@@ -398,12 +424,8 @@ const RAIL_PAGES = new Set([
 
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
-  const source = join(root, "site", "content", file);
-  let text = await readFile(source, "utf8");
-  for (const [name, value] of Object.entries(tokens)) text = text.replaceAll(`{{${name}}}`, value);
-  const leftover = /\{\{[\w.-]+\}\}/.exec(text);
-  if (leftover) throw new Error(`${relative(root, source)}: unsubstituted token ${leftover[0]}`);
-  return renderPage(path, text, source, {}, RAIL_PAGES.has(path));
+  const text = await contentSource(file, tokens);
+  return renderPage(path, text, join(root, "site", "content", file), {}, RAIL_PAGES.has(path));
 }
 
 function renderPage(path: string, source: string, file: string, extra: Partial<Page> = {}, rail = false): Page {
