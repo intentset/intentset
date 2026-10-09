@@ -13,3 +13,6 @@ packages/conformance-suite/examples/
 packages/conformance-suite/consumer/
 # The chat's corpus, built from the commit the backend deploys (site/corpus.ts); never committed.
 amplify/functions/ask/corpus.json
+# Written by ampx in a sandbox.
+amplify_outputs.json
+.amplify/

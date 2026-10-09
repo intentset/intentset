@@ -17,7 +17,11 @@
       "!tests/consumer",
       // Their staged copy, written by packages/conformance-suite/stage.ts at build time and gitignored.
       "!packages/conformance-suite/cases",
-      "!packages/conformance-suite/consumer"
+      "!packages/conformance-suite/consumer",
+      // Written by ampx and by pnpm run corpus, gitignored.
+      "!.amplify",
+      "!amplify_outputs.json",
+      "!amplify/functions/ask/corpus.json"
     ]
   },
   "formatter": {

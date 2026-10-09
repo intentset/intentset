@@ -1,0 +1,13 @@
+{
+  "name": "@intentset/chat-backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The backend of the chat on intentset.org: Amplify Gen 2 in us-east-2, in the coral-reef project (SLICE-ASK).",
+  "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "0.34.4",
+    "@anthropic-ai/sdk": "0.132.1",
+    "@aws-sdk/client-dynamodb": "3.1141.0",
+    "@aws-sdk/lib-dynamodb": "3.1141.0"
+  }
+}

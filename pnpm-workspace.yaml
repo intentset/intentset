@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - site
+  - amplify
 
 # Every package asks for its siblings at the version they are released at together (^x.y.z), so the
 # published manifests need no rewriting. This links those ranges to the workspace copy instead of fetching
@@ -13,3 +14,15 @@ minimumReleaseAgeExclude:
   - '@markset-lang/diagram-ascii@0.4.1'
   - '@markset-lang/parser@0.4.1'
   - '@markset-lang/render-html@0.4.1'
+
+# The chat's backend (amplify/) builds with esbuild through Amplify.
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: false
+  esbuild: true
+
+overrides:
+  # As in coral-reef-site and Streamlane: Amplify's backend-deployer pins toolkit-lib 1.32.0, whose hotswap fallback
+  # forces CloudFormation Express mode on every full sandbox deploy and cannot create a new stack. 1.42.0 falls back to an
+  # ordinary deploy. Remove once backend-deployer depends on a fixed release.
+  "@aws-cdk/toolkit-lib": 1.42.0

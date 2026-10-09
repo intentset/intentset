@@ -51,7 +51,10 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
 - Determinism: same inputs, same bytes. Canonical JSON for anything hashed. Sort everything you iterate.
 - Don't add dependencies without asking. Approved so far: `@markset-lang/parser` and `@markset-lang/render-html` at
   exactly 0.4.1 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
-  architecture, Playwright and Biome as dev dependencies. `pnpm install` is run by whoever owns the root; agents working
+  architecture, Playwright and Biome as dev dependencies, and for the chat's backend (2026-10-09, pinned):
+  `@aws-amplify/backend`, `@aws-amplify/backend-cli`, `aws-cdk`, `aws-cdk-lib`, `constructs`, `esbuild` and
+  `@types/aws-lambda` at the root, and `@anthropic-ai/bedrock-sdk`, `@anthropic-ai/sdk` and the DynamoDB clients in
+  `amplify/`. `pnpm install` is run by whoever owns the root; agents working
   in parallel do not run it.
 - No Streamlane record or code enters this repository; the adoption log describes them. Its records live in the
   Streamlane repository.
@@ -153,6 +156,7 @@ site/                 intentset.org: build.ts (pages, rails, sitemap, 404, /guid
 test/                 tooling.test.ts (the repository's shape), codes.test.ts (spec, suite and code agree on codes),
                       harness.test.ts, consumer/smoke.ts (install the packed or published packages and use them)
 docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff), pilot-findings.md, consumers.md
+amplify/              the chat's backend (SLICE-ASK): backend.ts, settings.ts, functions/ask/, test/
 CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICENSE
 ```
 
@@ -259,6 +263,41 @@ from source (the installed bin points at `dist/`, which only the build writes).
   `Intentset-Unchanged: SLICE-…` trailer.
 - **Every record is a draft** until a maintainer promotes it. No outcome has a measure record yet (three CORE009
   warnings), and no behavior has a verification record: the packages' tests are claimed, not linked.
+
+## The chat's backend
+
+`amplify/` is the chat's backend (SLICE-ASK), Amplify Gen 2 in us-east-2 in the coral-reef project, the same project
+and rules as coral-reef-site: every Regional resource in us-east-2, no Lambda@Edge, no us-east-1 certificate. It is a
+pnpm workspace member of its own (`@intentset/chat-backend`) with its own `tsconfig.json`, so nothing it depends on
+reaches a published package.
+
+- **The shape.** One function, `intentset-ask` (`amplify/functions/ask/`), with reserved concurrency (`limits.ts`,
+  the project's Lambda quota is 1000); an API Gateway REST API, `POST /ask`, streaming (`ResponseTransferMode.STREAM`),
+  CORS for intentset.org on the branch and `http://localhost:3004` in a sandbox (`settings.ts`), no CloudWatch role; a
+  regional WAF with a rate rule per IP on the stage; two tables with TTL, `intentset-ask-limits` (the switch, the
+  day's spend, the day's salt, each visitor's count) and `intentset-ask-questions` (scrubbed, 90 days). The function
+  has no URL of its own.
+- **The model.** Claude Opus 5.5 through `us.anthropic.claude-opus-5-5`, effort `low`, with the SDK's
+  refusal-fallback middleware to Opus 4.8; the corpus goes as cited document blocks, the last one cached for an hour,
+  after a system prompt with no date in it. The profile routes to us-east-1, us-east-2 and us-west-2; the SCP
+  `p-mlfzkjk2` opens us-west-2 to Bedrock only through an inference profile, and the function's grants name the two
+  profiles and their foundation models in those three Regions only.
+- **Limits and retention** are constants in `amplify/functions/ask/limits.ts`: question length, turns, the visitor's
+  daily count, the daily budget (estimated from token counts at Anthropic's published rates), retention. A changed
+  retention period changes the privacy page in the same commit.
+- **The switch.** Put `{"key": "switch", "state": "off"}` in the limits table and the chat refuses every question
+  until the item is removed; no deploy.
+- **Logs** carry an event kind, ids, a status and token counts (`log.ts`); `amplify/test/ask.test.ts` runs the whole
+  flow and fails if a question, an answer or an address reaches the console.
+- **The corpus** is `amplify/functions/ask/corpus.json`, built by `pnpm run corpus` and never committed; `pnpm run
+  typecheck` builds it first, and the synth test builds it when it is missing.
+- **Tests**: `amplify/test/*.test.ts` run with `pnpm test`, the synth test synthesizing the backend twice, as a
+  sandbox and as the branch, reading no account.
+- **An agent's sandbox**: `pnpm run sandbox` deploys `intentset-agent` with the `coral-reef` profile; exercise it, then
+  delete it with `pnpm exec ampx sandbox delete --identifier intentset-agent --profile coral-reef --yes`, check that no
+  `/aws/lambda/amplify-intentset*` log group, `intentset-ask-*` table or `intentset-ask-*` web ACL is left, and move
+  `.amplify/artifacts` out of the way (CDK's hotswap cache remembers the deleted stacks). The branch's deploy is
+  tracked in the chat's implementation tracker; until it exists, nothing serves intentset.org.
 
 ## Status
 

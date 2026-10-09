@@ -147,7 +147,10 @@ test("the tests, the suite and the installed packages also run under micromark's
     assert.match(scripts[name] ?? "", /--conditions=development/u, `${name} asks for the development build`);
     assert.equal(
       scripts[name].replace(" --conditions=development", ""),
-      scripts[name.replace(":development", "")].split(" && ")[0].replace(/ site\/test\/\S+| test\/\*\.test\.ts/gu, ""),
+      // The site's, the repository's and the chat backend's tests parse no Markset, so they run once.
+      scripts[name.replace(":development", "")]
+        .split(" && ")[0]
+        .replace(/ site\/test\/\S+| test\/\*\.test\.ts| amplify\/test\/\S+/gu, ""),
       `${name} runs what ${name.replace(":development", "")} runs`,
     );
   }
