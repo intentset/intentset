@@ -55,9 +55,15 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
   in parallel do not run it.
 - No Streamlane record or code enters this repository; the adoption log describes them. Its records live in the
   Streamlane repository.
-- The example product is Lantern, invented. Nothing in this repository names a real product, except the adoption
-  log (`site/content/pilot.md`, served at `/pilot/`), which names Streamlane and Driftline by Gary's decision of
-  2026-10-06. It shows Intentset's side: records, check output and counts, each with its source and date, and the
+- The example product is Lantern, invented: the fixtures, the worked example and the site's walkthrough use it and
+  nothing else. Nothing in this repository names another real product, except the adoption log, and the one real
+  product it models is Intentset itself.
+- **Intentset's own model** (`product/model/`, decided 2026-10-09) describes this repository's packages: what each
+  promises, which package delivers it, and the design invariants as rules. It is not an example: no fixture, test or
+  site page reads it, and the example's records never link into it. "Intentset's own model" below says how it is
+  kept.
+- The adoption log (`site/content/pilot.md`, served at `/pilot/`) names Streamlane and Driftline by Gary's decision
+  of 2026-10-06. It shows Intentset's side: records, check output and counts, each with its source and date, and the
   friction as well as what worked. Never the products' insides (screens, prices, roadmap detail, account ids,
   operation, function and log names, unreleased capabilities' names), never a link into their private repositories,
   and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
@@ -126,6 +132,9 @@ tests/                conformance fixtures, one JSON file per section (core, exp
 tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `pnpm run fixtures:consumer`
                       from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
 examples/scheduling/  the worked example, the fixtures' baseline and the site's example
+product/model/        Intentset's own model: the product, intent, outcomes, capabilities, behaviors, rules, and one
+                      slice per package under slices/<package>/slice.md
+.intentset/           its configuration, registries, architecture.yaml, the architecture baseline and agents.md
 packages/
   core/               carrier reader, types, graph, validator, impact, export. No dependencies.
   markset-adapter/    the one Markset import
@@ -215,6 +224,31 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   project: Markset`, then the family's mark. It links the sibling site, markset.org, once, as markset.org's links this
   one. `site/test/build.test.ts` holds the shape.
 
+## Intentset's own model
+
+This repository keeps its own Intentset model (decided 2026-10-09), checked by the CLI built from this checkout, so a
+change to the toolchain is checked by the toolchain it produces. Keep it as the guide below says, in the same commit as
+the code. The guide is generated and says `pnpm exec intentset`; here that is `pnpm run intentset`, which runs the CLI
+from source (the installed bin points at `dist/`, which only the build writes).
+
+@.intentset/agents.md
+
+- **One slice per package**, `product/model/slices/<package>/slice.md`: its entrypoint is the package's `index.ts`
+  (`harness.ts` for the private harness), and other packages reach it as `@intentset/<name>` through the
+  `intentset-source` condition (`.intentset/architecture.yaml`). `dependsOn` mirrors the package's dependencies, so
+  design invariant 8 is held by the architecture check as well as by the manifests: core, help and the suite depend on
+  no slice. The site is composition. Layers are empty, because a package has no presentation, policy or model layer;
+  the check warns about that (VSA006) on every slice.
+- **The design invariants are rules** (`product/model/rules/`), and the specifications stay the normative text: a
+  record points at a section, never restates one.
+- **The gate**: the `model` job in `ci.yml` runs `pnpm run model:validate` (L2, migration mode, with
+  `.intentset/architecture-baseline.json`) and `pnpm run model:review` (`--fail-on-drift` against the base). The
+  baseline is 17 VSA003 errors, all tests reaching past the conformance harness's `harness.ts` into its `fixtures`,
+  `schema`, `types`, `compare` and `report` modules; it only shrinks. A refactor answers drift with an
+  `Intentset-Unchanged: SLICE-…` trailer.
+- **Every record is a draft** until a maintainer promotes it. No outcome has a measure record yet (three CORE009
+  warnings), and no behavior has a verification record: the packages' tests are claimed, not linked.
+
 ## Status
 
 Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; milestones are
@@ -234,7 +268,9 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
   next such change, to any spec, moves `intentset.spec` to `0.2`.
 - The site is organized by task, as markset.org is (2026-10-05): see "The site" above.
-- Open: nothing.
+- Open: the own model's follow-ups ("Intentset's own model" above): retire the baseline by giving the conformance
+  harness one public surface; measures and verification records; and whether VSA006 should stay quiet for a slice
+  whose empty layers its Responsibility explains, as VSA §3 allows.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
 is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).

@@ -1,0 +1,102 @@
+[
+  {
+    "code": "VSA003",
+    "path": "packages/architecture/test/fixtures.test.ts",
+    "artifact": "SLICE-ARCHITECTURE",
+    "fingerprint": "372063b45075f2e7cd42dcce65fbe837f6054f2163c8f1c8058563c2c37761ed"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/architecture/test/fixtures.test.ts",
+    "artifact": "SLICE-ARCHITECTURE",
+    "fingerprint": "3ec4fe52bb94b17f40c089efbb8448b2ab777eb93c002197ac001cfc13dcb7be"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/cli/test/cli.test.ts",
+    "artifact": "SLICE-CLI",
+    "fingerprint": "26fe898189ef2897fab33517ef4d2a0f5e7439b8c09be72b9159f4017fdb9892"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/cli/test/helpers.ts",
+    "artifact": "SLICE-CLI",
+    "fingerprint": "47e9b7e9f22f301b583485fcdb9c88702a21461140cde4db1198c9bdac5b4a22"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/conformance-suite/stage.ts",
+    "fingerprint": "466745b916bb770eb75dea135e0d736c7a2060c4d789d706473e3cd95ed84f88"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/conformance-suite/test/suite.test.ts",
+    "artifact": "SLICE-CONFORMANCE-SUITE",
+    "fingerprint": "f464b7979fb380a607e6ed796a609331ef4ff9450cf546ee228b2bda86587a09"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/core/test/cases.ts",
+    "artifact": "SLICE-CORE",
+    "fingerprint": "046a8346d75cd65e560d31b1c973a0cfa02884c1661b292383b40fd252fe9c4a"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/core/test/cases.ts",
+    "artifact": "SLICE-CORE",
+    "fingerprint": "a0687abc3585c3b50171448f815f3de21d8fa54b6200ecd1b290fc9a8f790422"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/core/test/cases.ts",
+    "artifact": "SLICE-CORE",
+    "fingerprint": "f13158c24e572bacac09124805d0da11577a47824d40011f83733fd5eb83743e"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/publisher/test/fixtures.test.ts",
+    "artifact": "SLICE-PUBLISHER",
+    "fingerprint": "b764fc2286ee755b60c49745a905e5de98d17475b7016edbc39a67bf7ef03718"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/publisher/test/harness.ts",
+    "artifact": "SLICE-PUBLISHER",
+    "fingerprint": "4dc34574d2eaa2dcefce252b363f95b73240ec98476cc06ecfc895162ff4e041"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/verification/test/adapters.test.ts",
+    "artifact": "SLICE-VERIFICATION",
+    "fingerprint": "76bf642309025153b48561c51fb8022307b2d7ce67f69f066bbad08984d3c06c"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/verification/test/fixtures.test.ts",
+    "artifact": "SLICE-VERIFICATION",
+    "fingerprint": "726ce0dca5e74d5776b54d3dd5ea469a702c9ecf58a7b71cf18c0c07c78c9388"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/verification/test/helpers.ts",
+    "artifact": "SLICE-VERIFICATION",
+    "fingerprint": "270cc77941054ab2a6b46488367f7c0cd66e1c053e37bca3012d66542dfe33c6"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/verification/test/helpers.ts",
+    "artifact": "SLICE-VERIFICATION",
+    "fingerprint": "db1a4626a6a40ea5a94708d130974f6e965752551cd4fc32b960e4daba566d04"
+  },
+  {
+    "code": "VSA003",
+    "path": "packages/verification/test/records.test.ts",
+    "artifact": "SLICE-VERIFICATION",
+    "fingerprint": "8404b7a6449a696f1196634bf023ee68c05cf13d6b22d833d9701ecbfa320f25"
+  },
+  {
+    "code": "VSA003",
+    "path": "test/harness.test.ts",
+    "fingerprint": "4103162a3f84fd51560f3466431cd1a5da1b6f2bd7b9ca53d3793679af5fe9b8"
+  }
+]

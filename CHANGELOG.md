@@ -33,6 +33,12 @@ new one.
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
 - **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
   text.
+- **Intentset keeps its own model.** `product/model/` describes the packages with Intentset's own records, all
+  drafts: one product, one intent, three outcomes, eight capabilities, seventeen behaviors, five rules for the design
+  invariants, and one slice per package. CI checks it with the CLI this checkout builds: `validate` at L2 and
+  `review --fail-on-drift` against the base. The first architecture check found 17 imports past the conformance
+  harness's one entrypoint, all from tests; they are the baseline, which only shrinks. Nothing published changed: no
+  package, specification, conformance case or export.
 - **A Copy button on every code block on intentset.org**, made by the shell's script rather than rendered, so it
   exists only where the clipboard does and a reader with scripting off never meets a control that cannot work. The
   built HTML inside `<main>` still holds no script.

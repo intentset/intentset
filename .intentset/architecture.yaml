@@ -1,0 +1,31 @@
+# Intentset's own VSA checks at L2. Each package under packages/ is one slice, its index.ts the public surface the other
+# packages import as @intentset/<name>, resolved to source through the intentset-source export condition. There is no
+# backend, so no backend root and no backend SDK; a package has no internal layers, so the slices declare none.
+scope:
+  - packages/**
+  - site/**
+  - test/**
+sourceRoots:
+  - packages/*/src/**
+shared: []
+infrastructure: []
+# The site renders intentset.org from the CLI's usage and agent guide: composition over the packages.
+composition:
+  - site/**
+backendRoots: []
+backendSdks: []
+conditions:
+  - intentset-source
+ignore:
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - packages/conformance-suite/cases/**
+  - packages/conformance-suite/schemas/**
+  - packages/conformance-suite/examples/**
+  - packages/conformance-suite/consumer/**
+  - .git/**
+tests:
+  - "**/*.test.ts"
+  - packages/*/test/**
+  - test/**
+  - site/test/**
