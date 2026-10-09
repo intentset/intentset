@@ -33,6 +33,11 @@ new one.
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
 - **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
   text.
+- **The chat on intentset.org is modelled before it is built, and its corpus is the site.** Intentset's own model
+  gains the chat: an intent, two outcomes, two capabilities, six behaviors, four rules and a draft slice for
+  `amplify/` and `site/chat/`. `pnpm run corpus` writes what the chat will answer from, built from the same sources,
+  tokens and addresses as the pages (32 documents, about 46k tokens), and a test holds it deterministic and under its
+  budget. Nothing published changed.
 - **Intentset keeps its own model.** `product/model/` describes the packages with Intentset's own records, all
   drafts: one product, one intent, three outcomes, eight capabilities, seventeen behaviors, five rules for the design
   invariants, and one slice per package. CI checks it with the CLI this checkout builds: `validate` at L2 and

@@ -5,13 +5,19 @@ scope:
   - packages/**
   - site/**
   - test/**
+  - amplify/**
 sourceRoots:
   - packages/*/src/**
+  - site/chat/**
+  - amplify/**
 shared: []
 infrastructure: []
-# The site renders intentset.org from the CLI's usage and agent guide: composition over the packages.
+# The site renders intentset.org from the CLI's usage and agent guide: composition over the packages. Its chat panel,
+# site/chat/, is SLICE-ASK's, so the composition is listed around it.
 composition:
-  - site/**
+  - site/*.ts
+  - site/content/**
+  - site/test/**
 backendRoots: []
 backendSdks: []
 conditions:
