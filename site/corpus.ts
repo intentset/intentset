@@ -2,7 +2,7 @@
  * The chat's corpus: everything the chat on intentset.org answers from, built
  * from the same sources and the same commit as the site (RULE-ASK-PUBLISHED-ONLY).
  *
- * One document per published page: the content pages, the specifications, the
+ * One document per published page: the content pages (the chat's privacy page too), the specifications, the
  * agent guide and each record of the worked example, each with the address the
  * site serves it at, so an answer can link the page it came from. The text is
  * the page's Markset source after the site's tokens are substituted, without
@@ -18,6 +18,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import {
+  CHAT_PAGES,
   CONTENT_PAGES,
   canonicalUrl,
   contentSource,
@@ -67,7 +68,7 @@ export async function buildCorpus(): Promise<Corpus> {
   const { metas, records, tokens } = await siteInputs();
   const documents: CorpusDocument[] = [];
 
-  for (const [path, file] of CONTENT_PAGES) {
+  for (const [path, file] of [...CONTENT_PAGES, ...CHAT_PAGES]) {
     if (path === NOT_FOUND) continue;
     const { body } = splitFrontmatter(await contentSource(file, tokens));
     documents.push(doc(path, firstHeading(body) ?? file, "page", `site/content/${file}`, body));
