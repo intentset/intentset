@@ -208,6 +208,6 @@ Each type requires these level-two sections:
 |---|---|
 ${sections.join("\n")}
 
-The specifications are at https://intentset.org/specifications/.
+The specifications are at [intentset.org/specifications](https://intentset.org/specifications/).
 `;
 }
