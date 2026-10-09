@@ -31,6 +31,8 @@ new one.
   request merges on its own or waits, and how main deploys, stay the team's rules. The practices are written for any agent; one dated
   table maps them to Claude Code's pieces, checked against its documentation on 2026-10-09. It ends with the one
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
+- **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
+  text.
 - **A Copy button on every code block on intentset.org**, made by the shell's script rather than rendered, so it
   exists only where the clipboard does and a reader with scripting off never meets a control that cannot work. The
   built HTML inside `<main>` still holds no script.

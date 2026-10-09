@@ -61,10 +61,11 @@ Three things never split. **Approval** stays with a person, one record at a time
 The reason a person has to stay beside a long run is that the agent will stop to ask something. So gather the questions before it starts, and answer them where the agent can read them.
 
 1. **Plan before building.** Ask the agent to read the capability's context and write a plan: the records it expects to write, the slices it will touch, the tests it will add, and every question it cannot answer from the repository. A plan is cheap, and reading one is how you find out what the agent misunderstood before it has written four thousand lines.
-2. **Draft the records first, and approve them.** For new work, a product manager and an agent draft the behaviors and rules, and the slice that will deliver them, before any code. You read the drafts, which are a page in product language, and approve them. From then on the agent builds against what was approved, and the drift check holds it to that.
-3. **Answer the questions in the repository, not the chat.** A decision the agent needed goes into a decision record or the project's instructions file, so the next agent does not ask it again.
-4. **Then let it run, with two rules.** It does not end its turn to wait for a check it could poll; it polls, fixes and keeps going. And it stops only when the work is done or when it is blocked on a decision only you can make, which it says in one sentence.
-5. **Check in from wherever you are.** A session you can reach from a phone is one you can leave. Look at the counts and the open pull requests, not the transcript.
+2. **Keep the plan as a page, not a message.** For work that will run longer than a sitting, have the agent write the plan somewhere you can open from anywhere, and tell it to keep that page current: what is done, what is in progress, and the plan itself when it changes, with the change and its reason. The page is then the place you check, and the transcript is something you never need to read.
+3. **Draft the records first, and approve them.** For new work, a product manager and an agent draft the behaviors and rules, and the slice that will deliver them, before any code. You read the drafts, which are a page in product language, and approve them. From then on the agent builds against what was approved, and the drift check holds it to that.
+4. **Answer the questions in the repository, not the chat.** A decision the agent needed goes into a decision record or the project's instructions file, so the next agent does not ask it again.
+5. **Then let it run, with two rules.** It does not end its turn to wait for a check it could poll; it polls, fixes and keeps going. And it stops only when the work is done or when it is blocked on a decision only you can make, which it says in one sentence.
+6. **Check in from wherever you are.** A session you can reach from a phone is one you can leave. Look at the plan's page, the counts and the open pull requests, not the transcript.
 
 ## Write every decision down
 
@@ -114,6 +115,7 @@ The practices above are for any agent. These are the pieces that map to them in 
 | A subagent for a cold read or review | A definition under `.claude/agents/`, with the model and the tools it gets, run in the background and given the code, not the conclusion. `isolation: worktree` gives it a worktree of its own. |
 | A routine on a schedule | A routine, from `/schedule`, with a cron expression, run in the cloud whether or not a session is open (a research preview as of this date); `/loop` for a repeated check within one session. |
 | Plan before building | Plan mode, from `--permission-mode plan` or Shift+Tab, which reads and plans and changes nothing until you accept it. |
+| Keep the plan as a page | An artifact: a page the session publishes to claude.ai, private to you until you share it, and republishes in place as the work moves. Ask for one for any plan too long for a message, and for the agent to keep it current. |
 | A browser the agent can drive | Claude in Chrome, from `--chrome`, or a Playwright MCP server, pointed at the agent's own build. |
 | Check in from wherever you are | Remote Control, from `/remote-control`, which puts the running session in the Claude app on your phone. |
 | A review the author did not write | `/code-review` on the branch, which runs as a background subagent and can post its findings on the pull request with `--comment`. |
@@ -127,15 +129,16 @@ The same shape holds for any coding agent that reads a file of instructions and 
 
 ## This is less to set up than it reads
 
-Everything above is a lot to read and would be a lot to set up by hand. You do not set it up by hand. An agent can read this page, and setting up is the kind of work it does well: a permissions file, a worktree, a hook, a subagent definition, a check in CI. So point your agent here and say that this is how you want to work, with whatever your own rules add:
+This page is long, and what it describes would take days to put in place yourself. You will not be the one putting it in place. An agent can read the page, and the setup is work it does well: a permissions file, a worktree, a hook, a subagent definition, a check in CI. Point your agent here, say that this is how you want to work, and add your own rules:
 
 ```text
 Read https://intentset.org/adopt/. That is how I want to work in this repository.
 Set it up here, inside the controls we already have: <your rules on merging,
-deploying and approval>. Write a plan first, with every question you cannot
-answer from the repository, and stop there until I have read it.
+deploying and approval>. Write the plan first, as a page you keep current, with
+every question you cannot answer from the repository, and stop there until I
+have read it.
 ```
 
 The plan is the page's own first step. Read it, answer what it asks, and the rest is the agent's work, one pull request at a time, each through the gate.
 
-[[Read the adoption log](../pilot/index.html)]{.button .primary} [[The agent guide](../guide/index.html)]{.button}
+[[The agent guide](../guide/index.html)]{.button .primary} [[Start with one capability](../start/index.html)]{.button}
