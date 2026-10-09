@@ -138,7 +138,7 @@ test("alarms on errors, throttles, spend, the budget and the firewall go to a to
     const spend = alarms.find((a) => String(a.Properties?.AlarmName).includes("spend"));
     assert.equal(spend?.Properties?.Threshold, limits.dailyBudgetUsd * 1_000_000 * 0.8);
     assert.ok(
-      alarms.every((a) => (a.Properties?.AlarmActions as unknown[]).length === 1),
+      alarms.every((a) => ((a.Properties?.AlarmActions as unknown[] | undefined) ?? []).length === 1),
       kind,
     );
     const subscriptions = ofType(kind, "AWS::SNS::Subscription");
