@@ -26,8 +26,9 @@ new one.
   agents working unattended: the three boundaries ("sandbox" names all of them) that have to be in place before
   automation widens, what to set up, how to split work between sessions in worktrees, workflows, subagents and
   routines, what to settle before a long run so nobody has to stay, what a change proves before it lands, and a
-  permissions ladder paid for step by step. The practices are written for any agent; one dated table maps them to
-  Claude Code's pieces, checked against its documentation on 2026-10-09.
+  permissions ladder paid for step by step; and why every decision is written down as a record agents write and
+  people read, since a session has no memory of the others. The practices are written for any agent; one dated
+  table maps them to Claude Code's pieces, checked against its documentation on 2026-10-09.
 - **A Copy button on every code block on intentset.org**, made by the shell's script rather than rendered, so it
   exists only where the clipboard does and a reader with scripting off never meets a control that cannot work. The
   built HTML inside `<main>` still holds no script.

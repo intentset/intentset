@@ -64,6 +64,16 @@ The reason a person has to stay beside a long run is that the agent will stop to
 4. **Then let it run, with two rules.** It does not end its turn to wait for a check it could poll; it polls, fixes and keeps going. And it stops only when the work is done or when it is blocked on a decision only you can make, which it says in one sentence.
 5. **Check in from wherever you are.** A session you can reach from a phone is one you can leave. Look at the counts and the open pull requests, not the transcript.
 
+## Write every decision down
+
+Each session starts with no memory of the others. What one agent decided on Tuesday, twenty agents will face again on Wednesday, and the person who answered the question once does not want to answer it twenty times. The decision record is how a decision made in one session reaches every session after it, and how an agent explains to a later one why the obvious change is wrong.
+
+One file per decision, in the repository, with four parts: the context, what was true and what forced a choice; the decision, as one sentence; what was rejected, and why; and the consequences, what it costs and what it makes easier. A decision is never edited to reverse it. A new record supersedes it and the old one says so, so the history of the reasoning stays readable. Code, specifications and other records cite it by number.
+
+Agents write them. When an agent chose between alternatives, or you answered a question it asked, the record goes in the same pull request as the change, and reading it is the cheapest review there is: a decision is a paragraph where the code is a thousand lines, and a wrong decision is visible there in a way a wrong line is not. Ask for the rejected alternatives in particular; they are what the next agent needs most, because the rejected alternative is usually the one it will think of first.
+
+Intentset makes the decision part of the model. A `decision` is a record type, with Context, Decision and Consequences as its required sections, and a slice, a contract or a behavior names the decisions that inform it. `intentset context` hands an agent its slice's decisions beside its behaviors and rules, so the next agent reads them before it changes the code, and the drift check lists a slice whose code changed while its decisions and other records did not. In the [adoption log](../pilot/index.html), the decision record that already explained Streamlane's blocked state joined the model by gaining frontmatter, its text unchanged, and came in as approved while every record written that day was a draft: the one record a person had already reviewed.
+
 ## Prove it before it lands
 
 A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again.
