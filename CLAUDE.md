@@ -125,7 +125,10 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
 - Site output uses Markset's `ms-` classes and `site/site.css` layered over `markset.css`. No script inside `<main>`:
   the only two are the shell's, ahead of `<main>` (the colour scheme, and the Copy button each code block gets at
-  runtime), and nothing rendered from a document carries one. A test holds the count at two.
+  runtime), and nothing rendered from a document carries one. A test holds the count at two. When the site is built with the chat's address
+  (`ASK_URL` in `site/build.ts`, null until the launch), every page also links `chat/panel.css` and loads
+  `chat/panel.js` after `</main>`, with the address in a data attribute: three scripts, still none inside `<main>`, and
+  `site/test/chat.test.ts` holds that build. The default build has no chat, and `build.test.ts` holds it at two.
 
 ## Layout
 
@@ -223,6 +226,11 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   `og:image` with `twitter:card` at `summary_large_image`. It is drawn rather than generated at build time because
   CI and the deploy should not need a browser; redraw it when the mark, the tagline or the tokens change.
   `site/test/build.test.ts` holds the committed file to the size the pages claim.
+- **The chat panel** (`site/chat/`, SLICE-ASK, 2026-10-09) is plain JavaScript and CSS, copied into the build only
+  when `ASK_URL` is set. It builds its own markup (a launcher and a non-modal dialog), so a reader without scripting
+  sees the documentation as it was; it renders answers as DOM nodes, never HTML; and it keeps the conversation in the
+  tab's sessionStorage, so it follows the reader between pages. `site/test/chat.test.ts` drives it in Chromium against
+  a stub of `POST /ask`, at 390 and 1440 pixels in both schemes.
 - **The chat's corpus is the site** (2026-10-09): `site/corpus.ts` builds what the chat on intentset.org answers from
   out of `siteInputs()`, the same sources, tokens and addresses the pages are built from: every content page but the
   404, the specifications, the agent guide and the example's records, each with its canonical URL. It is written to

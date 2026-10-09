@@ -43,6 +43,18 @@ export const SITE_HOST = new URL(pkg.homepage).host;
 export const VERSION = pkg.version;
 /** Pages serves 404.html for any address it has nothing at; see shell() for why its links start at the root. */
 export const NOT_FOUND = "404.html";
+
+/**
+ * The chat's address: the backend's `POST /ask` on its branch (amplify/backend.ts, SLICE-ASK). While it is null, the
+ * site is built without the chat, exactly as before, so nothing points at a backend that does not serve
+ * intentset.org yet. Set it in the change that launches the chat, with the privacy page.
+ */
+export const ASK_URL: string | null = null;
+
+/** What a build may change from the defaults: the chat's address, so a test can build the site against a stub. */
+export interface BuildOptions {
+  askUrl?: string | null;
+}
 /** Where a page lives once published: the address canonical, og:url and the sitemap give for it. */
 export function canonicalUrl(path: string): string {
   return new URL(path.replace(/(^|\/)index\.html$/, "$1"), CANONICAL).href;
@@ -250,12 +262,12 @@ export interface Page {
  * build and renamed into place, so a reader (or the watch server) never sees a
  * half-written site and a failed build leaves the previous one intact.
  */
-export async function build(outDir: string = join(root, "dist")): Promise<string[]> {
+export async function build(outDir: string = join(root, "dist"), options: BuildOptions = {}): Promise<string[]> {
   const tag = `${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
   const staging = `${outDir}.staging-${tag}`;
   const previous = `${outDir}.previous-${tag}`;
   try {
-    const written = await writeSite(staging);
+    const written = await writeSite(staging, options.askUrl === undefined ? ASK_URL : options.askUrl);
     const hadPrevious = await rename(outDir, previous).then(
       () => true,
       () => false, // absent on a first build
@@ -326,8 +338,13 @@ export async function contentSource(file: string, tokens: Record<string, string>
   return text;
 }
 
-async function writeSite(out: string): Promise<string[]> {
+async function writeSite(out: string, askUrl: string | null): Promise<string[]> {
   await mkdir(join(out, "css"), { recursive: true });
+  // The chat's panel (site/chat/, SLICE-ASK), only when the site is built with its address.
+  if (askUrl !== null) {
+    await mkdir(join(out, "chat"), { recursive: true });
+    for (const file of ["panel.js", "panel.css"]) await cp(join(root, "site", "chat", file), join(out, "chat", file));
+  }
   // Pages reads the custom domain from a CNAME file at the root of what it
   // serves. The host comes from package.json's homepage, so there is one place
   // to change it.
@@ -364,7 +381,7 @@ async function writeSite(out: string): Promise<string[]> {
   for (const page of pages) {
     const file = join(out, page.path);
     await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, shell(page));
+    await writeFile(file, shell(page, askUrl));
     written.push(page.path);
   }
   await writeFile(join(out, "sitemap.xml"), sitemapXml(written));
@@ -823,7 +840,7 @@ function fromRoot(html: string, rootPath: string): string {
   );
 }
 
-function shell(page: Page): string {
+function shell(page: Page, askUrl: string | null = null): string {
   const depth = page.path.split("/").length - 1;
   const notFound = page.path === NOT_FOUND;
   const rel = notFound ? new URL(CANONICAL).pathname : depth === 0 ? "./" : "../".repeat(depth);
@@ -882,7 +899,7 @@ function shell(page: Page): string {
 ${meta}<link rel="icon" type="image/svg+xml" href="${rel}icon.svg">
 <link rel="stylesheet" href="${rel}css/markset.css">
 <link rel="stylesheet" href="${rel}css/site.css">
-</head>
+${askUrl === null ? "" : `<link rel="stylesheet" href="${rel}chat/panel.css">\n`}</head>
 <body${page.bodyAttributes}>
 ${SCHEME_SCRIPT}${COPY_SCRIPT}<a class="site-skip" href="#main">Skip to content</a>
 <header class="site-header">
@@ -903,7 +920,7 @@ ${footerLinks}
 <p><strong>${SITE_NAME}</strong> · ${esc(FOOTER.statement)} · <a href="${REPO}">${esc(FOOTER.repository)}</a> · <a href="${EXTERNAL.coralReef}">${esc(FOOTER.company)}</a> · Sibling project: <a href="${SIBLING.url}">${SIBLING.name}</a></p>
 </div>
 ${FAMILY_MARK}</footer>
-</body>
+${askUrl === null ? "" : `<script src="${rel}chat/panel.js" data-ask-url="${esc(askUrl)}" data-privacy-url="${rel}privacy/" defer></script>\n`}</body>
 </html>
 `;
 }

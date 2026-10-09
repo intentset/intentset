@@ -36,7 +36,7 @@ intentset:
 
 ## Responsibility
 
-Owner of the chat: the answer function in `amplify/functions/ask/` (parsing and admitting a question, the prompt and the corpus as cited documents, Claude Opus 5.5 on Bedrock at low effort with a refusal fallback to Opus 4.8, the cost against the day's budget, and the scrubbed record kept for 90 days), and the backend in `amplify/backend.ts` that deploys it: the API Gateway REST API that streams the answer, the regional web application firewall in front of it, the limits and questions tables, the function's reserved concurrency and its access to Bedrock. The panel's script in `site/chat/` is planned. The corpus the function answers from is built by the site from the same commit (`pnpm run corpus`). Layers are empty: the profile's layer matrix is not applied to this slice yet, which the check reports (VSA006). It uses no resources from a registry.
+Owner of the chat: the answer function in `amplify/functions/ask/` (parsing and admitting a question, the prompt and the corpus as cited documents, Claude Opus 5.5 on Bedrock at low effort with a refusal fallback to Opus 4.8, the cost against the day's budget, and the scrubbed record kept for 90 days), and the backend in `amplify/backend.ts` that deploys it: the API Gateway REST API that streams the answer, the regional web application firewall in front of it, the limits and questions tables, the function's reserved concurrency and its access to Bedrock. The panel in `site/chat/`: a launcher and a non-modal dialog that streams the answer, renders it as DOM nodes with its sources, says each refusal in words, and keeps the conversation in the tab's sessionStorage; it is built into the site only when `ASK_URL` is set. The corpus the function answers from is built by the site from the same commit (`pnpm run corpus`). Layers are empty: the profile's layer matrix is not applied to this slice yet, which the check reports (VSA006). It uses no resources from a registry.
 
 ## Public contract
 
@@ -44,7 +44,7 @@ Owner of the chat: the answer function in `amplify/functions/ask/` (parsing and 
 
 ## Verification
 
-`amplify/test/`: the answer flow against an in-memory store and a stubbed model (every behavior, every limit, and that no question, answer or address reaches a log), the scrubbing and the request parser, and two synths of the backend, as a sandbox and as the branch, read for the streaming integration, the firewall, the tables' expiry, the reserved concurrency and the Bedrock grants. An agent sandbox was deployed and exercised on 2026-10-09: preflight, origin refusal, limits and the stored record worked; the model call was refused by the organization's Region deny, which is still being opened. No verification records yet.
+`amplify/test/`: the answer flow against an in-memory store and a stubbed model (every behavior, every limit, and that no question, answer or address reaches a log), the scrubbing and the request parser, the panel in Chromium against a stub of the API (`site/test/chat.test.ts`), and two synths of the backend, as a sandbox and as the branch, read for the streaming integration, the firewall, the tables' expiry, the reserved concurrency and the Bedrock grants. An agent sandbox was deployed and exercised on 2026-10-09: preflight, origin refusal, limits and the stored record worked; the model call was refused by the organization's Region deny, which is still being opened. No verification records yet.
 
 ## Sources
 
