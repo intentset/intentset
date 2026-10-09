@@ -125,4 +125,17 @@ Two instructions belong in `CLAUDE.md` for every repository that runs this way, 
 
 The same shape holds for any coding agent that reads a file of instructions and runs commands. `AGENTS.md` carries the line that points at the guide. Git worktrees are git's, and a branch per session with protection on main needs nothing from the agent. The gate is a workflow in CI, and what happens after it is whatever your process already does. A disposable environment is a copy of whatever the product runs on, created from a branch. What differs between agents is how they run subagents, how they ask, and how they are reached from a phone; what is the same is that none of it is safe without the three boundaries, and all of it is fast with them.
 
+## This is less to set up than it reads
+
+Everything above is a lot to read and would be a lot to set up by hand. You do not set it up by hand. An agent can read this page, and setting up is the kind of work it does well: a permissions file, a worktree, a hook, a subagent definition, a check in CI. So point your agent here and say that this is how you want to work, with whatever your own rules add:
+
+```text
+Read https://intentset.org/adopt/. That is how I want to work in this repository.
+Set it up here, inside the controls we already have: <your rules on merging,
+deploying and approval>. Write a plan first, with every question you cannot
+answer from the repository, and stop there until I have read it.
+```
+
+The plan is the page's own first step. Read it, answer what it asks, and the rest is the agent's work, one pull request at a time, each through the gate.
+
 [[Read the adoption log](../pilot/index.html)]{.button .primary} [[The agent guide](../guide/index.html)]{.button}

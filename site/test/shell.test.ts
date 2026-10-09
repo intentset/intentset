@@ -94,6 +94,7 @@ test("llms.txt points an agent at the guide, the specifications and Markset's gu
     new URL("guide.md", CANONICAL).href,
     new URL("specifications/", CANONICAL).href,
     new URL("tools/cli/", CANONICAL).href,
+    new URL("adopt/", CANONICAL).href,
     "https://markset.org/guide.md",
   ]) {
     assert.ok(llms.includes(`](${url})`), `llms.txt does not link ${url}`);
