@@ -23,6 +23,7 @@ const PAGES = [
   "index.html",
   "start/index.html",
   "how-it-works/index.html",
+  "adopt/index.html",
   "guide/index.html",
   "tools/index.html",
   "tools/cli/index.html",

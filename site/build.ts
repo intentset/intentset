@@ -105,6 +105,7 @@ export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
     items: [
       ["Start with one capability", "start/index.html"],
       ["How it works", "how-it-works/index.html"],
+      ["Run the adoption", "adopt/index.html"],
       ["The agent guide", "guide/index.html"],
     ],
   },
@@ -210,6 +211,7 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["index.html", "index.md"],
   ["how-it-works/index.html", "how-it-works.md"],
   ["start/index.html", "start.md"],
+  ["adopt/index.html", "adopt.md"],
   ["pilot/index.html", "pilot.md"],
   ["tools/index.html", "tools.md"],
   ["tools/cli/index.html", "cli.md"],
@@ -385,7 +387,13 @@ function sitemapXml(paths: string[]): string {
 // ---------------------------------------------------------------------------
 
 /** Content pages long enough to want the contents rail the specifications have. */
-const RAIL_PAGES = new Set(["how-it-works/index.html", "pilot/index.html", "start/index.html", "tools/index.html"]);
+const RAIL_PAGES = new Set([
+  "how-it-works/index.html",
+  "adopt/index.html",
+  "pilot/index.html",
+  "start/index.html",
+  "tools/index.html",
+]);
 
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {

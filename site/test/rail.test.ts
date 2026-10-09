@@ -129,12 +129,12 @@ test("a page in a section carries its section's rail, marks itself once, and the
   );
 });
 
-test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the guide", () => {
+test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the adoption and the guide", () => {
   const reference = RAILS.find((r) => r.title === "Reference")?.items.map(([, href]) => href) ?? [];
   for (const page of ["specifications/core/index.html", "markset/index.html", "conformance/index.html"]) {
     assert.ok(reference.includes(page), `Reference lacks ${page}`);
   }
   assert.ok(RAILS.find((r) => r.title === "Tools")?.items.some(([, href]) => href === "tools/cli/index.html"));
   const start = RAILS.find((r) => r.title === "Start")?.items.map(([, href]) => href) ?? [];
-  assert.deepEqual(start, ["start/index.html", "how-it-works/index.html", "guide/index.html"]);
+  assert.deepEqual(start, ["start/index.html", "how-it-works/index.html", "adopt/index.html", "guide/index.html"]);
 });
