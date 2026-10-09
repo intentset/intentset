@@ -96,6 +96,14 @@ test("built with the chat, every page loads the panel after <main>, and its styl
   }
 });
 
+test("built with the chat, the privacy page exists and the footer's row links it", async () => {
+  const html = await readFile(join(dist, "privacy", "index.html"), "utf8");
+  assert.match(html, /<h1[^>]*>Privacy<\/h1>/);
+  assert.match(html, /privacy@coralreefventures\.com/);
+  const home = await readFile(join(dist, "index.html"), "utf8");
+  assert.match(home, /<nav class="site-footer-nav"[\s\S]*href="(?:\.\/)?privacy\/index\.html"[^>]*>Privacy<\/a>/);
+});
+
 test("a visitor asks, the answer streams in with its sources, and a follow-up sends the conversation back", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

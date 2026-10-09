@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { after, test } from "node:test";
 import { parseDocument } from "@markset-lang/parser";
-import { build, CONTENT_PAGES, VERSION } from "../build.ts";
+import { build, CHAT_PAGES, CONTENT_PAGES, VERSION } from "../build.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
 const contentDir = join(root, "site", "content");
@@ -31,8 +31,8 @@ test("every content page parses as Markset with no error diagnostics", async () 
   const files = (await readdir(contentDir)).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(
     files,
-    CONTENT_PAGES.map(([, file]) => file).sort(),
-    "site/content and CONTENT_PAGES name the same files",
+    [...CONTENT_PAGES, ...CHAT_PAGES].map(([, file]) => file).sort(),
+    "site/content and CONTENT_PAGES with CHAT_PAGES name the same files",
   );
   for (const file of files) {
     const { diagnostics } = parseDocument(await readFile(join(contentDir, file), "utf8"));

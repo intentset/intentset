@@ -162,6 +162,13 @@ export function railFor(path: string): (typeof RAILS)[number] | undefined {
 export const FOOTER_LINKS: Array<[string, string]> = [...NAV, ["About", "about/index.html"]];
 
 /**
+ * Pages that exist only with the chat: the privacy page, which describes what the chat keeps (approved 2026-10-09).
+ * Built, and linked from the footer's row, only when the site is built with the chat's address; the chat's corpus
+ * always carries them, since only the chat reads it.
+ */
+export const CHAT_PAGES: Array<[string, string]> = [["privacy/index.html", "privacy.md"]];
+
+/**
  * The footer's one line, the family's (decided 2026-10-06, the same on
  * markset.org): the name, what it is in one sentence (the approved tagline),
  * the source, the company and the sibling site.
@@ -369,7 +376,9 @@ async function writeSite(out: string, askUrl: string | null): Promise<string[]> 
 
   const { specs, records, tokens } = await siteInputs();
   const pages: Page[] = [
-    ...(await Promise.all(CONTENT_PAGES.map(([path, file]) => contentPage(path, file, tokens)))),
+    ...(await Promise.all(
+      [...CONTENT_PAGES, ...(askUrl === null ? [] : CHAT_PAGES)].map(([path, file]) => contentPage(path, file, tokens)),
+    )),
     ...specs,
     guidePage(),
     await conformancePage(),
@@ -851,9 +860,11 @@ function shell(page: Page, askUrl: string | null = null): string {
     const active = page.path === href || (section !== undefined && section.items[0][1] === href);
     return `<a href="${rel}${href}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("\n");
-  const footerLinks = FOOTER_LINKS.map(
-    ([label, href]) => `<a href="${rel}${href}"${page.path === href ? ' aria-current="page"' : ""}>${esc(label)}</a>`,
-  ).join("\n");
+  const footerLinks = [...FOOTER_LINKS, ...(askUrl === null ? [] : ([["Privacy", "privacy/index.html"]] as const))]
+    .map(
+      ([label, href]) => `<a href="${rel}${href}"${page.path === href ? ' aria-current="page"' : ""}>${esc(label)}</a>`,
+    )
+    .join("\n");
   // Where am I, then what is on this page: the section first, because it
   // answers the question a reader arriving from a search result has.
   const sectionNav = section

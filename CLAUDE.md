@@ -304,8 +304,14 @@ reaches a published package.
 - **An agent's sandbox**: `pnpm run sandbox` deploys `intentset-agent` with the `coral-reef` profile; exercise it, then
   delete it with `pnpm exec ampx sandbox delete --identifier intentset-agent --profile coral-reef --yes`, check that no
   `/aws/lambda/amplify-intentset*` log group, `intentset-ask-*` table or `intentset-ask-*` web ACL is left, and move
-  `.amplify/artifacts` out of the way (CDK's hotswap cache remembers the deleted stacks). The branch's deploy is
-  tracked in the chat's implementation tracker; until it exists, nothing serves intentset.org.
+  `.amplify/artifacts` out of the way (CDK's hotswap cache remembers the deleted stacks).
+- **The branch** deploys from `.github/workflows/chat-backend.yml`: on a push to main that touches the backend or the
+  corpus's sources, it builds the corpus and runs `ampx pipeline-deploy --branch main` on the Amplify app named by the
+  repository variable `CHAT_AMPLIFY_APP_ID`, through the role `CHAT_DEPLOY_ROLE_ARN`, which trusts this repository's
+  main only. Until both variables exist the job is skipped.
+- **The launch** is one change: `ASK_URL` in `site/build.ts` set to the branch's `POST /ask`. It builds the panel and
+  the privacy page (`CHAT_PAGES`, `site/content/privacy.md`, approved 2026-10-09, linked from the footer's row) into
+  the site. `amplify/test/retention.test.ts` holds the page to the periods in `limits.ts` and the logs' month.
 
 ## Status
 

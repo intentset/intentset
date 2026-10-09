@@ -1,0 +1,47 @@
+# The chat's backend (amplify/, SLICE-ASK) on its branch, `main` of the Amplify app in the coral-reef project
+# (us-east-2), deployed with `ampx pipeline-deploy` through the role CHAT_DEPLOY_ROLE_ARN, which trusts this
+# repository's main only. The corpus is built from the same commit first, so the chat answers from what the site
+# publishes. Until the repository variables exist, the job is skipped.
+name: Chat backend
+on:
+  push:
+    branches: [main]
+    paths:
+      - amplify/**
+      - site/content/**
+      - site/build.ts
+      - site/corpus.ts
+      - site/records.ts
+      - spec/**
+      - examples/**
+      - packages/cli/src/**
+      - pnpm-lock.yaml
+      - .github/workflows/chat-backend.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: chat-backend
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: vars.CHAT_AMPLIFY_APP_ID != '' && vars.CHAT_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run corpus
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.CHAT_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-2
+      - run: pnpm exec ampx pipeline-deploy --branch main --app-id "${{ vars.CHAT_AMPLIFY_APP_ID }}"
+        env:
+          CI: "true"
