@@ -33,6 +33,9 @@ new one.
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
 - **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
   text.
+- **The chat panel.** `site/chat/` is the panel a visitor asks in: a launcher and a dialog beside the page, the answer
+  streamed in with its sources, refusals said in words, the conversation kept for the tab. The site carries it only
+  when it is built with the chat's address, which it is not yet, so intentset.org is unchanged.
 - **The chat's backend.** `amplify/` holds the function that answers a question from the corpus with Claude Opus 5.5
   on Bedrock, streamed through an API Gateway REST API behind a regional WAF, with a visitor's daily count, a daily
   budget, a switch, reserved concurrency and the scrubbed questions kept 90 days. Tests run the whole flow against a
