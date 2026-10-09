@@ -12,6 +12,8 @@ Adopting Intentset in a product that already exists is a team's work for a long 
 
 [Start with one capability](../start/index.html) comes first. This page is what to do once the first capability is modelled and you want the rest.
 
+None of it asks you to change a control you already have. Whether a pull request merges on its own or waits for a reviewer, whether main deploys itself or a release is cut by hand, who may approve what: those are your rules, and this page works inside them. What it changes is how much of the work reaches those controls ready, and how little of a person's time it takes to get there.
+
 ## The shape of the job
 
 The adoption has three kinds of work, and each of them is large.
@@ -28,7 +30,7 @@ An agent that works unattended will, at some point, do the wrong thing with the 
 
 1. **The tool boundary.** The agent's own commands run with the files and the network they need and no more. What it can read, write and reach is a setting in the repository, and the destructive commands are refused there whatever the agent decides.
 2. **The environment boundary.** The agent builds, deploys and clicks through a copy of the product that holds no real data and no real credential: a temporary backend of its own, a database it can drop, a browser pointed at its own build. When it is done, the copy is deleted.
-3. **The merge boundary.** Nothing the agent does reaches the main branch except through a pull request, a required check and, for the records, a person. A branch is cheap to throw away. Main is not.
+3. **The merge boundary.** Nothing the agent does reaches the main branch except through a pull request and the review your process already requires, with the gate as a required check and, for the records, a person. A branch is cheap to throw away. Main is not.
 
 The amount of automation a product can safely allow is set by the weakest of the three. Before anything is in production, the second boundary costs nothing, because there is no real data to protect, and a product can run with the first and third alone. Coral Reef Ventures' own products run that way today; neither is released. The day one of them is, the first boundary stops being optional, and the [adoption log](../pilot/index.html) will say when each protection went on and what it cost.
 
@@ -37,8 +39,8 @@ The amount of automation a product can safely allow is set by the weakest of the
 Everything the [Start](../start/index.html) page does, and then the pieces that let the work run without you.
 
 - **The guide, pointed at.** `intentset init` writes `.intentset/agents.md`, and one line in `CLAUDE.md` or `AGENTS.md` points every agent at it. The guide is generated from the toolchain, so what it tells an agent to run cannot disagree with what the gate runs.
-- **The gate, required.** A check on every pull request runs `intentset validate --level L2 --mode migration` against a baseline of the violations that already exist, so only a new one fails, and `intentset review --base origin/main --fail-on-drift`, so a change that touched a slice's code and none of its records is refused unless a commit says why. Make the check required in the branch protection, with the product's own tests beside it, and turn on auto-merge so a green pull request lands without a hand on it.
-- **A disposable environment per branch.** Whatever the product deploys to, give each agent its own temporary copy, created from the branch and deleted after. An agent that cannot deploy cannot check a screen, and one that deploys to a shared environment cannot be left alone.
+- **The gate, required.** A check on every pull request runs `intentset validate --level L2 --mode migration` against a baseline of the violations that already exist, so only a new one fails, and `intentset review --base origin/main --fail-on-drift`, so a change that touched a slice's code and none of its records is refused unless a commit says why. Make the check required in the branch protection, with the product's own tests beside it. Whatever happens to a green pull request after that, a merge on its own or a reviewer's queue, is your process and stays as it is; the gate means what reaches it is already checked.
+- **A disposable environment per branch.** Whatever the product runs on, give each agent its own temporary copy, created from the branch and deleted after, with no path from it to a shared environment. An agent that cannot run its build cannot check a screen, and one that runs it somewhere shared cannot be left alone. Your real environments and how they are deployed to do not change.
 - **A browser the agent can drive.** A screen is a claim too. Give the agent a browser it can point at its own build, so it can open the page a behavior describes, read what is on it and compare it with the record, rather than reasoning about the component's source.
 - **A permissions file in the repository**, committed, that says what every agent in the repository may do without asking. It starts narrow and widens as the boundaries above go on, and each widening is a commit with a reason.
 - **A second model as reviewer.** A reviewer that reads the diff and the records without being told what the author concluded, and a verifier that is asked to break each finding rather than to confirm it.
@@ -82,7 +84,7 @@ A change that lands unread has to carry its own proof. Each of these is a check 
 - **Screens checked in a browser, not in the source.** For a behavior with a surface, the agent opens its own build, performs the behavior and reads the result from the page. A screenshot in the pull request is the record of that.
 - **A review the author did not write.** A second agent reads the diff and the records cold, and an adversarial verifier takes each finding and tries to show it is wrong. What survives is what a person sees. A reviewer handed the author's conclusion returns it confirmed; a reviewer handed the code does not.
 - **The drift check.** `intentset review` lists each slice whose code changed while its records did not. A refactor answers with one `Intentset-Unchanged` trailer per slice, in the commit, where the reviewer can question it. Anything unanswered fails the gate.
-- **Auto-merge behind the gate.** A pull request an agent you run opens merges once it is green. A person's review goes to the records, which are short, rather than the diff, which is not. Every other pull request waits for a person.
+- **The gate before the review.** Whether a green pull request then merges on its own or waits for a reviewer is your rule, not this page's. What changes is what the reviewer gets: a change that has already passed the gate, with its records, its tests and its screenshots in it, so a person's review goes to the records, which are short, rather than the diff, which is not.
 
 ## Loosen only inside the protection
 
@@ -94,9 +96,9 @@ Permissions widen in steps, and each step is paid for by a boundary.
 | Edit files, commit and push to its own branch | A worktree per session, and branch protection on main. |
 | Deploy and drive a browser | A disposable environment with no real data, created and deleted by the agent. |
 | Run every command without asking | The tool boundary: a command sandbox with the destructive commands refused, and no production credential reachable from the working tree. |
-| Merge | A required gate, a reviewer that is not the author, and the rule that only a person approves a record. |
+| Merge on its own, where your process allows it | A required gate, a reviewer that is not the author, and the rule that only a person approves a record. Where your process does not allow it, the agent's work stops at the pull request, ready. |
 
-What never loosens: a production credential in the working tree, a deploy to a shared environment, a record moved out of draft by an agent, and a merge that skipped the gate.
+What never loosens: a production credential in the working tree, a deploy to a shared environment, a record moved out of draft by an agent, and a merge that skipped the gate or the review your process requires.
 
 ## With Claude Code
 
@@ -121,6 +123,6 @@ Two instructions belong in `CLAUDE.md` for every repository that runs this way, 
 
 ## With any agent
 
-The same shape holds for any coding agent that reads a file of instructions and runs commands. `AGENTS.md` carries the line that points at the guide. Git worktrees are git's, and a branch per session with protection on main needs nothing from the agent. The gate is a workflow in CI, and auto-merge is the forge's. A disposable environment is whatever the product deploys to, created from a branch. What differs between agents is how they run subagents, how they ask, and how they are reached from a phone; what is the same is that none of it is safe without the three boundaries, and all of it is fast with them.
+The same shape holds for any coding agent that reads a file of instructions and runs commands. `AGENTS.md` carries the line that points at the guide. Git worktrees are git's, and a branch per session with protection on main needs nothing from the agent. The gate is a workflow in CI, and what happens after it is whatever your process already does. A disposable environment is a copy of whatever the product runs on, created from a branch. What differs between agents is how they run subagents, how they ask, and how they are reached from a phone; what is the same is that none of it is safe without the three boundaries, and all of it is fast with them.
 
 [[Read the adoption log](../pilot/index.html)]{.button .primary} [[The agent guide](../guide/index.html)]{.button}
