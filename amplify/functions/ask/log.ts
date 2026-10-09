@@ -26,3 +26,22 @@ export function errorStatus(error: unknown): number | undefined {
   const status = (error as { status?: unknown } | null)?.status;
   return typeof status === "number" ? status : undefined;
 }
+
+/** The namespace the chat's metrics are in. */
+export const METRIC_NAMESPACE = "Intentset/Chat";
+
+/**
+ * A metric in CloudWatch's embedded metric format: the log line becomes a metric with no dimensions beyond the
+ * function, and carries a number only.
+ */
+export function metric(name: string, value: number, unit: "Count" | "None" = "Count"): void {
+  console.log(
+    JSON.stringify({
+      _aws: {
+        Timestamp: Date.now(),
+        CloudWatchMetrics: [{ Namespace: METRIC_NAMESPACE, Dimensions: [[]], Metrics: [{ Name: name, Unit: unit }] }],
+      },
+      [name]: value,
+    }),
+  );
+}

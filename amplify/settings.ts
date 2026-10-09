@@ -10,3 +10,6 @@ export const LOCAL_ORIGIN = "http://localhost:3004";
 export function allowedOrigins(branch: boolean): string[] {
   return branch ? [SITE_ORIGIN] : [LOCAL_ORIGIN];
 }
+
+/** Where the branch's alarms go: the family's inbox, as coral-reef-site's do. */
+export const ALARM_EMAIL = "hello@coralreefventures.com";

@@ -293,6 +293,10 @@ reaches a published package.
 - **Limits and retention** are constants in `amplify/functions/ask/limits.ts`: question length, turns, the visitor's
   daily count, the daily budget (estimated from token counts at Anthropic's published rates), retention. A changed
   retention period changes the privacy page in the same commit.
+- **Alarms** go to the SNS topic `intentset-ask-notices`, which on the branch emails hello@coralreefventures.com (as
+  coral-reef-site's do; a sandbox's topic has no subscriber): function errors or throttles, the day's estimated spend
+  (the `CostMicros` metric, `Intentset/Chat`) past 80% of the budget, any refusal for the budget (`BudgetRefused`),
+  and the firewall blocking 50 requests in five minutes. AWS asks the inbox to confirm the subscription once.
 - **The switch.** Put `{"key": "switch", "state": "off"}` in the limits table and the chat refuses every question
   until the item is removed; no deploy.
 - **Logs** carry an event kind, ids, a status and token counts (`log.ts`); `amplify/test/ask.test.ts` runs the whole

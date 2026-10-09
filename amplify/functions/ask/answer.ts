@@ -1,7 +1,7 @@
 import { admit, spend } from "./admission.ts";
 import type { Corpus } from "./corpus.ts";
 import { getInvolvedUrl, model as modelConfig, pricePerMillion, retentionDays } from "./limits.ts";
-import { errorName, errorStatus, log } from "./log.ts";
+import { errorName, errorStatus, log, metric } from "./log.ts";
 import type { Model, ModelResult } from "./model.ts";
 import { conversation, SYSTEM } from "./prompt.ts";
 import { type AnswerBlock, parseRequest, type RequestProblem } from "./request.ts";
@@ -50,6 +50,7 @@ export async function ask(
   const admitted = await admit(deps.store, ip, now);
   if (!admitted.ok) {
     log("ask.refused", { reason: admitted.refusal });
+    if (admitted.refusal === "budget") metric("BudgetRefused", 1);
     send({ type: "refused", reason: admitted.refusal });
     return;
   }
@@ -112,6 +113,7 @@ export async function ask(
     cacheWriteTokens: usage.cacheWrite,
     costMicros: Math.ceil(costMicros),
   });
+  metric("CostMicros", Math.ceil(costMicros), "None");
   try {
     await spend(deps.store, costMicros, now);
     await deps.store.putQuestion({

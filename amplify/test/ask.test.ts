@@ -159,6 +159,23 @@ test("a model failure tells the visitor and is kept as failed; a refusal by the 
   assert.equal(declined.store.questions[0].outcome, "refused-by-model");
 });
 
+test("each answer's estimated cost, and each refusal for the budget, is a metric line carrying only a number", async (t) => {
+  const lines: string[] = [];
+  t.mock.method(console, "log", (line: string) => lines.push(line));
+  const d = deps();
+  await ask(body("Hello?"), "203.0.113.7", d, () => {});
+  d.store.items.set("budget#2026-10-09", { key: "budget#2026-10-09", value: limits.dailyBudgetUsd * 1_000_000 });
+  await ask(body("Hello?"), "203.0.113.7", d, () => {});
+  const metrics = lines.map((line) => JSON.parse(line)).filter((entry) => entry._aws);
+  assert.deepEqual(
+    metrics.map((entry) => [entry._aws.CloudWatchMetrics[0].Metrics[0].Name, entry.CostMicros ?? entry.BudgetRefused]),
+    [
+      ["CostMicros", 100 * 4 + 200 * 20 + 40_000 * 0.2],
+      ["BudgetRefused", 1],
+    ],
+  );
+});
+
 test("when storing fails, the visitor still gets the answer", async () => {
   const d = deps();
   d.store.failQuestions = true;

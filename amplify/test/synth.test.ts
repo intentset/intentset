@@ -8,7 +8,7 @@ import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { limits, model, retentionDays } from "../functions/ask/limits.ts";
-import { LOCAL_ORIGIN, SITE_ORIGIN } from "../settings.ts";
+import { ALARM_EMAIL, LOCAL_ORIGIN, SITE_ORIGIN } from "../settings.ts";
 
 type Resource = { Type: string; Properties?: Record<string, unknown>; DeletionPolicy?: string };
 type Kind = "sandbox" | "branch";
@@ -122,4 +122,29 @@ test("the function may invoke only the model and its fallback, through the US pr
     assert.ok(policies.includes(`:inference-profile/${id}`), id);
   }
   assert.doesNotMatch(policies, /"bedrock:\*"|foundation-model\/\*/);
+});
+
+test("alarms on errors, throttles, spend, the budget and the firewall go to a topic only the branch's inbox hears", () => {
+  for (const kind of ["sandbox", "branch"] as const) {
+    const alarms = ofType(kind, "AWS::CloudWatch::Alarm");
+    const names = alarms.map((a) => String(a.Properties?.AlarmName)).sort();
+    assert.equal(names.length, 5, kind);
+    for (const id of ["errors", "throttles", "spend", "budget-refused", "waf-blocked"]) {
+      assert.ok(
+        names.some((name) => name.includes(`intentset-ask-${id}`)),
+        `${kind}: ${id}`,
+      );
+    }
+    const spend = alarms.find((a) => String(a.Properties?.AlarmName).includes("spend"));
+    assert.equal(spend?.Properties?.Threshold, limits.dailyBudgetUsd * 1_000_000 * 0.8);
+    assert.ok(
+      alarms.every((a) => ((a.Properties?.AlarmActions as unknown[] | undefined) ?? []).length === 1),
+      kind,
+    );
+    const subscriptions = ofType(kind, "AWS::SNS::Subscription");
+    assert.deepEqual(
+      subscriptions.map((sub) => [sub.Properties?.Protocol, sub.Properties?.Endpoint]),
+      kind === "branch" ? [["email", ALARM_EMAIL]] : [],
+    );
+  }
 });
