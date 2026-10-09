@@ -33,6 +33,11 @@ new one.
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
 - **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
   text.
+- **The chat's backend.** `amplify/` holds the function that answers a question from the corpus with Claude Opus 5.5
+  on Bedrock, streamed through an API Gateway REST API behind a regional WAF, with a visitor's daily count, a daily
+  budget, a switch, reserved concurrency and the scrubbed questions kept 90 days. Tests run the whole flow against a
+  stubbed model and synthesize the backend twice. It is not deployed for intentset.org yet, and nothing published
+  changed.
 - **The chat on intentset.org is modelled before it is built, and its corpus is the site.** Intentset's own model
   gains the chat: an intent, two outcomes, two capabilities, six behaviors, four rules and a draft slice for
   `amplify/` and `site/chat/`. `pnpm run corpus` writes what the chat will answer from, built from the same sources,
