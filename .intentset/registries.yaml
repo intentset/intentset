@@ -1,0 +1,18 @@
+# Intentset registries (Core §4, §6, §7; VSA §3): the owners, audiences, release dimensions,
+# evidence sources and shared resources the records of Intentset's own model may name. The owner is
+# `maintainers` until there are teams. The packages are one open-source edition used by developers and their agents,
+# and every record is a draft of the v0.1 specifications' implementation.
+owners:
+  - maintainers
+audiences:
+  - engineering
+  - product
+releases:
+  - v0.1-draft
+roles:
+  - developer
+editions:
+  - open-source
+flags: []
+evidenceSources: []
+resources: []

@@ -1,0 +1,13 @@
+# Intentset configuration (Core §11): the repository scope a conformance claim is about.
+# Written by `intentset init`. Patterns are repository-relative: literal segments, * within
+# one segment, ** across segments. The scope is Intentset's own model; the worked example under examples/ is checked
+# by the tests and the conformance suite, not here.
+repository: "intentset/intentset"
+scope:
+  - "product/**/*.md"
+registries: ".intentset/registries.yaml"
+ignore:
+  - "node_modules/**"
+  - "**/node_modules/**"
+  - "dist/**"
+  - ".git/**"

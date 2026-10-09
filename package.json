@@ -10,6 +10,8 @@
   },
   "scripts": {
     "intentset": "node --conditions=intentset-source packages/cli/src/intentset.ts",
+    "model:validate": "node --conditions=intentset-source packages/cli/src/intentset.ts validate --level L2 --baseline .intentset/architecture-baseline.json",
+    "model:review": "node --conditions=intentset-source packages/cli/src/intentset.ts review --fail-on-drift --baseline .intentset/architecture-baseline.json",
     "test": "node --conditions=intentset-source --test packages/*/test/*.test.ts site/test/*.test.ts test/*.test.ts && pnpm run test:development",
     "test:development": "node --conditions=intentset-source --conditions=development --test packages/*/test/*.test.ts",
     "conformance": "node --conditions=intentset-source packages/conformance/src/cli.ts",

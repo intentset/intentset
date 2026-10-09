@@ -32,3 +32,21 @@ jobs:
       # pnpm test ends with test:development for the unit tests.
       - run: pnpm run conformance:development
       - run: pnpm run smoke:packed
+  # Intentset's own model, checked by the CLI this checkout builds: validate at L2 in migration mode with the committed
+  # baseline (a new violation is an error, the baseline only shrinks), and review against the base, failing on a
+  # slice whose code changed while its records did not unless a commit says so with `Intentset-Unchanged: <slice ID>`.
+  model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # review compares with the base and reads the commits since it for Intentset-Unchanged trailers.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run model:validate
+      - run: pnpm run model:review --base "origin/${{ github.base_ref || 'main' }}"
