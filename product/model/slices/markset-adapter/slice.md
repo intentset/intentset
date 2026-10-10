@@ -14,6 +14,7 @@ intentset:
   links:
     implements: [BEH-MARKSET-CARRIER]
     dependsOn: [SLICE-CORE]
+    informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
     domain: toolchain
@@ -35,7 +36,7 @@ intentset:
 
 The one place Markset is imported (design invariant 8): it reads a record as a Markset document and carries Markset's diagnostics under origin `syntax`.
 
-The slice is the package `@intentset/markset-adapter`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. It uses no backend resources.
+The slice is the package `@intentset/markset-adapter`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice. Its one source file is its entrypoint, so the check has nothing to place in a layer and reports no VSA006. It uses no backend resources.
 
 ## Public contract
 
@@ -43,4 +44,4 @@ The exports of `packages/markset-adapter/src/index.ts`, reached by other package
 
 ## Verification
 
-The package's tests under `packages/markset-adapter/test/`. No verification records yet.
+The package's tests under `packages/markset-adapter/test/`. TEST-MARKSET-CARRIER verifies the behavior it implements, BEH-MARKSET-CARRIER, naming the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

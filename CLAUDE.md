@@ -138,9 +138,9 @@ tests/                conformance fixtures, one JSON file per section (core, exp
 tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `pnpm run fixtures:consumer`
                       from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
 examples/scheduling/  the worked example, the fixtures' baseline and the site's example
-product/model/        Intentset's own model: the product, intent, outcomes, capabilities, behaviors, rules, and one
-                      slice per package under slices/<package>/slice.md
-.intentset/           its configuration, registries, architecture.yaml, the architecture baseline and agents.md
+product/model/        Intentset's own model: the product, intent, outcomes and their measures, capabilities, behaviors,
+                      rules, verifications, one decision, and one slice per package under slices/<package>/slice.md
+.intentset/           its configuration, registries, architecture.yaml and agents.md; evidence/ is local run output
 packages/
   core/               carrier reader, types, graph, validator, impact, export. No dependencies.
   markset-adapter/    the one Markset import
@@ -168,7 +168,8 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 - Node ≥ 22.18, TypeScript run directly by type stripping: erasable syntax only, explicit `.ts` import extensions.
 - pnpm workspaces (`pnpm-workspace.yaml`; pnpm pinned by `packageManager`). `pnpm test` (node --test),
   `pnpm run conformance`, `pnpm run typecheck`, `pnpm run lint`, `pnpm run format`, `pnpm run site`,
-  `pnpm run social-card`, `pnpm run corpus`,
+  `pnpm run social-card`, `pnpm run corpus`, `pnpm run model:validate`, `pnpm run model:review`,
+  `pnpm run model:evidence` ("Intentset's own model" below),
   `pnpm run site:watch`, `pnpm run build` (publishing only, to `dist/`). Moved from npm on 2026-10-04 with the lockfile
   imported, so no version changed. Siblings keep `^<version>` ranges, linked by `linkWorkspacePackages`. A file may
   import only what its own package declares: the root links every workspace package for the tests, and
@@ -260,8 +261,14 @@ from source (the installed bin points at `dist/`, which only the build writes).
   (`harness.ts` for the private harness), and other packages reach it as `@intentset/<name>` through the
   `intentset-source` condition (`.intentset/architecture.yaml`). `dependsOn` mirrors the package's dependencies, so
   design invariant 8 is held by the architecture check as well as by the manifests: core, help and the suite depend on
-  no slice. The site is composition. Layers are empty, because a package has no presentation, policy or model layer;
-  the check warns about that (VSA006) on every slice.
+  no slice. A test reaches another package only through its entrypoint: the conformance harness re-exports the
+  fixtures, the schema validator, `firstMismatch` and the report formatters for the packages' tests, and its manifest
+  exports nothing else. The site is composition.
+- **Layers are empty, and VSA006 stays** (ADR-PACKAGE-LAYERS, `product/model/decisions/`, 2026-10-10). A package has
+  no presentation, policy or model layer, so the package slices declare none and the check warns, once per package
+  with modules beside its entrypoint (eight today), that their imports were not layer-checked. That warning is the
+  true statement (design invariant 6): do not silence it with a made-up layer assignment, a baseline or an exception.
+  SLICE-ASK is outside the decision; whether it declares layers is its own call.
 - **The chat on intentset.org is SLICE-ASK** (`product/model/slices/ask/`, 2026-10-09), with its intent, two outcomes,
   two capabilities, six behaviors and four rules: answers only from what is published, nothing kept identifies a
   visitor, questions kept 90 days, and spend capped. The slice claims `amplify/` and `site/chat/`, so the site's
@@ -269,14 +276,26 @@ from source (the installed bin points at `dist/`, which only the build writes).
   warnings until the code exists.
 - **The design invariants are rules** (`product/model/rules/`), and the specifications stay the normative text: a
   record points at a section, never restates one.
-- **The gate**: the `model` job in `ci.yml` runs `pnpm run model:validate` (L2, migration mode, with
-  `.intentset/architecture-baseline.json`) and `pnpm run model:review` (`--fail-on-drift` against the base). The
-  baseline is 17 VSA003 errors, all tests reaching past the conformance harness's `harness.ts` into its `fixtures`,
-  `schema`, `types`, `compare` and `report` modules; it only shrinks. A refactor answers drift with an
-  `Intentset-Unchanged: SLICE-…` trailer.
-- **Every record is a draft** until a maintainer promotes it. One outcome has a measure record,
-  MEAS-QUESTIONS-ANSWERED under `product/model/measures/` (its evidence source `chat-questions` is in the registry);
-  the others are CORE009 warnings. And no behavior has a verification record: the packages' tests are claimed, not linked.
+- **Verification records** (`product/model/verifications/TEST-*.md`, 2026-10-10): one per behavior that has tests,
+  its selector the behavior's ID, which the titles of the tests that exercise it carry (`test("BEH-EXPORT: graph
+  prints …")`, or a `describe` group's title). A test that exercises two behaviors names both (`BEH-IMPACT,
+  BEH-CONTEXT: …`). Tag a test only when it checks what the behavior promises; a renamed or untagged test leaves its
+  selector unmatched, which the import lists. Every behavior has one.
+  No rule has one: the tests that touch a rule cover part of it, and a partial check is not a verification.
+- **Evidence**: `pnpm run model:evidence` reruns the tests with node:test's TAP reporter into `.intentset/evidence/`
+  (ignored) and imports them with `intentset evidence import --from node-tap`, bound to the commit, so it refuses an
+  uncommitted tree. The `test` job in `ci.yml` runs it after `pnpm test` and then validates at L3, which reports link
+  coverage and current-pass coverage apart; every record is a draft, so a missing run is reported and fails nothing.
+- **Measures** (`product/model/measures/`): MEAS-QUESTIONS-ANSWERED reads the questions the chat keeps (evidence
+  source `chat-questions`), through the questions report. Each of the toolchain's three outcomes has one too, saying
+  "not measured yet" with the evidence source it is to come from (`evidenceSources` in `.intentset/registries.yaml`),
+  a baseline of `unknown`, and a target the maintainers confirm. OUT-DOCS-IMPROVE has none yet (a CORE009 warning).
+  Never write a reading no source produced.
+- **The gate**: the `model` job in `ci.yml` runs `pnpm run model:validate` (L2, strict mode) and `pnpm run
+  model:review` (`--fail-on-drift` against the base). There is no architecture baseline: the last one, 17 VSA003
+  errors of tests reaching into the conformance harness's modules, was retired on 2026-10-10, so any new violation is
+  an error. A refactor answers drift with an `Intentset-Unchanged: SLICE-…` trailer.
+- **Every record is a draft** until a maintainer promotes it.
 
 ## The chat's backend
 
@@ -365,9 +384,9 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
   next such change, to any spec, moves `intentset.spec` to `0.2`.
 - The site is organized by task, as markset.org is (2026-10-05): see "The site" above.
-- Open: the own model's follow-ups ("Intentset's own model" above): retire the baseline by giving the conformance
-  harness one public surface; measures and verification records; and whether VSA006 should stay quiet for a slice
-  whose empty layers its Responsibility explains, as VSA §3 allows.
+- Intentset's own model is complete as drafts (2026-10-10): no architecture baseline, a verification record for every
+  behavior, a measure for each of the toolchain's outcomes, and ADR-PACKAGE-LAYERS for the VSA006 warnings. What is left is a
+  maintainer's: promoting records out of draft, confirming the measures' targets, and taking their first readings.
 
 Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
 is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).

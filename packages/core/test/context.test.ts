@@ -38,7 +38,7 @@ function roles(bundle: ContextBundle | null): string[] {
   return bundle.artifacts.map((a) => `${a.role} ${a.id}`);
 }
 
-test("a behavior's bundle: owner, rules, scenarios, verifications, contracts, decisions, knowledge, ancestors", () => {
+test("BEH-CONTEXT: a behavior's bundle: owner, rules, scenarios, verifications, contracts, decisions, knowledge, ancestors", () => {
   const bundle = contextFor(graph, "BEH-ASMT-SCHEDULE");
   assert.deepEqual(roles(bundle), [
     "start BEH-ASMT-SCHEDULE",
@@ -134,7 +134,7 @@ test("an unknown ID has no context", () => {
   assert.equal(contextFor(graph, "BEH-NOPE"), null);
 });
 
-test("restricted artifacts are withheld and counted, unless included", () => {
+test("BEH-CONTEXT: restricted artifacts are withheld and counted, unless included", () => {
   const restricted = graphOf((name, source) =>
     name === "RULE-ASMT-AUTH.md" || name === "ADR-ASMT-SEAM.md"
       ? source.replace("visibility: internal", "visibility: restricted")

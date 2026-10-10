@@ -109,7 +109,7 @@ test("titles: three or more words, case-sensitive, across a line break, and neve
   );
 });
 
-test("no reference diagnostic carries the referenced title or path", () => {
+test("BEH-PUBLISH: no reference diagnostic carries the referenced title or path", () => {
   const { graph } = example({
     kb: reviewed(),
     body: guidance("[Keep backend access behind the slice seam](ADR-ASMT-SEAM.md) and SLICE-ASMT-SCHEDULE.md."),

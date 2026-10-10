@@ -10,8 +10,9 @@
   },
   "scripts": {
     "intentset": "node --conditions=intentset-source packages/cli/src/intentset.ts",
-    "model:validate": "node --conditions=intentset-source packages/cli/src/intentset.ts validate --level L2 --baseline .intentset/architecture-baseline.json",
-    "model:review": "node --conditions=intentset-source packages/cli/src/intentset.ts review --fail-on-drift --baseline .intentset/architecture-baseline.json",
+    "model:validate": "node --conditions=intentset-source packages/cli/src/intentset.ts validate --level L2 --mode strict",
+    "model:review": "node --conditions=intentset-source packages/cli/src/intentset.ts review --fail-on-drift --mode strict",
+    "model:evidence": "rm -rf .intentset/evidence && mkdir -p .intentset/evidence && node --conditions=intentset-source --test --test-reporter=tap packages/*/test/*.test.ts site/test/*.test.ts test/*.test.ts amplify/test/*.test.ts > .intentset/evidence/node-test.tap && node --conditions=intentset-source packages/cli/src/intentset.ts evidence import --from node-tap .intentset/evidence/node-test.tap --out .intentset/evidence/node-test.json --product PRD-INTENTSET --release v0.1-draft",
     "test": "node --conditions=intentset-source --test packages/*/test/*.test.ts site/test/*.test.ts test/*.test.ts amplify/test/*.test.ts && pnpm run test:development",
     "test:development": "node --conditions=intentset-source --conditions=development --test packages/*/test/*.test.ts",
     "conformance": "node --conditions=intentset-source packages/conformance/src/cli.ts",

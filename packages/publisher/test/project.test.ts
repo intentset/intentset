@@ -93,7 +93,7 @@ test("release labels match exactly: no SemVer ordering, no case folding", () => 
   assert.equal(reason(knowledge(AVAILABLE), { release: "R2" }), "release");
 });
 
-test("deny by default: type, lifecycle, visibility, audience and missing availability each exclude", () => {
+test("BEH-PUBLISH: deny by default: type, lifecycle, visibility, audience and missing availability each exclude", () => {
   assert.equal(reason(knowledge(AVAILABLE, { type: "behavior" })), "not-knowledge");
   assert.equal(reason(knowledge(AVAILABLE, { status: "draft" })), "draft");
   assert.equal(reason(knowledge(AVAILABLE, { status: "retired" })), "retired");

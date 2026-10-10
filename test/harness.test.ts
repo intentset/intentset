@@ -4,8 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import type { Diagnostic } from "@intentset/core";
-import { type Driver, runSuite, suitePassed } from "@intentset/conformance";
-import { formatJson, formatReport } from "../packages/conformance/src/report.ts";
+import { type Driver, formatJson, formatReport, runSuite, suitePassed } from "@intentset/conformance";
 
 const root = resolve(import.meta.dirname, "..");
 const schemaPath = join(root, "spec", "conformance.schema.json");

@@ -3,8 +3,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { validateSchema } from "@intentset/conformance";
-import type { ParseYaml } from "@intentset/conformance/fixtures";
+import { type ParseYaml, validateSchema } from "@intentset/conformance";
 import { loadSection, loadSuite, sections } from "@intentset/conformance-suite";
 import * as core from "@intentset/core";
 import { EXAMPLES, SCHEMAS, stage } from "../stage.ts";
@@ -31,7 +30,7 @@ async function withStaged<T>(run: (dir: string) => Promise<T>): Promise<T> {
   }
 }
 
-test("staging expands every case into whole files that still satisfy the schema", async () => {
+test("BEH-SUITE-CASES: staging expands every case into whole files that still satisfy the schema", async () => {
   await withStaged(async (dir) => {
     const staged = stage({ into: dir, parseYaml });
     const canonical = (await readdir(join(root, "tests"))).filter((n) => n.endsWith(".json")).sort();
@@ -130,7 +129,7 @@ test("the copy that would actually be packed matches too", async () => {
   });
 });
 
-test("the package ships the data, reachable by path, and depends on nothing", async () => {
+test("BEH-SUITE-CASES: the package ships the data, reachable by path, and depends on nothing", async () => {
   const pkg = JSON.parse(await readFile(join(resolve(import.meta.dirname, ".."), "package.json"), "utf8")) as {
     files: string[];
     exports: Record<string, unknown>;

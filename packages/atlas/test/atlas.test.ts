@@ -114,7 +114,7 @@ const PAGES = [
   "atlas.css",
 ];
 
-test("the Atlas of the example has the five pages, a page per behavior, and the stylesheet once", () => {
+test("BEH-ATLAS: the Atlas of the example has the five pages, a page per behavior, and the stylesheet once", () => {
   const atlas = buildAtlas(example());
   assert.deepEqual([...atlas.keys()], PAGES);
   assert.equal(atlas.get("atlas.css"), readFileSync(defaultStylesheetPath, "utf8"));
@@ -148,7 +148,7 @@ test("every internal link resolves to a page in the Atlas, and every fragment to
   assert.ok(checked > 40, `only ${checked} links checked`);
 });
 
-test("every page states the snapshot and the internal banner", () => {
+test("BEH-ATLAS: every page states the snapshot and the internal banner", () => {
   const unknown = example();
   const prefix = unknown.snapshot.graphHash.slice(0, 12);
   for (const [path, html] of pages(buildAtlas(unknown))) {

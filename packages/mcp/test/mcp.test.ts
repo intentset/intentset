@@ -110,7 +110,7 @@ async function toolNames(client: Client): Promise<string[]> {
   return (await client.listTools()).tools.map((t) => t.name);
 }
 
-test("engineering mode lists the four read-only engineering tools, with JSON Schema inputs", async () => {
+test("BEH-MCP-CONTEXT: engineering mode lists the four read-only engineering tools, with JSON Schema inputs", async () => {
   const client = await engineering();
   const { tools } = await client.listTools();
   assert.deepEqual(
@@ -298,7 +298,7 @@ test("customer search and get return published knowledge, citing named sources a
   await client.close();
 });
 
-test("customer mode cannot reach an internal record by any tool or argument", async () => {
+test("BEH-MCP-CONTEXT: customer mode cannot reach an internal record by any tool or argument", async () => {
   const { graph: reviewed, publication } = customerPublication();
   // Even an options object that smuggles the graph in gives the server nothing more.
   const smuggled = { mode: "customer", publication, graph: reviewed } as unknown as Parameters<

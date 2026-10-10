@@ -7,8 +7,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { expandCase as expandWith } from "../../conformance/src/fixtures.ts";
-import type { ConformanceCase, ExpandedCase } from "../../conformance/src/types.ts";
+import { type ConformanceCase, type ExpandedCase, expandCase as expandWith } from "../../conformance/src/harness.ts";
 import {
   type Diagnostic,
   type DocumentInput,
@@ -25,7 +24,7 @@ import {
 } from "../src/index.ts";
 
 export type { ConformanceCase, ExpandedCase };
-export { firstMismatch } from "../../conformance/src/compare.ts";
+export { firstMismatch } from "../../conformance/src/harness.ts";
 
 export const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 export const EXAMPLES_DIR = join(REPO_ROOT, "examples");

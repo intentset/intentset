@@ -11,7 +11,7 @@ function statusOf(records: Parameters<typeof classifyEvidence>[1], at: EvidenceS
   return classifyEvidence(graph, records, at).verifications["TEST-ASMT-SCHEDULE"];
 }
 
-describe("classifyEvidence", () => {
+describe("BEH-EVIDENCE-CURRENT: classifyEvidence", () => {
   test("only a pass at both the commit and the graph hash is current", () => {
     assert.equal(statusOf([review(hash)]).status, "current-pass");
     assert.equal(statusOf([review(hash, { commit: OLD_COMMIT })]).status, "stale");

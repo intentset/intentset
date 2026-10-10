@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { validateSchema } from "@intentset/conformance/schema";
+import { validateSchema } from "@intentset/conformance";
 import { outputText, readCases, root, run } from "./harness.ts";
 
 const cases = readCases();

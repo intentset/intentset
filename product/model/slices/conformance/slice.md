@@ -13,6 +13,7 @@ intentset:
   revision: 1
   links:
     dependsOn: [SLICE-CORE, SLICE-MARKSET-ADAPTER, SLICE-ARCHITECTURE, SLICE-VERIFICATION, SLICE-PUBLISHER]
+    informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: technical
     rationale: Test infrastructure for this implementation; it delivers nothing a user of the packages sees.
@@ -31,9 +32,9 @@ intentset:
 
 ## Responsibility
 
-The private harness that runs this implementation against the conformance cases and writes the export consumer fixtures. It is not published. Its manifest exports `./fixtures` and `./schema` beside `harness.ts`, and the packages' tests import those and its other modules directly: the 17 VSA003 errors in the architecture baseline.
+The private harness that runs this implementation against the conformance cases and writes the export consumer fixtures. It is not published. Its one export is `harness.ts`, which re-exports what the packages' tests and the suite's staging use: the fixture expansion (`expandCase`, `treeOf`, `REGISTRIES_PATH`, `CONFIG_PATH`, `ParseYaml`), the schema validator (`validateSchema`, `Schema`), `firstMismatch` and the report formatters. Until 2026-10-10 the manifest also exported `./fixtures` and `./schema` and the tests imported its modules directly, the 17 VSA003 errors the architecture baseline held; routing them through the harness retired the baseline.
 
-The slice is the package `@intentset/conformance`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. It uses no backend resources.
+The slice is the package `@intentset/conformance`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
 ## Public contract
 
@@ -41,4 +42,4 @@ The exports of `packages/conformance/src/harness.ts`, reached as `@intentset/con
 
 ## Verification
 
-The package's tests under `packages/conformance/test/`. No verification records yet.
+The package's tests under `packages/conformance/test/`. It implements no behavior, so no verification record names it; its tests run in `pnpm test` like every package's.

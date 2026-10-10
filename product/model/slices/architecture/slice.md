@@ -14,6 +14,7 @@ intentset:
   links:
     implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE]
     dependsOn: [SLICE-CORE]
+    informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
     domain: toolchain
@@ -35,7 +36,7 @@ intentset:
 
 The VSA and profile checks: claims, the import graph, layers, regions, areas, exceptions and the baseline.
 
-The slice is the package `@intentset/architecture`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. It uses no backend resources.
+The slice is the package `@intentset/architecture`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
 ## Public contract
 
@@ -43,4 +44,4 @@ The exports of `packages/architecture/src/index.ts`, reached by other packages a
 
 ## Verification
 
-The package's tests under `packages/architecture/test/`. No verification records yet.
+The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK) and TEST-ARCH-BASELINE (BEH-ARCH-BASELINE). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

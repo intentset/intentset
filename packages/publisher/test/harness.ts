@@ -18,7 +18,7 @@ import {
   readRegistries,
   validate,
 } from "@intentset/core";
-import { expandCase } from "@intentset/conformance/fixtures";
+import { expandCase } from "@intentset/conformance";
 import { type PublicationRequest, type PublishResult, bindReviewPins, publish } from "../src/index.ts";
 
 export const root = resolve(import.meta.dirname, "..", "..", "..");

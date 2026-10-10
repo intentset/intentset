@@ -80,7 +80,7 @@ function raw(url: string, path: string, method = "GET"): Promise<{ status: numbe
   });
 }
 
-test("serve prints the URL, the snapshot and the warning, serves the Atlas, and refuses everything else", async (t) => {
+test("BEH-ATLAS: serve prints the URL, the snapshot and the warning, serves the Atlas, and refuses everything else", async (t) => {
   const dir = await example(t);
   const serving = await serve(dir);
   t.after(() => serving.stop());
@@ -120,7 +120,7 @@ test("serve prints the URL, the snapshot and the warning, serves the Atlas, and 
   assert.equal(await serving.stop(), 0);
 });
 
-test("serve rebuilds when a record changes, so a reload shows the edit, and writes nothing", async (t) => {
+test("BEH-ATLAS: serve rebuilds when a record changes, so a reload shows the edit, and writes nothing", async (t) => {
   const dir = await example(t);
   const before = snapshot(dir);
   const serving = await serve(dir);
@@ -145,7 +145,7 @@ test("serve rebuilds when a record changes, so a reload shows the edit, and writ
   assert.deepEqual([...after.keys()].sort(), [...before.keys()].sort(), "serve creates no file");
 });
 
-test("serve --out writes the Atlas and exits, the same bytes twice, never into scope or over files", async (t) => {
+test("BEH-ATLAS: serve --out writes the Atlas and exits, the same bytes twice, never into scope or over files", async (t) => {
   const dir = await example(t);
   const first = await run(dir, "serve", "--out", "dist/atlas");
   assert.equal(first.code, 1, "the example has L2 errors, and the Atlas shows them");
@@ -207,7 +207,7 @@ function text(result: unknown): string {
   return (result as { content: { text: string }[] }).content[0].text;
 }
 
-test("mcp engineering serves the four context tools over the graph, and every result names the snapshot", async (t) => {
+test("BEH-MCP-CONTEXT: mcp engineering serves the four context tools over the graph, and every result names the snapshot", async (t) => {
   const dir = await example(t);
   const built = build(dir, { mode: "engineering" });
   assert.notEqual(typeof built.server, "number", built.err);
@@ -225,7 +225,7 @@ test("mcp engineering serves the four context tools over the graph, and every re
   assert.deepEqual(lookup.sources, ["product/scheduling/BEH-ASMT-SCHEDULE.md"]);
 });
 
-test("mcp customer serves only the two knowledge tools over one publication", async (t) => {
+test("BEH-MCP-CONTEXT: mcp customer serves only the two knowledge tools over one publication", async (t) => {
   const dir = await example(t);
   const pins = ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"].map(
     (id) =>
@@ -255,7 +255,7 @@ test("mcp customer serves only the two knowledge tools over one publication", as
   }
 });
 
-test("mcp customer refuses before any server starts: a refused request, a failing graph, the wrong mode's options", async (t) => {
+test("BEH-MCP-CONTEXT: mcp customer refuses before any server starts: a refused request, a failing graph, the wrong mode's options", async (t) => {
   const dir = await example(t);
   const partial = build(dir, { mode: "customer", visibility: "customer", audience: "teacher" });
   assert.equal(partial.server, 1);
@@ -281,7 +281,7 @@ test("mcp customer refuses before any server starts: a refused request, a failin
   }
 });
 
-test("the real bin speaks MCP on stdout and nothing else", async (t) => {
+test("BEH-MCP-CONTEXT: the real bin speaks MCP on stdout and nothing else", async (t) => {
   const dir = await example(t);
   const transport = new StdioClientTransport({
     command: process.execPath,

@@ -11,7 +11,7 @@ test("the pin in package.json is the version the adapter names", async () => {
   assert.equal(pkg.dependencies["@markset-lang/parser"], MARKSET_VERSION);
 });
 
-test("frontmatter, headings and syntax diagnostics come out in the shared shape", () => {
+test("BEH-MARKSET-CARRIER: frontmatter, headings and syntax diagnostics come out in the shared shape", () => {
   const source =
     "---\nmarkset: 0\nintentset:\n  id: X-Y\n---\n\n# Title *em*\n\n```md\n# not a heading\n```\n\n## Public `contract`\n\n> # quoted\n\n:::card\n### inner\n:::\n\n:::nonsense\nx\n:::\n";
   const input = marksetCarrier("a.md", source);
@@ -50,7 +50,7 @@ test("a document without frontmatter has null frontmatter and no syntax diagnost
   assert.deepEqual(input.headings, [{ depth: 1, text: "Just a heading", line: 1 }]);
 });
 
-test("marksetCarrier and plainCarrier agree on every example document", async () => {
+test("BEH-MARKSET-CARRIER: marksetCarrier and plainCarrier agree on every example document", async () => {
   // plainCarrier is core's fallback (ADR 0003). Loaded dynamically so this file
   // still runs while core is being built; the assertion is what matters.
   const core = (await import("@intentset/core")) as { plainCarrier?: (p: string, s: string) => unknown };
