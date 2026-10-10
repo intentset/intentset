@@ -33,6 +33,7 @@ new one.
   instruction that sets it all up, pointing an agent at the page, and `/llms.txt` lists the page so an agent finds it.
 - **The agent guide's closing line links the specifications.** It was a bare address, which the site rendered as
   text.
+- **intentset.org has a chat.** Every page carries the panel, and the footer's row links the privacy page.
 - **The chat answers with Claude Sonnet 4.6 for now.** Bedrock serves Opus 5.5 to the account once Anthropic approves
   its use case; until then the chat uses Sonnet 4.6, with no refusal fallback, and Sonnet 4.6's prices in its budget.
 - **The chat's alarms.** Errors, throttles, the day's estimated spend past 80% of its budget, a refusal for the budget,

@@ -11,7 +11,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, normalize } from "node:path";
 import { after, test } from "node:test";
-import { build, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor } from "../build.ts";
+import { ASK_URL, build, CHAT_PAGES, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor } from "../build.ts";
 
 const dist = await mkdtemp(join(tmpdir(), "intentset-rail-"));
 const pages = await build(dist);
@@ -65,7 +65,9 @@ test("every URL the site had before the bar changed still answers", () => {
 });
 
 test("every page is named by the bar, a rail or the footer's row, or is a record the worked example lists", () => {
-  const named = new Set([...NAV, ...FOOTER_LINKS, ...RAILS.flatMap((r) => r.items)].map(([, href]) => href));
+  // The privacy page is in the footer's row once the chat is launched.
+  const chat = ASK_URL === null ? [] : CHAT_PAGES.map(([path]): [string, string] => ["", path]);
+  const named = new Set([...NAV, ...FOOTER_LINKS, ...chat, ...RAILS.flatMap((r) => r.items)].map(([, href]) => href));
   const examples = linksFrom("example/index.html");
   for (const page of pages) {
     // Home is the wordmark, on every page.

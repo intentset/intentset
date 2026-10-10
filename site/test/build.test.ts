@@ -4,7 +4,9 @@ import { tmpdir } from "node:os";
 import { dirname, join, normalize, resolve } from "node:path";
 import { after, test } from "node:test";
 import {
+  ASK_URL,
   build,
+  CHAT_PAGES,
   CARD,
   CARD_ALT,
   cardUrl,
@@ -62,6 +64,8 @@ function main(page: string): string {
 test("the page list is the content pages, the specifications, the guide, conformance and one page per record", () => {
   const expected = [
     ...CONTENT_PAGES.map(([path]) => path),
+    // The privacy page, once the chat is launched.
+    ...(ASK_URL === null ? [] : CHAT_PAGES.map(([path]) => path)),
     ...SPECS.map((s) => `specifications/${s.slug}/index.html`),
     "guide/index.html",
     "conformance/index.html",
@@ -98,7 +102,7 @@ test("every internal link resolves to a page that was built, and every fragment 
   }
 });
 
-test("every page has exactly one h1, a skip link to main, and no script but the shell's two", () => {
+test("every page has exactly one h1, a skip link to main, and no script but the shell's two and the chat's", () => {
   // Both scripts are the shell's: one remembers the reader's color scheme across
   // pages, as markset.org's does, and one puts a Copy button on each code block.
   // They sit ahead of the header; nothing inside <main>, which is rendered from a
@@ -107,7 +111,13 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
     assert.equal((doc.match(/<h1[\s>]/g) ?? []).length, 1, `${page}: h1 count`);
     assert.match(doc, /<a class="site-skip" href="#main">Skip to content<\/a>/, page);
     assert.match(doc, /<main id="main" class="ms-document" tabindex="-1">/, page);
-    assert.equal((doc.match(/<script/gi) ?? []).length, 2, `${page}: two scripts`);
+    // The chat panel's, after </main>, once the chat is launched (chat.test.ts drives it).
+    assert.equal((doc.match(/<script/gi) ?? []).length, ASK_URL === null ? 2 : 3, `${page}: the shell's scripts`);
+    if (ASK_URL !== null)
+      assert.ok(
+        doc.indexOf('chat/panel.js" data-ask-url=') > doc.indexOf("</main>"),
+        `${page}: the chat's script after main`,
+      );
     assert.ok(doc.includes(SCHEME_SCRIPT), `${page}: and one is the scheme script`);
     assert.ok(doc.includes(COPY_SCRIPT), `${page}: and one is the copy script`);
     assert.ok(doc.indexOf(SCHEME_SCRIPT) < doc.indexOf('<header class="site-header">'), `${page}: ahead of the header`);
@@ -151,12 +161,12 @@ test("the footer is the family's: the bar and About, then one line, then the fam
     const footerNav = footer.slice(navStart, footer.indexOf("</nav>"));
     assert.deepEqual(
       [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
-      FOOTER_LINKS.map(([label]) => label),
+      [...FOOTER_LINKS.map(([label]) => label), ...(ASK_URL === null ? [] : ["Privacy"])],
       page,
     );
     assert.deepEqual(
       [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
-      ["Start", "Tools", "Reference", "Examples", "Roadmap", "About"],
+      ["Start", "Tools", "Reference", "Examples", "Roadmap", "About", ...(ASK_URL === null ? [] : ["Privacy"])],
       `${page}: About stays in the footer's row`,
     );
     const afterNav = footer.slice(footer.indexOf("</nav>") + "</nav>".length);
