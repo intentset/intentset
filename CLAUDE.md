@@ -274,8 +274,9 @@ from source (the installed bin points at `dist/`, which only the build writes).
   baseline is 17 VSA003 errors, all tests reaching past the conformance harness's `harness.ts` into its `fixtures`,
   `schema`, `types`, `compare` and `report` modules; it only shrinks. A refactor answers drift with an
   `Intentset-Unchanged: SLICE-…` trailer.
-- **Every record is a draft** until a maintainer promotes it. No outcome has a measure record yet (three CORE009
-  warnings), and no behavior has a verification record: the packages' tests are claimed, not linked.
+- **Every record is a draft** until a maintainer promotes it. One outcome has a measure record,
+  MEAS-QUESTIONS-ANSWERED under `product/model/measures/` (its evidence source `chat-questions` is in the registry);
+  the others are CORE009 warnings. And no behavior has a verification record: the packages' tests are claimed, not linked.
 
 ## The chat's backend
 
@@ -323,6 +324,27 @@ reaches a published package.
 - **The launch** is one change: `ASK_URL` in `site/build.ts` set to the branch's `POST /ask`. It builds the panel and
   the privacy page (`CHAT_PAGES`, `site/content/privacy.md`, approved 2026-10-09, linked from the footer's row) into
   the site. `amplify/test/retention.test.ts` holds the page to the periods in `limits.ts` and the logs' month.
+
+## Learning from questions
+
+The chat keeps each question 90 days, scrubbed (CAP-LEARN-FROM-QUESTIONS). `pnpm run questions:report` reads them,
+read-only, with the `coral-reef` profile unless `AWS_PROFILE` or keys say otherwise (`amplify/questions/`,
+BEH-QUESTIONS-REPORT; `--help` lists the options). The questions are visitor data and this repository is public: the
+report goes to standard output, an `--out` inside the repository is warned about, and no report, brief or question is
+ever committed. The checks' own conversations are left out by their id prefixes (`--exclude-prefix`); a new check
+names its conversations with one of them, or adds its prefix to `defaultExcludePrefixes` in `report.ts`.
+
+- **The measure.** The report's Measure line is MEAS-QUESTIONS-ANSWERED: `answered` over `answered` plus `uncited`,
+  contact requests, refusals and failures left out. Read it monthly with `--days 30`; the first 30 days after the
+  launch (2026-10-09) are the baseline, and the target is set then, in the measure record.
+- **Drafting knowledge from gaps.** `pnpm run questions:report --gaps` writes a brief: the questions the
+  documentation did not answer, grouped, and what to do with them. An agent given it sets aside the off-topic
+  questions, looks for each answer in `spec/`, `site/content/` and `product/model/`, and either names the page that
+  already answers it (a findability gap) or drafts a knowledge record under `product/model/knowledge/` (`type:
+  knowledge`, `status: draft`, `links.explains`, a `## Sources` section naming what it draws on). It writes only what
+  those sources say, never a fact they do not, and describes each subject in its own words, never quoting a visitor.
+  Records stay drafts: a person reviews them, and publication refuses a draft. No model runs here; the agent is
+  whoever runs the procedure.
 
 ## Status
 
