@@ -3,6 +3,7 @@ import type { APIGatewayProxyEvent } from "aws-lambda";
 import { type AskEvent, ask, type Deps } from "./answer.ts";
 import corpusFile from "./corpus.json" with { type: "json" };
 import { checkCorpus } from "./corpus.ts";
+import { errorName, log } from "./log.ts";
 import { bedrockModel } from "./model.ts";
 import { DynamoStore } from "./store.ts";
 
@@ -38,7 +39,13 @@ export const handler = awslambda.streamifyResponse(async (event: APIGatewayProxy
   });
   const send = (e: AskEvent) => stream.write(`${JSON.stringify(e)}\n`);
   if (allowed) {
-    await ask(event.body ?? undefined, event.requestContext?.identity?.sourceIp ?? "unknown", dependencies(), send);
+    try {
+      await ask(event.body ?? undefined, event.requestContext?.identity?.sourceIp ?? "unknown", dependencies(), send);
+    } catch (error) {
+      // A store that could not be reached, before or after the model: the panel is told, rather than left waiting.
+      log("ask.error", { error: errorName(error) });
+      send({ type: "error", reason: "internal" });
+    }
   } else {
     // A streamed response with no body is a 502 at API Gateway, so the refusal says something.
     send({ type: "error", reason: "origin" });

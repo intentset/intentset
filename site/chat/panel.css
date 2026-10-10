@@ -44,7 +44,7 @@
   font: inherit;
   cursor: pointer;
 }
-.chat-icon { font-size: 1.5rem; line-height: 1; }
+.chat-icon { display: inline-grid; place-items: center; font-size: 1.5rem; line-height: 1; }
 .chat-text-button { padding-inline: 0.5rem; font-size: 0.875rem; }
 .chat-icon:hover, .chat-text-button:hover { color: var(--ms-fg); background: var(--ms-surface); }
 .chat-notice { margin: 0; padding: 0.6rem 1rem; font-size: 0.8125rem; line-height: 1.45; color: var(--ms-fg-muted); border-bottom: 1px solid var(--ms-border); }
@@ -82,9 +82,13 @@
   font: 600 0.95rem/1 var(--ms-font-body);
   cursor: pointer;
 }
-.chat-send:disabled, .chat-text-button:disabled { opacity: 0.55; cursor: progress; }
+.chat-send:disabled { opacity: 0.55; cursor: progress; }
+/* Expanded: the window less a gutter, with the conversation in a column a line of text can be read across. */
+.chat-panel.chat-panel-expanded { inset: 1rem; width: auto; height: auto; max-height: none; }
+.chat-panel-expanded :is(.chat-notice, .chat-log, .chat-form) { padding-inline: max(1rem, calc((100% - 46rem) / 2)); }
 .chat-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 40rem) {
   .chat-panel { inset: auto 0 0 0; width: 100%; height: min(85dvh, 40rem); border-radius: calc(var(--ms-radius) * 2) calc(var(--ms-radius) * 2) 0 0; }
+  .chat-panel.chat-panel-expanded { inset: 0; height: auto; border: 0; border-radius: 0; }
 }
 @media print { .chat-launch, .chat-panel[open] { display: none; } }

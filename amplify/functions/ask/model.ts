@@ -31,6 +31,9 @@ export type Model = (
 export function bedrockModel(): Model {
   const client = new AnthropicBedrock({
     awsRegion: model.region,
+    // The SDK's timeout covers the wait for the response to start; a timed-out attempt is retried once.
+    timeout: limits.modelWaitSeconds * 1000,
+    maxRetries: 1,
     middleware: model.fallbackId ? [betaRefusalFallbackMiddleware([{ model: model.fallbackId }])] : [],
   });
   return async ({ system, messages }, onEvent) => {
@@ -41,21 +44,35 @@ export function bedrockModel(): Model {
       system,
       messages,
     });
+    // Once the response has started, a pause longer than modelWaitSeconds ends the attempt: the stream is aborted and
+    // the answer fails, rather than waiting out the function's timeout. Before it starts, the SDK's own timeout and
+    // retry apply, so the first wait allows for both.
+    let idle: ReturnType<typeof setTimeout> | undefined;
+    const wait = (seconds: number) => {
+      clearTimeout(idle);
+      idle = setTimeout(() => stream.abort(), seconds * 1000);
+    };
+    wait(limits.modelWaitSeconds * 2 + 5);
     const cited = new Map<number, Set<number>>();
     const textBlocks = new Set<number>();
-    for await (const event of stream) {
-      if (event.type === "content_block_start" && event.content_block.type === "text") textBlocks.add(event.index);
-      if (event.type === "content_block_delta") {
-        if (event.delta.type === "text_delta") onEvent({ type: "text", text: event.delta.text });
-        if (event.delta.type === "citations_delta" && "document_index" in event.delta.citation) {
-          const set = cited.get(event.index) ?? new Set<number>();
-          set.add(event.delta.citation.document_index);
-          cited.set(event.index, set);
+    try {
+      for await (const event of stream) {
+        wait(limits.modelWaitSeconds);
+        if (event.type === "content_block_start" && event.content_block.type === "text") textBlocks.add(event.index);
+        if (event.type === "content_block_delta") {
+          if (event.delta.type === "text_delta") onEvent({ type: "text", text: event.delta.text });
+          if (event.delta.type === "citations_delta" && "document_index" in event.delta.citation) {
+            const set = cited.get(event.index) ?? new Set<number>();
+            set.add(event.delta.citation.document_index);
+            cited.set(event.index, set);
+          }
+        }
+        if (event.type === "content_block_stop" && textBlocks.has(event.index)) {
+          onEvent({ type: "block-end", documents: [...(cited.get(event.index) ?? [])].sort((a, b) => a - b) });
         }
       }
-      if (event.type === "content_block_stop" && textBlocks.has(event.index)) {
-        onEvent({ type: "block-end", documents: [...(cited.get(event.index) ?? [])].sort((a, b) => a - b) });
-      }
+    } finally {
+      clearTimeout(idle);
     }
     const final = await stream.finalMessage();
     return {

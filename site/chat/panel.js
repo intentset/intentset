@@ -10,6 +10,9 @@
 
   const STORAGE = "intentset-chat";
   const MAX_CHARS = 1000;
+  // Seconds without a byte from the chat before the panel stops waiting. The function gives up on a stalled model well
+  // before this; it is here for a connection that drops without closing.
+  const WAIT_SECONDS = 60;
   const MESSAGES = {
     "too-long": `That question is longer than ${MAX_CHARS.toLocaleString("en")} characters. Try a shorter one.`,
     "too-many-turns": "This conversation has reached its length. Start a new one to keep asking.",
@@ -21,9 +24,10 @@
     failed: "The answer could not be finished. Try again in a moment.",
   };
 
-  const fresh = () => ({ conversationId: newId(), open: false, turns: [] });
+  const fresh = () => ({ conversationId: newId(), open: false, expanded: false, turns: [] });
   let state = load() ?? fresh();
   let busy = false;
+  let inFlight = null;
 
   // ---- markup -------------------------------------------------------------------------------------------------------
   const el = (tag, attrs = {}, ...children) => {
@@ -46,6 +50,7 @@
     text: "Ask the docs",
   });
   const close = el("button", { type: "button", class: "chat-icon", "aria-label": "Close the chat", text: "×" });
+  const expand = el("button", { type: "button", class: "chat-icon chat-expand", "aria-pressed": "false" });
   const restart = el("button", { type: "button", class: "chat-text-button", text: "New conversation" });
   const notice = el(
     "p",
@@ -73,7 +78,7 @@
   const panel = el(
     "dialog",
     { id: "chat-panel", class: "chat-panel", "aria-labelledby": "chat-title" },
-    el("div", { class: "chat-head" }, el("h2", { id: "chat-title", text: "Ask the docs" }), restart, close),
+    el("div", { class: "chat-head" }, el("h2", { id: "chat-title", text: "Ask the docs" }), restart, expand, close),
     notice,
     log,
     form,
@@ -89,6 +94,23 @@
     save();
     input.focus();
   }
+  // Expanded, the panel fills the window and the conversation reads in a centred column; the choice is kept with the
+  // conversation, so it holds from page to page.
+  function setExpanded(value) {
+    state.expanded = value;
+    panel.classList.toggle("chat-panel-expanded", value);
+    expand.setAttribute("aria-pressed", String(value));
+    expand.setAttribute("aria-label", value ? "Restore the chat's size" : "Expand the chat");
+    expand.title = value ? "Restore" : "Expand";
+    expand.replaceChildren(
+      icon(value ? "M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" : "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"),
+    );
+  }
+  expand.addEventListener("click", () => {
+    setExpanded(!state.expanded);
+    save();
+  });
+
   function shut() {
     panel.close();
     launcher.hidden = false;
@@ -106,8 +128,8 @@
     }
   });
   restart.addEventListener("click", () => {
-    if (busy) return;
-    state = { ...fresh(), open: true };
+    inFlight?.abort();
+    state = { ...fresh(), open: true, expanded: state.expanded };
     save();
     render();
     input.focus();
@@ -136,11 +158,20 @@
     const view = renderTurn(turn);
     log.append(view.node);
     view.node.scrollIntoView({ block: "end" });
+    const controller = new AbortController();
+    inFlight = controller;
+    let timer;
+    const waitAgain = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => controller.abort(), WAIT_SECONDS * 1000);
+    };
+    waitAgain();
     try {
       const response = await fetch(askUrl, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ conversationId: state.conversationId, question, history }),
+        signal: controller.signal,
       });
       if (!response.body) throw new Error("no body");
       const reader = response.body.getReader();
@@ -148,6 +179,7 @@
       let buffer = "";
       for (;;) {
         const { value, done } = await reader.read();
+        waitAgain();
         buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
         let newline = buffer.indexOf("\n");
         while (newline !== -1) {
@@ -163,8 +195,12 @@
     } catch {
       fail(turn, "failed");
     }
-    view.update();
+    clearTimeout(timer);
+    inFlight = null;
     setBusy(false);
+    // A new conversation started while this one was answering: this turn is no longer on screen or in the state.
+    if (!state.turns.includes(turn)) return;
+    view.update();
     save();
     input.focus();
   }
@@ -190,7 +226,6 @@
   function setBusy(value) {
     busy = value;
     send.disabled = value;
-    restart.disabled = value;
     log.setAttribute("aria-busy", String(value));
   }
 
@@ -265,6 +300,26 @@
     return out;
   }
 
+  function icon(path) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    for (const [name, value] of Object.entries({
+      viewBox: "0 0 24 24",
+      width: "18",
+      height: "18",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": "2",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "aria-hidden": "true",
+    }))
+      svg.setAttribute(name, value);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("d", path);
+    svg.append(line);
+    return svg;
+  }
+
   function newId() {
     return typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
@@ -289,8 +344,12 @@
   }
 
   render();
+  setExpanded(state.expanded === true);
   if (state.open) {
+    // Reopened on a new page: show() moves focus into the dialog, onto its first button, but the visitor arrived at a
+    // page, not at the chat, so focus goes back to where the page starts.
     panel.show();
+    if (panel.contains(document.activeElement)) document.activeElement.blur();
     launcher.hidden = true;
     launcher.setAttribute("aria-expanded", "true");
   }
