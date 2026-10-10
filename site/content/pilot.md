@@ -14,29 +14,29 @@ Both products' repositories are private, so this page counts and describes their
 
 ## Where it stands
 
-Counts taken on 2026-10-06 on each product's main branch, from `intentset validate` and the architecture check (the 0.6 toolchain) and from the records' frontmatter.
+Counts taken on 2026-10-10 on each product's main branch, from `intentset validate` and the architecture check (the 0.6 toolchain) and from the records' frontmatter.
 
 ### Streamlane
 
 :::metrics
 | Count | Value |
 |---|---|
-| Baselined architecture violations | 472 |
-| Slices | 37 |
-| Records | 86 |
-| Records approved | 2 |
-| Behaviors declared | 20 |
-| Behaviors named in code | 4 |
+| Baselined architecture violations | 469 |
+| Slices | 39 |
+| Records | 89 |
+| Records approved | 4 |
+| Behaviors declared | 21 |
+| Behaviors named in code | 8 |
 :::
 
-Validation reports 0 errors and 577 warnings at [L2](../how-it-works/index.html#adopt-in-levels). 472 are the violations in the architecture [baseline](../specifications/vsa/index.html#9-exceptions-and-adoption), which [migration mode](../specifications/vsa/index.html#9-exceptions-and-adoption) reports as warnings. Of the other 105, 64 are on draft slices that have no behaviors yet or have files in no known layer, and 41 are imports into a slice from code outside the checked scope. All but two records are drafts. Of the 20 behaviors, 4 are named in the backend's code and a fifth only as a marker in the web app. The other 15 belong to a second capability, modelled before its release, and are named nowhere yet. Five of the 20 have a verification record.
+Validation reports 0 errors and 603 warnings at [L2](../how-it-works/index.html#adopt-in-levels). 469 are the violations in the architecture [baseline](../specifications/vsa/index.html#9-exceptions-and-adoption), which [migration mode](../specifications/vsa/index.html#9-exceptions-and-adoption) reports as warnings. Of the other 134, 64 are on draft slices that have no behaviors yet or have files in no known layer, 66 are imports into a slice from code outside the checked scope, and 4 are slices a resource lists as consumers that do not list the resource back. All but four records are drafts. Of the 21 behaviors, 8 are named in the backend's code and a ninth only as a marker in the web app. The other 12 belong to the second capability, which is partly built: four of them are deferred to a later release. Five of the 21 have a verification record.
 
 ### Driftline
 
 :::metrics
 | Count | Value |
 |---|---|
-| Records | 32 |
+| Records | 33 |
 | Records promoted | 6 |
 | Slices | 6 |
 | Slices with code | 1 |
@@ -44,6 +44,74 @@ Validation reports 0 errors and 577 warnings at [L2](../how-it-works/index.html#
 :::
 
 Validation reports 21 warnings at L2, all on drafts: five slices whose code is not written yet and that have no behaviors, and six outcomes with no measure record yet. Driftline reads usage evidence and writes none, so its two behaviors are covered by its tests, not named in its code.
+
+## 2026-10-07 to 2026-10-10: Each area becomes a backend
+
+Streamlane declared its areas (Streamlane #374), and the [AMP rules](../specifications/profile-typescript-amplify-gen2/index.html#9-areas-more-than-one-backend) began to bind. Until then, in that pull request's words, "AMP007 to AMP011 were evaluated against nothing." The declaration names the areas that already had a backend, platform and search, with each one's backend, schema and frontend, plus the shared backend package and the one schema bridge. AMP008 to AMP011 came back clean: no import between backends, no name declared by two schemas, no reference across an area, one client. AMP012 and AMP013 stay review assertions, because the checker cannot decide them from source.
+
+The declaration also surfaced 30 slices that belong to delivery, docs and work, three areas that had no backend yet. Streamlane kept their true domains and baselined the 30 findings (AMP007), rather than relabelling the slices as platform. The baseline then shrank as each area got its own backend:
+
+| Date | Change | Baseline |
+|---|---|---|
+| 2026-10-06 | The gate goes on (Streamlane #352) | 472 |
+| 2026-10-07 | Areas declared; 30 slices of areas with no backend yet (#374) | 502 |
+| 2026-10-08 | Delivery becomes a backend (#405) | 498 |
+| 2026-10-09 | Docs becomes a backend (#415) | 492 |
+| 2026-10-10 | Work becomes a backend; no AMP007 entries left (#489) | 472 |
+| 2026-10-10 | A second shared backend package declared; one stale entry retired (#503) | 471 |
+| 2026-10-10 | A feature change routes one import through an entrypoint (#505) | 469 |
+
+Each new backend is a declared area with a resource record, such as RES-WORK-BACKEND, that the slices using it list. The check on Streamlane's main branch now reports:
+
+```text
+89 artifacts, 0 errors, 603 warnings
+Architecture (L2, migration mode): 39 active slices; 233 files claimed,
+0 unclaimed, 738 out of scope (counted, not reported); 1176 import edges,
+495 across slices; 1 cycle; 0 excepted, 469 baselined, 0 stale baseline entries
+```
+
+### What it cost
+
+- **A resource listed one way.** The delivery cut added RES-DELIVERY-BACKEND naming four consumers, but none of the four slice records was changed to list it. The validator reports each as a warning (VSA009), and all four are still open on main. The docs and work cuts updated their slices in the same change.
+- **Findings declared, not baselined.** Declaring the areas surfaced 72 findings, not 30. The other 42 were the search backend and the shared package reading as owned by nobody. A resource record for one and a shared region for the other declared them away.
+
+## 2026-10-07 to 2026-10-10: The drift gate in daily use
+
+From 2026-10-07 to 2026-10-10 the model check ran 367 times on Streamlane's pull requests, and 355 runs passed. Nine of the 12 failures were the drift gate's: a commit changed a slice's code with no `Intentset-Unchanged` trailer at all. They came from 8 pull requests, one of which changed seven slices at once:
+
+```text
+Code changed, records unchanged (7, 7 not acknowledged)
+```
+
+Each passed after a commit with one trailer per slice; that one carried seven. Two failures were the help check described in the next entry, and the rest failed before the check ran.
+
+### What it cost
+
+Driftline's gate failed twice on one pull request (Driftline #25) with the trailer present. The fix commit says why: "The previous empty commit put Intentset-Unchanged in its own paragraph above the Co-Authored-By line, so git's trailer parser, which reads only the last block, never saw it." It passed with `Intentset-Unchanged: SLICE-BACKEND-SIGNALS` in the last paragraph.
+
+### What it changed in Intentset
+
+The agent guide now says the trailer goes in the commit message's last paragraph, and `init --agents` and `guide` write that sentence (Intentset #39, 2026-10-10, not yet released).
+
+## 2026-10-08 to 2026-10-10: The second capability's help, checked in CI
+
+Streamlane's second capability got its decision approved and its help published. The decision record, ADR-0061, was approved and rewritten to the first release's scope (Streamlane #407). Four of its behaviors moved to later releases, and three new release labels in the registry keep them out of the help: publishing for the first release leaves deferred behavior out, so help never describes work that does not exist. The next day four of its behaviors were named in code, from BEH-DEPMAP-START to BEH-DEPMAP-LIMITS (Streamlane #418). Its knowledge record, KB-DEPENDENCY-MAP, was approved by the product owner after its text was corrected to describe only what the release has (Streamlane #440). That makes four approved records.
+
+### What it caught
+
+Streamlane #418 edited BEH-BLOCKED-SHOWN, one of the behaviors KB-BLOCKED-WORK is pinned to. That put the knowledge record back up for review, as pinning means to. Nobody noticed until the next publish, which wrote 0 documents and deleted the committed help for blocked work. The record was reviewed again, and Streamlane #440 added a CI step that runs the publish and fails when its output differs from what is committed. Tested against a planted change, one appended line on a behavior dropped the document and failed the step. Three later changes each re-pinned KB-DEPENDENCY-MAP so it would not drop out of the publish silently.
+
+### What it cost
+
+- **A check that could not pass.** The first version compared the publish's output with a plain diff. Every publish writes a new commit and graph hash into its snapshot, so the check failed on its own pull request, twice, until it compared everything but those two fields.
+- **A refusal with no reason given.** The publisher refused a knowledge record whose body restated its title, with the reason `title` "and no further explanation; I bisected it paragraph by paragraph."
+- **An exact heading.** The validator requires a section named exactly `Decision`, so ADR-0061 says which release it decides in that section's first line, not in its heading.
+
+None of the three has changed in Intentset yet.
+
+## 2026-10-08: Driftline decides what a drafted model is worth
+
+Driftline recorded how much of the product works when a team has no Intentset model (Driftline #27). The decision record, ADR-NO-MODEL, is linked from SLICE-ADOPTION-LADDERS by `informedBy`: a model is required and Intentset is not, because Driftline drafts one. Its value is a gradient, not a switch, and a draft stays labelled until a person accepts it. The record is a draft. Validation reports 33 artifacts, 0 errors and the same 21 warnings.
 
 ## 2026-10-06: The gate goes on
 
