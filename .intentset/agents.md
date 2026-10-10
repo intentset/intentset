@@ -46,7 +46,9 @@ Intentset-Unchanged: SLICE-...
 ```
 
 `intentset review` lists every slice whose code changed while its records did not, and this trailer is how a
-commit answers it. Use it only when no behavior changed: a reviewer reads it as your claim.
+commit answers it. Use it only when no behavior changed: a reviewer reads it as your claim. Git reads trailers only
+from a message's last paragraph, so put it there, beside any other trailer such as `Co-Authored-By`; in a paragraph
+of its own above them, it is not read.
 
 ## Never
 
