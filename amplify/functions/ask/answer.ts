@@ -47,7 +47,12 @@ export async function ask(
   }
   const { request } = parsed;
   const now = deps.now();
+  // Milliseconds from the start of the request: to admission, and to the answer's first words. A stall shows up in
+  // these, and in which of them.
+  const started = performance.now();
+  const elapsed = () => Math.round(performance.now() - started);
   const admitted = await admit(deps.store, ip, now);
+  const admitMs = elapsed();
   if (!admitted.ok) {
     log("ask.refused", { reason: admitted.refusal });
     if (admitted.refusal === "budget") metric("BudgetRefused", 1);
@@ -58,9 +63,11 @@ export async function ask(
   const turn = request.history.length + 1;
   const sourcesSeen = new Set<string>();
   let result: ModelResult | null = null;
+  let firstTextMs: number | undefined;
   try {
     result = await deps.model({ system: SYSTEM, messages: conversation(deps.corpus, request) }, (event) => {
       if (event.type === "text") {
+        firstTextMs ??= elapsed();
         send(event);
         return;
       }
@@ -77,6 +84,9 @@ export async function ask(
       turn,
       error: errorName(error),
       status: errorStatus(error),
+      admitMs,
+      firstTextMs,
+      totalMs: elapsed(),
     });
     send({ type: "error", reason: "model" });
   }
@@ -112,6 +122,9 @@ export async function ask(
     cacheReadTokens: usage.cacheRead,
     cacheWriteTokens: usage.cacheWrite,
     costMicros: Math.ceil(costMicros),
+    admitMs,
+    firstTextMs,
+    totalMs: elapsed(),
   });
   metric("CostMicros", Math.ceil(costMicros), "None");
   try {

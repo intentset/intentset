@@ -254,13 +254,41 @@
     log.replaceChildren(...state.turns.map((turn) => renderTurn(turn).node));
   }
 
-  // A small, safe Markdown: paragraphs, lists, inline code, bold, emphasis and http(s) links. Built as DOM nodes, never
-  // as HTML, so nothing in an answer can become markup.
+  // A small, safe Markdown: paragraphs, headings, lists, tables, fenced code, inline code, bold, emphasis and http(s)
+  // links. Built as DOM nodes, never as HTML, so nothing in an answer can become markup.
   function markdown(text) {
     const blocks = [];
+    const lines = text.split("\n");
     let list = null;
-    for (const raw of text.split("\n")) {
-      const line = raw.trimEnd();
+    let paragraph = null;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trimEnd();
+      const fence = /^\s*(```|~~~)/.exec(line);
+      if (fence) {
+        // Everything to the closing fence, or to the end while the answer is still streaming.
+        const code = [];
+        while (++i < lines.length && !lines[i].trimStart().startsWith(fence[1])) code.push(lines[i]);
+        blocks.push(el("pre", {}, el("code", { text: code.join("\n") })));
+        list = paragraph = null;
+        continue;
+      }
+      if (isRow(line) && isDivider(lines[i + 1] ?? "")) {
+        const table = el("table");
+        table.append(el("thead", {}, row(line, "th")));
+        const body = el("tbody");
+        i++;
+        while (i + 1 < lines.length && isRow(lines[i + 1].trimEnd())) body.append(row(lines[++i].trimEnd(), "td"));
+        table.append(body);
+        blocks.push(el("div", { class: "chat-table" }, table));
+        list = paragraph = null;
+        continue;
+      }
+      const heading = /^#{1,6}\s+(.*?)\s*#*$/.exec(line);
+      if (heading) {
+        blocks.push(el("h3", {}, ...inline(heading[1])));
+        list = paragraph = null;
+        continue;
+      }
       const item = /^\s*(?:[-*]|(\d+)\.)\s+(.*)$/.exec(line);
       if (item) {
         const ordered = item[1] !== undefined;
@@ -269,17 +297,32 @@
           blocks.push(list.node);
         }
         list.node.append(el("li", {}, ...inline(item[2])));
+        paragraph = null;
       } else if (line.trim() === "") {
-        list = null;
+        list = paragraph = null;
       } else {
         list = null;
-        const last = blocks.at(-1);
-        if (last?.tagName === "P" && !last.dataset.closed) last.append(" ", ...inline(line.trim()));
-        else blocks.push(el("p", {}, ...inline(line.trim())));
+        if (paragraph) paragraph.append(" ", ...inline(line.trim()));
+        else {
+          paragraph = el("p", {}, ...inline(line.trim()));
+          blocks.push(paragraph);
+        }
       }
-      if (line.trim() === "" && blocks.at(-1)?.tagName === "P") blocks.at(-1).dataset.closed = "1";
     }
     return blocks;
+  }
+
+  function isRow(line) {
+    return /^\s*\|.*\|\s*$/.test(line);
+  }
+
+  function isDivider(line) {
+    return /^\s*\|?(\s*:?-{3,}:?\s*\|)+\s*(:?-{3,}:?\s*)?$/.test(line.trimEnd());
+  }
+
+  function row(line, cell) {
+    const cells = line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|");
+    return el("tr", {}, ...cells.map((value) => el(cell, {}, ...inline(value.trim()))));
   }
 
   function inline(text) {

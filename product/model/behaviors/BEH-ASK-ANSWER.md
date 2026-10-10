@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   parent: CAP-ASK
   links:
     governedBy: [RULE-ASK-PUBLISHED-ONLY, RULE-ASK-SPEND-CAPPED]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-A visitor types a question in the chat panel. The answer streams back as it is written, and each claim links to the page, or the section of a specification, it came from. A follow-up question in the same conversation is answered with the conversation so far. The panel can be expanded to fill the window, and stays expanded from page to page until restored; reopened on a new page, it does not take the page's focus.
+A visitor types a question in the chat panel. The answer streams back as it is written, with its headings, lists, tables and code drawn as such, and each claim links to the page, or the section of a specification, it came from. A follow-up question in the same conversation is answered with the conversation so far. The panel can be expanded to fill the window, and stays expanded from page to page until restored; reopened on a new page, it does not take the page's focus.
 
 ## Preconditions
 
