@@ -15,7 +15,7 @@ export type AskEvent =
   | { type: "sources"; sources: Array<{ url: string; title: string }> }
   | { type: "done"; outcome: Outcome; answer: AnswerBlock[] }
   | { type: "refused"; reason: Exclude<RequestProblem, "malformed"> | Refusal | "declined" }
-  | { type: "error"; reason: "malformed" | "model" | "origin" };
+  | { type: "error"; reason: "malformed" | "model" | "origin" | "internal" };
 
 export interface Deps {
   store: Store;

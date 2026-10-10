@@ -20,6 +20,14 @@ export const limits = {
   concurrency: 5,
   /** Seconds one answer may take. */
   timeoutSeconds: 120,
+  /**
+   * Seconds the function waits on the model before giving up on an attempt: for its response to start (then it tries
+   * once more), and between two parts of the answer once it has. A connection that stalls never holds a visitor to
+   * the full timeout.
+   */
+  modelWaitSeconds: 20,
+  /** Milliseconds one DynamoDB request may take before the SDK retries it. */
+  storeRequestMs: 3_000,
   /** Requests per IP per five minutes before the web application firewall blocks. */
   wafPerFiveMinutes: 100,
 } as const;

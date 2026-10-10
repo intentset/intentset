@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-ASK
   links:
     governedBy: [RULE-ASK-PUBLISHED-ONLY, RULE-ASK-SPEND-CAPPED]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-A visitor types a question in the chat panel. The answer streams back as it is written, and each claim links to the page, or the section of a specification, it came from. A follow-up question in the same conversation is answered with the conversation so far.
+A visitor types a question in the chat panel. The answer streams back as it is written, and each claim links to the page, or the section of a specification, it came from. A follow-up question in the same conversation is answered with the conversation so far. The panel can be expanded to fill the window, and stays expanded from page to page until restored; reopened on a new page, it does not take the page's focus.
 
 ## Preconditions
 
@@ -34,7 +34,7 @@ The chat is on, and the visitor is inside the day's limits.
 
 ## Outcomes
 
-Success: the answer and its links. Failure: when the model or the network fails, the panel says the answer could not be finished and links the documentation's start page; nothing partial is presented as complete.
+Success: the answer and its links. Failure: when the model or the network fails, the panel says the answer could not be finished and links the documentation's start page; nothing partial is presented as complete. A model or store that stalls is given up on within seconds, and the panel stops waiting after a minute with nothing from the chat, so a visitor is never left waiting on an answer that is not coming; starting a new conversation abandons one still being written.
 
 ## Sources
 

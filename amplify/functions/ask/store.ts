@@ -1,5 +1,6 @@
 import { ConditionalCheckFailedException, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { limits } from "./limits.ts";
 
 /** One stored question and its answer (BEH-ASK-KEEP-QUESTION), scrubbed, deleted by DynamoDB at `expiresAt`. */
 export interface QuestionRecord {
@@ -49,7 +50,14 @@ export class DynamoStore implements Store {
   readonly #limitsTable: string;
   readonly #questionsTable: string;
 
-  constructor(limitsTable: string, questionsTable: string, client = new DynamoDBClient({})) {
+  constructor(
+    limitsTable: string,
+    questionsTable: string,
+    // Without a timeout a request on a connection that went stale while the function was idle waits forever.
+    client = new DynamoDBClient({
+      requestHandler: { connectionTimeout: 1_000, requestTimeout: limits.storeRequestMs },
+    }),
+  ) {
     this.#client = DynamoDBDocumentClient.from(client);
     this.#limitsTable = limitsTable;
     this.#questionsTable = questionsTable;
