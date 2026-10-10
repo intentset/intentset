@@ -281,7 +281,7 @@ reaches a published package.
 
 - **The shape.** One function, `intentset-ask` (`amplify/functions/ask/`), with reserved concurrency (`limits.ts`,
   the project's Lambda quota is 1000); an API Gateway REST API, `POST /ask`, streaming (`ResponseTransferMode.STREAM`),
-  CORS for intentset.org on the branch and `http://localhost:3004` in a sandbox (`settings.ts`), no CloudWatch role; a
+  CORS for intentset.org and `http://localhost:3004` on the branch, so `pnpm run site:watch` can try the real backend, and the local server only in a sandbox (`settings.ts`), no CloudWatch role; a
   regional WAF with a rate rule per IP on the stage; two tables with TTL, `intentset-ask-limits` (the switch, the
   day's spend, the day's salt, each visitor's count) and `intentset-ask-questions` (scrubbed, 90 days). The function
   has no URL of its own.

@@ -70,9 +70,10 @@ test("the function has reserved concurrency, Node 24, and no URL of its own", ()
   }
 });
 
-test("POST /ask streams through API Gateway, with CORS for the site on the branch and the local server in a sandbox", () => {
+test("POST /ask streams, with CORS for the site and the local server on the branch, the local server only in a sandbox", () => {
   for (const [kind, origin] of [
     ["branch", SITE_ORIGIN],
+    ["branch", LOCAL_ORIGIN],
     ["sandbox", LOCAL_ORIGIN],
   ] as const) {
     const methods = ofType(kind, "AWS::ApiGateway::Method");
@@ -82,6 +83,8 @@ test("POST /ask streams through API Gateway, with CORS for the site on the branc
     assert.equal(integration.TimeoutInMillis, limits.timeoutSeconds * 1000, kind);
     const options = methods.find((m) => m.Properties?.HttpMethod === "OPTIONS");
     assert.ok(JSON.stringify(options).includes(origin), `${kind}: preflight names ${origin}`);
+    if (kind === "sandbox")
+      assert.ok(!JSON.stringify(options).includes(SITE_ORIGIN), "a sandbox never answers the site");
   }
 });
 
