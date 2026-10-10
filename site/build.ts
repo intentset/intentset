@@ -26,6 +26,7 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
+import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
 import { type ExampleRecord, loadRecords, readYaml, splitFrontmatter } from "./records.ts";
 
 const root = resolve(import.meta.dirname, "..");
@@ -52,9 +53,18 @@ export const NOT_FOUND = "404.html";
  */
 export const ASK_URL: string | null = "https://qjlqykgg6e.execute-api.us-east-2.amazonaws.com/v1/ask";
 
-/** What a build may change from the defaults: the chat's address, so a test can build the site against a stub. */
+/**
+ * What a build may change from the defaults: the chat's address, so a test can build the site against a stub, and
+ * the repository whose own model the published knowledge comes from, so a test can build it from a fixture.
+ */
 export interface BuildOptions {
   askUrl?: string | null;
+  modelRoot?: string;
+}
+
+/** What siteInputs may read from elsewhere: the root of the model published knowledge is released from. */
+export interface InputOptions {
+  modelRoot?: string;
 }
 /** Where a page lives once published: the address canonical, og:url and the sitemap give for it. */
 export function canonicalUrl(path: string): string {
@@ -151,11 +161,26 @@ export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
   },
 ];
 
-/** The rail a page sits in: the one listing it, or, for a record of the worked example, Examples. */
-export function railFor(path: string): (typeof RAILS)[number] | undefined {
+/** The published knowledge's index, in the Reference rail once publication releases a record. */
+export const KNOWLEDGE_INDEX: [string, string] = ["Published knowledge", "knowledge/index.html"];
+
+/** The rails of a build: RAILS, with the published knowledge's index in Reference when there is any. */
+export function siteRails(knowledge: readonly PublishedKnowledge[]): typeof RAILS {
+  if (knowledge.length === 0) return RAILS;
+  return RAILS.map((rail) =>
+    rail.title === "Reference" ? { ...rail, items: [...rail.items, KNOWLEDGE_INDEX] } : rail,
+  );
+}
+
+/**
+ * The rail a page sits in: the one listing it, or, for a record of the worked example, Examples, and for a page of
+ * published knowledge, Reference.
+ */
+export function railFor(path: string, rails: typeof RAILS = RAILS): (typeof RAILS)[number] | undefined {
   return (
-    RAILS.find((rail) => rail.items.some(([, href]) => href === path)) ??
-    (path.startsWith("example/") ? RAILS.find((rail) => rail.title === "Examples") : undefined)
+    rails.find((rail) => rail.items.some(([, href]) => href === path)) ??
+    (path.startsWith("example/") ? rails.find((rail) => rail.title === "Examples") : undefined) ??
+    (path.startsWith("knowledge/") ? rails.find((rail) => rail.title === "Reference") : undefined)
   );
 }
 
@@ -275,7 +300,9 @@ export async function build(outDir: string = join(root, "dist"), options: BuildO
   const staging = `${outDir}.staging-${tag}`;
   const previous = `${outDir}.previous-${tag}`;
   try {
-    const written = await writeSite(staging, options.askUrl === undefined ? ASK_URL : options.askUrl);
+    const written = await writeSite(staging, options.askUrl === undefined ? ASK_URL : options.askUrl, {
+      modelRoot: options.modelRoot,
+    });
     const hadPrevious = await rename(outDir, previous).then(
       () => true,
       () => false, // absent on a first build
@@ -295,14 +322,16 @@ export async function build(outDir: string = join(root, "dist"), options: BuildO
 
 /**
  * What the pages are made from: each specification's frontmatter and rendered
- * page, the worked example's records, and the tokens the content pages
- * substitute. The site and the chat's corpus (site/corpus.ts) both read it, so
- * the chat answers from exactly what the site publishes.
+ * page, the worked example's records, the knowledge records publication
+ * releases from this repository's own model (site/knowledge.ts), and the tokens
+ * the content pages substitute. The site and the chat's corpus (site/corpus.ts)
+ * both read it, so the chat answers from exactly what the site publishes.
  */
-export async function siteInputs(): Promise<{
+export async function siteInputs(options: InputOptions = {}): Promise<{
   metas: SpecMeta[];
   specs: Page[];
   records: ExampleRecord[];
+  knowledge: PublishedKnowledge[];
   tokens: Record<string, string>;
 }> {
   const metas = await Promise.all(
@@ -313,6 +342,7 @@ export async function siteInputs(): Promise<{
   );
   const specs = await Promise.all(SPECS.map((spec, i) => specPage(spec, metas[i])));
   const records = await loadRecords(join(root, EXAMPLE_DIR));
+  const knowledge = await publishedKnowledge(options.modelRoot ?? root);
   // The specifications index's cards: each document's title and status line,
   // from its frontmatter. `spec.core.title`, `spec.core.meta`, and so on.
   const specTokens: Record<string, string> = {};
@@ -333,7 +363,7 @@ export async function siteInputs(): Promise<{
     // than written by hand, so renumbering the section cannot break the link.
     coreMarksetSection: sectionAnchor(specs[0], /markset/i),
   };
-  return { metas, specs, records, tokens };
+  return { metas, specs, records, knowledge, tokens };
 }
 
 /** A content page's source with its tokens substituted. Throws on a token left over. */
@@ -346,7 +376,7 @@ export async function contentSource(file: string, tokens: Record<string, string>
   return text;
 }
 
-async function writeSite(out: string, askUrl: string | null): Promise<string[]> {
+async function writeSite(out: string, askUrl: string | null, inputs: InputOptions = {}): Promise<string[]> {
   await mkdir(join(out, "css"), { recursive: true });
   // The chat's panel (site/chat/, SLICE-ASK), only when the site is built with its address.
   if (askUrl !== null) {
@@ -375,7 +405,8 @@ async function writeSite(out: string, askUrl: string | null): Promise<string[]> 
   await writeFile(join(out, "llms.txt"), llmsTxt());
   await writeFile(join(out, "robots.txt"), robotsTxt());
 
-  const { specs, records, tokens } = await siteInputs();
+  const { specs, records, knowledge, tokens } = await siteInputs(inputs);
+  const rails = siteRails(knowledge);
   const pages: Page[] = [
     ...(await Promise.all(
       [...CONTENT_PAGES, ...(askUrl === null ? [] : CHAT_PAGES)].map(([path, file]) => contentPage(path, file, tokens)),
@@ -385,13 +416,15 @@ async function writeSite(out: string, askUrl: string | null): Promise<string[]> 
     await conformancePage(),
     exampleIndex(records),
     ...records.map((record) => recordPage(record, records)),
+    ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
+    ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
   ];
 
   const written: string[] = [];
   for (const page of pages) {
     const file = join(out, page.path);
     await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, shell(page, askUrl));
+    await writeFile(file, shell(page, askUrl, rails));
     written.push(page.path);
   }
   await writeFile(join(out, "sitemap.xml"), sitemapXml(written));
@@ -820,6 +853,53 @@ ${record.body.trim()}
   return renderPage(`example/${record.id}/index.html`, source, join(root, EXAMPLE_DIR, record.file));
 }
 
+/** The address of a published knowledge record's page, relative to the site's root. */
+export function knowledgePath(id: string): string {
+  return `knowledge/${id}/index.html`;
+}
+
+/**
+ * The published knowledge: every record a public publication releases from this repository's own model, listed.
+ * Built only when there is one.
+ */
+function knowledgeIndex(knowledge: PublishedKnowledge[]): Page {
+  const items = knowledge.map(({ record }) => `- [${md(record.title)}](${record.id}/index.html) · \`${record.id}\``);
+  const source = `---
+markset: 0
+---
+
+# Published knowledge
+
+Guidance about Intentset, kept as knowledge records in the repository's own model beside the records it explains, and published here only after a person has reviewed it against them. Publication denies by default: a draft, or a record whose sources changed after its review, is not on this page.
+
+${items.join("\n")}
+`;
+  return renderPage("knowledge/index.html", source, join(root, "product", "model"));
+}
+
+/** One published knowledge record: its metadata as a card, then the body publication released, as a record page is. */
+function knowledgePage(entry: PublishedKnowledge, knowledge: PublishedKnowledge[]): Page {
+  const ids = new Set(knowledge.map(({ record }) => record.id));
+  const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/index.html)` : `\`${id}\``);
+  const source = `---
+markset: 0
+---
+
+{.eyebrow}
+Published knowledge
+
+:::card{.record}
+${recordFields(entry.record, ref)}
+:::
+
+${entry.body}
+
+{.site-back}
+[Back to the published knowledge](../index.html)
+`;
+  return renderPage(knowledgePath(entry.record.id), source, entry.path);
+}
+
 /** `governedBy` reads as "Governed by". */
 function relationLabel(name: string): string {
   return capitalize(name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase());
@@ -850,11 +930,11 @@ function fromRoot(html: string, rootPath: string): string {
   );
 }
 
-function shell(page: Page, askUrl: string | null = null): string {
+function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = RAILS): string {
   const depth = page.path.split("/").length - 1;
   const notFound = page.path === NOT_FOUND;
   const rel = notFound ? new URL(CANONICAL).pathname : depth === 0 ? "./" : "../".repeat(depth);
-  const section = railFor(page.path);
+  const section = railFor(page.path, rails);
   const nav = NAV.map(([label, href]) => {
     // A bar item is current for its whole section, not just its own page, or
     // the bar goes blank the moment a reader follows the rail into one.

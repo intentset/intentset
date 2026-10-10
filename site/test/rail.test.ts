@@ -11,10 +11,13 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, normalize } from "node:path";
 import { after, test } from "node:test";
-import { ASK_URL, build, CHAT_PAGES, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor } from "../build.ts";
+import { ASK_URL, build, CHAT_PAGES, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor, siteRails } from "../build.ts";
+import { publishedKnowledge } from "../knowledge.ts";
 
 const dist = await mkdtemp(join(tmpdir(), "intentset-rail-"));
 const pages = await build(dist);
+// The rails as this build drew them: Reference lists the published knowledge once publication releases any.
+const rails = siteRails(await publishedKnowledge(join(import.meta.dirname, "..", "..")));
 const html = new Map<string, string>();
 for (const page of pages) html.set(page, await readFile(join(dist, page), "utf8"));
 after(async () => {
@@ -64,22 +67,23 @@ test("every URL the site had before the bar changed still answers", () => {
   }
 });
 
-test("every page is named by the bar, a rail or the footer's row, or is a record the worked example lists", () => {
+test("every page is named by the bar, a rail or the footer's row, or is a record the worked example or the published knowledge lists", () => {
   // The privacy page is in the footer's row once the chat is launched.
   const chat = ASK_URL === null ? [] : CHAT_PAGES.map(([path]): [string, string] => ["", path]);
-  const named = new Set([...NAV, ...FOOTER_LINKS, ...chat, ...RAILS.flatMap((r) => r.items)].map(([, href]) => href));
+  const named = new Set([...NAV, ...FOOTER_LINKS, ...chat, ...rails.flatMap((r) => r.items)].map(([, href]) => href));
   const examples = linksFrom("example/index.html");
+  const knowledge = linksFrom("knowledge/index.html");
   for (const page of pages) {
     // Home is the wordmark, on every page.
     if (page === NOT_FOUND || page === "index.html") continue;
     if (named.has(page)) continue;
     assert.ok(
-      page.startsWith("example/") && examples.has(page),
+      (page.startsWith("example/") && examples.has(page)) || (page.startsWith("knowledge/") && knowledge.has(page)),
       `${page} is reachable only from a sentence: give it a place in a rail`,
     );
   }
   // Every rail entry is a page that was built.
-  for (const { title, items } of RAILS) {
+  for (const { title, items } of rails) {
     for (const [label, href] of items) assert.ok(html.has(href), `${title} rail: ${label} (${href}) was not built`);
   }
 });
@@ -104,7 +108,7 @@ test("every page is reachable from the home page, and none of them is far", () =
 
 test("a page in a section carries its section's rail, marks itself once, and the bar marks the section", () => {
   for (const page of pages) {
-    const section = railFor(page);
+    const section = railFor(page, rails);
     const doc = html.get(page) ?? "";
     const bar = doc.slice(doc.indexOf('<nav class="site-nav"'), doc.indexOf("</nav>"));
     const current = [...bar.matchAll(/<a [^>]*aria-current="page"[^>]*>([^<]+)<\/a>/g)].map((m) => m[1]);
