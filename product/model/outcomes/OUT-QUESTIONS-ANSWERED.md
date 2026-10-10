@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: INT-LEARN-YOUR-WAY
 ---
 
@@ -18,7 +18,7 @@ intentset:
 
 ## Measure
 
-Not measured yet, and no measure record exists. A candidate is the share of stored questions answered with at least one cited source, against those the documentation did not answer, read from the questions the chat keeps. No evidence source is registered for it yet.
+Judged by MEAS-QUESTIONS-ANSWERED: of the questions the chat answered with a cited page or without one, the share that cited at least one, read monthly by the questions report from the questions the chat keeps (evidence source `chat-questions`). The baseline is the first 30 days after the launch on 2026-10-09, and the target is set from it.
 
 ## Sources
 

@@ -18,5 +18,7 @@ editions:
   - hosted
   - open-source
 flags: []
-evidenceSources: []
+evidenceSources:
+  # The questions the chat on intentset.org keeps for 90 days, read by the questions report (MEAS-QUESTIONS-ANSWERED).
+  - chat-questions
 resources: []

@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: OUT-DOCS-IMPROVE
 ---
 
@@ -18,7 +18,7 @@ intentset:
 
 ## Overview
 
-The chat keeps each question and its answer for a limited time, scrubbed of anything that looks personal, so the maintainers can see what visitors look for and where the documentation falls short. Gaps become draft knowledge records, which a person reviews before anything is published.
+The chat keeps each question and its answer for a limited time, scrubbed of anything that looks personal, so the maintainers can see what visitors look for and where the documentation falls short. The questions report reads them back; its gaps brief hands an agent the questions the documentation did not answer, and the agent drafts knowledge records from what is already published, which a person reviews before anything is published. MEAS-QUESTIONS-ANSWERED reads, from the same report, how often the documentation answered.
 
 ## Sources
 
