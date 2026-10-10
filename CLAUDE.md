@@ -63,7 +63,9 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
   product it models is Intentset itself.
 - **Intentset's own model** (`product/model/`, decided 2026-10-09) describes this repository's packages: what each
   promises, which package delivers it, and the design invariants as rules. It is not an example: no fixture, test or
-  site page reads it, and the example's records never link into it. "Intentset's own model" below says how it is
+  site page reads it, and the example's records never link into it. The one exception is published knowledge
+  (2026-10-10): a knowledge record in it that `intentset publish` releases to the public gets a page on the site and a
+  place in the chat's corpus, through `site/knowledge.ts`; nothing else in it reaches either. "Intentset's own model" below says how it is
   kept.
 - The adoption log (`site/content/pilot.md`, served at `/pilot/`) names Streamlane and Driftline by Gary's decision
   of 2026-10-06. It shows Intentset's side: records, check output and counts, each with its source and date, and the
@@ -155,11 +157,12 @@ packages/
   conformance-suite/  published cases, consumer fixtures and schemas as data
   mcp/                M5: read-only context server
 site/                 intentset.org: build.ts (pages, rails, sitemap, 404, /guide.md, /llms.txt, schemas under /spec/),
-                      content/*.md, site.css over markset.css, serve.ts for site:watch, corpus.ts (the chat's corpus)
+                      content/*.md, site.css over markset.css, serve.ts for site:watch, corpus.ts (the chat's corpus),
+                      knowledge.ts (the knowledge `intentset publish` releases from product/model/)
 test/                 tooling.test.ts (the repository's shape), codes.test.ts (spec, suite and code agree on codes),
                       harness.test.ts, consumer/smoke.ts (install the packed or published packages and use them)
 docs/                 implementation-plan.md, decisions/, requirements/ (frozen handoff), pilot-findings.md, consumers.md
-amplify/              the chat's backend (SLICE-ASK): backend.ts, settings.ts, functions/ask/, test/
+amplify/              the chat's backend (SLICE-ASK): backend.ts, settings.ts, functions/ask/, test/, eval/ (the chat's eval)
 CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICENSE
 ```
 
@@ -239,7 +242,15 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   a stub of `POST /ask`, at 390 and 1440 pixels in both schemes.
 - **The chat's corpus is the site** (2026-10-09): `site/corpus.ts` builds what the chat on intentset.org answers from
   out of `siteInputs()`, the same sources, tokens and addresses the pages are built from: every content page but the
-  404, the specifications, the agent guide and the example's records, each with its canonical URL. It is written to
+  404, the specifications, the agent guide, the example's records and published knowledge, each with its canonical
+  URL. **Published knowledge** (2026-10-10) is every knowledge record in this repository's own model that
+  `intentset publish` releases: `site/knowledge.ts` runs the CLI's own `publish` for a public projection, once per
+  product record and per audience, release, role and edition the registries declare, with no flags, and takes the
+  union; it decides nothing itself, so a draft, retired, non-public or unreviewed record, or one whose sources changed
+  since its review, never reaches the site or the chat (RULE-ASK-PUBLISHED-ONLY). Each released record gets a page at
+  `/knowledge/<ID>/`, rendered as an example record is, and `/knowledge/` lists them in the Reference rail; with none
+  released (the case until a maintainer approves one), neither exists. A model that does not validate fails the
+  build. `site/test/knowledge.test.ts` holds it against a fixture model with an approved, a draft and a stale record. It is written to
   `amplify/functions/ask/corpus.json` by `pnpm run corpus` and never committed; the backend's deploy builds it from
   the commit it deploys. The whole corpus is sent, cached, with every question, so `site/test/corpus.test.ts` holds it
   under `TOKEN_BUDGET` (about 46k of 100k estimated tokens at first). A new page joins it by joining the site.
@@ -332,6 +343,16 @@ reaches a published package.
   typecheck` builds it first, and the synth test builds it when it is missing.
 - **Tests**: `amplify/test/*.test.ts` run with `pnpm test`, the synth test synthesizing the backend twice, as a
   sandbox and as the branch, reading no account.
+- **The eval** (`amplify/eval/`, 2026-10-10): `questions.json` is about twenty fixed questions, each with the sources
+  a right answer cites (any of them) or the outcome it records, covering the concepts, the command, the
+  specifications, the VSA check, the drift gate, an off-topic question, a contact request, a question the documents
+  do not answer and a prompt injection. `pnpm run chat:eval` builds the corpus and runs every question through `ask()`
+  and `bedrockModel()` against Bedrock with the `coral-reef` profile and an in-memory store (nothing is written to
+  DynamoDB, nothing counts against the day's budget), prints a pass/fail table and the estimated cost (about $0.90 a
+  run on Sonnet 4.6 when the prompt changed and the cache is written; about $0.50 when it is warm), and exits 1 on any
+  failure. **Run it before any change to the prompt, the model or `limits.ts`'s model, and put its table and cost in
+  the pull request.** Change an expectation only when the expectation was wrong, never to pass a wrong answer.
+  `amplify/test/eval.test.ts` holds the file's shape, its coverage, and that every expected source is in the corpus.
 - **An agent's sandbox**: `pnpm run sandbox` deploys `intentset-agent` with the `coral-reef` profile; exercise it, then
   delete it with `pnpm exec ampx sandbox delete --identifier intentset-agent --profile coral-reef --yes`, check that no
   `/aws/lambda/amplify-intentset*` log group, `intentset-ask-*` table or `intentset-ask-*` web ACL is left, and move

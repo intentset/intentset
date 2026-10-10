@@ -26,6 +26,7 @@
     "site:watch": "node --conditions=intentset-source site/serve.ts",
     "social-card": "node --conditions=intentset-source site/social-card.ts",
     "corpus": "node --conditions=intentset-source site/corpus.ts",
+    "chat:eval": "node --conditions=intentset-source site/corpus.ts && node --conditions=intentset-source amplify/eval/run.ts",
     "e2e": "playwright test",
     "release": "pnpm run build && pnpm --filter @intentset/core --filter @intentset/markset-adapter --filter @intentset/architecture --filter @intentset/verification --filter @intentset/publisher --filter @intentset/help --filter @intentset/atlas --filter @intentset/mcp --filter @intentset/conformance-suite --filter @intentset/cli publish",
     "smoke:packed": "pnpm run build && node --conditions=intentset-source test/consumer/smoke.ts --packed",

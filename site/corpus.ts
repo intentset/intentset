@@ -3,11 +3,14 @@
  * from the same sources and the same commit as the site (RULE-ASK-PUBLISHED-ONLY).
  *
  * One document per published page: the content pages (the chat's privacy page too), the specifications, the
- * agent guide and each record of the worked example, each with the address the
- * site serves it at, so an answer can link the page it came from. The text is
- * the page's Markset source after the site's tokens are substituted, without
- * its frontmatter, except for the example's records, which keep theirs because
- * the record format is what a reader asks about.
+ * agent guide, each record of the worked example, and each knowledge record of
+ * this repository's own model that publication releases to the public
+ * (site/knowledge.ts: `intentset publish` decides, and a draft never enters),
+ * each with the address the site serves it at, so an answer can link the page
+ * it came from. The text is the page's Markset source after the site's tokens
+ * are substituted, without its frontmatter, except for the example's records,
+ * which keep theirs because the record format is what a reader asks about; a
+ * knowledge record's text is the body its publication wrote.
  *
  * Usage: node --conditions=intentset-source site/corpus.ts [--out <file>]
  * (default amplify/functions/ask/corpus.json, which is not committed: the
@@ -21,8 +24,10 @@ import {
   CHAT_PAGES,
   CONTENT_PAGES,
   canonicalUrl,
+  type InputOptions,
   contentSource,
   GUIDE_SCOPE,
+  knowledgePath,
   NOT_FOUND,
   SPECS,
   siteGuide,
@@ -43,7 +48,7 @@ export const DEFAULT_OUT = join(root, "amplify", "functions", "ask", "corpus.jso
  */
 export const TOKEN_BUDGET = 100_000;
 
-export type CorpusKind = "page" | "specification" | "guide" | "example";
+export type CorpusKind = "page" | "specification" | "guide" | "example" | "knowledge";
 
 export interface CorpusDocument {
   url: string;
@@ -64,8 +69,8 @@ export interface Corpus {
 }
 
 /** Build the corpus. Deterministic: the same commit gives the same bytes. */
-export async function buildCorpus(): Promise<Corpus> {
-  const { metas, records, tokens } = await siteInputs();
+export async function buildCorpus(options: InputOptions = {}): Promise<Corpus> {
+  const { metas, records, knowledge, tokens } = await siteInputs(options);
   const documents: CorpusDocument[] = [];
 
   for (const [path, file] of [...CONTENT_PAGES, ...CHAT_PAGES]) {
@@ -92,6 +97,9 @@ export async function buildCorpus(): Promise<Corpus> {
     const file = `examples/scheduling/${record.file}`;
     const text = await readFile(join(root, file), "utf8");
     documents.push(doc(`example/${record.id}/index.html`, `${record.id}: ${record.title}`, "example", file, text));
+  }
+  for (const { record, body } of knowledge) {
+    documents.push(doc(knowledgePath(record.id), record.title, "knowledge", record.file, body));
   }
 
   documents.sort((a, b) => (a.url < b.url ? -1 : a.url > b.url ? 1 : 0));
