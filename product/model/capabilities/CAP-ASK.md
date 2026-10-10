@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: OUT-QUESTIONS-ANSWERED
 ---
 
@@ -18,7 +18,7 @@ intentset:
 
 ## Overview
 
-A visitor to intentset.org asks a question in a panel beside the page they are reading, and gets an answer streamed back, drawn only from the published specifications, the site's pages and reviewed knowledge, with each claim linked to its source. The answer comes from Claude Opus 5.5 on Amazon Bedrock, called by a function behind an API Gateway API and a web application firewall in the coral-reef AWS project. The documentation works the same without the panel.
+A visitor to intentset.org asks a question in a panel beside the page they are reading, and gets an answer streamed back, drawn only from the published specifications, the site's pages and reviewed knowledge, with each claim linked to its source. The answer comes from Claude on Amazon Bedrock (Sonnet 4.6 until Anthropic approves the account for Opus 5.5), called by a function behind an API Gateway API and a web application firewall in the coral-reef AWS project. The documentation works the same without the panel.
 
 ## Sources
 

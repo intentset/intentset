@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ask } from "../functions/ask/answer.ts";
-import { getInvolvedUrl, limits, retentionDays } from "../functions/ask/limits.ts";
+import { getInvolvedUrl, limits, pricePerMillion, retentionDays } from "../functions/ask/limits.ts";
 import { SYSTEM } from "../functions/ask/prompt.ts";
 import { body, collect, corpus, deps, stubModel } from "./fixtures.ts";
 
@@ -128,8 +128,11 @@ test("a visitor is counted by a salted hash of the IP, refused past the day's li
 test("the day's spend grows by each answer's estimated cost", async () => {
   const d = deps();
   await ask(body("Hello?"), "203.0.113.7", d, () => {});
-  // 100 input × $4 + 200 output × $20 + 40,000 cache reads × $0.20, per million tokens, in micro-dollars.
-  assert.equal(d.store.items.get("budget#2026-10-09")?.value, 100 * 4 + 200 * 20 + 40_000 * 0.2);
+  // Tokens × the price per million tokens is micro-dollars.
+  assert.equal(
+    d.store.items.get("budget#2026-10-09")?.value,
+    100 * pricePerMillion.input + 200 * pricePerMillion.output + 40_000 * pricePerMillion.cacheRead,
+  );
 });
 
 test("BEH-ASK-KEEP-QUESTION: the question and answer are kept scrubbed, with sources, tokens and corpus, for the retention period", async () => {
@@ -170,7 +173,7 @@ test("each answer's estimated cost, and each refusal for the budget, is a metric
   assert.deepEqual(
     metrics.map((entry) => [entry._aws.CloudWatchMetrics[0].Metrics[0].Name, entry.CostMicros ?? entry.BudgetRefused]),
     [
-      ["CostMicros", 100 * 4 + 200 * 20 + 40_000 * 0.2],
+      ["CostMicros", 100 * pricePerMillion.input + 200 * pricePerMillion.output + 40_000 * pricePerMillion.cacheRead],
       ["BudgetRefused", 1],
     ],
   );

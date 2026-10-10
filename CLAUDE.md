@@ -285,8 +285,10 @@ reaches a published package.
   regional WAF with a rate rule per IP on the stage; two tables with TTL, `intentset-ask-limits` (the switch, the
   day's spend, the day's salt, each visitor's count) and `intentset-ask-questions` (scrubbed, 90 days). The function
   has no URL of its own.
-- **The model.** Claude Opus 5.5 through `us.anthropic.claude-opus-5-5`, effort `low`, with the SDK's
-  refusal-fallback middleware to Opus 4.8; the corpus goes as cited document blocks, the last one cached for an hour,
+- **The model.** Claude Sonnet 4.6 through `us.anthropic.claude-sonnet-4-6`, effort `low`, no fallback, until
+  Anthropic approves the account's use case for Opus 5.5 on Bedrock (submitted 2026-10-09; until then Bedrock answers
+  Opus 4.7 and later with "not available for this account"). Then `limits.ts` names Opus 5.5 with the SDK's
+  refusal-fallback middleware to Opus 4.8, and Opus 5.5's prices; the corpus goes as cited document blocks, the last one cached for an hour,
   after a system prompt with no date in it. The profile routes to us-east-1, us-east-2 and us-west-2; the SCP
   `p-mlfzkjk2` opens us-west-2 to Bedrock only through an inference profile, and the function's grants name the two
   profiles and their foundation models in those three Regions only.

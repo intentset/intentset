@@ -24,14 +24,14 @@ export type Model = (
 ) => Promise<ModelResult>;
 
 /**
- * Claude Opus 5.5 on Bedrock, through the US cross-region inference profile, at low effort, streaming. When Opus 5.5
- * declines on a safety ground, the SDK's refusal-fallback middleware retries on Opus 4.8 inside the same stream; the
- * answer then carries a `fallback` block, which goes back with the next question like any other.
+ * The model in limits.ts on Bedrock, through the US cross-region inference profile, at low effort, streaming. When it
+ * has a fallback and declines on a safety ground, the SDK's refusal-fallback middleware retries on the fallback inside
+ * the same stream; the answer then carries a `fallback` block, which goes back with the next question like any other.
  */
 export function bedrockModel(): Model {
   const client = new AnthropicBedrock({
     awsRegion: model.region,
-    middleware: [betaRefusalFallbackMiddleware([{ model: model.fallbackId }])],
+    middleware: model.fallbackId ? [betaRefusalFallbackMiddleware([{ model: model.fallbackId }])] : [],
   });
   return async ({ system, messages }, onEvent) => {
     const stream = client.beta.messages.stream({
