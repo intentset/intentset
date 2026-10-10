@@ -55,6 +55,14 @@
 .chat-a p, .chat-a ul, .chat-a ol { margin: 0 0 0.6rem; }
 .chat-a ul, .chat-a ol { padding-left: 1.25rem; }
 .chat-a code { font-family: var(--ms-font-mono); font-size: 0.875em; overflow-wrap: anywhere; }
+.chat-a h3 { margin: 0.9rem 0 0.4rem; font-size: 1rem; }
+.chat-a pre { margin: 0 0 0.6rem; padding: 0.6rem 0.75rem; overflow-x: auto; border-radius: var(--ms-radius); background: var(--ms-surface); }
+.chat-a pre code { overflow-wrap: normal; white-space: pre; }
+/* A wide table scrolls inside the answer rather than widening the panel. */
+.chat-table { margin: 0 0 0.6rem; overflow-x: auto; }
+.chat-table table { border-collapse: collapse; font-size: 0.875rem; }
+.chat-table th, .chat-table td { padding: 0.35rem 0.6rem; border: 1px solid var(--ms-border); text-align: left; vertical-align: top; }
+.chat-table th { background: var(--ms-surface); }
 .chat-sources, .chat-pending { font-size: 0.8125rem; color: var(--ms-fg-muted); }
 .chat-message { padding: 0.5rem 0.75rem; border-left: 3px solid var(--site-focus); background: var(--ms-surface); border-radius: 0 var(--ms-radius) var(--ms-radius) 0; }
 .chat-form { display: flex; gap: 0.5rem; align-items: flex-end; padding: 0.75rem 1rem; border-top: 1px solid var(--ms-border); }
