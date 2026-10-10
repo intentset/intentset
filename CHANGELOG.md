@@ -21,6 +21,10 @@ new one.
   `ce8f27a986463815fee6c81d9b66efd64cb03193f2fa1b20882f7fa0c435c9a6`: Core's own note says a change to any baseline
   byte changes it. Core §1's illustrative frontmatter carries the new title, which is why Core's revision is
   2026-10-07; the example is informative and no rule moved.
+- **The agent guide says where the `Intentset-Unchanged` trailer goes**: in the commit message's last paragraph,
+  beside any other trailer. Git reads trailers only from there, so a trailer in a paragraph of its own above
+  `Co-Authored-By` was silently not read and the drift gate failed the commit. `intentset init --agents` and
+  `intentset guide` write the new sentence.
 - **A page for the person running the adoption**, `/adopt/`, in the Start rail between How it works and the agent
   guide. The Start page models one capability; this page is for the rest of a product, run by one person through many
   agents working unattended: the three boundaries ("sandbox" names all of them) that have to be in place before
