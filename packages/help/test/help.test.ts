@@ -79,7 +79,7 @@ function helpFromPublisher(): Help {
   return read.help;
 }
 
-test("the file the publisher writes reads back, as text and as bytes, and carries the tips", () => {
+test("BEH-HELP-TIPS: the file the publisher writes reads back, as text and as bytes, and carries the tips", () => {
   const help = helpFromPublisher();
   assert.equal(help.profile, HELP_PROFILE);
   assert.deepEqual(Object.keys(help.tips), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
@@ -112,7 +112,7 @@ test("tipFor and helpForPage: the tip, its article, each ID once, and what has n
   assert.deepEqual(page.missing, ["CAP-ASMT-ASSIGN"]);
 });
 
-test("a file with any problem is refused whole, and every problem is named", () => {
+test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem is named", () => {
   const help = helpFromPublisher();
   const broken = (edit: (value: Record<string, unknown>) => void) => {
     const value = JSON.parse(JSON.stringify(help)) as Record<string, unknown>;
@@ -176,7 +176,7 @@ function root(elements: Fake[], attribute = BEHAVIOR_ATTRIBUTE) {
   };
 }
 
-test("bindTips puts each tip on its control, keeps an existing title, and reports the IDs with no tip", () => {
+test("BEH-HELP-TIPS: bindTips puts each tip on its control, keeps an existing title, and reports the IDs with no tip", () => {
   const help = helpFromPublisher();
   const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
   const titled = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", title: "Schedule" });

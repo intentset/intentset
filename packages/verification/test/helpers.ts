@@ -19,8 +19,13 @@ import {
   readRegistries,
   validate,
 } from "@intentset/core";
-import { CONFIG_PATH, expandCase, REGISTRIES_PATH } from "../../conformance/src/fixtures.ts";
-import type { ConformanceCase, ExpandedCase } from "../../conformance/src/types.ts";
+import {
+  CONFIG_PATH,
+  type ConformanceCase,
+  type ExpandedCase,
+  expandCase,
+  REGISTRIES_PATH,
+} from "../../conformance/src/harness.ts";
 import type { RunRecord } from "../src/index.ts";
 
 export type { ConformanceCase, ExpandedCase };

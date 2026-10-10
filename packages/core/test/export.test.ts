@@ -153,7 +153,7 @@ function withRestrictedRule() {
   );
 }
 
-test("a restricted artifact is withheld by default: absent, unlinked, counted, and still in the graph hash", () => {
+test("BEH-EXPORT: a restricted artifact is withheld by default: absent, unlinked, counted, and still in the graph hash", () => {
   const result = validate(withRestrictedRule(), registries);
   const envelope = exportGraph(result, registries, META);
   assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);

@@ -18,7 +18,7 @@ intentset:
 
 ## Measure
 
-Not measured yet, and no measure record exists. The adoption log on intentset.org records what the checks caught in Streamlane and Driftline, which is evidence of use rather than a measure.
+Judged by MEAS-REVIEW-THE-PRODUCT: the share of reviewers in repositories that keep a model who say they judge a change from its records, from a survey that does not exist yet. Not measured yet. The adoption log on intentset.org records what the checks caught in Streamlane and Driftline, which is evidence of use rather than a measure.
 
 ## Sources
 

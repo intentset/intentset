@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, test } from "node:test";
-import { type Schema, validateSchema } from "../../conformance/src/schema.ts";
+import { type Schema, validateSchema } from "../../conformance/src/harness.ts";
 import {
   classifyEvidence,
   deriveEvidenceId,
@@ -223,7 +223,7 @@ describe("selectorMatches", () => {
   });
 });
 
-describe("parseNodeTap", () => {
+describe("BEH-EVIDENCE-IMPORT: parseNodeTap", () => {
   test("reads full nested titles and maps each result", () => {
     const parsed = parseNodeTap(NODE_TAP);
     assert.deepEqual(
@@ -271,7 +271,7 @@ describe("parseNodeTap", () => {
   });
 });
 
-describe("parseVitestJson", () => {
+describe("BEH-EVIDENCE-IMPORT: parseVitestJson", () => {
   test("maps statuses, tells assertion failures from errors, and reports files that never ran", () => {
     const parsed = parseVitestJson(VITEST_JSON);
     assert.deepEqual(
@@ -296,7 +296,7 @@ describe("parseVitestJson", () => {
   });
 });
 
-describe("toRunRecords", () => {
+describe("BEH-EVIDENCE-IMPORT: toRunRecords", () => {
   test("one record per verification, worst result, counted rationale, unmatched selectors listed", () => {
     const { records, unmatched } = toRunRecords(parseNodeTap(NODE_TAP), OPTIONS);
     assert.deepEqual(unmatched, ["nothing-has-this"]);

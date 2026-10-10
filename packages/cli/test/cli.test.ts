@@ -3,10 +3,10 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { validateSchema } from "../../conformance/src/schema.ts";
+import { validateSchema } from "../../conformance/src/harness.ts";
 import { edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
 
-test("init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
+test("BEH-AGENT-GUIDE: init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
   const dir = temp(t);
   const init = await run(dir, "init");
   assert.equal(init.code, 0, init.err);
@@ -23,7 +23,7 @@ test("init writes a config and empty registries, and validate passes on the empt
   assert.equal(validate.out, "0 artifacts, 0 errors, 0 warnings (level L1, scope: product/**/*.md)\n");
 });
 
-test("init refuses to overwrite, and writes nothing when it refuses", async (t) => {
+test("BEH-AGENT-GUIDE: init refuses to overwrite, and writes nothing when it refuses", async (t) => {
   const dir = temp(t);
   mkdirSync(join(dir, ".intentset"));
   writeFileSync(join(dir, ".intentset", "registries.yaml"), "owners: [mine]\n");
@@ -40,7 +40,7 @@ test("init refuses to overwrite, and writes nothing when it refuses", async (t) 
   assert.match(again.err, /config\.yaml, \.intentset\/registries\.yaml/);
 });
 
-test("init --agents writes only the guide, for the scope the config names, and never over an existing one", async (t) => {
+test("BEH-AGENT-GUIDE: init --agents writes only the guide, for the scope the config names, and never over an existing one", async (t) => {
   const dir = temp(t);
   mkdirSync(join(dir, ".intentset"));
   writeFileSync(
@@ -61,7 +61,7 @@ test("init --agents writes only the guide, for the scope the config names, and n
   assert.equal((await run(dir, "init", "--agents", "--example")).code, 2);
 });
 
-test("guide prints the guide init --agents writes, for the config's scope, and writes nothing", async (t) => {
+test("BEH-AGENT-GUIDE: guide prints the guide init --agents writes, for the config's scope, and writes nothing", async (t) => {
   const dir = temp(t);
   mkdirSync(join(dir, ".intentset"));
   writeFileSync(
@@ -146,7 +146,7 @@ test("init --example then validate: 15 artifacts and no diagnostics", async (t) 
   assert.equal(validate.err, "");
 });
 
-test("a broken record exits 1 with its code, location, artifact, fix and field", async (t) => {
+test("BEH-VALIDATE-REPORTS: a broken record exits 1 with its code, location, artifact, fix and field", async (t) => {
   const dir = await example(t);
   edit(dir, "BEH-ASMT-SCHEDULE", /- RULE-ASMT-AUTH$/m, "- RULE-ASMT-MISSING");
   const validate = await run(dir, "validate");
@@ -160,7 +160,7 @@ test("a broken record exits 1 with its code, location, artifact, fix and field",
   assert.match(validate.out, /15 artifacts, 1 error, 1 warning \(level L1, scope: product\/\*\*\/\*\.md\)\n$/);
 });
 
-test("Markset's own diagnostics are marked as Markset's in text and keep origin syntax in JSON", async (t) => {
+test("BEH-MARKSET-CARRIER: Markset's own diagnostics are marked as Markset's in text and keep origin syntax in JSON", async (t) => {
   const dir = await example(t);
   writeFileSync(
     RECORD(dir, "RULE-ASMT-AUTH"),
@@ -178,7 +178,7 @@ test("Markset's own diagnostics are marked as Markset's in text and keep origin 
   assert.equal(plain.code, 0, "the plain carrier has no grammar to fail");
 });
 
-test("no configuration anywhere above exits 2 and names init", async (t) => {
+test("BEH-VALIDATE-REPORTS: no configuration anywhere above exits 2 and names init", async (t) => {
   const dir = temp(t);
   const validate = await run(dir, "validate");
   assert.equal(validate.code, 2);
@@ -236,7 +236,7 @@ test("--version prints the tool and its version, the one a report names, and exi
   assert.match(both.out, /--version/);
 });
 
-test("invocation errors exit 2 before reading anything", async (t) => {
+test("BEH-VALIDATE-REPORTS: invocation errors exit 2 before reading anything", async (t) => {
   const dir = await example(t);
   const cases: [string[], RegExp][] = [
     [["validate", "--bogus"], /Unknown option '--bogus'/],
@@ -268,7 +268,7 @@ test("invocation errors exit 2 before reading anything", async (t) => {
   }
 });
 
-test("validate --json parses, counts warnings apart from errors, and is the same bytes twice", async (t) => {
+test("BEH-VALIDATE-REPORTS: validate --json parses, counts warnings apart from errors, and is the same bytes twice", async (t) => {
   const dir = await example(t);
   edit(dir, "BEH-ASMT-SCHEDULE", /- RULE-ASMT-AUTH$/m, "- RULE-ASMT-MISSING");
   const first = await run(dir, "validate", "--json");
@@ -294,7 +294,7 @@ test("validate --json parses, counts warnings apart from errors, and is the same
   assert.ok(first.out.startsWith('{\n  "commit"'), "two-space indent");
 });
 
-test("--carrier plain and markset give identical validate output on the example", async (t) => {
+test("BEH-MARKSET-CARRIER: --carrier plain and markset give identical validate output on the example", async (t) => {
   const dir = await example(t);
   for (const format of [[], ["--json"]]) {
     const markset = await run(dir, "validate", ...format);
@@ -304,7 +304,7 @@ test("--carrier plain and markset give identical validate output on the example"
   }
 });
 
-test("graph prints an envelope that matches spec/export.schema.json", async (t) => {
+test("BEH-EXPORT: graph prints an envelope that matches spec/export.schema.json", async (t) => {
   const dir = await example(t);
   const graph = await run(dir, "graph", "--format", "json");
   assert.equal(graph.code, 0, graph.err);
@@ -345,7 +345,7 @@ test("graph prints an envelope that matches spec/export.schema.json", async (t) 
   assert.equal(unknownProduct.code, 2);
 });
 
-test("graph on a failing repository still exports, marked fail, and exits 1", async (t) => {
+test("BEH-EXPORT: graph on a failing repository still exports, marked fail, and exits 1", async (t) => {
   const dir = await example(t);
   edit(dir, "BEH-ASMT-SCHEDULE", /- RULE-ASMT-AUTH$/m, "- RULE-ASMT-MISSING");
   const graph = await run(dir, "graph");
@@ -377,7 +377,7 @@ test("graph --out writes that one file and refuses to write over a file the repo
   assert.equal(readFileSync(record, "utf8"), bytes);
 });
 
-test("impact BEH-ASMT-SCHEDULE lists the slice, the verification and the knowledge, with snapshot and caveat", async (t) => {
+test("BEH-IMPACT: impact BEH-ASMT-SCHEDULE lists the slice, the verification and the knowledge, with snapshot and caveat", async (t) => {
   const dir = await example(t);
   const impact = await run(dir, "impact", "BEH-ASMT-SCHEDULE");
   assert.equal(impact.code, 0, impact.err);
@@ -403,7 +403,7 @@ test("impact BEH-ASMT-SCHEDULE lists the slice, the verification and the knowled
   assert.match(report.snapshot.graphHash, /^[0-9a-f]{64}$/);
 });
 
-test("impact of a rule reaches downstream candidates with multi-step paths", async (t) => {
+test("BEH-IMPACT: impact of a rule reaches downstream candidates with multi-step paths", async (t) => {
   const dir = await example(t);
   const impact = await run(dir, "impact", "RULE-ASMT-FUTURE");
   assert.equal(impact.code, 0);
@@ -411,7 +411,7 @@ test("impact of a rule reaches downstream candidates with multi-step paths", asy
   assert.match(candidates, /SLICE-ASMT-SCHEDULE --implements--> BEH-ASMT-SCHEDULE --governedBy--> RULE-ASMT-FUTURE/);
 });
 
-test("impact and context of an unknown ID exit 1 with a CORE003", async (t) => {
+test("BEH-IMPACT, BEH-CONTEXT: impact and context of an unknown ID exit 1 with a CORE003", async (t) => {
   const dir = await example(t);
   for (const command of ["impact", "context"]) {
     const result = await run(dir, command, "BEH-NOPE");
@@ -422,7 +422,7 @@ test("impact and context of an unknown ID exit 1 with a CORE003", async (t) => {
   }
 });
 
-test("context BEH-ASMT-SCHEDULE holds the owning slice, both rules and the rest, each with its path", async (t) => {
+test("BEH-CONTEXT: context BEH-ASMT-SCHEDULE holds the owning slice, both rules and the rest, each with its path", async (t) => {
   const dir = await example(t);
   const context = await run(dir, "context", "BEH-ASMT-SCHEDULE");
   assert.equal(context.code, 0, context.err);
@@ -460,7 +460,7 @@ test("context BEH-ASMT-SCHEDULE holds the owning slice, both rules and the rest,
   assert.match(context.out, /Included: 13 artifacts\. Withheld: 0 restricted\./);
 });
 
-test("context from a rule, a slice and a capability reaches the same slice; other types get their neighbours", async (t) => {
+test("BEH-CONTEXT: context from a rule, a slice and a capability reaches the same slice; other types get their neighbours", async (t) => {
   const dir = await example(t);
   for (const id of ["RULE-ASMT-AUTH", "SLICE-ASMT-SCHEDULE", "CAP-ASMT-ASSIGN"]) {
     const context = JSON.parse((await run(dir, "context", id, "--json")).out);
@@ -477,7 +477,7 @@ test("context from a rule, a slice and a capability reaches the same slice; othe
   );
 });
 
-test("context withholds restricted artifacts unless asked, and says how many", async (t) => {
+test("BEH-CONTEXT: context withholds restricted artifacts unless asked, and says how many", async (t) => {
   const dir = await example(t);
   edit(dir, "RULE-ASMT-AUTH", "visibility: internal", "visibility: restricted");
   const withheld = await run(dir, "context", "BEH-ASMT-SCHEDULE");

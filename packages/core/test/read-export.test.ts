@@ -46,7 +46,7 @@ function otherType(value: unknown): unknown {
   return [value];
 }
 
-test("the reader's shape checks agree with spec/export.schema.json on every single-node mutant of full.json", () => {
+test("BEH-READ-EXPORT: the reader's shape checks agree with spec/export.schema.json on every single-node mutant of full.json", () => {
   const pointers = [...nodes(full)].map(([pointer]) => pointer);
   let disagreements: string[] = [];
   // Every node deleted, retyped and, for an object, given an unknown member: a few thousand mutants.
@@ -128,7 +128,7 @@ test("a diagnostic's code shape follows its origin: Markset's codes under syntax
   }
 });
 
-test("bytes, text and parsed values read alike; invalid UTF-8, oversize and truncation are not-json", () => {
+test("BEH-READ-EXPORT: bytes, text and parsed values read alike; invalid UTF-8, oversize and truncation are not-json", () => {
   const text = fixture("full.json");
   const fromText = readExport(text);
   const fromBytes = readExport(new TextEncoder().encode(text));
@@ -144,7 +144,7 @@ test("bytes, text and parsed values read alike; invalid UTF-8, oversize and trun
   assert.equal(readExport(text.slice(0, 500)).ok, false);
 });
 
-test("a missing or unknown contract is unsupported-contract before any shape check", () => {
+test("BEH-READ-EXPORT: a missing or unknown contract is unsupported-contract before any shape check", () => {
   for (const contract of [
     undefined,
     3,
@@ -161,7 +161,7 @@ test("a missing or unknown contract is unsupported-contract before any shape che
   assert.equal(!read.ok && read.category, "unsupported-contract");
 });
 
-test("problems come back ordered by category, the first naming the result", () => {
+test("BEH-READ-EXPORT: problems come back ordered by category, the first naming the result", () => {
   const value = structuredClone(full) as unknown as ExportEnvelope;
   value.validation.status = value.validation.status === "pass" ? "fail" : "pass";
   value.repository = "example/elsewhere";

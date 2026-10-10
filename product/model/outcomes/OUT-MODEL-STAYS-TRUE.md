@@ -18,7 +18,7 @@ intentset:
 
 ## Measure
 
-Not measured yet, and no measure record exists. A candidate is the share of merged changes in an adopting repository whose slices changed code and either updated their records or carried an `Intentset-Unchanged` trailer, read from `intentset review`. No evidence source is registered for it.
+Judged by MEAS-MODEL-STAYS-TRUE: the share of pull requests touching a slice's code on which `intentset review` still listed unacknowledged drift at their last run, read monthly from the CI of each repository that keeps a model. Not measured yet.
 
 ## Sources
 

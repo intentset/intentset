@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { describe, test } from "node:test";
-import { type Schema, validateSchema } from "../../conformance/src/schema.ts";
+import { type Schema, validateSchema } from "../../conformance/src/harness.ts";
 import { checkFixtureEvidence, type EvidenceStatus, readRunRecords } from "../src/index.ts";
 import { type ConformanceCase, codes, expand, readJson, SPEC_DIR, TESTS_DIR, validateExpanded } from "./helpers.ts";
 

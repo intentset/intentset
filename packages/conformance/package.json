@@ -7,9 +7,7 @@
   "homepage": "https://intentset.org/",
   "type": "module",
   "exports": {
-    ".": "./src/harness.ts",
-    "./fixtures": "./src/fixtures.ts",
-    "./schema": "./src/schema.ts"
+    ".": "./src/harness.ts"
   },
   "dependencies": {
     "@intentset/architecture": "^0.6.1",

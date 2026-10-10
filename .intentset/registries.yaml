@@ -18,7 +18,15 @@ editions:
   - hosted
   - open-source
 flags: []
+# Where each measure's evidence is to come from (Core §4).
+#   chat-questions: the questions the chat on intentset.org keeps for 90 days, read by the questions report
+#     (MEAS-QUESTIONS-ANSWERED).
+#   review-reports: `intentset review --fail-on-drift` output in the CI of each repository that keeps a model.
+#   conformance-claims: conformance runs of the published suite that other implementations report.
+#   reviewer-survey: a short survey of the people who review changes in repositories that keep a model.
 evidenceSources:
-  # The questions the chat on intentset.org keeps for 90 days, read by the questions report (MEAS-QUESTIONS-ANSWERED).
   - chat-questions
+  - conformance-claims
+  - review-reports
+  - reviewer-survey
 resources: []

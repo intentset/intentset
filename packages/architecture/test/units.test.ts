@@ -319,7 +319,7 @@ const RECORD = {
   remediation: "ISSUE-1",
 };
 
-describe("exceptions (VSA §9)", () => {
+describe("BEH-ARCH-BASELINE: exceptions (VSA §9)", () => {
   const target = finding({
     code: "VSA003",
     artifact: "SLICE-A",
@@ -387,7 +387,7 @@ describe("exceptions (VSA §9)", () => {
   });
 });
 
-describe("baseline (VSA §9)", () => {
+describe("BEH-ARCH-BASELINE: baseline (VSA §9)", () => {
   const error = (path: string, message: string): Diagnostic => ({
     code: "VSA003",
     severity: "error",
@@ -723,7 +723,7 @@ describe("checkArchitecture: declared scope and modes", () => {
     assert.equal(summary.excepted, 1);
   });
 
-  test("unresolved lists what could not be checked, with a TS004 warning beside it", () => {
+  test("BEH-ARCH-CHECK: unresolved lists what could not be checked, with a TS004 warning beside it", () => {
     const withDynamic = new Map(files);
     withDynamic.set("packages/a/src/lazy.ts", "export const load = (name: string) => import(name);\n");
     const { diagnostics, summary } = checkArchitecture(

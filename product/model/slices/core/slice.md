@@ -13,6 +13,7 @@ intentset:
   revision: 1
   links:
     implements: [BEH-VALIDATE-REPORTS, BEH-IMPACT, BEH-EXPORT, BEH-READ-EXPORT]
+    informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
     domain: toolchain
@@ -34,7 +35,7 @@ intentset:
 
 The carrier reader, the types, the graph, the validator, impact and the export, and `readExport` for consumers. It has no dependencies (design invariant 8), which `dependsOn` being empty states and the architecture check holds.
 
-The slice is the package `@intentset/core`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. It uses no backend resources.
+The slice is the package `@intentset/core`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
 ## Public contract
 
@@ -42,4 +43,4 @@ The exports of `packages/core/src/index.ts`, reached by other packages as `@inte
 
 ## Verification
 
-The package's tests under `packages/core/test/`. No verification records yet.
+The package's tests under `packages/core/test/`. The verification records of the behaviors it implements are TEST-VALIDATE-REPORTS (BEH-VALIDATE-REPORTS), TEST-IMPACT (BEH-IMPACT), TEST-EXPORT (BEH-EXPORT) and TEST-READ-EXPORT (BEH-READ-EXPORT). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

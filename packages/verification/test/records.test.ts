@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { describe, test } from "node:test";
-import { type Schema, validateSchema } from "../../conformance/src/schema.ts";
+import { type Schema, validateSchema } from "../../conformance/src/harness.ts";
 import { compareRecords, isUtcTimestamp, readRunRecords, type RunRecord, timeKey } from "../src/index.ts";
 import { automatedRun, readJson, review, SPEC_DIR } from "./helpers.ts";
 

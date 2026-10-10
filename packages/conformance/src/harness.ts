@@ -16,9 +16,13 @@ import type {
   Totals,
 } from "./types.ts";
 
+// The harness is the package's one public surface (SLICE-CONFORMANCE's entrypoint): the packages' tests and the
+// suite's staging reach the fixtures, the schema validator, the comparison and the report through it.
 export type { ConformanceCase, Driver, ExpandedCase, Actual } from "./types.ts";
-export { expandCase, serializeYaml, treeOf } from "./fixtures.ts";
-export { validateSchema } from "./schema.ts";
+export { CONFIG_PATH, expandCase, type ParseYaml, REGISTRIES_PATH, serializeYaml, treeOf } from "./fixtures.ts";
+export { type Schema, validateSchema } from "./schema.ts";
+export { firstMismatch } from "./compare.ts";
+export { formatJson, formatReport } from "./report.ts";
 
 /** Repository root, derived from this file's location: packages/conformance/src -> root. */
 export const repoRoot = resolve(import.meta.dirname, "..", "..", "..");

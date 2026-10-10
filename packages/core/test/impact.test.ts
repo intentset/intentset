@@ -14,7 +14,7 @@ const baseline: DocumentInput[] = readdirSync(dir)
 
 const ids = (hits: { id: string }[]) => hits.map((h) => h.id);
 
-test("a rule change reaches its behavior, verifications and knowledge directly, owners and scenarios beyond", () => {
+test("BEH-IMPACT: a rule change reaches its behavior, verifications and knowledge directly, owners and scenarios beyond", () => {
   const report = impact(validate(baseline, registries).graph, "RULE-ASMT-FUTURE");
   assert.equal(report.start, "RULE-ASMT-FUTURE");
   assert.deepEqual(ids(report.direct), ["BEH-ASMT-SCHEDULE", "KB-ASMT-SCHEDULE", "TEST-ASMT-SCHEDULE"]);

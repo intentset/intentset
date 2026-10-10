@@ -18,7 +18,7 @@ intentset:
 
 ## Measure
 
-Not measured yet, and no measure record exists. Core §1 makes the specifications, not this implementation, normative; the published conformance suite is how another implementation shows it agrees.
+Judged by MEAS-OPEN-STANDARD: the number of implementations other than this one that report a run of the published conformance suite. Core §1 makes the specifications, not this implementation, normative; the suite is how another implementation shows it agrees. Not measured yet.
 
 ## Sources
 

@@ -25,6 +25,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      # Intentset's own evidence: the tests again with the TAP reporter, imported as run records for each verification
+      # whose selector a test title carries, then the model validated at L3, which reports link coverage and
+      # current-pass coverage apart. Every record is a draft, so a missing run is reported, not failed.
+      - run: pnpm run model:evidence --environment github-actions --uri-base "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      - run: pnpm run intentset validate --level L3 --mode strict
       - run: pnpm run conformance
       # The same cases against micromark's development build, which asserts its
       # tokenizer contract where the production build does not. Vite, Vitest and
@@ -32,9 +37,10 @@ jobs:
       # pnpm test ends with test:development for the unit tests.
       - run: pnpm run conformance:development
       - run: pnpm run smoke:packed
-  # Intentset's own model, checked by the CLI this checkout builds: validate at L2 in migration mode with the committed
-  # baseline (a new violation is an error, the baseline only shrinks), and review against the base, failing on a
-  # slice whose code changed while its records did not unless a commit says so with `Intentset-Unchanged: <slice ID>`.
+  # Intentset's own model, checked by the CLI this checkout builds: validate at L2 in strict mode, with no baseline (the
+  # last one was retired on 2026-10-10, so any architecture violation is an error), and review against the base,
+  # failing on a slice whose code changed while its records did not unless a commit says so with
+  # `Intentset-Unchanged: <slice ID>`.
   model:
     runs-on: ubuntu-latest
     steps:

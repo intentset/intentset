@@ -51,7 +51,7 @@ test("every authored edge has one derived inverse, marked derived", () => {
   ]);
 });
 
-test("diagnostics are sorted and identical whatever order the files arrive in", () => {
+test("BEH-VALIDATE-REPORTS: diagnostics are sorted and identical whatever order the files arrive in", () => {
   const broken = baseline.map((input) =>
     input.path === "BEH-ASMT-SCHEDULE.md"
       ? plainCarrier(
@@ -72,7 +72,7 @@ test("diagnostics are sorted and identical whatever order the files arrive in", 
   assert.deepEqual(forward, sorted);
 });
 
-test("syntax diagnostics from the carrier pass through with their origin", () => {
+test("BEH-MARKSET-CARRIER: syntax diagnostics from the carrier pass through with their origin", () => {
   const syntax: Diagnostic = {
     code: "MARKSET001",
     severity: "error",
@@ -89,7 +89,7 @@ test("syntax diagnostics from the carrier pass through with their origin", () =>
   assert.equal(result.ok, false);
 });
 
-test("every diagnostic has the contract's shape: one-sentence message and remediation", () => {
+test("BEH-VALIDATE-REPORTS: every diagnostic has the contract's shape: one-sentence message and remediation", () => {
   const broken = baseline.map((input) =>
     input.path === "BEH-ASMT-SCHEDULE.md"
       ? plainCarrier(input.path, input.source.replace("owner: team-assessment", "owner: team-ghost"))

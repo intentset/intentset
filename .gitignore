@@ -16,3 +16,5 @@ amplify/functions/ask/corpus.json
 # Written by ampx in a sandbox.
 amplify_outputs.json
 .amplify/
+# Intentset's own run records, written by `pnpm run model:evidence`; they describe one commit and are never committed.
+.intentset/evidence/

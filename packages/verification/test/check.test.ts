@@ -8,7 +8,7 @@ const approved = exampleGraph({ approve: true });
 const draft = exampleGraph();
 const at = (hash: string): EvidenceSnapshot => ({ commit: COMMIT, graphHash: hash, scope: SCOPE });
 
-describe("coverage", () => {
+describe("BEH-EVIDENCE-CURRENT: coverage", () => {
   test("counts links and current passes apart, with snapshot and denominator", () => {
     const report = coverage(draft.graph, classifyEvidence(draft.graph, [], at(draft.hash)), { level: "L3" });
     assert.deepEqual(report.snapshot, { commit: COMMIT, graphHash: draft.hash, scope: SCOPE });

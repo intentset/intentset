@@ -21,8 +21,7 @@ import {
   type Registries,
   validate,
 } from "@intentset/core";
-import { expandCase, REGISTRIES_PATH } from "../../conformance/src/fixtures.ts";
-import type { ConformanceCase, ExpandedCase } from "../../conformance/src/types.ts";
+import { type ConformanceCase, type ExpandedCase, expandCase, REGISTRIES_PATH } from "../../conformance/src/harness.ts";
 import { type ArchitectureResult, checkArchitecture } from "../src/index.ts";
 
 const ROOT = resolve(import.meta.dirname, "../../..");

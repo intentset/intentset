@@ -14,8 +14,7 @@
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { type ConformanceCase, expandCase, treeOf, validateSchema } from "@intentset/conformance";
-import type { ParseYaml } from "@intentset/conformance/fixtures";
+import { type ConformanceCase, expandCase, type ParseYaml, treeOf, validateSchema } from "@intentset/conformance";
 
 export const packageDir = resolve(import.meta.dirname);
 const repoRoot = resolve(packageDir, "..", "..");

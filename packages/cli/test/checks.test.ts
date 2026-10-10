@@ -86,7 +86,7 @@ function approveKnowledge(dir: string, pins = true): void {
   edit(dir, "KB-ASMT-SCHEDULE", "  revision: 1\n", `  revision: 1\n${lines.join("\n")}\n`);
 }
 
-test("architecture check on the example with its source tree is clean at L2, and says what it did not check", async (t) => {
+test("BEH-ARCH-CHECK: architecture check on the example with its source tree is clean at L2, and says what it did not check", async (t) => {
   const dir = await withSources(t);
   const check = await run(dir, "architecture", "check");
   assert.equal(check.code, 0, check.out + check.err);
@@ -101,7 +101,7 @@ test("architecture check on the example with its source tree is clean at L2, and
   assert.equal((await run(dir, "validate", "--level", "L2")).code, 0);
 });
 
-test("architecture check without the source tree: a draft slice's paths are planned, an approved slice's are missing", async (t) => {
+test("BEH-ARCH-CHECK: architecture check without the source tree: a draft slice's paths are planned, an approved slice's are missing", async (t) => {
   const dir = await example(t);
   const planned = await run(dir, "architecture", "check");
   assert.equal(planned.code, 1, "the registry resource naming no file is an error whatever the slice's status");
@@ -123,7 +123,7 @@ test("architecture check without the source tree: a draft slice's paths are plan
   assert.equal((await run(dir, "validate")).code, 0, "L1 does not");
 });
 
-test("a deep import into another slice's internals is VSA003 and exits 1", async (t) => {
+test("BEH-ARCH-CHECK: a deep import into another slice's internals is VSA003 and exits 1", async (t) => {
   const dir = await example(t);
   const deep = vsaCase("V02 a relative deep import");
   for (const [name, text] of Object.entries(deep.files ?? {})) writeFileSync(RECORD(dir, name.slice(0, -3)), text);
@@ -137,7 +137,7 @@ test("a deep import into another slice's internals is VSA003 and exits 1", async
   assert.match(check.out, /^ {2}fix: /m);
 });
 
-test("a baseline written by --write-baseline turns known violations into warnings in migration mode only", async (t) => {
+test("BEH-ARCH-BASELINE: a baseline written by --write-baseline turns known violations into warnings in migration mode only", async (t) => {
   const dir = await example(t);
   // Approved, so its missing paths are errors rather than planned warnings, and there is something to baseline.
   edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: approved");
@@ -190,7 +190,7 @@ test("in a git repository the tree is git's: a .gitignored source file is not re
   assert.equal(listed.code, 0, listed.out);
 });
 
-test("evidence import binds a Vitest report to the commit, and L3 reads it as a current pass", async (t) => {
+test("BEH-EVIDENCE-IMPORT, BEH-EVIDENCE-CURRENT: evidence import binds a Vitest report to the commit, and L3 reads it as a current pass", async (t) => {
   const dir = await committed(t);
   const head = git(dir, "rev-parse", "HEAD");
   write(dir, { "reports/vitest.json": vitestReport("passed") });
@@ -236,7 +236,7 @@ test("evidence import binds a Vitest report to the commit, and L3 reads it as a 
   assert.match(stale.out, /^ {2}verified: {2}0 of 1 behavior, 0 of 2 rules, 0 of 1 scenario/m);
 });
 
-test("at L3 an approved behavior without a current pass is CORE007", async (t) => {
+test("BEH-EVIDENCE-CURRENT: at L3 an approved behavior without a current pass is CORE007", async (t) => {
   const dir = await committed(t);
   for (const id of ["BEH-ASMT-SCHEDULE", "SLICE-ASMT-SCHEDULE"]) edit(dir, id, "status: draft", "status: approved");
   git(dir, "commit", "-q", "-am", "approve");
@@ -246,7 +246,7 @@ test("at L3 an approved behavior without a current pass is CORE007", async (t) =
   assert.match(l3.out, /Evidence: 0 run records from no evidence files/);
 });
 
-test("evidence import lists unmatched selectors, reads node:test TAP, and refuses what it must", async (t) => {
+test("BEH-EVIDENCE-IMPORT: evidence import lists unmatched selectors, reads node:test TAP, and refuses what it must", async (t) => {
   const dir = await committed(t);
   write(dir, {
     "reports/other.json": vitestReport("passed", "something else entirely"),
@@ -350,7 +350,7 @@ test("evidence import lists unmatched selectors, reads node:test TAP, and refuse
   assert.equal(existsSync(join(dir, "out", "d.json")), false);
 });
 
-test("evidence import outside a git repository refuses: evidence must name a commit", async (t) => {
+test("BEH-EVIDENCE-IMPORT: evidence import outside a git repository refuses: evidence must name a commit", async (t) => {
   const dir = await withSources(t);
   write(dir, { "reports/vitest.json": vitestReport("passed") });
   const imported = await run(
@@ -443,7 +443,7 @@ const POLICY = "src/features/assessment/schedule/domain/policies/release-time.ts
 const STRICTER =
   'import type { ScheduleRequest } from "../models/schedule";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime() + 1000;\n}\n';
 
-test("review lists a slice whose code changed while none of its records did, and --fail-on-drift fails on it", async (t) => {
+test("BEH-REVIEW-DRIFT: review lists a slice whose code changed while none of its records did, and --fail-on-drift fails on it", async (t) => {
   const dir = await committed(t);
   write(dir, { [POLICY]: STRICTER });
   git(dir, "commit", "-q", "-am", "stricter release time");
@@ -482,7 +482,7 @@ test("review lists a slice whose code changed while none of its records did, and
   assert.match(acknowledged.out, /- Acknowledged: a commit since the base says this changes no behavior/);
 });
 
-test("review lists no drift when a record describing the slice changed with its code, or when nothing it claims as code did", async (t) => {
+test("BEH-REVIEW-DRIFT: review lists no drift when a record describing the slice changed with its code, or when nothing it claims as code did", async (t) => {
   const dir = await committed(t);
   write(dir, { [POLICY]: STRICTER });
   edit(dir, "RULE-ASMT-FUTURE", "must be earlier", "must be strictly earlier");
@@ -497,7 +497,7 @@ test("review lists no drift when a record describing the slice changed with its 
   assert.match(unclaimed.out, /\(0, 0 not acknowledged\)/);
 });
 
-test("context of a file a slice claims is that slice's context, and of an unclaimed file a CORE003", async (t) => {
+test("BEH-CONTEXT: context of a file a slice claims is that slice's context, and of an unclaimed file a CORE003", async (t) => {
   const dir = await withSources(t);
   const context = await run(dir, "context", POLICY);
   assert.equal(context.code, 0, context.err);
@@ -558,7 +558,7 @@ const REQUEST = [
   "2026-10-02T12:00:00Z",
 ];
 
-test("publish from the all-draft example publishes nothing and says why", async (t) => {
+test("BEH-PUBLISH: publish from the all-draft example publishes nothing and says why", async (t) => {
   const dir = await example(t);
   const published = await run(dir, "publish", ...REQUEST, "--out", "published");
   assert.equal(published.code, 0, published.out + published.err);
@@ -575,7 +575,7 @@ test("publish from the all-draft example publishes nothing and says why", async 
   assert.deepEqual(help.tips, {});
 });
 
-test("publish writes reviewed knowledge with provenance, HTML, an index, a help file and chunks, naming no internal source", async (t) => {
+test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an index, a help file and chunks, naming no internal source", async (t) => {
   const dir = await example(t);
   approveKnowledge(dir);
   const published = await run(dir, "publish", ...REQUEST, "--html", "--out", "out/kb");
@@ -614,7 +614,7 @@ test("publish writes reviewed knowledge with provenance, HTML, an index, a help 
   assert.equal(existsSync(join(dir, "product", "published")), false);
 });
 
-test("publish refuses a graph that does not validate, and a request missing a dimension", async (t) => {
+test("BEH-PUBLISH: publish refuses a graph that does not validate, and a request missing a dimension", async (t) => {
   const dir = await example(t);
   approveKnowledge(dir);
   const partial = await run(dir, "publish", "--visibility", "customer", "--audience", "teacher", "--out", "partial");
@@ -638,7 +638,7 @@ test("validate --level L5 is refused as a claim one run cannot check", async (t)
   assert.match(l5.err, /L5 is a claim about continuous CI, not something one run can check \(Core §11\)/);
 });
 
-test("graph --report all at L3 writes every report at the commit, and a consumer's reader accepts it", async (t) => {
+test("BEH-EXPORT, BEH-READ-EXPORT: graph --report all at L3 writes every report at the commit, and a consumer's reader accepts it", async (t) => {
   const dir = await committed(t);
   const head = git(dir, "rev-parse", "HEAD");
   write(dir, { "reports/vitest.json": vitestReport("passed") });
@@ -708,7 +708,7 @@ test("graph --report all at L3 writes every report at the commit, and a consumer
   assert.deepEqual(JSON.parse(everything.out).withholding.visibilities, []);
 });
 
-test("graph refuses a report its level does not read, and a report it does not know", async (t) => {
+test("BEH-EXPORT: graph refuses a report its level does not read, and a report it does not know", async (t) => {
   const dir = await withSources(t);
   const low = await run(dir, "graph", "--report", "evidence");
   assert.equal(low.code, 2);
