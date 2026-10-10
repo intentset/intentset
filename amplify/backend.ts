@@ -15,7 +15,7 @@ import type { CfnFunction } from "aws-cdk-lib/aws-lambda";
 import { Topic } from "aws-cdk-lib/aws-sns";
 import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
-import { limits, model } from "./functions/ask/limits.ts";
+import { invokedModels, limits } from "./functions/ask/limits.ts";
 import { METRIC_NAMESPACE } from "./functions/ask/log.ts";
 import { ask } from "./functions/ask/resource.ts";
 import { ALARM_EMAIL, allowedOrigins } from "./settings.ts";
@@ -60,13 +60,13 @@ backend.ask.addEnvironment("ASK_LIMITS_TABLE", limitsTable.tableName);
 backend.ask.addEnvironment("ASK_QUESTIONS_TABLE", questionsTable.tableName);
 backend.ask.addEnvironment("ASK_ALLOWED_ORIGINS", allowedOrigins(branch).join(","));
 
-// Bedrock: the US inference profiles of the model and its refusal fallback, and the foundation models in each Region
+// Bedrock: the US inference profiles of the model and its refusal fallback (when it has one), and the foundation models in each Region
 // those profiles route to. The organization's SCP opens us-west-2 to Bedrock only through an inference profile.
 const routed = ["us-east-1", "us-east-2", "us-west-2"];
 fn.addToRolePolicy(
   new PolicyStatement({
     actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
-    resources: [model.id, model.fallbackId].flatMap((id) => [
+    resources: invokedModels.flatMap((id) => [
       `arn:aws:bedrock:${Aws.REGION}:${Aws.ACCOUNT_ID}:inference-profile/${id}`,
       ...routed.map((region) => `arn:aws:bedrock:${region}::foundation-model/${id.replace(/^us\./, "")}`),
     ]),

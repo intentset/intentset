@@ -7,7 +7,7 @@ import process from "node:process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { limits, model, retentionDays } from "../functions/ask/limits.ts";
+import { invokedModels, limits, model, retentionDays } from "../functions/ask/limits.ts";
 import { ALARM_EMAIL, LOCAL_ORIGIN, SITE_ORIGIN } from "../settings.ts";
 
 type Resource = { Type: string; Properties?: Record<string, unknown>; DeletionPolicy?: string };
@@ -114,7 +114,8 @@ test("both tables expire their items, and the branch keeps them if the stack goe
 
 test("the function may invoke only the model and its fallback, through the US profile, in the Regions it routes to", () => {
   const policies = JSON.stringify(ofType("branch", "AWS::IAM::Policy"));
-  for (const id of [model.id, model.fallbackId]) {
+  assert.equal(invokedModels[0], model.id);
+  for (const id of invokedModels) {
     const bare = id.replace(/^us\./, "");
     for (const region of ["us-east-1", "us-east-2", "us-west-2"]) {
       assert.ok(policies.includes(`arn:aws:bedrock:${region}::foundation-model/${bare}`), `${bare} in ${region}`);

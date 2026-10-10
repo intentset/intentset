@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   links:
     implements: [BEH-ASK-ANSWER, BEH-ASK-NOT-IN-DOCS, BEH-ASK-CONTACT, BEH-ASK-LIMITS, BEH-ASK-KEEP-QUESTION, BEH-QUESTIONS-REPORT]
   slice:
@@ -36,7 +36,7 @@ intentset:
 
 ## Responsibility
 
-Owner of the chat: the answer function in `amplify/functions/ask/` (parsing and admitting a question, the prompt and the corpus as cited documents, Claude Opus 5.5 on Bedrock at low effort with a refusal fallback to Opus 4.8, the cost against the day's budget, and the scrubbed record kept for 90 days), and the backend in `amplify/backend.ts` that deploys it: the API Gateway REST API that streams the answer, the regional web application firewall in front of it, the limits and questions tables, the function's reserved concurrency and its access to Bedrock. The panel in `site/chat/`: a launcher and a non-modal dialog that streams the answer, renders it as DOM nodes with its sources, says each refusal in words, and keeps the conversation in the tab's sessionStorage; it is built into the site only when `ASK_URL` is set. The corpus the function answers from is built by the site from the same commit (`pnpm run corpus`). Layers are empty: the profile's layer matrix is not applied to this slice yet, which the check reports (VSA006). It uses no resources from a registry.
+Owner of the chat: the answer function in `amplify/functions/ask/` (parsing and admitting a question, the prompt and the corpus as cited documents, Claude on Bedrock at low effort (Sonnet 4.6 until Anthropic approves the account for Opus 5.5, which comes with a refusal fallback to Opus 4.8), the cost against the day's budget, and the scrubbed record kept for 90 days), and the backend in `amplify/backend.ts` that deploys it: the API Gateway REST API that streams the answer, the regional web application firewall in front of it, the limits and questions tables, the function's reserved concurrency and its access to Bedrock. The panel in `site/chat/`: a launcher and a non-modal dialog that streams the answer, renders it as DOM nodes with its sources, says each refusal in words, and keeps the conversation in the tab's sessionStorage; it is built into the site only when `ASK_URL` is set. The corpus the function answers from is built by the site from the same commit (`pnpm run corpus`). Layers are empty: the profile's layer matrix is not applied to this slice yet, which the check reports (VSA006). It uses no resources from a registry.
 
 ## Public contract
 

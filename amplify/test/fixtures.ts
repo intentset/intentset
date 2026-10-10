@@ -38,7 +38,7 @@ export function stubModel(
         { type: "text", text },
       ],
       stopReason: options.stopReason ?? "end_turn",
-      model: "claude-opus-5-5",
+      model: "claude-sonnet-4-6",
       usage: { input: 100, output: 200, cacheRead: 40_000, cacheWrite: 0 },
     };
   }) as Model & { calls: Parameters<Model>[0][] };
