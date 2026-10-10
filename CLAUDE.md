@@ -180,6 +180,11 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 - Biome config is `biome.jsonc`, deliberately not `.json`.
 - The site's browser checks run Playwright (Chromium) at 390px and 1440px, over a small HTTP server rather than
   file URLs, so the 404 page (linked from the root, served by Pages at any missing address) is checked as served.
+- **Every page carries a Content Security Policy in a meta element** (`contentSecurityPolicy` in `site/build.ts`),
+  because GitHub Pages sets no headers: scripts from the site and the shell's two inline scripts by hash, and the
+  chat's API as the one other origin. A new inline script, or a new origin a page calls, changes the policy in the
+  same commit; a build test holds every page to it. A meta policy cannot forbid framing or set HSTS: those need a
+  host that sets headers.
 - **Everything that parses Markset also runs under micromark's development build**, as Markset does: `pnpm test` ends
   with `test:development`, `conformance:development` runs beside `conformance` in CI and the release, and the smoke
   test runs its consumer a second time with `--conditions=development`. Vite, Vitest and Next resolve that asserting

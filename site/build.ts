@@ -19,6 +19,7 @@
  *
  *   pnpm run site
  */
+import { createHash } from "node:crypto";
 import { cp, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, posix, relative, resolve } from "node:path";
 import type { Heading, Link, Nodes, Root } from "mdast";
@@ -905,6 +906,8 @@ function shell(page: Page, askUrl: string | null = null): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="${esc(contentSecurityPolicy(askUrl))}">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(page.description)}">
 ${meta}<link rel="icon" type="image/svg+xml" href="${rel}icon.svg">
@@ -978,6 +981,30 @@ export const SCHEME_CONTROL = `<div class="site-scheme-slot"><div class="site-sc
  * <body>, the hook markset.css publishes (Markset spec §6), and runs first so
  * the scheme is in force before anything paints.
  */
+/**
+ * The page's Content Security Policy, set in a meta element because GitHub Pages sets no headers. Scripts run only
+ * from the site itself and the two inline scripts below, each by its hash, so a change to either changes the policy
+ * with it; the chat's address is the one other origin the page may call. Styles allow inline `style` attributes,
+ * which the Markset renderer writes for column ratios. A meta policy cannot set frame-ancestors, so framing stays
+ * allowed until the site is on a host that sets headers.
+ */
+export function contentSecurityPolicy(askUrl: string | null): string {
+  const hash = (script: string) =>
+    `'sha256-${createHash("sha256")
+      .update(script.replace(/^<script>/, "").replace(/<\/script>\n?$/, ""))
+      .digest("base64")}'`;
+  return [
+    "default-src 'none'",
+    `script-src 'self' ${hash(SCHEME_SCRIPT)} ${hash(COPY_SCRIPT)}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self'",
+    `connect-src 'self'${askUrl === null ? "" : ` ${new URL(askUrl).origin}`}`,
+    "base-uri 'none'",
+    "form-action 'none'",
+    "object-src 'none'",
+  ].join("; ");
+}
+
 export const SCHEME_SCRIPT = `<script>
 (function () {
   var key = "ms-scheme";

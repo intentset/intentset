@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { access, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, normalize, resolve } from "node:path";
@@ -99,6 +100,29 @@ test("every internal link resolves to a page that was built, and every fragment 
         assert.ok(ids.get(target)?.has(fragment), `${page}: ${href} has no target id`);
       }
     }
+  }
+});
+
+test("every page carries a Content Security Policy that allows its own inline scripts by hash and only the chat's origin", () => {
+  for (const [page, doc] of html) {
+    const policy = /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/
+      .exec(doc)?.[1]
+      .replaceAll("&#39;", "'");
+    assert.ok(policy, `${page}: has a policy`);
+    assert.ok(doc.indexOf("Content-Security-Policy") < doc.indexOf("<script"), `${page}: ahead of every script`);
+    const directives = new Map(policy.split("; ").map((d) => [d.split(" ")[0], d.split(" ").slice(1)]));
+    assert.deepEqual(directives.get("default-src"), ["'none'"], page);
+    for (const [, body] of doc.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+      const hash = `'sha256-${createHash("sha256").update(body).digest("base64")}'`;
+      assert.ok(directives.get("script-src")?.includes(hash), `${page}: an inline script is allowed by its hash`);
+    }
+    assert.ok(!directives.get("script-src")?.includes("'unsafe-inline'"), page);
+    assert.deepEqual(
+      directives.get("connect-src"),
+      ["'self'", ...(ASK_URL === null ? [] : [new URL(ASK_URL).origin])],
+      `${page}: the chat's origin is the one other the page may call`,
+    );
+    assert.match(doc, /<meta name="referrer" content="strict-origin-when-cross-origin">/, page);
   }
 });
 
