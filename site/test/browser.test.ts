@@ -131,6 +131,30 @@ for (const width of WIDTHS) {
   });
 }
 
+test("the command page's help block fits the column at desktop width", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  // The document's column stops at the wide measure beside the rail, so help that
+  // fits a terminal can still be wider than the column (it was, at 105 columns),
+  // and widening the window does not help. Other pages' blocks hold one-line JSON
+  // that scrolls by design, so only this page is held to it.
+  for (const width of [1440, 1920]) {
+    const tab = await browser.newPage({ viewport: { width, height: 900 } });
+    try {
+      for (const page of ["tools/cli/index.html"]) {
+        await tab.goto(url(page));
+        const scrolling = await tab.evaluate(() =>
+          [...document.querySelectorAll("pre")]
+            .filter((pre) => pre.scrollWidth > pre.clientWidth)
+            .map((pre) => `${pre.textContent?.slice(0, 40)} (${pre.scrollWidth}px in ${pre.clientWidth}px)`),
+        );
+        assert.deepEqual(scrolling, [], `${page}: a code block scrolls sideways at ${width}px`);
+      }
+    } finally {
+      await tab.close();
+    }
+  }
+});
+
 test("the primary calls to action are at least 44px tall", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   for (const width of WIDTHS) {
