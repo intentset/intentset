@@ -181,6 +181,40 @@ test("Tab from the top lands on the skip link, which moves focus to main; the ne
   }
 });
 
+test("every term on the adoption log shows its tip inside the window when focused, at phone, tablet and desktop widths", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  for (const width of [390, 1024, 1100, 1440]) {
+    const tab = await browser.newPage({ viewport: { width, height: 900 } });
+    try {
+      await tab.goto(url("pilot/index.html"));
+      const count = await tab.locator(".term").count();
+      assert.ok(count > 0, "the log has terms");
+      for (let i = 0; i < count; i++) {
+        const term = tab.locator(".term").nth(i);
+        await term.focus();
+        const box = await term.evaluate((el) => {
+          const tip = el.querySelector(".term-tip") as HTMLElement;
+          const r = tip.getBoundingClientRect();
+          return {
+            text: el.textContent?.slice(0, 40),
+            shown: getComputedStyle(tip).display !== "none",
+            left: r.left,
+            right: r.right,
+            bottom: r.bottom,
+          };
+        });
+        assert.ok(box.shown, `${box.text}: the tip shows on focus at ${width}px`);
+        assert.ok(
+          box.left >= 0 && box.right <= width,
+          `${box.text}: the tip stays inside the window at ${width}px (${Math.round(box.left)} to ${Math.round(box.right)})`,
+        );
+      }
+    } finally {
+      await tab.close();
+    }
+  }
+});
+
 test("a missing address, however deep, gets the 404 page in the site's shell and styles", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   const tab = await browser.newPage({ viewport: { width: 390, height: 900 } });

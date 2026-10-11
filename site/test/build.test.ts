@@ -28,6 +28,7 @@ import {
   SPEC_META_KEYS,
   SPECS,
   statusLabel,
+  termTips,
 } from "../build.ts";
 import { loadRecords } from "../records.ts";
 
@@ -495,6 +496,21 @@ test("the build leaves no placeholder behind", async () => {
   assert.ok(!written.some((name) => name.includes("staging")), "a staging directory was left in dist");
 });
 
+test("a term becomes a tooltip reached by pointer, keyboard or tap, described by its tip, with ids unique to the page", () => {
+  const html = termTips(
+    '<p>A <span class="ms-span term" data-tip="Known &#x22;old&#x22; ones">baselined</span> list and a <span class="ms-span term" data-tip="One feature.">slice</span>.</p>',
+  );
+  assert.equal(
+    html,
+    '<p>A <span class="term" tabindex="0" aria-describedby="term-tip-1">baselined<span class="term-tip" id="term-tip-1" role="tooltip">Known &#x22;old&#x22; ones</span></span> list and a <span class="term" tabindex="0" aria-describedby="term-tip-2">slice<span class="term-tip" id="term-tip-2" role="tooltip">One feature.</span></span>.</p>',
+  );
+  assert.equal(
+    termTips('<span class="ms-span badge">Draft</span>'),
+    '<span class="ms-span badge">Draft</span>',
+    "other spans are left alone",
+  );
+});
+
 test("the adoption log: the counts first, dated chapters newest first, and no link into the products", () => {
   const page = main("pilot/index.html");
   const chapters = [...page.matchAll(/<h2 id="[^"]*">([^<]*)<\/h2>/g)].map((m) => m[1]);
@@ -507,6 +523,22 @@ test("the adoption log: the counts first, dated chapters newest first, and no li
   assert.deepEqual(last, [...last].sort().reverse(), "chapters are newest first");
   const counts = page.slice(page.indexOf('id="where-it-stands"'), page.indexOf(`>${dated[0]}<`));
   assert.match(counts, /class="ms-metrics"/, "the counts are a metrics block");
+  // Every card in the counts says what it counts, and every term on the page carries its explanation.
+  const labels = [...counts.matchAll(/<div class="ms-metric-label">([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+  const explained = new Set<string>();
+  for (const label of labels) {
+    const text = label.replace(/<span class="term-tip"[^>]*>[^<]*<\/span>/g, "").replace(/<[^>]+>/g, "");
+    if (label.includes('class="term"')) explained.add(text);
+  }
+  assert.ok(explained.has("Baselined architecture violations"), "the baseline's card explains itself");
+  assert.doesNotMatch(page, /class="ms-span term"/, "no term is left without its tooltip");
+  // Every chapter says what it achieved.
+  for (const heading of dated) {
+    const start = page.indexOf(`>${heading}<`);
+    const next = dated[dated.indexOf(heading) + 1];
+    const chapter = page.slice(start, next ? page.indexOf(`>${next}<`) : undefined);
+    assert.match(chapter, />What it achieved</, `${heading}: says what it achieved`);
+  }
   // The products' sites are locked and their repositories private, so the log counts and describes, never links.
   for (const [, href] of page.matchAll(/href="([^"]*)"/g)) {
     assert.doesNotMatch(href, /streamlane|driftline/i, href);
