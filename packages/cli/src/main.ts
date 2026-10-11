@@ -35,14 +35,15 @@ export const USAGE = `usage: intentset <command> [options]
 
 commands
   init [--repository <name>] [--example] [--agents]
-                            create .intentset/config.yaml, an empty .intentset/registries.yaml and
-                            .intentset/agents.md, the guide that tells coding agents how to keep the
-                            model current; --example adds the scheduling example under
-                            product/scheduling/; --agents writes only the guide, for a repository
-                            already initialized. Never overwrites a file.
-  guide                     print that guide for this repository, for the scope its config names,
-                            without writing anything
-  validate                  every check the level asks for; exit 1 when any diagnostic is an error
+                            create .intentset/config.yaml, an empty .intentset/registries.yaml
+                            and .intentset/agents.md, the guide that tells coding agents how to
+                            keep the model current; --example adds the scheduling example under
+                            product/scheduling/; --agents writes only the guide, for a
+                            repository already initialized. Never overwrites a file.
+  guide                     print that guide for this repository, for the scope its config
+                            names, without writing anything
+  validate                  every check the level asks for; exit 1 when any diagnostic is an
+                            error
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
@@ -56,47 +57,52 @@ commands
         [--environment <text>] [--started-at <time>] [--finished-at <time>] [--uri-base <uri>]
         [--tool-version <v>]
                             turn a test report into run records bound to this commit and graph
-  impact <ID>               what depends on an artifact: direct, candidates, review context, ancestors
+  impact <ID>               what depends on an artifact: direct, candidates, review context,
+                            ancestors
   context <ID|path> [--include-restricted]
-                            the bounded engineering context of an artifact, with paths and bodies;
-                            given a file a slice claims, the context of that slice
+                            the bounded engineering context of an artifact, with paths and
+                            bodies; given a file a slice claims, the context of that slice
   review [--base <ref>] [--fail-on-drift]
-                            the local review report: checks, coverage, the impact of what changed,
-                            and each slice whose code changed while its records did not;
-                            --fail-on-drift exits 1 for any such slice no commit acknowledged with
-                            an Intentset-Unchanged trailer
+                            the local review report: checks, coverage, the impact of what
+                            changed, and each slice whose code changed while its records did
+                            not; --fail-on-drift exits 1 for any such slice no commit
+                            acknowledged with an Intentset-Unchanged trailer
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
         [--published-at <time>]
-                            reviewed knowledge for one audience and release, as Markset with provenance
+                            reviewed knowledge for one audience and release, as Markset with
+                            provenance
   serve [--port <n>] [--host <address>] [--out <dir>]
-                            the Atlas, the internal review pages, on http://127.0.0.1:3000/ (rebuilt
-                            when a file changes), or written to --out; runs at L2, or L3 with run records
+                            the Atlas, the internal review pages, on http://127.0.0.1:3000/
+                            (rebuilt when a file changes), or written to --out; runs at L2, or
+                            L3 with run records
   mcp --mode engineering [--include-restricted]
-  mcp --mode customer --visibility <public|customer> --audience <a> --product <ID> --release <r>
-        --role <r> --edition <e> [--flag <f>]...
+  mcp --mode customer --visibility <public|customer> --audience <a> --product <ID>
+        --release <r> --role <r> --edition <e> [--flag <f>]...
                             the read-only MCP server on stdio: the engineering graph, or one
                             publication made in memory as publish makes it, and nothing else
 
 options
-  --root <dir>              repository root (default: the nearest directory at or above this one
-                            holding .intentset/config.yaml)
+  --root <dir>              repository root (default: the nearest directory at or above this
+                            one holding .intentset/config.yaml)
   --json                    machine-readable output, keys in canonical order
   --carrier <markset|plain> how documents are read (default markset)
   --level <L1..L4>          conformance level; each includes those below it (default L1):
                             L2 adds architecture, L3 evidence, L4 publication readiness
-  --evidence <file>         L3 and above: run records to read, repeatable (default: every *.json in
-                            ${EVIDENCE_DIR}/, which holds local output and is not committed)
+  --evidence <file>         L3 and above: run records to read, repeatable (default: every
+                            *.json in ${EVIDENCE_DIR}/, which holds local output and is not
+                            committed)
   --product <ID> --release <label>
-                            L3 and above: the exact scope evidence is assessed for (default: every scope)
+                            L3 and above: the exact scope evidence is assessed for (default:
+                            every scope)
   --mode <migration|strict> --baseline <file>
-                            L2 and above: whether a baseline of known violations applies, and which
-                            (for mcp, --mode names the server's mode instead)
+                            L2 and above: whether a baseline of known violations applies, and
+                            which (for mcp, --mode names the server's mode instead)
   -h, --help                show this help
   --version                 print "intentset <version>", the checker version a report names
 
-exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift, unacknowledged drift),
-            2 invocation or tool failure`;
+exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift,
+            unacknowledged drift), 2 invocation or tool failure`;
 
 const COMMANDS = [
   "init",
