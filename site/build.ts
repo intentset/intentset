@@ -496,11 +496,29 @@ function renderPage(path: string, source: string, file: string, extra: Partial<P
     path,
     title: firstHeading(ast) ?? basename(file, ".md"),
     description: firstParagraph(ast),
-    body: renderHtml(ast, { diagrams: false, charts: false }),
+    body: termTips(renderHtml(ast, { diagrams: false, charts: false })),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
     ...(rail ? { toc: tableOfContents(ast, 2, 3) } : {}),
     ...extra,
   };
+}
+
+/**
+ * A term a reader may not know, written `[slice]{.term tip="…"}` in a page's source. Markset makes the span's `tip` a
+ * `data-tip`; this turns it into a tooltip reached by pointer, keyboard or tap, with no script, since no script runs
+ * inside `<main>`. The term takes focus, the tip is its accessible description (hidden, so a screen reader reads it on
+ * focus rather than inline as well), and site.css shows it on hover and on focus. Ids are numbered per page.
+ */
+export function termTips(html: string): string {
+  let count = 0;
+  return html.replace(
+    /<span class="ms-span term" data-tip="([^"]*)">([\s\S]*?)<\/span>/g,
+    (_match, tip: string, text: string) => {
+      count += 1;
+      const id = `term-tip-${count}`;
+      return `<span class="term" tabindex="0" aria-describedby="${id}">${text}<span class="term-tip" id="${id}" role="tooltip">${tip}</span></span>`;
+    },
+  );
 }
 
 /**

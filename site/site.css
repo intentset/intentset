@@ -371,6 +371,53 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .site-copy:hover { color: var(--ms-fg); border-color: var(--ms-fg-muted); }
 .site-copy[data-copied] { color: var(--ms-accent); border-color: var(--ms-accent); }
 
+/* ---- terms ------------------------------------------------------------------ */
+/* A term with a tooltip (`termTips` in build.ts): a dotted underline, and the tip on hover or focus, below the term.
+   Up to 64rem wide the tip is a strip along the bottom of the window instead, so it never runs off the right edge. */
+.term {
+  position: relative;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+.term-tip {
+  display: none;
+  position: absolute;
+  /* Anchored to the term's right edge, so it opens leftward: the contents rail sits to the left of the page, and a
+     term near the end of a line has no room to its right. */
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 30;
+  width: max-content;
+  max-width: 20rem;
+  padding: 0.5rem 0.7rem;
+  font-family: var(--ms-font-body);
+  font-size: 0.85rem;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  color: var(--ms-bg);
+  background: var(--ms-fg);
+  border-radius: var(--ms-radius);
+  box-shadow: 0 0.25rem 1rem color-mix(in oklab, var(--ms-fg), transparent 80%);
+}
+.term:hover > .term-tip, .term:focus > .term-tip { display: block; }
+/* In a metrics card the tip spans the card, so a card at the end of a row cannot push it past the window's edge. */
+.ms-metric:has(.term) { position: relative; }
+.ms-metric-label .term { position: static; }
+.ms-metric-label .term-tip { left: 0; right: 0; top: calc(100% + 0.35rem); width: auto; max-width: none; }
+
+/* Up to 64rem a term near the end of a line has too little room to its right, so the tip is a strip along the bottom
+   of the window, above the chat's launcher. */
+@media (max-width: 64rem) {
+  .term-tip, .ms-metric-label .term-tip { position: fixed; left: 1rem; right: 1rem; top: auto; bottom: 1rem; width: auto; max-width: none; }
+}
+
 /* ---- narrow screens --------------------------------------------------------- */
 @media (max-width: 47.5rem) {
   /* The brand and the scheme control share the first row; the links wrap below. */
@@ -389,7 +436,7 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {
-  .site-skip, .site-nav, .site-toc, .site-scheme-slot, .site-family, .site-copy { display: none; }
+  .site-skip, .site-nav, .site-toc, .site-scheme-slot, .site-family, .site-copy, .term-tip { display: none; }
   .site-layout.has-rail { display: block; }
   .ms-card.status { background: none; color: inherit; border: 1px solid var(--ms-border); }
 }
