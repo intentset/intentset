@@ -56,7 +56,7 @@ const records = readRunRecords([], "evidence.json").records;
 const evidence = checkEvidence(result.graph, records, { commit: null, graphHash: hash, scope: null }, { level: "L1" });
 assert.ok(Object.values(evidence.classification.verifications).every((v) => v.status === "missing"));
 
-// publisher: the example's knowledge is draft, so a customer projection publishes nothing.
+// publisher: the example's knowledge is approved and reviewed against its sources, so a customer projection publishes it.
 const published = publish(
   result.graph,
   registries,
@@ -71,11 +71,28 @@ const published = publish(
   },
   { snapshot: { commit: null, graphHash: hash }, publishedAt: "2026-01-01T00:00:00Z" },
 );
-assert.deepEqual(published.index.published, []);
-// help: the file the publisher writes reads back, and binds nothing for a run that published nothing.
+assert.deepEqual(published.index.published, ["KB-ASMT-SCHEDULE"]);
+// help: the file the publisher writes reads back with the record's two tips, and binds one to a control that names
+// its behavior, reporting the control whose behavior has none.
 const help = readHelp(JSON.stringify(published.help));
 assert.equal(help.ok, true, help.problems.join("; "));
-assert.deepEqual(bindTips({ querySelectorAll: () => [] }, help.help), { bound: [], missing: [] });
+assert.deepEqual(Object.keys(help.help.tips), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+const control = (behavior) => {
+  const attributes = new Map([["data-behavior", behavior]]);
+  return {
+    getAttribute: (name) => attributes.get(name) ?? null,
+    setAttribute: (name, value) => attributes.set(name, value),
+    hasAttribute: (name) => attributes.has(name),
+  };
+};
+const schedule = control("BEH-ASMT-SCHEDULE");
+const assign = control("CAP-ASMT-ASSIGN");
+assert.deepEqual(bindTips({ querySelectorAll: () => [schedule, assign] }, help.help), {
+  bound: ["BEH-ASMT-SCHEDULE"],
+  missing: ["CAP-ASMT-ASSIGN"],
+});
+assert.equal(schedule.getAttribute("title"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
+assert.equal(assign.hasAttribute("title"), false);
 
 // atlas renders, with no script anywhere.
 const atlas = buildAtlas({
