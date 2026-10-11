@@ -248,31 +248,26 @@ test("no count is a percentage", () => {
 });
 
 test("publication readiness runs the projection per visibility with the knowledge's own availability", () => {
-  const draft = textOf(buildAtlas(example()).get("publication.html") as string);
+  // The example's knowledge is approved and reviewed against its sources as they are.
+  const approved = textOf(buildAtlas(example()).get("publication.html") as string);
+  assert.ok(approved.includes("public public excluded visibility"));
+  assert.ok(approved.includes("customer public, customer would publish"));
+  assert.ok(approved.includes("Admitted by at least one projection: 1 of 1 knowledge artifact."));
+  assert.ok(approved.includes("review current reviewed by team-assessment"));
+
+  // Demoted to a draft with its review removed, it is excluded as a draft, and the review reads as unpinned and unsigned.
+  const unreview = (name: string, source: string) =>
+    name !== "KB-ASMT-SCHEDULE.md"
+      ? source
+      : source
+          .replace("  status: approved", "  status: draft")
+          .replace(/\n {2}reviewedBy: .*\n {2}reviewedAt: .*\n/, "\n")
+          .replace(/\n {2}extensions:\n(?: {4,}.*\n)+/, "\n");
+  const draft = textOf(buildAtlas(example({ edit: unreview })).get("publication.html") as string);
   assert.ok(draft.includes("public public excluded draft"));
   assert.ok(
     draft.includes("needs review not pinned: BEH-ASMT-SCHEDULE, RULE-ASMT-AUTH, RULE-ASMT-FUTURE; no reviewer"),
   );
-
-  const hashes = new Map<string, string>();
-  const pin = (name: string, source: string) => {
-    if (name !== "KB-ASMT-SCHEDULE.md") return source;
-    const pins = ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]
-      .map((id) => `        ${id}: ${hashes.get(id)}`)
-      .join("\n");
-    return source
-      .replace("  status: draft", "  status: approved")
-      .replace(
-        "  revision: 1",
-        `  revision: 1\n  reviewedBy: reviewer-ana\n  reviewedAt: '2026-09-30'\n  extensions:\n    intentset.org/review:\n      sources:\n${pins}`,
-      );
-  };
-  for (const [id, artifact] of example().graph.artifacts) hashes.set(id, artifact.sourceHash);
-  const approved = textOf(buildAtlas(example({ edit: pin })).get("publication.html") as string);
-  assert.ok(approved.includes("public public excluded visibility"));
-  assert.ok(approved.includes("customer public, customer would publish"));
-  assert.ok(approved.includes("Admitted by at least one projection: 1 of 1 knowledge artifact."));
-  assert.ok(approved.includes("review current reviewed by reviewer-ana"));
 });
 
 test("record text cannot open markup: titles and bodies are escaped", () => {

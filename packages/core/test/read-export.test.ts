@@ -22,14 +22,19 @@ function* nodes(
     }
   } else if (value !== null && typeof value === "object") {
     for (const key of Object.keys(value)) {
-      yield [`${pointer}/${key}`, value as Record<string, unknown>, key];
-      yield* nodes((value as Record<string, unknown>)[key], `${pointer}/${key}`);
+      // RFC 6901: `intentset.org/review`, the review extension's key, is `intentset.org~1review` in a pointer.
+      const token = key.replace(/~/g, "~0").replace(/\//g, "~1");
+      yield [`${pointer}/${token}`, value as Record<string, unknown>, key];
+      yield* nodes((value as Record<string, unknown>)[key], `${pointer}/${token}`);
     }
   }
 }
 
 function at(root: unknown, pointer: string): [Record<string, unknown> | unknown[], string | number] {
-  const parts = pointer.split("/").slice(1);
+  const parts = pointer
+    .split("/")
+    .slice(1)
+    .map((token) => token.replace(/~1/g, "/").replace(/~0/g, "~"));
   let parent = root as Record<string, unknown>;
   for (const part of parts.slice(0, -1)) parent = parent[part] as Record<string, unknown>;
   const last = parts[parts.length - 1];

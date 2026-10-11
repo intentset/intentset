@@ -17,7 +17,8 @@
                 "RULE-ASMT-FUTURE": "@current"
               }
             }
-          }
+          },
+          "intentset.tips": null
         }
       }
     },
@@ -65,7 +66,7 @@
         "RULE-ASMT-FUTURE"
       ]
     },
-    "notes": "Every explained source is internal, so the provenance counts three withheld sources and names none; the knowledge's own path is omitted below an internal projection."
+    "notes": "Every explained source is internal, so the provenance counts three withheld sources and names none; the knowledge's own path is omitted below an internal projection. The tips are dropped here so the help file keys nothing and every internal ID can be listed as forbidden; the help cases below cover tips, whose keys are explained IDs by design (publication §5)."
   },
   {
     "section": "publication",
@@ -301,7 +302,15 @@
       "mustNotContain": [
         "Choose a published assessment"
       ]
-    }
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "draft"
+        }
+      }
+    },
+    "notes": "The baseline's knowledge is approved since 2026-10-11, so the case demotes it."
   },
   {
     "section": "publication",
@@ -323,7 +332,14 @@
         "Choose a published assessment"
       ]
     },
-    "notes": "Boundary: deny by default needs no diagnostic to keep a draft out."
+    "notes": "Boundary: deny by default needs no diagnostic to keep a draft out. The baseline's knowledge is approved since 2026-10-11, so the case demotes it.",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "draft"
+        }
+      }
+    }
   },
   {
     "section": "publication",
@@ -694,7 +710,8 @@
           },
           "intentset.links.explains": [
             "BEH-ASMT-SCHEDULE"
-          ]
+          ],
+          "intentset.tips": null
         }
       }
     },
@@ -720,7 +737,7 @@
         "Choose a published assessment"
       ]
     },
-    "notes": "The knowledge explains only the behavior; the rule governs it, so its pin is required too. A literal hash that is not the rule's current one models a rule edited after review."
+    "notes": "The knowledge explains only the behavior; the rule governs it, so its pin is required too. A literal hash that is not the rule's current one models a rule edited after review. The baseline's tip for the rule is dropped with the rule from explains."
   },
   {
     "section": "publication",
@@ -743,7 +760,8 @@
           },
           "intentset.links.explains": [
             "BEH-ASMT-SCHEDULE"
-          ]
+          ],
+          "intentset.tips": null
         }
       }
     },
@@ -762,7 +780,8 @@
       "mustNotContain": [
         "Choose a published assessment"
       ]
-    }
+    },
+    "notes": "The baseline's tip for the rule is dropped with the rule from explains."
   },
   {
     "section": "publication",
@@ -1686,7 +1705,8 @@
         "frontmatter": {
           "intentset.tips": {
             "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
-          }
+          },
+          "intentset.status": "draft"
         }
       }
     },

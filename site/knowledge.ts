@@ -30,8 +30,8 @@ export interface PublishedKnowledge {
   path: string;
 }
 
-/** The fixed publication time, so the same commit gives the same bytes. Only the body is read. */
-const PUBLISHED_AT = "2026-01-01T00:00:00Z";
+/** The fixed publication time, so the same commit gives the same bytes; the worked example is published at it too. */
+export const PUBLISHED_AT = "2026-01-01T00:00:00Z";
 
 /** Every knowledge record a public publication releases from the model at `root`, sorted by ID. */
 export async function publishedKnowledge(root: string): Promise<PublishedKnowledge[]> {

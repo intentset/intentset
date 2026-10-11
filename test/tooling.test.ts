@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
@@ -348,4 +349,33 @@ test("no README runs a bare `npx intentset` that could fetch someone else's pack
     }
   }
   assert.ok(seen > 0, "the READMEs show commands, so the pattern above should find some");
+});
+
+test("the worked example's knowledge is reviewed against its sources as they are, so publication releases it", async () => {
+  // Since 2026-10-11 the example's knowledge is approved: the walkthrough on
+  // intentset.org ends with what publication writes for it, and @intentset/help's
+  // tests read its tips. Its review pins are the real hashes of its three
+  // sources, so an edit to any of them puts the knowledge back in review. This
+  // says which pin moved and how to re-pin, before the site build refuses to
+  // publish a walkthrough with an empty help file.
+  const dir = join(root, "examples", "scheduling");
+  const knowledge = await readFile(join(dir, "KB-ASMT-SCHEDULE.md"), "utf8");
+  assert.match(knowledge, /^ {2}status: approved$/mu);
+  const pins = [...knowledge.matchAll(/^ {8}([A-Z][A-Z0-9-]+): '?([0-9a-f]{64})'?$/gmu)];
+  assert.deepEqual(
+    pins.map(([, id]) => id),
+    ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"],
+    "a pin on each explained source and each rule governing the explained behavior (publication §3)",
+  );
+  for (const [, id, pinned] of pins) {
+    const current = createHash("sha256")
+      .update(await readFile(join(dir, `${id}.md`)))
+      .digest("hex");
+    assert.equal(
+      pinned,
+      current,
+      `KB-ASMT-SCHEDULE pins ${id} at ${pinned}, and ${id}.md now hashes to ${current}: review the knowledge against ` +
+        `it, then set the pin to that hash (shasum -a 256 examples/scheduling/${id}.md) and update reviewedAt`,
+    );
+  }
 });

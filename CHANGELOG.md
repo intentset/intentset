@@ -7,11 +7,29 @@ case, in any section of the suite, moves `intentset.spec` from `0.1`.
 
 ## Unreleased
 
-**The worked example says "student assessment", and intentset.org gained a Copy button.** Of the specifications
-only Core moved, and only in an illustrative example: no conformance case changed, `intentset.spec` stays `0.1` and
-the export stays 0.3. The suite's baseline bytes did change, so a consumer that pins the export's graph hash reads a
-new one.
+**The worked example's knowledge is approved, reviewed and carries two tips, the walkthrough shows what publication
+writes for it, the example says "student assessment", and intentset.org gained a Copy button.** Of the specifications
+only Core moved, and only in an illustrative example: `intentset.spec` stays `0.1` and the export stays 0.3. Nine
+conformance cases gained a patch so that each still describes the draft or untipped record it is about now that the
+suite's baseline is neither, and nothing that conformed stops conforming. The suite's baseline bytes did change, so a
+consumer that pins the export's graph hash reads a new one.
 
+- **The example's knowledge is approved** (#48). `KB-ASMT-SCHEDULE` is reviewed by its owner against its three
+  sources as they are, with their hashes pinned under `intentset.org/review`, and carries two tips, for the behavior
+  and for the release-time rule; the permission rule has none, because a tip is optional. Until now the only tips a
+  reader of this repository could find were written into the record by `@intentset/help`'s tests at runtime, and the
+  example's publication was an empty index. The walkthrough's last act ends with what `intentset publish` writes
+  for a teacher on pilot-1, as written: the document with provenance in place of frontmatter and its three internal
+  sources counted rather than named, and `help.json` with the two tips keyed by the IDs a control carries. A record's
+  fields on the site now show its review and its tips. The pins are real hashes, so an edit to the behavior or either
+  rule puts the knowledge back in review: `test/tooling.test.ts` says which pin moved and how to re-pin, and the site
+  build refuses to publish a walkthrough with an empty help file. The baseline graph hash moved to
+  `bf153850c0ac1583a7803a1363eea05139772fec1b062637431a6e37abbc275f`, `tests/consumer/` was rebuilt from the recipe,
+  and the cases about a draft or an untipped record (the two P01 cases, the empty help file, the P04 pair and three
+  CORE003 and CORE009 cases) patch the record so. ADR 0011's "Not in the export" is marked superseded by ADR 0012,
+  which moved the export to 0.3 with `tips` on every artifact the same day (#47). Found on the way (#49): a review
+  pin, and a tip's key, can carry a withheld artifact's ID into an export, since publication requires the pin and
+  export §2 carries extensions as authored; two tests now say so where they used to say the ID appears nowhere.
 - **"Schedule an assessment" is "Schedule a student assessment"**, and the capability, slice, knowledge and
   verification records that named an assessment alone now say whose. Standing on its own — in the home page's
   reviewer card, in a title, in a list of records — the bare word read as an assessment of something on the page

@@ -130,6 +130,10 @@ export interface ExampleRecord {
   parent: string | null;
   /** Authored forward edges, relationship name to target ids, in source order. */
   links: Array<[string, string[]]>;
+  /** A knowledge record's `tips`, explained id to sentence, in source order; empty on every other type. */
+  tips: Array<[string, string]>;
+  /** A knowledge record's review: who, when, and the ids its `intentset.org/review` pins name. Null when unreviewed. */
+  review: { by: string; at: string; pins: string[] } | null;
   /** The file's name, e.g. BEH-ASMT-SCHEDULE.md. */
   file: string;
   /** The document after its frontmatter: what the page renders. */
@@ -171,6 +175,10 @@ function str(value: YamlValue | undefined, field: string, file: string): string 
   throw new Error(`${file}: intentset.${field} is missing`);
 }
 
+function isMap(value: YamlValue | undefined): value is YamlMap {
+  return value !== undefined && value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function strings(value: YamlValue | undefined): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 }
@@ -185,6 +193,16 @@ export function readRecord(file: string, source: string): ExampleRecord {
   if (rawLinks && typeof rawLinks === "object" && !Array.isArray(rawLinks)) {
     for (const [name, targets] of Object.entries(rawLinks)) links.push([name, strings(targets)]);
   }
+  const tips: Array<[string, string]> = [];
+  if (isMap(meta.tips)) {
+    for (const [id, tip] of Object.entries(meta.tips)) if (typeof tip === "string") tips.push([id, tip]);
+  }
+  let review: ExampleRecord["review"] = null;
+  if (typeof meta.reviewedBy === "string" && typeof meta.reviewedAt === "string") {
+    const pinned = isMap(meta.extensions) ? meta.extensions["intentset.org/review"] : undefined;
+    const sources = isMap(pinned) ? pinned.sources : undefined;
+    review = { by: meta.reviewedBy, at: meta.reviewedAt, pins: isMap(sources) ? Object.keys(sources) : [] };
+  }
   return {
     id: str(meta.id, "id", file),
     type: str(meta.type, "type", file),
@@ -195,6 +213,8 @@ export function readRecord(file: string, source: string): ExampleRecord {
     audiences: strings(meta.audiences),
     parent: typeof meta.parent === "string" ? meta.parent : null,
     links,
+    tips,
+    review,
     file,
     body,
   };

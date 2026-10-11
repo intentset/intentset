@@ -1,6 +1,6 @@
 # ADR 0011: Tips live on knowledge records, and a publication writes a help file for the product
 
-**Status:** accepted, 2026-10-04
+**Status:** accepted, 2026-10-04; the "Not in the export" decision below was superseded by ADR 0012 the same day
 
 ## Context
 
@@ -36,6 +36,8 @@ paragraphs, which is a panel, not a hover.
   product has yet to write. The binder takes any root with `querySelectorAll`, so it is tested without a DOM.
 - **Not in the export.** Adding `tips` to exported artifacts would make every 0.2 envelope invalid under a closed
   0.2 schema, which is a 0.3 change (ADR 0008). A consumer that wants coverage reads `help.json` for now.
+  *Superseded by ADR 0012, 2026-10-04*: the measure type moved the export to 0.3 the same day, and 0.3 carries
+  `tips` on every artifact (`spec/export.md` §2, §7). `help.json` stays the file a product's runtime reads.
 
 ## Consequences
 

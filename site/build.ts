@@ -26,6 +26,7 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
+import { EXAMPLE_REQUEST, type ExamplePublication, publishExample } from "./example-publication.ts";
 import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
 import { type ExampleRecord, loadRecords, readYaml, splitFrontmatter } from "./records.ts";
 
@@ -406,6 +407,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await writeFile(join(out, "robots.txt"), robotsTxt());
 
   const { specs, records, knowledge, tokens } = await siteInputs(inputs);
+  const publication = await publishExample(join(root, EXAMPLE_DIR));
   const rails = siteRails(knowledge);
   const pages: Page[] = [
     ...(await Promise.all(
@@ -414,7 +416,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
     ...specs,
     guidePage(),
     await conformancePage(),
-    exampleIndex(records),
+    exampleIndex(records, publication),
     ...records.map((record) => recordPage(record, records)),
     ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
     ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
@@ -738,7 +740,7 @@ export const EXAMPLE_ACTS: Array<{ title: string; lead: string; records: string[
   },
   {
     title: "What a customer may be told",
-    lead: `The knowledge record is the guidance a user would read, kept beside the behavior it explains rather than in a separate system that goes quietly out of date. It names the records it came from, so a change to the rule marks it for review before it is published again. This one is a draft, and publication denies by default, so nothing goes out until a person approves it.`,
+    lead: `The knowledge record is the guidance a teacher would read, kept beside the behavior it explains rather than in a separate system that goes quietly out of date. It is the one approved record in the example, and approval has a shape: a reviewer, a date, and a pin on each of the three sources it was reviewed against, so a change to the behavior or to either rule sends it back for review before it is published again. It also carries two tips, one sentence each, for the product to show beside the control that delivers the behavior and where the rule about the release time applies; the permission rule has none, because a tip is optional. The last fold is what \`intentset publish\` writes for it: the document with its provenance, and the help file a product's interface reads.`,
     records: ["KB-ASMT-SCHEDULE"],
   },
 ];
@@ -755,6 +757,11 @@ function recordFields(record: ExampleRecord, ref: (id: string) => string): strin
   ];
   if (record.parent) rows.push(["Parent", ref(record.parent)]);
   for (const [name, targets] of record.links) rows.push([relationLabel(name), targets.map(ref).join(", ")]);
+  if (record.review) {
+    const { by, at, pins } = record.review;
+    rows.push(["Reviewed", `${md(by)}, ${md(at)}, pinned to ${pins.map(ref).join(", ")}`]);
+  }
+  for (const [id, tip] of record.tips) rows.push(["Tip", `${ref(id)} · ${md(tip)}`]);
   return ["| Field | Value |", "|---|---|", ...rows.map(([k, v]) => `| ${k} | ${v} |`)].join("\n");
 }
 
@@ -784,11 +791,32 @@ function foldedRecord(record: ExampleRecord, ref: (id: string) => string): strin
 }
 
 /**
- * The worked example: the five acts, each explained and then opened, in the
- * model's own order. Generated as Markset source and rendered, so the page is a
- * Markset document like every other one.
+ * What publication writes for the example, open on the page after the last act
+ * as the records are: the generated document and the help file, as written, so
+ * a reader sees provenance in place of frontmatter, the withheld sources counted
+ * rather than named, and each tip keyed by the ID a control carries.
  */
-function exampleIndex(records: ExampleRecord[]): Page {
+function publicationFold(publication: ExamplePublication): string {
+  const r = EXAMPLE_REQUEST;
+  const inside = [
+    `What \`intentset publish\` writes for the ${r.visibility} projection, audience ${r.audience}, ${r.product} ${r.release}, role ${r.role}, edition ${r.edition}, from the example as it stands. The document keeps the record's body and replaces its frontmatter with provenance: the three sources it was reviewed against are internal, so they are counted and not named. The help file carries the two tips, keyed by the ID a control in the product carries, and names the document each comes from.`,
+    `\`\`\`markdown\n${publication.document.trimEnd()}\n\`\`\``,
+    `\`\`\`json\n${publication.help.trimEnd()}\n\`\`\``,
+  ].join("\n\n");
+  const quoted = inside
+    .split("\n")
+    .map((line) => (line === "" ? ">" : `> ${line}`))
+    .join("\n");
+  return `{.record-fold .publication-fold}\n> [!NOTE]- \`intentset publish\` · The document and the help file, as written\n${quoted}`;
+}
+
+/**
+ * The worked example: the five acts, each explained and then opened, in the
+ * model's own order, and after the last what publication writes. Generated as
+ * Markset source and rendered, so the page is a Markset document like every
+ * other one.
+ */
+function exampleIndex(records: ExampleRecord[], publication: ExamplePublication): Page {
   const byId = new Map(records.map((r) => [r.id, r]));
   const ids = new Set(records.map((r) => r.id));
   const ref = (id: string) => (ids.has(id) ? `[${id}](${id}/index.html)` : `\`${id}\``);
@@ -802,10 +830,12 @@ function exampleIndex(records: ExampleRecord[]): Page {
       if (!record) throw new Error(`the walkthrough names ${id}, which the example does not hold`);
       return foldedRecord(record, ref);
     });
+    if (index === EXAMPLE_ACTS.length - 1) folds.push(publicationFold(publication));
     return `## ${index + 1}. ${act.title}\n\n${act.lead}\n\n${folds.join("\n\n")}`;
   }).join("\n\n***\n\n");
 
   const types = new Set(records.map((r) => r.type)).size;
+  const approved = records.filter((r) => r.status === "approved").length;
   const source = `---
 markset: 0
 ---
@@ -826,11 +856,11 @@ Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in orde
 | Records | ${records.length} |
 | Record types | ${types} |
 | Behaviors | 1 |
-| Records approved | 0 |
+| Records approved | ${approved} |
 :::
 
 > [!NOTE]
-> Lantern is invented and nothing here runs. Every record is a draft, the code paths are planned rather than written, the check has not been executed and nothing has been published. What the example shows is the shape of a model and what it makes visible, not a verification report.
+> Lantern is invented and nothing here runs. Every record but the knowledge is a draft, the code paths are planned rather than written and the check has not been executed. The knowledge is approved and reviewed, so the last step can show what publication writes for it. What the example shows is the shape of a model and what it makes visible, not a verification report.
 
 ***
 

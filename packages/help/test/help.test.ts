@@ -25,25 +25,15 @@ const example = resolve(import.meta.dirname, "..", "..", "..", "examples", "sche
 const TIP = "Pick a published assessment, a class you manage and a future release time.";
 const RULE_TIP = "The release time must be in the future.";
 
-/** The example with its knowledge approved, reviewed against current pins, and carrying two tips. */
+/**
+ * The example as it is: its knowledge is approved, reviewed against its sources as they are, and carries the two tips
+ * above (since 2026-10-11; until then this test wrote them into the record itself, and no reader of the example saw one).
+ */
 function publishExample() {
   const inputs = readdirSync(example)
     .filter((name) => name.endsWith(".md"))
     .sort()
-    .map((name) => {
-      let source = readFileSync(join(example, name), "utf8");
-      if (name === "KB-ASMT-SCHEDULE.md") {
-        source = source.replace(
-          "  status: draft\n",
-          "  status: approved\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n",
-        );
-        source = source.replace(
-          "    flags: []\n---",
-          `    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: ${TIP}\n    RULE-ASMT-FUTURE: ${RULE_TIP}\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---`,
-        );
-      }
-      return plainCarrier(name, source);
-    });
+    .map((name) => plainCarrier(name, readFileSync(join(example, name), "utf8")));
   const registries = readRegistries(
     readFileSync(join(example, "registries.yaml"), "utf8"),
     "registries.yaml",
