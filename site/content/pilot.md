@@ -16,30 +16,31 @@ Both products' repositories are private, so this page counts and describes their
 
 ## Where it stands
 
-Counted on 2026-10-10 on each product's main branch, with Intentset's own checks (the 0.6 release) and from the records themselves.
+Counted on 2026-10-10 on each product's main branch, with Intentset's own checks (the 0.6 release) and from the records themselves. Streamlane's architecture figures and record count were taken again on 2026-10-11, after the entry below; the rows on approvals and behaviors are from 2026-10-10.
 
 ### Streamlane
 
 :::metrics
 | Count | Value |
 |---|---|
-| [Baselined architecture violations]{.term tip="Structural problems that already existed when the check was switched on. They are tolerated, so only a new one fails a change. This number should only go down."} | 469 |
-| [Slices]{.term tip="A slice is one feature of the product: the code that builds it and the records that describe it."} | 39 |
-| [Records]{.term tip="A record is a short Markdown file stating one thing about the product, such as a behavior, a rule or a decision. Intentset checks records against each other and against the code."} | 89 |
+| [Baselined architecture violations]{.term tip="Structural problems that already existed when the check was switched on. They are tolerated, so only a new one fails a change. This number should only go down."} | 0 |
+| [Slices]{.term tip="A slice is one feature of the product: the code that builds it and the records that describe it."} | 43 |
+| [Records]{.term tip="A record is a short Markdown file stating one thing about the product, such as a behavior, a rule or a decision. Intentset checks records against each other and against the code."} | 98 |
 | [Records approved]{.term tip="Records a person has reviewed and accepted. The rest are drafts: checked, but held to looser rules until someone approves them."} | 4 |
 | [Behaviors declared]{.term tip="A behavior is one thing the product does that a person could observe, such as refusing to start blocked work."} | 21 |
 | [Behaviors named in code]{.term tip="Behaviors whose code says, in one line, which behavior it delivers. That is what lets a log line or a test be traced back to its record."} | 8 |
 :::
 
-Streamlane's check reports 0 errors and 603 warnings. Errors fail a change; warnings are only reported. 469 of the warnings are the [baselined]{.term tip="Recorded in the baseline: the list of violations that existed when the check was switched on. They are reported as warnings, and only a new violation fails."} violations. The other 134 are:
+Streamlane's check reports 0 errors and 92 warnings, in strict mode with no baseline. Errors fail a change; warnings are only reported. The warnings are:
 
-- 64 on draft slices that have no behaviors yet, or that have files the check cannot place.
-- 66 imports into a slice from code the check does not cover yet.
-- 4 slices that do not list a backend that lists them.
+- 46 on draft slices that have no behaviors yet.
+- 29 files the check cannot place in one layer, so their imports are not layer-checked.
+- 15 imports, from the app's route pages, of a slice's private file instead of its entrypoint. The pages lie outside the declared scope, so they are reported and do not fail.
+- 2 slices that do not list a backend that lists them.
 
-All but four of the 89 records are drafts. Of the 21 behaviors, 8 are named in the backend's code and one more in the web app. The other 12 belong to a second capability that is partly built, and four of those are planned for a later release. Five of the 21 have a [verification record]{.term tip="A record that names the test proving a behavior works."}.
+Of the 98 records, all but a handful are drafts. The behaviors are as counted on 2026-10-10: 21, of which 8 are named in the backend's code and one more in the web app, with five that have a [verification record]{.term tip="A record that names the test proving a behavior works."}.
 
-The number to watch is the baseline. It can only go down, and it has: from 472 when the check was switched on to 469, while Streamlane grew from 37 slices to 39.
+The number to watch was the baseline. It could only go down, and it did: from 472 when the check was switched on to 0 on 2026-10-11, while Streamlane grew from 37 slices to 43. Nothing is tolerated now.
 
 ### Driftline
 
@@ -54,6 +55,38 @@ The number to watch is the baseline. It can only go down, and it has: from 472 w
 :::
 
 Driftline's check reports 21 warnings, all on drafts: five slices whose code is not written yet and that have no behaviors, and six [outcomes]{.term tip="An outcome is a result the product is meant to bring about for the people using it."} with no [measure]{.term tip="A record saying how an outcome is measured."} yet. Driftline reads usage evidence and writes none, so its two behaviors are proved by its tests rather than named in its code.
+
+## 2026-10-10 to 2026-10-11: The baseline reaches zero
+
+By 2026-10-10 the baseline held 469 violations. Streamlane wrote a plan to retire it (#533) and followed it in steps, each its own pull request with the gate on. The imports that reached past a slice's entrypoint became imports through it, so every slice's entrypoint is a plain list of what other slices may use. Pieces several slices shared moved out into shared code, and the app's shell became [composition]{.term tip="Code above the slices that wires them together. It may use each slice only through its entrypoint, and no slice may import it."}. The plan's first step took the baseline to one entry, the dependency cycle.
+
+That cycle was the hard part. 25 of the product's 39 slices formed one loop, joined by 99 imports, each reaching every other. It took four more changes (#575, #583, #587 and #596), after a plan for it (#563). The list pages opened the item page, and the item page opened the lists, so the item page became a slice of its own and the lists now reach it through a slot the app's root fills. The same was done for the docs editor and the live views embedded in a doc: the editor is given them instead of importing them. Each change replaced the one baseline entry with a smaller cycle: 25 slices became 22, then two cycles of 13 and 2, then one of 12, then none.
+
+```text
+98 artifacts, 0 errors, 92 warnings
+Architecture (L2, strict mode): 43 active slices; 258 files claimed,
+0 unclaimed, 783 out of scope (counted, not reported); 1196 import edges,
+333 across slices; 0 cycles; 0 excepted, 0 baselined, 0 stale baseline entries
+```
+
+The baseline file is deleted, and the model gate runs in strict mode.
+
+### What it achieved
+
+- **No known violation is left to tolerate.** A change that adds any structural violation, including a new dependency loop, fails before it merges. The rule "the baseline only shrinks" is replaced by there being no baseline.
+- **Slices can be changed one at a time.** With the loop gone, a slice's records can be promoted past draft without a cycle in its dependency graph.
+- **The ending was measurable at every step.** The loop's size, 25 slices, 22, 13, 12, 0, was reported by the check after each change.
+
+### What it cost
+
+- **A cycle's baseline entry is rewritten each time it shrinks.** Each smaller cycle needed a new entry, and a rule of its own ("only replaced by a smaller cycle") for the baseline to still only shrink.
+- **The check cannot see load order.** The last change passed every Intentset check and then failed 12 of the product's browser tests: the registration that gives the editor its blocks ran from a file the server never loaded on the client. Intentset reports who imports whom, not when a module runs. The fix rendered the registration from the app's root.
+- **Seams that cost a faster test run.** Because the root now wires in the item page and the editor's blocks, a change to almost any web code reaches almost everything, so the product runs its full browser suite for most changes.
+- **Records stayed drafts.** Retiring the cycle added slice records and changed others; each is still a draft until someone approves it.
+
+### What changed in Intentset
+
+Nothing yet. Whether a cycle's baseline entry should survive the cycle shrinking is a candidate for the next release.
 
 ## 2026-10-07 to 2026-10-10: Each area becomes a backend
 
