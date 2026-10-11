@@ -10,7 +10,7 @@
     "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
     "uncommitted": false
   },
-  "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
+  "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -249,7 +249,7 @@
       "id": "KB-ASMT-SCHEDULE",
       "type": "knowledge",
       "title": "Prepare a scheduled student assessment",
-      "status": "draft",
+      "status": "approved",
       "owner": "team-assessment",
       "visibility": "customer",
       "audiences": [
@@ -258,7 +258,7 @@
       "profile": "intentset/knowledge/0.1",
       "revision": 1,
       "path": "KB-ASMT-SCHEDULE.md",
-      "sourceHash": "50d8dfd5216b6f04befbe896c405ff428be900515389e51379af133600e87a9c",
+      "sourceHash": "a96cf3464fe3e2acf91e32d0ea345cce5d08274a93cdeaa87b9ce4ec82e70aa0",
       "parent": null,
       "links": {
         "explains": [
@@ -286,8 +286,19 @@
       "slice": null,
       "verification": null,
       "measure": null,
-      "tips": null,
-      "extensions": null
+      "tips": {
+        "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+        "RULE-ASMT-FUTURE": "The release time must be in the future."
+      },
+      "extensions": {
+        "intentset.org/review": {
+          "sources": {
+            "BEH-ASMT-SCHEDULE": "1cb64613c917d4adbb85fa8a28898e13d4450b9c2840ee80f66fcba1673fc02e",
+            "RULE-ASMT-AUTH": "40a217f3c9c56d148e185e99b0c39c61b5ad27abf4cdab70bf4d800ffd404947",
+            "RULE-ASMT-FUTURE": "e39f8756c8783312666924df3f6d2f09ad59cd6982d6ae834ea3e8d95812b35a"
+          }
+        }
+      }
     },
     {
       "id": "MEAS-PREPARE-ADOPTION",
@@ -615,7 +626,7 @@
             "evidenceId": "review-0002",
             "verificationId": "TEST-ASMT-SCHEDULE",
             "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-            "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
+            "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e",
             "environment": "staging",
             "scope": {
               "product": "PRD-LANTERN",
@@ -679,29 +690,26 @@
       ]
     },
     "knowledge": {
-      "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
+      "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e",
       "artifacts": [
         {
           "id": "KB-ASMT-SCHEDULE",
-          "lifecycle": "draft",
+          "lifecycle": "approved",
           "status": "needs-review",
-          "reviewer": null,
-          "reviewedAt": null,
+          "reviewer": "team-assessment",
+          "reviewedAt": "2026-10-11",
           "sources": [
             "BEH-ASMT-SCHEDULE",
             "RULE-ASMT-FUTURE"
           ],
           "changed": [],
-          "missing": [
-            "BEH-ASMT-SCHEDULE",
-            "RULE-ASMT-FUTURE"
-          ],
+          "missing": [],
           "withheld": 2
         }
       ]
     },
     "impact": {
-      "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
+      "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e",
       "note": "Reachability through authored links marks an artifact for review; it is not proof that runtime behavior changed (Core §10).",
       "starts": [
         {
@@ -1618,7 +1626,7 @@
     },
     "ownership": {
       "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-      "graphHash": "c390058f190cbdaee3fc25a0391127a8b4e4833b0e502014f6812d16ee77262e",
+      "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e",
       "files": [
         {
           "path": "amplify/data/resource.ts",

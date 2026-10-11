@@ -4,7 +4,6 @@
  * with the source tree the VSA fixtures give it.
  */
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -69,21 +68,16 @@ function vitestReport(status: "passed" | "failed", title = TITLE): string {
 
 const IMPORT = ["--product", "PRD-LANTERN", "--release", "pilot-1"];
 
-function sha256(path: string): string {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
+/**
+ * The example's knowledge is approved and reviewed against its sources as they are (since 2026-10-11), so publication
+ * releases it as the example stands. These two undo parts of that: the review pins, leaving an approved record with
+ * nothing to say what it was reviewed against; and the approval, leaving the draft it used to be.
+ */
+function unpinKnowledge(dir: string): void {
+  edit(dir, "KB-ASMT-SCHEDULE", /\n {2}extensions:\n(?: {4,}.*\n)+/, "\n");
 }
-
-/** Knowledge approved and reviewed, its pins the real hashes of its sources as they are now. */
-function approveKnowledge(dir: string, pins = true): void {
-  const lines = ["  reviewedBy: team-assessment", "  reviewedAt: '2026-10-02'"];
-  if (pins) {
-    lines.push("  extensions:", "    intentset.org/review:", "      sources:");
-    for (const id of ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]) {
-      lines.push(`        ${id}: ${sha256(RECORD(dir, id))}`);
-    }
-  }
-  edit(dir, "KB-ASMT-SCHEDULE", "  status: draft\n", "  status: approved\n");
-  edit(dir, "KB-ASMT-SCHEDULE", "  revision: 1\n", `  revision: 1\n${lines.join("\n")}\n`);
+function draftKnowledge(dir: string): void {
+  edit(dir, "KB-ASMT-SCHEDULE", "  status: approved\n", "  status: draft\n");
 }
 
 test("BEH-ARCH-CHECK: architecture check on the example with its source tree is clean at L2, and says what it did not check", async (t) => {
@@ -370,7 +364,7 @@ test("BEH-EVIDENCE-IMPORT: evidence import outside a git repository refuses: evi
 
 test("L4 adds publication readiness: active knowledge without a current review is CORE008", async (t) => {
   const dir = await withSources(t);
-  approveKnowledge(dir, false);
+  unpinKnowledge(dir);
   const unpinned = await run(dir, "validate", "--level", "L4");
   assert.equal(unpinned.code, 1);
   assert.match(
@@ -382,7 +376,6 @@ test("L4 adds publication readiness: active knowledge without a current review i
   assert.equal((await run(dir, "validate", "--level", "L3")).code, 0, "L3 does not check publication");
 
   const pinned = await withSources(t);
-  approveKnowledge(pinned);
   const current = await run(pinned, "validate", "--level", "L4");
   assert.equal(current.code, 0, current.out);
   assert.match(current.out, /Publication readiness: 1 active knowledge artifact checked .* \(KB-ASMT-SCHEDULE\)/);
@@ -538,7 +531,7 @@ test("review runs at L4 when run records are present", async (t) => {
   const review = await run(dir, "review");
   assert.match(review.out, /^- Level: L4, the highest the inputs allow: run records were given or found$/m);
   assert.match(review.out, /TEST-ASMT-SCHEDULE {2}automated {2}current-pass/);
-  assert.match(review.out, /Publication readiness: 0 active knowledge artifacts checked/);
+  assert.match(review.out, /Publication readiness: 1 active knowledge artifact checked/);
 });
 
 const REQUEST = [
@@ -558,8 +551,9 @@ const REQUEST = [
   "2026-10-02T12:00:00Z",
 ];
 
-test("BEH-PUBLISH: publish from the all-draft example publishes nothing and says why", async (t) => {
+test("BEH-PUBLISH: publish from the example with its knowledge demoted to a draft publishes nothing and says why", async (t) => {
   const dir = await example(t);
+  draftKnowledge(dir);
   const published = await run(dir, "publish", ...REQUEST, "--out", "published");
   assert.equal(published.code, 0, published.out + published.err);
   assert.match(
@@ -577,7 +571,6 @@ test("BEH-PUBLISH: publish from the all-draft example publishes nothing and says
 
 test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an index, a help file and chunks, naming no internal source", async (t) => {
   const dir = await example(t);
-  approveKnowledge(dir);
   const published = await run(dir, "publish", ...REQUEST, "--html", "--out", "out/kb");
   assert.equal(published.code, 0, published.out + published.err);
   assert.match(published.out, /^Published 1 document .*\n {2}KB-ASMT-SCHEDULE$/m);
@@ -616,7 +609,6 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
 
 test("BEH-PUBLISH: publish refuses a graph that does not validate, and a request missing a dimension", async (t) => {
   const dir = await example(t);
-  approveKnowledge(dir);
   const partial = await run(dir, "publish", "--visibility", "customer", "--audience", "teacher", "--out", "partial");
   assert.equal(partial.code, 1);
   assert.match(partial.out, /error PUB001 /);
@@ -700,7 +692,12 @@ test("BEH-EXPORT, BEH-READ-EXPORT: graph --report all at L3 writes every report 
     ),
   );
   assert.ok(envelope.reports.ownership?.files.some((f) => f.path === TEST_FILE && f.region === "test"));
-  assert.ok(!text.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere");
+  // The knowledge's review pins name the rule, as publication §3 requires and export §2 carries (issue #49).
+  const outsidePins = JSON.stringify({
+    ...envelope,
+    artifacts: envelope.artifacts.map((artifact) => ({ ...artifact, extensions: null })),
+  });
+  assert.ok(!outsidePins.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere but the review pins");
 
   const everything = await run(dir, "graph", "--report", "knowledge", "--include-restricted");
   assert.equal(everything.code, 0, everything.err);

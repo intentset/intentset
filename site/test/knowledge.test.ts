@@ -42,19 +42,21 @@ const pins = {
 };
 const kb = await readFile(join(example, "KB-ASMT-SCHEDULE.md"), "utf8");
 
-/** The example's knowledge record, made public, with the given id, status and review pins. */
+/**
+ * The example's knowledge record, made public, with the given id, status and review pins. The record is approved and
+ * reviewed as it stands; each pin is rewritten to the hash given for it.
+ */
 function knowledge(id: string, status: string, sources: Record<string, string>): string {
-  const pinLines = Object.entries(sources)
-    .map(([source, hash]) => `        ${source}: ${hash}`)
-    .join("\n");
-  return kb
+  let text = kb
     .replace("id: KB-ASMT-SCHEDULE", `id: ${id}`)
-    .replace("status: draft", `status: ${status}`)
-    .replace("visibility: customer", "visibility: public")
-    .replace(
-      "  revision: 1\n",
-      `  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  extensions:\n    intentset.org/review:\n      sources:\n${pinLines}\n`,
-    )
+    .replace("status: approved", `status: ${status}`)
+    .replace("visibility: customer", "visibility: public");
+  for (const [source, hash] of Object.entries(sources)) {
+    const pin = new RegExp(`^( {8}${source}: ).*$`, "m");
+    assert.match(text, pin, `${id}: no pin for ${source}`);
+    text = text.replace(pin, `$1'${hash}'`);
+  }
+  return text
     .replace("# Prepare a scheduled student assessment", `# Prepare a scheduled student assessment (${id})`)
     .replace("title: Prepare a scheduled student assessment", `title: Prepare a scheduled student assessment (${id})`);
 }

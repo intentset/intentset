@@ -403,9 +403,8 @@ test("the worked example opens every record on the page, in the act it belongs t
   // records are open on the page in Markset's folding callout, which is a
   // <details> and so needs no script.
   const index = main("example/index.html");
-  const folds = [...index.matchAll(/<details class="ms-callout record-fold"[^>]*>([\s\S]*?)<\/details>/g)].map(
-    (m) => m[1],
-  );
+  const allFolds = [...index.matchAll(/<details class="([^"]*)"[^>]*>([\s\S]*?)<\/details>/g)];
+  const folds = allFolds.filter((m) => m[1] === "ms-callout record-fold").map((m) => m[2]);
   assert.equal(folds.length, records.length, "one fold per record");
   assert.equal((index.match(/<h1[\s>]/g) ?? []).length, 1, "a record's own h1 is dropped inside its fold");
 
@@ -441,13 +440,21 @@ test("the worked example opens every record on the page, in the act it belongs t
     for (const value of [record.id, record.type, record.status, record.owner, record.visibility, ...record.audiences]) {
       assert.ok(cardText.includes(value), `${record.id}: card lacks ${value}`);
     }
-    for (const target of [...(record.parent ? [record.parent] : []), ...record.links.flatMap(([, ids]) => ids)]) {
+    const pins = record.review?.pins ?? [];
+    for (const target of [
+      ...(record.parent ? [record.parent] : []),
+      ...record.links.flatMap(([, ids]) => ids),
+      ...pins,
+    ]) {
       assert.match(
         card,
         new RegExp(`<a href="\\.\\./${target}/index\\.html">${target}</a>`),
         `${record.id}: ${target}`,
       );
     }
+    // A reviewed record's card says who reviewed it and when, and carries each tip beside the ID it is for.
+    if (record.review) assert.ok(cardText.includes(`${record.review.by}, ${record.review.at}`), `${record.id}: review`);
+    for (const [id, tip] of record.tips) assert.ok(cardText.includes(`${id} · ${tip}`), `${record.id}: tip for ${id}`);
     // The body is rendered, the frontmatter is not.
     assert.match(page, new RegExp(`<h1 id="[^"]+">${record.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</h1>`));
     assert.doesNotMatch(page, /intentset:\s*\n\s*spec:/, `${record.id}: frontmatter leaked into the page`);
@@ -455,7 +462,43 @@ test("the worked example opens every record on the page, in the act it belongs t
   }
   // Nothing on the example claims a running system or passing evidence.
   assert.ok(text(index).includes("Lantern is invented and nothing here runs."));
-  assert.ok(text(index).includes("the check has not been executed and nothing has been published"));
+  assert.ok(text(index).includes("the check has not been executed"));
+
+  // The knowledge is the one approved record (since 2026-10-11): reviewed against its three sources, with two tips.
+  const kb = records.find((r) => r.id === "KB-ASMT-SCHEDULE");
+  assert.equal(kb?.status, "approved");
+  assert.deepEqual(kb?.review?.pins, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]);
+  assert.equal(kb?.tips.length, 2);
+  assert.ok(text(index).includes("Records approved 1"));
+
+  // After the last act, what publication writes for it, as written: the document with provenance in place of its
+  // frontmatter and its internal sources counted rather than named, and the help file with the two tips keyed by the
+  // IDs a control carries. Nothing in either names an internal source.
+  const published = allFolds.filter((m) => m[1].includes("publication-fold")).map((m) => m[2]);
+  assert.equal(published.length, 1, "one publication fold");
+  assert.ok(
+    index.lastIndexOf("publication-fold") > index.lastIndexOf("<code>KB-ASMT-SCHEDULE</code>"),
+    "the publication follows the knowledge",
+  );
+  const out = text(published[0]);
+  for (const expected of [
+    "intentset/publication/0.1",
+    "withheldSources: 3",
+    "reviewer: team-assessment",
+    "intentset/help/0.1",
+    ...(kb?.tips.map(([, tip]) => tip) ?? []),
+  ]) {
+    assert.ok(out.includes(expected), `the publication lacks ${expected}`);
+  }
+  for (const internal of [
+    "Schedule a student assessment",
+    "Require a future release time",
+    "Require assignment permission",
+    "BEH-ASMT-SCHEDULE.md",
+    "RULE-ASMT-AUTH",
+  ]) {
+    assert.ok(!out.includes(internal), `the publication names ${internal}`);
+  }
 });
 
 test("home: the hero, the loop, the role cards, the worked example and status are the constructs the layout asks for", () => {

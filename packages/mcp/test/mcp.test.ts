@@ -34,21 +34,9 @@ function graphOf(edit: (name: string, source: string) => string = (_, s) => s): 
 const graph = graphOf();
 const snapshot = { commit: COMMIT, graphHash: graphHash(graph) };
 
-/** The example with its knowledge approved and reviewed against the sources as they are, so it can be published. */
+/** The example as it is: its knowledge is approved and reviewed against the sources as they are, so it can be published. */
 function reviewedGraph(): Graph {
-  const pins = ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]
-    .map((id) => `        ${id}: ${graph.artifacts.get(id)?.sourceHash}`)
-    .join("\n");
-  return graphOf((name, source) =>
-    name !== "KB-ASMT-SCHEDULE.md"
-      ? source
-      : source
-          .replace("  status: draft", "  status: approved")
-          .replace(
-            "  revision: 1",
-            `  revision: 1\n  reviewedBy: reviewer-ana\n  reviewedAt: '2026-09-30'\n  extensions:\n    intentset.org/review:\n      sources:\n${pins}`,
-          ),
-  );
+  return graphOf();
 }
 
 const REQUEST = {

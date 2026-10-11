@@ -23,9 +23,9 @@ intentset:
 
 ## Procedure
 
-`pnpm test` runs these tests with node:test. The CLI publishes from the all-draft worked example, from a copy with reviewed knowledge, from a graph that does not validate and with a request missing a dimension; the publisher units project hand-built graphs. The selector is the behavior's ID, which each test's title, or the title of the group it is in, carries; `pnpm run model:evidence` reruns the tests with the TAP reporter and turns the result into run records for every selector a title carries.
+`pnpm test` runs these tests with node:test. The CLI publishes from the worked example, whose knowledge is approved and reviewed, from a copy with that knowledge demoted to a draft, from a graph that does not validate and with a request missing a dimension; the publisher units project hand-built graphs. The selector is the behavior's ID, which each test's title, or the title of the group it is in, carries; `pnpm run model:evidence` reruns the tests with the TAP reporter and turns the result into run records for every selector a title carries.
 
-- `packages/cli/test/checks.test.ts`: the test "publish from the all-draft example publishes nothing and says why"
+- `packages/cli/test/checks.test.ts`: the test "publish from the example with its knowledge demoted to a draft publishes nothing and says why"
 - `packages/cli/test/checks.test.ts`: the test "publish writes reviewed knowledge with provenance, HTML, an index, a help file and chunks, naming no internal source"
 - `packages/cli/test/checks.test.ts`: the test "publish refuses a graph that does not validate, and a request missing a dimension"
 - `packages/publisher/test/project.test.ts`: the test "deny by default: type, lifecycle, visibility, audience and missing availability each exclude"

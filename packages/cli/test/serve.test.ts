@@ -6,7 +6,6 @@
  * over stdio, which is what proves stdout carries the protocol and nothing else.
  */
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { request } from "node:http";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,7 +15,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildMcpServer, type McpOptions, type McpServer } from "../src/commands/mcp.ts";
 import { main } from "../src/main.ts";
-import { edit, example, RECORD, REPO, run, snapshot } from "./helpers.ts";
+import { edit, example, REPO, run, snapshot } from "./helpers.ts";
 
 interface Serving {
   url: string;
@@ -226,20 +225,8 @@ test("BEH-MCP-CONTEXT: mcp engineering serves the four context tools over the gr
 });
 
 test("BEH-MCP-CONTEXT: mcp customer serves only the two knowledge tools over one publication", async (t) => {
+  // The example's knowledge is approved and reviewed against its sources as they are, so it publishes as it stands.
   const dir = await example(t);
-  const pins = ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"].map(
-    (id) =>
-      `        ${id}: ${createHash("sha256")
-        .update(readFileSync(RECORD(dir, id)))
-        .digest("hex")}`,
-  );
-  edit(dir, "KB-ASMT-SCHEDULE", "  status: draft\n", "  status: approved\n");
-  edit(
-    dir,
-    "KB-ASMT-SCHEDULE",
-    "  revision: 1\n",
-    `  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-10-02'\n  extensions:\n    intentset.org/review:\n      sources:\n${pins.join("\n")}\n`,
-  );
   const built = build(dir, { mode: "customer", ...REQUEST });
   assert.notEqual(typeof built.server, "number", built.err);
   assert.equal(built.out, "");

@@ -1804,14 +1804,16 @@
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.links.explains.0": "BEH-MISSING"
+          "intentset.links.explains.0": "BEH-MISSING",
+          "intentset.tips": null
         }
       }
     },
     "valid": false,
     "diagnostics": [
       "CORE003"
-    ]
+    ],
+    "notes": "The baseline's tips are dropped: a tip for an ID the knowledge no longer explains is CORE003 of its own, which the tip cases hold."
   },
   {
     "section": "core",
@@ -2002,14 +2004,16 @@
       "KB-ASMT-SCHEDULE.md": {
         "frontmatter": {
           "intentset.status": "approved",
-          "intentset.links": null
+          "intentset.links": null,
+          "intentset.tips": null
         }
       }
     },
     "valid": false,
     "diagnostics": [
       "CORE003"
-    ]
+    ],
+    "notes": "The baseline's tips are dropped: a tip for an ID the knowledge no longer explains is CORE003 of its own, which the tip cases hold."
   },
   {
     "section": "core",
@@ -2750,14 +2754,17 @@
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.links": null
+          "intentset.links": null,
+          "intentset.status": "draft",
+          "intentset.tips": null
         }
       }
     },
     "valid": true,
     "diagnostics": [
       "CORE009"
-    ]
+    ],
+    "notes": "The baseline's knowledge is approved and tipped since 2026-10-11, so the case demotes it and drops the tips."
   },
   {
     "section": "core",

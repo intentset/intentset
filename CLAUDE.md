@@ -223,7 +223,13 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
 - **The worked example is a walkthrough** (`EXAMPLE_ACTS` in `site/build.ts`, 2026-10-07): five acts of the model's
   chain, each with its own prose, and every record open on the page in a folding callout (Markset §4.1, a `<details>`
   with no script) rather than a link to a page a reader has to leave for. A new record goes in an act; the build
-  throws when one is in none. Each record keeps its own page, and each fold links to it.
+  throws when one is in none. Each record keeps its own page, and each fold links to it. **The knowledge is the one
+  approved record** (2026-10-11, #48): reviewed against its three sources with their real hashes pinned, and carrying
+  two tips, so the last act ends with what `intentset publish` writes for it, published at build time from a copy of
+  the example (`site/example-publication.ts`). Editing `BEH-ASMT-SCHEDULE`, `RULE-ASMT-AUTH` or `RULE-ASMT-FUTURE`
+  changes a pinned hash: review the knowledge against the change, re-pin it (`shasum -a 256`) and update `reviewedAt`,
+  or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
+  record used to be patches `status: draft` itself.
 - **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
   label, not a sentence. The h2s below it are written as sentences and keep theirs.
 - **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose
