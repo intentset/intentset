@@ -317,7 +317,7 @@ from source (the installed bin points at `dist/`, which only the build writes).
 ## The chat's backend
 
 `amplify/` is the chat's backend (SLICE-ASK), Amplify Gen 2 in us-east-2 in the coral-reef project, the same project
-and rules as coral-reef-site: every Regional resource in us-east-2, no Lambda@Edge, no us-east-1 certificate. It is a
+and rules as coral-reef-site: every Regional resource in us-east-2, no Lambda@Edge, and us-east-1 only where a service requires it, such as a CloudFront certificate (allowed since 2026-10-12). It is a
 pnpm workspace member of its own (`@intentset/chat-backend`) with its own `tsconfig.json`, so nothing it depends on
 reaches a published package.
 
