@@ -36,6 +36,8 @@ export interface ConformanceCase {
   /** How documents are read: plain (the default) or markset, whose diagnostics carry origin syntax. */
   carrier?: Carrier;
   evidence?: Record<string, unknown>[];
+  /** Per run record commit, the files git would report changed between it and the snapshot (evidence cases). */
+  changedSince?: Record<string, string[]>;
   request?: PublicationRequest;
   valid: boolean;
   diagnostics?: string[];
@@ -61,6 +63,7 @@ export interface ExpandedCase {
   level: Level;
   carrier: Carrier;
   evidence: Record<string, unknown>[];
+  changedSince: Record<string, string[]>;
   request: PublicationRequest | null;
 }
 

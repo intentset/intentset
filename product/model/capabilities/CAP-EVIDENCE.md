@@ -18,7 +18,7 @@ intentset:
 
 ## Overview
 
-Turn test reports into run records bound to a commit and a graph hash, and report coverage by links and by current passes separately (Core invariant 3).
+Turn test reports into run records bound to what each check is about, or to a commit and a graph hash, and report coverage by links and by current passes separately (Core invariant 3).
 
 ## Sources
 

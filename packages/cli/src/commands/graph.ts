@@ -20,10 +20,10 @@ import {
   impactReport,
 } from "@intentset/core";
 import { knowledgeReport } from "@intentset/publisher";
-import { evidenceReport } from "@intentset/verification";
+import { checkEvidence, evidenceReport } from "@intentset/verification";
 import type { Io } from "../output.ts";
 import { outputProblem } from "../outputs.ts";
-import type { Session } from "../session.ts";
+import type { EvidenceRun, Session } from "../session.ts";
 
 export interface GraphOptions {
   format?: string;
@@ -93,6 +93,33 @@ export function parseRelease(text: string): { product: string; label: string } |
   return { product, label };
 }
 
+/**
+ * The export contract (0.3) states a status at the snapshot's commit and graph hash and has no member for a binding,
+ * and a reader refuses a current status whose latest record is not at that snapshot. Where subject binding is in
+ * force the report is therefore classified under commit binding, says so in every note, and carries no subject
+ * information; the repository's own checks (`validate`, the CORE007 gate) still judge by subject.
+ */
+function exportedEvidence(session: Session, run: EvidenceRun) {
+  if (run.binding.binding === "commit") return evidenceReport(run.check, run.records);
+  // Its rule is the contract's own: a record counts when it was made at the snapshot's commit and graph hash, whatever
+  // it is bound to, so the records are read as the commit-binding records the contract knows.
+  const records = run.runRecords.map(({ binding: _binding, subjectHash: _subjectHash, ...rest }) => rest);
+  const check = checkEvidence(
+    session.result.graph,
+    records,
+    {
+      commit: run.snapshot.commit,
+      graphHash: run.snapshot.graphHash,
+      scope: run.snapshot.scope ?? null,
+      binding: "commit",
+    },
+    { level: session.level, files: session.tree?.paths },
+  );
+  return evidenceReport(check, run.records, {
+    note: "classified at the snapshot's commit and graph hash, as the export contract states; this repository judges evidence by subject, which the contract has no member for",
+  });
+}
+
 export function graphCommand(session: Session, options: GraphOptions, io: Io): number {
   const { repo, result, snapshot } = session;
   const release = options.release === undefined ? null : parseRelease(options.release);
@@ -103,7 +130,7 @@ export function graphCommand(session: Session, options: GraphOptions, io: Io): n
   const reports: ExportReports = {};
   for (const name of selectReports(options.reports ?? [], session.level)) {
     if (name === "evidence" && session.evidence !== undefined) {
-      reports.evidence = evidenceReport(session.evidence.check, session.evidence.records);
+      reports.evidence = exportedEvidence(session, session.evidence);
     } else if (name === "knowledge") {
       reports.knowledge = knowledgeReport(result.graph);
     } else if (name === "impact") {

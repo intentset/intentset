@@ -885,6 +885,113 @@
   },
   {
     "section": "core",
+    "name": "CORE003 boundary: a verification exercises a slice and a registry resource",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.exercises": [
+            "SLICE-ASMT-SCHEDULE",
+            "RES-ASSESSMENT-DATA"
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "verification.exercises (Core §8) is optional; each entry names a slice in the graph or a resource in the registries."
+  },
+  {
+    "section": "core",
+    "name": "CORE003 exercises names an ID that is neither a slice nor a resource",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.exercises": [
+            "SLICE-ASMT-ELSEWHERE"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE003 exercises names an artifact that is not a slice",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.exercises": [
+            "BEH-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE003"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 exercises repeats an entry",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.exercises": [
+            "SLICE-ASMT-SCHEDULE",
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 exercises is not a list",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.exercises": "SLICE-ASMT-SCHEDULE"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 exercises entry is not an ID",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.exercises": [
+            "the scheduling slice"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
     "name": "C01 boundary: a measure without direction is valid",
     "baseline": "scheduling",
     "patch": {
@@ -2952,6 +3059,68 @@
     "config": {
       "repository": "example/scheduling",
       "scope": "**/*.md"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG001 boundary: config with evidence binding and global inputs",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "binding": "commit",
+        "globalInputs": [
+          "pnpm-lock.yaml",
+          "tsconfig*.json"
+        ]
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CFG001 evidence binding is neither subject nor commit",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "binding": "graph"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG001 evidence names a key it does not know",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "bindings": "subject"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG001 evidence global inputs are not a list of paths",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": "pnpm-lock.yaml"
+      }
     },
     "valid": false,
     "diagnostics": [

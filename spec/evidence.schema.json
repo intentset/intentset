@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://intentset.org/spec/evidence.schema.json",
   "title": "Intentset run records",
-  "description": "An array of run records (Core §8): one per run of one verification. A record is evidence, not a definition; only a pass at the assessed commit and graph hash is current. Three requirements are beyond this schema and checked by the reader: a timestamp names a real calendar day, finishedAt is not before startedAt, and no two records share an evidenceId. The literal \"@current\" for commit or graphHash is the conformance fixtures' placeholder for the snapshot under assessment; a driver binds it before classification, and a record still carrying it is never current.",
+  "description": "An array of run records (Core §8): one per run of one verification. A record is evidence, not a definition; only a pass whose binding holds is current: at the assessed commit and graph hash for a commit-binding record, or while the subject it checked is unchanged for a subject-binding one (Core \u00a78). Three requirements are beyond this schema and checked by the reader: a timestamp names a real calendar day, finishedAt is not before startedAt, and no two records share an evidenceId. The literal \"@current\" for commit or graphHash is the conformance fixtures' placeholder for the snapshot under assessment; a driver binds it before classification, and a record still carrying it is never current.",
   "type": "array",
   "items": { "$ref": "#/$defs/runRecord" },
   "$defs": {
@@ -77,6 +77,15 @@
           "description": "Where the run's report lives. Presence is not proof of trustworthy execution (Core §8).",
           "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:\\S+$"
         },
+        "binding": {
+          "enum": ["subject", "commit"],
+          "description": "What the record is bound to (Core \u00a78). Absent means commit: every record written before the field existed is a commit-binding record and means what it meant. A subject record is current while the subject it checked is unchanged; its commit and graphHash stay as provenance."
+        },
+        "subjectHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the subject the run checked (Core \u00a78); required when binding is subject."
+        },
         "rationale": { "$ref": "#/$defs/text", "description": "Required when reviewer is set." },
         "extensions": {
           "type": "object",
@@ -85,6 +94,11 @@
         }
       },
       "allOf": [
+        {
+          "description": "A subject-binding record carries the hash of its subject.",
+          "if": { "required": ["binding"], "properties": { "binding": { "const": "subject" } } },
+          "then": { "required": ["subjectHash"] }
+        },
         {
           "description": "A manual record identifies its reviewer and the review rationale.",
           "if": { "required": ["reviewer"], "properties": { "reviewer": { "type": "string" } } },

@@ -825,11 +825,11 @@ function readVerification(value: unknown, field: string, problem: Problem): Veri
   }
   let ok = true;
   for (const key of Object.keys(value).sort(compareStrings)) {
-    if (!["method", "locator", "selector"].includes(key)) {
+    if (!["method", "locator", "selector", "exercises"].includes(key)) {
       problem(
         `${field}/${pointerToken(key)}`,
         `Unknown verification key \`${key}\`.`,
-        "The keys are method, locator and selector.",
+        "The keys are method, locator, selector and exercises.",
       );
       ok = false;
     }
@@ -854,12 +854,20 @@ function readVerification(value: unknown, field: string, problem: Problem): Veri
       ok = false;
     }
   }
+  let exercises: string[] | undefined;
+  if (Object.hasOwn(value, "exercises") && value.exercises !== null) {
+    const list = stringList(value.exercises, `${field}/exercises`, "exercises", problem, { pattern: ID_PATTERN });
+    if (list === null) ok = false;
+    else exercises = list;
+  }
   if (!ok) return null;
-  return {
+  const meta: VerificationMeta = {
     method: value.method as VerificationMeta["method"],
     locator: value.locator as string,
     selector: value.selector as string,
   };
+  if (exercises !== undefined) meta.exercises = exercises;
+  return meta;
 }
 
 const MEASURE_KEYS = ["metric", "baseline", "target", "window", "source", "direction"] as const;

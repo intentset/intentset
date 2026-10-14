@@ -2,7 +2,7 @@
 title: Intentset Core Specification v0.1
 id: intentset/core/0.1
 status: draft
-revision: 2026-10-07
+revision: 2026-10-14
 implementation: 0.6.1
 ---
 
@@ -23,6 +23,7 @@ Breaking revisions within `0.1`, recorded so that a reader who conformed earlier
 | Revision | Change |
 |---|---|
 | 2026-10-04 | An active outcome MUST have a measure (§5, CORE003; ADR 0012). A repository with an outcome past draft and no measure validated on 2026-10-03 and fails from this revision; while the outcome is draft it is a CORE009 warning. |
+| 2026-10-14 | Run evidence is judged by subject binding by default wherever slices claim files (§8, ADR 0013); the commit rule is `binding: commit`. A repository with slices whose records are bound to a commit, as every record written before this revision is, reads stale until its runs are imported again or it sets `evidence.binding: commit`. The evidence cases that test the commit rule now say so in their configuration, so none of them changed its `valid` or `diagnostics`. |
 
 ## 2. Semantic model and granularity
 
@@ -151,13 +152,31 @@ A release may include deprecated behavior; prospective documentation MAY describ
 
 ## 8. Verification definitions and run evidence
 
-Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. `verification` metadata contains `method` (`automated` or `manual`), `locator` (repository-relative path), and `selector` (stable test or review case identifier).
+Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. `verification` metadata contains `method` (`automated` or `manual`), `locator` (repository-relative path), `selector` (stable test or review case identifier) and optionally `exercises`: unique IDs of slices or registry resources the check drives beyond what the slices implementing its behaviors reach, as an end-to-end test drives code its behavior's slices do not import. Each MUST name a slice in the graph or a resource in the registries (CORE003).
 
-A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
+A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. A record MAY carry `binding` (`subject` or `commit`) and `subjectHash`, a SHA-256 in lowercase hex; a record with `binding: subject` MUST carry `subjectHash`, and one without `binding` is a commit-binding record, so every record written before the field existed means what it meant. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
 
-Only `pass` at the assessed commit and graph hash counts as current passing evidence in v0.1. Any older evidence is stale. This deliberately conservative policy avoids pretending change-impact analysis proves unrelated code safe. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.
+Only a `pass` whose binding holds counts as current passing evidence. There are two bindings:
 
-*Informative: where run records live.* Because a pass counts only at the assessed commit, a run record committed to the repository it assesses describes a commit that is no longer the latest the moment it lands, and reads as stale. Keep run records in CI artifacts or another store the adopting organization controls, never in the commit under assessment. (Found by the Streamlane pilot, 2026-10-02.)
+- `commit`: the record was made at the assessed commit and graph hash. This is deliberately conservative: no change-impact analysis, so no pretending that a change elsewhere is safe. A gate that needs "this commit was tested at this commit", such as a release, asks for it.
+- `subject`: the record carries the hash of the verification's **subject**, and is current while that hash equals the subject at the assessed snapshot, whatever the commit or graph hash. Its commit and graph hash stay as provenance. A current record then says that what the check is about is unchanged since it passed, not that the commit as a whole was tested.
+
+The binding in force is the one the repository asks for, as `evidence.binding` in `.intentset/config.yaml` (§11) or as a gate requires; otherwise `subject` wherever a slice that is not retired has claims, and `commit` where none does. A repository with no slice claims has no subject to hash, so it is judged by commit even when it asks for subject, and every report says so (EVID004): it never falls back silently. Under subject binding a commit-binding record is stale, with a note that it is bound to a commit and can be imported again; under commit binding a subject-binding record is stale, with a note that it is bound to a subject. The status vocabulary does not change. A report says which binding judged each verification and, for a stale subject-binding record, which parts of the subject changed since the record's commit when that can be known.
+
+**The subject** is a SHA-256, over the canonical JSON (ADR 0005) of a list of entries `{kind, id, hash, why, owner}` sorted by kind, then `id`, then `owner` (`why` and `owner` are omitted where they do not apply), of:
+
+- `verification` and `verified`: the verification record, and each behavior it verifies, directly or through a rule it verifies that governs it or a scenario it verifies that illustrates it, with those rules and scenarios: each by the source hash of its whole record, since its prose is its promise;
+- `slice`: each slice that implements a verified behavior, each slice those `dependsOn` transitively, and each slice `exercises` names, by the hash of the canonical JSON of its binding fields only (`implements`, `dependsOn`, `claims`, `usesResources` and `entrypoints`, each sorted), so a prose edit to a slice does not move a subject; `why` lists the reasons (`implements`, `dependsOn`, `exercises`);
+- `slice-file`: each file those slices' claims resolve to, by its content hash, with the slice as `owner`;
+- `resource` and `resource-file`: each registry resource an included slice lists in `usesResources` and each `exercises` names, by its registry entry, and the files its path matches by content hash, with the resource as `owner`;
+- `test` and `test-import`: the `locator` file and the local files it imports, transitively, resolved as the architecture check resolves imports (VSA §3) and not followed out of the locator's package;
+- `global-input`: each file `evidence.globalInputs` lists or its patterns match.
+
+A file's hash is the SHA-256 of its bytes, and `absent` when the file does not exist, so a deleted file moves a subject and is told apart from an empty one. What no file holds, such as a deployed environment or a service's version, stays outside the binding; a record's `environment` says which it ran in.
+
+Claims therefore decide whether evidence is current. A file that changed between the commit of a subject-bound current record and the assessed commit and that no slice claims, no used resource names, no global input lists and no record or test names cannot move any subject; when that commit is an ancestor of the assessed one a report lists such files, the first twenty and a count (EVID005), and otherwise says it could not. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.
+
+*Informative: where run records live.* Under commit binding a run record committed to the repository it assesses describes a commit that is no longer the latest the moment it lands, and reads as stale; under subject binding it still goes stale whenever the commit it lands in changes the subject, so the advice is the same. Keep run records in CI artifacts or another store the adopting organization controls, never in the commit under assessment. (Found by the Streamlane pilot, 2026-10-02.)
 
 *Outcome evidence.* A measure's reading is evidence of a different kind from a run record, and no v0.1 tool reads one. When a later version or an external system such as a usage product supplies it, an outcome evidence record names the measure ID, the window it was read in, the observed value, the source it came from, the time of the reading and an evidence URI, and it says whether the target was met. It is never current in the sense a run record is: a reading is bound to a window, not to a commit and graph hash, and an outcome met in one window may be missed in the next. Until that record is specified, such evidence travels in namespaced `extensions`, which every tool preserves and none interprets.
 
@@ -227,11 +246,13 @@ Configuration and run records have codes of their own, reported before or beside
 
 | Code | Condition | Default |
 |---|---|---|
-| CFG001 | `.intentset/config.yaml` (origin `profile`) or `.intentset/architecture.yaml` (origin `architecture`) does not parse, names an unknown key, or gives a key the wrong shape or an invalid pattern | Error |
+| CFG001 | `.intentset/config.yaml` (origin `profile`) or `.intentset/architecture.yaml` (origin `architecture`) does not parse, names an unknown key, or gives a key the wrong shape or an invalid pattern; in `config.yaml`, `evidence` takes `binding` (`subject` or `commit`) and `globalInputs` (paths or patterns), both optional | Error |
 | CFG002 | The registries file does not parse, names an unknown registry, or a registry is not a list of unique non-empty strings (`resources`: a list of resource records with known keys and unique IDs) | Error |
-| EVID001 | A run record is malformed (§8: a required field missing or of the wrong type, the file not an array of records, an evidence ID repeated), or a manual run names no reviewer or rationale | Error |
+| EVID001 | A run record is malformed (§8: a required field missing or of the wrong type, the file not an array of records, an evidence ID repeated, a `binding` other than `subject` or `commit`, a `subjectHash` that is not 64 lowercase hex, `binding: subject` with no `subjectHash`), or a manual run names no reviewer or rationale | Error |
 | EVID002 | A run record names an ID that is not a verification in the graph, so it is evidence for nothing | Warning |
 | EVID003 | A verification's `locator` is not a file in the repository tree | Warning |
+| EVID004 | The repository has no slice claims and did not choose commit binding, so evidence is judged by commit binding for want of a subject (§8) | Warning |
+| EVID005 | Files changed since the commit of a subject-bound current record that no slice claims, no used resource names, no global input lists and no record or test names, so they cannot make evidence stale; the first twenty are listed, with a count (§8) | Warning |
 
 Diagnostics MUST identify code, severity, origin, artifact, path, field/location, explanation, and remediation. `origin` names the stage that reported it, and keeps Markset's diagnostics apart from Intentset's: `syntax` (Markset, §9), `profile` (the carrier, frontmatter, required sections, configuration and registries), `graph` (identity, relationships and lifecycle across records), `architecture` (VSA and its profiles), `evidence` (run records, §8), `publication` (the [publication profile](publication.md)), and `render` (a renderer, reserved: no v0.1 check reports it). No other value is valid. Intentset codes are AREA###, Markset's are AREA_NAME; a host never renames the other's. A diagnostic with origin `syntax` is Markset's (§9) and keeps Markset's own code, such as `DIRECTIVE_UNKNOWN_NAME`; every other origin carries an Intentset code from the tables here and in the profiles. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. CLI exits are 0 pass, 1 validation failure, 2 invocation/tool failure (ADR 0004). JSON reports MUST preserve warnings separately.
 

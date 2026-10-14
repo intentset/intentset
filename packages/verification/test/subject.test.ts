@@ -1,13 +1,22 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { Artifact, Edge, Graph, LinkKind } from "@intentset/core";
-import { computeSubject, includedSlices, movedParts, type SubjectInput, verifiedBehaviors } from "../src/index.ts";
+import {
+  computeSubject,
+  includedSlices,
+  movedParts,
+  partsChangedAmong,
+  SUBJECT_PART_KINDS,
+  type SubjectInput,
+  verifiedBehaviors,
+} from "../src/index.ts";
 
 /** A hand-built graph: ids, types, authored links and a version string standing for each record's source. */
 interface Node {
   type: string;
   links?: Partial<Record<LinkKind, string[]>>;
   verification?: { method: "automated"; locator: string; selector: string; exercises?: string[] };
+  slice?: { claims?: { kind: string; path: string }[]; usesResources?: string[]; entrypoints?: string[] };
   version?: string;
 }
 
@@ -16,7 +25,7 @@ function stubGraph(nodes: Record<string, Node>): Graph {
   const edges: Edge[] = [];
   for (const [id, node] of Object.entries(nodes)) {
     artifacts.set(id, {
-      meta: { id, type: node.type, links: node.links ?? {}, verification: node.verification },
+      meta: { id, type: node.type, links: node.links ?? {}, verification: node.verification, slice: node.slice },
       path: `${id}.md`,
       sourceHash: `src:${id}:${node.version ?? "1"}`,
       body: "",
@@ -40,7 +49,15 @@ const BASE: Record<string, Node> = {
   "BEH-A": { type: "behavior", links: { governedBy: ["RULE-A"] } },
   "RULE-A": { type: "rule" },
   "SCN-A": { type: "scenario", links: { illustrates: ["BEH-A"] } },
-  "SLICE-A": { type: "slice", links: { implements: ["BEH-A"], dependsOn: ["SLICE-B"] } },
+  "SLICE-A": {
+    type: "slice",
+    links: { implements: ["BEH-A"], dependsOn: ["SLICE-B"] },
+    slice: {
+      claims: [{ kind: "source", path: "a/**" }],
+      usesResources: ["RES-DATA"],
+      entrypoints: ["a/one.ts"],
+    },
+  },
   "SLICE-B": { type: "slice", links: { dependsOn: ["SLICE-C"] } },
   "SLICE-C": { type: "slice" },
   "SLICE-D": { type: "slice" },
@@ -67,7 +84,11 @@ const FILES: Record<string, string> = {
   "d/d.ts": "d",
   "e/e.ts": "e",
   "z/z.ts": "z",
+  "data/table.ts": "table",
+  "data/other.ts": "other",
   "tests/a.test.ts": "test a",
+  "tests/helpers/fixture.ts": "fixture",
+  "tests/helpers/deeper.ts": "deeper",
   "tests/z.test.ts": "test z",
   "pnpm-lock.yaml": "lock",
   "tsconfig.json": "tsconfig",
@@ -83,6 +104,16 @@ const SLICE_FILES = {
   "SLICE-Z": ["z/z.ts"],
 };
 
+const RESOURCES = new Map([
+  ["RES-DATA", { record: { id: "RES-DATA", path: "data/table.ts" }, files: ["data/table.ts"] }],
+  ["RES-OTHER", { record: { id: "RES-OTHER", path: "data/other.ts" }, files: ["data/other.ts"] }],
+]);
+
+/** What the architecture package resolves for the test: its helper, which imports another, both in its package. */
+const IMPORTS: Record<string, string[]> = {
+  "tests/a.test.ts": ["tests/helpers/fixture.ts", "tests/helpers/deeper.ts"],
+};
+
 function input(
   overrides: Partial<SubjectInput> & { files?: Record<string, string>; nodes?: Record<string, Node> } = {},
 ): SubjectInput {
@@ -92,6 +123,8 @@ function input(
     verificationId: "TEST-A",
     readFile: (path) => (path in files ? Buffer.from(files[path]) : undefined),
     sliceFiles: SLICE_FILES,
+    resources: RESOURCES,
+    localImports: (path) => IMPORTS[path] ?? [],
     globalInputs: ["pnpm-lock.yaml", "tsconfig.json"],
     ...overrides,
   };
@@ -112,6 +145,10 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     assert.equal(a.hash, b.hash);
     assert.deepEqual(a.parts, b.parts);
     assert.equal(a.hash, hashOf());
+  });
+
+  test("the hash of a fixed input is pinned, so a change to the format is a decision", () => {
+    assert.equal(hashOf(), "6ca38ac8b3f2e2a9aa7a485463e71b8e66972e0625985672ebc2f35b2c977a9d");
   });
 
   test("it includes the implementing slice, its dependsOn closure and no other slice", () => {
@@ -158,7 +195,40 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
       "the verified behavior": { nodes: { "BEH-A": { ...BASE["BEH-A"], version: "2" } } },
       "the governing rule": { nodes: { "RULE-A": { type: "rule", version: "2" } } },
       "the verification record": { nodes: { "TEST-A": { ...BASE["TEST-A"], version: "2" } } },
-      "the implementing slice's record": { nodes: { "SLICE-A": { ...BASE["SLICE-A"], version: "2" } } },
+      "a locally imported helper": { files: { "tests/helpers/fixture.ts": "fixture!" } },
+      "a file the helper imports, transitively": { files: { "tests/helpers/deeper.ts": "deeper!" } },
+      "a file of a resource the slice uses": { files: { "data/table.ts": "table!" } },
+      "the resource's registry entry": {
+        resources: new Map([
+          ...RESOURCES,
+          ["RES-DATA", { record: { id: "RES-DATA", path: "data/**" }, files: ["data/table.ts"] }],
+        ]),
+      },
+      "a file added to the resource": {
+        resources: new Map([
+          ...RESOURCES,
+          ["RES-DATA", { ...(RESOURCES.get("RES-DATA") as object), files: ["data/table.ts", "data/new.ts"] } as never],
+        ]),
+      },
+      "a binding field of the implementing slice: its claims": {
+        nodes: {
+          "SLICE-A": {
+            ...BASE["SLICE-A"],
+            slice: { ...BASE["SLICE-A"].slice, claims: [{ kind: "source", path: "a/one.ts" }] },
+          },
+        },
+      },
+      "a binding field of the implementing slice: its entrypoints": {
+        nodes: { "SLICE-A": { ...BASE["SLICE-A"], slice: { ...BASE["SLICE-A"].slice, entrypoints: ["a/two.ts"] } } },
+      },
+      "a binding field of the implementing slice: usesResources": {
+        nodes: { "SLICE-A": { ...BASE["SLICE-A"], slice: { ...BASE["SLICE-A"].slice, usesResources: [] } } },
+      },
+      "a binding field of the implementing slice: dependsOn": {
+        nodes: {
+          "SLICE-A": { ...BASE["SLICE-A"], links: { implements: ["BEH-A"], dependsOn: ["SLICE-B", "SLICE-D"] } },
+        },
+      },
       "a global input added": { globalInputs: ["pnpm-lock.yaml", "tsconfig.json", "README.md"] },
     };
     for (const [name, change] of Object.entries(changes)) {
@@ -181,6 +251,17 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     );
     assert.equal(hashOf({ files: { "README.md": "readme!" } }), base, "a file no slice claims and no input names");
     assert.equal(hashOf({ nodes: { "SLICE-D": { type: "slice", version: "2" } } }), base, "an unrelated slice record");
+    assert.equal(
+      hashOf({ nodes: { "SLICE-A": { ...BASE["SLICE-A"], version: "2" } } }),
+      base,
+      "the implementing slice's prose: only its binding fields are in the subject",
+    );
+    assert.equal(
+      hashOf({ files: { "data/other.ts": "other!" } }),
+      base,
+      "the file of a resource no included slice uses",
+    );
+    assert.equal(hashOf({ files: { "tests/helpers/unrelated.ts": "x" } }), base, "a helper the test does not import");
     assert.equal(hashOf({ nodes: { "BEH-Z": { type: "behavior", version: "9" } } }), base, "an unrelated behavior");
     assert.equal(hashOf({ nodes: { "TEST-Z": { ...BASE["TEST-Z"], version: "9" } } }), base, "another verification");
   });
@@ -200,6 +281,55 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     assert.equal(includedSlices(stubGraph({ ...BASE, ...exercising }), "TEST-A").get("SLICE-D"), "exercises");
   });
 
+  test("exercises may name a resource, whose files then count", () => {
+    const exercising: Record<string, Node> = {
+      "TEST-A": {
+        ...BASE["TEST-A"],
+        verification: { ...(BASE["TEST-A"].verification as Node["verification"] & object), exercises: ["RES-OTHER"] },
+      },
+    };
+    const declared = hashOf({ nodes: exercising });
+    assert.notEqual(declared, hashOf());
+    assert.notEqual(hashOf({ nodes: exercising, files: { "data/other.ts": "other!" } }), declared);
+    const subject = computeSubject(input({ nodes: exercising }));
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
+      [
+        ["RES-DATA", "usesResources"],
+        ["RES-OTHER", "exercises"],
+      ],
+    );
+  });
+
+  test("a slice's binding fields are hashed in any order, and its prose not at all", () => {
+    const shuffled: Node = {
+      ...BASE["SLICE-A"],
+      slice: {
+        claims: [{ kind: "source", path: "a/**" }],
+        usesResources: ["RES-DATA"],
+        entrypoints: ["a/one.ts"],
+      },
+      links: { dependsOn: ["SLICE-B"], implements: ["BEH-A"] },
+    };
+    assert.equal(hashOf({ nodes: { "SLICE-A": shuffled } }), hashOf());
+  });
+
+  test("the test's imports are parts of their own, and the test itself is not one of them", () => {
+    const subject = computeSubject(
+      input({
+        localImports: (path) => (path === "tests/a.test.ts" ? ["tests/a.test.ts", "tests/helpers/fixture.ts"] : []),
+      }),
+    );
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "test-import").map((p) => p.id),
+      ["tests/helpers/fixture.ts"],
+    );
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "test").map((p) => p.id),
+      ["tests/a.test.ts"],
+    );
+  });
+
   test("a missing file is told apart from an empty one", () => {
     assert.notEqual(
       hashOf({ files: { "tests/a.test.ts": "" } }),
@@ -213,8 +343,16 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     assert.deepEqual(movedParts(before, after), ["global-input pnpm-lock.yaml", "slice-file b/b.ts (SLICE-B)"]);
     assert.deepEqual(movedParts(before, before), []);
     const kinds = new Set(before.parts.map((p) => p.kind));
-    for (const kind of ["verification", "verified", "slice", "slice-file", "test", "global-input"])
-      assert.ok(kinds.has(kind as never), kind);
+    for (const kind of SUBJECT_PART_KINDS) assert.ok(kinds.has(kind), kind);
+  });
+
+  test("partsChangedAmong names the parts whose file or record a diff lists, and none for an unrelated file", () => {
+    const subject = computeSubject(input());
+    assert.deepEqual(
+      partsChangedAmong(subject, new Set(["b/b.ts", "tests/helpers/fixture.ts", "BEH-A.md", "unrelated.txt"])),
+      ["slice-file b/b.ts (SLICE-B)", "test-import tests/helpers/fixture.ts", "verified BEH-A"],
+    );
+    assert.deepEqual(partsChangedAmong(subject, new Set(["unrelated.txt"])), []);
   });
 
   test("a record that is not a verification is refused", () => {

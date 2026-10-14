@@ -156,7 +156,7 @@ A verification record defines how a claim is checked: an automated test, named b
 Evidence is a separate run record: this check, on this commit, against this version of the graph, in this environment, passed, failed, was skipped or errored. `intentset evidence import` turns a Vitest or node test report from CI into run records.
 
 > [!NOTE] Linked is not verified
-> Only a pass on the commit under review counts. A pass from an earlier commit is stale, and skipped, errored and missing runs never count as passing. Reports always show two numbers side by side: how many claims have a check linked, and how many have a current pass.
+> Only a pass whose binding holds counts. By default a pass counts while what its check is about is unchanged: the behavior, the slices that deliver it and the files they claim, the test and what it imports. A repository, or a release gate, can ask for the stricter rule, a pass on the commit under review. A pass that no longer holds is stale, and skipped, errored and missing runs never count as passing. Reports always show two numbers side by side: how many claims have a check linked, and how many have a current pass.
 
 Keep run records in CI or another store you control, never in the commit they assess. A record committed to the repository describes a commit that stops being the latest the moment it lands.
 

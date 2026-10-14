@@ -6,8 +6,15 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { describe, test } from "node:test";
+import { subjectSource } from "@intentset/architecture";
 import { type Schema, validateSchema } from "../../conformance/src/harness.ts";
-import { checkFixtureEvidence, type EvidenceStatus, readRunRecords } from "../src/index.ts";
+import {
+  checkFixtureEvidence,
+  type EvidenceStatus,
+  hasSliceClaims,
+  readRunRecords,
+  resolveBinding,
+} from "../src/index.ts";
 import { type ConformanceCase, codes, expand, readJson, SPEC_DIR, TESTS_DIR, validateExpanded } from "./helpers.ts";
 
 const cases = readJson(join(TESTS_DIR, "evidence.json")) as ConformanceCase[];
@@ -15,6 +22,19 @@ const cases = readJson(join(TESTS_DIR, "evidence.json")) as ConformanceCase[];
 function run(testCase: ConformanceCase) {
   const expanded = expand(testCase);
   const validated = validateExpanded(expanded);
+  const files = new Map([...expanded.files, ...expanded.sources]);
+  const subject =
+    resolveBinding(validated.evidence.binding, hasSliceClaims(validated.graph)).binding === "subject"
+      ? subjectSource(
+          validated.graph,
+          validated.registries,
+          { files },
+          {
+            globalInputs: validated.evidence.globalInputs,
+            readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
+          },
+        )
+      : undefined;
   const evidence = checkFixtureEvidence({
     graph: validated.graph,
     level: expanded.level,
@@ -22,6 +42,9 @@ function run(testCase: ConformanceCase) {
     request: expanded.request,
     documents: expanded.files.keys(),
     sources: expanded.sources.keys(),
+    configuredBinding: validated.evidence.binding,
+    changedSince: expanded.changedSince,
+    ...(subject === undefined ? {} : { subjectSource: subject }),
   });
   return { expanded, evidence, diagnostics: [...validated.diagnostics, ...evidence.diagnostics] };
 }
@@ -47,6 +70,27 @@ const REVIEW_STATUS: Record<string, EvidenceStatus> = {
   "Scope a pass for another release is ignored": "missing",
   "Scope a fail for another release does not hide the in-scope pass": "current-pass",
   "Automated verification passing at the snapshot verifies its claims": "current-pass",
+  "S01 a subject record stays current across an unrelated commit": "current-pass",
+  "S01 a subject record stays current across a prose edit of a slice record": "current-pass",
+  "S01 a subject record stays current across an edit of an unrelated record": "current-pass",
+  "S02 a change to a file the verified behavior's slice claims makes a subject record stale": "stale",
+  "S02 a change to a file a claim of the slice resolves to by another claim makes a subject record stale": "stale",
+  "S02 a change to a dependency slice's file makes a subject record stale": "stale",
+  "S02 a change to the test file makes a subject record stale": "stale",
+  "S02 a change to a locally imported helper makes a subject record stale": "stale",
+  "S02 a change to an exercised slice's file makes a subject record stale": "stale",
+  "S02 a change to a used resource's file makes a subject record stale": "stale",
+  "S02 a change to a global input makes a subject record stale": "stale",
+  "S02 a change to the verified behavior's text makes a subject record stale": "stale",
+  "S02 a change to a binding field of a slice record makes a subject record stale": "stale",
+  "S03 a record bound to a commit is stale under subject binding": "stale",
+  "S03 a subject record is stale under commit binding": "stale",
+  "S04 a repository with no slice claims is judged by commit binding, and says so": "current-pass",
+  "S04 choosing commit binding where no slice claims files is not reported": "current-pass",
+  "S05 a file no slice claims and no check names, changed since the record's commit, is reported": "current-pass",
+  "S05 files that only claimed, used or declared inputs cover are not reported": "current-pass",
+  "S05 a record's commit that is not an ancestor of the snapshot cannot be listed, and the report says so without failing":
+    "current-pass",
 };
 
 describe("tests/evidence.json", () => {

@@ -136,6 +136,8 @@ export interface VerificationMeta {
   method: "automated" | "manual";
   locator: string;
   selector: string;
+  /** Slice or resource IDs the check drives beyond what its behaviors' slices reach (Core §8, ADR 0013); unique. */
+  exercises?: string[];
 }
 
 export const MEASURE_DIRECTIONS = ["increase", "decrease"] as const;
@@ -286,6 +288,20 @@ export interface Config {
   registries: string | null;
   /** Globs excluded from scope and from source enumeration. */
   ignore: string[];
+  /** How run evidence is judged current (Core §8, ADR 0013). */
+  evidence: EvidenceConfig;
+}
+
+/** The two bindings of run evidence to what it checks (Core §8). */
+export const EVIDENCE_BINDINGS = ["subject", "commit"] as const;
+export type EvidenceBinding = (typeof EVIDENCE_BINDINGS)[number];
+
+/** `evidence:` in `.intentset/config.yaml`; both members optional. */
+export interface EvidenceConfig {
+  /** The binding a repository asks for; null leaves the default (subject where slices exist, else commit). */
+  binding: EvidenceBinding | null;
+  /** Files whose change affects every check and that belong to no slice: paths or patterns, mixed into every subject. */
+  globalInputs: string[];
 }
 
 /** Conformance levels, Core §11. Checks above the requested level do not run. */

@@ -86,7 +86,7 @@ Streamlane's last 300 commits (`docs/adoption/subject-binding-backtest.md`, 2026
 
 **Unclaimed files are reported, not hidden.** A file that changed between a record's commit and the assessed commit,
 and that no slice claims and no resource or global input names, cannot move any subject. The report lists such files
-(`EVID003`, a warning), so a repository sees what the binding could not see, and the architecture check's unclaimed
+(`EVID005`, a warning; EVID003 was already the locator check, and the fallback below is EVID004), so a repository sees what the binding could not see, and the architecture check's unclaimed
 files rule is what removes them.
 
 ## Costs and risks
@@ -144,3 +144,26 @@ and is built after the binding itself.
 
 Whether a record may be current across a bounded number of commits as a looser alternative for suites that cannot be
 selected this way; Streamlane's first selected runs, imported with `--from playwright`, give the figures.
+
+## Implementation, stage 2 (2026-10-14)
+
+Core §8 and §11, the run record and frontmatter schemas, `evidence:` in `.intentset/config.yaml`, the classifier, `evidence import`, the
+unclaimed-files warning and the conformance cases (the S cases of `tests/evidence.json`) are built. What the build decided where this text left it open:
+
+- **Codes.** EVID003 was taken (a locator that is not a file), so the unclaimed files are EVID005 and the fallback for a repository
+  with no slice claims is EVID004.
+- **What a current subject record needs.** `binding: subject` and a `subjectHash` equal to the subject at the snapshot. A record with no
+  `binding` is a commit record, and each is stale, with a note, under the other binding, even at the snapshot's own commit: a gate that
+  asks for commit binding asks for a run imported with it (`--binding commit`).
+- **Which binding.** `evidence.binding` in the configuration, or `--binding` for one command, else subject where a slice that is not
+  retired has claims, else commit with EVID004. Asking for subject where nothing claims files is judged by commit all the same.
+- **What moved.** A record holds a hash, not its parts, so a stale record names the parts by asking git what changed between its commit
+  and the assessed one and naming the subject's parts whose file or record is on that list. A prose edit to a slice record is named
+  too, since the list cannot tell it from a change to a binding field; the hash decided that the subject moved.
+- **Test imports.** The test's local imports are followed with the architecture package's resolver and not out of the test's package;
+  an import of another workspace package is not in the subject unless a slice the check reaches claims it.
+- **The export did not move.** 0.3 states a status at the snapshot's commit and graph hash, its reader rejects a current status whose
+  latest record is not at that snapshot, and its record schema is closed. Subject binding has no place in it without a new version, so the
+  export classifies evidence by commit whatever the repository uses, reads each record as a commit record, says so in every `note`, and
+  carries neither `binding` nor `subjectHash` nor `exercises`. A consumer therefore sees `stale` for a record the repository's own gate
+  accepts, until a version carries the binding (export §7).

@@ -1,13 +1,15 @@
 /**
- * Evidence freshness (Core §8, invariant 3). Only a `pass` at the assessed
- * commit and graph hash is current; everything else is something else, and
- * says which. A failing run at the snapshot stays visible however many older
- * passes there are, because the status is decided by the latest run at the
- * snapshot and every run is kept in the history.
+ * Evidence freshness (Core §8, invariant 3). Only a `pass` whose binding holds
+ * is current: under commit binding, at the assessed commit and graph hash;
+ * under subject binding, while the subject it checked is unchanged. Everything
+ * else is something else, and says which. A failing current run stays visible
+ * however many older passes there are, because the status is decided by the
+ * latest current run and every run is kept in the history.
  */
-import { type Diagnostic, type Graph, sortDiagnostics } from "@intentset/core";
+import { type Diagnostic, type EvidenceBinding, type Graph, sortDiagnostics } from "@intentset/core";
 import { compareStrings, evidenceDiagnostic } from "./diagnostic.ts";
 import { CURRENT, compareRecords, type RunRecord, type RunResult, type RunScope } from "./records.ts";
+import { partsChangedAmong, type Subject } from "./subject.ts";
 
 export const EVIDENCE_STATUSES = [
   "current-pass",
@@ -28,6 +30,23 @@ export interface EvidenceSnapshot {
   graphHash: string;
   /** The exact product and release under assessment. Absent or null considers records of every scope, and reports that it did. */
   scope?: RunScope | null;
+  /** The binding in force (Core §8); commit when absent, as before the field existed. */
+  binding?: EvidenceBinding;
+  /**
+   * Why the binding is the one in force: `configured` (the repository asked), `default` (subject, because slices
+   * exist) or `no-slices` (commit, because the repository has no slice claims to hash and did not ask for it,
+   * which EVID004 says). Absent reads as `configured`.
+   */
+  bindingReason?: "configured" | "default" | "no-slices";
+  /** Under subject binding: the subject of each verification at the snapshot, by verification ID. */
+  subjects?: ReadonlyMap<string, Subject>;
+  /**
+   * The files changed between a record's commit and the assessed commit, or null when the commit is not an
+   * ancestor of it or git is unavailable. Optional: it only makes the notes and EVID005 more specific.
+   */
+  changedSince?: (commit: string) => readonly string[] | null;
+  /** True for a file that can move some subject: claimed, a used resource's, a global input, a test, a record. */
+  covers?: (path: string) => boolean;
 }
 
 export type ResultCounts = Record<RunResult, number>;
@@ -36,6 +55,8 @@ export interface VerificationEvidence {
   verificationId: string;
   method: "automated" | "manual";
   status: EvidenceStatus;
+  /** The binding that judged this verification. */
+  binding: EvidenceBinding;
   /** Why the status is qualified or what was set aside, when anything was. */
   note?: string;
   /** The record that decided the status: the latest at the snapshot, else the latest in scope; null when there is none. */
@@ -54,7 +75,7 @@ export interface RejectedRecord {
 }
 
 export interface Classification {
-  snapshot: { commit: string | null; graphHash: string; scope: RunScope | null };
+  snapshot: { commit: string | null; graphHash: string; scope: RunScope | null; binding: EvidenceBinding };
   /** One entry per verification artifact in the graph, keyed and ordered by ID. */
   verifications: Record<string, VerificationEvidence>;
   /** Records whose scope named another product or release, across every verification. */
@@ -63,7 +84,7 @@ export interface Classification {
   unknown: RunRecord[];
   /** Records that cannot be evidence for the verification they name (EVID001), by evidence ID. */
   rejected: RejectedRecord[];
-  /** EVID001 and EVID002, sorted. */
+  /** EVID001, EVID002, EVID004 and EVID005, sorted. */
   diagnostics: Diagnostic[];
 }
 
@@ -73,6 +94,11 @@ export interface ClassifyOptions {
 }
 
 const NOTE_COMMIT_UNKNOWN = "commit unknown; matched on graph hash";
+
+/** The most files EVID005 lists; the rest are counted. */
+export const UNCLAIMED_LIMIT = 20;
+
+const short = (commit: string) => commit.slice(0, 9);
 
 /** Core §8: classify every verification in the graph against the snapshot. Deterministic for identical inputs. */
 export function classifyEvidence(
@@ -139,7 +165,24 @@ export function classifyEvidence(
     inScope.get(record.verificationId)?.push(record);
   }
 
+  const binding = snapshot.binding ?? "commit";
+  if (snapshot.bindingReason === "no-slices") {
+    diagnostics.push(
+      evidenceDiagnostic({
+        code: "EVID004",
+        severity: "warning",
+        artifact: null,
+        path: null,
+        message:
+          "No slice claims files, so there is no subject to bind evidence to: it is judged by commit binding (a record is current only at the assessed commit and graph hash).",
+        remediation:
+          "Declare slices with claims (VSA §3) so evidence can stay current while its subject is unchanged, or set `evidence.binding: commit` in .intentset/config.yaml to choose this on purpose (Core §8).",
+      }),
+    );
+  }
+
   const verifications: Record<string, VerificationEvidence> = {};
+  const unclaimed = new Set<string>();
   for (const id of ids) {
     const artifact = graph.artifacts.get(id);
     const history = (inScope.get(id) ?? []).sort(compareRecords);
@@ -149,11 +192,28 @@ export function classifyEvidence(
       history,
       outOfScope.get(id) ?? 0,
       snapshot,
+      binding,
+      unclaimed,
+    );
+  }
+  if (unclaimed.size > 0) {
+    const files = [...unclaimed].sort(compareStrings);
+    const listed = files.slice(0, UNCLAIMED_LIMIT);
+    diagnostics.push(
+      evidenceDiagnostic({
+        code: "EVID005",
+        severity: "warning",
+        artifact: null,
+        path: null,
+        message: `${files.length} file${files.length === 1 ? "" : "s"} changed since the commit of a subject-bound record and no slice claims, no used resource names and no global input lists ${files.length === 1 ? "it" : "them"}, so ${files.length === 1 ? "it" : "they"} cannot make any evidence stale: ${listed.join(", ")}${files.length > listed.length ? `, and ${files.length - listed.length} more` : ""}.`,
+        remediation:
+          "Claim the file in a slice (the architecture check's unclaimed files rule), name its resource in `usesResources`, or list it in `evidence.globalInputs` if it affects every check (Core §8).",
+      }),
     );
   }
 
   return {
-    snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash, scope },
+    snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash, scope, binding },
     verifications,
     ignoredOutOfScope,
     unknown,
@@ -173,9 +233,11 @@ function classifyOne(
   history: RunRecord[],
   outOfScope: number,
   snapshot: EvidenceSnapshot,
+  binding: EvidenceBinding,
+  unclaimed: Set<string>,
 ): VerificationEvidence {
   const counts: ResultCounts = { pass: 0, fail: 0, skip: 0, error: 0 };
-  const base = { verificationId, method, history, atSnapshot: counts, outOfScope };
+  const base = { verificationId, method, binding, history, atSnapshot: counts, outOfScope };
   const ignored =
     outOfScope > 0 ? `${outOfScope} record${outOfScope === 1 ? "" : "s"} for another product or release ignored` : null;
 
@@ -194,25 +256,81 @@ function classifyOne(
     ]);
   }
 
-  const current = history.filter((record) => atSnapshot(record, snapshot));
+  const subject = snapshot.subjects?.get(verificationId);
+  if (binding === "subject" && subject === undefined) {
+    return withNote({ ...base, status: "unresolved", latest: history[history.length - 1] }, [
+      "subject binding is in force but no subject could be computed for this verification",
+      ignored,
+    ]);
+  }
+
+  const current =
+    binding === "subject"
+      ? history.filter((record) => record.binding === "subject" && record.subjectHash === subject?.hash)
+      : history.filter((record) => record.binding !== "subject" && atSnapshot(record, snapshot));
   for (const record of current) counts[record.result]++;
   if (current.length === 0) {
-    return withNote({ ...base, status: "stale", latest: history[history.length - 1] }, [ignored]);
+    const latest = history[history.length - 1];
+    return withNote({ ...base, status: "stale", latest }, [staleNote(latest, binding, subject, snapshot), ignored]);
   }
 
   const latest = current[current.length - 1];
   const status: EvidenceStatus =
     latest.result === "pass" ? "current-pass" : latest.result === "fail" ? "current-fail" : latest.result;
-  return withNote({ ...base, status, latest }, [snapshot.commit === null ? NOTE_COMMIT_UNKNOWN : null, ignored]);
+  const notes: (string | null)[] = [];
+  if (binding === "subject") {
+    const unlisted = collectUnclaimed(latest, snapshot, unclaimed);
+    notes.push(`judged by subject binding; the run was at commit ${short(latest.commit)}${unlisted}`);
+  } else if (snapshot.commit === null) notes.push(NOTE_COMMIT_UNKNOWN);
+  notes.push(ignored);
+  return withNote({ ...base, status, latest }, notes);
+}
+
+/** Why the latest record is not current under the binding in force, with what moved when that can be said. */
+function staleNote(
+  latest: RunRecord,
+  binding: EvidenceBinding,
+  subject: Subject | undefined,
+  snapshot: EvidenceSnapshot,
+): string | null {
+  if (binding === "commit") {
+    return latest.binding === "subject"
+      ? "latest record is bound to a subject, not to a commit; a gate that asks for commit binding needs a run imported at this commit with commit binding"
+      : null;
+  }
+  if (latest.binding !== "subject") {
+    return `latest record is bound to commit ${short(latest.commit)}, not to a subject, so subject binding judges it stale; it can be re-imported to bind it to the subject`;
+  }
+  if (snapshot.changedSince === undefined || subject === undefined) return "the subject changed since the run";
+  const changed = snapshot.changedSince(latest.commit);
+  if (changed === null) {
+    return `the subject changed since the run; which part moved is unknown, because commit ${short(latest.commit)} is not an ancestor of the assessed commit or git is unavailable`;
+  }
+  const parts = partsChangedAmong(subject, new Set(changed));
+  return parts.length === 0
+    ? `the subject changed since the run at commit ${short(latest.commit)}, in a part no changed file names (a file that left the subject, or a record moved)`
+    : `the subject changed since the run at commit ${short(latest.commit)}: ${parts.slice(0, 5).join(", ")}${parts.length > 5 ? `, and ${parts.length - 5} more` : ""}`;
+}
+
+/** Collects what changed outside every subject since a current record's commit (EVID005), and says when that cannot be known. */
+function collectUnclaimed(latest: RunRecord, snapshot: EvidenceSnapshot, unclaimed: Set<string>): string {
+  if (snapshot.changedSince === undefined || snapshot.covers === undefined) return "";
+  const changed = snapshot.changedSince(latest.commit);
+  if (changed === null) {
+    return `; files changed since then could not be listed, because the commit is not an ancestor of the assessed commit or git is unavailable`;
+  }
+  for (const path of changed) if (!snapshot.covers(path)) unclaimed.add(path);
+  return "";
 }
 
 function withNote(evidence: Omit<VerificationEvidence, "note">, notes: (string | null)[]): VerificationEvidence {
   const present = notes.filter((note): note is string => note !== null);
-  const { verificationId, method, status, latest, history, atSnapshot: counts, outOfScope } = evidence;
+  const { verificationId, method, binding, status, latest, history, atSnapshot: counts, outOfScope } = evidence;
   return {
     verificationId,
     method,
     status,
+    binding,
     ...(present.length > 0 ? { note: present.join("; ") } : {}),
     latest,
     history,

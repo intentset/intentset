@@ -9,10 +9,41 @@ case, in any section of the suite, moves `intentset.spec` from `0.1`.
 
 **The worked example's knowledge is approved, reviewed and carries two tips, the walkthrough shows what publication
 writes for it, the example says "student assessment", and intentset.org gained a Copy button.** Of the specifications
-only Core moved, in an illustrative example, and the publication profile, in a clarification: `intentset.spec` stays `0.1` and the export stays 0.3. Nine
+Core moved, in an illustrative example and in §8 (run evidence is judged by subject binding by default, below), and the publication profile and the export contract's text, in clarifications: `intentset.spec` stays `0.1` and the export stays 0.3. Nine
 conformance cases gained a patch so that each still describes the draft or untipped record it is about now that the
 suite's baseline is neither, and nothing that conformed stops conforming. The suite's baseline bytes did change, so a
 consumer that pins the export's graph hash reads a new one.
+
+- **Run evidence is judged by subject binding by default wherever slices claim files, and by commit binding when a repository or a gate asks for it** (ADR 0013, stage 2). Of the specifications Core moved
+  (§8, §11; revision 2026-10-14) and the export contract's text did (a clarification: the evidence report is classified by commit and carries no binding), so `intentset.spec` stays `0.1` and the export stays 0.3. The
+  evidence schema gained optional `binding` and `subjectHash`, the frontmatter schema optional `verification.exercises`, and
+  `.intentset/config.yaml` an optional `evidence` block (`binding`, `globalInputs`). A repository with slices whose records are bound to a commit,
+  as every record written before this revision is, reads stale until its runs are imported again or it sets `evidence.binding: commit`: the 27 evidence
+  cases that test the commit rule now say so in their configuration, none changed its `valid` or `diagnostics`, and nothing the suite held stops conforming.
+
+  - **The subject.** A verification's subject is a SHA-256 over its record and what it verifies, the binding fields (never the prose) of the slices
+    that implement the behaviors, of their `dependsOn` closure and of those `exercises` names, the content of the files those claims resolve to, the
+    registry resources they use and their files, the test file and its local imports, and the global inputs. `computeSubject` is in
+    `@intentset/verification`; `subjectSource` in `@intentset/architecture` resolves claims, resources and a test's imports with the resolver the
+    import graph uses.
+  - **`evidence import`** writes `binding: "subject"` and the hash where subject binding is in force, and today's records otherwise
+    (`--binding commit`, `evidence.binding: commit`, or no slice claims); it still refuses an uncommitted tree. `--binding subject|commit` is also
+    an option of `validate`, `graph`, `review` and the other level commands.
+  - **Reports** say which binding judged each verification (`[subject]` or `[commit]`), and when a subject record is stale which part of the
+    subject changed since its commit, named from one `git diff`. A commit record under subject binding, and a subject record under commit binding,
+    are stale with a note. Two new warnings: **EVID004**, a repository with no slice claims judged by commit for want of a subject, and
+    **EVID005**, the files changed since a current subject record that no slice claims, no used resource names, no global input lists and no
+    record or test names, so they cannot make evidence stale (the first twenty, with a count).
+  - **`verification.exercises`** (slice or resource IDs, unique, CORE003 when one names neither) is read, validated and hashed; it is not exported.
+  - **The export did not move, and does not carry the binding.** 0.3's reader rejects a current status whose latest record is not at the
+    snapshot's commit and graph hash, and its record schema is closed, so `graph` classifies the evidence report by commit when the repository's
+    binding is subject, says so in every `note`, and leaves `binding`, `subjectHash` and `exercises` out. A consumer of the export reads `stale` for a record the repository's own
+    L3 check accepts; carrying the binding would be a 0.4 and is a decision for when a consumer needs it.
+  - **Conformance.** `tests/evidence.json` has the subject cases (S01 to S05): a record current across an unrelated commit, a prose edit of a slice
+    record and an unrelated record edit; stale for a change to a claimed file, a dependency's, the test, a helper it imports, an exercised slice, a used
+    resource, a global input, the verified behavior's text and a binding field; the commit-record and subject-record mismatches; the no-slice
+    fallback (EVID004) and EVID005. The cases pin the subject hash of their tree. A case may carry `changedSince`, the files git would report
+    changed between a record's commit and the snapshot. `tests/core.json` has the `exercises` and `evidence` configuration cases.
 
 - **`intentset evidence import --from playwright`** reads Playwright's JSON reporter, as `--from vitest` reads Vitest's.
   A test is named by its `describe` titles and its own, so a verification's selector matches as it does for the other

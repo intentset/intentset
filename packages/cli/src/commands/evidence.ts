@@ -10,7 +10,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { compareStrings } from "@intentset/core";
+import { compareStrings, type EvidenceBinding } from "@intentset/core";
 import {
   type ParsedRun,
   isUtcTimestamp,
@@ -22,6 +22,8 @@ import {
 import { count, type Io } from "../output.ts";
 import { outputProblem } from "../outputs.ts";
 import type { Session } from "../session.ts";
+import { bindingFor, subjectsOf } from "../subject.ts";
+import { readTree } from "../tree.ts";
 
 export const REPORTERS = {
   vitest: { tool: "vitest", parse: (text: string) => parseVitestJson(JSON.parse(text)) },
@@ -40,6 +42,8 @@ export interface EvidenceImportOptions {
   finishedAt?: string;
   uriBase?: string;
   toolVersion?: string;
+  /** Overrides evidence.binding of the configuration (Core §8). */
+  binding?: EvidenceBinding;
 }
 
 const URI = /^[A-Za-z][A-Za-z0-9+.-]*:\S+$/;
@@ -127,6 +131,15 @@ export function evidenceImportCommand(session: Session, options: EvidenceImportO
     else verifications.set(selector, id);
   }
 
+  // Core §8: where subject binding is in force each record carries its verification's subject hash; otherwise the
+  // records are what they always were. The commit and graph hash go in either way, as provenance.
+  const decision = bindingFor(repo, graph, options.binding);
+  let subjectHashes: Map<string, string> | undefined;
+  if (decision.binding === "subject") {
+    const { subjects } = subjectsOf(repo, graph, readTree(repo.root, repo.config));
+    subjectHashes = new Map([...subjects].map(([id, subject]) => [id, subject.hash]));
+  }
+
   const startedAt = options.startedAt ?? modified;
   const finishedAt = options.finishedAt ?? modified;
   let converted: ReturnType<typeof toRunRecords>;
@@ -141,6 +154,7 @@ export function evidenceImportCommand(session: Session, options: EvidenceImportO
       startedAt,
       finishedAt,
       uriBase: options.uriBase ?? pathToFileURL(reportFile).href,
+      ...(subjectHashes === undefined ? {} : { subjects: subjectHashes }),
     });
   } catch (error) {
     return fail((error as Error).message);
@@ -155,6 +169,11 @@ export function evidenceImportCommand(session: Session, options: EvidenceImportO
   const lines = [
     `Imported ${count(converted.records.length, "run record")} from ${options.report} (${options.from}, ${count(parsed.tests.length, "test")}) into ${options.out}`,
     `  bound to commit ${snapshot.commit}, graph ${snapshot.graphHash}, for ${product} ${release}, environment ${options.environment ?? "local"}`,
+    decision.binding === "subject"
+      ? `  binding: subject (${decision.reason === "default" ? "the default, since slices claim files" : "as configured"}); each record carries the hash of its verification's subject, and stays current while that is unchanged. The commit above is provenance.`
+      : decision.reason === "no-slices"
+        ? "  binding: commit; no slice claims files, so there is no subject to bind to (EVID004). Each record is current only at that commit and graph hash."
+        : "  binding: commit, as configured. Each record is current only at that commit and graph hash.",
   ];
   if (options.startedAt === undefined || options.finishedAt === undefined) {
     lines.push(

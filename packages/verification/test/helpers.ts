@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
+  type Config,
   type Diagnostic,
   type DocumentInput,
   EMPTY_REGISTRIES,
@@ -48,6 +49,8 @@ export interface Validated {
   registries: Registries;
   /** Validation's diagnostics plus those of the registries and config, as the harness folds them. */
   diagnostics: Diagnostic[];
+  /** `evidence:` of the case's configuration; its defaults when the case has none. */
+  evidence: Config["evidence"];
 }
 
 /** The harness's validateTree, restated so a test does not import its drivers. */
@@ -63,9 +66,14 @@ export function validateExpanded(expanded: ExpandedCase): Validated {
     registries = read.registries;
     extra.push(...read.diagnostics);
   }
-  if (expanded.configText !== null) extra.push(...readConfig(expanded.configText, CONFIG_PATH).diagnostics);
+  let evidence: Config["evidence"] = { binding: null, globalInputs: [] };
+  if (expanded.configText !== null) {
+    const config = readConfig(expanded.configText, CONFIG_PATH);
+    extra.push(...config.diagnostics);
+    evidence = config.config.evidence;
+  }
   const result = validate(inputs, registries, { level: expanded.level });
-  return { graph: result.graph, registries, diagnostics: [...result.diagnostics, ...extra] };
+  return { graph: result.graph, registries, diagnostics: [...result.diagnostics, ...extra], evidence };
 }
 
 const CLAIMS = ["BEH-ASMT-SCHEDULE.md", "RULE-ASMT-AUTH.md", "RULE-ASMT-FUTURE.md", "SCN-ASMT-SCHEDULE.md"];

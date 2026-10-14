@@ -34,6 +34,12 @@ export interface ToRunRecordsOptions {
   finishedAt: string;
   /** Where the run's report lives; each record's uri is this plus `#` and the verification ID. */
   uriBase: string;
+  /**
+   * Verification ID -> the hash of its subject, when the effective binding is subject (Core §8): a record is then
+   * written with `binding: "subject"` and that hash, and the commit and graph hash stay as provenance. A
+   * verification with no entry, or no map at all, gets a commit-binding record.
+   */
+  subjects?: ReadonlyMap<string, string>;
 }
 
 export interface ConvertedRun {
@@ -114,6 +120,7 @@ export function toRunRecords(parsed: ParsedRun, options: ToRunRecordsOptions): C
       .map(([r, n]) => `${n} ${r}`)
       .join(", ");
     const names = [...selectors].sort(compareStrings).join(", ");
+    const subjectHash = options.subjects?.get(verificationId);
     records.push({
       evidenceId: deriveEvidenceId(verificationId, options.commit, options.graphHash, options.finishedAt),
       verificationId,
@@ -127,6 +134,7 @@ export function toRunRecords(parsed: ParsedRun, options: ToRunRecordsOptions): C
       finishedAt: options.finishedAt,
       result,
       uri: `${options.uriBase}#${encodeURIComponent(verificationId)}`,
+      ...(subjectHash === undefined ? {} : { binding: "subject" as const, subjectHash }),
       rationale: `${results.length} test${results.length === 1 ? "" : "s"} matched ${names}: ${counts}.`,
     });
   }

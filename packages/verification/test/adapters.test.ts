@@ -316,6 +316,25 @@ describe("BEH-EVIDENCE-IMPORT: toRunRecords", () => {
     assert.deepEqual(gate.tool, OPTIONS.tool);
   });
 
+  test("with subjects, a matched verification gets a subject record carrying its hash; the rest stay commit records", () => {
+    const hash = "7".repeat(64);
+    const { records } = toRunRecords(parseNodeTap(NODE_TAP), {
+      ...OPTIONS,
+      subjects: new Map([["TEST-ASMT-SCHEDULE", hash]]),
+    });
+    const [gate, schedule] = records;
+    assert.equal(schedule.binding, "subject");
+    assert.equal(schedule.subjectHash, hash);
+    assert.equal(schedule.commit, COMMIT, "the commit stays as provenance");
+    assert.equal(schedule.graphHash, HASH);
+    assert.equal(gate.binding, undefined);
+    assert.equal("subjectHash" in gate, false);
+    assert.deepEqual(
+      toRunRecords(parseNodeTap(NODE_TAP), OPTIONS).records.map((r) => r.binding),
+      [undefined, undefined],
+    );
+  });
+
   test("the worst result wins: fail over error over skip over pass", () => {
     const run = (results: ParsedRun["tests"][number]["result"][]): string =>
       toRunRecords(
