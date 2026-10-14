@@ -1,6 +1,6 @@
 # ADR 0013: Run evidence should be current for what it checks, not for the whole commit
 
-**Status:** proposed, 2026-10-14. Not accepted: it changes Core §8, and nothing is built until the maintainers accept it.
+**Status:** proposed, 2026-10-14, revised the same day after review. Not accepted: it changes Core §8, and nothing is built until the maintainers accept it.
 
 ## Context
 
@@ -35,31 +35,73 @@ So there are two bindings, each too coarse for a slow suite: the **commit** (any
 
 ## Recommendation
 
-Option 3, as an opt-in in `.intentset/config.yaml` (`evidence.binding: subject`), with option 1 staying the default.
-Opt-in keeps the claim honest: Core §8's worry is that change-impact analysis can prove unrelated code safe wrongly.
-Here the analysis is the one the architecture check already runs, owned by the slice record and enforced by VSA
-(an import past a slice's entrypoint, or from a slice it does not declare, is an error), so the set of files a check
-can depend on is already declared and checked rather than inferred. What it still cannot see is behavior that flows
-through something no slice claims (configuration, the deployed environment, data). Those stay outside the binding and
-the record's `environment` field says so.
+Option 3, as the **default** wherever a repository has slices, with commit binding kept as a stricter mode a gate can
+require. The first draft of this ADR made subject binding opt-in. That was wrong for the direction the family is
+building toward: work done by agents arrives as many small commits in quick succession, and commit binding makes
+evidence useless in exactly that flow, so an opt-in would make the intended way of working the exception. Intentset's
+specifications are 0.1 drafts with the family's own products as the adopters, so changing the default now costs
+little and later would cost a great deal.
 
-A record under subject binding carries a `subjectHash` instead of relying on the snapshot's commit and graph hash, and
-a tool says which binding judged a record. A repository that does not opt in is judged as before, so no existing run
-record, case or export changes meaning.
+- **`binding: subject` is the default.** A record is current while its subject is unchanged (below).
+- **`binding: commit` is the existing rule, named.** A gate that needs "this commit was tested at this commit" asks
+  for it: a release, and the compliance evidence a product keeps for its own users. A release then needs the suite run
+  at the tag, while ordinary merges are judged on the subject. The two are used at different gates and neither
+  replaces the other.
+- **No slices, no subject.** A repository with no slice claims (no L2 architecture) cannot compute a subject, so it is
+  judged by commit binding and every report says so with a diagnostic. It never falls back silently.
+
+**The subject of a record** is hashed from: the verification record and what it verifies (its behaviors, their rules
+and scenarios); the files claimed by the slices that implement those behaviors and by the slices they depend on; the
+test's own file; the files claimed by any slice the verification **declares it exercises** (below); and the repository's
+**global inputs**.
+
+Two additions that the first draft lacked, each found by asking what a hash of files cannot see:
+
+- **A verification declares the slices it exercises** (`verification.exercises`, a list of slice IDs, optional). An
+  end-to-end test drives the whole stack, and a product whose web and backend slices talk through an API, not imports,
+  has no `dependsOn` between them; Streamlane's are like that. Without the declaration a backend change could break a
+  browser test while its evidence stayed current. A verification that declares nothing is judged on the behavior's
+  slices only, and the report says it declares nothing.
+- **Global inputs** (`evidence.globalInputs`, in `.intentset/config.yaml`): files whose change affects every check
+  and belong to no slice, such as the lockfile, the toolchain version file, the TypeScript configuration and the CI
+  workflow. They are mixed into every subject hash. What no file holds (the deployed environment, its data, a service's
+  version) stays outside the binding, and a record's `environment` field says which environment it ran in.
+
+## Costs and risks
+
+- **Claims become trust-bearing.** A slice's claimed files were an ownership and architecture matter; they now decide
+  whether evidence is current. Too wide a claim (`apps/web/**`) makes the hash cover everything and quietly returns
+  the commit rule's behavior; too narrow a claim, or a file nobody claims, gives a false green. The architecture
+  check already reports unclaimed files as errors in strict mode, which is the control; a claim wider than the files the
+  slice's imports reach could be reported as a warning.
+- **A larger specification.** Every reader of the export must compute a subject identically, so the hashing is
+  specified canonically and ships with conformance cases: a record kept current across an unrelated commit, made stale
+  by a change to a claimed file, a dependency's file, the test file, an exercised slice, a global input, or the verified
+  behavior.
+- **A weaker default statement.** At the default, a current record says the check's subject is unchanged since it
+  passed, not that the commit as a whole was tested. The commit mode exists so that a gate that needs the stronger
+  statement can ask for it.
+- **Large dependency closures.** Streamlane's shared packages put many slices in each other's closure, so a change
+  to a shared package makes most evidence stale. That is honest, and it makes the gate noisy for that change.
 
 ## Consequences if accepted
 
-- Core §8 gains the binding and its rule; the run record schema gains an optional `subjectHash` and `binding`; the
-  export's evidence report says which binding judged each record; conformance cases cover a record kept current across
-  an unrelated commit and made stale by a change to a claimed file, a dependency's file, the test file and the
-  verified behavior.
-- Streamlane runs its browser suite nightly and its unit tests per commit, and a record stays current for as long as the
-  slice's files and the model records around it are unchanged. Its L3 gate can then name a scope and mean it.
-- A slice whose `claims` are wrong (a file missing from them) would let evidence stay current when it should not. The
-  architecture check already reports unclaimed files, which is the control; this decision makes claims matter more.
+- Core §8 gains both bindings and the rule for choosing; the run record schema gains optional `subjectHash` and
+  `binding`; the verification metadata gains optional `exercises`; the configuration gains `evidence.binding` and
+  `evidence.globalInputs`; the export's evidence report says which binding judged each record and what a verification
+  declares.
+- Streamlane runs its unit tests per commit and its browser suite nightly, and a record stays current for as long as
+  its subject is unchanged. Its L3 gate can name a scope and mean it, and a release gate can require commit binding.
+
+## Before it is accepted: a back-test
+
+Replay Streamlane's history. For each past commit, would subject binding have marked stale the evidence of the tests
+that failed, or that the commit changed behavior for? The commits that broke a pinned record on 2026-10-11 (#678,
+#666, #690, #702, #704, #720), the settings-read loop fixed in #891 and the cut-map sentence fixed in #891 are known
+cases. The result decides how large a closure is acceptable and whether declaring `exercises` is needed on every
+verification or only on the end-to-end ones.
 
 ## Not decided here
 
-How large a `dependsOn` closure is acceptable (Streamlane's shared packages put many slices in each other's closure),
-and whether a record may be current across a bounded number of commits as a looser alternative. Streamlane's first
-nightly runs, imported with `--from playwright`, give the figures to decide on.
+Whether a record may be current across a bounded number of commits as a looser alternative; Streamlane's first nightly
+runs, imported with `--from playwright`, give the figures.
