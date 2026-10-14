@@ -11,13 +11,21 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "no
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { compareStrings } from "@intentset/core";
-import { type ParsedRun, isUtcTimestamp, parseNodeTap, parseVitestJson, toRunRecords } from "@intentset/verification";
+import {
+  type ParsedRun,
+  isUtcTimestamp,
+  parseNodeTap,
+  parsePlaywrightJson,
+  parseVitestJson,
+  toRunRecords,
+} from "@intentset/verification";
 import { count, type Io } from "../output.ts";
 import { outputProblem } from "../outputs.ts";
 import type { Session } from "../session.ts";
 
 export const REPORTERS = {
   vitest: { tool: "vitest", parse: (text: string) => parseVitestJson(JSON.parse(text)) },
+  playwright: { tool: "playwright", parse: (text: string) => parsePlaywrightJson(JSON.parse(text)) },
   "node-tap": { tool: "node:test", parse: (text: string) => parseNodeTap(text) },
 } as const;
 
@@ -39,7 +47,7 @@ const URI = /^[A-Za-z][A-Za-z0-9+.-]*:\S+$/;
 /** Problems that need no repository, so a typo costs nothing. */
 export function evidenceUsageProblem(options: EvidenceImportOptions): string | null {
   if (options.from === undefined || !Object.hasOwn(REPORTERS, options.from)) {
-    return `--from ${options.from ?? "(missing)"}: the reporters are ${Object.keys(REPORTERS).join(" and ")}`;
+    return `--from ${options.from ?? "(missing)"}: the reporters are ${Object.keys(REPORTERS).join(", ")}`;
   }
   if (options.report === undefined) return "a report file is required: evidence import --from <reporter> <report>";
   for (const [flag, value] of [

@@ -248,7 +248,7 @@ test("BEH-VALIDATE-REPORTS: invocation errors exit 2 before reading anything", a
     [["validate", "--level", "L2", "--mode", "lax"], /the modes are migration and strict/],
     [["architecture"], /the only subcommand is "architecture check"/],
     [["architecture", "check", "--level", "L1"], /runs at L2 and above/],
-    [["evidence", "import", "r.json", "--from", "jest"], /the reporters are vitest and node-tap/],
+    [["evidence", "import", "r.json", "--from", "jest"], /the reporters are vitest, playwright, node-tap/],
     [["evidence", "import", "--from", "vitest"], /a report file is required/],
     [
       ["evidence", "import", "r.json", "--from", "vitest", "--product", "PRD-LANTERN", "--release", "pilot-1"],
