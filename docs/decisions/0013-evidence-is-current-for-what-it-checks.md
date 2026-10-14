@@ -50,22 +50,44 @@ little and later would cost a great deal.
 - **No slices, no subject.** A repository with no slice claims (no L2 architecture) cannot compute a subject, so it is
   judged by commit binding and every report says so with a diagnostic. It never falls back silently.
 
-**The subject of a record** is hashed from: the verification record and what it verifies (its behaviors, their rules
-and scenarios); the files claimed by the slices that implement those behaviors and by the slices they depend on; the
-test's own file; the files claimed by any slice the verification **declares it exercises** (below); and the repository's
-**global inputs**.
+**The subject of a record** is hashed from:
 
-Two additions that the first draft lacked, each found by asking what a hash of files cannot see:
+- the verification record and what it verifies (its behaviors, their rules and scenarios);
+- the slices that implement those behaviors, those they `dependsOn` (transitively) and those the verification
+  **declares it exercises** (below): for each, its **binding fields** (`implements`, `dependsOn`, `claims`,
+  `usesResources`, `entrypoints`) and the files its claims resolve to, and the files of every resource it `usesResources`;
+- the test's own file and the **local files it imports**, transitively, such as an end-to-end helper or fixture;
+- the repository's **global inputs**.
 
-- **A verification declares the slices it exercises** (`verification.exercises`, a list of slice IDs, optional). An
-  end-to-end test drives the whole stack, and a product whose web and backend slices talk through an API, not imports,
-  has no `dependsOn` between them; Streamlane's are like that. Without the declaration a backend change could break a
-  browser test while its evidence stayed current. A verification that declares nothing is judged on the behavior's
-  slices only, and the report says it declares nothing.
+Three additions to the first draft, each found by asking what a hash of files cannot see; the back-test over
+Streamlane's last 300 commits (`docs/adoption/subject-binding-backtest.md`, 2026-10-14) measured the gaps:
+
+- **A verification declares what it exercises** (`verification.exercises`, a list of slice or resource IDs, optional).
+  An end-to-end test drives the whole stack, and a product whose web and backend slices talk through an API, not
+  imports, has no `dependsOn` between them; Streamlane's are like that. A verification that declares nothing is judged
+  on the behavior's slices only, and the report says it declares nothing. Declaring is needed where the behavior's own
+  slices do not reach the code the test drives: the back-test found one such case in six replayed fixes (a delivery
+  strip test whose backend change lay outside its closure), and 20 of the 21 end-to-end verifications whose behavior
+  changed with the code moved through the behavior's slices alone.
+- **Resources and the slice record count, but only the parts that bind.** Files no slice claims are the largest gap:
+  129 of the 172 code-changing commits touched a file outside every claim (backend resources, shared and composition
+  code), invisible to a hash of claimed files. A slice's `usesResources` is declared and checked by VSA, so the files
+  of the resources it uses are in its subject (about 6.5 points of per-commit currency, 87.6% against 94.1%, the price
+  of closing it). The slice record took part in 64% of subject moves, because it is hashed whole: only the binding
+  fields above count, so a prose edit to a slice does not move a subject. A behavior, rule, scenario or verification
+  is hashed whole, since its prose is its promise.
 - **Global inputs** (`evidence.globalInputs`, in `.intentset/config.yaml`): files whose change affects every check
-  and belong to no slice, such as the lockfile, the toolchain version file, the TypeScript configuration and the CI
-  workflow. They are mixed into every subject hash. What no file holds (the deployed environment, its data, a service's
-  version) stays outside the binding, and a record's `environment` field says which environment it ran in.
+  and belong to no slice, such as the lockfile and the toolchain version files. They are mixed into every subject hash.
+  The back-test found that a lean set (the lockfile, the workspace file, the TypeScript configurations and the version
+  files) kept 94.1% of evidence per commit while adding `package.json` and the workflows kept 92.3%; each moves every
+  subject when it changes, so the set is a choice and each entry is named in the configuration. What no file holds (the
+  deployed environment, its data, a service's version) stays outside the binding, and a record's `environment` field
+  says which environment it ran in.
+
+**Unclaimed files are reported, not hidden.** A file that changed between a record's commit and the assessed commit,
+and that no slice claims and no resource or global input names, cannot move any subject. The report lists such files
+(`EVID003`, a warning), so a repository sees what the binding could not see, and the architecture check's unclaimed
+files rule is what removes them.
 
 ## Costs and risks
 
@@ -81,8 +103,15 @@ Two additions that the first draft lacked, each found by asking what a hash of f
 - **A weaker default statement.** At the default, a current record says the check's subject is unchanged since it
   passed, not that the commit as a whole was tested. The commit mode exists so that a gate that needs the stronger
   statement can ask for it.
-- **Large dependency closures.** Streamlane's shared packages put many slices in each other's closure, so a change
-  to a shared package makes most evidence stale. That is honest, and it makes the gate noisy for that change.
+- **Large dependency closures.** Measured on Streamlane: the median verification hashes 8 slices and 87 files, the 90th
+  percentile 26 slices and 200 files, the largest 32 slices and 228 files, and six slices have a closure of at least half
+  the model. A change to a central slice makes most evidence stale. That is honest. There is no cap, because the wide
+  ones are the central slices; a warning above the 90th percentile names the noisy ones.
+- **A subject cannot make slow evidence last.** At Streamlane's merge rate (about 60 a day) the share of evidence still
+  current is 75% after one commit, 31% after five, 13% after ten and 3% after twenty-five. Subject binding makes
+  per-merge unit runs useful and does little for a 28-minute nightly browser suite, whose evidence is stale by the next
+  merge. That is a property of the repository's pace, and the tail is heavy (a commit that touches a central slice moves
+  nearly every subject).
 
 ## Consequences if accepted
 
@@ -93,15 +122,25 @@ Two additions that the first draft lacked, each found by asking what a hash of f
 - Streamlane runs its unit tests per commit and its browser suite nightly, and a record stays current for as long as
   its subject is unchanged. Its L3 gate can name a scope and mean it, and a release gate can require commit binding.
 
-## The back-test (the first implementation step)
+## The back-test (done 2026-10-14)
 
-Replay Streamlane's history. For each past commit, would subject binding have marked stale the evidence of the tests
-that failed, or that the commit changed behavior for? The commits that broke a pinned record on 2026-10-11 (#678,
-#666, #690, #702, #704, #720), the settings-read loop fixed in #891 and the cut-map sentence fixed in #891 are known
-cases. The result decides how large a closure is acceptable and whether declaring `exercises` is needed on every
-verification or only on the end-to-end ones.
+Streamlane's last 300 first-parent commits (2026-10-10 to 2026-10-14) were replayed with `scripts/subject-backtest.ts`;
+the figures are in `docs/adoption/subject-binding-backtest.md`. Under commit binding 0% of evidence is current at any
+commit; under the lean subject a median 94.1% is, and a median 95.8% of the end-to-end verifications. The known
+breakages replayed (#891 and four of five other fixes) moved the right verification's subject; the one that did not
+(#650) is the case for `exercises` and for hashing resources. The amendments above answer what the replay found.
+
+## Slow suites
+
+Subject binding makes a record last as long as its subject is unchanged, and it also says exactly which records are
+stale. That second property is the one a slow suite needs: **run the verifications whose subject moved, not the whole
+suite.** A merge that touches one slice moves the subjects of the verifications around it, and a runner selects just
+those tests (`intentset evidence stale`, listing the selectors whose records are no longer current), so a per-merge
+browser run covers what the merge could have changed. A central-slice change still moves nearly everything, and that
+merge needs the full suite; the nightly run is the backstop for what the declarations missed. This is the intended use
+and is built after the binding itself.
 
 ## Not decided here
 
-Whether a record may be current across a bounded number of commits as a looser alternative; Streamlane's first nightly
-runs, imported with `--from playwright`, give the figures.
+Whether a record may be current across a bounded number of commits as a looser alternative for suites that cannot be
+selected this way; Streamlane's first selected runs, imported with `--from playwright`, give the figures.
