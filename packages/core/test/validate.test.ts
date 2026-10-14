@@ -151,6 +151,7 @@ test("readConfig applies defaults and reports CFG001", () => {
     scope: DEFAULT_SCOPE,
     registries: "registries.yaml",
     ignore: DEFAULT_IGNORE,
+    evidence: { binding: null, globalInputs: [] },
   });
   assert.deepEqual(DEFAULT_SCOPE, ["**/*.md"]);
   assert.deepEqual(DEFAULT_IGNORE, ["node_modules/**", "dist/**", ".git/**"]);
@@ -168,6 +169,27 @@ test("readConfig applies defaults and reports CFG001", () => {
   assert.equal(bad.config.registries, null);
 });
 
+test("BEH-EVIDENCE-CURRENT: evidence in the configuration names the binding and the global inputs, both optional", () => {
+  const read = (evidence: string) =>
+    readConfig(`repository: example/x\nevidence:\n${evidence}`, ".intentset/config.yaml");
+  const both = read(
+    "  binding: commit\n  globalInputs:\n    - pnpm-lock.yaml\n    - tsconfig*.json\n    - pnpm-lock.yaml\n",
+  );
+  assert.deepEqual(both.diagnostics, []);
+  assert.deepEqual(both.config.evidence, { binding: "commit", globalInputs: ["pnpm-lock.yaml", "tsconfig*.json"] });
+  assert.deepEqual(read("  binding: subject\n").config.evidence, { binding: "subject", globalInputs: [] });
+  assert.deepEqual(read("  globalInputs: []\n").diagnostics, []);
+
+  const bad = (evidence: string) => read(evidence).diagnostics.map((d) => [d.code, d.field]);
+  assert.deepEqual(bad("  binding: graph\n"), [["CFG001", "/evidence/binding"]]);
+  assert.deepEqual(bad("  globalInputs: pnpm-lock.yaml\n"), [["CFG001", "/evidence/globalInputs"]]);
+  assert.deepEqual(bad("  globalInputs:\n    - ../outside\n"), [["CFG001", "/evidence/globalInputs/0"]]);
+  assert.deepEqual(bad("  other: 1\n"), [["CFG001", "/evidence/other"]]);
+  assert.deepEqual(
+    readConfig("repository: example/x\nevidence: yes\n", "c").diagnostics.map((d) => d.field),
+    ["/evidence"],
+  );
+});
 test("Core §3: a record over the size limit is refused before it is parsed", () => {
   const big = `---\nmarkset: 0\n---\n\n# Big\n\n${"x".repeat(DOCUMENT_MAX_BYTES)}\n`;
   const read = readArtifact(plainCarrier("BIG.md", big));

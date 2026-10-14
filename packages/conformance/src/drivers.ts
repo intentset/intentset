@@ -6,6 +6,7 @@
 import {
   type DocumentInput,
   EMPTY_REGISTRIES,
+  type Config,
   type Diagnostic,
   type Registries,
   type ValidationResult,
@@ -16,10 +17,10 @@ import {
   readRegistries,
   validate,
 } from "@intentset/core";
-import { checkArchitecture } from "@intentset/architecture";
+import { checkArchitecture, subjectSource } from "@intentset/architecture";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { type PublicationRequest, bindReviewPins, publish } from "@intentset/publisher";
-import { checkFixtureEvidence } from "@intentset/verification";
+import { checkFixtureEvidence, hasSliceClaims, resolveBinding } from "@intentset/verification";
 import { CONFIG_PATH, REGISTRIES_PATH } from "./fixtures.ts";
 import type { Actual, Driver, ExpandedCase } from "./types.ts";
 
@@ -38,6 +39,8 @@ interface Validated {
   result: ValidationResult;
   registries: Registries;
   diagnostics: Diagnostic[];
+  /** `evidence:` of the case's configuration; its defaults when the case has none. */
+  evidence: Config["evidence"];
 }
 
 function validateTree(expanded: ExpandedCase): Validated {
@@ -50,6 +53,7 @@ function validateTree(expanded: ExpandedCase): Validated {
   }
 
   const extra: Diagnostic[] = [];
+  let evidence: Config["evidence"] = { binding: null, globalInputs: [] };
   let registries: Registries = EMPTY_REGISTRIES;
   if (expanded.registriesText !== null) {
     const read = readRegistries(expanded.registriesText, REGISTRIES_PATH);
@@ -57,11 +61,13 @@ function validateTree(expanded: ExpandedCase): Validated {
     extra.push(...read.diagnostics);
   }
   if (expanded.configText !== null) {
-    extra.push(...readConfig(expanded.configText, CONFIG_PATH).diagnostics);
+    const config = readConfig(expanded.configText, CONFIG_PATH);
+    extra.push(...config.diagnostics);
+    evidence = config.config.evidence;
   }
 
   const result = validate(inputs, registries, { level: expanded.level });
-  return { result, registries, diagnostics: [...result.diagnostics, ...extra] };
+  return { result, registries, diagnostics: [...result.diagnostics, ...extra], evidence };
 }
 
 /** Core checks, L1 and the level the case names: valid, diagnostics, artifacts. */
@@ -90,7 +96,22 @@ export const exportDriver: Driver = (expanded) => {
  * snapshot through the `@current` placeholder, classified, and CORE007 at L3+.
  */
 export const evidenceDriver: Driver = (expanded) => {
-  const { result, diagnostics } = validateTree(expanded);
+  const { result, registries, diagnostics, evidence } = validateTree(expanded);
+  // Under subject binding the subjects are computed over the tree of the case's documents and sources, with
+  // the architecture package's resolution of claims and imports (Core §8).
+  const files = new Map([...expanded.files, ...expanded.sources]);
+  const subject =
+    resolveBinding(evidence.binding, hasSliceClaims(result.graph)).binding === "subject"
+      ? subjectSource(
+          result.graph,
+          registries,
+          { files },
+          {
+            globalInputs: evidence.globalInputs,
+            readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
+          },
+        )
+      : undefined;
   const run = checkFixtureEvidence({
     graph: result.graph,
     level: expanded.level,
@@ -98,6 +119,9 @@ export const evidenceDriver: Driver = (expanded) => {
     request: expanded.request,
     documents: expanded.files.keys(),
     sources: expanded.sources.keys(),
+    configuredBinding: evidence.binding,
+    changedSince: expanded.changedSince,
+    ...(subject === undefined ? {} : { subjectSource: subject }),
   });
   const all = [...diagnostics, ...run.diagnostics];
   return {

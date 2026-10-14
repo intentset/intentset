@@ -112,7 +112,7 @@ of its own above them, it is not read.
   \`.intentset/registries.yaml\`. Ask instead.
 - Treat a passing check as the outcome achieved. Verification says the behavior was built as described; a measure
   says whether building it produced the outcome, and only evidence read in its window answers that.
-- Commit run evidence (\`.intentset/evidence/\`) or an export. They describe one commit and are stale once it lands.
+- Commit run evidence (\`.intentset/evidence/\`) or an export. They describe one run and go stale as the code it checks changes.
 - Edit generated output: an export, the Atlas, published pages.
 
 ## Before you finish

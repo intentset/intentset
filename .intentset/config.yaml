@@ -11,3 +11,11 @@ ignore:
   - "**/node_modules/**"
   - "dist/**"
   - ".git/**"
+# Run evidence is judged by subject binding (Core §8): a record stays current while what its check is about is
+# unchanged. These files affect every check and belong to no slice, so a change to any of them makes every record stale.
+evidence:
+  globalInputs:
+    - pnpm-lock.yaml
+    - pnpm-workspace.yaml
+    - tsconfig.json
+    - tsconfig.build.base.json

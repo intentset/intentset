@@ -8,6 +8,7 @@ export * from "./adapters/common.ts";
 export * from "./adapters/node-test.ts";
 export * from "./adapters/playwright.ts";
 export * from "./adapters/vitest.ts";
+export * from "./binding.ts";
 export * from "./check.ts";
 export * from "./classify.ts";
 export * from "./coverage.ts";

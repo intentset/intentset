@@ -15,6 +15,10 @@ import { compareStrings, evidenceDiagnostic, pointerToken } from "./diagnostic.t
 export const RUN_RESULTS = ["pass", "fail", "skip", "error"] as const;
 export type RunResult = (typeof RUN_RESULTS)[number];
 
+/** What a record is bound to (Core §8): the subject the run checked, or the commit and graph hash it ran at. */
+export const RUN_BINDINGS = ["subject", "commit"] as const;
+export type RunBinding = (typeof RUN_BINDINGS)[number];
+
 /** The literal a fixture writes for "the snapshot's commit" or "the snapshot's graph hash". */
 export const CURRENT = "@current";
 
@@ -48,6 +52,10 @@ export interface RunRecord {
   finishedAt: string;
   result: RunResult;
   uri: string;
+  /** Absent means commit binding, as every record written before the field existed. */
+  binding?: RunBinding;
+  /** SHA-256 of the subject the run checked (subject.ts); present on every subject-binding record. */
+  subjectHash?: string;
   rationale?: string;
   /** Namespaced extensions (`org.example/key`), preserved and never interpreted. */
   extensions?: Record<string, unknown>;
@@ -67,7 +75,7 @@ const REQUIRED = [
   "result",
   "uri",
 ] as const;
-const KNOWN = new Set<string>([...REQUIRED, "rationale", "extensions"]);
+const KNOWN = new Set<string>([...REQUIRED, "binding", "subjectHash", "rationale", "extensions"]);
 
 const TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?Z$/;
 const GRAPH_HASH = /^[0-9a-f]{64}$/;
@@ -261,6 +269,34 @@ function readRecord(entry: unknown, index: number, problems: Problem[]): RunReco
       );
   }
 
+  let binding: RunBinding | undefined;
+  if (Object.hasOwn(entry, "binding")) {
+    if ((RUN_BINDINGS as readonly unknown[]).includes(entry.binding)) binding = entry.binding as RunBinding;
+    else
+      problem(
+        "binding",
+        `\`binding\` of run record ${index} must be subject or commit, but it is ${describe(entry.binding)}.`,
+        "Write `binding: subject` for a record bound to its subject, or leave it out for a commit-binding record (Core §8).",
+      );
+  }
+  let subjectHash: string | undefined;
+  if (Object.hasOwn(entry, "subjectHash")) {
+    if (typeof entry.subjectHash === "string" && GRAPH_HASH.test(entry.subjectHash)) subjectHash = entry.subjectHash;
+    else
+      problem(
+        "subjectHash",
+        `\`subjectHash\` of run record ${index} must be 64 lowercase hex characters, but it is ${describe(entry.subjectHash)}.`,
+        "Record the subject hash `intentset evidence import` computed for the verification (Core §8).",
+      );
+  }
+  if (binding === "subject" && !Object.hasOwn(entry, "subjectHash")) {
+    problem(
+      "subjectHash",
+      `Run record ${index} has binding subject but no \`subjectHash\`, so nothing says what it was bound to.`,
+      "Add the subject hash, or leave `binding` out to make it a commit-binding record (Core §8).",
+    );
+  }
+
   let rationale: string | undefined;
   if (Object.hasOwn(entry, "rationale")) {
     if (typeof entry.rationale === "string" && /\S/.test(entry.rationale)) rationale = entry.rationale;
@@ -336,6 +372,8 @@ function readRecord(entry: unknown, index: number, problems: Problem[]): RunReco
     result: result as RunResult,
     uri: uri as string,
   };
+  if (binding !== undefined) record.binding = binding;
+  if (subjectHash !== undefined) record.subjectHash = subjectHash;
   if (rationale !== undefined) record.rationale = rationale;
   if (extensions !== undefined) record.extensions = extensions;
   return record;

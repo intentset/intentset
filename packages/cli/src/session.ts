@@ -25,6 +25,7 @@ import {
   type Artifact,
   compareStrings,
   type Diagnostic,
+  type EvidenceBinding,
   type Graph,
   graphHash,
   hasErrors,
@@ -36,6 +37,7 @@ import {
 } from "@intentset/core";
 import { reviewStatus } from "@intentset/publisher";
 import {
+  type BindingDecision,
   checkEvidence,
   type EvidenceCheck,
   type EvidenceSnapshot,
@@ -46,6 +48,7 @@ import {
 import { insideRoot } from "./outputs.ts";
 import { formatDiagnostic, type Io, type Snapshot } from "./output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository, type Repository } from "./repository.ts";
+import { bindingFor, subjectsOf } from "./subject.ts";
 import { readTree, type Tree } from "./tree.ts";
 
 /** Where run records are read from when no --evidence is given. Local output: not to be committed. */
@@ -64,12 +67,18 @@ export interface SessionOptions {
   scope?: RunScope | null;
   /** The day exceptions expire against; default today, UTC. */
   today?: string;
+  /** L3 and above: the evidence binding asked for on the command line, overriding the configuration. */
+  binding?: EvidenceBinding;
 }
 
 export interface EvidenceRun {
   /** The files read, as repository-relative paths where they lie inside the root. */
   files: string[];
   records: number;
+  /** The records read, as classified; the export classifies them again under the binding its contract states. */
+  runRecords: RunRecord[];
+  /** The binding in force and why. */
+  binding: BindingDecision;
   check: EvidenceCheck;
   snapshot: EvidenceSnapshot;
 }
@@ -171,17 +180,33 @@ export function openSession(command: string, options: SessionOptions, io: Io): S
       }
       shown.push(path);
     }
+    const decision = bindingFor(repo, graph, options.binding);
     const evidenceSnapshot: EvidenceSnapshot = {
       commit: snapshot.commit,
       graphHash: snapshot.graphHash,
       scope: options.scope ?? null,
+      binding: decision.binding,
+      bindingReason: decision.reason,
     };
+    if (decision.binding === "subject" && session.tree !== undefined && records.length > 0) {
+      const computed = subjectsOf(repo, graph, session.tree);
+      evidenceSnapshot.subjects = computed.subjects;
+      evidenceSnapshot.covers = computed.source.covers;
+      evidenceSnapshot.changedSince = computed.changedSince;
+    }
     const check = checkEvidence(graph, records, evidenceSnapshot, {
       level,
       files: session.tree?.paths,
       evidencePath: shown.length === 1 ? shown[0] : null,
     });
-    session.evidence = { files: shown, records: records.length, check, snapshot: evidenceSnapshot };
+    session.evidence = {
+      files: shown,
+      records: records.length,
+      runRecords: records,
+      binding: decision,
+      check,
+      snapshot: evidenceSnapshot,
+    };
     all.push(...check.diagnostics);
   }
 

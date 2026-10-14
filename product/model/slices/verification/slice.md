@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     implements: [BEH-EVIDENCE-IMPORT, BEH-EVIDENCE-CURRENT]
     dependsOn: [SLICE-CORE]
@@ -34,7 +34,7 @@ intentset:
 
 ## Responsibility
 
-Run records, their freshness against the commit and graph hash, and the reporter adapters that turn test reports into them.
+Run records, their freshness under the binding in force (a verification's subject, or the commit and graph hash), the subject hash itself, and the reporter adapters that turn test reports into them.
 
 The slice is the package `@intentset/verification`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 

@@ -438,6 +438,17 @@ function checkLifecycle(context: Context): void {
         });
       }
     });
+    meta.verification?.exercises?.forEach((target, i) => {
+      if (graph.artifacts.get(target)?.meta.type !== "slice" && !resourceIds.has(target)) {
+        reportOn(context, artifact, {
+          code: "CORE003",
+          field: `/intentset/verification/exercises/${i}`,
+          message: `exercises names ${target}, which is neither a slice in the graph nor a resource in the registries.`,
+          remediation:
+            "Name the slice or registry resource the check drives, so a change to its files makes the evidence stale (Core §8), or remove the entry.",
+        });
+      }
+    });
     if (meta.status === "retired" && (meta.links.replacedBy ?? []).length === 0) {
       reportOn(context, artifact, {
         code: "CORE005",

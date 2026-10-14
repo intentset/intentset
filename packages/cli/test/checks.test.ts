@@ -8,7 +8,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from "node:path";
 import { test } from "node:test";
 import { readExport } from "@intentset/core";
-import { edit, example, git, RECORD, REPO, run, snapshot, write } from "./helpers.ts";
+import { changedSince } from "../src/git.ts";
+import { edit, example, git, RECORD, REPO, run, snapshot, temp, write } from "./helpers.ts";
 
 type Context = { after(fn: () => void): void };
 
@@ -211,22 +212,40 @@ test("BEH-EVIDENCE-IMPORT, BEH-EVIDENCE-CURRENT: evidence import binds a Vitest 
   assert.equal(records.length, 1);
   assert.equal(records[0].commit, head);
   assert.deepEqual(records[0].tool, { name: "vitest", version: "3.2.0" });
+  // The example has slices that claim files, so subject binding is the default (Core §8): the record carries the
+  // subject's hash, and the commit stays as provenance.
+  assert.equal(records[0].binding, "subject");
+  assert.match(records[0].subjectHash, /^[0-9a-f]{64}$/);
+  assert.match(imported.out, /binding: subject \(the default, since slices claim files\)/);
 
   const l3 = await run(dir, "validate", "--level", "L3", ...IMPORT);
   assert.equal(l3.code, 0, l3.out);
   assert.match(l3.out, /Evidence: 1 run record from \.intentset\/evidence\/run-1\.json/);
   assert.match(l3.out, /^ {2}verified: {2}1 of 1 behavior, 2 of 2 rules, 1 of 1 scenario {2}\(evidence: /m);
-  assert.match(l3.out, /^ {2}TEST-ASMT-SCHEDULE {2}automated {2}current-pass$/m);
+  assert.match(
+    l3.out,
+    /^ {2}TEST-ASMT-SCHEDULE {2}automated {2}current-pass {2}\[subject\] {2}\(judged by subject binding; the run was at commit /m,
+  );
+  assert.match(l3.out, /^Binding: subject \(the default, since slices claim files\)/m);
   assert.doesNotMatch(l3.out, /%/, "coverage is counts, never a percentage");
   const json = JSON.parse((await run(dir, "validate", "--level", "L3", ...IMPORT, "--json")).out);
   assert.deepEqual(json.evidence.coverage.verified, { behaviors: 1, rules: 2, scenarios: 1 });
   assert.equal(json.evidence.verifications["TEST-ASMT-SCHEDULE"].status, "current-pass");
 
-  // A new commit changes the snapshot, and the same record is stale.
+  // A new commit that changes nothing the check is about moves the snapshot and not the subject: still current.
+  edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
+  git(dir, "commit", "-q", "-am", "reword an outcome");
+  const unrelated = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(unrelated.out, /^ {2}TEST-ASMT-SCHEDULE {2}automated {2}current-pass {2}\[subject\]/m);
+
+  // A commit that changes the rule the check verifies makes the same record stale, and the note says which part moved.
   edit(dir, "RULE-ASMT-FUTURE", "must be earlier", "must be strictly earlier");
   git(dir, "commit", "-q", "-am", "tighten the rule");
   const stale = await run(dir, "validate", "--level", "L3", ...IMPORT);
-  assert.match(stale.out, /^ {2}TEST-ASMT-SCHEDULE {2}automated {2}stale$/m);
+  assert.match(
+    stale.out,
+    /^ {2}TEST-ASMT-SCHEDULE {2}automated {2}stale {2}\[subject\] {2}\(the subject changed since the run at commit [0-9a-f]{9}: verified RULE-ASMT-FUTURE\)$/m,
+  );
   assert.match(stale.out, /^ {2}verified: {2}0 of 1 behavior, 0 of 2 rules, 0 of 1 scenario/m);
 });
 
@@ -717,4 +736,204 @@ test("BEH-EXPORT: graph refuses a report its level does not read, and a report i
   const all = await run(dir, "graph", "--report", "all");
   assert.equal(all.code, 0, all.err);
   assert.deepEqual(Object.keys(JSON.parse(all.out).reports), ["knowledge", "impact"], "all is what L1 reads");
+});
+
+/** Import the one vitest report into `out`, with the options a test names. */
+async function importRun(dir: string, out: string, ...more: string[]) {
+  write(dir, { "reports/vitest.json": vitestReport("passed") });
+  return run(dir, "evidence", "import", "--from", "vitest", "reports/vitest.json", "--out", out, ...IMPORT, ...more);
+}
+
+const verificationLine = (out: string) => out.split("\n").find((line) => line.startsWith("  TEST-ASMT-SCHEDULE")) ?? "";
+
+test("BEH-EVIDENCE-IMPORT: --binding commit writes the records of before, and a later commit makes them stale", async (t) => {
+  const dir = await committed(t);
+  const imported = await importRun(dir, ".intentset/evidence/commit.json", "--binding", "commit");
+  assert.equal(imported.code, 0, imported.err);
+  assert.match(imported.out, /binding: commit, as configured\. Each record is current only at that commit/);
+  const [record] = JSON.parse(readFileSync(join(dir, ".intentset", "evidence", "commit.json"), "utf8"));
+  assert.equal("binding" in record, false);
+  assert.equal("subjectHash" in record, false);
+
+  // Judged by the default, a commit-binding record is stale at once, with a note; judged by commit it is current.
+  const bySubject = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(
+    verificationLine(bySubject.out),
+    /stale {2}\[subject\] {2}\(latest record is bound to commit [0-9a-f]{9}, not to a subject/,
+  );
+  const byCommit = await run(dir, "validate", "--level", "L3", ...IMPORT, "--binding", "commit");
+  assert.match(verificationLine(byCommit.out), /current-pass {2}\[commit\]$/);
+  assert.match(byCommit.out, /^Binding: commit, as configured/m);
+
+  edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
+  git(dir, "commit", "-q", "-am", "reword an outcome");
+  const later = await run(dir, "validate", "--level", "L3", ...IMPORT, "--binding", "commit");
+  assert.match(verificationLine(later.out), /stale {2}\[commit\]/);
+});
+
+test("BEH-EVIDENCE-CURRENT: the configuration's binding and the --binding option, and an unknown binding is refused", async (t) => {
+  const dir = await committed(t);
+  const config = join(dir, ".intentset", "config.yaml");
+  writeFileSync(config, `${readFileSync(config, "utf8")}evidence:\n  binding: commit\n`);
+  git(dir, "commit", "-q", "-am", "ask for commit binding");
+  const asked = await importRun(dir, ".intentset/evidence/a.json");
+  assert.match(asked.out, /binding: commit, as configured/);
+  assert.equal("binding" in JSON.parse(readFileSync(join(dir, ".intentset", "evidence", "a.json"), "utf8"))[0], false);
+  const overridden = await importRun(dir, ".intentset/evidence/b.json", "--binding", "subject");
+  assert.match(overridden.out, /binding: subject \(as configured\)/);
+  assert.equal(JSON.parse(readFileSync(join(dir, ".intentset", "evidence", "b.json"), "utf8"))[0].binding, "subject");
+
+  const refused = await run(dir, "validate", "--level", "L3", "--binding", "graph");
+  assert.equal(refused.code, 2);
+  assert.match(refused.err, /--binding graph: the bindings are subject and commit/);
+});
+
+test("BEH-EVIDENCE-CURRENT: a repository with no slice claims is judged by commit and EVID004 says so; choosing commit is silent", async (t) => {
+  const dir = await committed(t);
+  for (const id of ["SLICE-ASMT-SCHEDULE"]) {
+    const file = RECORD(dir, id);
+    writeFileSync(
+      file,
+      readFileSync(file, "utf8").replace(/ {4}claims:\n(?: {4}- [^\n]*\n {6}[^\n]*\n)+/, "    claims: []\n"),
+    );
+  }
+  git(dir, "commit", "-q", "-am", "claim nothing");
+  const imported = await importRun(dir, ".intentset/evidence/run.json");
+  assert.match(imported.out, /binding: commit; no slice claims files, so there is no subject to bind to \(EVID004\)/);
+  const [record] = JSON.parse(readFileSync(join(dir, ".intentset", "evidence", "run.json"), "utf8"));
+  assert.equal("binding" in record, false);
+  const l3 = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(l3.out, /warning EVID004 /);
+  assert.match(l3.out, /^Binding: commit, because no slice claims files/m);
+  assert.match(verificationLine(l3.out), /current-pass {2}\[commit\]$/);
+  const chosen = await run(dir, "validate", "--level", "L3", ...IMPORT, "--binding", "commit");
+  assert.doesNotMatch(chosen.out, /EVID004/);
+});
+
+test("BEH-EVIDENCE-CURRENT: global inputs, and the part named when a subject record goes stale", async (t) => {
+  const dir = await committed(t);
+  const config = join(dir, ".intentset", "config.yaml");
+  writeFileSync(config, `${readFileSync(config, "utf8")}evidence:\n  globalInputs:\n    - pnpm-lock.yaml\n`);
+  write(dir, { "pnpm-lock.yaml": "lock 1\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a lockfile that every check depends on");
+  const imported = await importRun(dir, ".intentset/evidence/run.json");
+  assert.equal(imported.code, 0, imported.err);
+  assert.match(
+    verificationLine((await run(dir, "validate", "--level", "L3", ...IMPORT)).out),
+    /current-pass {2}\[subject\]/,
+  );
+
+  write(dir, { "pnpm-lock.yaml": "lock 2\n" });
+  git(dir, "commit", "-q", "-am", "bump a dependency");
+  const stale = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(
+    verificationLine(stale.out),
+    /stale {2}\[subject\] {2}\(the subject changed since the run at commit [0-9a-f]{9}: global-input pnpm-lock\.yaml\)$/,
+  );
+
+  // A claimed file of the slice the behavior belongs to, and the test file, are named the same way.
+  const again = await importRun(dir, ".intentset/evidence/run-2.json");
+  assert.equal(again.code, 0, again.err);
+  write(dir, {
+    [TEST_FILE]: `import { test } from "vitest";\ntest(${JSON.stringify(TITLE)}, () => { /* edited */ });\n`,
+  });
+  git(dir, "commit", "-q", "-am", "edit the test");
+  const both = await run(dir, "validate", "--level", "L3", ...IMPORT, "--evidence", ".intentset/evidence/run-2.json");
+  assert.match(
+    verificationLine(both.out),
+    new RegExp(
+      `stale {2}\\[subject\\] {2}\\(the subject changed since the run at commit [0-9a-f]{9}: .*test ${TEST_FILE.replaceAll(".", "\\.")}`,
+    ),
+  );
+});
+
+test("BEH-EVIDENCE-CURRENT: EVID005 lists a file changed since the run that no slice, resource or global input names", async (t) => {
+  const dir = await committed(t);
+  await importRun(dir, ".intentset/evidence/run.json");
+  write(dir, { "scripts/release.sh": "echo release\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a script nothing claims");
+  const l3 = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(
+    l3.out,
+    /warning EVID005 .*1 file changed since the commit of a subject-bound record.*: scripts\/release\.sh\./,
+  );
+  assert.match(verificationLine(l3.out), /current-pass {2}\[subject\]/, "the script cannot make the evidence stale");
+
+  // A file a claim covers is not listed: it moved the subject instead, and the record says which part.
+  write(dir, { [`${TEST_FILE.replace("schedule.test.ts", "")}new-code.ts`]: "export const x = 1;\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a file a claim covers");
+  const stale = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.doesNotMatch(stale.out, /EVID005/);
+  assert.match(
+    verificationLine(stale.out),
+    /stale {2}\[subject\] {2}\(the subject changed since the run at commit [0-9a-f]{9}: slice-file .*new-code\.ts/,
+  );
+});
+
+test("BEH-EXPORT: where subject binding is in force the export classifies by commit, says so, and carries no binding", async (t) => {
+  const dir = await committed(t);
+  await importRun(dir, ".intentset/evidence/run.json");
+  const atCommit = await run(
+    dir,
+    "graph",
+    "--level",
+    "L3",
+    "--release",
+    "PRD-LANTERN:pilot-1",
+    "--report",
+    "evidence",
+    "--generated-at",
+    "2026-10-14T00:00:00Z",
+  );
+  assert.equal(atCommit.code, 0, atCommit.err);
+  const first = JSON.parse(atCommit.out).reports.evidence.verifications[0];
+  assert.equal(first.status, "current-pass");
+  assert.match(first.note, /this repository judges evidence by subject/);
+  assert.equal("binding" in first.latest, false);
+  assert.equal("subjectHash" in first.latest, false);
+
+  // An unrelated commit: the repository's own check keeps the record current; the contract's rule does not.
+  edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
+  git(dir, "commit", "-q", "-am", "reword an outcome");
+  const validated = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(verificationLine(validated.out), /current-pass {2}\[subject\]/);
+  const exported = await run(
+    dir,
+    "graph",
+    "--level",
+    "L3",
+    "--release",
+    "PRD-LANTERN:pilot-1",
+    "--report",
+    "evidence",
+    "--generated-at",
+    "2026-10-14T00:00:00Z",
+  );
+  const entry = JSON.parse(exported.out).reports.evidence.verifications[0];
+  assert.equal(entry.status, "stale");
+  assert.match(entry.note, /classified at the snapshot's commit and graph hash/);
+  assert.equal(readExport(exported.out).ok, true);
+});
+
+test("BEH-EVIDENCE-CURRENT: changedSince is one diff against the working tree, and null for a commit that is not an ancestor", async (t) => {
+  const dir = await committed(t);
+  const first = git(dir, "rev-parse", "HEAD");
+  write(dir, { "a.txt": "one\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "add a file");
+  write(dir, { "b.txt": "two\n" });
+  assert.deepEqual(changedSince(dir, first), ["a.txt", "b.txt"], "committed and untracked changes, sorted");
+  assert.deepEqual(changedSince(dir, git(dir, "rev-parse", "HEAD")), ["b.txt"]);
+  assert.equal(changedSince(dir, "0".repeat(40)), null, "no such commit");
+  git(dir, "checkout", "-q", "-b", "side", first);
+  write(dir, { "c.txt": "three\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a side commit");
+  const side = git(dir, "rev-parse", "HEAD");
+  git(dir, "checkout", "-q", "-");
+  assert.equal(changedSince(dir, side), null, "a commit on another branch is not an ancestor of HEAD");
+  assert.equal(changedSince(temp(t), first), null, "not a git repository");
 });

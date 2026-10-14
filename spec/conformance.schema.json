@@ -76,6 +76,14 @@
           "type": "object"
         }
       },
+      "changedSince": {
+        "type": "object",
+        "description": "Evidence cases: for a run record's commit, the repository-relative files git reports changed between that commit and the snapshot. A commit that is not listed is not an ancestor of the snapshot, so nothing can be said of what changed since (Core \u00a78).",
+        "additionalProperties": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
       "request": {
         "type": "object",
         "description": "A publication request for publication cases.",

@@ -46,6 +46,8 @@ export interface SuiteCase {
   level: "L1" | "L2" | "L3" | "L4" | "L5";
   /** Run records supplied to the evidence check. */
   evidence?: Record<string, unknown>[];
+  /** For an evidence case: per run record commit, the files git would report changed between it and the snapshot. */
+  changedSince?: Record<string, string[]>;
   request?: PublicationRequest;
   /** True when no diagnostic is an error. */
   valid: boolean;

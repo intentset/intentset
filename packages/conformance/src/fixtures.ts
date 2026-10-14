@@ -75,6 +75,7 @@ export function expandCase(testCase: ConformanceCase, options: ExpandOptions): E
     level: (testCase.level ?? "L1") as Level,
     carrier: testCase.carrier ?? "plain",
     evidence: testCase.evidence ?? [],
+    changedSince: testCase.changedSince ?? {},
     request: testCase.request ?? null,
   };
 }

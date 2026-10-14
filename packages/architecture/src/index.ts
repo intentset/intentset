@@ -59,6 +59,7 @@ export type { Finding, SubjectEdge } from "./finding.ts";
 export { buildImportGraph, type ImportEdge, type ImportGraph, type UnresolvedImport } from "./imports.ts";
 export { inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";
 export { checkOwnership } from "./ownership.ts";
+export { type ArchitectureSubjectSource, type SubjectSourceOptions, subjectSource } from "./subject-source.ts";
 export { expandClaims, matchAny, matchPattern, validatePattern } from "./patterns.ts";
 export {
   activeSlices,

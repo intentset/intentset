@@ -27,6 +27,14 @@ function variants(): [string, unknown][] {
     ["nine-digit fraction", { ...manual, finishedAt: "2026-09-30T09:45:00.123456789Z" }],
     ["urn uri", { ...manual, uri: "urn:review:42" }],
     ["namespaced extension", { ...manual, extensions: { "org.example/build": 42 } }],
+    ["subject record", { ...automated, binding: "subject", subjectHash: HASH }],
+    ["commit record that names its binding", { ...automated, binding: "commit" }],
+    ["commit record with a subject hash as provenance", { ...automated, binding: "commit", subjectHash: HASH }],
+    ["subject record without a subject hash", { ...automated, binding: "subject" }],
+    ["subject hash in uppercase", { ...automated, binding: "subject", subjectHash: "A".repeat(64) }],
+    ["short subject hash", { ...automated, binding: "subject", subjectHash: "abc" }],
+    ["unknown binding", { ...automated, binding: "graph" }],
+    ["binding as a boolean", { ...automated, binding: true }],
     ["not an object", "EV-1"],
     ["null entry", null],
     ["unknown key", { ...manual, method: "manual" }],
@@ -71,6 +79,25 @@ describe("readRunRecords", () => {
     const read = readRunRecords(JSON.parse(JSON.stringify(records)), "evidence.json");
     assert.deepEqual(read.diagnostics, []);
     assert.deepEqual(read.records, records);
+  });
+
+  test("a subject record needs its hash, and the reader says which part is wrong", () => {
+    const record = automatedRun(HASH);
+    const field = (entry: unknown) => readRunRecords([entry], "e.json").diagnostics.map((d) => [d.code, d.field]);
+    assert.deepEqual(field({ ...record, binding: "subject" }), [["EVID001", "/0/subjectHash"]]);
+    assert.deepEqual(field({ ...record, binding: "subject", subjectHash: "xyz" }), [["EVID001", "/0/subjectHash"]]);
+    assert.deepEqual(field({ ...record, binding: "other" }), [["EVID001", "/0/binding"]]);
+    const read = readRunRecords(
+      [
+        { ...record, binding: "subject", subjectHash: HASH },
+        { ...record, evidenceId: "EV-OTHER" },
+      ],
+      "e.json",
+    );
+    assert.deepEqual(read.diagnostics, []);
+    assert.equal(read.records[0].binding, "subject");
+    assert.equal(read.records[0].subjectHash, HASH);
+    assert.equal(read.records[1].binding, undefined, "a record without a binding stays one: a commit-binding record");
   });
 
   test("agrees with spec/evidence.schema.json on every variant", () => {

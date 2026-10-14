@@ -35,6 +35,17 @@ function ofCounts(part: ClaimCounts, whole: ClaimCounts): string {
   ].join(", ");
 }
 
+/** Which binding judged the evidence, and why (Core §8). */
+function bindingLine(run: EvidenceRun): string {
+  const { binding, reason } = run.binding;
+  if (binding === "subject") {
+    return `Binding: subject (${reason === "default" ? "the default, since slices claim files" : "as configured"}); a record is current while the subject it checked is unchanged`;
+  }
+  return reason === "no-slices"
+    ? "Binding: commit, because no slice claims files and there is no subject to bind to (EVID004); a record is current only at the assessed commit and graph hash"
+    : "Binding: commit, as configured; a record is current only at the assessed commit and graph hash";
+}
+
 export function evidenceLines(run: EvidenceRun): string[] {
   const { coverage, classification } = run.check;
   const snap = run.snapshot;
@@ -46,6 +57,7 @@ export function evidenceLines(run: EvidenceRun): string[] {
   const d = coverage.denominator;
   const lines = [
     `Evidence: ${count(run.records, "run record")} from ${from}; assessed at ${snap.commit === null ? "no commit" : `commit ${snap.commit}`}, graph ${snap.graphHash}, for ${scope}`,
+    bindingLine(run),
     `Coverage over ${count(d.behaviors, "behavior")}, ${count(d.rules, "rule")} and ${count(d.scenarios, "scenario")} that are not retired:`,
     `  linked:    ${ofCounts(coverage.linked, d)}  (${coverage.measures.linked})`,
     `  verified:  ${ofCounts(coverage.verified, d)}  (${coverage.measures.verified})`,
@@ -57,7 +69,7 @@ export function evidenceLines(run: EvidenceRun): string[] {
   if (ids.length === 0) lines.push("  none");
   for (const id of ids) {
     const v = classification.verifications[id];
-    lines.push(`  ${id}  ${v.method}  ${v.status}${v.note === undefined ? "" : `  (${v.note})`}`);
+    lines.push(`  ${id}  ${v.method}  ${v.status}  [${v.binding}]${v.note === undefined ? "" : `  (${v.note})`}`);
   }
   lines.push(
     `Not checked, so not a pass (${coverage.unresolved.length}):${coverage.unresolved.length === 0 ? " none" : ""}`,
@@ -94,9 +106,21 @@ export function levelJson(session: Session): Record<string, unknown> {
     const { files, records, snapshot, check } = session.evidence;
     const verifications: Record<string, unknown> = {};
     for (const [id, v] of Object.entries(check.classification.verifications)) {
-      verifications[id] = { method: v.method, status: v.status, ...(v.note === undefined ? {} : { note: v.note }) };
+      verifications[id] = {
+        method: v.method,
+        status: v.status,
+        binding: v.binding,
+        ...(v.note === undefined ? {} : { note: v.note }),
+      };
     }
-    out.evidence = { files, records, snapshot, coverage: check.coverage, verifications };
+    out.evidence = {
+      files,
+      records,
+      binding: session.evidence.binding,
+      snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash, scope: snapshot.scope ?? null },
+      coverage: check.coverage,
+      verifications,
+    };
   }
   if (session.publication !== undefined) out.publication = { checked: session.publication.checked };
   return out;

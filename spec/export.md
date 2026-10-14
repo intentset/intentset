@@ -2,7 +2,7 @@
 title: Intentset Export Contract v0.3
 id: intentset/export/0.3
 status: draft
-revision: 2026-10-05
+revision: 2026-10-14
 implementation: 0.6.1
 ---
 
@@ -94,14 +94,20 @@ snapshot it was computed at (`graphHash`, and `commit` where runs or files depen
 and release assessed, or null for records of every scope) and the number of `records` read, and holds:
 
 - `verifications`: one entry per exported verification with its `method`, its Core §8 `status`, a `note` when the
-  status is qualified, the `latest` run record that decided it (spec/evidence.schema.json's record, unchanged), the
+  status is qualified, the `latest` run record that decided it (spec/evidence.schema.json's record without its
+  optional `binding` and `subjectHash`, which this contract does not carry), the
   results of the runs at the snapshot (`atSnapshot`), the number of in-scope `runs` at any snapshot, and the number of
   records ignored as `outOfScope`.
 - `claims`: one entry per exported behavior, rule and scenario that is not retired, with its lifecycle, whether
   evidence is `required` for it at the level, whether a verification names it (`linked`), whether every verification
   naming it is a current pass (`verified`), and the verification IDs.
 
-The statuses are Core §8's: `current-pass`, `current-fail`, `skip` and `error` are about a run at the snapshot;
+This report judges a record at the snapshot's `commit` and `graphHash`, whatever binding the repository's own checks use (Core §8):
+a producer whose repository judges by subject classifies the evidence report by commit, reads each record as a
+commit-binding one, and says so in every `note`, so a consumer never reads a status the repository's gate did not
+reach by the rule this section states. The verification metadata's `exercises` is not exported either.
+
+The statuses are Core §8's under that rule: `current-pass`, `current-fail`, `skip` and `error` are about a run at the snapshot;
 `stale` means runs exist only at another commit or graph hash; `missing` means no run record; `unresolved` means the
 records could not be classified. Only `current-pass` is a pass. A consumer MUST show each status distinctly, MUST NOT
 fold `stale`, `missing` or `unresolved` into a pass or a failure, and MUST NOT reduce coverage to a percentage.
@@ -195,6 +201,11 @@ already wrote Markset's codes under origin `syntax`, since the adapter passes th
 and `readExport` accepted only AREA###, so such an envelope was rejected as malformed although it meant exactly what
 0.3 says. Nothing a producer writes changed. A reader built against the earlier schema, `@intentset/core` 0.6.0 and
 before among them, still rejects these envelopes, so a consumer upgrades its reader (0.6.1) rather than its pin.
+
+Subject binding (Core §8, 2026-10-14) did not move the version. A 0.3 reader checks each status against the
+snapshot's commit and graph hash and rejects a record or a verification with a member it does not know, so the report
+stays what it was and the binding information stays out of it; carrying a subject hash, a binding or a per-record
+"current by subject" status would move the version, and is decided when a consumer needs it.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

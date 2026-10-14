@@ -233,3 +233,26 @@ test("an uncommitted tree is said so, and never alongside a null commit", () => 
   const none = exportGraph(result, registries, { ...META, uncommitted: true });
   assert.equal(none.source.uncommitted, false);
 });
+
+test("BEH-EXPORT: a verification's exercises is read and validated but is not exported, so the contract stays 0.3", () => {
+  const source = readFileSync(join(dir, "TEST-ASMT-SCHEDULE.md"), "utf8").replace(
+    "    selector: schedule-review-v1\n",
+    "    selector: schedule-review-v1\n    exercises:\n    - SLICE-ASMT-SCHEDULE\n    - RES-ASSESSMENT-DATA\n",
+  );
+  const documents = inputs().map((input) =>
+    input.path === "TEST-ASMT-SCHEDULE.md" ? plainCarrier(input.path, source) : input,
+  );
+  const result = validate(documents, registries, { level: "L1" });
+  assert.deepEqual(
+    result.diagnostics.filter((d) => d.severity === "error"),
+    [],
+  );
+  assert.deepEqual(result.graph.artifacts.get("TEST-ASMT-SCHEDULE")?.meta.verification?.exercises, [
+    "SLICE-ASMT-SCHEDULE",
+    "RES-ASSESSMENT-DATA",
+  ]);
+  const envelope = plain(exportGraph(result, registries, META)) as ExportEnvelope;
+  const exported = envelope.artifacts.find((artifact) => artifact.id === "TEST-ASMT-SCHEDULE");
+  assert.deepEqual(Object.keys(exported?.verification ?? {}), ["method", "locator", "selector"]);
+  assert.deepEqual(validateSchema(exportSchema, envelope), []);
+});

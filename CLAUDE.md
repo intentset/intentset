@@ -20,9 +20,11 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
    unknown top-level keys are preserved and never interpreted.
 2. **Authored forward edges only.** Relationships are written once in the Core §5 direction; every inverse is
    derived and marked derived. A reverse edge in a file is a mistake, not a convenience.
-3. **Definitions are not evidence.** A verification record says how a claim is checked. Only a `pass` at the assessed
-   commit and graph hash is current; stale, skip, error, fail and missing never count as pass, and link coverage and
-   current-pass coverage are always reported separately.
+3. **Definitions are not evidence.** A verification record says how a claim is checked. Only a `pass` whose binding
+   holds is current: under subject binding (the default wherever slices claim files, ADR 0013) while the subject its
+   check is about is unchanged, under commit binding (`evidence.binding: commit`, or `--binding commit`) at the assessed
+   commit and graph hash. Stale, skip, error, fail and missing never count as pass, and link coverage and current-pass
+   coverage are always reported separately.
 4. **Publication fails closed.** Deny by default, intersect every availability dimension, exclude draft and retired,
    never leak an excluded source's title or path. Documentation metadata never grants runtime access.
 5. **Profiles are metadata, not syntax.** No `:::behavior`, no new Markset directive, ever. Markset owns the document
@@ -83,7 +85,7 @@ parseYaml(text): { value: Record<string, unknown>; error: null } | { value: null
 plainCarrier(path, source): DocumentInput                     // plain-Markdown fallback, ADR 0003
 readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE001, origin "profile"
 readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] }
-readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[] }
+readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[] } }
 validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline
 impact(graph: Graph, id: string): ImpactReport
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
@@ -93,6 +95,16 @@ readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, en
 // report builders live with their checks: evidenceReport (verification), knowledgeReport (publisher), ownershipReport (architecture)
 graphHash(graph): string; canonicalJson(value): string; sha256Hex(input): string
 sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
+```
+
+```ts
+// @intentset/verification  (evidence is judged under a binding, Core §8, ADR 0013)
+readRunRecords(json, path); classifyEvidence(graph, records, snapshot); checkEvidence(graph, records, snapshot, options)
+// snapshot = { commit, graphHash, scope?, binding?, bindingReason?, subjects?, changedSince?, covers? }: commit binding unless it says subject
+resolveBinding(configured, hasSlices): { binding, reason }; hasSliceClaims(graph); subjectsFor(graph, source)
+computeSubject(input): { hash, parts }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
+// @intentset/architecture
+subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed files, resources, a test's local imports, covers(path)
 ```
 
 ```ts
@@ -115,7 +127,7 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID003` (Core §11; an outcome with no
+- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID005` (Core §11; an outcome with no
   measure is CORE009 draft, CORE003 active), `VSA001`–`VSA013` and `REG001` (VSA §2, §5, §9), `TS001`–`TS006` and
   `AMP001`–`AMP013` (profile §2, §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export

@@ -11,7 +11,7 @@
  */
 import { parseArgs } from "node:util";
 import type { Mode } from "@intentset/architecture";
-import { LEVELS, type Level } from "@intentset/core";
+import { EVIDENCE_BINDINGS, type EvidenceBinding, LEVELS, type Level } from "@intentset/core";
 import type { RunScope } from "@intentset/verification";
 import { architectureCommand } from "./commands/architecture.ts";
 import { contextCommand } from "./commands/context.ts";
@@ -96,6 +96,12 @@ options
   --product <ID> --release <label>
                             L3 and above: the exact scope evidence is assessed for (default:
                             every scope)
+  --binding <subject|commit>
+                            L3 and above, and evidence import: how run evidence is judged
+                            current, overriding evidence.binding in the configuration (default:
+                            subject where slices claim files, else commit). Subject keeps a
+                            record current while what it checked is unchanged; commit only at
+                            the commit it ran at
   --mode <migration|strict> --baseline <file>
                             L2 and above: whether a baseline of known violations applies, and
                             which (for mcp, --mode names the server's mode instead)
@@ -121,7 +127,7 @@ const COMMANDS = [
 ];
 
 const GLOBAL = ["root", "json", "carrier", "level", "help", "version"];
-const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline"];
+const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline", "binding"];
 const COMMAND_OPTIONS: Record<string, string[]> = {
   init: ["repository", "example", "agents"],
   guide: [],
@@ -137,6 +143,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "evidence",
     "mode",
     "baseline",
+    "binding",
   ],
   architecture: ["mode", "baseline", "write-baseline"],
   evidence: [
@@ -149,6 +156,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "finished-at",
     "uri-base",
     "tool-version",
+    "binding",
   ],
   impact: LEVEL_OPTIONS,
   context: ["include-restricted", ...LEVEL_OPTIONS],
@@ -275,6 +283,9 @@ export async function main(argv: string[], io: Io): Promise<number> {
     }
   }
 
+  if (values.binding !== undefined && !(EVIDENCE_BINDINGS as readonly string[]).includes(values.binding)) {
+    return usage(`--binding ${values.binding}: the bindings are ${EVIDENCE_BINDINGS.join(" and ")}`);
+  }
   const sessionOptions = (level: Level): SessionOptions => ({
     root: values.root,
     carrier: carrier as CarrierName,
@@ -283,6 +294,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     baseline: values.baseline,
     evidence: values.evidence,
     scope,
+    binding: values.binding as EvidenceBinding | undefined,
   });
 
   switch (command) {
@@ -323,6 +335,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
         finishedAt: values["finished-at"],
         uriBase: values["uri-base"],
         toolVersion: values["tool-version"],
+        binding: values.binding as EvidenceBinding | undefined,
       };
       const problem = evidenceUsageProblem(options);
       if (problem !== null) return usage(problem);
@@ -441,6 +454,7 @@ function parse(argv: string[]) {
       product: { type: "string" },
       mode: { type: "string" },
       baseline: { type: "string" },
+      binding: { type: "string" },
       "write-baseline": { type: "string" },
       from: { type: "string" },
       environment: { type: "string" },

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { bindPlaceholders, CURRENT, classifyEvidence, type EvidenceSnapshot } from "../src/index.ts";
+import {
+  bindPlaceholders,
+  CURRENT,
+  classifyEvidence,
+  type EvidenceSnapshot,
+  type RunRecord,
+  type Subject,
+} from "../src/index.ts";
 import { automatedRun, COMMIT, codes, exampleGraph, OLD_COMMIT, OLD_HASH, review } from "./helpers.ts";
 
 const { graph, hash } = exampleGraph();
@@ -153,5 +160,151 @@ describe("bindPlaceholders", () => {
       bindPlaceholders([{ commit: "@current", graphHash: "@current" }], { commit: null, graphHash: hash }),
       [{ commit: "@current", graphHash: hash }],
     );
+  });
+});
+
+const SUBJECT_HASH = "5".repeat(64);
+const MOVED_HASH = "6".repeat(64);
+const subject: Subject = {
+  hash: SUBJECT_HASH,
+  parts: [
+    { kind: "slice-file", id: "src/a.ts", hash: "h1", owner: "SLICE-A", path: "src/a.ts" },
+    { kind: "test", id: "tests/a.test.ts", hash: "h2", path: "tests/a.test.ts" },
+  ],
+};
+const bound = (overrides: Partial<RunRecord> = {}) =>
+  review(OLD_HASH, { commit: OLD_COMMIT, binding: "subject", subjectHash: SUBJECT_HASH, ...overrides });
+const under = (binding: "subject" | "commit", more: Partial<EvidenceSnapshot> = {}): EvidenceSnapshot => ({
+  ...snapshot,
+  binding,
+  subjects: new Map([["TEST-ASMT-SCHEDULE", subject]]),
+  ...more,
+});
+
+describe("BEH-EVIDENCE-CURRENT: subject binding", () => {
+  test("a subject record is current while its subject is unchanged, whatever the commit and graph hash", () => {
+    const evidence = statusOf([bound()], under("subject"));
+    assert.equal(evidence.status, "current-pass");
+    assert.equal(evidence.binding, "subject");
+    assert.match(evidence.note ?? "", /^judged by subject binding; the run was at commit 000000000$/);
+    assert.deepEqual(evidence.atSnapshot, { pass: 1, fail: 0, skip: 0, error: 0 });
+  });
+
+  test("the result of a current subject record decides the status as it does under commit binding", () => {
+    assert.equal(statusOf([bound({ result: "fail" })], under("subject")).status, "current-fail");
+    assert.equal(statusOf([bound({ result: "skip" })], under("subject")).status, "skip");
+    const pass = bound({ finishedAt: "2026-09-30T09:45:00Z" });
+    const fail = bound({ finishedAt: "2026-10-01T09:45:00Z", result: "fail" });
+    assert.equal(statusOf([pass, fail], under("subject")).status, "current-fail");
+  });
+
+  test("a subject record whose hash differs is stale, and says what moved among the files git lists", () => {
+    const moved = bound({ subjectHash: MOVED_HASH });
+    const asked: string[] = [];
+    const at = under("subject", {
+      changedSince: (commit) => {
+        asked.push(commit);
+        return ["src/a.ts", "docs/unrelated.md"];
+      },
+    });
+    const evidence = statusOf([moved], at);
+    assert.equal(evidence.status, "stale");
+    assert.equal(evidence.note, "the subject changed since the run at commit 000000000: slice-file src/a.ts (SLICE-A)");
+    assert.deepEqual(asked, [OLD_COMMIT]);
+  });
+
+  test("a stale subject record says so plainly when git cannot name what moved", () => {
+    const moved = bound({ subjectHash: MOVED_HASH });
+    assert.equal(statusOf([moved], under("subject")).note, "the subject changed since the run");
+    assert.match(
+      statusOf([moved], under("subject", { changedSince: () => null })).note ?? "",
+      /which part moved is unknown, because commit 000000000 is not an ancestor/,
+    );
+    assert.match(
+      statusOf([moved], under("subject", { changedSince: () => ["unrelated.txt"] })).note ?? "",
+      /in a part no changed file names/,
+    );
+  });
+
+  test("a commit-binding record is stale under subject binding, with a note, even at the snapshot", () => {
+    const evidence = statusOf([review(hash)], under("subject"));
+    assert.equal(evidence.status, "stale");
+    assert.match(evidence.note ?? "", /bound to commit abcdef012, not to a subject/);
+    assert.match(evidence.note ?? "", /re-imported/);
+  });
+
+  test("a subject record is stale under commit binding, with a note, even at the snapshot", () => {
+    const evidence = statusOf([bound({ commit: COMMIT, graphHash: hash })], under("commit"));
+    assert.equal(evidence.status, "stale");
+    assert.equal(evidence.binding, "commit");
+    assert.match(evidence.note ?? "", /bound to a subject, not to a commit/);
+    assert.equal(statusOf([review(hash)], under("commit")).status, "current-pass");
+  });
+
+  test("a snapshot that names no binding is judged by commit, as before", () => {
+    assert.equal(statusOf([review(hash)]).binding, "commit");
+    assert.equal(classifyEvidence(graph, [], snapshot).snapshot.binding, "commit");
+    assert.equal(statusOf([bound()]).status, "stale");
+  });
+
+  test("subject binding with no subject for the verification is unresolved, never current", () => {
+    const evidence = statusOf([bound()], { ...snapshot, binding: "subject", subjects: new Map() });
+    assert.equal(evidence.status, "unresolved");
+    assert.match(evidence.note ?? "", /no subject could be computed/);
+    assert.equal(statusOf([], { ...snapshot, binding: "subject" }).status, "missing");
+  });
+
+  test("a placeholder still unbound is unresolved under either binding", () => {
+    assert.equal(statusOf([bound({ commit: CURRENT })], under("subject")).status, "unresolved");
+  });
+
+  test("EVID004 says a repository with no slice claims was judged by commit", () => {
+    const none = classifyEvidence(graph, [review(hash)], {
+      ...snapshot,
+      binding: "commit",
+      bindingReason: "no-slices",
+    });
+    assert.deepEqual(codes(none.diagnostics), ["EVID004"]);
+    assert.equal(none.diagnostics[0].severity, "warning");
+    assert.equal(none.diagnostics[0].origin, "evidence");
+    assert.equal(none.verifications["TEST-ASMT-SCHEDULE"].status, "current-pass");
+    for (const reason of ["configured", "default"] as const) {
+      const quiet = classifyEvidence(graph, [review(hash)], { ...snapshot, binding: "commit", bindingReason: reason });
+      assert.deepEqual(quiet.diagnostics, []);
+    }
+  });
+
+  test("EVID005 lists the files changed since a current record that nothing claims, once, up to twenty", () => {
+    const many = Array.from({ length: 23 }, (_, i) => `misc/file-${String(i).padStart(2, "0")}.txt`);
+    const at = under("subject", {
+      changedSince: () => ["src/a.ts", ...many],
+      covers: (path) => path === "src/a.ts",
+    });
+    const result = classifyEvidence(graph, [bound()], at);
+    const found = result.diagnostics.filter((d) => d.code === "EVID005");
+    assert.equal(found.length, 1);
+    assert.equal(found[0].severity, "warning");
+    assert.match(found[0].message, /^23 files changed since the commit of a subject-bound record/);
+    assert.match(found[0].message, /misc\/file-00\.txt/);
+    assert.match(found[0].message, /misc\/file-19\.txt, and 3 more\.$/);
+    assert.doesNotMatch(found[0].message, /file-20|src\/a\.ts/);
+    assert.equal(result.verifications["TEST-ASMT-SCHEDULE"].status, "current-pass", "a warning, not a failure");
+  });
+
+  test("EVID005 is silent when every changed file can move a subject, and says so in a note when git cannot say", () => {
+    const covered = under("subject", { changedSince: () => ["src/a.ts"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound()], covered).diagnostics, []);
+    const unknown = under("subject", { changedSince: () => null, covers: () => false });
+    const result = classifyEvidence(graph, [bound()], unknown);
+    assert.deepEqual(result.diagnostics, []);
+    assert.match(
+      result.verifications["TEST-ASMT-SCHEDULE"].note ?? "",
+      /files changed since then could not be listed, because the commit is not an ancestor/,
+    );
+  });
+
+  test("EVID005 is not reported under commit binding", () => {
+    const at = under("commit", { changedSince: () => ["misc/x.txt"], covers: () => false });
+    assert.deepEqual(classifyEvidence(graph, [review(hash)], at).diagnostics, []);
   });
 });

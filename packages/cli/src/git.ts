@@ -94,3 +94,17 @@ export function acknowledgedSlices(root: string, base: Base | null): string[] {
   if (out === null) return [];
   return [...new Set(out.split(/[\s,]+/).filter((id) => id !== ""))].sort(compareStrings);
 }
+
+/**
+ * The files that differ between `commit` and the working tree (tracked changes, staged or not, and untracked files
+ * .gitignore does not exclude), sorted, as paths relative to the CLI's root; or null when `commit` is not an ancestor of
+ * HEAD or git cannot say. One `git diff --name-only`, so the evidence report can list what changed outside every
+ * subject (Core §8) without computing anything per file.
+ */
+export function changedSince(root: string, commit: string): string[] | null {
+  if (git(root, ["merge-base", "--is-ancestor", commit, "HEAD"]) === null) return null;
+  const diff = git(root, ["diff", "--relative", "--name-only", "-z", commit]);
+  if (diff === null) return null;
+  const untracked = paths(git(root, ["ls-files", "-z", "--others", "--exclude-standard"]));
+  return [...new Set([...paths(diff), ...untracked])].sort(compareStrings);
+}

@@ -325,6 +325,15 @@
             "selector": {
               "type": "string",
               "minLength": 1
+            },
+            "exercises": {
+              "type": "array",
+              "description": "Optional (Core \u00a78): slice or registry resource IDs the check drives beyond what the slices implementing its behaviors reach. A change to their files makes the check's evidence stale under subject binding. The validator checks that each names a slice or a resource (CORE003).",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              }
             }
           }
         },
