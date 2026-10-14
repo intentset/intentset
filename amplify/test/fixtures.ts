@@ -13,7 +13,7 @@ export const corpus: Corpus = {
       url: "https://intentset.org/specifications/core/",
       title: "Core",
       kind: "specification",
-      source: "spec/core-0.1.md",
+      source: "spec/core-0.2.md",
       text: "Core text.",
     },
   ],

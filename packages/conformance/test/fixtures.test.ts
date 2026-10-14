@@ -156,7 +156,7 @@ test("setDotted creates intermediate mappings, indexes sequences, and deletes on
 test("the serializer writes the examples' style: bare numbers and booleans, quoted lookalikes, `- ` sequences", () => {
   assert.equal(
     serializeYaml({
-      spec: "0.1",
+      spec: "0.2",
       revision: 1,
       draft: true,
       none: null,
@@ -175,7 +175,7 @@ test("the serializer writes the examples' style: bare numbers and booleans, quot
       control: "line\nbreak",
     }),
     [
-      "spec: '0.1'",
+      "spec: '0.2'",
       "revision: 1",
       "draft: true",
       "none: null",

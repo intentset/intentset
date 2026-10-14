@@ -1,6 +1,6 @@
 # @intentset/cli
 
-The `intentset` command: `init`, `validate` (levels L1 to L4), `graph` (the export), `impact`, `context`,
+The `intentset` command: `init`, `validate` (levels L1 to L4), `graph` (the export), `migrate` (records to the next specification version), `impact`, `context`,
 `architecture check`, `evidence import`, `review`, `publish`, `serve` (the Atlas), `mcp` and `guide`. Exit codes are 0
 no errors, 1 validation errors, 2 invocation or tool failure.
 

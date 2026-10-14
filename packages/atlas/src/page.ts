@@ -1,5 +1,5 @@
 /**
- * One Atlas page: Markset source with the generated `intentset/atlas/0.1`
+ * One Atlas page: Markset source with the generated `intentset/atlas/0.2`
  * block in its frontmatter, the internal banner and the snapshot line at the
  * top, parsed back and rendered by render-html, then placed in the shared
  * shell. The Markset parse is the check: a page that does not parse cleanly
@@ -12,7 +12,7 @@ import { renderHtml } from "@markset-lang/render-html";
 import { code, escapeHtml, text } from "./text.ts";
 import type { AtlasSnapshot } from "./types.ts";
 
-export const ATLAS_PROFILE = "intentset/atlas/0.1";
+export const ATLAS_PROFILE = "intentset/atlas/0.2";
 /** The top-level frontmatter key of an Atlas page; never `intentset`, so no page reads as a canonical record. */
 export const ATLAS_KEY = "intentset-atlas";
 export const STYLESHEET = "atlas.css";

@@ -16,7 +16,7 @@ import { compareStrings } from "./diagnostic.ts";
 import type { Snapshot } from "./project.ts";
 import type { PublicationRequest } from "./request.ts";
 
-export const HELP_PROFILE = "intentset/help/0.1";
+export const HELP_PROFILE = "intentset/help/0.2";
 /** The file's name beside the published documents. */
 export const HELP_FILE = "help.json";
 

@@ -15,7 +15,7 @@
  * shadow root or a test double alike.
  */
 
-export const HELP_PROFILE = "intentset/help/0.1";
+export const HELP_PROFILE = "intentset/help/0.2";
 /** The attribute a control carries to name the behavior it delivers. */
 export const BEHAVIOR_ATTRIBUTE = "data-behavior";
 /** Set on a bound control: the ID of the knowledge the tip came from, for a "learn more" link. */

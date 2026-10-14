@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/capability/0.1
+  spec: '0.2'
+  profile: intentset/capability/0.2
   id: CAP-EXPORT
   type: capability
   title: Hand the model to other tools under a contract
@@ -18,7 +18,7 @@ intentset:
 
 ## Overview
 
-Export the graph as the `intentset/export/0.3` envelope, with reports, and read one back with the consumer's checks (spec/export.md).
+Export the graph as the `intentset/export/0.4` envelope, with reports, and read one back with the consumer's checks (spec/export.md).
 
 ## Sources
 

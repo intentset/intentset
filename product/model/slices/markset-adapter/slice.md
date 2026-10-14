@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/slice/0.1
+  spec: '0.2'
+  profile: intentset/slice/0.2
   id: SLICE-MARKSET-ADAPTER
   type: slice
   title: The markset-adapter package

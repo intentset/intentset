@@ -482,10 +482,10 @@ test("the worked example opens every record on the page, in the act it belongs t
   );
   const out = text(published[0]);
   for (const expected of [
-    "intentset/publication/0.1",
+    "intentset/publication/0.2",
     "withheldSources: 3",
     "reviewer: team-assessment",
-    "intentset/help/0.1",
+    "intentset/help/0.2",
     ...(kb?.tips.map(([, tip]) => tip) ?? []),
   ]) {
     assert.ok(out.includes(expected), `the publication lacks ${expected}`);

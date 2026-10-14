@@ -12,7 +12,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkArchitecture, ownershipReport } from "@intentset/architecture";
+import { checkArchitecture, ownershipReport, subjectSource } from "@intentset/architecture";
 import {
   type Diagnostic,
   EXPORT_CONTRACT,
@@ -35,7 +35,15 @@ import {
 } from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { knowledgeReport } from "@intentset/publisher";
-import { checkEvidence, evidenceReport, readRunRecords } from "@intentset/verification";
+import {
+  checkEvidence,
+  type EvidenceSnapshot,
+  evidenceReport,
+  hasSliceClaims,
+  readRunRecords,
+  resolveBinding,
+  subjectsFor,
+} from "@intentset/verification";
 import { FIXTURE_TODAY } from "./drivers.ts";
 import { expandCase, REGISTRIES_PATH } from "./fixtures.ts";
 import type { ConformanceCase } from "./types.ts";
@@ -104,8 +112,12 @@ interface BuildOptions {
   /** Frontmatter patches on top of the restricted rule. */
   patch?: ConformanceCase["patch"];
   commit: string | null;
-  /** Run records for the evidence check; `@snapshot` in commit or graphHash is this snapshot's. */
+  /** Run records for the evidence check; `@snapshot` in commit or graphHash is this snapshot's, `@subject` in subjectHash the subject of its verification. */
   records?: Record<string, unknown>[];
+  /** `evidence.binding` of the configuration: commit for the fixtures that judge as 0.3 did; absent leaves the default. */
+  evidenceBinding?: "subject" | "commit";
+  /** The files git would report changed since a record's commit, for the note of a stale subject record. */
+  movedSince?: readonly string[];
   reports: readonly ExportReportName[];
   includeRestricted?: boolean;
   generatedAt?: string;
@@ -153,15 +165,36 @@ function build(options: BuildOptions): ExportEnvelope {
     if (options.reports.includes("ownership")) reports.ownership = ownershipReport(architecture, snapshot);
   }
   if (at("L3")) {
-    const bound = (options.records ?? []).map((record) => bind(record, snapshot));
+    const decision = resolveBinding(options.evidenceBinding ?? null, hasSliceClaims(graph));
+    const judged: EvidenceSnapshot = {
+      ...snapshot,
+      scope: { product: RELEASE.product, release: RELEASE.label },
+      binding: decision.binding,
+      bindingReason: decision.reason,
+    };
+    if (decision.binding === "subject") {
+      const tree = new Map([...expanded.files, ...expanded.sources]);
+      const source = subjectSource(
+        graph,
+        registries,
+        { files: tree },
+        {
+          globalInputs: [],
+          readFile: (path) => (tree.has(path) ? Buffer.from(tree.get(path) as string) : undefined),
+        },
+      );
+      judged.subjects = subjectsFor(graph, source);
+      judged.covers = source.covers;
+      const moved = options.movedSince;
+      if (moved !== undefined) judged.changedSince = () => moved;
+    }
+    const bound = (options.records ?? []).map((record) => bind(record, snapshot, judged));
     const read = readRunRecords(bound, "evidence.json");
     all.push(...read.diagnostics);
-    const check = checkEvidence(
-      graph,
-      read.records,
-      { ...snapshot, scope: { product: RELEASE.product, release: RELEASE.label } },
-      { level: options.level, files: new Set([...expanded.files.keys(), ...expanded.sources.keys()]) },
-    );
+    const check = checkEvidence(graph, read.records, judged, {
+      level: options.level,
+      files: new Set([...expanded.files.keys(), ...expanded.sources.keys()]),
+    });
     all.push(...check.diagnostics);
     if (options.reports.includes("evidence")) reports.evidence = evidenceReport(check, read.records.length);
   }
@@ -182,11 +215,18 @@ function build(options: BuildOptions): ExportEnvelope {
   });
 }
 
-function bind(record: Record<string, unknown>, snapshot: { commit: string | null; graphHash: string }) {
+function bind(
+  record: Record<string, unknown>,
+  snapshot: { commit: string | null; graphHash: string },
+  judged: EvidenceSnapshot,
+) {
   return {
     ...record,
     commit: record.commit === "@snapshot" ? snapshot.commit : record.commit,
     graphHash: record.graphHash === "@snapshot" ? snapshot.graphHash : record.graphHash,
+    ...(record.subjectHash === "@subject"
+      ? { subjectHash: judged.subjects?.get(String(record.verificationId))?.hash }
+      : {}),
   };
 }
 
@@ -210,6 +250,14 @@ function run(id: string, commit: string, hash: string, result: string, finishedA
 }
 
 const PASS_HERE = run("review-0002", "@snapshot", "@snapshot", "pass", "2026-10-03T11:40:30Z");
+/** A review bound to the subject it checked: made at another commit and graph hash, and current while the subject holds. */
+const PASS_SUBJECT = {
+  ...run("review-0003", OTHER_COMMIT, OTHER_GRAPH, "pass", "2026-10-02T14:20:30Z"),
+  binding: "subject",
+  subjectHash: "@subject",
+};
+/** The same review, whose subject has since moved: the file the verified behavior's slice claims changed. */
+const MOVED_FILE = "src/features/assessment/schedule/index.ts";
 const PASS_EARLIER = run("review-0001", OTHER_COMMIT, OTHER_GRAPH, "pass", "2026-10-01T09:15:30Z");
 
 /** Every fixture file by name, the manifest included, as the bytes to commit. */
@@ -218,17 +266,40 @@ export function buildConsumerFixtures(): Map<string, string> {
     level: "L3",
     commit: COMMIT,
     records: [PASS_EARLIER, PASS_HERE],
+    evidenceBinding: "commit",
     reports: EXPORT_REPORTS,
   });
   const regenerated = build({
     level: "L3",
     commit: COMMIT,
     records: [PASS_EARLIER, PASS_HERE],
+    evidenceBinding: "commit",
     reports: EXPORT_REPORTS,
     generatedAt: "2026-10-03T18:05:00Z",
   });
   const minimal = build({ level: "L1", commit: null, reports: [] });
-  const stale = build({ level: "L3", commit: COMMIT, records: [PASS_EARLIER], reports: ["evidence"] });
+  const stale = build({
+    level: "L3",
+    commit: COMMIT,
+    records: [PASS_EARLIER],
+    evidenceBinding: "commit",
+    reports: ["evidence"],
+  });
+  const subjectCurrent = build({ level: "L3", commit: COMMIT, records: [PASS_SUBJECT], reports: ["evidence"] });
+  const subjectStale = build({
+    level: "L3",
+    commit: COMMIT,
+    records: [{ ...PASS_SUBJECT, subjectHash: sha256Hex("the subject before the claimed file changed") }],
+    movedSince: [MOVED_FILE],
+    reports: ["evidence"],
+  });
+  const noSlices = build({
+    level: "L3",
+    commit: COMMIT,
+    patch: { "SLICE-ASMT-SCHEDULE.md": { frontmatter: { "intentset.status": "retired" } } },
+    records: [PASS_HERE],
+    reports: ["evidence"],
+  });
   const failing = build({
     level: "L1",
     commit: COMMIT,
@@ -304,6 +375,24 @@ export function buildConsumerFixtures(): Map<string, string> {
     "Show TEST-ASMT-SCHEDULE as stale for this snapshot, not as passing, though its latest run passed.",
   );
   accept(
+    "evidence judged by subject, current",
+    "subject-current.json",
+    subjectCurrent,
+    "The report says the repository judges by subject (the default, since slices claim files). The review was made at another commit and graph hash, and is a current pass because its subjectHash equals the verification's subject in the report: show TEST-ASMT-SCHEDULE as passing, with the binding that judged it, not as stale for being at an older commit.",
+  );
+  accept(
+    "evidence judged by subject, stale because the subject moved",
+    "subject-stale.json",
+    subjectStale,
+    "The review's subjectHash is not the verification's subject, so it is stale; the note names the part that moved, a file the verified behavior's slice claims. Show it as stale with that note, never as passing, and not as failing.",
+  );
+  accept(
+    "evidence judged by commit for want of slice claims",
+    "commit-fallback.json",
+    noSlices,
+    "The only slice is retired, so no slice claims files and there is no subject to bind to: the report says the binding is commit and fell back (bindingReason no-slices, EVID004), which a repository that asked for commit binding does not say. A record at the snapshot's commit and graph hash is a current pass, as in 0.3. The files the retired slice claimed are now claimed by none, so validation fails for that reason; the snapshot is imported as failing, with the evidence shown beside it.",
+  );
+  accept(
     "a failing validation still exports",
     "failing-validation.json",
     failing,
@@ -359,10 +448,39 @@ export function buildConsumerFixtures(): Map<string, string> {
     }),
   );
   reject(
-    "the previous contract version",
+    "an earlier contract version",
     "unsupported-contract-0.2.json",
     "unsupported-contract",
-    "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A 0.3 reader rejects it rather than guess what an outcome's measures were.",
+    "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A reader of a later version rejects it rather than guess what an outcome's measures were.",
+  );
+  /** What 0.4 added (ADR 0014), taken back out so an earlier envelope is what its reader would have written. */
+  const before04 = (e: Json) => {
+    for (const artifact of e.artifacts) delete artifact.verification?.exercises;
+    const evidence = e.reports?.evidence;
+    if (evidence === undefined) return;
+    delete evidence.binding;
+    delete evidence.bindingReason;
+    for (const entry of evidence.verifications) {
+      delete entry.binding;
+      delete entry.subject;
+      if (entry.latest !== null) {
+        delete entry.latest.binding;
+        delete entry.latest.subjectHash;
+      }
+    }
+  };
+  files.set(
+    "unsupported-contract-0.3.json",
+    mutate(full, (e) => {
+      e.contract = "intentset/export/0.3";
+      before04(e);
+    }),
+  );
+  reject(
+    "the previous contract version",
+    "unsupported-contract-0.3.json",
+    "unsupported-contract",
+    "0.3 judged every record by commit and carried no binding, subject or exercises. A 0.4 reader rejects it, with the version it supports in the message, and keeps the prior snapshot, rather than read a stale status the repository's own check may not have reached; the consumer upgrades its pin and its reader together.",
   );
   files.set(
     "unsupported-contract-future.json",
@@ -435,6 +553,19 @@ export function buildConsumerFixtures(): Map<string, string> {
     "stale-pass-as-current.json",
     "inconsistent-report",
     "A current-pass whose deciding run is from another snapshot contradicts itself; never show it as passing.",
+  );
+  files.set(
+    "subject-hash-mismatch.json",
+    mutate(subjectCurrent, (e) => {
+      const entry = e.reports.evidence.verifications.find((v: { id: string }) => v.id === "TEST-ASMT-SCHEDULE");
+      entry.subject = sha256Hex("another subject");
+    }),
+  );
+  reject(
+    "a current pass whose record is bound to another subject",
+    "subject-hash-mismatch.json",
+    "inconsistent-report",
+    "A subject-bound current-pass is current only while the record's subjectHash equals the verification's subject in the report. Here they differ, so the status contradicts the report: never show it as passing.",
   );
   files.set(
     "forbidden-restricted.json",

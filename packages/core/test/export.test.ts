@@ -84,7 +84,11 @@ test("the schema rejects what a consumer must reject", () => {
     "the earlier contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.4")),
+    bad((e) => (e.contract = "intentset/export/0.3")),
+    "the previous contract version",
+  );
+  assert.ok(
+    bad((e) => (e.contract = "intentset/export/0.5")),
     "a later contract version",
   );
   assert.ok(
@@ -104,7 +108,7 @@ test("the schema rejects what a consumer must reject", () => {
     "invalid artifact ID",
   );
   assert.ok(
-    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.1")),
+    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.2")),
     "profile mismatching type",
   );
   assert.ok(
@@ -234,7 +238,7 @@ test("an uncommitted tree is said so, and never alongside a null commit", () => 
   assert.equal(none.source.uncommitted, false);
 });
 
-test("BEH-EXPORT: a verification's exercises is read and validated but is not exported, so the contract stays 0.3", () => {
+test("BEH-EXPORT: a verification's exercises is exported as authored, sorted, and an artifact's list is empty when it names none", () => {
   const source = readFileSync(join(dir, "TEST-ASMT-SCHEDULE.md"), "utf8").replace(
     "    selector: schedule-review-v1\n",
     "    selector: schedule-review-v1\n    exercises:\n    - SLICE-ASMT-SCHEDULE\n    - RES-ASSESSMENT-DATA\n",
@@ -253,6 +257,25 @@ test("BEH-EXPORT: a verification's exercises is read and validated but is not ex
   ]);
   const envelope = plain(exportGraph(result, registries, META)) as ExportEnvelope;
   const exported = envelope.artifacts.find((artifact) => artifact.id === "TEST-ASMT-SCHEDULE");
-  assert.deepEqual(Object.keys(exported?.verification ?? {}), ["method", "locator", "selector"]);
+  assert.deepEqual(Object.keys(exported?.verification ?? {}), ["method", "locator", "selector", "exercises"]);
+  assert.deepEqual(exported?.verification?.exercises, ["RES-ASSESSMENT-DATA", "SLICE-ASMT-SCHEDULE"]);
   assert.deepEqual(validateSchema(exportSchema, envelope), []);
+  const none = plain(exportGraph(validate(inputs(), registries), registries, META)) as ExportEnvelope;
+  assert.deepEqual(
+    none.artifacts.find((artifact) => artifact.id === "TEST-ASMT-SCHEDULE")?.verification?.exercises,
+    [],
+  );
+
+  // A withheld slice's ID is not carried, and is counted where a withheld link is.
+  const restricted = documents.map((input) =>
+    input.path === "SLICE-ASMT-SCHEDULE.md"
+      ? plainCarrier(input.path, input.source.replace("visibility: internal", "visibility: restricted"))
+      : input,
+  );
+  const withheld = plain(
+    exportGraph(validate(restricted, registries, { level: "L1" }), registries, META),
+  ) as ExportEnvelope;
+  const kept = withheld.artifacts.find((artifact) => artifact.id === "TEST-ASMT-SCHEDULE");
+  assert.deepEqual(kept?.verification?.exercises, ["RES-ASSESSMENT-DATA"]);
+  assert.equal((kept?.withheldLinks ?? 0) > (exported?.withheldLinks ?? 0), true);
 });

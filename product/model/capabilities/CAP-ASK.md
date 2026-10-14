@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/capability/0.1
+  spec: '0.2'
+  profile: intentset/capability/0.2
   id: CAP-ASK
   type: capability
   title: Ask the documentation a question

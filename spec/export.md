@@ -1,14 +1,14 @@
 ---
-title: Intentset Export Contract v0.3
-id: intentset/export/0.3
+title: Intentset Export Contract v0.4
+id: intentset/export/0.4
 status: draft
 revision: 2026-10-14
 implementation: 0.6.1
 ---
 
-# Intentset Export Contract v0.3
+# Intentset Export Contract v0.4
 
-**Extends:** [Core §12](core-0.1.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
+**Extends:** [Core §12](core-0.2.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
 behaviors, a usage product attributing errors to slices, a second implementation comparing graphs. This document fixes
@@ -27,8 +27,8 @@ hit's `path` from the start. The same validation with the same `generatedAt` is 
 
 | Field | Meaning |
 |---|---|
-| `contract` | `intentset/export/0.3`. A consumer MUST reject any other value (§5). |
-| `spec` | The Core version the model is written against: `0.1`. |
+| `contract` | `intentset/export/0.4`. A consumer MUST reject any other value (§5). |
+| `spec` | The Core version the model is written against: `0.2`. |
 | `generatedAt` | ISO 8601 time of generation. Outside every hash; two exports of one snapshot differ only here. |
 | `repository` | The stable repository identity from `.intentset/config.yaml`. |
 | `products` | The exported product artifact IDs. |
@@ -56,7 +56,10 @@ Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`
 `audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `extensions`), its source `path` and
 `sourceHash`, its `parent`, its authored `links` by kind, and `derived`: the inverse edges by the authored kind, so
 `derived.governedBy` on a rule lists the behaviors that name it. Derived edges are never authored (Core §5).
-`withheldLinks` counts the link targets and sources left out because the artifact at the other end is withheld.
+`withheldLinks` counts the link targets and sources left out because the artifact at the other end is withheld. A
+verification's metadata carries `exercises`, the slice and resource IDs it declares it drives beyond its behaviors' slices
+(Core §8): as authored and sorted, an empty list when it declares none, less the IDs of withheld artifacts, which
+`withheldLinks` counts.
 
 `body`, the document text after the frontmatter, is present only when the export was asked for bodies. Bodies,
 `extensions` and `availability` are exported as authored: what they name is the author's responsibility at the
@@ -93,24 +96,40 @@ snapshot it was computed at (`graphHash`, and `commit` where runs or files depen
 `reports.evidence` is produced at L3 and above, where run records are read. It names the `scope` (the exact product
 and release assessed, or null for records of every scope) and the number of `records` read, and holds:
 
-- `verifications`: one entry per exported verification with its `method`, its Core §8 `status`, a `note` when the
-  status is qualified, the `latest` run record that decided it (spec/evidence.schema.json's record without its
-  optional `binding` and `subjectHash`, which this contract does not carry), the
-  results of the runs at the snapshot (`atSnapshot`), the number of in-scope `runs` at any snapshot, and the number of
-  records ignored as `outOfScope`.
+- `binding` and `bindingReason`: the binding the repository judged by (Core §8: `subject` or `commit`) and why, `configured`
+  (the repository or the producer's gate asked for it), `default` (subject, because slices claim files) or `no-slices`
+  (commit, because no slice claims files and so there is no subject to bind to, which is EVID004). A report that fell
+  back says so, and a repository that asked for commit binding is `configured`, not `no-slices`. Every verification below
+  was judged by this binding.
+- `verifications`: one entry per exported verification with its `method`, its Core §8 `status`, the `binding` that judged
+  it, its `subject`, a `note` when the status is qualified, the `latest` run record that decided it
+  (spec/evidence.schema.json's record, `binding` and `subjectHash` included), the results of the runs that count at the
+  snapshot (`atSnapshot`), the number of in-scope `runs` at any snapshot, and the number of records ignored as
+  `outOfScope`. Under subject binding `subject` is the SHA-256 of the verification's subject at this snapshot, computed
+  by the producer, so that a reader can check a record against it without recomputing anything; it is null under commit
+  binding, and when a subject binding could compute none, which is then `unresolved`. A `note` for a stale subject
+  record says which part of the subject moved (a record, a claimed file, the test, a global input) when the producer
+  can tell, and that the subject changed when it cannot; its wording is the producer's.
 - `claims`: one entry per exported behavior, rule and scenario that is not retired, with its lifecycle, whether
   evidence is `required` for it at the level, whether a verification names it (`linked`), whether every verification
   naming it is a current pass (`verified`), and the verification IDs.
 
-This report judges a record at the snapshot's `commit` and `graphHash`, whatever binding the repository's own checks use (Core §8):
-a producer whose repository judges by subject classifies the evidence report by commit, reads each record as a
-commit-binding one, and says so in every `note`, so a consumer never reads a status the repository's gate did not
-reach by the rule this section states. The verification metadata's `exercises` is not exported either.
+This report states the repository's own verdict: the status each verification has under the binding in force, which is
+the status its L3 check reports, so a consumer never reads a status the repository's gate did not reach. What makes a
+record current is Core §8's rule for the binding, and a reader checks it from what the report carries:
 
-The statuses are Core §8's under that rule: `current-pass`, `current-fail`, `skip` and `error` are about a run at the snapshot;
-`stale` means runs exist only at another commit or graph hash; `missing` means no run record; `unresolved` means the
-records could not be classified. Only `current-pass` is a pass. A consumer MUST show each status distinctly, MUST NOT
-fold `stale`, `missing` or `unresolved` into a pass or a failure, and MUST NOT reduce coverage to a percentage.
+- Under **commit binding**, the latest record has no `binding` or has `binding: commit`, and is at the envelope's
+  `commit` and `graphHash` (the graph hash alone when the commit is null).
+- Under **subject binding**, the latest record has `binding: subject` and its `subjectHash` equals the verification's
+  `subject`; its own `commit` and `graphHash` are provenance and may be any, which is the point: it stays current while
+  the subject is unchanged. A commit-binding record under subject binding is stale (it can be imported again to bind it
+  to the subject), and a subject record under commit binding is stale.
+
+The statuses are Core §8's under that rule: `current-pass`, `current-fail`, `skip` and `error` are about a run that is
+current under the binding; `stale` means runs exist but none is current; `missing` means no run record; `unresolved`
+means the records could not be classified. Only `current-pass` is a pass. A consumer MUST show each status distinctly,
+MUST NOT fold `stale`, `missing` or `unresolved` into a pass or a failure, MUST NOT reduce coverage to a percentage, and
+SHOULD show the binding beside a status, since the same word carries a different guarantee under each.
 
 ### 4.2 Knowledge
 
@@ -154,7 +173,7 @@ they are reported:
 | `identity-mismatch` | has another `repository` than the connection's, or does not contain the connection's product |
 | `mixed-snapshot` | carries a report computed at another commit or graph hash than its own |
 | `forbidden-content` | contains an artifact of a visibility its own `withholding` says it withheld |
-| `inconsistent-report` | contradicts itself: a status disagreeing with its counts, a `current-pass` decided by a run from another snapshot, a `stale` status with a run at this one, a knowledge entry `current` with changed sources, a report entry for an artifact the export lacks, an impact hit whose path does not end at it |
+| `inconsistent-report` | contradicts itself: a status disagreeing with its counts, a `current-pass` decided by a run that is not current under the report's binding (§4.1), a `stale` status whose latest record is current under it, a verification judged by another binding than the report's, a subject binding with no subject for a verification that is not `unresolved`, a fallback reason that contradicts the binding, a knowledge entry `current` with changed sources, a report entry for an artifact the export lacks, an impact hit whose path does not end at it |
 
 The first three stop the read: nothing else can be judged in a value of the wrong shape or version. The rest are all
 collected, and the first in the table names the result. A schema validator alone covers `malformed` and part of
@@ -194,7 +213,7 @@ versions it supports and rejects the rest (§5). 0.2 was the first version a con
 report slots and exported restricted artifacts by default, and no consumer was built against it (ADR 0008). 0.3 added
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
-unannounced.
+unannounced. 0.4 carries the evidence binding (ADR 0014), below.
 
 Keying the code's shape on the origin (§1, 2026-10-05) was a defect fix inside 0.3, not a new version. A 0.3 producer
 already wrote Markset's codes under origin `syntax`, since the adapter passes them through unchanged, while the schema
@@ -202,10 +221,17 @@ and `readExport` accepted only AREA###, so such an envelope was rejected as malf
 0.3 says. Nothing a producer writes changed. A reader built against the earlier schema, `@intentset/core` 0.6.0 and
 before among them, still rejects these envelopes, so a consumer upgrades its reader (0.6.1) rather than its pin.
 
-Subject binding (Core §8, 2026-10-14) did not move the version. A 0.3 reader checks each status against the
-snapshot's commit and graph hash and rejects a record or a verification with a member it does not know, so the report
-stays what it was and the binding information stays out of it; carrying a subject hash, a binding or a per-record
-"current by subject" status would move the version, and is decided when a consumer needs it.
+0.4 (2026-10-14, ADR 0014) carries what the repository judged evidence by. Subject binding (Core §8, ADR 0013) made a
+record current for what it checked and not for the whole commit, and the export, which was then 0.3, could not say so:
+a 0.3 reader rejects a current status whose latest record is not at the snapshot's commit and graph hash, and its record
+schema is closed, so the producer classified the report by commit and noted that it had, and a consumer read `stale` for
+evidence the repository's own gate accepted. 0.4 adds, and a 0.3 reader would reject or misread each: the report's
+`binding` and `bindingReason`; each verification's `binding` and `subject`; the optional `binding` and `subjectHash` on a
+run record in `latest`; a verification artifact's `exercises`; and the reader's rule for a current status, which is now
+per binding (§4.1, §5). A 0.4 reader rejects a 0.3 envelope as `unsupported-contract`, with the version it supports in
+the message: it cannot tell a 0.3 report classified by commit from a 0.4 one, and guessing would show a verdict the
+repository did not reach. `spec` in the envelope moves to `0.2` with Core's (Core §1), which is the specifications'
+move and is recorded there.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

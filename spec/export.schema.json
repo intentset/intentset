@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://intentset.org/spec/export.schema.json",
-  "title": "Intentset export envelope, intentset/export/0.3",
+  "title": "Intentset export envelope, intentset/export/0.4",
   "description": "The export contract of spec/export.md: the normalized JSON graph of Core §12 and the minimum graph exchange of the integration contract. Artifacts are sorted by id and every list inside the envelope is sorted, so the same validation with the same generatedAt is the same bytes. Restricted artifacts are withheld unless asked for, and every omission is counted. Optional report sections are absent when not supplied, which means not supplied, never zero or pass. Some requirements are beyond a schema and are checked by a consumer's reader (spec/export.md §5): identity, snapshot agreement between the reports and the envelope, withholding, and consistency.",
   "type": "object",
   "additionalProperties": false,
@@ -22,11 +22,11 @@
   ],
   "properties": {
     "contract": {
-      "const": "intentset/export/0.3",
+      "const": "intentset/export/0.4",
       "description": "A consumer rejects any other value (spec/export.md §5)."
     },
     "spec": {
-      "const": "0.1"
+      "const": "0.2"
     },
     "generatedAt": {
       "type": "string",
@@ -492,7 +492,7 @@
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["method", "locator", "selector"],
+      "required": ["method", "locator", "selector", "exercises"],
       "properties": {
         "method": {
           "enum": ["automated", "manual"]
@@ -504,6 +504,10 @@
         "selector": {
           "type": "string",
           "minLength": 1
+        },
+        "exercises": {
+          "$ref": "#/$defs/ids",
+          "description": "The slice or resource IDs the check declares it exercises beyond its behaviors' slices (Core §8), as authored, less withheld IDs (counted in withheldLinks); empty when it declares none."
         }
       }
     },
@@ -624,7 +628,7 @@
         },
         "profile": {
           "type": "string",
-          "pattern": "^intentset/[a-z]+/0\\.1$"
+          "pattern": "^intentset/[a-z]+/0\\.2$"
         },
         "revision": {
           "anyOf": [
@@ -923,7 +927,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/product/0.1"
+                "const": "intentset/product/0.2"
               }
             }
           }
@@ -939,7 +943,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/intent/0.1"
+                "const": "intentset/intent/0.2"
               }
             }
           }
@@ -955,7 +959,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/outcome/0.1"
+                "const": "intentset/outcome/0.2"
               }
             }
           }
@@ -971,7 +975,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/measure/0.1"
+                "const": "intentset/measure/0.2"
               }
             }
           }
@@ -987,7 +991,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/capability/0.1"
+                "const": "intentset/capability/0.2"
               }
             }
           }
@@ -1003,7 +1007,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/behavior/0.1"
+                "const": "intentset/behavior/0.2"
               }
             }
           }
@@ -1019,7 +1023,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/rule/0.1"
+                "const": "intentset/rule/0.2"
               }
             }
           }
@@ -1035,7 +1039,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/scenario/0.1"
+                "const": "intentset/scenario/0.2"
               }
             }
           }
@@ -1051,7 +1055,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/slice/0.1"
+                "const": "intentset/slice/0.2"
               }
             }
           }
@@ -1067,7 +1071,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/contract/0.1"
+                "const": "intentset/contract/0.2"
               }
             }
           }
@@ -1083,7 +1087,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/verification/0.1"
+                "const": "intentset/verification/0.2"
               }
             }
           }
@@ -1099,7 +1103,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/knowledge/0.1"
+                "const": "intentset/knowledge/0.2"
               }
             }
           }
@@ -1115,7 +1119,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/decision/0.1"
+                "const": "intentset/decision/0.2"
               }
             }
           }
@@ -1240,6 +1244,15 @@
           "description": "Where the run's report lives. Presence is not proof of trustworthy execution (Core §8).",
           "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:\\S+$"
         },
+        "binding": {
+          "enum": ["subject", "commit"],
+          "description": "What the record is bound to (Core §8). Absent means commit. A subject record is current while the subject it checked is unchanged; its commit and graphHash stay as provenance."
+        },
+        "subjectHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the subject the run checked (Core §8); required when binding is subject."
+        },
         "rationale": {
           "$ref": "#/$defs/text",
           "description": "Required when reviewer is set."
@@ -1253,6 +1266,20 @@
         }
       },
       "allOf": [
+        {
+          "description": "A subject-binding record carries the hash of its subject.",
+          "if": {
+            "required": ["binding"],
+            "properties": {
+              "binding": {
+                "const": "subject"
+              }
+            }
+          },
+          "then": {
+            "required": ["subjectHash"]
+          }
+        },
         {
           "description": "A manual record identifies its reviewer and the review rationale.",
           "if": {
@@ -1309,8 +1336,8 @@
     "evidenceReport": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["commit", "graphHash", "scope", "records", "verifications", "claims"],
-      "description": "Every verification classified at the envelope's snapshot, and every claim's coverage (spec/export.md §4.1).",
+      "required": ["commit", "graphHash", "scope", "records", "binding", "bindingReason", "verifications", "claims"],
+      "description": "Every verification classified at the envelope's snapshot by the binding the repository judges by, and every claim's coverage (spec/export.md §4.1).",
       "properties": {
         "commit": {
           "$ref": "#/$defs/snapshotCommit"
@@ -1344,13 +1371,32 @@
           "$ref": "#/$defs/count",
           "description": "Run records read, before classification."
         },
+        "binding": {
+          "enum": ["subject", "commit"],
+          "description": "The binding the repository judged by (Core §8); every verification below was judged by it."
+        },
+        "bindingReason": {
+          "enum": ["configured", "default", "no-slices"],
+          "description": "Why: the repository asked for it, it is the default (subject, since slices claim files), or it fell back to commit for want of slice claims (EVID004)."
+        },
         "verifications": {
           "type": "array",
           "description": "One per exported verification, sorted by id.",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "method", "status", "note", "latest", "atSnapshot", "runs", "outOfScope"],
+            "required": [
+              "id",
+              "method",
+              "status",
+              "binding",
+              "subject",
+              "note",
+              "latest",
+              "atSnapshot",
+              "runs",
+              "outOfScope"
+            ],
             "properties": {
               "id": {
                 "$ref": "#/$defs/id"
@@ -1361,6 +1407,21 @@
               "status": {
                 "enum": ["current-pass", "current-fail", "stale", "skip", "error", "missing", "unresolved"],
                 "description": "Only current-pass is a pass (Core §8)."
+              },
+              "binding": {
+                "enum": ["subject", "commit"],
+                "description": "The binding that judged this verification: the report's."
+              },
+              "subject": {
+                "description": "Under subject binding, the SHA-256 of the verification's subject at this snapshot: a record is current when it is a subject record whose subjectHash equals it. Null under commit binding, and when none could be computed.",
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/sha256"
+                  }
+                ]
               },
               "note": {
                 "type": ["string", "null"],

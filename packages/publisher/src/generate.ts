@@ -4,7 +4,7 @@
  *
  * The document is the knowledge body, unchanged, under frontmatter that
  * carries `markset: 0` and a top-level `intentset-publication` block: the
- * generated profile `intentset/publication/0.1`, marked derived, with the
+ * generated profile `intentset/publication/0.2`, marked derived, with the
  * provenance Core §9 requires. It is a top-level key, not `intentset:`, so
  * nothing reads a generated document as a canonical record. A comment line
  * after the frontmatter says the same to a person opening the file.
@@ -28,7 +28,7 @@ import type { Snapshot } from "./project.ts";
 import { type PublicationRequest, admits } from "./request.ts";
 import { type YamlValue, emitYaml } from "./yaml.ts";
 
-export const PUBLICATION_PROFILE = "intentset/publication/0.1";
+export const PUBLICATION_PROFILE = "intentset/publication/0.2";
 /** The top-level frontmatter key of a generated document. */
 export const PUBLICATION_KEY = "intentset-publication";
 

@@ -584,7 +584,7 @@ test("BEH-PUBLISH: publish from the example with its knowledge demoted to a draf
   assert.deepEqual(index.published, []);
   assert.deepEqual(readdirSync(join(dir, "published")).sort(), ["chunks.jsonl", "help.json", "index.json"]);
   const help = JSON.parse(readFileSync(join(dir, "published", "help.json"), "utf8"));
-  assert.equal(help.profile, "intentset/help/0.1");
+  assert.equal(help.profile, "intentset/help/0.2");
   assert.deepEqual(help.tips, {});
 });
 
@@ -602,7 +602,7 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
     "index.json",
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");
-  assert.match(markset, /intentset\/publication\/0\.1/);
+  assert.match(markset, /intentset\/publication\/0\.2/);
   for (const internal of ["Schedule a student assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
     for (const file of readdirSync(out))
       assert.ok(!readFileSync(join(out, file), "utf8").includes(internal), `${file}: ${internal}`);
@@ -873,49 +873,85 @@ test("BEH-EVIDENCE-CURRENT: EVID005 lists a file changed since the run that no s
   );
 });
 
-test("BEH-EXPORT: where subject binding is in force the export classifies by commit, says so, and carries no binding", async (t) => {
+test("BEH-EXPORT: where subject binding is in force the export states the repository's verdict and carries the binding", async (t) => {
   const dir = await committed(t);
   await importRun(dir, ".intentset/evidence/run.json");
-  const atCommit = await run(
-    dir,
-    "graph",
-    "--level",
-    "L3",
-    "--release",
-    "PRD-LANTERN:pilot-1",
-    "--report",
-    "evidence",
-    "--generated-at",
-    "2026-10-14T00:00:00Z",
-  );
-  assert.equal(atCommit.code, 0, atCommit.err);
-  const first = JSON.parse(atCommit.out).reports.evidence.verifications[0];
+  const exportEvidence = async () => {
+    const out = await run(
+      dir,
+      "graph",
+      "--level",
+      "L3",
+      "--release",
+      "PRD-LANTERN:pilot-1",
+      "--report",
+      "evidence",
+      "--generated-at",
+      "2026-10-14T00:00:00Z",
+    );
+    assert.equal(readExport(out.out).ok, true, "a consumer's reader accepts it");
+    return JSON.parse(out.out);
+  };
+  const atCommit = await exportEvidence();
+  const report = atCommit.reports.evidence;
+  assert.equal(report.binding, "subject");
+  assert.equal(report.bindingReason, "default");
+  const first = report.verifications[0];
   assert.equal(first.status, "current-pass");
-  assert.match(first.note, /this repository judges evidence by subject/);
-  assert.equal("binding" in first.latest, false);
-  assert.equal("subjectHash" in first.latest, false);
+  assert.equal(first.binding, "subject");
+  assert.match(first.subject, /^[0-9a-f]{64}$/);
+  assert.equal(first.latest.binding, "subject");
+  assert.equal(
+    first.latest.subjectHash,
+    first.subject,
+    "the record is current because it names the subject the report names",
+  );
+  assert.match(first.note, /judged by subject binding/);
 
-  // An unrelated commit: the repository's own check keeps the record current; the contract's rule does not.
+  // An unrelated commit: the repository's own check keeps the record current, and so does the export, which no longer
+  // classifies by commit: the record is at an older commit and graph hash than the snapshot.
   edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
   git(dir, "commit", "-q", "-am", "reword an outcome");
   const validated = await run(dir, "validate", "--level", "L3", ...IMPORT);
   assert.match(verificationLine(validated.out), /current-pass {2}\[subject\]/);
-  const exported = await run(
+  const later = await exportEvidence();
+  const entry = later.reports.evidence.verifications[0];
+  assert.equal(entry.status, "current-pass");
+  assert.notEqual(entry.latest.commit, later.source.commit);
+  assert.notEqual(entry.latest.graphHash, later.graphHash);
+  assert.equal(entry.subject, first.subject, "an unrelated commit leaves the subject as it was");
+
+  // A change to a file a claim covers moves the subject: stale, with the part named, as the repository's check says.
+  write(dir, { [`${TEST_FILE.replace("schedule.test.ts", "")}new-code.ts`]: "export const x = 1;\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a file a claim covers");
+  const moved = (await exportEvidence()).reports.evidence.verifications[0];
+  assert.equal(moved.status, "stale");
+  assert.notEqual(moved.subject, first.subject);
+  assert.notEqual(moved.latest.subjectHash, moved.subject);
+  assert.match(moved.note, /the subject changed since the run at commit [0-9a-f]{9}: slice-file .*new-code\.ts/);
+});
+
+test("BEH-EXPORT: a repository that asks for commit binding says so, and carries no subject", async (t) => {
+  const dir = await committed(t);
+  const out = await run(
     dir,
     "graph",
     "--level",
     "L3",
-    "--release",
-    "PRD-LANTERN:pilot-1",
+    "--binding",
+    "commit",
     "--report",
     "evidence",
     "--generated-at",
     "2026-10-14T00:00:00Z",
   );
-  const entry = JSON.parse(exported.out).reports.evidence.verifications[0];
-  assert.equal(entry.status, "stale");
-  assert.match(entry.note, /classified at the snapshot's commit and graph hash/);
-  assert.equal(readExport(exported.out).ok, true);
+  const report = JSON.parse(out.out).reports.evidence;
+  assert.equal(report.binding, "commit");
+  assert.equal(report.bindingReason, "configured");
+  assert.equal(report.verifications[0].binding, "commit");
+  assert.equal(report.verifications[0].subject, null);
+  assert.equal(readExport(out.out).ok, true);
 });
 
 test("BEH-EVIDENCE-CURRENT: changedSince is one diff against the working tree, and null for a commit that is not an ancestor", async (t) => {

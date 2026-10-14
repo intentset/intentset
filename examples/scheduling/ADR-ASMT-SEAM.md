@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/decision/0.1
+  spec: '0.2'
+  profile: intentset/decision/0.2
   id: ADR-ASMT-SEAM
   type: decision
   title: Keep backend access behind the slice seam

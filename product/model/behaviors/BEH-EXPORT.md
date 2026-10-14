@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/behavior/0.1
+  spec: '0.2'
+  profile: intentset/behavior/0.2
   id: BEH-EXPORT
   type: behavior
   title: Graph prints the model as the export envelope
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.3` envelope: the artifacts, the edges, the diagnostics and the snapshot.
+Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.4` envelope: the artifacts, the edges, the diagnostics and the snapshot.
 
 ## Preconditions
 

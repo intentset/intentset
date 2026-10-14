@@ -17,7 +17,7 @@ npx intentset graph --level L3 --release <PRD-ID>:<label> --report all --out int
 
 Upload `intentset-export.json` as a CI artifact; never commit it or the run records, which are stale at the next
 commit. At L2 (no run records) `--report all` gives knowledge, impact and ownership; evidence is then not supplied,
-which a consumer shows as such. The export judges evidence at its snapshot's commit and graph hash even where the repository's own checks judge it by subject (export §4.1), and says so in each verification's `note`. With pnpm and the CLI installed, the commands are `pnpm exec intentset …`. The
+which a consumer shows as such. The export states the repository's own verdict on evidence, by the binding it judges by, and carries that binding, each record's `binding` and `subjectHash` and each verification's `subject` (export §4.1), so a record made at an older commit reads current while the subject it checked is unchanged. With pnpm and the CLI installed, the commands are `pnpm exec intentset …`. The
 architecture check needs TypeScript 7: a repository on 5.x runs the CLI as
 `npx -p @intentset/cli -p typescript@7 intentset …`, or with pnpm as
 `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset …`.
@@ -35,7 +35,7 @@ importer over `@intentset/conformance-suite/consumer/` (or `tests/consumer/` her
 | STL-001 connection with stable identity | `repository`, `products`; `identity-mismatch` cases |
 | STL-002 versioned import, validate before promotion | `contract`, `readExport`; `unsupported-contract`, `malformed`, `not-json` cases; snapshot pair (`source.commit`, `graphHash`) for idempotent re-import (`full-regenerated.json`) |
 | STL-003 link to stable artifact IDs | `artifacts[].id`, `type`, `status`, `visibility`; key by (connection, ID), never title or `path` |
-| STL-004 traceability with provenance | owning slice: `derived.implements` on a behavior; rules: `links.governedBy`; checks: `derived.verifies`; run status and freshness: `reports.evidence.verifications[].status` and `latest`; per-claim: `reports.evidence.claims`; knowledge: `derived.explains` and `reports.knowledge` |
+| STL-004 traceability with provenance | owning slice: `derived.implements` on a behavior; rules: `links.governedBy`; checks: `derived.verifies`; run status and freshness: `reports.evidence.verifications[].status`, `binding` and `latest`, and `reports.evidence.binding` and `bindingReason`; per-claim: `reports.evidence.claims`; knowledge: `derived.explains` and `reports.knowledge` |
 | STL-005 impact as review context | `reports.impact.starts[]`: `direct` apart from `candidates`, each step's `reason`, and `note` |
 | STL-006 work state apart from product state | nothing flows back; the export is read-only by contract |
 | STL-007 moves, retirement, stale snapshots | IDs survive path changes; `status: retired` with `links.replacedBy`; dangling links stay visible (§2) |
@@ -59,6 +59,20 @@ authorization.
 | Its own model, written before its code | VSA §3: draft slices plan their paths as warnings, so L2 holds from the first commit |
 
 Driftline's usage-evidence specification, keyed to Intentset IDs, is planned as an Intentset extension and is not
-part of 0.3; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
+part of 0.4; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
 time, URI, target met). Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
 authored.
+
+## Moving a pin: export 0.4 and specifications 0.2 (ADR 0014)
+
+Both are breaking, they ship together as 0.7.0, and a consumer moves both pins at once.
+
+| Where | What changes |
+|---|---|
+| The repository that produces the export (Streamlane's `model:export`, Intentset's own) | Move `@intentset/cli` to 0.7.0, and run `intentset migrate --to 0.2` once on a clean tree, committing what it rewrites: it changes `spec` and `profile` in each record the scope matches and nothing else. A 0.7.0 reader rejects a record that declares `0.1` (CORE001). |
+| A reader of the export (`readExport`, Driftline's `modelFromExport`, Streamlane's importer) | Support `intentset/export/0.4` and drop 0.3, which a 0.4 reader rejects as `unsupported-contract`. Accept `reports.evidence.binding`, `bindingReason`, each verification's `binding` and `subject`, a run record's optional `binding` and `subjectHash`, and a verification artifact's `exercises`; take a status as the producer's verdict under that binding (export §4.1) and show the binding beside it. |
+| A consumer's own tests | Run the importer over the fixtures again: `subject-current.json`, `subject-stale.json`, `commit-fallback.json`, `subject-hash-mismatch.json` and `unsupported-contract-0.3.json` are new, and every accepted envelope's `spec` is `0.2`. |
+
+A record imported by commit binding stays what it was; under the default a repository with slices reads such a record as
+stale until `intentset evidence import` writes it again (Core §8). What changes for a reader of the export is that
+evidence the repository's gate accepts now reads current there too.

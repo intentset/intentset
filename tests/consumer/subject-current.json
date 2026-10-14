@@ -1,0 +1,700 @@
+{
+  "contract": "intentset/export/0.4",
+  "spec": "0.2",
+  "generatedAt": "2026-10-03T12:00:00Z",
+  "repository": "example/scheduling",
+  "products": [
+    "PRD-LANTERN"
+  ],
+  "source": {
+    "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+    "uncommitted": false
+  },
+  "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37",
+  "release": {
+    "product": "PRD-LANTERN",
+    "label": "pilot-1"
+  },
+  "validation": {
+    "level": "L3",
+    "scope": [
+      "**/*.md"
+    ],
+    "status": "pass",
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": []
+  },
+  "withholding": {
+    "visibilities": [
+      "restricted"
+    ],
+    "artifacts": 1,
+    "diagnostics": 0
+  },
+  "registries": {
+    "owners": [
+      "team-assessment",
+      "team-platform"
+    ],
+    "audiences": [
+      "engineering",
+      "product",
+      "teacher"
+    ],
+    "releases": [
+      "pilot-1"
+    ],
+    "roles": [
+      "teacher"
+    ],
+    "editions": [
+      "standard"
+    ],
+    "flags": [],
+    "evidenceSources": [
+      "product-analytics",
+      "task-study"
+    ],
+    "resources": [
+      {
+        "id": "RES-ASSESSMENT-DATA",
+        "path": "amplify/data/resource.ts",
+        "owner": "team-platform",
+        "consumers": [
+          "SLICE-ASMT-SCHEDULE"
+        ]
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "ADR-ASMT-SEAM",
+      "type": "decision",
+      "title": "Keep backend access behind the slice seam",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/decision/0.2",
+      "revision": 1,
+      "path": "ADR-ASMT-SEAM.md",
+      "sourceHash": "3f83a229b04748a59fd8b010444dae78b3d647b8bdeb68fd4170e80eff456be3",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "informedBy": [
+          "SLICE-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "BEH-ASMT-SCHEDULE",
+      "type": "behavior",
+      "title": "Schedule a student assessment",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/behavior/0.2",
+      "revision": 1,
+      "path": "BEH-ASMT-SCHEDULE.md",
+      "sourceHash": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
+      "parent": "CAP-ASMT-ASSIGN",
+      "links": {
+        "governedBy": [
+          "RULE-ASMT-FUTURE"
+        ]
+      },
+      "derived": {
+        "illustrates": [
+          "SCN-ASMT-SCHEDULE"
+        ],
+        "implements": [
+          "SLICE-ASMT-SCHEDULE"
+        ],
+        "verifies": [
+          "TEST-ASMT-SCHEDULE"
+        ],
+        "explains": [
+          "KB-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 1,
+      "availability": {
+        "products": [
+          "PRD-LANTERN"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": []
+      },
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "CAP-ASMT-ASSIGN",
+      "type": "capability",
+      "title": "Student assessment assignment",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/capability/0.2",
+      "revision": 1,
+      "path": "CAP-ASMT-ASSIGN.md",
+      "sourceHash": "ba31f2d6c661405d1dd0e02d2f0d22042e3db04639b4e688b9be9209a88d4377",
+      "parent": "OUT-PREPARE",
+      "links": {},
+      "derived": {
+        "parent": [
+          "BEH-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "CONTRACT-ASMT-SCHEDULE",
+      "type": "contract",
+      "title": "ScheduleAssessment contract",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/contract/0.2",
+      "revision": 1,
+      "path": "CONTRACT-ASMT-SCHEDULE.md",
+      "sourceHash": "bfba2f210578b09bec589ee330840dd8cf8d5d4cfe7379d70130fb905c73bb49",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "exposes": [
+          "SLICE-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "INT-PREPARE",
+      "type": "intent",
+      "title": "Prepare learning in advance",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/intent/0.2",
+      "revision": 1,
+      "path": "INT-PREPARE.md",
+      "sourceHash": "77808e4361be73aaca3b19c346fd94574d9b9739fd7bcd37984fdfe307dcd912",
+      "parent": "PRD-LANTERN",
+      "links": {},
+      "derived": {
+        "parent": [
+          "OUT-PREPARE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "KB-ASMT-SCHEDULE",
+      "type": "knowledge",
+      "title": "Prepare a scheduled student assessment",
+      "status": "approved",
+      "owner": "team-assessment",
+      "visibility": "customer",
+      "audiences": [
+        "teacher"
+      ],
+      "profile": "intentset/knowledge/0.2",
+      "revision": 1,
+      "path": "KB-ASMT-SCHEDULE.md",
+      "sourceHash": "dbe2aa382421e2a3b8f8615c937441a8869f855d474ceee06e31fdfd5c830021",
+      "parent": null,
+      "links": {
+        "explains": [
+          "BEH-ASMT-SCHEDULE",
+          "RULE-ASMT-FUTURE"
+        ]
+      },
+      "derived": {},
+      "withheldLinks": 1,
+      "availability": {
+        "products": [
+          "PRD-LANTERN"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": []
+      },
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": {
+        "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+        "RULE-ASMT-FUTURE": "The release time must be in the future."
+      },
+      "extensions": {
+        "intentset.org/review": {
+          "sources": {
+            "BEH-ASMT-SCHEDULE": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
+            "RULE-ASMT-AUTH": "63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094",
+            "RULE-ASMT-FUTURE": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e"
+          }
+        }
+      }
+    },
+    {
+      "id": "MEAS-PREPARE-ADOPTION",
+      "type": "measure",
+      "title": "Assignments scheduled a day or more ahead",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/measure/0.2",
+      "revision": 1,
+      "path": "MEAS-PREPARE-ADOPTION.md",
+      "sourceHash": "7b69a35995e4b60f0a6f80aaab307c7cf2f00072d223b3efedff3fecd780e982",
+      "parent": "OUT-PREPARE",
+      "links": {},
+      "derived": {},
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": {
+        "metric": "assignments_scheduled_ahead",
+        "baseline": "unknown",
+        "target": "60% of assignments scheduled at least one day before they open",
+        "window": "90 days after pilot-1",
+        "source": "product-analytics",
+        "direction": "increase"
+      },
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "MEAS-PREPARE-MINUTES",
+      "type": "measure",
+      "title": "Teacher minutes spent preparing an assignment",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/measure/0.2",
+      "revision": 1,
+      "path": "MEAS-PREPARE-MINUTES.md",
+      "sourceHash": "866b88513cc809f8326410e95e103ae4b6659b5ead1b902d26f38baa70a0966d",
+      "parent": "OUT-PREPARE",
+      "links": {},
+      "derived": {},
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": {
+        "metric": "teacher_prep_minutes",
+        "baseline": "unknown",
+        "target": "20% below the measured pilot baseline",
+        "window": "90 days after pilot-1",
+        "source": "task-study",
+        "direction": "decrease"
+      },
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "OUT-PREPARE",
+      "type": "outcome",
+      "title": "Reduce assignment preparation friction",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/outcome/0.2",
+      "revision": 1,
+      "path": "OUT-PREPARE.md",
+      "sourceHash": "98a8319c145316db6373032d1c48d564a527d2f095dc516d19299be9492e325f",
+      "parent": "INT-PREPARE",
+      "links": {},
+      "derived": {
+        "parent": [
+          "CAP-ASMT-ASSIGN",
+          "MEAS-PREPARE-ADOPTION",
+          "MEAS-PREPARE-MINUTES"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "PRD-LANTERN",
+      "type": "product",
+      "title": "Lantern example",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/product/0.2",
+      "revision": 1,
+      "path": "PRD-LANTERN.md",
+      "sourceHash": "17e8a8c8c1c04079053d25744e8ffb74be0268efb8dc4d6d05ebe06cce06a977",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "parent": [
+          "INT-PREPARE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "RULE-ASMT-FUTURE",
+      "type": "rule",
+      "title": "Require a future release time",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/rule/0.2",
+      "revision": 1,
+      "path": "RULE-ASMT-FUTURE.md",
+      "sourceHash": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e",
+      "parent": null,
+      "links": {},
+      "derived": {
+        "governedBy": [
+          "BEH-ASMT-SCHEDULE"
+        ],
+        "verifies": [
+          "TEST-ASMT-SCHEDULE"
+        ],
+        "explains": [
+          "KB-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "SCN-ASMT-SCHEDULE",
+      "type": "scenario",
+      "title": "Accept an eligible schedule",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/scenario/0.2",
+      "revision": 1,
+      "path": "SCN-ASMT-SCHEDULE.md",
+      "sourceHash": "cf4ad4cfe961d7fb0530b60e997c97b000f27abeb9f178f6c9417a8fcf808e9a",
+      "parent": null,
+      "links": {
+        "illustrates": [
+          "BEH-ASMT-SCHEDULE"
+        ]
+      },
+      "derived": {
+        "verifies": [
+          "TEST-ASMT-SCHEDULE"
+        ]
+      },
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": null,
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "SLICE-ASMT-SCHEDULE",
+      "type": "slice",
+      "title": "Student assessment scheduling slice",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/slice/0.2",
+      "revision": 1,
+      "path": "SLICE-ASMT-SCHEDULE.md",
+      "sourceHash": "f0422d48e6c5cff122f396e3fa2b04c7cdf79ade28e6defabb7a6a40f25c4f46",
+      "parent": null,
+      "links": {
+        "implements": [
+          "BEH-ASMT-SCHEDULE"
+        ],
+        "exposes": [
+          "CONTRACT-ASMT-SCHEDULE"
+        ],
+        "informedBy": [
+          "ADR-ASMT-SEAM"
+        ]
+      },
+      "derived": {},
+      "withheldLinks": 0,
+      "availability": null,
+      "slice": {
+        "kind": "product",
+        "domain": "assessment",
+        "entrypoints": [
+          "src/features/assessment/schedule/index.ts"
+        ],
+        "layers": {
+          "application": [
+            "src/features/assessment/schedule/domain/use-cases/**"
+          ],
+          "external": [
+            "src/features/assessment/schedule/client/**"
+          ],
+          "model": [
+            "src/features/assessment/schedule/domain/models/**"
+          ],
+          "policy": [
+            "src/features/assessment/schedule/domain/policies/**"
+          ],
+          "presentation": [
+            "src/features/assessment/schedule/ui/**"
+          ]
+        },
+        "claims": [
+          {
+            "kind": "backend",
+            "path": "amplify/functions/schedule-assessment/**"
+          },
+          {
+            "kind": "source",
+            "path": "src/features/assessment/schedule/**"
+          }
+        ],
+        "usesResources": [
+          "RES-ASSESSMENT-DATA"
+        ]
+      },
+      "verification": null,
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    },
+    {
+      "id": "TEST-ASMT-SCHEDULE",
+      "type": "verification",
+      "title": "Review student assessment scheduling behavior",
+      "status": "draft",
+      "owner": "team-assessment",
+      "visibility": "internal",
+      "audiences": [
+        "engineering",
+        "product"
+      ],
+      "profile": "intentset/verification/0.2",
+      "revision": 1,
+      "path": "TEST-ASMT-SCHEDULE.md",
+      "sourceHash": "29380720f60d53341a0a7e1c058baf3b02f8a6716888bf49765f2db5e492a14f",
+      "parent": null,
+      "links": {
+        "verifies": [
+          "BEH-ASMT-SCHEDULE",
+          "RULE-ASMT-FUTURE",
+          "SCN-ASMT-SCHEDULE"
+        ]
+      },
+      "derived": {},
+      "withheldLinks": 1,
+      "availability": null,
+      "slice": null,
+      "verification": {
+        "method": "manual",
+        "locator": "TEST-ASMT-SCHEDULE.md",
+        "selector": "schedule-review-v1",
+        "exercises": []
+      },
+      "measure": null,
+      "tips": null,
+      "extensions": null
+    }
+  ],
+  "reports": {
+    "evidence": {
+      "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+      "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37",
+      "scope": {
+        "product": "PRD-LANTERN",
+        "release": "pilot-1"
+      },
+      "records": 1,
+      "binding": "subject",
+      "bindingReason": "default",
+      "verifications": [
+        {
+          "id": "TEST-ASMT-SCHEDULE",
+          "method": "manual",
+          "status": "current-pass",
+          "binding": "subject",
+          "subject": "82c9f9dc0709c2d39425a290dbea2cdc69eef5e148f0e0c112a24f668d5bb463",
+          "note": "judged by subject binding; the run was at commit 9a8b7c6d5",
+          "latest": {
+            "evidenceId": "review-0003",
+            "verificationId": "TEST-ASMT-SCHEDULE",
+            "commit": "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b",
+            "graphHash": "02b40d73b7e5c5b99147db91ce6f7d339b0cacac5749a343b1d4bb3c905baa15",
+            "environment": "staging",
+            "scope": {
+              "product": "PRD-LANTERN",
+              "release": "pilot-1"
+            },
+            "tool": null,
+            "reviewer": "qa-lead@example.org",
+            "startedAt": "2026-10-02T14:20:00Z",
+            "finishedAt": "2026-10-02T14:20:30Z",
+            "result": "pass",
+            "uri": "https://reviews.example.org/review-0003",
+            "binding": "subject",
+            "subjectHash": "82c9f9dc0709c2d39425a290dbea2cdc69eef5e148f0e0c112a24f668d5bb463",
+            "rationale": "Scheduled an assessment for tomorrow and one for yesterday; the second was refused with the stated reason."
+          },
+          "atSnapshot": {
+            "pass": 1,
+            "fail": 0,
+            "skip": 0,
+            "error": 0
+          },
+          "runs": 1,
+          "outOfScope": 0
+        }
+      ],
+      "claims": [
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "type": "behavior",
+          "lifecycle": "draft",
+          "required": false,
+          "linked": true,
+          "verified": true,
+          "verifications": [
+            "TEST-ASMT-SCHEDULE"
+          ],
+          "withheld": 0
+        },
+        {
+          "id": "RULE-ASMT-FUTURE",
+          "type": "rule",
+          "lifecycle": "draft",
+          "required": false,
+          "linked": true,
+          "verified": true,
+          "verifications": [
+            "TEST-ASMT-SCHEDULE"
+          ],
+          "withheld": 0
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE",
+          "type": "scenario",
+          "lifecycle": "draft",
+          "required": false,
+          "linked": true,
+          "verified": true,
+          "verifications": [
+            "TEST-ASMT-SCHEDULE"
+          ],
+          "withheld": 0
+        }
+      ]
+    }
+  }
+}

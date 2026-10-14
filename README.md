@@ -4,14 +4,14 @@ Keep product intent connected to what you ship. Intentset connects what a produc
 that implement it, the checks that verify it, and the knowledge you share with customers, as readable Markdown files
 in your repository. The graph, reports, Atlas and published knowledge are views of those files.
 
-**Status: v0.1 draft.** The specifications are ready for review, and the reference implementation is on npm as
+**Status: v0.2 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
 release changed, and whether the specifications, the conformance suite or the export contract moved.
 
 Ten packages are published under the `@intentset` scope: `core`, `markset-adapter`, `architecture`, `verification`, `publisher`, `help`, `atlas`, `mcp`, `conformance-suite` and `cli`.
 
-- Specifications: [`spec/core-0.1.md`](spec/core-0.1.md), [`spec/vsa-0.1.md`](spec/vsa-0.1.md),
-  [`spec/profile-typescript-amplify-gen2-0.1.md`](spec/profile-typescript-amplify-gen2-0.1.md),
+- Specifications: [`spec/core-0.2.md`](spec/core-0.2.md), [`spec/vsa-0.2.md`](spec/vsa-0.2.md),
+  [`spec/profile-typescript-amplify-gen2-0.2.md`](spec/profile-typescript-amplify-gen2-0.2.md),
   [`spec/publication.md`](spec/publication.md), and the export contract other tools read,
   [`spec/export.md`](spec/export.md)
 - Worked example: [`examples/scheduling/`](examples/scheduling/), an invented product
@@ -40,7 +40,7 @@ pnpm run intentset validate --root <dir>
 pnpm run intentset impact BEH-ASMT-SCHEDULE --root <dir>
 ```
 
-Commands: `init`, `validate` (levels L1 to L4), `graph`, `impact`, `context`, `architecture check`,
+Commands: `init`, `validate` (levels L1 to L4), `graph`, `migrate` (records to the next specification version), `impact`, `context`, `architecture check`,
 `evidence import`, `review`, `publish`, `serve` (the Atlas), `mcp` (a read-only context server), and `guide` (the
 agent guide, printed).
 

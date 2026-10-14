@@ -6,7 +6,13 @@
  * however many older passes there are, because the status is decided by the
  * latest current run and every run is kept in the history.
  */
-import { type Diagnostic, type EvidenceBinding, type Graph, sortDiagnostics } from "@intentset/core";
+import {
+  type Diagnostic,
+  type EvidenceBinding,
+  type EvidenceBindingReason,
+  type Graph,
+  sortDiagnostics,
+} from "@intentset/core";
 import { compareStrings, evidenceDiagnostic } from "./diagnostic.ts";
 import { CURRENT, compareRecords, type RunRecord, type RunResult, type RunScope } from "./records.ts";
 import { partsChangedAmong, type Subject } from "./subject.ts";
@@ -37,7 +43,7 @@ export interface EvidenceSnapshot {
    * exist) or `no-slices` (commit, because the repository has no slice claims to hash and did not ask for it,
    * which EVID004 says). Absent reads as `configured`.
    */
-  bindingReason?: "configured" | "default" | "no-slices";
+  bindingReason?: EvidenceBindingReason;
   /** Under subject binding: the subject of each verification at the snapshot, by verification ID. */
   subjects?: ReadonlyMap<string, Subject>;
   /**
@@ -57,6 +63,8 @@ export interface VerificationEvidence {
   status: EvidenceStatus;
   /** The binding that judged this verification. */
   binding: EvidenceBinding;
+  /** Under subject binding, the hash of the subject it was judged at; null under commit binding and when none could be computed. */
+  subject: string | null;
   /** Why the status is qualified or what was set aside, when anything was. */
   note?: string;
   /** The record that decided the status: the latest at the snapshot, else the latest in scope; null when there is none. */
@@ -75,7 +83,14 @@ export interface RejectedRecord {
 }
 
 export interface Classification {
-  snapshot: { commit: string | null; graphHash: string; scope: RunScope | null; binding: EvidenceBinding };
+  snapshot: {
+    commit: string | null;
+    graphHash: string;
+    scope: RunScope | null;
+    binding: EvidenceBinding;
+    /** Why this binding is in force (`configured` when the caller did not say). */
+    bindingReason: EvidenceBindingReason;
+  };
   /** One entry per verification artifact in the graph, keyed and ordered by ID. */
   verifications: Record<string, VerificationEvidence>;
   /** Records whose scope named another product or release, across every verification. */
@@ -213,7 +228,13 @@ export function classifyEvidence(
   }
 
   return {
-    snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash, scope, binding },
+    snapshot: {
+      commit: snapshot.commit,
+      graphHash: snapshot.graphHash,
+      scope,
+      binding,
+      bindingReason: snapshot.bindingReason ?? "configured",
+    },
     verifications,
     ignoredOutOfScope,
     unknown,
@@ -237,7 +258,8 @@ function classifyOne(
   unclaimed: Set<string>,
 ): VerificationEvidence {
   const counts: ResultCounts = { pass: 0, fail: 0, skip: 0, error: 0 };
-  const base = { verificationId, method, binding, history, atSnapshot: counts, outOfScope };
+  const subjectHash = binding === "subject" ? (snapshot.subjects?.get(verificationId)?.hash ?? null) : null;
+  const base = { verificationId, method, binding, subject: subjectHash, history, atSnapshot: counts, outOfScope };
   const ignored =
     outOfScope > 0 ? `${outOfScope} record${outOfScope === 1 ? "" : "s"} for another product or release ignored` : null;
 
@@ -325,12 +347,23 @@ function collectUnclaimed(latest: RunRecord, snapshot: EvidenceSnapshot, unclaim
 
 function withNote(evidence: Omit<VerificationEvidence, "note">, notes: (string | null)[]): VerificationEvidence {
   const present = notes.filter((note): note is string => note !== null);
-  const { verificationId, method, binding, status, latest, history, atSnapshot: counts, outOfScope } = evidence;
+  const {
+    verificationId,
+    method,
+    binding,
+    subject,
+    status,
+    latest,
+    history,
+    atSnapshot: counts,
+    outOfScope,
+  } = evidence;
   return {
     verificationId,
     method,
     status,
     binding,
+    subject,
     ...(present.length > 0 ? { note: present.join("; ") } : {}),
     latest,
     history,

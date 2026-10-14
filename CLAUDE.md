@@ -2,11 +2,11 @@
 
 Intentset keeps product intent, observable behavior, implementation ownership, verification and published knowledge
 connected, as readable Markdown files with YAML frontmatter in a repository. The graph, reports, Atlas and published
-knowledge are derived views; the files are authoritative. This repository is the v0.1 specifications, the conformance
+knowledge are derived views; the files are authoritative. This repository is the v0.2 specifications, the conformance
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
-**`spec/` is the source of truth**: `core-0.1.md`, `vsa-0.1.md`, `profile-typescript-amplify-gen2-0.1.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.3`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
+**`spec/` is the source of truth**: `core-0.2.md`, `vsa-0.2.md`, `profile-typescript-amplify-gen2-0.2.md`,
+`export.md` (the export contract other tools pin, `intentset/export/0.4`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
 `docs/requirements/` is the kickoff handoff as delivered and is not updated (`markset/` in it is the half delivered to
@@ -16,7 +16,9 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
 ## Design invariants
 
 1. **One carrier, one record per artifact.** Markdown with YAML frontmatter under `intentset:`. Tools never merge
-   duplicate records and never rewrite files. Unknown keys inside `intentset` are errors except under `extensions`;
+   duplicate records and never rewrite files, with one exception: `intentset migrate --to 0.2` rewrites `spec` and
+   `profile` in each record's frontmatter, only when asked, and refuses a tree with uncommitted changes to tracked
+   files unless `--allow-dirty` says otherwise. Unknown keys inside `intentset` are errors except under `extensions`;
    unknown top-level keys are preserved and never interpreted.
 2. **Authored forward edges only.** Relationships are written once in the Core §5 direction; every inverse is
    derived and marked derived. A reverse edge in a file is a mistake, not a convenience.
@@ -415,13 +417,16 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - `site/content` is the site copy's source of truth. The IA document in `docs/requirements/` stays frozen as the
   handoff, and the site's words need not match it.
 - The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
-- The export is 0.3. Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline
-  read exports and move their pins when they update.
+- The export is 0.4 (2026-10-14, ADR 0014: it carries the evidence binding) and the specifications are 0.2. Before 1.0 a
+  changed export envelope is a minor bump of the packages; Streamlane and Driftline read exports and move their pins when
+  they update. A 0.4 reader rejects 0.3, and a 0.2 reader rejects a record that declares `0.1`: `intentset migrate --to
+  0.2` rewrites `spec` and `profile` in a repository's records.
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
-  inside export 0.3); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
+  inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.
-- One breaking revision was made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure); the
-  next such change, to any spec, moves `intentset.spec` to `0.2`.
+- Two breaking revisions were made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure;
+  2026-10-14, evidence judged by subject by default), and the second moved `intentset.spec` to `0.2` (ADR 0014); the
+  next such change, to any spec, moves it to `0.3`.
 - The site is organized by task, as markset.org is (2026-10-05): see "The site" above.
 - Intentset's own model is complete as drafts (2026-10-10): no architecture baseline, a verification record for every
   behavior, a measure for each of the toolchain's outcomes, and ADR-PACKAGE-LAYERS for the VSA006 warnings. What is left is a

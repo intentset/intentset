@@ -3,19 +3,71 @@
 Every release of the `@intentset/*` packages, newest first. Each entry says whether the specifications, the
 conformance suite or the export contract moved, because those are what another tool pins. Core §1 says what kind of
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
-case, in any section of the suite, moves `intentset.spec` from `0.1`.
+case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
 ## Unreleased
 
-**The worked example's knowledge is approved, reviewed and carries two tips, the walkthrough shows what publication
-writes for it, the example says "student assessment", and intentset.org gained a Copy button.** Of the specifications
-Core moved, in an illustrative example and in §8 (run evidence is judged by subject binding by default, below), and the publication profile and the export contract's text, in clarifications: `intentset.spec` stays `0.1` and the export stays 0.3. Nine
-conformance cases gained a patch so that each still describes the draft or untipped record it is about now that the
-suite's baseline is neither, and nothing that conformed stops conforming. The suite's baseline bytes did change, so a
-consumer that pins the export's graph hash reads a new one.
+**Export 0.4 and specifications 0.2 are breaking for a consumer that pins export 0.3 or `intentset.spec` `0.1`; the
+release that carries them is 0.7.0 (not yet released).** Export 0.4 carries the evidence binding, and the
+specifications and `intentset.spec` move from `0.1` to `0.2` (ADR 0014), and the conformance suite's cases move with them (new export and consumer cases, `0.2` in every fixture). The worked example's knowledge is also
+approved, reviewed and carries two tips, the walkthrough shows what publication writes for it, the example says
+"student assessment", and intentset.org gained a Copy button.
 
-- **Run evidence is judged by subject binding by default wherever slices claim files, and by commit binding when a repository or a gate asks for it** (ADR 0013, stage 2). Of the specifications Core moved
-  (§8, §11; revision 2026-10-14) and the export contract's text did (a clarification: the evidence report is classified by commit and carries no binding), so `intentset.spec` stays `0.1` and the export stays 0.3. The
+- **Export 0.4 carries the evidence binding** (ADR 0014, stage 2b of ADR 0013). The evidence report says which binding
+  the repository judged by (`binding`: `subject` or `commit`) and why (`bindingReason`: `configured`, `default`, or
+  `no-slices`, the EVID004 fallback); each verification carries the `binding` that judged it and its `subject`, the
+  SHA-256 of its subject at the snapshot, which a reader compares with a record's `subjectHash` instead of recomputing
+  it; `latest` is the whole run record, `binding` and `subjectHash` included; and a stale subject record's `note` names
+  the part that moved. A verification artifact carries `exercises` (a list, empty when it declares none, less withheld
+  IDs). `graph` no longer classifies by commit where the repository judges by subject: the export states the
+  repository's own verdict, so a record made at an older commit reads `current-pass` while its subject is unchanged,
+  where 0.3 showed `stale`. The reader's rule for a current status is per binding (export §4.1, §5): commit binding as
+  before, subject binding needs `binding: subject` and a `subjectHash` equal to the verification's `subject`. A note
+  can name a withheld artifact's ID or path, so the export redacts them in notes as it does in diagnostics. A 0.4
+  reader rejects a 0.3 envelope as `unsupported-contract`, with the version it supports in the message.
+- **The specifications move to `0.2`**, as Core §1 describes (ADR 0014): Core, VSA, the reference profile, the
+  publication profile and the export contract now say 0.2 (their `id`, title and revision; the files are
+  `spec/core-0.2.md`, `spec/vsa-0.2.md` and `spec/profile-typescript-amplify-gen2-0.2.md`), a record declares
+  `spec: '0.2'` and `profile: intentset/<type>/0.2`, and a reader of `0.2` rejects a record that declares `0.1` as CORE001,
+  saying how to move it. Core §1 states no migration, so none is invented: the reader stays strict and the move is one
+  command. **`intentset migrate --to 0.2`** rewrites `intentset.spec` and `intentset.profile` in the frontmatter of
+  each record the model reads (the files the scope matches), keeps every other byte, prints how many it moved, leaves a
+  record at another version alone, and refuses a tree with uncommitted changes to tracked files (or no git work tree)
+  unless `--allow-dirty` is given, so the rewrite is a diff of its own. It is the one command that rewrites records, and
+  RULE-NEVER-REWRITE and design invariant 1 name it as the exception. It does not touch `.intentset/agents.md`, which
+  carries an example record: write the guide again with `intentset guide > .intentset/agents.md`, or edit its
+  `spec` and `profile` lines.
+- **What each consumer must do.** Both pins move to 0.7.0 together, and neither reads a 0.3 export or a `0.1` record
+  again.
+  - **Streamlane**: `model:export` and every `pnpm dlx @intentset/cli@0.6.1` script move to `@intentset/cli@0.7.0`, and
+    the repository runs `intentset migrate --to 0.2` once, in the same pull request (750 records: 747 under
+    `product/model` and the three `docs/decisions` files its scope names); the `model.yml` comment and `CLAUDE.md` say
+    Export Contract 0.4. Any reader of `.intentset/export.json` accepts `intentset/export/0.4`, uses export §4.1's rule
+    for a current status, and shows the binding beside a status.
+  - **Driftline**: `@intentset/core` moves to 0.7.0, which rejects `0.1` records, so `intentset migrate --to 0.2` runs in
+    the same change (33 records); `modelFromExport` accepts `intentset/export/0.4` and reads the new members it ignores
+    (`binding`, `bindingReason`, `subject`, `exercises`, a record's `binding` and `subjectHash`), and its watched export
+    fixture (`packages/signals/test/watched-export.json`) is replaced by a 0.4 one.
+  - **Markset** has no model (`product/` holds no records), so it migrates nothing. **Intentset** migrated its own 90
+    records (and the 15 of the worked example, which `init --example` copies) in this change.
+  - `docs/consumers.md`'s requirement tables name the same members; its one new section says what to change.
+- **Conformance.** `tests/export.json` gains four cases (a subject-bound report that reads current at an older commit, a
+  stale one whose note names the moved part, a commit-binding report as 0.3 judged, and the no-slices fallback), run by
+  the harness's export driver, which now makes the evidence report for a case that carries run records; `tests/consumer/`
+  gains `subject-current.json`, `subject-stale.json`, `commit-fallback.json`, `subject-hash-mismatch.json` (rejected as
+  `inconsistent-report`) and `unsupported-contract-0.3.json` (rejected as `unsupported-contract`), and was rebuilt from the
+  recipe. `tests/core.json`'s CORE001 case now says a record at `0.1` is rejected. Every record's `spec` and `profile`
+  lines changed, so every `sourceHash` and the graph hash moved: the baseline graph hash is
+  `6914e830beab0ab9fe5564eb18a9e93bbdadaa242379e9e79275b82aaf795bb5`, and the subject hashes the evidence cases pin, and
+  the review pins of the worked example's knowledge, moved with it. A conformance suite version marker of `0.1` is `0.2`.
+
+**Also in this release:** the worked example's knowledge is approved, reviewed and carries two tips, the walkthrough
+shows what publication writes for it, the example says "student assessment", and intentset.org gained a Copy button.
+Nine conformance cases gained a patch so that each still describes the draft or untipped record it is about now that the
+suite's baseline is neither, and nothing that conformed stops conforming.
+
+- **Run evidence is judged by subject binding by default wherever slices claim files, and by commit binding when a repository or a gate asks for it** (ADR 0013, stage 2). Core moved (§8, §11; revision 2026-10-14), and because it changed what an existing
+  record means the specifications moved to `0.2` and the export to 0.4 (above). The
   evidence schema gained optional `binding` and `subjectHash`, the frontmatter schema optional `verification.exercises`, and
   `.intentset/config.yaml` an optional `evidence` block (`binding`, `globalInputs`). A repository with slices whose records are bound to a commit,
   as every record written before this revision is, reads stale until its runs are imported again or it sets `evidence.binding: commit`: the 27 evidence
@@ -34,11 +86,10 @@ consumer that pins the export's graph hash reads a new one.
     are stale with a note. Two new warnings: **EVID004**, a repository with no slice claims judged by commit for want of a subject, and
     **EVID005**, the files changed since a current subject record that no slice claims, no used resource names, no global input lists and no
     record or test names, so they cannot make evidence stale (the first twenty, with a count).
-  - **`verification.exercises`** (slice or resource IDs, unique, CORE003 when one names neither) is read, validated and hashed; it is not exported.
-  - **The export did not move, and does not carry the binding.** 0.3's reader rejects a current status whose latest record is not at the
-    snapshot's commit and graph hash, and its record schema is closed, so `graph` classifies the evidence report by commit when the repository's
-    binding is subject, says so in every `note`, and leaves `binding`, `subjectHash` and `exercises` out. A consumer of the export reads `stale` for a record the repository's own
-    L3 check accepts; carrying the binding would be a 0.4 and is a decision for when a consumer needs it.
+  - **`verification.exercises`** (slice or resource IDs, unique, CORE003 when one names neither) is read, validated, hashed and exported (export 0.4).
+  - **The export carries the binding from 0.4.** Stage 2 first left the export at 0.3, classifying the evidence report by
+    commit and saying so in each `note`, because 0.3's reader and closed schema had no place for the binding; export 0.4
+    (above) replaced that with the repository's own verdict.
   - **Conformance.** `tests/evidence.json` has the subject cases (S01 to S05): a record current across an unrelated commit, a prose edit of a slice
     record and an unrelated record edit; stale for a change to a claimed file, a dependency's, the test, a helper it imports, an exercised slice, a used
     resource, a global input, the verified behavior's text and a binding field; the commit-record and subject-record mismatches; the no-slice

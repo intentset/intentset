@@ -108,3 +108,14 @@ export function changedSince(root: string, commit: string): string[] | null {
   const untracked = paths(git(root, ["ls-files", "-z", "--others", "--exclude-standard"]));
   return [...new Set([...paths(diff), ...untracked])].sort(compareStrings);
 }
+
+/**
+ * The tracked files that differ from HEAD, staged or not, as `git status` lists them; an empty list for a clean
+ * tree, and null when this is not a git work tree or git cannot say. Untracked files are not counted: a command that
+ * rewrites tracked files asks only that its rewrite be a diff on its own.
+ */
+export function trackedChanges(root: string): string[] | null {
+  const out = git(root, ["status", "--porcelain", "--untracked-files=no", "-z"]);
+  if (out === null) return null;
+  return out.split("\0").filter((entry) => entry !== "");
+}

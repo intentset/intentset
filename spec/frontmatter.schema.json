@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Intentset v0.1 authoring frontmatter",
+  "title": "Intentset v0.2 authoring frontmatter",
   "description": "Structural schema; semantic graph, narrative, path, lifecycle and evidence checks are additional requirements.",
   "type": "object",
   "required": ["markset", "intentset"],
@@ -14,7 +14,7 @@
       "required": ["spec", "profile", "id", "type", "title", "status", "owner", "visibility", "audiences"],
       "properties": {
         "spec": {
-          "const": "0.1"
+          "const": "0.2"
         },
         "profile": {
           "type": "string"
@@ -381,7 +381,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/product/0.1"
+                "const": "intentset/product/0.2"
               }
             }
           }
@@ -397,7 +397,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/intent/0.1"
+                "const": "intentset/intent/0.2"
               }
             }
           }
@@ -413,7 +413,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/outcome/0.1"
+                "const": "intentset/outcome/0.2"
               }
             }
           }
@@ -429,7 +429,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/measure/0.1"
+                "const": "intentset/measure/0.2"
               }
             }
           }
@@ -445,7 +445,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/capability/0.1"
+                "const": "intentset/capability/0.2"
               }
             }
           }
@@ -461,7 +461,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/behavior/0.1"
+                "const": "intentset/behavior/0.2"
               }
             }
           }
@@ -477,7 +477,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/rule/0.1"
+                "const": "intentset/rule/0.2"
               }
             }
           }
@@ -493,7 +493,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/scenario/0.1"
+                "const": "intentset/scenario/0.2"
               }
             }
           }
@@ -509,7 +509,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/slice/0.1"
+                "const": "intentset/slice/0.2"
               }
             }
           }
@@ -525,7 +525,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/contract/0.1"
+                "const": "intentset/contract/0.2"
               }
             }
           }
@@ -541,7 +541,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/verification/0.1"
+                "const": "intentset/verification/0.2"
               }
             }
           }
@@ -557,7 +557,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/knowledge/0.1"
+                "const": "intentset/knowledge/0.2"
               }
             }
           }
@@ -573,7 +573,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/decision/0.1"
+                "const": "intentset/decision/0.2"
               }
             }
           }

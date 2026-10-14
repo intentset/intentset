@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/rule/0.1
+  spec: '0.2'
+  profile: intentset/rule/0.2
   id: RULE-ASK-SPEND-CAPPED
   type: rule
   title: The chat's spend has a ceiling
