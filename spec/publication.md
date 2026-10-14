@@ -2,7 +2,7 @@
 title: Intentset Publication Profile v0.1
 id: intentset/publication/0.1
 status: draft
-revision: 2026-10-05
+revision: 2026-10-13
 implementation: 0.6.1
 ---
 
@@ -10,9 +10,11 @@ implementation: 0.6.1
 
 **Extends:** [Core §9](core-0.1.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
 
-Core §9 names the generated publication profile and lists the provenance a published knowledge document must retain.
-This note fixes the fields that carry it, the review record that decides `needs-review`, and the diagnostics a
-publisher reports. MUST, MUST NOT, SHOULD and MAY are used as in Core §1.
+Publication turns reviewed knowledge, the explanations a product's readers are given, into documentation and in-app
+help for one audience and release, and leaves out everything that audience may not see. It is not deployment: nothing
+here ships a product. Core §9 names the generated publication profile and lists the provenance a published knowledge
+document must retain. This note fixes the fields that carry it, the review record that decides `needs-review`, and the
+diagnostics a publisher reports. MUST, MUST NOT, SHOULD and MAY are used as in Core §1.
 
 ## 1. Request and projection
 

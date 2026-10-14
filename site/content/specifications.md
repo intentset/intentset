@@ -13,7 +13,7 @@ Intentset separates product meaning from implementation architecture and platfor
 
   {{spec.core.meta}}
 
-  Identity, artifact types, relationships, lifecycle, evidence, Markset profiles, and audience-safe knowledge publication.
+  The product model: what a repository records about a product, from its purpose and outcomes down to each behavior and rule, how those records link to verification, evidence and the explanations readers are given, and how each moves from draft to released.
 
   [[Read Core](core/index.html)]{.button}
   :::
@@ -22,7 +22,7 @@ Intentset separates product meaning from implementation architecture and platfor
 
   {{spec.vsa.meta}}
 
-  Behavior ownership, public contracts, dependencies, implementation claims, and verification boundaries.
+  How code is organized around what the product does: each behavior has one owning slice of the codebase, a slice exposes a declared public surface and depends only on what it declares, and verification shows it delivers what it claims.
 
   [[Read Traceable VSA](vsa/index.html)]{.button}
   :::
@@ -31,7 +31,7 @@ Intentset separates product meaning from implementation architecture and platfor
 
   {{spec.profile-typescript-amplify-gen2.meta}}
 
-  A concrete mapping for slice folders, import boundaries, backend seams, and logically owned cloud resources, with areas for a backend too large for one CloudFormation stack.
+  Traceable VSA in a TypeScript and AWS Amplify Gen 2 repository: where slices live, which imports `intentset architecture check` refuses, how a slice owns its backend resources, and areas for a backend too large for one CloudFormation stack.
 
   [[Read the reference profile](profile-typescript-amplify-gen2/index.html)]{.button}
   :::
@@ -45,7 +45,7 @@ Intentset separates product meaning from implementation architecture and platfor
 
   {{spec.publication.meta}}
 
-  The fields that carry a published document's provenance, the review record that decides when an explanation needs review again, and the publisher's diagnostics.
+  How reviewed explanations become documentation and in-app help for one audience and release: what a request must name, what it may include and what stays withheld, the provenance each document keeps, and when an explanation needs review again.
 
   [[Read the publication profile](publication/index.html)]{.button}
   :::
