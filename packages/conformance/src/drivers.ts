@@ -10,8 +10,12 @@ import {
   type Diagnostic,
   type Registries,
   type ValidationResult,
+  type ExportMeta,
   exportGraph,
   graphHash,
+  hasErrors,
+  LEVELS,
+  sortDiagnostics,
   plainCarrier,
   readConfig,
   readRegistries,
@@ -20,7 +24,15 @@ import {
 import { checkArchitecture, subjectSource } from "@intentset/architecture";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { type PublicationRequest, bindReviewPins, publish } from "@intentset/publisher";
-import { checkFixtureEvidence, hasSliceClaims, resolveBinding } from "@intentset/verification";
+import {
+  checkFixtureEvidence,
+  evidenceReport,
+  FIXTURE_COMMIT,
+  type FixtureEvidenceRun,
+  hasSliceClaims,
+  requestedScope,
+  resolveBinding,
+} from "@intentset/verification";
 import { CONFIG_PATH, REGISTRIES_PATH } from "./fixtures.ts";
 import type { Actual, Driver, ExpandedCase } from "./types.ts";
 
@@ -80,25 +92,14 @@ export const coreDriver: Driver = (expanded) => {
   } satisfies Actual;
 };
 
-/** The export envelope over the same validation, with fixture metadata. */
-export const exportDriver: Driver = (expanded) => {
-  const { result, registries, diagnostics } = validateTree(expanded);
-  return {
-    valid: !diagnostics.some((d) => d.severity === "error"),
-    diagnostics,
-    artifacts: [...result.graph.artifacts.keys()].sort(),
-    export: exportGraph(result, registries, FIXTURE_META),
-  } satisfies Actual;
-};
-
 /**
- * Evidence over the same validation (Core §8): run records bound to the case's
- * snapshot through the `@current` placeholder, classified, and CORE007 at L3+.
+ * The evidence check of a case over its validation (Core §8): the case's run records bound to its snapshot through
+ * the `@current` placeholder and classified under the binding in force; under subject binding the subjects are
+ * computed over the tree of the case's documents and sources, with the architecture package's resolution of claims
+ * and imports.
  */
-export const evidenceDriver: Driver = (expanded) => {
-  const { result, registries, diagnostics, evidence } = validateTree(expanded);
-  // Under subject binding the subjects are computed over the tree of the case's documents and sources, with
-  // the architecture package's resolution of claims and imports (Core §8).
+function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvidenceRun {
+  const { result, registries, evidence } = validated;
   const files = new Map([...expanded.files, ...expanded.sources]);
   const subject =
     resolveBinding(evidence.binding, hasSliceClaims(result.graph)).binding === "subject"
@@ -112,7 +113,7 @@ export const evidenceDriver: Driver = (expanded) => {
           },
         )
       : undefined;
-  const run = checkFixtureEvidence({
+  return checkFixtureEvidence({
     graph: result.graph,
     level: expanded.level,
     evidence: expanded.evidence,
@@ -123,11 +124,53 @@ export const evidenceDriver: Driver = (expanded) => {
     changedSince: expanded.changedSince,
     ...(subject === undefined ? {} : { subjectSource: subject }),
   });
-  const all = [...diagnostics, ...run.diagnostics];
+}
+
+/**
+ * The export envelope over the same validation, with fixture metadata. A case at L3 or above that carries run
+ * records also gets the evidence report, classified as the CLI's `graph` does and with the evidence diagnostics
+ * folded in; the envelope then names the fixture's commit, which the records were bound to.
+ */
+export const exportDriver: Driver = (expanded) => {
+  const validated = validateTree(expanded);
+  const { result, registries } = validated;
+  let diagnostics = validated.diagnostics;
+  let exported = result;
+  let meta: ExportMeta = FIXTURE_META;
+  if (expanded.evidence.length > 0 && LEVELS.indexOf(expanded.level) >= LEVELS.indexOf("L3")) {
+    const run = evidenceRun(expanded, validated);
+    diagnostics = sortDiagnostics([...diagnostics, ...run.diagnostics]);
+    exported = { ...result, diagnostics, ok: !hasErrors(diagnostics) };
+    const { commitUnavailable: _unavailable, ...rest } = FIXTURE_META;
+    const scope = requestedScope(expanded.request);
+    meta = {
+      ...rest,
+      commit: FIXTURE_COMMIT,
+      level: expanded.level,
+      release: scope === null ? null : { product: scope.product, label: scope.release },
+      reports: { evidence: evidenceReport(run, expanded.evidence.length) },
+    };
+  }
+  return {
+    valid: !diagnostics.some((d) => d.severity === "error"),
+    diagnostics,
+    artifacts: [...result.graph.artifacts.keys()].sort(),
+    export: exportGraph(exported, registries, meta),
+  } satisfies Actual;
+};
+
+/**
+ * Evidence over the same validation (Core §8): run records bound to the case's
+ * snapshot through the `@current` placeholder, classified, and CORE007 at L3+.
+ */
+export const evidenceDriver: Driver = (expanded) => {
+  const validated = validateTree(expanded);
+  const run = evidenceRun(expanded, validated);
+  const all = [...validated.diagnostics, ...run.diagnostics];
   return {
     valid: !all.some((d) => d.severity === "error"),
     diagnostics: all,
-    artifacts: [...result.graph.artifacts.keys()].sort(),
+    artifacts: [...validated.result.graph.artifacts.keys()].sort(),
   } satisfies Actual;
 };
 

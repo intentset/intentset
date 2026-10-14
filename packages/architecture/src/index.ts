@@ -1,7 +1,7 @@
 /**
- * @intentset/architecture: the Traceable VSA checker (spec/vsa-0.1.md) with
+ * @intentset/architecture: the Traceable VSA checker (spec/vsa-0.2.md) with
  * the TypeScript + Amplify Gen 2 profile's boundaries
- * (spec/profile-typescript-amplify-gen2-0.1.md). `checkArchitecture` is the
+ * (spec/profile-typescript-amplify-gen2-0.2.md). `checkArchitecture` is the
  * whole check; the rest is exported for reports, tools and tests.
  */
 export { AREA_REVIEW_REQUIRED, areaOf, backendAreaOf, checkAreas, isAreaSchema } from "./areas.ts";

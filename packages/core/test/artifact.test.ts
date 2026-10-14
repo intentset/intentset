@@ -100,7 +100,7 @@ test("the schema and readArtifact agree on every fixture document", () => {
 
 test("an artifact keeps its foreign keys, its body and the hash of its bytes", () => {
   const source =
-    "---\nmarkset: 0\nx-editor:\n  theme: dark\nintentset:\n  spec: '0.1'\n  profile: intentset/product/0.1\n  id: PRD-X\n  type: product\n  title: X\n  status: draft\n  owner: o\n  visibility: internal\n  audiences: [a]\n---\n\n# X\n\n## Scope\n\nText.\n";
+    "---\nmarkset: 0\nx-editor:\n  theme: dark\nintentset:\n  spec: '0.2'\n  profile: intentset/product/0.2\n  id: PRD-X\n  type: product\n  title: X\n  status: draft\n  owner: o\n  visibility: internal\n  audiences: [a]\n---\n\n# X\n\n## Scope\n\nText.\n";
   const { artifact, diagnostics } = readArtifact(plainCarrier("PRD-X.md", source));
   assert.deepEqual(diagnostics, []);
   assert.ok(artifact !== null);

@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/contract/0.1
+  spec: '0.2'
+  profile: intentset/contract/0.2
   id: CONTRACT-ASMT-SCHEDULE
   type: contract
   title: ScheduleAssessment contract

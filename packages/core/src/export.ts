@@ -96,7 +96,7 @@ export function exportGraph(result: ValidationResult, registries: Registries, me
     },
     registries: exportRegistries(registries, withheld.ids),
     artifacts: ids.map((id) => exportArtifact(result, id, meta.includeBodies === true, withheld.ids)),
-    reports: withholdReports(meta.reports ?? {}, withheld.ids),
+    reports: withholdReports(meta.reports ?? {}, withheld),
   };
 }
 
@@ -129,6 +129,16 @@ function withheldIds(result: ValidationResult, includeRestricted: boolean): With
 
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * A note names the parts of a subject that moved (a record's ID, a file's path), so a withheld artifact's ID or source
+ * path in it is replaced as in a diagnostic's text.
+ */
+function redactNote(note: string, withheld: Withheld): string {
+  let out = withheld.pattern === null ? note : note.replace(withheld.pattern, "a withheld artifact");
+  for (const path of withheld.paths) out = out.split(path).join("a withheld artifact");
+  return out;
 }
 
 /** Diagnostics about a withheld artifact are left out; any other that names one has the ID redacted. */
@@ -194,6 +204,8 @@ function exportArtifact(
     withheldLinks++;
   }
 
+  const exercises = keep(meta.verification?.exercises ?? []);
+
   const exported: ExportArtifact = {
     id,
     type: meta.type,
@@ -219,6 +231,7 @@ function exportArtifact(
             method: meta.verification.method,
             locator: meta.verification.locator,
             selector: meta.verification.selector,
+            exercises,
           },
     measure:
       meta.measure === undefined
@@ -244,7 +257,8 @@ function exportArtifact(
  * an impact hit whose path passes through a withheld artifact goes too, each
  * counted in the `withheld` beside it.
  */
-function withholdReports(reports: ExportReports, withheld: ReadonlySet<string>): ExportReports {
+function withholdReports(reports: ExportReports, hidden: Withheld): ExportReports {
+  const withheld = hidden.ids;
   const out: ExportReports = {};
   const split = (list: readonly string[]): [string[], number] => {
     const kept = list.filter((id) => !withheld.has(id));
@@ -254,7 +268,9 @@ function withholdReports(reports: ExportReports, withheld: ReadonlySet<string>):
     const evidence = reports.evidence;
     out.evidence = {
       ...evidence,
-      verifications: evidence.verifications.filter((v) => !withheld.has(v.id)),
+      verifications: evidence.verifications
+        .filter((v) => !withheld.has(v.id))
+        .map((v) => (v.note === null ? v : { ...v, note: redactNote(v.note, hidden) })),
       claims: evidence.claims
         .filter((claim) => !withheld.has(claim.id))
         .map((claim) => {

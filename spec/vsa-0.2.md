@@ -1,14 +1,14 @@
 ---
-title: Intentset Traceable Vertical Slice Architecture Specification v0.1
-id: intentset/vsa/0.1
+title: Intentset Traceable Vertical Slice Architecture Specification v0.2
+id: intentset/vsa/0.2
 status: draft
-revision: 2026-10-05
+revision: 2026-10-14
 implementation: 0.6.1
 ---
 
-# Intentset Traceable Vertical Slice Architecture Specification v0.1
+# Intentset Traceable Vertical Slice Architecture Specification v0.2
 
-Depends on [Core v0.1](core-0.1.md), whose §1 gives MUST and SHOULD their meaning and the change policy this document follows.
+Depends on [Core v0.2](core-0.2.md), whose §1 gives MUST and SHOULD their meaning and the change policy this document follows.
 
 ## 1. Architecture model
 
@@ -38,11 +38,11 @@ The architecture regions are composition, product slices, shared neutral abstrac
 
 A checker MUST distinguish automatic structural checks from human assertions. It cannot reliably infer “business-neutral” from names or prove absence of dynamic network behavior. Reviews of VSA007 and unresolvable dynamic dependencies are required; unresolved checks cannot be represented as passed.
 
-VSA007, VSA008, VSA010, VSA011 and VSA012 are review assertions in v0.1: no reference check reports them, and the conformance suite has no case for them. A reviewer asserts each, and one not yet reviewed is unresolved, never passed (Core §11).
+VSA007, VSA008, VSA010, VSA011 and VSA012 are review assertions in v0.2: no reference check reports them, and the conformance suite has no case for them. A reviewer asserts each, and one not yet reviewed is unresolved, never passed (Core §11).
 
 ## 3. Slice metadata
 
-`slice.md` uses the Core carrier and the `intentset/slice/0.1` profile. `slice` is a type-specific object:
+`slice.md` uses the Core carrier and the `intentset/slice/0.2` profile. `slice` is a type-specific object:
 
 ```yaml
 slice:
@@ -67,11 +67,11 @@ slice:
 
 `entrypoints` is a nonempty list of unique repository-relative file paths, the slice's public contract surfaces. Each MUST lie inside one of the slice's own `source` claims and resolve to a file, and a slice MUST NOT declare two entrypoints in the same package (VSA002). A file's package is the nearest ancestor directory holding a `package.json` in the repository, or the repository root when there is none. Every entrypoint is a public surface: another slice, composition or unowned code MAY import any of them, and any other file of the slice is private (VSA003). A slice whose logic and UI live in different packages has one surface in each, as a monorepo publishes each package through its own entry. (Decided 2026-10-03 after the Streamlane pilot, whose blocked-work slice keeps its rules in a core package and its components in the web app: with one entrypoint, every import of a component read as a private-file import.)
 
-A claim has `kind` (`source`, `backend`, `contract`, `verification`, `documentation`) and `path`. Paths are repository-relative POSIX paths. v0.1 patterns allow literal segments, `*` within one segment, and `**` across zero or more segments. Absolute paths, `..`, traversal through symlinks outside the repository, brace expansion, and negation are forbidden. Include/exclude precedence is therefore unnecessary. Source enumeration MUST use a versioned ignore list to exclude generated/build/vendor output. A nonempty claim matching no file is an error.
+A claim has `kind` (`source`, `backend`, `contract`, `verification`, `documentation`) and `path`. Paths are repository-relative POSIX paths. v0.2 patterns allow literal segments, `*` within one segment, and `**` across zero or more segments. Absolute paths, `..`, traversal through symlinks outside the repository, brace expansion, and negation are forbidden. Include/exclude precedence is therefore unnecessary. Source enumeration MUST use a versioned ignore list to exclude generated/build/vendor output. A nonempty claim matching no file is an error.
 
 While a slice is `draft`, an entrypoint that is not yet a file (VSA002) and a claim that matches no file (VSA009) are warnings: the slice is planned, not yet owned, and the warning names what it still promises. Once the slice leaves draft both are errors. Every other VSA002 and VSA009 condition, such as two entrypoints in one package, an entrypoint outside the slice's claims, two owners for one file, or a registry resource matching nothing, is an error whatever the status, because it is a mistake in what was written rather than code not yet written. (Decided 2026-10-03 for model-first adoption: a product built from its first commit with Intentset writes its slices before their code, and its CI runs at L2 from the start. It mirrors the draft rule for CORE007.)
 
-Two slices MUST NOT own the same resolved file. When ownership differs inside a file, extract a contract/module or assign the file to a technical resource owner; v0.1 does not infer symbol ownership from line ranges. A backend registry MAY declare one technical owner for a shared resource and list consuming slices. `usesResources` references those resource IDs and does not transfer ownership. This registry is a deployment inventory, not a second product graph.
+Two slices MUST NOT own the same resolved file. When ownership differs inside a file, extract a contract/module or assign the file to a technical resource owner; v0.2 does not infer symbol ownership from line ranges. A backend registry MAY declare one technical owner for a shared resource and list consuming slices. `usesResources` references those resource IDs and does not transfer ownership. This registry is a deployment inventory, not a second product graph.
 
 ## 4. Contracts and collaboration
 
@@ -118,4 +118,4 @@ Adopt by declared scope. Baseline existing violations, block new violations, and
 
 ## 10. Conformance fixtures
 
-A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; a slice with an entrypoint in each of two packages; two entrypoints in one package; deep import through relative path; a deep import from outside the declared scope; alias and re-export bypass; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.1.
+A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; a slice with an entrypoint in each of two packages; two entrypoints in one package; deep import through relative path; a deep import from outside the declared scope; alias and re-export bypass; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.2.

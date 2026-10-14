@@ -1,10 +1,13 @@
 /**
- * The vocabulary of Core v0.1 (spec/core-0.1.md §2, §4, §5, §7) and the shapes
+ * The vocabulary of Core v0.2 (spec/core-0.2.md §2, §4, §5, §7) and the shapes
  * the packages exchange. This file is the contract; it carries no logic.
  */
 import type { Diagnostic } from "./diagnostics.ts";
 
-export const SPEC_VERSION = "0.1";
+export const SPEC_VERSION = "0.2";
+
+/** The version `SPEC_VERSION` followed (Core §1), named so the error for a record still at it can point to `intentset migrate`. */
+export const PREVIOUS_SPEC_VERSION = "0.1";
 
 export const ARTIFACT_TYPES = [
   "product",
@@ -352,8 +355,11 @@ export interface ImpactReport {
  * the first version a consumer could pin: 0.1 carried untyped report slots and
  * restricted artifacts by default (ADR 0008). 0.3 added the measure type, the
  * `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012).
+ * 0.4 carries the evidence binding: which binding judged each verification, the
+ * subject it was judged at, each record's binding and subject hash, and a
+ * verification's `exercises` (ADR 0014).
  */
-export const EXPORT_CONTRACT = "intentset/export/0.3";
+export const EXPORT_CONTRACT = "intentset/export/0.4";
 
 /** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
 export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];
@@ -383,7 +389,8 @@ export interface ExportArtifact {
   withheldLinks: number;
   availability: Availability | null;
   slice: SliceMeta | null;
-  verification: VerificationMeta | null;
+  /** `exercises` is the list as authored, less withheld IDs (counted in `withheldLinks`); empty when the record names none. */
+  verification: (Omit<VerificationMeta, "exercises"> & { exercises: string[] }) | null;
   /** Null unless the artifact is a measure; `direction` is null when the author set none. */
   measure: (Omit<MeasureMeta, "direction"> & { direction: MeasureDirection | null }) | null;
   /** Null unless the artifact is knowledge with tips (Core §9). */
@@ -393,7 +400,7 @@ export interface ExportArtifact {
   body?: string;
 }
 
-/** A run record as the evidence report carries it: spec/evidence.schema.json's record, unchanged. */
+/** A run record as the evidence report carries it: spec/evidence.schema.json's record, unchanged, `binding` and `subjectHash` included. */
 export interface ExportRunRecord {
   evidenceId: string;
   verificationId: string;
@@ -407,9 +414,17 @@ export interface ExportRunRecord {
   finishedAt: string;
   result: "pass" | "fail" | "skip" | "error";
   uri: string;
+  /** What the record is bound to (Core §8); absent means commit. */
+  binding?: EvidenceBinding;
+  /** The hash of the subject the run checked; present when `binding` is subject. */
+  subjectHash?: string;
   rationale?: string;
   extensions?: Record<string, unknown>;
 }
+
+/** Why the binding of a report is the one in force: the repository asked, the default (subject, since slices claim files), or the fallback to commit for want of slice claims (EVID004). */
+export const EVIDENCE_BINDING_REASONS = ["configured", "default", "no-slices"] as const;
+export type EvidenceBindingReason = (typeof EVIDENCE_BINDING_REASONS)[number];
 
 /** Core §8 freshness, as the evidence check classifies it. Only current-pass is a pass. */
 export const EXPORT_EVIDENCE_STATUSES = [
@@ -432,6 +447,10 @@ export interface EvidenceReportSection {
   scope: { product: string; release: string } | null;
   /** Run records read, before classification. */
   records: number;
+  /** The binding the repository judged by (Core §8): every verification below was judged by it. */
+  binding: EvidenceBinding;
+  /** Why: `no-slices` is the fallback to commit binding (EVID004), the only way a repository that asked for nothing is judged by commit. */
+  bindingReason: EvidenceBindingReason;
   /** One per verification artifact, sorted by ID. */
   verifications: ExportVerificationEvidence[];
   /** One per behavior, rule and scenario that is not retired, sorted by ID. */
@@ -442,7 +461,11 @@ export interface ExportVerificationEvidence {
   id: string;
   method: "automated" | "manual";
   status: ExportEvidenceStatus;
-  /** Why the status is qualified, or what was set aside; null when nothing was. */
+  /** The binding that judged it. */
+  binding: EvidenceBinding;
+  /** Under subject binding, the SHA-256 of the verification's subject at this snapshot, which a `subject` record's `subjectHash` must equal to be current; null under commit binding, and when none could be computed. */
+  subject: string | null;
+  /** Why the status is qualified, or what was set aside, and for a stale subject record which part of the subject moved; null when nothing was. */
   note: string | null;
   /** The record that decided the status: the latest at the snapshot, else the latest in scope; null when none. */
   latest: ExportRunRecord | null;

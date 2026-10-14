@@ -5,7 +5,7 @@
  * resolves (claimed files, import closures), which this package does not
  * depend on, so a caller hands it in as a `SubjectSource`.
  */
-import type { EvidenceBinding, Graph } from "@intentset/core";
+import type { EvidenceBinding, EvidenceBindingReason, Graph } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
 import { ABSENT, computeSubject, type Subject, type SubjectInput } from "./subject.ts";
 import { sha256Hex } from "@intentset/core";
@@ -13,7 +13,7 @@ import { sha256Hex } from "@intentset/core";
 export interface BindingDecision {
   binding: EvidenceBinding;
   /** `configured`, `default` (subject, since slices exist) or `no-slices` (commit, since there is nothing to hash). */
-  reason: "configured" | "default" | "no-slices";
+  reason: EvidenceBindingReason;
 }
 
 /**

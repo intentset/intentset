@@ -4,7 +4,7 @@ markset: 0
 
 ::::::columns{.hero ratio="5:4"}
 {.eyebrow}
-Product truth for agentic development · v0.1 draft
+Product truth for agentic development · v0.2 draft
 
 # Keep control of what your agents build
 
@@ -162,7 +162,7 @@ Project status
 
 ## Specifications in review. A toolchain to try them with
 
-The v0.1 specifications define the product model, traceable vertical slices, a TypeScript + AWS Amplify Gen 2 reference profile and reviewed publication. An export contract fixes what other tools read from a model.
+The v0.2 specifications define the product model, traceable vertical slices, a TypeScript + AWS Amplify Gen 2 reference profile and reviewed publication. An export contract fixes what other tools read from a model.
 
 The reference toolchain is at {{version}} on npm: validation, architecture checks, evidence, change impact, a Product Atlas, reviewed publication with tips for the product's own interface, agent context and the export, with a guide and a drift check for the agents that keep the model. They are early releases, to try against one real capability.
 

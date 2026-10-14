@@ -7,7 +7,7 @@
  * characters, which validatePattern rejects.
  */
 
-/** Why a pattern is not a v0.1 pattern, or null when it is one. */
+/** Why a pattern is not a v0.2 pattern, or null when it is one. */
 export function validatePattern(pattern: string): string | null {
   if (pattern === "") return "is empty";
   if (pattern.startsWith("/")) return "is absolute";

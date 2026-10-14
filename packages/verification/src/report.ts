@@ -7,41 +7,25 @@
  */
 import type { EvidenceReportSection } from "@intentset/core";
 import type { EvidenceCheck } from "./check.ts";
-import type { RunRecord } from "./records.ts";
-
-export interface EvidenceReportOptions {
-  /**
-   * Added to the note of every verification: the export contract (0.3) judges a record at the snapshot's commit and
-   * graph hash and has no member for the binding, so a caller whose repository uses another says so here.
-   */
-  note?: string;
-}
-
-/** A record as the export contract's `runRecord` has it: the members of spec/evidence.schema.json without `binding` and `subjectHash`. */
-function exported(record: RunRecord | null): EvidenceReportSection["verifications"][number]["latest"] {
-  if (record === null) return null;
-  const { binding: _binding, subjectHash: _subjectHash, ...rest } = record;
-  return rest;
-}
 
 /** The evidence report of a check that classified `records` run records. */
-export function evidenceReport(
-  check: EvidenceCheck,
-  records: number,
-  options: EvidenceReportOptions = {},
-): EvidenceReportSection {
+export function evidenceReport(check: EvidenceCheck, records: number): EvidenceReportSection {
   const { classification, coverage } = check;
   return {
     commit: classification.snapshot.commit,
     graphHash: classification.snapshot.graphHash,
     scope: classification.snapshot.scope,
     records,
+    binding: classification.snapshot.binding,
+    bindingReason: classification.snapshot.bindingReason,
     verifications: Object.values(classification.verifications).map((v) => ({
       id: v.verificationId,
       method: v.method,
       status: v.status,
-      note: [v.note, options.note].filter((n): n is string => n !== undefined).join("; ") || null,
-      latest: exported(v.latest),
+      binding: v.binding,
+      subject: v.subject,
+      note: v.note ?? null,
+      latest: v.latest,
       atSnapshot: { ...v.atSnapshot },
       runs: v.history.length,
       outOfScope: v.outOfScope,

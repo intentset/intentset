@@ -1,14 +1,14 @@
 ---
-title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.1
-id: intentset/typescript-amplify-gen2/0.1
+title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.2
+id: intentset/typescript-amplify-gen2/0.2
 status: draft
-revision: 2026-10-05
+revision: 2026-10-14
 implementation: 0.6.1
 ---
 
-# TypeScript + AWS Amplify Gen 2 Reference Profile v0.1
+# TypeScript + AWS Amplify Gen 2 Reference Profile v0.2
 
-Implements [Core](core-0.1.md) and [Traceable VSA](vsa-0.1.md), and follows Core §1's change policy. Rules below are Intentset decisions, not requirements imposed by AWS. This profile says what `intentset architecture check` checks in a TypeScript and Amplify Gen 2 repository; it is not an Amplify starter, and it does not install or configure one.
+Implements [Core](core-0.2.md) and [Traceable VSA](vsa-0.2.md), and follows Core §1's change policy. Rules below are Intentset decisions, not requirements imposed by AWS. This profile says what `intentset architecture check` checks in a TypeScript and Amplify Gen 2 repository; it is not an Amplify starter, and it does not install or configure one.
 
 ## 1. Reference layout
 
@@ -49,7 +49,7 @@ This is a reference mapping; directory migrations are not a prerequisite to firs
 | TS005 | Runtime resolver/bundler and type-checker MUST agree on alias resolution |
 | TS006 | Wildcard aliases opening another slice's internals MUST NOT be permitted |
 
-TS005 is a review assertion in v0.1: the reference check resolves imports one way, from the TypeScript configuration, and cannot compare that with a bundler's. A reviewer asserts it, and until then it is unresolved, never passed.
+TS005 is a review assertion in v0.2: the reference check resolves imports one way, from the TypeScript configuration, and cannot compare that with a bundler's. A reviewer asserts it, and until then it is unresolved, never passed.
 
 Example alias: `@assessment/schedule` → `src/features/assessment/schedule/index.ts`. A slice that spans packages, its logic in a library package and its UI in an app, has an `index.ts` in each, and a consumer normally imports the one in its own package. A repository that lets its router import screens directly MUST name that one file (for example `src/app/routes/Router.tsx`) and MUST NOT widen the exemption to all application files. A separate composition entrypoint is an optional future design requiring an ADR, not the inherited convention. An alias is convenience, not an access-control boundary: the checker must resolve relative and transitive re-export paths too. TypeScript `paths` does not rewrite emitted imports, so bundler/runtime configuration must match it. [TypeScript paths documentation](https://www.typescriptlang.org/tsconfig/paths.html)
 
@@ -86,7 +86,7 @@ Intentset imposes the following additional constraints:
 | AMP005 | Backend authorization and product invariants MUST be verified independently of frontend validation |
 | AMP006 | Generated client/configuration and runtime SDK types MUST NOT leak into domain policy/model layers |
 
-AMP003 and AMP005 are review assertions in v0.1: whether two definitions describe one contract, and whether authorization is verified independently of the frontend, are not visible in an import graph. No reference check reports them. AMP007 to AMP013 apply only to a repository split into areas (§9).
+AMP003 and AMP005 are review assertions in v0.2: whether two definitions describe one contract, and whether authorization is verified independently of the frontend, are not visible in an import graph. No reference check reports them. AMP007 to AMP013 apply only to a repository split into areas (§9).
 
 **Inherited exception — response envelope only:** feature `client/` modules MAY import `parseResolverResponse` from `@/amplify/shared/lambda-core/`. A repository adopting this profile names that one module explicitly. Treat it as a narrow named exception, not permission to import handlers or resource definitions. Preserve one authoritative backend contract; do not manually copy transport types.
 

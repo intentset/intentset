@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/behavior/0.1
+  spec: '0.2'
+  profile: intentset/behavior/0.2
   id: BEH-ASK-NOT-IN-DOCS
   type: behavior
   title: The chat says when the documentation does not answer

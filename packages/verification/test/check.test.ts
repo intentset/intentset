@@ -11,7 +11,13 @@ const at = (hash: string): EvidenceSnapshot => ({ commit: COMMIT, graphHash: has
 describe("BEH-EVIDENCE-CURRENT: coverage", () => {
   test("counts links and current passes apart, with snapshot and denominator", () => {
     const report = coverage(draft.graph, classifyEvidence(draft.graph, [], at(draft.hash)), { level: "L3" });
-    assert.deepEqual(report.snapshot, { commit: COMMIT, graphHash: draft.hash, scope: SCOPE, binding: "commit" });
+    assert.deepEqual(report.snapshot, {
+      commit: COMMIT,
+      graphHash: draft.hash,
+      scope: SCOPE,
+      binding: "commit",
+      bindingReason: "configured",
+    });
     assert.deepEqual(report.denominator, { behaviors: 1, rules: 2, scenarios: 1 });
     assert.deepEqual(report.linked, { behaviors: 1, rules: 2, scenarios: 1 });
     assert.deepEqual(report.verified, { behaviors: 0, rules: 0, scenarios: 0 });

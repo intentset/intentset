@@ -1,6 +1,6 @@
 # @intentset/architecture
 
-The Traceable Vertical Slice Architecture checker (`spec/vsa-0.1.md`) with the TypeScript and AWS Amplify Gen 2
+The Traceable Vertical Slice Architecture checker (`spec/vsa-0.2.md`) with the TypeScript and AWS Amplify Gen 2
 profile's boundaries: path claims and ownership, the import graph read with TypeScript 7's scanner, regions, layers,
 areas, exceptions and a baseline of known violations. It reads files it is given and runs nothing.
 

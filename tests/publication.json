@@ -483,7 +483,7 @@
     "name": "P02 a link to an internal file whose path carries no ID",
     "baseline": "scheduling",
     "files": {
-      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/decision/0.1\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -1682,7 +1682,7 @@
         "KB-ASMT-SCHEDULE"
       ],
       "mustContain": [
-        "\"profile\":\"intentset/help/0.1\"",
+        "\"profile\":\"intentset/help/0.2\"",
         "\"knowledge\":[{\"id\":\"KB-ASMT-SCHEDULE\",\"title\":\"Prepare a scheduled student assessment\",\"path\":\"KB-ASMT-SCHEDULE.md\"}]",
         "\"tips\":{\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"},\"RULE-ASMT-FUTURE\":{\"text\":\"The release time must be in the future.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}}"
       ],
@@ -1782,7 +1782,7 @@
     "name": "two published documents tip one ID: the lower knowledge ID wins",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/knowledge/0.1\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/knowledge/0.2\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {

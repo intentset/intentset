@@ -94,7 +94,7 @@ test("each review assertion is called one where the specification defines it", a
   for (const code of REVIEW_ONLY) {
     const paragraphs = [...texts.values()].flatMap((t) => t.split(/\n\s*\n/u));
     const said = paragraphs.some(
-      (p) => p.includes(code) && /review assertions? in v0\.1|are review assertions/u.test(p),
+      (p) => p.includes(code) && /review assertions? in v0\.2|are review assertions/u.test(p),
     );
     assert.ok(said, `no paragraph that names ${code} says it is a review assertion`);
   }

@@ -112,9 +112,9 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
   assert.deepEqual(readHelp("{").ok, false);
   assert.deepEqual(readHelp("[]").problems, ["the help file is not a JSON object"]);
   const profile = broken((v) => {
-    v.profile = "intentset/publication/0.1";
+    v.profile = "intentset/publication/0.2";
   });
-  assert.deepEqual(profile.problems, ['profile is "intentset/publication/0.1", not intentset/help/0.1']);
+  assert.deepEqual(profile.problems, ['profile is "intentset/publication/0.2", not intentset/help/0.2']);
   const orphan = broken((v) => {
     (v.tips as Record<string, unknown>)["BEH-ASMT-SCHEDULE"] = { text: TIP, knowledge: "KB-ELSEWHERE" };
   });

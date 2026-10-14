@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.3",
+  "contract": "intentset/export/0.4",
   "cases": [
     {
       "name": "full: every report, one restricted artifact withheld",
@@ -12,7 +12,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e"
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
         },
         "validation": "pass",
         "supplied": [
@@ -39,7 +39,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e"
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
         },
         "validation": "pass",
         "supplied": [
@@ -66,7 +66,7 @@
         "accept": true,
         "snapshot": {
           "commit": null,
-          "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e"
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
         },
         "validation": "pass",
         "supplied": [],
@@ -85,7 +85,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e"
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
         },
         "validation": "pass",
         "supplied": [
@@ -99,6 +99,78 @@
       "notes": "Show TEST-ASMT-SCHEDULE as stale for this snapshot, not as passing, though its latest run passed."
     },
     {
+      "name": "evidence judged by subject, current",
+      "file": "subject-current.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": true,
+        "snapshot": {
+          "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
+        },
+        "validation": "pass",
+        "supplied": [
+          "evidence"
+        ],
+        "withheldArtifacts": 1,
+        "evidence": {
+          "TEST-ASMT-SCHEDULE": "current-pass"
+        }
+      },
+      "notes": "The report says the repository judges by subject (the default, since slices claim files). The review was made at another commit and graph hash, and is a current pass because its subjectHash equals the verification's subject in the report: show TEST-ASMT-SCHEDULE as passing, with the binding that judged it, not as stale for being at an older commit."
+    },
+    {
+      "name": "evidence judged by subject, stale because the subject moved",
+      "file": "subject-stale.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": true,
+        "snapshot": {
+          "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
+        },
+        "validation": "pass",
+        "supplied": [
+          "evidence"
+        ],
+        "withheldArtifacts": 1,
+        "evidence": {
+          "TEST-ASMT-SCHEDULE": "stale"
+        }
+      },
+      "notes": "The review's subjectHash is not the verification's subject, so it is stale; the note names the part that moved, a file the verified behavior's slice claims. Show it as stale with that note, never as passing, and not as failing."
+    },
+    {
+      "name": "evidence judged by commit for want of slice claims",
+      "file": "commit-fallback.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": true,
+        "snapshot": {
+          "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+          "graphHash": "de563272355a281eeeca0cf6ed0e46334eb0c95e49a1307a631aa7a8f3e24337"
+        },
+        "validation": "fail",
+        "supplied": [
+          "evidence"
+        ],
+        "withheldArtifacts": 1,
+        "evidence": {
+          "TEST-ASMT-SCHEDULE": "current-pass"
+        }
+      },
+      "notes": "The only slice is retired, so no slice claims files and there is no subject to bind to: the report says the binding is commit and fell back (bindingReason no-slices, EVID004), which a repository that asked for commit binding does not say. A record at the snapshot's commit and graph hash is a current pass, as in 0.3. The files the retired slice claimed are now claimed by none, so validation fails for that reason; the snapshot is imported as failing, with the evidence shown beside it."
+    },
+    {
       "name": "a failing validation still exports",
       "file": "failing-validation.json",
       "connection": {
@@ -109,7 +181,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "4bd2a43d786c1473106e84cc929a18bcf3982e939941aae8959c2562f9d731e9"
+          "graphHash": "85d54a9f00903a6fed36fca03fbfd9ae9ba84f8ad7aa78ab12870a6ac10ae236"
         },
         "validation": "fail",
         "supplied": [
@@ -131,7 +203,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d934137efa08c6b61bfb002eaf0aeb1fb28f3b955c0653fad69f5807c8d41f6e"
+          "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37"
         },
         "validation": "pass",
         "supplied": [
@@ -152,7 +224,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "e49b75826f1e9dfab84a23ff311b32a3e27b06ab44a8c1b64de3db2363d0bb90"
+          "graphHash": "a1b152e923645316c9884af6cbcc553af46a283f224a07e63d6dd2a9313779fe"
         },
         "validation": "pass",
         "supplied": [],
@@ -174,7 +246,7 @@
       "notes": "0.1 had untyped reports and exported restricted artifacts. Reject it with an understandable error and keep the prior snapshot."
     },
     {
-      "name": "the previous contract version",
+      "name": "an earlier contract version",
       "file": "unsupported-contract-0.2.json",
       "connection": {
         "repository": "example/scheduling",
@@ -184,7 +256,20 @@
         "accept": false,
         "category": "unsupported-contract"
       },
-      "notes": "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A 0.3 reader rejects it rather than guess what an outcome's measures were."
+      "notes": "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A reader of a later version rejects it rather than guess what an outcome's measures were."
+    },
+    {
+      "name": "the previous contract version",
+      "file": "unsupported-contract-0.3.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": false,
+        "category": "unsupported-contract"
+      },
+      "notes": "0.3 judged every record by commit and carried no binding, subject or exercises. A 0.4 reader rejects it, with the version it supports in the message, and keeps the prior snapshot, rather than read a stale status the repository's own check may not have reached; the consumer upgrades its pin and its reader together."
     },
     {
       "name": "a later contract version",
@@ -276,6 +361,19 @@
         "category": "inconsistent-report"
       },
       "notes": "A current-pass whose deciding run is from another snapshot contradicts itself; never show it as passing."
+    },
+    {
+      "name": "a current pass whose record is bound to another subject",
+      "file": "subject-hash-mismatch.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": false,
+        "category": "inconsistent-report"
+      },
+      "notes": "A subject-bound current-pass is current only while the record's subjectHash equals the verification's subject in the report. Here they differ, so the status contradicts the report: never show it as passing."
     },
     {
       "name": "a restricted artifact in an export that says restricted is withheld",

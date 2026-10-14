@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/behavior/0.1
+  spec: '0.2'
+  profile: intentset/behavior/0.2
   id: BEH-CONTEXT
   type: behavior
   title: Context gives an agent what the code it will change promises

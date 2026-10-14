@@ -1839,7 +1839,7 @@
       }
     },
     "files": {
-      "TEST-ASMT-PAST.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/verification/0.1\n  id: TEST-ASMT-PAST\n  type: verification\n  title: Reject a past release time\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    verifies:\n    - RULE-ASMT-FUTURE\n  verification:\n    method: automated\n    locator: src/features/assessment/schedule/domain/policies/future-release.test.ts\n    selector: rejects a past release time\n---\n\n# Reject a past release time\n\n## Procedure\n\nAn automated test submits a schedule request whose release time is one minute in the past and asserts that the service rejects it without recording a schedule.\n\n## Expected result\n\nThe request is rejected with a validation error, and no schedule exists for the assessment afterwards.\n"
+      "TEST-ASMT-PAST.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/verification/0.2\n  id: TEST-ASMT-PAST\n  type: verification\n  title: Reject a past release time\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    verifies:\n    - RULE-ASMT-FUTURE\n  verification:\n    method: automated\n    locator: src/features/assessment/schedule/domain/policies/future-release.test.ts\n    selector: rejects a past release time\n---\n\n# Reject a past release time\n\n## Procedure\n\nAn automated test submits a schedule request whose release time is one minute in the past and asserts that the service rejects it without recording a schedule.\n\n## Expected result\n\nThe request is rejected with a validation error, and no schedule exists for the assessment afterwards.\n"
     },
     "evidence": [
       {
@@ -1943,8 +1943,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -1980,12 +1980,12 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": true,
     "diagnostics": [],
-    "notes": "A subject-bound record is current while its subject is unchanged: a file no slice claims and no check names changed, and the record's commit and graph hash are not the snapshot's. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "A subject-bound record is current while its subject is unchanged: a file no slice claims and no check names changed, and the record's commit and graph hash are not the snapshot's. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2046,8 +2046,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2083,12 +2083,12 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": true,
     "diagnostics": [],
-    "notes": "Only a slice record's binding fields (implements, dependsOn, claims, usesResources, entrypoints) are in the subject: its title and body are not. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "Only a slice record's binding fields (implements, dependsOn, claims, usesResources, entrypoints) are in the subject: its title and body are not. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2149,8 +2149,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2186,12 +2186,12 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": true,
     "diagnostics": [],
-    "notes": "A record the verification does not verify and no included slice binds to, here an outcome, is not in the subject; the graph hash moved all the same. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "A record the verification does not verify and no included slice binds to, here an outcome, is not in the subject; the graph hash moved all the same. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2249,8 +2249,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 2;\n",
@@ -2286,7 +2286,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2296,7 +2296,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "The slice implements the verified behavior and claims src/features/assessment/schedule/**. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The slice implements the verified behavior and claims src/features/assessment/schedule/**. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2354,8 +2354,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2391,7 +2391,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2401,7 +2401,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "The slice's backend claim, amplify/functions/schedule-assessment/**, resolves to a file as well. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The slice's backend claim, amplify/functions/schedule-assessment/**, resolves to a file as well. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2459,8 +2459,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2496,7 +2496,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2506,7 +2506,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "SLICE-ASMT-SCHEDULE dependsOn SLICE-ASMT-CORE, whose claimed file changes. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "SLICE-ASMT-SCHEDULE dependsOn SLICE-ASMT-CORE, whose claimed file changes. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2564,8 +2564,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2601,7 +2601,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2611,7 +2611,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "The verification's locator is tests/schedule.test.ts. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The verification's locator is tests/schedule.test.ts. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2669,8 +2669,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2706,7 +2706,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2716,7 +2716,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "The test imports ./helpers/fixture.ts, in the same package: the local files a test imports are in its subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The test imports ./helpers/fixture.ts, in the same package: the local files a test imports are in its subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2774,8 +2774,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2811,7 +2811,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2821,7 +2821,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "The verification declares verification.exercises: [SLICE-ASMT-EXERCISED], which no slice the behavior reaches depends on. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The verification declares verification.exercises: [SLICE-ASMT-EXERCISED], which no slice the behavior reaches depends on. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2879,8 +2879,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -2916,7 +2916,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -2926,7 +2926,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "SLICE-ASMT-SCHEDULE usesResources RES-ASSESSMENT-DATA, whose path is amplify/data/resource.ts. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "SLICE-ASMT-SCHEDULE usesResources RES-ASSESSMENT-DATA, whose path is amplify/data/resource.ts. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -2984,8 +2984,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3021,7 +3021,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -3031,7 +3031,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "The configuration lists pnpm-lock.yaml under evidence.globalInputs; it belongs to no slice and is in every subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The configuration lists pnpm-lock.yaml under evidence.globalInputs; it belongs to no slice and is in every subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3090,8 +3090,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3127,7 +3127,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -3137,7 +3137,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "A behavior is hashed whole: its prose is its promise. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "A behavior is hashed whole: its prose is its promise. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3198,8 +3198,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3235,7 +3235,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -3245,7 +3245,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "A slice's entrypoints are one of the binding fields hashed from its record. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "A slice's entrypoints are one of the binding fields hashed from its record. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3303,8 +3303,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3348,7 +3348,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "A record with no binding is a commit-binding record, and at an older commit and graph hash it is stale; it can be re-imported. The case has no config binding, so the default (subject, since the slice claims files) judges it. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "A record with no binding is a commit-binding record, and at an older commit and graph hash it is stale; it can be re-imported. The case has no config binding, so the default (subject, since the slice claims files) judges it. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3407,8 +3407,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3444,7 +3444,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "valid": false,
@@ -3454,7 +3454,7 @@
       "CORE007",
       "CORE007"
     ],
-    "notes": "evidence.binding: commit asks for the existing rule, which a record bound to a subject does not meet. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "evidence.binding: commit asks for the existing rule, which a record bound to a subject does not meet. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3548,7 +3548,7 @@
     "diagnostics": [
       "EVID004"
     ],
-    "notes": "With every claim removed there is no subject to hash; a record at the snapshot's commit and graph hash is current, and EVID004 says the binding was not the default. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "With every claim removed there is no subject to hash; a record at the snapshot's commit and graph hash is current, and EVID004 says the binding was not the default. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3641,7 +3641,7 @@
     ],
     "valid": true,
     "diagnostics": [],
-    "notes": "The same repository with evidence.binding: commit written down is judged by commit and reports nothing. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The same repository with evidence.binding: commit written down is judged by commit and reports nothing. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3699,8 +3699,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3736,7 +3736,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "changedSince": {
@@ -3750,7 +3750,7 @@
     "diagnostics": [
       "EVID005"
     ],
-    "notes": "git reports README.txt and src/other/unrelated.ts changed since the record's commit; no slice claims them, no used resource names them and no global input lists them, so they cannot make any evidence stale. src/features/assessment/schedule/index.ts is claimed and is not listed. The subject is unchanged, so the record stays current and the case stays valid. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "git reports README.txt and src/other/unrelated.ts changed since the record's commit; no slice claims them, no used resource names them and no global input lists them, so they cannot make any evidence stale. src/features/assessment/schedule/index.ts is claimed and is not listed. The subject is unchanged, so the record stays current and the case stays valid. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3808,8 +3808,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3845,7 +3845,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "changedSince": {
@@ -3859,7 +3859,7 @@
     },
     "valid": true,
     "diagnostics": [],
-    "notes": "Every file changed since the record's commit is a slice's claim, a used resource's file, a global input, the test or a record, so nothing is outside every subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "Every file changed since the record's commit is a slice's claim, a used resource's file, a global input, the test or a record, so nothing is outside every subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",
@@ -3917,8 +3917,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.1'\n  profile: intentset/slice/0.1\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -3954,7 +3954,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "3988d413a1a7a5cbde8ee355b104c7769f4463d44caa213025c1165c1dfc3df0"
+        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
       }
     ],
     "changedSince": {
@@ -3964,7 +3964,7 @@
     },
     "valid": true,
     "diagnostics": [],
-    "notes": "The case lists nothing changed since the record's commit, as git would answer for a commit that is not an ancestor of HEAD: no EVID005, and the verification's note says the files could not be listed. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 3988d413a1a7...); its commit and graph hash are other than the snapshot's, as after any later commit."
+    "notes": "The case lists nothing changed since the record's commit, as git would answer for a commit that is not an ancestor of HEAD: no EVID005, and the verification's note says the files could not be listed. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 45fdc979985e...); its commit and graph hash are other than the snapshot's, as after any later commit."
   },
   {
     "section": "evidence",

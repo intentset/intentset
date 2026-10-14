@@ -13,7 +13,7 @@ implementation.
 | `cases/*.json` | One file per section: `core`, `export`, `vsa`, `evidence`, `publication`. Each file is an array of cases. |
 | `schemas/conformance.schema.json` | The normative schema every case file satisfies. |
 | `schemas/frontmatter.schema.json` | The structural schema of a document's frontmatter (Core §3, §4). |
-| `schemas/export.schema.json` | The schema of the `intentset/export/0.3` envelope. |
+| `schemas/export.schema.json` | The schema of the `intentset/export/0.4` envelope. |
 | `schemas/evidence.schema.json` | The schema of run records (Core §8). |
 | `consumer/` | Export envelopes a consumer must accept or reject, and `manifest.json` saying which and why. |
 | `examples/scheduling/` | The worked example the cases are built from, for reading alongside them. |
@@ -74,7 +74,7 @@ need no patch logic:
 - `valid`: false when at least one diagnostic is an error.
 - `diagnostics`: every code, errors and warnings alike, as a **multiset** in any order. Absent means none are
   permitted. Messages, locations and remediation text are yours to write; codes are Core §11 and the VSA and
-  profile specifications, and are stable within v0.1. A `markset` case's syntax codes are Markset's own.
+  profile specifications, and are stable within v0.2. A `markset` case's syntax codes are Markset's own.
 - `artifacts`, when present: the IDs in the graph, compared sorted.
 - `export`, when present: a deep partial match against your envelope. Only the fields named are compared, so
   `generatedAt`, `source.commit` and `graphHash` are checked only by a case that names them. Where a case names

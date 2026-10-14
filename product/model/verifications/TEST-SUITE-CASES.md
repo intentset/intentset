@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/verification/0.1
+  spec: '0.2'
+  profile: intentset/verification/0.2
   id: TEST-SUITE-CASES
   type: verification
   title: The conformance suite package ships the cases as data

@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/product/0.1
+  spec: '0.2'
+  profile: intentset/product/0.2
   id: PRD-LANTERN
   type: product
   title: Lantern example

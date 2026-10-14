@@ -2,15 +2,19 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { EXPORT_CONTRACT, readExport } from "@intentset/core";
+import { EXPORT_CONTRACT, parseYaml, readExport } from "@intentset/core";
 import {
   type AcceptExpectation,
   buildConsumerFixtures,
+  CONNECTION,
   CONSUMER_DIR,
   type ConsumerManifest,
   MANIFEST,
 } from "../src/consumer.ts";
+import { exportDriver } from "../src/drivers.ts";
+import { expandCase } from "../src/fixtures.ts";
 import { type Schema, validateSchema } from "../src/schema.ts";
+import type { ConformanceCase } from "../src/types.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
 const schema = JSON.parse(readFileSync(join(root, "spec", "export.schema.json"), "utf8")) as Schema;
@@ -115,4 +119,24 @@ test("same commit and graph hash is the same snapshot, whatever the generation t
   const { generatedAt: _a, ...restA } = a.envelope;
   const { generatedAt: _b, ...restB } = b.envelope;
   assert.deepEqual(restA, restB);
+});
+
+test("the export section's evidence cases make envelopes the schema and the reader accept, whatever binding judged them", async () => {
+  const cases = (JSON.parse(readFileSync(join(root, "tests", "export.json"), "utf8")) as ConformanceCase[]).filter(
+    (c) => c.evidence !== undefined,
+  );
+  assert.equal(cases.length >= 4, true);
+  const bindings = new Set<string>();
+  for (const testCase of cases) {
+    const actual = await exportDriver(
+      expandCase(testCase, { examplesDir: join(root, "examples"), parseYaml }),
+      testCase,
+    );
+    const envelope = JSON.parse(JSON.stringify(actual.export));
+    assert.deepEqual(validateSchema(schema, envelope), [], testCase.name);
+    const result = readExport(JSON.stringify(envelope), CONNECTION);
+    assert.equal(result.ok, true, `${testCase.name}: ${result.ok ? "" : JSON.stringify(result.problems)}`);
+    bindings.add(`${envelope.reports.evidence.binding}/${envelope.reports.evidence.bindingReason}`);
+  }
+  assert.deepEqual([...bindings].sort(), ["commit/configured", "commit/no-slices", "subject/default"]);
 });

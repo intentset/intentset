@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/knowledge/0.1
+  spec: '0.2'
+  profile: intentset/knowledge/0.2
   id: KB-ASMT-SCHEDULE
   type: knowledge
   title: Prepare a scheduled student assessment
@@ -35,9 +35,9 @@ intentset:
   extensions:
     intentset.org/review:
       sources:
-        BEH-ASMT-SCHEDULE: '1cb64613c917d4adbb85fa8a28898e13d4450b9c2840ee80f66fcba1673fc02e'
-        RULE-ASMT-AUTH: '40a217f3c9c56d148e185e99b0c39c61b5ad27abf4cdab70bf4d800ffd404947'
-        RULE-ASMT-FUTURE: e39f8756c8783312666924df3f6d2f09ad59cd6982d6ae834ea3e8d95812b35a
+        BEH-ASMT-SCHEDULE: '881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873'
+        RULE-ASMT-AUTH: '63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094'
+        RULE-ASMT-FUTURE: '9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e'
 ---
 
 # Prepare a scheduled student assessment

@@ -19,6 +19,8 @@
 import { compareStrings, isRecord } from "./report.ts";
 import {
   CLAIM_KINDS,
+  EVIDENCE_BINDING_REASONS,
+  EVIDENCE_BINDINGS,
   EXPORT_EVIDENCE_STATUSES,
   EXPORT_REPORTS,
   type ExportEnvelope,
@@ -86,7 +88,7 @@ const CODE = /^[A-Z]+[0-9]{3}$/;
 /** Markset's own codes, which a diagnostic with origin syntax carries unchanged (§1): a host never renames them. */
 const MARKSET_CODE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
 const POINTER = /^(?:\/.*)?$/;
-const PROFILE = /^intentset\/[a-z]+\/0\.1$/;
+const PROFILE = /^intentset\/[a-z]+\/0\.2$/;
 const EXTENSION_KEY = /^[^/]+\/.+$/;
 const TOKEN = /^\S+$/;
 const TEXT = /\S/;
@@ -278,7 +280,7 @@ class Shape {
       "reports",
     ]);
     if (v === null) return;
-    if (v.spec !== "0.1") this.fail("/spec", "Expected 0.1.");
+    if (v.spec !== "0.2") this.fail("/spec", "Expected 0.2.");
     this.string(v.generatedAt, "/generatedAt", GENERATED_AT, "an ISO 8601 time");
     this.string(v.repository, "/repository");
     this.array(v.products, "/products", (p, at) => this.id(p, at), { sortedBy: String });
@@ -440,7 +442,7 @@ class Shape {
     this.string(a.owner, `${at}/owner`);
     this.oneOf(a.visibility, `${at}/visibility`, VISIBILITIES);
     this.strings(a.audiences, `${at}/audiences`, { minItems: 1 });
-    this.string(a.profile, `${at}/profile`, PROFILE, "a profile such as intentset/behavior/0.1");
+    this.string(a.profile, `${at}/profile`, PROFILE, "a profile such as intentset/behavior/0.2");
     this.nullable(a.revision, `${at}/revision`, (r, p) => this.integer(r, p, 1));
     this.string(a.path, `${at}/path`);
     this.string(a.sourceHash, `${at}/sourceHash`, SHA256, "a SHA-256 in lowercase hex");
@@ -465,11 +467,12 @@ class Shape {
     });
     this.nullable(a.slice, `${at}/slice`, (x, p) => this.slice(x, p));
     this.nullable(a.verification, `${at}/verification`, (x, p) => {
-      const v = this.object(x, p, ["method", "locator", "selector"]);
+      const v = this.object(x, p, ["method", "locator", "selector", "exercises"]);
       if (v === null) return;
       this.oneOf(v.method, `${p}/method`, ["automated", "manual"]);
       this.string(v.locator, `${p}/locator`);
       this.string(v.selector, `${p}/selector`);
+      this.array(v.exercises, `${p}/exercises`, (id, q) => this.id(id, q), { sortedBy: String });
     });
     this.nullable(a.measure, `${at}/measure`, (x, p) => {
       const m = this.object(x, p, ["metric", "baseline", "target", "window", "source", "direction"]);
@@ -537,22 +540,46 @@ class Shape {
   }
 
   evidence(value: unknown, at: string): void {
-    const e = this.object(value, at, ["commit", "graphHash", "scope", "records", "verifications", "claims"]);
+    const e = this.object(value, at, [
+      "commit",
+      "graphHash",
+      "scope",
+      "records",
+      "binding",
+      "bindingReason",
+      "verifications",
+      "claims",
+    ]);
     if (e === null) return;
     this.snapshotCommit(e.commit, `${at}/commit`);
     this.string(e.graphHash, `${at}/graphHash`, SHA256, "a SHA-256 in lowercase hex");
     this.nullable(e.scope, `${at}/scope`, (x, p) => this.runScope(x, p));
     this.integer(e.records, `${at}/records`);
+    this.oneOf(e.binding, `${at}/binding`, EVIDENCE_BINDINGS);
+    this.oneOf(e.bindingReason, `${at}/bindingReason`, EVIDENCE_BINDING_REASONS);
     const byId = (x: unknown) => (isRecord(x) && typeof x.id === "string" ? x.id : "");
     this.array(
       e.verifications,
       `${at}/verifications`,
       (x, p) => {
-        const v = this.object(x, p, ["id", "method", "status", "note", "latest", "atSnapshot", "runs", "outOfScope"]);
+        const v = this.object(x, p, [
+          "id",
+          "method",
+          "status",
+          "binding",
+          "subject",
+          "note",
+          "latest",
+          "atSnapshot",
+          "runs",
+          "outOfScope",
+        ]);
         if (v === null) return;
         this.id(v.id, `${p}/id`);
         this.oneOf(v.method, `${p}/method`, ["automated", "manual"]);
         this.oneOf(v.status, `${p}/status`, EXPORT_EVIDENCE_STATUSES);
+        this.oneOf(v.binding, `${p}/binding`, EVIDENCE_BINDINGS);
+        this.nullable(v.subject, `${p}/subject`, (h, q) => this.string(h, q, SHA256, "a SHA-256 in lowercase hex"));
         this.nullable(v.note, `${p}/note`, (n, q) => this.string(n, q));
         this.nullable(v.latest, `${p}/latest`, (r, q) => this.runRecord(r, q));
         const counts = this.object(v.atSnapshot, `${p}/atSnapshot`, ["pass", "fail", "skip", "error"]);
@@ -616,7 +643,7 @@ class Shape {
         "result",
         "uri",
       ],
-      ["rationale", "extensions"],
+      ["binding", "subjectHash", "rationale", "extensions"],
     );
     if (r === null) return;
     this.string(r.evidenceId, `${at}/evidenceId`, TOKEN);
@@ -636,6 +663,13 @@ class Shape {
     this.string(r.finishedAt, `${at}/finishedAt`, TIMESTAMP, "a UTC timestamp");
     this.oneOf(r.result, `${at}/result`, ["pass", "fail", "skip", "error"]);
     this.string(r.uri, `${at}/uri`, URI, "a URI");
+    if (Object.hasOwn(r, "binding")) this.oneOf(r.binding, `${at}/binding`, EVIDENCE_BINDINGS);
+    if (Object.hasOwn(r, "subjectHash")) {
+      this.string(r.subjectHash, `${at}/subjectHash`, SHA256, "a SHA-256 in lowercase hex");
+    }
+    if (r.binding === "subject" && !Object.hasOwn(r, "subjectHash")) {
+      this.fail(`${at}/subjectHash`, "Expected the subject hash of a subject-binding record.");
+    }
     if (Object.hasOwn(r, "rationale")) this.string(r.rationale, `${at}/rationale`, TEXT);
     if (Object.hasOwn(r, "extensions")) this.extensions(r.extensions, `${at}/extensions`);
     if (typeof r.reviewer === "string" && !Object.hasOwn(r, "rationale")) {
@@ -832,6 +866,21 @@ function consistency(envelope: ExportEnvelope): ExportProblem[] {
   if (evidence !== undefined) {
     const at = (r: { commit: string; graphHash: string }) =>
       r.graphHash === envelope.graphHash && (envelope.source.commit === null || r.commit === envelope.source.commit);
+    /** Core §8 per binding: a commit record at the snapshot, or a subject record whose hash is the verification's subject. */
+    const current = (v: (typeof evidence.verifications)[number]) =>
+      v.latest !== null &&
+      (v.binding === "subject"
+        ? v.latest.binding === "subject" && v.subject !== null && v.latest.subjectHash === v.subject
+        : v.latest.binding !== "subject" && at(v.latest));
+    if (evidence.bindingReason === "no-slices" && evidence.binding !== "commit") {
+      fail(
+        "/reports/evidence/bindingReason",
+        "The binding fell back for want of slice claims, which is commit binding.",
+      );
+    }
+    if (evidence.bindingReason === "default" && evidence.binding !== "subject") {
+      fail("/reports/evidence/bindingReason", "The default binding, where slices claim files, is subject binding.");
+    }
     const statusOf = new Map(evidence.verifications.map((v) => [v.id, v.status]));
     for (const artifact of envelope.artifacts) {
       if (artifact.type === "verification" && !statusOf.has(artifact.id)) {
@@ -844,17 +893,37 @@ function consistency(envelope: ExportEnvelope): ExportProblem[] {
       if (v.latest !== null && v.latest.verificationId !== v.id) {
         fail(`${p}/latest/verificationId`, `The latest record of ${v.id} is a run of ${v.latest.verificationId}.`);
       }
+      if (v.binding !== evidence.binding) {
+        fail(
+          `${p}/binding`,
+          `${v.id} was judged by ${v.binding} binding, but the report's binding is ${evidence.binding}.`,
+        );
+      }
+      if (v.binding === "commit" && v.subject !== null) {
+        fail(`${p}/subject`, `${v.id} was judged by commit binding, which has no subject.`);
+      }
+      if (v.binding === "subject" && v.subject === null && v.status !== "unresolved") {
+        fail(`${p}/subject`, `${v.id} was judged by subject binding but names no subject, and is ${v.status}.`);
+      }
       if (v.status.startsWith("current-") || v.status === "skip" || v.status === "error") {
         const result = v.status.replace("current-", "");
-        if (v.latest === null || !at(v.latest) || v.latest.result !== result) {
+        if (!current(v) || v.latest?.result !== result) {
           fail(
             `${p}/status`,
-            `${v.id} is ${v.status}, but its latest record is not a ${result} at the export's snapshot.`,
+            v.binding === "subject"
+              ? `${v.id} is ${v.status}, but its latest record is not a ${result} bound to the subject the report names.`
+              : `${v.id} is ${v.status}, but its latest record is not a ${result} at the export's snapshot.`,
           );
         }
       } else if (v.status === "stale") {
-        if (v.latest === null || at(v.latest))
-          fail(`${p}/status`, `${v.id} is stale, but has no record from another snapshot.`);
+        if (v.latest === null || current(v)) {
+          fail(
+            `${p}/status`,
+            v.binding === "subject"
+              ? `${v.id} is stale, but its latest record is bound to the subject the report names.`
+              : `${v.id} is stale, but has no record from another snapshot.`,
+          );
+        }
       } else if (v.status === "missing" && (v.latest !== null || v.runs !== 0)) {
         fail(`${p}/status`, `${v.id} is missing, but has run records.`);
       }

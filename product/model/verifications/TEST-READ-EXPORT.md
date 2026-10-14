@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/verification/0.1
+  spec: '0.2'
+  profile: intentset/verification/0.2
   id: TEST-READ-EXPORT
   type: verification
   title: readExport refuses an export that breaks the contract

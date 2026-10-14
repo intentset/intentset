@@ -7,7 +7,8 @@
  * invocation or tool failure. validate, graph, architecture check, impact,
  * context, review, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
- * --out write only what they name; init only creates.
+ * --out write only what they name; init only creates; migrate rewrites the
+ * two version values of each record's frontmatter and nothing else.
  */
 import { parseArgs } from "node:util";
 import type { Mode } from "@intentset/architecture";
@@ -20,6 +21,7 @@ import { graphCommand, graphUsageProblem, parseRelease } from "./commands/graph.
 import { guideCommand } from "./commands/guide.ts";
 import { impactCommand } from "./commands/impact.ts";
 import { initCommand } from "./commands/init.ts";
+import { migrateCommand, migrateUsageProblem } from "./commands/migrate.ts";
 import { mcpCommand, mcpUsageProblem } from "./commands/mcp.ts";
 import { publishCommand, publishUsageProblem } from "./commands/publish.ts";
 import { reviewCommand } from "./commands/review.ts";
@@ -47,7 +49,7 @@ commands
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
-                            print the intentset/export/0.3 envelope, or write it to --out;
+                            print the intentset/export/0.4 envelope, or write it to --out;
                             each --report adds a section (ownership needs L2, evidence L3; all
                             is every one the level reads). Restricted artifacts are withheld
                             and counted unless --include-restricted
@@ -77,6 +79,11 @@ commands
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
                             L3 with run records
+  migrate --to 0.2 [--allow-dirty]
+                            move the records the model reads from specifications 0.1 to 0.2:
+                            rewrites intentset.spec and intentset.profile in each record's
+                            frontmatter and nothing else, and says how many. Refuses a tree
+                            with uncommitted changes to tracked files unless --allow-dirty
   mcp --mode engineering [--include-restricted]
   mcp --mode customer --visibility <public|customer> --audience <a> --product <ID>
         --release <r> --role <r> --edition <e> [--flag <f>]...
@@ -123,6 +130,7 @@ const COMMANDS = [
   "review",
   "publish",
   "serve",
+  "migrate",
   "mcp",
 ];
 
@@ -131,6 +139,7 @@ const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline", "bi
 const COMMAND_OPTIONS: Record<string, string[]> = {
   init: ["repository", "example", "agents"],
   guide: [],
+  migrate: ["to", "allow-dirty"],
   validate: LEVEL_OPTIONS,
   graph: [
     "format",
@@ -261,6 +270,14 @@ export async function main(argv: string[], io: Io): Promise<number> {
     return usage(`--mode ${values.mode}: the modes are migration and strict`);
   }
   if (command === "guide") return guideCommand({ root: values.root }, io);
+  if (command === "migrate") {
+    const problem = migrateUsageProblem({ to: values.to });
+    if (problem !== null) return usage(problem);
+    return migrateCommand(
+      { root: values.root, to: values.to, allowDirty: values["allow-dirty"], carrier: carrier as CarrierName },
+      io,
+    );
+  }
   if (command === "init") {
     if (values.agents && values.example)
       return usage("--agents writes only the guide; it does not combine with --example");
@@ -474,6 +491,8 @@ function parse(argv: string[]) {
       "published-at": { type: "string" },
       port: { type: "string" },
       host: { type: "string" },
+      to: { type: "string" },
+      "allow-dirty": { type: "boolean", default: false },
     },
   });
 }

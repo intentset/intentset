@@ -1,6 +1,6 @@
 # ADR 0013: Run evidence should be current for what it checks, not for the whole commit
 
-**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
+**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). The export and the specifications moved for it in [ADR 0014](0014-export-0.4-carries-the-evidence-binding.md): export 0.4 carries the binding, and `intentset.spec` is `0.2`. Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
 
 ## Context
 
@@ -166,4 +166,4 @@ unclaimed-files warning and the conformance cases (the S cases of `tests/evidenc
   latest record is not at that snapshot, and its record schema is closed. Subject binding has no place in it without a new version, so the
   export classifies evidence by commit whatever the repository uses, reads each record as a commit record, says so in every `note`, and
   carries neither `binding` nor `subjectHash` nor `exercises`. A consumer therefore sees `stale` for a record the repository's own gate
-  accepts, until a version carries the binding (export §7).
+  accepts, until a version carries the binding (export §7). That version is 0.4 ([ADR 0014](0014-export-0.4-carries-the-evidence-binding.md)), which states the repository's own verdict and carries the binding, and the specifications moved to `0.2` with it.

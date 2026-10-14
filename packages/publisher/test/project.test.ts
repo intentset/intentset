@@ -21,8 +21,8 @@ const CURRENT: ReviewStatus = { status: "current", changed: [], missing: [], rev
 function knowledge(availability: Availability | undefined, extra: Partial<Artifact["meta"]> = {}): Artifact {
   return {
     meta: {
-      spec: "0.1",
-      profile: "intentset/knowledge/0.1",
+      spec: "0.2",
+      profile: "intentset/knowledge/0.2",
       id: "KB-X",
       type: "knowledge",
       title: "Knowledge",

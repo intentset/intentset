@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/verification/0.1
+  spec: '0.2'
+  profile: intentset/verification/0.2
   id: TEST-IMPACT
   type: verification
   title: Impact lists what depends on an artifact

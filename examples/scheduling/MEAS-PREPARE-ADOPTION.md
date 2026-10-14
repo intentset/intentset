@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/measure/0.1
+  spec: '0.2'
+  profile: intentset/measure/0.2
   id: MEAS-PREPARE-ADOPTION
   type: measure
   title: Assignments scheduled a day or more ahead

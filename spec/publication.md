@@ -1,14 +1,14 @@
 ---
-title: Intentset Publication Profile v0.1
-id: intentset/publication/0.1
+title: Intentset Publication Profile v0.2
+id: intentset/publication/0.2
 status: draft
-revision: 2026-10-13
+revision: 2026-10-14
 implementation: 0.6.1
 ---
 
-# Intentset Publication Profile v0.1
+# Intentset Publication Profile v0.2
 
-**Extends:** [Core §9](core-0.1.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
+**Extends:** [Core §9](core-0.2.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
 
 Publication turns reviewed knowledge, the explanations a product's readers are given, into documentation and in-app
 help for one audience and release, and leaves out everything that audience may not see. It is not deployment: nothing
@@ -48,7 +48,7 @@ knowledge body unchanged, preceded by one blank line when it does not begin with
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/publication/0.1` |
+| `profile` | `intentset/publication/0.2` |
 | `derived` | `true` |
 | `projection` | the request's visibility; the document is as restricted as its projection |
 | `source` | `id`, `revision` (null when undeclared), `sourceHash` of the knowledge; `path` only when the projection admits internal |
@@ -119,7 +119,7 @@ being there, and the same bytes for the same inputs.
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/help/0.1` |
+| `profile` | `intentset/help/0.2` |
 | `derived` | `true` |
 | `projection` | the request's visibility |
 | `snapshot` | `commit` and `graphHash`, as in §2 |

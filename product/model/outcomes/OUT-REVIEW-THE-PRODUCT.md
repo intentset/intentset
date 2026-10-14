@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/outcome/0.1
+  spec: '0.2'
+  profile: intentset/outcome/0.2
   id: OUT-REVIEW-THE-PRODUCT
   type: outcome
   title: A reviewer reads what a change does to the product

@@ -89,8 +89,8 @@ recognizable promise including how it fails:
 ---
 markset: 0
 intentset:
-  spec: '0.1'
-  profile: intentset/behavior/0.1
+  spec: '0.2'
+  profile: intentset/behavior/0.2
   id: BEH-AREA-NAME
   type: behavior
   title: The promise in a few words, such as Schedule a student assessment
