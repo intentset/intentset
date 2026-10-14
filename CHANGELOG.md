@@ -14,6 +14,13 @@ conformance cases gained a patch so that each still describes the draft or untip
 suite's baseline is neither, and nothing that conformed stops conforming. The suite's baseline bytes did change, so a
 consumer that pins the export's graph hash reads a new one.
 
+- **`intentset evidence import --from playwright`** reads Playwright's JSON reporter, as `--from vitest` reads Vitest's.
+  A test is named by its `describe` titles and its own, so a verification's selector matches as it does for the other
+  runners; a test that ran in several projects counts as the worst of them; `skipped` (`test.skip`, `test.fixme`) is
+  skip, a flaky test that passed on retry is pass, a timeout or an interrupted run is error, and an assertion that did
+  not hold is fail. Found by Streamlane, whose browser tests verify 247 of its 315 behaviors and which the importer
+  could not read before: imported against a real report of eight of its tests, six verifications matched. No
+  specification, conformance case or export changed.
 - **The example's knowledge is approved** (#48). `KB-ASMT-SCHEDULE` is reviewed by its owner against its three
   sources as they are, with their hashes pinned under `intentset.org/review`, and carries two tips, for the behavior
   and for the release-time rule; the permission rule has none, because a tip is optional. Until now the only tips a

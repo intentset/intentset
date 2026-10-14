@@ -10,6 +10,7 @@ import {
   deriveEvidenceId,
   type ParsedRun,
   parseNodeTap,
+  parsePlaywrightJson,
   parseVitestJson,
   readRunRecords,
   selectorMatches,
@@ -394,5 +395,142 @@ describe("toRunRecords counting", () => {
       ]),
     });
     assert.equal(records[0].rationale, "2 tests matched accepts a future time, schedule-review-v1: 1 pass, 1 fail.");
+  });
+});
+
+/** Shaped as `playwright test --reporter=json` writes it: a file suite, a describe, specs with one test per project. */
+const PLAYWRIGHT = {
+  config: {},
+  suites: [
+    {
+      title: "schedule.spec.ts",
+      file: "schedule.spec.ts",
+      specs: [
+        {
+          title: "accepts a future time [schedule-review-v1]",
+          ok: true,
+          tests: [
+            { projectName: "1440", status: "expected", results: [{ status: "passed", duration: 1200 }] },
+            {
+              projectName: "phone",
+              status: "flaky",
+              results: [
+                { status: "failed", duration: 900 },
+                { status: "passed", duration: 800 },
+              ],
+            },
+          ],
+        },
+      ],
+      suites: [
+        {
+          title: "refusals",
+          specs: [
+            {
+              title: "rejects a past time",
+              ok: false,
+              tests: [
+                {
+                  projectName: "1440",
+                  status: "unexpected",
+                  results: [
+                    {
+                      status: "failed",
+                      duration: 300,
+                      error: { message: "Error: expect(locator).toBeVisible() failed" },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              title: "waits for the server",
+              ok: false,
+              tests: [
+                { projectName: "1440", status: "unexpected", results: [{ status: "timedOut", duration: 30000 }] },
+              ],
+            },
+            {
+              title: "needs a sandbox",
+              ok: true,
+              tests: [{ projectName: "1440", status: "skipped", results: [{ status: "skipped", duration: 0 }] }],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  errors: [],
+};
+
+describe("parsePlaywrightJson", () => {
+  test("names each test by its describe titles and its own, one entry per project", () => {
+    const run = parsePlaywrightJson(PLAYWRIGHT);
+    assert.deepEqual(
+      run.tests.map((t) => [t.fullName, t.result]),
+      [
+        ["accepts a future time [schedule-review-v1]", "pass"],
+        ["accepts a future time [schedule-review-v1]", "pass"],
+        ["refusals > rejects a past time", "fail"],
+        ["refusals > waits for the server", "error"],
+        ["refusals > needs a sandbox", "skip"],
+      ],
+    );
+    assert.equal(run.tests[0]?.durationMs, 1200);
+    assert.deepEqual(run.problems, []);
+  });
+
+  test("reads a test that threw something other than an assertion as an error, and an unknown status as an error with a problem", () => {
+    const run = parsePlaywrightJson({
+      suites: [
+        {
+          title: "f.spec.ts",
+          specs: [
+            {
+              title: "threw",
+              tests: [
+                {
+                  status: "unexpected",
+                  results: [{ status: "failed", error: { message: "TypeError: x is not a function" } }],
+                },
+              ],
+            },
+            { title: "odd", tests: [{ status: "mystery", results: [] }] },
+          ],
+        },
+      ],
+    });
+    assert.deepEqual(
+      run.tests.map((t) => t.result),
+      ["error", "error"],
+    );
+    assert.match(run.problems[0] ?? "", /odd has the unknown status "mystery"/);
+  });
+
+  test("lists a run-wide error as a problem, and refuses output that is not a Playwright report", () => {
+    assert.match(
+      parsePlaywrightJson({ suites: [], errors: [{ message: "Global setup failed\n  at x" }] }).problems[0] ?? "",
+      /Global setup failed/,
+    );
+    assert.throws(() => parsePlaywrightJson({ testResults: [] }), /not Playwright JSON reporter output/);
+  });
+
+  test("matches a verification's selector against the title, and the worst of a test's projects is the result", () => {
+    const options: ToRunRecordsOptions = {
+      ...OPTIONS,
+      verifications: new Map([
+        ["accepts a future time [schedule-review-v1]", "VER-SCHEDULE-REVIEW"],
+        ["rejects a past time", "VER-REJECT"],
+      ]),
+    };
+    const { records, unmatched } = toRunRecords(parsePlaywrightJson(PLAYWRIGHT), options);
+    assert.deepEqual(
+      records.map((r) => [r.verificationId, r.result]),
+      [
+        ["VER-REJECT", "fail"],
+        ["VER-SCHEDULE-REVIEW", "pass"],
+      ],
+    );
+    assert.deepEqual(unmatched, []);
   });
 });

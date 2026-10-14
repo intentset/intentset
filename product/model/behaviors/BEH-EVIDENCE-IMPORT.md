@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-EVIDENCE
   links:
     governedBy: [RULE-DETERMINISTIC]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset evidence import --from vitest|node-tap` with a report, and gets run records bound to the current commit and graph hash, for each verification the report exercised.
+Someone runs `intentset evidence import --from vitest|playwright|node-tap` with a report, and gets run records bound to the current commit and graph hash, for each verification the report exercised.
 
 ## Preconditions
 
