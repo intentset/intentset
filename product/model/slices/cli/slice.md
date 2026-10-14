@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     implements: [BEH-AGENT-GUIDE, BEH-CONTEXT, BEH-MIGRATE, BEH-REVIEW-DRIFT]
     dependsOn: [SLICE-CORE, SLICE-MARKSET-ADAPTER, SLICE-ARCHITECTURE, SLICE-VERIFICATION, SLICE-PUBLISHER, SLICE-ATLAS, SLICE-MCP, SLICE-CONFORMANCE-SUITE]
@@ -34,7 +34,7 @@ intentset:
 
 ## Responsibility
 
-The `intentset` command: it wires every package into a command, and owns what only the command does: `init` and the agent guide, `context` by file, `migrate` between specification versions, and `review`'s drift.
+The `intentset` command: it wires every package into a command, and owns what only the command does: `init` and the agent guide, `context` by file, `migrate` between specification versions, `review`'s drift, and the `evidence stale` command's table, JSON and exit codes (what it selects and the runner arguments it prints are the verification package's, BEH-EVIDENCE-STALE).
 
 The slice is the package `@intentset/cli`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 

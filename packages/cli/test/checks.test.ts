@@ -973,3 +973,132 @@ test("BEH-EVIDENCE-CURRENT: changedSince is one diff against the working tree, a
   assert.equal(changedSince(dir, side), null, "a commit on another branch is not an ancestor of HEAD");
   assert.equal(changedSince(temp(t), first), null, "not a git repository");
 });
+
+const staleOf = async (dir: string, ...more: string[]) => run(dir, "evidence", "stale", ...IMPORT_SCOPE, ...more);
+const IMPORT_SCOPE = ["--release", "PRD-LANTERN:pilot-1"];
+const SCHEDULE_DIR = TEST_FILE.replace("schedule.test.ts", "");
+
+test("BEH-EVIDENCE-STALE: evidence stale lists what has no current pass, then what a change moved, and writes nothing", async (t) => {
+  const dir = await committed(t);
+
+  // No run yet: the verification is missing, and a runner is given exactly its test.
+  const missing = await staleOf(dir);
+  assert.equal(missing.code, 0, "without --check it exits 0 whatever it finds");
+  assert.match(missing.out, /^Binding: subject \(the default, since slices claim files\)$/m);
+  assert.match(
+    missing.out,
+    new RegExp(`^${TEST_FILE.replaceAll(".", "\\.")}\\n {2}missing {2}schedule-review-v1 {2}TEST-ASMT-SCHEDULE$`, "m"),
+  );
+  assert.match(missing.out, /^1 of 1 automated verification need a run: missing 1\.$/m);
+  assert.equal((await staleOf(dir, "--check")).code, 1, "--check is the gate's `evidence is current` test");
+  const playwright = await staleOf(dir, "--format", "playwright");
+  assert.equal(playwright.out, `--grep schedule-review-v1 ${TEST_FILE}\n`);
+  assert.match(playwright.err, /^1 of 1 automated verification need a run: missing 1\./m);
+  assert.equal((await staleOf(dir, "--format", "vitest")).out, `${TEST_FILE} -t schedule-review-v1\n`);
+  assert.equal(
+    (await staleOf(dir, "--format", "node-test")).out,
+    `--test-name-pattern=schedule-review-v1 ${TEST_FILE}\n`,
+  );
+
+  // A run makes it current; an empty line is what a runner format prints, so `$(...)` is safe, and --check passes.
+  const imported = await importRun(dir, ".intentset/evidence/run.json");
+  assert.equal(imported.code, 0, imported.err);
+  for (const format of ["playwright", "vitest", "node-test"]) {
+    const none = await staleOf(dir, "--format", format, "--check");
+    assert.equal(none.code, 0);
+    assert.equal(none.out, "\n");
+    assert.match(none.err, /^0 of 1 automated verification need a run\./m);
+  }
+  assert.match((await staleOf(dir)).out, /^Nothing automated needs a run\.$/m);
+
+  // A commit nothing claims moves no subject.
+  write(dir, { "scripts/release.sh": "echo release\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a script nothing claims");
+  assert.equal((await staleOf(dir, "--check")).code, 0);
+
+  // A claimed file changes: stale, and the note names the part that moved.
+  write(dir, { [`${SCHEDULE_DIR}new-code.ts`]: "export const x = 1;\n" });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a file a claim covers");
+  const stale = await staleOf(dir, "--check");
+  assert.equal(stale.code, 1);
+  assert.match(
+    stale.out,
+    new RegExp(
+      `^${TEST_FILE.replaceAll(".", "\\.")}\\n {2}stale {2}schedule-review-v1 {2}TEST-ASMT-SCHEDULE\\n {4}the subject changed since the run at commit [0-9a-f]{9}: slice-file .*new-code\\.ts`,
+      "m",
+    ),
+  );
+  assert.match(stale.out, /^1 of 1 automated verification need a run: stale 1\.$/m);
+
+  const first = await staleOf(dir, "--format", "json");
+  const again = await staleOf(dir, "--json");
+  assert.equal(first.code, 0);
+  assert.equal(first.out, again.out, "the same bytes twice, --json being --format json");
+  const report = JSON.parse(first.out);
+  assert.deepEqual(Object.keys(report), ["binding", "counts", "manual", "needRun", "snapshot"]);
+  assert.equal(report.binding, "subject");
+  assert.equal(report.snapshot.commit, git(dir, "rev-parse", "HEAD"));
+  assert.deepEqual(report.manual, []);
+  assert.equal(report.counts.byStatus.stale, 1);
+  const { note, ...entry } = report.needRun[0];
+  assert.deepEqual(entry, {
+    locator: TEST_FILE,
+    selector: "schedule-review-v1",
+    status: "stale",
+    verification: "TEST-ASMT-SCHEDULE",
+  });
+  assert.match(note, /: slice-file .*new-code\.ts/);
+
+  // Under commit binding the record, a subject record, is not current either, and the line says which binding judged.
+  const byCommit = await staleOf(dir, "--binding", "commit");
+  assert.match(byCommit.out, /^Binding: commit, as configured$/m);
+  assert.match(byCommit.out, /stale {2}schedule-review-v1/);
+
+  // Never writes: every file, git's included, is as it was after every format has run.
+  const before = snapshot(dir);
+  for (const format of ["list", "json", "playwright", "vitest", "node-test"]) await staleOf(dir, "--format", format);
+  const after = snapshot(dir);
+  assert.deepEqual([...after.keys()].sort(), [...before.keys()].sort());
+  for (const [path, was] of before) assert.deepEqual(after.get(path), was, `${path} was not touched`);
+});
+
+test("BEH-EVIDENCE-STALE: a manual verification is listed apart and never needs a run, and usage errors exit 2", async (t) => {
+  const dir = await example(t);
+  const listed = await staleOf(dir);
+  assert.equal(listed.code, 0);
+  assert.match(listed.out, /^Nothing automated needs a run\.$/m);
+  assert.match(
+    listed.out,
+    /^Manual, not re-run by a runner \(1\):\n {2}TEST-ASMT-SCHEDULE {2}missing {2}examples\/scheduling\/TEST-ASMT-SCHEDULE\.md$/m,
+  );
+  assert.equal((await staleOf(dir, "--check")).code, 0, "a person's review is not something a runner re-runs");
+  const report = JSON.parse((await staleOf(dir, "--json")).out);
+  assert.deepEqual(report.needRun, []);
+  assert.equal(report.manual[0].verification, "TEST-ASMT-SCHEDULE");
+  assert.equal(report.counts.manual, 1);
+
+  for (const [argv, message] of [
+    [["--format", "xml"], /--format xml: the formats are list, json, playwright, vitest, node-test/],
+    [["--json", "--format", "vitest"], /--json is --format json/],
+    [["--release", "PRD-LANTERN"], /give a product and a release label as <product>:<label>/],
+    [["--release", "PRD-NOPE:pilot-1"], /PRD-NOPE, which is not a product in this graph/],
+    [["--level", "L2"], /evidence is judged at L3 and above/],
+    [["--out", "x.json"], /--out is not an option of evidence stale/],
+    [["--binding", "graph"], /--binding graph: the bindings are subject and commit/],
+    [["extra"], /unexpected argument "extra"/],
+  ] as const) {
+    const refused = await run(dir, "evidence", "stale", ...argv);
+    assert.equal(refused.code, 2, `${argv.join(" ")}: ${refused.out}`);
+    assert.match(refused.err, message);
+  }
+  const alone = await run(dir, "evidence");
+  assert.equal(alone.code, 2);
+  assert.match(alone.err, /the subcommands are "evidence import" and "evidence stale"/);
+  const stray = await run(dir, "evidence", "import", "r.json", "--from", "vitest", "--check");
+  assert.equal(stray.code, 2);
+  assert.match(stray.err, /--check is not an option of evidence import/);
+  const missingRoot = await run(temp(t), "evidence", "stale");
+  assert.equal(missingRoot.code, 2);
+});

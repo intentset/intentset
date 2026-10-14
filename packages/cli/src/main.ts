@@ -5,7 +5,7 @@
  *
  * Exit codes (Core §11, ADR 0004): 0 no errors, 1 validation errors, 2
  * invocation or tool failure. validate, graph, architecture check, impact,
- * context, review, serve, mcp and guide never write; graph --out, architecture
+ * context, review, evidence stale, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
  * --out write only what they name; init only creates; migrate rewrites the
  * two version values of each record's frontmatter and nothing else.
@@ -17,6 +17,7 @@ import type { RunScope } from "@intentset/verification";
 import { architectureCommand } from "./commands/architecture.ts";
 import { contextCommand } from "./commands/context.ts";
 import { evidenceImportCommand, evidenceUsageProblem } from "./commands/evidence.ts";
+import { evidenceStaleCommand, evidenceStaleUsageProblem } from "./commands/evidence-stale.ts";
 import { graphCommand, graphUsageProblem, parseRelease } from "./commands/graph.ts";
 import { guideCommand } from "./commands/guide.ts";
 import { impactCommand } from "./commands/impact.ts";
@@ -60,6 +61,12 @@ commands
         [--environment <text>] [--started-at <time>] [--finished-at <time>] [--uri-base <uri>]
         [--tool-version <v>]
                             turn a test report into run records bound to this commit and graph
+  evidence stale [--release <product>:<label>] [--check] [--binding <subject|commit>]
+        [--format list|json|playwright|vitest|node-test]
+                            what needs a run: the automated verifications whose evidence is
+                            not a current pass, as a table, as JSON, or as the arguments that
+                            make a test runner run only those tests; never writes; --check
+                            exits 1 when any needs a run
   impact <ID>               what depends on an artifact: direct, candidates, review context,
                             ancestors
   context <ID|path> [--include-restricted]
@@ -156,6 +163,9 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
   ],
   architecture: ["mode", "baseline", "write-baseline"],
   evidence: [
+    "format",
+    "check",
+    "evidence",
     "from",
     "out",
     "product",
@@ -202,9 +212,9 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
 };
 
 /** Positional arguments after the command: a fixed subcommand, then how many more. */
-const POSITIONALS: Record<string, { sub?: string; count: number; what?: string }> = {
-  architecture: { sub: "check", count: 0 },
-  evidence: { sub: "import", count: 1, what: "a report file" },
+const POSITIONALS: Record<string, { subs?: Record<string, number>; count: number; what?: string }> = {
+  architecture: { subs: { check: 0 }, count: 0 },
+  evidence: { subs: { import: 1, stale: 0 }, count: 0, what: "a report file" },
   impact: { count: 1, what: "an artifact ID" },
   context: { count: 1, what: "an artifact ID or a file path" },
 };
@@ -245,14 +255,48 @@ export async function main(argv: string[], io: Io): Promise<number> {
 
   const shape = POSITIONALS[command] ?? { count: 0 };
   let args = rest;
-  if (shape.sub !== undefined) {
-    if (args[0] !== shape.sub) return usage(`the only subcommand is "${command} ${shape.sub}"`);
+  let wanted = shape.count;
+  let sub: string | undefined;
+  if (shape.subs !== undefined) {
+    const names = Object.keys(shape.subs);
+    sub = args[0];
+    if (sub === undefined || !Object.hasOwn(shape.subs, sub)) {
+      return usage(
+        names.length === 1
+          ? `the only subcommand is "${command} ${names[0]}"`
+          : `the subcommands are ${names.map((name) => `"${command} ${name}"`).join(" and ")}`,
+      );
+    }
+    wanted = shape.subs[sub];
     args = args.slice(1);
   }
-  if (args.length < shape.count) return usage(`${shape.what} is required`);
-  if (args.length > shape.count) {
-    const hint = shape.count === 0 ? " (use --root <dir> to name the repository)" : "";
-    return usage(`unexpected argument "${args[shape.count]}"${hint}`);
+  if (args.length < wanted) return usage(`${shape.what} is required`);
+  if (args.length > wanted) {
+    const hint = wanted === 0 ? " (use --root <dir> to name the repository)" : "";
+    return usage(`unexpected argument "${args[wanted]}"${hint}`);
+  }
+  if (command === "evidence") {
+    // Each subcommand takes its own options, though one list allows them all.
+    const own =
+      sub === "stale"
+        ? ["format", "check", "evidence", "release", "binding"]
+        : [
+            "from",
+            "out",
+            "product",
+            "release",
+            "environment",
+            "started-at",
+            "finished-at",
+            "uri-base",
+            "tool-version",
+            "binding",
+          ];
+    for (const token of tokens) {
+      if (token.kind === "option" && COMMAND_OPTIONS.evidence.includes(token.name) && !own.includes(token.name)) {
+        return usage(`--${token.name} is not an option of evidence ${sub}`);
+      }
+    }
   }
 
   const carrier = values.carrier ?? "markset";
@@ -289,8 +333,8 @@ export async function main(argv: string[], io: Io): Promise<number> {
 
   // Evidence scope: --product with --release, or graph's --release <product>:<label>.
   let scope: RunScope | null = null;
-  if (command !== "evidence" && command !== "publish" && command !== "mcp") {
-    if (command === "graph") {
+  if ((command !== "evidence" || sub === "stale") && command !== "publish" && command !== "mcp") {
+    if (command === "graph" || command === "evidence") {
       const release = values.release === undefined ? null : parseRelease(values.release);
       scope = release === null ? null : { product: release.product, release: release.label };
     } else if ((values.product === undefined) !== (values.release === undefined)) {
@@ -341,6 +385,21 @@ export async function main(argv: string[], io: Io): Promise<number> {
       return architectureCommand(session, { writeBaseline: values["write-baseline"] }, values.json, io);
     }
     case "evidence": {
+      if (sub === "stale") {
+        if (levelGiven === "L1" || levelGiven === "L2") {
+          return usage("evidence is judged at L3 and above, where run records are read");
+        }
+        const staleOptions = {
+          release: values.release,
+          format: values.format,
+          check: values.check,
+          json: values.json,
+        };
+        const checked = evidenceStaleUsageProblem(staleOptions);
+        if ("problem" in checked) return usage(checked.problem);
+        const session = openSession("evidence stale", sessionOptions(levelGiven ?? "L3"), io);
+        return typeof session === "number" ? session : evidenceStaleCommand(session, checked.format, staleOptions, io);
+      }
       const options = {
         from: values.from,
         report: args[0],
@@ -473,6 +532,7 @@ function parse(argv: string[]) {
       baseline: { type: "string" },
       binding: { type: "string" },
       "write-baseline": { type: "string" },
+      check: { type: "boolean", default: false },
       from: { type: "string" },
       environment: { type: "string" },
       "started-at": { type: "string" },
