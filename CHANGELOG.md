@@ -9,7 +9,7 @@ case, in any section of the suite, moves `intentset.spec` from `0.1`.
 
 **The worked example's knowledge is approved, reviewed and carries two tips, the walkthrough shows what publication
 writes for it, the example says "student assessment", and intentset.org gained a Copy button.** Of the specifications
-only Core moved, and only in an illustrative example: `intentset.spec` stays `0.1` and the export stays 0.3. Nine
+only Core moved, in an illustrative example, and the publication profile, in a clarification: `intentset.spec` stays `0.1` and the export stays 0.3. Nine
 conformance cases gained a patch so that each still describes the draft or untipped record it is about now that the
 suite's baseline is neither, and nothing that conformed stops conforming. The suite's baseline bytes did change, so a
 consumer that pins the export's graph hash reads a new one.
@@ -39,6 +39,12 @@ consumer that pins the export's graph hash reads a new one.
   `ce8f27a986463815fee6c81d9b66efd64cb03193f2fa1b20882f7fa0c435c9a6`: Core's own note says a change to any baseline
   byte changes it. Core §1's illustrative frontmatter carries the new title, which is why Core's revision is
   2026-10-07; the example is informative and no rule moved.
+- **The specifications page says what each specification is for.** The cards for Core, Traceable VSA, the reference
+  profile and the publication profile listed each document's parts, which told a reader new to Intentset little, and
+  the publication profile's read as a release process. Each now says what it covers in plain terms; the export
+  contract's already did. The publication profile's opening now says the same: publication turns reviewed knowledge
+  into documentation and in-app help for one audience and release, and it is not deployment. A clarification, so
+  that profile's revision is 2026-10-13 and no rule moved.
 - **The agent guide says where the `Intentset-Unchanged` trailer goes**: in the commit message's last paragraph,
   beside any other trailer. Git reads trailers only from there, so a trailer in a paragraph of its own above
   `Co-Authored-By` was silently not read and the drift gate failed the commit. `intentset init --agents` and
