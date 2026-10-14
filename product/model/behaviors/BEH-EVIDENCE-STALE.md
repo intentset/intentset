@@ -6,7 +6,7 @@ intentset:
   id: BEH-EVIDENCE-STALE
   type: behavior
   title: Evidence stale lists what needs a run, in a test runner's own arguments
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
