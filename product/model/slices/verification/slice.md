@@ -10,9 +10,9 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   links:
-    implements: [BEH-EVIDENCE-IMPORT, BEH-EVIDENCE-CURRENT]
+    implements: [BEH-EVIDENCE-IMPORT, BEH-EVIDENCE-CURRENT, BEH-EVIDENCE-STALE]
     dependsOn: [SLICE-CORE]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
@@ -34,7 +34,7 @@ intentset:
 
 ## Responsibility
 
-Run records, their freshness under the binding in force (a verification's subject, or the commit and graph hash), the subject hash itself, and the reporter adapters that turn test reports into them.
+Run records, their freshness under the binding in force (a verification's subject, or the commit and graph hash), the subject hash itself, the reporter adapters that turn test reports into them, and what needs a run: the verifications without a current pass, and the arguments that make a test runner run only those (`intentset evidence stale`).
 
 The slice is the package `@intentset/verification`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
@@ -44,4 +44,4 @@ The exports of `packages/verification/src/index.ts`, reached by other packages a
 
 ## Verification
 
-The package's tests under `packages/verification/test/`. The verification records of the behaviors it implements are TEST-EVIDENCE-IMPORT (BEH-EVIDENCE-IMPORT) and TEST-EVIDENCE-CURRENT (BEH-EVIDENCE-CURRENT). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/verification/test/`. The verification records of the behaviors it implements are TEST-EVIDENCE-IMPORT (BEH-EVIDENCE-IMPORT), TEST-EVIDENCE-CURRENT (BEH-EVIDENCE-CURRENT) and TEST-EVIDENCE-STALE (BEH-EVIDENCE-STALE). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

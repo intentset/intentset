@@ -34,7 +34,7 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
    origin) are never mixed into one list without the origin field.
 6. **Checks report what they could not check.** `unresolved` is never `pass`. A waiver produces "with exceptions",
    never unqualified conformance. Every count names its snapshot, denominator and whether it measures links or evidence.
-7. **No code execution, no network, no mutation** in `validate`, `graph`, `architecture check`, `impact`, `review`.
+7. **No code execution, no network, no mutation** in `validate`, `graph`, `architecture check`, `evidence stale`, `impact`, `review`.
    Publication and serving are separate explicit commands.
 8. **`@intentset/core` has no dependencies.** Everything Markset is in `@intentset/markset-adapter` and nowhere else.
    `@intentset/conformance-suite` has no dependencies either: it is what another implementation is checked against.
@@ -104,6 +104,7 @@ sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
 readRunRecords(json, path); classifyEvidence(graph, records, snapshot); checkEvidence(graph, records, snapshot, options)
 // snapshot = { commit, graphHash, scope?, binding?, bindingReason?, subjects?, changedSince?, covers? }: commit binding unless it says subject
 resolveBinding(configured, hasSlices): { binding, reason }; hasSliceClaims(graph); subjectsFor(graph, source)
+staleReport(graph, classification): { needRun, manual, counts }; runnerArguments(format, entries)   // `intentset evidence stale`: what needs a run
 computeSubject(input): { hash, parts }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
 // @intentset/architecture
 subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed files, resources, a test's local imports, covers(path)
@@ -161,7 +162,7 @@ packages/
   core/               carrier reader, types, graph, validator, impact, export. No dependencies.
   markset-adapter/    the one Markset import
   architecture/       M2: claims, import graph, layers, resources, exceptions, baseline
-  verification/       M3: run records, freshness, reporter adapters
+  verification/       M3: run records, freshness, reporter adapters, what needs a run (evidence stale)
   publisher/          M4: projection and generated Markset, and the help file (publication §5)
   help/               reads help.json and binds tips to the controls of a product's interface. No dependencies, runs in
                       a browser; the binder takes any root with querySelectorAll, so it is tested without a DOM
@@ -317,6 +318,10 @@ from source (the installed bin points at `dist/`, which only the build writes).
   (ignored) and imports them with `intentset evidence import --from node-tap`, bound to the commit, so it refuses an
   uncommitted tree. The `test` job in `ci.yml` runs it after `pnpm test` and then validates at L3, which reports link
   coverage and current-pass coverage apart; every record is a draft, so a missing run is reported and fails nothing.
+  `intentset evidence stale` (ADR 0013, BEH-EVIDENCE-STALE) lists what has no current pass, as a table, JSON, or the
+  arguments for `playwright`, `vitest` or `node-test` to run only those tests; read-only, exit 0 unless `--check`
+  finds something to run. A runner's pattern is a substring match where `selectorMatches` is whole-token, so it may run
+  a few extra tests, never fewer.
 - **Measures** (`product/model/measures/`): MEAS-QUESTIONS-ANSWERED reads the questions the chat keeps (evidence
   source `chat-questions`), through the questions report. Each of the toolchain's three outcomes has one too, saying
   "not measured yet" with the evidence source it is to come from (`evidenceSources` in `.intentset/registries.yaml`),

@@ -13,6 +13,16 @@ specifications and `intentset.spec` move from `0.1` to `0.2` (ADR 0014), and the
 approved, reviewed and carries two tips, the walkthrough shows what publication writes for it, the example says
 "student assessment", and intentset.org gained a Copy button.
 
+- **`intentset evidence stale`** (ADR 0013, "Slow suites") lists the automated verifications whose evidence at the
+  snapshot is not a current pass, each with its selector, locator and status (stale, missing, error, skip,
+  current-fail or unresolved) and, for a stale subject record, the note that names the part that moved. The default
+  is a table grouped by locator file with counts; `--format json` is a stable, sorted object (`snapshot`, `binding`,
+  `needRun`, `manual`, `counts`); `--format playwright|vitest|node-test` prints the arguments that make that runner
+  run just those tests, escaped for its regular expression and quoted for a POSIX shell (paste them, or pass them through `eval`), and an empty line when nothing needs
+  a run. `--check` exits 1 when anything does; otherwise the command exits 0 and never writes. A person's manual
+  review is listed apart. `--release <product>:<label>`, `--evidence` and `--binding` are read as `graph` reads them;
+  the level is L3 or above. The selection and the runner formats are exported from `@intentset/verification`
+  (`staleReport`, `runnerArguments`). No specification, export or conformance change.
 - **Export 0.4 carries the evidence binding** (ADR 0014, stage 2b of ADR 0013). The evidence report says which binding
   the repository judged by (`binding`: `subject` or `commit`) and why (`bindingReason`: `configured`, `default`, or
   `no-slices`, the EVID004 fallback); each verification carries the `binding` that judged it and its `subject`, the

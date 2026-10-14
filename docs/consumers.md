@@ -22,6 +22,28 @@ architecture check needs TypeScript 7: a repository on 5.x runs the CLI as
 `npx -p @intentset/cli -p typescript@7 intentset …`, or with pnpm as
 `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset …`.
 
+## Running only what moved
+
+Under subject binding a record is current while what it checked is unchanged, so a merge makes stale only the
+verifications around what it touched. A slow suite, such as a browser run on every merge, can run just those:
+
+```sh
+args=$(npx intentset evidence stale --format playwright --release <PRD-ID>:<label>)
+[ -z "$args" ] || eval "npx playwright test $args"
+```
+
+`--format playwright` prints `--grep '<selectors>'` and the locator files, so only those spec files load and only the
+tests carrying a stale verification's selector run; `--format vitest` prints the files and `-t '<selectors>'`, and
+`--format node-test` one `--test-name-pattern` per selector and the files. Import the run afterwards as usual and the
+records are current again. The runner matches a pattern as a substring where Intentset matches the selector as a whole
+token, so a few extra tests may run, never fewer. When nothing needs a run the command prints an empty line and says so
+on stderr, so the capture is safe; guard it as above, because a runner given no arguments runs everything, or let the
+nightly run be the full one. The arguments are quoted for a POSIX shell, so paste them or pass them through `eval`, as
+above; an unquoted `$args` would hand the runner the quote characters. `--check` exits 1 while any automated verification needs a run, for a gate that asks
+whether the evidence is current; `--format json` is the list for a script. A manual review is listed apart, because no
+runner re-runs it. A change to a central slice moves nearly everything, and that merge needs the full suite; the
+nightly run is the backstop for what the declarations missed (ADR 0013).
+
 ## Reading it
 
 `readExport(text, { repository, product })` from `@intentset/core` (no dependencies) returns the envelope and the
