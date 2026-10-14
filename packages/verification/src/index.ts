@@ -15,3 +15,4 @@ export * from "./fixture.ts";
 export * from "./placeholders.ts";
 export * from "./records.ts";
 export * from "./report.ts";
+export * from "./subject.ts";
