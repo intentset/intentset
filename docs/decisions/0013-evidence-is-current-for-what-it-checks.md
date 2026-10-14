@@ -1,6 +1,6 @@
 # ADR 0013: Run evidence should be current for what it checks, not for the whole commit
 
-**Status:** proposed, 2026-10-14, revised the same day after review. Not accepted: it changes Core §8, and nothing is built until the maintainers accept it.
+**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
 
 ## Context
 
@@ -93,7 +93,7 @@ Two additions that the first draft lacked, each found by asking what a hash of f
 - Streamlane runs its unit tests per commit and its browser suite nightly, and a record stays current for as long as
   its subject is unchanged. Its L3 gate can name a scope and mean it, and a release gate can require commit binding.
 
-## Before it is accepted: a back-test
+## The back-test (the first implementation step)
 
 Replay Streamlane's history. For each past commit, would subject binding have marked stale the evidence of the tests
 that failed, or that the commit changed behavior for? The commits that broke a pinned record on 2026-10-11 (#678,
