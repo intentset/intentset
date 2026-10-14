@@ -53,8 +53,8 @@ commands
                             and counted unless --include-restricted
   architecture check [--mode migration|strict] [--baseline <file>] [--write-baseline <file>]
                             ownership, claims, imports, layers and regions (default level L2)
-  evidence import --from vitest|playwright|node-tap <report> --out <file> --product <ID> --release <label>
-        [--environment <text>] [--started-at <time>] [--finished-at <time>] [--uri-base <uri>]
+  evidence import --from vitest|playwright|node-tap <report> --out <file> --product <ID>
+        --release <label> [--environment <text>] [--started-at <time>] [--finished-at <time>] [--uri-base <uri>]
         [--tool-version <v>]
                             turn a test report into run records bound to this commit and graph
   impact <ID>               what depends on an artifact: direct, candidates, review context,
