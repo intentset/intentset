@@ -22,8 +22,12 @@ export interface ParsedRun {
 }
 
 export interface ToRunRecordsOptions {
-  /** Selector -> verification ID, from the graph's automated verifications. */
-  verifications: ReadonlyMap<string, string>;
+  /**
+   * Selector -> the verification ID, or every verification ID, that names it, from the graph's automated
+   * verifications. A selector two verifications share (one test verifying two behaviors) gives each of them its own
+   * record from the same tests.
+   */
+  verifications: ReadonlyMap<string, string | readonly string[]>;
   commit: string;
   graphHash: string;
   environment: string;
@@ -43,9 +47,9 @@ export interface ToRunRecordsOptions {
 }
 
 export interface ConvertedRun {
-  /** One record per verification at least one test matched, by verification ID. */
+  /** One record per verification whose selector at least one test matched, by verification ID. */
   records: RunRecord[];
-  /** Selectors no test matched, sorted: their verifications get no record from this run, and read as missing. */
+  /** Selectors no test matched, sorted and listed once however many verifications name them: those verifications get no record from this run, and read as missing. */
   unmatched: string[];
 }
 
@@ -88,8 +92,8 @@ export function worst(a: RunResult, b: RunResult): RunResult {
 }
 
 /**
- * One run record per verification whose selector matched at least one test.
- * Several matching tests make one record with the worst result and a
+ * One run record per verification whose selector matched at least one test,
+ * so a selector two verifications share gives each its own record. Several matching tests make one record with the worst result and a
  * rationale that counts them. Throws when the options would make a malformed
  * record, since that is a caller's mistake rather than evidence.
  */
@@ -97,16 +101,19 @@ export function toRunRecords(parsed: ParsedRun, options: ToRunRecordsOptions): C
   const matched = new Map<string, { selectors: Set<string>; tests: Set<number> }>();
   const unmatched: string[] = [];
   for (const selector of [...options.verifications.keys()].sort(compareStrings)) {
-    const verificationId = options.verifications.get(selector) as string;
+    const named = options.verifications.get(selector) as string | readonly string[];
+    const verificationIds = [...new Set(typeof named === "string" ? [named] : named)].sort(compareStrings);
     const hits = parsed.tests.flatMap((test, index) => (selectorMatches(selector, test.fullName) ? [index] : []));
     if (hits.length === 0) {
       unmatched.push(selector);
       continue;
     }
-    const entry = matched.get(verificationId) ?? { selectors: new Set<string>(), tests: new Set<number>() };
-    entry.selectors.add(selector);
-    for (const hit of hits) entry.tests.add(hit);
-    matched.set(verificationId, entry);
+    for (const verificationId of verificationIds) {
+      const entry = matched.get(verificationId) ?? { selectors: new Set<string>(), tests: new Set<number>() };
+      entry.selectors.add(selector);
+      for (const hit of hits) entry.tests.add(hit);
+      matched.set(verificationId, entry);
+    }
   }
 
   const records: RunRecord[] = [];

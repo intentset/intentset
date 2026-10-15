@@ -307,6 +307,18 @@ export type EvidenceBinding = (typeof EVIDENCE_BINDINGS)[number];
 export const EVIDENCE_RESOURCES = ["exercised", "used"] as const;
 export type EvidenceResources = (typeof EVIDENCE_RESOURCES)[number];
 
+/**
+ * What a slice reached only through `dependsOn` contributes to a subject (Core §8, ADR 0013 as amended 2026-10-15, second):
+ * `entrypoint` its binding fields, its entrypoint files and its contract records, not its other claimed files; `files`
+ * every file its claims resolve to, as release 0.7.0 did. Slices that implement a verified behavior and slices a
+ * verification exercises always contribute every file.
+ */
+export const EVIDENCE_DEPENDENCIES = ["entrypoint", "files"] as const;
+export type EvidenceDependencies = (typeof EVIDENCE_DEPENDENCIES)[number];
+
+/** The rule a repository gets when its configuration says nothing (the one place the default is written). */
+export const DEFAULT_EVIDENCE_DEPENDENCIES: EvidenceDependencies = "files";
+
 /** `evidence:` in `.intentset/config.yaml`; every member optional. */
 export interface EvidenceConfig {
   /** The binding a repository asks for; null leaves the default (subject where slices exist, else commit). */
@@ -315,6 +327,8 @@ export interface EvidenceConfig {
   globalInputs: string[];
   /** Which resource files a subject hashes; `exercised` unless the repository asks for `used`. */
   resources: EvidenceResources;
+  /** What a dependency slice contributes to a subject; `DEFAULT_EVIDENCE_DEPENDENCIES` unless the repository says otherwise. */
+  dependencies: EvidenceDependencies;
 }
 
 /** Conformance levels, Core §11. Checks above the requested level do not run. */

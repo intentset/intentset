@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   parent: CAP-EVIDENCE
   links:
     governedBy: [RULE-UNRESOLVED-NOT-PASS]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-The evidence report reads run records and gives each verification's status under the binding in force, with link coverage and current-pass coverage reported apart. Under subject binding, the default where slices claim files, a record is current while the subject it checked is unchanged, and a resource's files are part of that subject only where the verification exercises the resource or an implementing slice owns it (`evidence.resources: exercised`, the default; `used` hashes every resource a slice lists); under commit binding, which a repository or a gate asks for, only at the assessed commit and graph hash. The report says which binding judged each verification and, for a stale subject record, which part of the subject changed.
+The evidence report reads run records and gives each verification's status under the binding in force, with link coverage and current-pass coverage reported apart. Under subject binding, the default where slices claim files, a record is current while the subject it checked is unchanged, and a resource's files are part of that subject only where the verification exercises the resource or an implementing slice owns it (`evidence.resources: exercised`, the default; `used` hashes every resource a slice lists), and a slice reached only through `dependsOn` contributes every file it claims, or only its binding fields, entrypoint files and contract records under `evidence.dependencies: entrypoint` (an opt-in); under commit binding, which a repository or a gate asks for, only at the assessed commit and graph hash. The report says which binding judged each verification and, for a stale subject record, which part of the subject changed.
 
 ## Preconditions
 
@@ -34,7 +34,7 @@ Run records outside the repository, never committed.
 
 ## Outcomes
 
-Success: a pass whose binding holds is current: a subject record with the subject's hash, or a commit record at the assessed commit and graph hash. Failure: stale, skip, error, fail and missing are reported as what they are and never counted as a pass; a commit record under subject binding, and a subject record under commit binding, are stale with a note; a repository with no slice claims is judged by commit binding and says so (EVID004); files changed since a current record that nothing claims are listed (EVID005); and where a current record's slices list a resource its verification does not exercise and a file of it changed, the verifications are counted and listed (EVID006), so a repository sees what the binding could not.
+Success: a pass whose binding holds is current: a subject record with the subject's hash, or a commit record at the assessed commit and graph hash. Failure: stale, skip, error, fail and missing are reported as what they are and never counted as a pass; a commit record under subject binding, and a subject record under commit binding, are stale with a note; a repository with no slice claims is judged by commit binding and says so (EVID004); files changed since a current record that nothing claims are listed (EVID005); and where a current record's slices list a resource its verification does not exercise and a file of it changed, the verifications are counted and listed (EVID006), and where a current record's verification depends on a slice whose file outside its entrypoints changed under `entrypoint` (EVID007), so a repository sees what the binding could not.
 
 ## Sources
 

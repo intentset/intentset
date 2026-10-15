@@ -3129,6 +3129,35 @@
   },
   {
     "section": "core",
+    "name": "CFG001 evidence dependencies is neither entrypoint nor files",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "dependencies": "everything"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CFG001 boundary: config with evidence dependencies and resources",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "dependencies": "entrypoint",
+        "resources": "used"
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
     "name": "C01 tips on knowledge, keyed by what it explains, are accepted",
     "baseline": "scheduling",
     "patch": {

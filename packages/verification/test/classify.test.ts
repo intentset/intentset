@@ -172,6 +172,7 @@ const subject: Subject = {
     { kind: "test", id: "tests/a.test.ts", hash: "h2", path: "tests/a.test.ts" },
   ],
   unexercised: [{ id: "RES-A", files: ["backend/a.ts", "backend/b.ts"] }],
+  dependencyInternals: [],
 };
 const bound = (overrides: Partial<RunRecord> = {}) =>
   review(OLD_HASH, { commit: OLD_COMMIT, binding: "subject", subjectHash: SUBJECT_HASH, ...overrides });
@@ -359,5 +360,53 @@ describe("BEH-EVIDENCE-CURRENT: what the binding could not see (EVID006)", () =>
       found[0].message,
       /RES-A \(backend\/f0\.ts, backend\/f1\.ts, backend\/f2\.ts, backend\/f3\.ts, backend\/f4\.ts, and 2 more\)/,
     );
+  });
+});
+
+describe("BEH-EVIDENCE-CURRENT: what a dependency's contract could not see (EVID007)", () => {
+  const withInternals: Subject = {
+    ...subject,
+    unexercised: [],
+    dependencyInternals: [{ id: "SLICE-B", files: ["b/internal.ts", "b/other.ts"] }],
+  };
+  const atWith = (more: Partial<EvidenceSnapshot> = {}) =>
+    under("subject", { subjects: new Map([["TEST-ASMT-SCHEDULE", withInternals]]), ...more });
+
+  test("EVID007 names the dependency slice, its changed internal files and the verification, and the record stays current", () => {
+    const at = atWith({ changedSince: () => ["b/internal.ts", "docs/x.md"], covers: () => true });
+    const result = classifyEvidence(graph, [bound()], at);
+    const found = result.diagnostics.filter((d) => d.code === "EVID007");
+    assert.equal(found.length, 1);
+    assert.equal(found[0].severity, "warning");
+    assert.equal(found[0].origin, "evidence");
+    assert.match(
+      found[0].message,
+      /^1 verification is current though a slice it depends on changed outside its entrypoints and contracts since the commit of its record: SLICE-B \(b\/internal\.ts\); TEST-ASMT-SCHEDULE\.$/,
+    );
+    assert.doesNotMatch(found[0].message, /other\.ts|docs\/x\.md/);
+    assert.equal(result.verifications["TEST-ASMT-SCHEDULE"].status, "current-pass", "a warning, not a failure");
+  });
+
+  test("EVID007 is silent when no internal file changed, when git cannot say, for a stale record and under commit binding", () => {
+    const quiet = atWith({ changedSince: () => ["docs/x.md"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound()], quiet).diagnostics, []);
+    const unknown = atWith({ changedSince: () => null, covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound()], unknown).diagnostics, []);
+    const stale = atWith({ changedSince: () => ["b/internal.ts"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound({ subjectHash: MOVED_HASH })], stale).diagnostics, []);
+    const commit = under("commit", { changedSince: () => ["b/internal.ts"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [review(hash)], commit).diagnostics, []);
+  });
+
+  test("EVID007 lists up to twenty verifications and five files for each slice, and counts the rest", () => {
+    const many = Array.from({ length: 7 }, (_, i) => `b/f${i}.ts`);
+    const wide: Subject = { ...withInternals, dependencyInternals: [{ id: "SLICE-B", files: many }] };
+    const at = under("subject", {
+      subjects: new Map([["TEST-ASMT-SCHEDULE", wide]]),
+      changedSince: () => many,
+      covers: () => true,
+    });
+    const found = classifyEvidence(graph, [bound()], at).diagnostics.filter((d) => d.code === "EVID007");
+    assert.match(found[0].message, /SLICE-B \(b\/f0\.ts, b\/f1\.ts, b\/f2\.ts, b\/f3\.ts, b\/f4\.ts, and 2 more\)/);
   });
 });

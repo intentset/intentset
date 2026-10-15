@@ -31,6 +31,7 @@ export function sourceFor(repo: Repository, graph: Graph, tree: Tree): SubjectSo
   return subjectSource(graph, repo.registries, tree, {
     globalInputs: repo.config.evidence.globalInputs,
     resources: repo.config.evidence.resources,
+    dependencies: repo.config.evidence.dependencies,
     readFile: (path) => {
       try {
         return readFileSync(join(repo.root, path));

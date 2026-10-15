@@ -7,6 +7,27 @@ case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` t
 
 ## Unreleased
 
+**A dependency slice can count through its contract, as an opt-in, and a selector two verifications share gives each a record (ADR 0013, amended 2026-10-15, second).**
+Under 0.7.0 a slice reached only through `dependsOn` puts every file its claims resolve to in a subject, so a change to a central slice moves nearly every
+subject: `SLICE-PLATFORM-ORGANIZATION` moved 227 of the 237 browser records of Streamlane's store. `evidence.dependencies: entrypoint | files` in
+`.intentset/config.yaml` (an unknown value is CFG001) chooses what such a dependency contributes: `entrypoint` its binding fields, the files its
+`entrypoints` name and the records of the contracts it exposes or consumes and the decisions they name (new `contract` and `decision` parts of the subject),
+`files` every claimed file, as before. A slice that implements a verified behavior or that `exercises` names still contributes every file. The rule was
+measured before it was shipped (`docs/adoption/subject-binding-backtest.md`, "Amendment 2026-10-15 (second)"): it keeps a median 98.0% of verifications
+current per commit against 97.2% and cuts the files a verification hashes from a median 87 to 17, with 0 false greens among the 27 replayed fix pairs, but on
+Streamlane's 237 records it keeps 5 current at the later commit, as `files` does, because the central slices' entrypoints and records really changed. The
+bar for a new default was 60%, so **the default stays `files`** and `entrypoint` is an opt-in. A new warning, EVID007, says how many verifications are
+current though a file of a slice they depend on changed outside its entrypoints and contracts since their record, naming the slice, its changed files (the
+first five) and the verifications (the first twenty); it needs the git history EVID005 and EVID006 ask for. Core §8 and §11 and the change table moved, with the D
+cases of `tests/evidence.json` and two CFG001 cases in `tests/core.json`; no existing case changed its `valid` or `diagnostics`, so `intentset.spec` did not move,
+and the export did not change.
+
+**`evidence import` gives every verification that names a selector its own record.** A selector two verifications share (one test verifying two behaviors)
+mapped to the first verification only, so the rest were silently missing: the 237 records of Streamlane's browser store came from an import with this bug.
+`toRunRecords` now takes a selector's verification or list of verifications and writes a record for each from the same tests (each rationale names the matched tests
+as before), a selector no test matched is listed once, and the output stays deterministic; the CLI's note lists the shared selectors and says each gets a record.
+Re-import where verifications share a selector to give the missing ones a record.
+
 **A resource's files count in a subject only where a verification exercises it (ADR 0013, amended 2026-10-15).** Release 0.7.0 hashed
 the files of every resource an included slice lists in `usesResources`, so one backend change made stale every verification of every web slice that
 talks to that backend: Streamlane's first browser run, judged at a later commit, read current for 5 of 274 verifications, 133 of the stale ones

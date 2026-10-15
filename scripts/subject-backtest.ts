@@ -53,6 +53,13 @@
  * release 0.7.0). `--resources-section` appends a dated section comparing them
  * to the report instead of regenerating it (see `renderResources`).
  *
+ * `--dependencies-section` appends the section of ADR 0013's second amendment
+ * of 2026-10-15 (`evidence.dependencies: entrypoint | files`) instead:
+ * `files` against `entrypoint` over the same commits and, with `--records
+ * <playwright.json>` (and `--records-ref` for the commit to judge them at), a
+ * store of run records, with the false-green replay and the decision rule
+ * applied to the figures. Use `--ref` to pin the window's last commit.
+ *
  * File content is represented by git's blob id: a blob id is the content's
  * hash, so it moves exactly when the bytes move, and it costs one `git
  * ls-files` per commit instead of a read of every file. Nothing is
@@ -102,7 +109,7 @@ const DETAILED_PRS = [891, 666, 678, 650, 653, 828];
 /** #891's two named behaviors: their verifications are replayed whether or not the commit touched their tests. */
 const FORCED: Record<number, string[]> = { 891: ["BEH-DEPMAP-LIMITS", "BEH-ORG-REQUEST-TEAM-UNREAD"] };
 
-const VARIANTS = ["claims", "+globals", "+lean", "prod+lean", "+res", "exercised", "used"] as const;
+const VARIANTS = ["claims", "+globals", "+lean", "prod+lean", "+res", "exercised", "used", "entrypoint"] as const;
 type Variant = (typeof VARIANTS)[number];
 
 interface VInfo {
@@ -121,6 +128,8 @@ interface State {
   subjectsRes: Map<string, Subject>;
   subjectsExercised: Map<string, Subject>;
   subjectsUsed: Map<string, Subject>;
+  /** `exercised` resources with `dependencies: entrypoint` (ADR 0013, amended 2026-10-15, second); `exercised` is the same with `dependencies: files`. */
+  subjectsEntrypoint: Map<string, Subject>;
   oids: Map<string, string>;
   sliceFiles: Map<string, string[]>;
   sliceFilesRes: Map<string, string[]>;
@@ -152,6 +161,11 @@ interface FixVerification {
   /** Whether a claimed file or a resource's file moved the subject, under `exercised` (the new default) and under `used` (release 0.7.0's rule). */
   codeOrResourceExercised: boolean;
   codeOrResourceUsed: boolean;
+  /** The same under `dependencies: entrypoint` (`exercised` is the `files` rule). */
+  codeOrResourceEntrypoint: boolean;
+  /** Whether the whole subject moved under `files` (`exercised`) and under `entrypoint`: a record or test file edit in the same commit moves it either way. */
+  movedFiles: boolean;
+  movedEntrypoint: boolean;
   /** Under `used`, the resources whose files moved: what `exercises` would have to name for `exercised` to see the same change. */
   resourcesMovedUsed: string[];
 }
@@ -161,6 +175,8 @@ interface FixReplay {
   title: string;
   codeFiles: { path: string; owner: string }[];
   verifications: FixVerification[];
+  /** Every verification the commit moved under `files` and left current under `entrypoint`: what `entrypoint` could not see, whether or not the commit touched its test. */
+  keptByEntrypoint: string[];
 }
 
 interface Results {
@@ -177,10 +193,16 @@ interface Results {
     graphHashChanged: boolean;
     /** Verifications whose `exercised` subject did not move although a file of a resource their slices list and they do not exercise did (what EVID006 reports). */
     currentWithResourceChange: number;
+    /** Verifications `files` (the `exercised` hash) moved and `entrypoint` did not: a dependency's internal file changed and nothing else in the subject did. */
+    keptByEntrypoint: string[];
+    /** Whether a file claimed by a dependency slice of some verification and outside its entrypoints and contracts changed in the step. */
+    internalChanged: boolean;
+    /** Verifications `entrypoint` left current whose dependency internals (EVID007's list) changed in the step; must equal `keptByEntrypoint`. */
+    evid007: string[];
   }[];
   /** At the newest commit, per verification: slices and files in its subject under each resource mode, and the resources `exercised` leaves out. */
   sizesByMode: Record<
-    "exercised" | "used",
+    "exercised" | "used" | "entrypoint",
     { id: string; slices: number; files: number; left: number; e2e: boolean }[]
   >;
   survival: Record<Variant, { n: number; kept: number | null }[]>;
@@ -284,6 +306,7 @@ function build(root: string, sha: string): State {
     "+res": new Map(),
     exercised: new Map(),
     used: new Map(),
+    entrypoint: new Map(),
   };
   const resourceFiles = new Map(model.resources.map((info) => [info.resource.id, info.files]));
   const sliceFilesRes = new Map<string, string[]>();
@@ -298,19 +321,21 @@ function build(root: string, sha: string): State {
   const subjectsRes = new Map<string, Subject>();
   const subjectsExercised = new Map<string, Subject>();
   const subjectsUsed = new Map<string, Subject>();
+  const subjectsEntrypoint = new Map<string, Subject>();
   for (const id of verifs.keys()) {
-    for (const mode of ["exercised", "used"] as const) {
+    for (const mode of ["exercised", "used", "entrypoint"] as const) {
       const subject = computeSubject({
         graph,
         verificationId: id,
         readFile,
         sliceFiles,
         resources: registry,
-        resourceMode: mode,
+        resourceMode: mode === "used" ? "used" : "exercised",
+        dependencyMode: mode === "entrypoint" ? "entrypoint" : "files",
         globalInputs: lean,
       });
       hashes[mode].set(id, subject.hash);
-      (mode === "exercised" ? subjectsExercised : subjectsUsed).set(id, subject);
+      (mode === "exercised" ? subjectsExercised : mode === "used" ? subjectsUsed : subjectsEntrypoint).set(id, subject);
     }
     hashes.claims.set(id, computeSubject({ graph, verificationId: id, readFile, sliceFiles, globalInputs: [] }).hash);
     hashes["+globals"].set(
@@ -344,6 +369,7 @@ function build(root: string, sha: string): State {
     subjectsRes,
     subjectsExercised,
     subjectsUsed,
+    subjectsEntrypoint,
     oids,
     sliceFiles,
     sliceFilesRes,
@@ -401,6 +427,7 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
     "+res": new Map(),
     exercised: new Map(),
     used: new Map(),
+    entrypoint: new Map(),
   };
   let prev: State | null = null;
   let last: State | null = null;
@@ -482,7 +509,23 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
           const left = state.subjectsExercised.get(id)?.unexercised ?? [];
           if (left.some((resource) => resource.files.some((file) => changedSet.has(file)))) currentWithResourceChange++;
         }
+        const keptByEntrypoint: string[] = [];
+        const evid007: string[] = [];
+        let internalChanged = false;
+        for (const id of state.verifs.keys()) {
+          if (!p.verifs.has(id)) continue;
+          const internalFiles = (state.subjectsEntrypoint.get(id)?.dependencyInternals ?? []).flatMap((x) => x.files);
+          const touched = internalFiles.some((file) => changedSet.has(file));
+          if (touched) internalChanged = true;
+          const filesMoved = state.hashes.exercised.get(id) !== p.hashes.exercised.get(id);
+          const entrypointKept = state.hashes.entrypoint.get(id) === p.hashes.entrypoint.get(id);
+          if (filesMoved && entrypointKept) keptByEntrypoint.push(id);
+          if (entrypointKept && touched) evid007.push(id);
+        }
         perCommit.push({
+          keptByEntrypoint,
+          internalChanged,
+          evid007,
           currentWithResourceChange,
           sha,
           total: common,
@@ -557,18 +600,19 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
     verificationSize.push({ id, slices: slices.size, files: files.size, e2e: info.e2e });
   }
 
-  const sizesByMode = { exercised: [], used: [] } as Results["sizesByMode"];
+  const sizesByMode = { exercised: [], used: [], entrypoint: [] } as Results["sizesByMode"];
   for (const [id, info] of head.verifs) {
     for (const [mode, map] of [
       ["exercised", head.subjectsExercised],
       ["used", head.subjectsUsed],
+      ["entrypoint", head.subjectsEntrypoint],
     ] as const) {
       const subject = map.get(id) as Subject;
       const count = (kind: string) => subject.parts.filter((part) => part.kind === kind).length;
       sizesByMode[mode].push({
         id,
         slices: count("slice"),
-        files: count("slice-file") + count("resource-file"),
+        files: count("slice-file") + count("resource-file") + count("contract") + count("decision"),
         left: subject.unexercised.length,
         e2e: info.e2e,
       });
@@ -675,7 +719,14 @@ function replayFix(prev: State, cur: State, changed: string[], title: string, sh
       cur.subjectsExercised.get(id) as Subject,
     );
     const movedUsed = movedParts(prev.subjectsUsed.get(id) as Subject, cur.subjectsUsed.get(id) as Subject);
+    const movedEntrypoint = movedParts(
+      prev.subjectsEntrypoint.get(id) as Subject,
+      cur.subjectsEntrypoint.get(id) as Subject,
+    );
     verifications.push({
+      codeOrResourceEntrypoint: movedEntrypoint.some(byCode),
+      movedFiles: movedExercised.length > 0,
+      movedEntrypoint: movedEntrypoint.length > 0,
       codeOrResourceExercised: movedExercised.some(byCode),
       codeOrResourceUsed: movedUsed.some(byCode),
       resourcesMovedUsed: [
@@ -698,7 +749,13 @@ function replayFix(prev: State, cur: State, changed: string[], title: string, sh
       outside,
     });
   }
-  return { pr, sha, title, codeFiles, verifications };
+  const keptByEntrypoint = [...cur.verifs.keys()].filter(
+    (id) =>
+      prev.verifs.has(id) &&
+      cur.hashes.exercised.get(id) !== prev.hashes.exercised.get(id) &&
+      cur.hashes.entrypoint.get(id) === prev.hashes.entrypoint.get(id),
+  );
+  return { pr, sha, title, codeFiles, verifications, keptByEntrypoint };
 }
 
 function render(r: Results): string {
@@ -1319,6 +1376,403 @@ function renderResources(r: Results, rec: RecordsReplay | null, date: string): s
   return lines.join("\n");
 }
 
+/** What replaying a store of run records over the commits after theirs found, for the dependency rule (ADR 0013, amended 2026-10-15, second). */
+interface DepsReplay {
+  base: string;
+  headSha: string;
+  records: number;
+  verifications: number;
+  /** After each later first-parent commit: records whose subject equals the one at their commit, under each rule. */
+  steps: { sha: string; files: number; entrypoint: number }[];
+  /** At the newest commit, per rule: the records still current. */
+  atHead: Record<"files" | "entrypoint", { current: number; causes: { part: string; verifications: number }[] }>;
+  /** Records `entrypoint` keeps current at the newest commit that `files` would not, and the dependency slices whose internal files moved them. */
+  keptByEntrypoint: { verifications: number; bySlice: { slice: string; verifications: number }[] };
+  /** At the records' own commit, per rule and verification: slices and files hashed (claimed files, resource files, contract and decision records). */
+  sizes: Record<"files" | "entrypoint", { slices: number; files: number }[]>;
+  /** Records current under `entrypoint` at the newest commit whose dependency internals (EVID007) changed since the records' commit. */
+  evid007: number;
+}
+
+type DepsHashes = Record<
+  "files" | "entrypoint",
+  {
+    hash: Map<string, string>;
+    parts: PartHashes;
+    sizes: Map<string, { slices: number; files: number }>;
+    internals: Map<string, { id: string; files: string[] }[]>;
+  }
+>;
+
+/** Every verification's subject at a checked-out tree under both dependency rules, as the CLI computes it (the repository's own configuration). */
+function subjectsAtDeps(root: string): DepsHashes {
+  const out = {} as DepsHashes;
+  for (const mode of ["files", "entrypoint"] as const) {
+    const repo = loadRepository(root, "markset");
+    repo.config.evidence.dependencies = mode;
+    const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
+    const { subjects } = subjectsOf(repo, graph, readTree(root, repo.config));
+    const entry: DepsHashes["files"] = { hash: new Map(), parts: new Map(), sizes: new Map(), internals: new Map() };
+    for (const [id, subject] of subjects) {
+      entry.hash.set(id, subject.hash);
+      entry.parts.set(
+        id,
+        new Map(subject.parts.map((p) => [`${p.kind} ${p.id}${p.owner === undefined ? "" : ` (${p.owner})`}`, p.hash])),
+      );
+      const count = (kind: string) => subject.parts.filter((part) => part.kind === kind).length;
+      entry.sizes.set(id, {
+        slices: count("slice"),
+        files: count("slice-file") + count("resource-file") + count("contract") + count("decision"),
+      });
+      entry.internals.set(id, subject.dependencyInternals);
+    }
+    out[mode] = entry;
+  }
+  return out;
+}
+
+/** Judges a store of run records, made at one commit, at each later first-parent commit up to `ref`, under both dependency rules. */
+function replayRecordsDeps(options: { repo: string; records: string; ref: string }): DepsReplay {
+  const repo = resolve(options.repo);
+  const records = JSON.parse(readFileSync(options.records, "utf8")) as { verificationId: string; commit: string }[];
+  const bases = [...new Set(records.map((r) => r.commit))];
+  if (bases.length !== 1) throw new Error(`the records name ${bases.length} commits; the replay takes one`);
+  const base = bases[0];
+  const shas = git(repo, "rev-list", "--first-parent", "--reverse", `${base}..${options.ref}`)
+    .trim()
+    .split("\n")
+    .filter((x) => x !== "");
+  const worktree = join(repo, ".claude", "worktrees", "intentset-subject-records-deps");
+  git(repo, "worktree", "add", "-q", "--detach", "--force", worktree, base);
+  const ids = [...new Set(records.map((r) => r.verificationId))];
+  try {
+    const at = subjectsAtDeps(worktree);
+    const steps: DepsReplay["steps"] = [];
+    let last = at;
+    for (const sha of shas) {
+      git(worktree, "checkout", "-q", "--detach", "--force", sha);
+      last = subjectsAtDeps(worktree);
+      const same = (mode: "files" | "entrypoint") =>
+        ids.filter((id) => last[mode].hash.get(id) === at[mode].hash.get(id)).length;
+      steps.push({ sha, files: same("files"), entrypoint: same("entrypoint") });
+      process.stderr.write(
+        `records ${sha.slice(0, 9)} files ${steps[steps.length - 1].files} entrypoint ${steps[steps.length - 1].entrypoint}\n`,
+      );
+    }
+    const atHead = {} as DepsReplay["atHead"];
+    for (const mode of ["files", "entrypoint"] as const) {
+      const causes = new Map<string, number>();
+      let current = 0;
+      for (const id of ids) {
+        const before = at[mode].parts.get(id) ?? new Map<string, string>();
+        const after = last[mode].parts.get(id) ?? new Map<string, string>();
+        const moved = new Set<string>();
+        for (const [key, hash] of before) if (after.get(key) !== hash) moved.add(key);
+        for (const key of after.keys()) if (!before.has(key)) moved.add(key);
+        if (at[mode].hash.get(id) === last[mode].hash.get(id)) current++;
+        const named = new Set(
+          [...moved].map((key) => {
+            const owner = /\(([^)]+)\)$/.exec(key)?.[1];
+            const kind = key.split(" ")[0];
+            if (kind === "slice") return `slice record ${key.slice(6)}`;
+            return owner === undefined
+              ? key
+              : `${kind === "slice-file" ? "slice files" : kind.replace(/-file$/, "")} ${owner}`;
+          }),
+        );
+        for (const part of named) causes.set(part, (causes.get(part) ?? 0) + 1);
+      }
+      atHead[mode] = {
+        current,
+        causes: [...causes]
+          .map(([part, verifications]) => ({ part, verifications }))
+          .sort((a, b) => b.verifications - a.verifications || (a.part < b.part ? -1 : 1)),
+      };
+    }
+    const changed = new Set(
+      git(repo, "diff", "--name-only", "-z", base, shas[shas.length - 1] ?? base)
+        .split("\0")
+        .filter((x) => x !== ""),
+    );
+    const bySlice = new Map<string, number>();
+    let kept = 0;
+    let evid007 = 0;
+    for (const id of ids) {
+      const entrypointCurrent = at.entrypoint.hash.get(id) === last.entrypoint.hash.get(id);
+      const hit = (at.entrypoint.internals.get(id) ?? []).filter((x) => x.files.some((f) => changed.has(f)));
+      if (entrypointCurrent && hit.length > 0) evid007++;
+      if (entrypointCurrent && at.files.hash.get(id) !== last.files.hash.get(id)) {
+        kept++;
+        for (const x of hit) bySlice.set(x.id, (bySlice.get(x.id) ?? 0) + 1);
+      }
+    }
+    return {
+      base,
+      headSha: shas[shas.length - 1] ?? base,
+      records: records.length,
+      verifications: ids.length,
+      steps,
+      atHead,
+      keptByEntrypoint: {
+        verifications: kept,
+        bySlice: [...bySlice]
+          .map(([slice, verifications]) => ({ slice, verifications }))
+          .sort((a, b) => b.verifications - a.verifications || (a.slice < b.slice ? -1 : 1)),
+      },
+      sizes: {
+        files: ids.map((id) => at.files.sizes.get(id) ?? { slices: 0, files: 0 }),
+        entrypoint: ids.map((id) => at.entrypoint.sizes.get(id) ?? { slices: 0, files: 0 }),
+      },
+      evid007,
+    };
+  } finally {
+    try {
+      git(repo, "worktree", "remove", "--force", worktree);
+    } catch {
+      // Left for `git worktree prune`.
+    }
+  }
+}
+
+/** The bar ADR 0013's second amendment set before the measurement (the decision rule of the brief). */
+const CURRENT_SHARE_BAR = 0.6;
+const FALSE_GREEN_LIMIT = 2;
+
+/** The false-green figures of a run: what `entrypoint` keeps current that `files` would have invalidated, and the fixes it hid. */
+function falseGreens(r: Results) {
+  const steps = r.perCommit;
+  const hit = steps.filter((c) => c.keptByEntrypoint.length > 0);
+  const pairs = steps.reduce((sum, c) => sum + c.keptByEntrypoint.length, 0);
+  const distinct = new Set(steps.flatMap((c) => c.keptByEntrypoint));
+  const evidMatches = steps.every((c) => c.evid007.join() === c.keptByEntrypoint.join());
+  const fixPairs = r.fixes.flatMap((f) => f.verifications.map((v) => ({ f, v })));
+  const strong = fixPairs.filter(({ v }) => v.strong);
+  const seenByFiles = strong.filter(({ v }) => v.codeOrResourceExercised);
+  const falseGreen = seenByFiles.filter(({ v }) => !v.codeOrResourceEntrypoint);
+  const falseGreenSilent = falseGreen.filter(({ v }) => !v.movedEntrypoint);
+  const weak = fixPairs.filter(({ v }) => !v.strong);
+  const weakFalse = weak.filter(({ v }) => v.codeOrResourceExercised && !v.codeOrResourceEntrypoint);
+  const fixesWithKept = r.fixes.filter((f) => f.keptByEntrypoint.length > 0);
+  return {
+    hit,
+    pairs,
+    distinct,
+    evidMatches,
+    fixPairs,
+    strong,
+    seenByFiles,
+    falseGreen,
+    falseGreenSilent,
+    weak,
+    weakFalse,
+    fixesWithKept,
+  };
+}
+
+/**
+ * The section `--dependencies-section` appends to the report (ADR 0013, amended
+ * 2026-10-15, second): `files` against `entrypoint` over the same run: kept
+ * current, survival, the store of records, closure sizes and the false-green
+ * risk, then the decision rule applied to those figures. Every figure is
+ * computed in the run that wrote it.
+ */
+function renderDependencies(r: Results, rec: DepsReplay | null, date: string): string {
+  const lines: string[] = [];
+  const out = (s = "") => lines.push(s);
+  const n = r.perCommit.length;
+  const live = r.perCommit.filter((c) => c.total > 0);
+  const third = Math.floor(n / 3);
+  const newest = r.perCommit.slice(2 * third, n).filter((c) => c.total > 0);
+  const f1 = (x: number) => `${x.toFixed(1)}%`;
+  const kept = (cs: Results["perCommit"], v: Variant) =>
+    sortedNumbers(cs.map((c) => (100 * (c.total - c.changed[v])) / c.total));
+  const changedOf = (cs: Results["perCommit"], v: Variant) => sortedNumbers(cs.map((c) => c.changed[v]));
+  const fg = falseGreens(r);
+
+  out(`## Amendment ${date} (second): a dependency counts through its contract`);
+  out();
+  out(
+    `The finding that prompted this (Gary, ${date}, "proceed with your recommendation"): under the rule of release 0.7.0 and the first amendment every file of every slice reached through \`dependsOn\` is in a subject, and a change to a central slice moves nearly every subject at once (\`SLICE-PLATFORM-ORGANIZATION\` moved 227 of the 237 records of Streamlane's store, \`SLICE-PLATFORM-PEOPLE\` 186, \`SLICE-WORK-ITEMS\` 176). The candidate rule, \`evidence.dependencies: entrypoint | files\`: a **dependency** slice (reached only through \`dependsOn\`: not an implementing slice of the verified behavior and not one the verification \`exercises\`) contributes its binding fields, the files of its \`entrypoints\` and the records of the contracts it \`exposes\` or \`consumes\` and the decisions those \`informedBy\` name, and not its other claimed files; implementing and exercised slices still contribute every file. \`files\` is the earlier rule.`,
+  );
+  out();
+  out(
+    `Generated by \`scripts/subject-backtest.ts --dependencies-section\` over the same ${r.commits.length} first-parent commits of \`${r.ref}\` as the sections above (${r.commits[0].sha.slice(0, 9)} to ${r.head.slice(0, 9)}, ${n} steps). **files** is the \`exercised\` variant of the section above (resources by the amended rule, every file of a dependency) and **entrypoint** is the same with \`dependencies: entrypoint\`; both mix in the lean global inputs. The only difference between them is what a dependency slice contributes.`,
+  );
+  out();
+  out("### Kept current per commit");
+  out();
+  out(
+    "| Window | Rule | Commits | Changed per commit: median | p90 | max | Kept current per commit: median | p10 (worst decile) |",
+  );
+  out("|---|---|---|---|---|---|---|---|");
+  for (const [name, cs] of [
+    ["all steps", live],
+    [`newest third (steps ${2 * third + 1}-${n})`, newest],
+  ] as const) {
+    for (const [label, v] of [
+      ["files", "exercised"],
+      ["entrypoint", "entrypoint"],
+    ] as const) {
+      const ch = changedOf(cs, v);
+      const k = kept(cs, v);
+      out(
+        `| ${name} | ${label} | ${cs.length} | ${percentile(ch, 50)} | ${percentile(ch, 90)} | ${ch[ch.length - 1]} | ${f1(percentile(k, 50))} | ${f1(percentile(k, 10))} |`,
+      );
+    }
+  }
+  out();
+  out(
+    "How long a record made at one commit stays current (the share of (verification, commit) pairs whose subject is unchanged N commits later):",
+  );
+  out();
+  out("| After N commits | files | entrypoint |");
+  out("|---|---|---|");
+  for (const [k, point] of r.survival.exercised.entries()) {
+    const cell = (v: Variant) => (r.survival[v][k].kept === null ? "n/a" : f1(100 * (r.survival[v][k].kept as number)));
+    out(`| ${point.n} | ${cell("exercised")} | ${cell("entrypoint")} |`);
+  }
+  out();
+
+  if (rec !== null) {
+    out("### Streamlane's store of 237 browser records, judged at later commits");
+    out();
+    out(
+      `The records are the asset \`playwright.json\` of the release \`evidence-records\` in Coral-Reef-Ventures/streamlane: ${rec.records} records for ${rec.verifications} verifications, all made at ${rec.base.slice(0, 9)}. The subjects are the CLI's own (\`subjectsOf\`, the repository's configuration, which names no global input), over temporary read-only worktrees of Streamlane at ${rec.base.slice(0, 9)} and at each of the ${rec.steps.length} first-parent commits after it up to ${rec.headSha.slice(0, 9)} (origin/main when the run was made). A record made under either new rule does not exist yet, so the columns count the verifications whose subject at the later commit equals their subject at ${rec.base.slice(0, 9)} under the rule, which is what a record imported again at that commit would be judged by.`,
+    );
+    out();
+    out("| After commit | Commits since | Current under files | Current under entrypoint |");
+    out("|---|---|---|---|");
+    for (const [i, step] of rec.steps.entries()) {
+      out(
+        `| ${step.sha.slice(0, 9)} | ${i + 1} | ${step.files} of ${rec.verifications} | ${step.entrypoint} of ${rec.verifications} |`,
+      );
+    }
+    out();
+    for (const mode of ["files", "entrypoint"] as const) {
+      const top = rec.atHead[mode].causes
+        .slice(0, 12)
+        .map((c) => `${c.part} (${c.verifications})`)
+        .join(", ");
+      out(
+        `Under \`${mode}\` at ${rec.headSha.slice(0, 9)}: ${rec.atHead[mode].current} of ${rec.verifications} current (${f1((100 * rec.atHead[mode].current) / rec.verifications)}). Parts that moved, by the verifications they moved: ${top || "none"}.`,
+      );
+      out();
+    }
+    out(
+      `Of the ${rec.atHead.entrypoint.current} records current under \`entrypoint\` at ${rec.headSha.slice(0, 9)}, ${rec.keptByEntrypoint.verifications} would be stale under \`files\`, because a file of a dependency slice outside its entrypoints and contracts changed (${
+        rec.keptByEntrypoint.bySlice
+          .slice(0, 8)
+          .map((x) => `${x.slice} ${x.verifications}`)
+          .join(", ") || "none"
+      }); EVID007 would name a dependency slice for ${rec.evid007} current records.`,
+    );
+    out();
+  }
+
+  out("### Closure sizes: files hashed per verification");
+  out();
+  const sizeRow = (label: string, slices: number[], files: number[]) => {
+    const sl = sortedNumbers(slices);
+    const fi = sortedNumbers(files);
+    out(
+      `| ${label} | ${percentile(sl, 50)} | ${percentile(sl, 90)} | ${sl[sl.length - 1]} | ${percentile(fi, 50)} | ${percentile(fi, 90)} | ${fi[fi.length - 1]} |`,
+    );
+  };
+  out("| Where | Slices per verification: median | p90 | max | Files hashed per verification: median | p90 | max |");
+  out("|---|---|---|---|---|---|---|");
+  for (const [label, mode] of [
+    ["all verifications at the newest commit, files", "exercised"],
+    ["all verifications at the newest commit, entrypoint", "entrypoint"],
+  ] as const) {
+    sizeRow(
+      label,
+      r.sizesByMode[mode].map((v) => v.slices),
+      r.sizesByMode[mode].map((v) => v.files),
+    );
+  }
+  if (rec !== null) {
+    sizeRow(
+      "the store's verifications at the records' commit, files",
+      rec.sizes.files.map((v) => v.slices),
+      rec.sizes.files.map((v) => v.files),
+    );
+    sizeRow(
+      "the store's verifications at the records' commit, entrypoint",
+      rec.sizes.entrypoint.map((v) => v.slices),
+      rec.sizes.entrypoint.map((v) => v.files),
+    );
+  }
+  out();
+  out(
+    "Files hashed are the claimed files of the implementing and exercised slices, the entrypoint files of the dependencies (under `files`, all of their claimed files), the files of the resources in the subject and, under `entrypoint`, the contract and decision records of the dependencies; the test, its imports and the global inputs are the same under both.",
+  );
+  out();
+
+  out("### The false-green risk");
+  out();
+  out(
+    `**Over the whole window.** A file claimed by a dependency slice and outside its entrypoints and contracts changed in ${r.perCommit.filter((c) => c.internalChanged).length} of ${n} steps. At ${fg.hit.length} steps at least one verification was current under \`entrypoint\` that \`files\` would have invalidated: ${fg.pairs} (verification, step) pairs in all${fg.hit.length === 0 ? "" : `, a median ${percentile(sortedNumbers(fg.hit.map((c) => c.keptByEntrypoint.length)), 50)} verifications at those steps, p90 ${percentile(sortedNumbers(fg.hit.map((c) => c.keptByEntrypoint.length)), 90)}, maximum ${Math.max(...fg.hit.map((c) => c.keptByEntrypoint.length))} (of ${live[live.length - 1]?.total ?? 0} compared at the last step)`}; ${fg.distinct.size} distinct verifications were affected at least once. EVID007 would have reported at the same ${fg.hit.length} steps${fg.evidMatches ? ", and its list equals that set at every step" : ", but its list differs from that set at some step (see the script)"}.`,
+  );
+  out();
+  const fixTotal = r.fixesTotal;
+  out(
+    `**The fix commits.** ${fixTotal} of the ${r.commits.length - 1} commits of the window are fixes (subject starting "fix"); ${r.fixes.length} of them changed code and were replayed. At ${fg.fixesWithKept.length} of those ${r.fixes.length} the commit moved some verification under \`files\` that stayed current under \`entrypoint\` (${fg.fixesWithKept.map((f) => (f.pr === null ? f.sha.slice(0, 9) : `#${f.pr}`)).join(", ") || "none"}).`,
+  );
+  out();
+  out(
+    `The pairs the replay judges are a fix and a verification it touched: **strong** (the commit changed a behavior, rule or scenario the verification verifies, or the brief named the behavior, as for #891) and **weak** (only its test file changed, which moves the subject through the test part under either rule). A pair is moved *by code or resource* when a claimed file of an included slice or a file of a resource in the subject moved, the only way a code fix that leaves tests and records alone is seen. Strong pairs: ${fg.strong.length}; moved by code under \`files\` ${fg.seenByFiles.length}, under \`entrypoint\` ${fg.strong.filter(({ v }) => v.codeOrResourceEntrypoint).length}. **False greens** (strong pairs that \`files\` sees through code and \`entrypoint\` does not): **${fg.falseGreen.length}**${fg.falseGreen.length === 0 ? "" : `, in ${new Set(fg.falseGreen.map(({ f }) => f.sha)).size} fix${new Set(fg.falseGreen.map(({ f }) => f.sha)).size === 1 ? "" : "es"} (${[...new Set(fg.falseGreen.map(({ f }) => (f.pr === null ? f.sha.slice(0, 9) : `#${f.pr}`)))].join(", ")}); of these ${fg.falseGreenSilent.length} would not have moved at all, because the commit changed nothing else in the subject (a changed behavior record or test file moves the subject under either rule)`}. Weak pairs: ${fg.weak.length}; moved by code under \`files\` ${fg.weak.filter(({ v }) => v.codeOrResourceExercised).length}, under \`entrypoint\` ${fg.weak.filter(({ v }) => v.codeOrResourceEntrypoint).length}; none of the ${fg.weakFalse.length} that only \`files\` sees by code is a false green, since the test file moves the subject anyway.`,
+  );
+  out();
+  out(
+    "| PR | Verification | End-to-end | Moved by code or resource: files | entrypoint | Moved at all: files | entrypoint |",
+  );
+  out("|---|---|---|---|---|---|---|");
+  for (const pr of DETAILED_PRS) {
+    const f = r.fixes.find((x) => x.pr === pr);
+    if (f === undefined) {
+      out(`| #${pr} | not in the replayed set | | | | | |`);
+      continue;
+    }
+    for (const v of f.verifications.filter((x) => x.strong)) {
+      const yn = (b: boolean) => (b ? "yes" : "no");
+      out(
+        `| #${pr} | ${v.id} | ${yn(v.e2e)} | ${yn(v.codeOrResourceExercised)} | ${yn(v.codeOrResourceEntrypoint)} | ${yn(v.movedFiles)} | ${yn(v.movedEntrypoint)} |`,
+      );
+    }
+  }
+  out();
+  if (fg.falseGreen.length > 0) {
+    out("Every strong pair that `files` sees through code and `entrypoint` does not:");
+    out();
+    out("| PR | Verification | End-to-end | Moves anyway (a record changed) | Files touched |");
+    out("|---|---|---|---|---|");
+    for (const { f, v } of fg.falseGreen) {
+      out(
+        `| ${f.pr === null ? f.sha.slice(0, 9) : `#${f.pr}`} | ${v.id} | ${v.e2e ? "yes" : "no"} | ${v.movedEntrypoint ? "yes" : "no"} | ${f.codeFiles
+          .map((c) => `${c.path} (${c.owner})`)
+          .slice(0, 4)
+          .join(", ")}${f.codeFiles.length > 4 ? `, and ${f.codeFiles.length - 4} more` : ""} |`,
+      );
+    }
+    out();
+  }
+
+  out("### The decision rule");
+  out();
+  const current = rec === null ? null : rec.atHead.entrypoint.current / rec.verifications;
+  const barMet = current !== null && current >= CURRENT_SHARE_BAR;
+  const greensOk = fg.falseGreen.length <= FALSE_GREEN_LIMIT;
+  out(
+    `The rule, set before the run: \`entrypoint\` becomes the default only if it keeps at least ${Math.round(CURRENT_SHARE_BAR * 100)}% of the store's browser records current at the later commit AND its replayed fixes show no more than ${FALSE_GREEN_LIMIT} false greens; otherwise it ships as an opt-in and the default stays \`files\`.`,
+  );
+  out();
+  out(
+    `Measured: ${current === null || rec === null ? "no store of records was replayed" : `${rec.atHead.entrypoint.current} of ${rec.verifications} records current under \`entrypoint\` at ${rec.headSha.slice(0, 9)} (${f1(100 * current)}; ${rec.atHead.files.current} under \`files\`), so the ${Math.round(CURRENT_SHARE_BAR * 100)}% bar is ${barMet ? "met" : "not met"}`}; ${fg.falseGreen.length} false green${fg.falseGreen.length === 1 ? "" : "s"} among the replayed fixes, so the false-green limit is ${greensOk ? "met" : "exceeded"}. **${barMet && greensOk ? "Both conditions hold: `entrypoint` is the default." : `${barMet ? "The gain clears the bar but the false greens exceed the limit" : greensOk ? "The false greens are within the limit but the gain is under the bar" : "The gain is under the bar and the false greens exceed the limit"}: the default stays \`files\` and \`entrypoint\` is opt-in.`}**`,
+  );
+  out();
+  return lines.join("\n");
+}
+
 function main(): void {
   const { values } = parseArgs({
     options: {
@@ -1329,6 +1783,8 @@ function main(): void {
       cache: { type: "string" },
       "from-cache": { type: "boolean", default: false },
       "resources-section": { type: "boolean", default: false },
+      "dependencies-section": { type: "boolean", default: false },
+      "records-ref": { type: "string" },
       records: { type: "string" },
       "records-cache": { type: "string" },
       date: { type: "string" },
@@ -1358,6 +1814,29 @@ function main(): void {
     const body = at === -1 ? existing.replace(/\n+$/, "") : existing.slice(0, at).replace(/\n+$/, "");
     writeFileSync(path, `${body}\n\n${renderResources(results, replay, date)}\n`);
     process.stderr.write(`appended the resources section to ${values.out}\n`);
+    return;
+  }
+  if (values["dependencies-section"]) {
+    let replay: DepsReplay | null = null;
+    const recordsCache = values["records-cache"];
+    if (values["from-cache"] && recordsCache !== undefined && existsSync(recordsCache)) {
+      replay = JSON.parse(readFileSync(recordsCache, "utf8")) as DepsReplay;
+    } else if (values.records !== undefined) {
+      replay = replayRecordsDeps({
+        repo: values.repo as string,
+        records: values.records,
+        ref: (values["records-ref"] ?? values.ref) as string,
+      });
+      if (recordsCache !== undefined) writeFileSync(recordsCache, JSON.stringify(replay));
+    }
+    const date = values.date ?? new Date().toISOString().slice(0, 10);
+    const path = resolve(values.out as string);
+    const existing = readFileSync(path, "utf8");
+    const heading = `\n## Amendment ${date} (second)`;
+    const at = existing.indexOf(heading);
+    const body = at === -1 ? existing.replace(/\n+$/, "") : existing.slice(0, at).replace(/\n+$/, "");
+    writeFileSync(path, `${body}\n\n${renderDependencies(results, replay, date)}\n`);
+    process.stderr.write(`appended the dependencies section to ${values.out}\n`);
     return;
   }
   const text = render(results);

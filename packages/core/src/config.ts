@@ -8,13 +8,19 @@
 import type { Diagnostic } from "./diagnostics.ts";
 import { compareStrings, makeDiagnostic } from "./report.ts";
 import { patternProblem } from "./validate.ts";
-import { type Config, EVIDENCE_BINDINGS, EVIDENCE_RESOURCES } from "./types.ts";
+import {
+  type Config,
+  DEFAULT_EVIDENCE_DEPENDENCIES,
+  EVIDENCE_BINDINGS,
+  EVIDENCE_DEPENDENCIES,
+  EVIDENCE_RESOURCES,
+} from "./types.ts";
 import { parseYamlDetailed } from "./yaml.ts";
 
 export const DEFAULT_SCOPE = ["**/*.md"];
 export const DEFAULT_IGNORE = ["node_modules/**", "dist/**", ".git/**"];
 const KNOWN_KEYS = ["repository", "scope", "registries", "ignore", "evidence"];
-const EVIDENCE_KEYS = ["binding", "globalInputs", "resources"];
+const EVIDENCE_KEYS = ["binding", "globalInputs", "resources", "dependencies"];
 
 /** Core §11: read the repository configuration. Shape problems are CFG001. */
 export function readConfig(text: string, path: string): { config: Config; diagnostics: Diagnostic[] } {
@@ -24,7 +30,7 @@ export function readConfig(text: string, path: string): { config: Config; diagno
     scope: [...DEFAULT_SCOPE],
     registries: null,
     ignore: [...DEFAULT_IGNORE],
-    evidence: { binding: null, globalInputs: [], resources: "exercised" },
+    evidence: { binding: null, globalInputs: [], resources: "exercised", dependencies: DEFAULT_EVIDENCE_DEPENDENCIES },
   };
   const parsed = parseYamlDetailed(text);
   if (parsed.error) {
@@ -114,7 +120,7 @@ function readEvidence(
     report(
       "/evidence",
       "`evidence` must be a mapping.",
-      "Write `binding`, `globalInputs` and `resources` under `evidence:`, or remove it.",
+      "Write `binding`, `globalInputs`, `resources` and `dependencies` under `evidence:`, or remove it.",
     );
     return;
   }
@@ -147,6 +153,17 @@ function readEvidence(
         "/evidence/resources",
         "`evidence.resources` must be exercised or used.",
         "Write `resources: exercised` (the default: a resource's files count where a verification exercises it) or `resources: used` (the files of every resource an included slice lists, Core §8).",
+      );
+    }
+  }
+  if (mapping.dependencies !== undefined && mapping.dependencies !== null) {
+    if ((EVIDENCE_DEPENDENCIES as readonly unknown[]).includes(mapping.dependencies)) {
+      config.evidence.dependencies = mapping.dependencies as Config["evidence"]["dependencies"];
+    } else {
+      report(
+        "/evidence/dependencies",
+        "`evidence.dependencies` must be entrypoint or files.",
+        "Write `dependencies: entrypoint` (a slice reached only through `dependsOn` counts by its binding fields, entrypoint files and contract records) or `dependencies: files` (every file its claims resolve to, Core §8).",
       );
     }
   }

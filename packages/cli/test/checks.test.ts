@@ -249,6 +249,59 @@ test("BEH-EVIDENCE-IMPORT, BEH-EVIDENCE-CURRENT: evidence import binds a Vitest 
   assert.match(stale.out, /^ {2}verified: {2}0 of 1 behavior, 0 of 2 rules, 0 of 1 scenario/m);
 });
 
+test("BEH-EVIDENCE-IMPORT: a selector two verifications share gives each of them a record", async (t) => {
+  const dir = await committed(t);
+  const second = readFileSync(RECORD(dir, "TEST-ASMT-SCHEDULE"), "utf8").replaceAll(
+    "TEST-ASMT-SCHEDULE",
+    "TEST-ASMT-SCHEDULE-TWO",
+  );
+  write(dir, { "product/scheduling/TEST-ASMT-SCHEDULE-TWO.md": second, "reports/vitest.json": vitestReport("passed") });
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "a second verification with the same selector");
+  const imported = await run(
+    dir,
+    "evidence",
+    "import",
+    "--from",
+    "vitest",
+    "reports/vitest.json",
+    "--out",
+    "out/shared.json",
+    ...IMPORT,
+  );
+  assert.equal(imported.code, 0, imported.err);
+  assert.match(imported.out, /^Imported 2 run records from/);
+  assert.match(imported.out, /TEST-ASMT-SCHEDULE {2}pass {2}1 test matched schedule-review-v1: 1 pass\./m);
+  assert.match(imported.out, /TEST-ASMT-SCHEDULE-TWO {2}pass {2}1 test matched schedule-review-v1: 1 pass\./m);
+  assert.match(
+    imported.out,
+    /Selectors shared by several verifications, each of which gets a record from the same tests \(1\):\n {2}- schedule-review-v1 \(TEST-ASMT-SCHEDULE, TEST-ASMT-SCHEDULE-TWO\)/,
+  );
+  const records = JSON.parse(readFileSync(join(dir, "out", "shared.json"), "utf8"));
+  assert.deepEqual(records.map((r: { verificationId: string }) => r.verificationId).sort(), [
+    "TEST-ASMT-SCHEDULE",
+    "TEST-ASMT-SCHEDULE-TWO",
+  ]);
+
+  // A report no test of which carries the selector lists it once, with both verifications.
+  write(dir, { "reports/other.json": vitestReport("passed", "something else entirely") });
+  const none = await run(
+    dir,
+    "evidence",
+    "import",
+    "--from",
+    "vitest",
+    "reports/other.json",
+    "--out",
+    "out/none.json",
+    ...IMPORT,
+  );
+  assert.match(
+    none.out,
+    /Unmatched selectors \(1\): .*read as missing\n {2}- schedule-review-v1 \(TEST-ASMT-SCHEDULE, TEST-ASMT-SCHEDULE-TWO\)/,
+  );
+});
+
 test("BEH-EVIDENCE-CURRENT: at L3 an approved behavior without a current pass is CORE007", async (t) => {
   const dir = await committed(t);
   for (const id of ["BEH-ASMT-SCHEDULE", "SLICE-ASMT-SCHEDULE"]) edit(dir, id, "status: draft", "status: approved");
