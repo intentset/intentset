@@ -66,7 +66,7 @@ test("the 404 page wears the shell, links from the root, and asks not to be inde
   assert.doesNotMatch(doc, /rel="canonical"|og:url/, "it has no address of its own");
   assert.match(doc, /<header class="site-header">[\s\S]*<footer class="site-footer">/);
   assert.match(doc, /<link rel="stylesheet" href="\/css\/site\.css">/);
-  assert.match(doc, /<a href="\/index\.html">Go to the home page<\/a>/);
+  assert.match(doc, /<a href="\/">Go to the home page<\/a>/);
   assert.match(doc, /<a class="site-skip" href="#main">/, "the skip link stays on the page");
   // Served at any depth, so no link may be relative.
   for (const [, url] of doc.matchAll(/(?:href|src)="([^"]+)"/g)) {

@@ -253,7 +253,7 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
   await tab.close();
   assert.equal(result.h1, "Page not found");
   assert.ok(result.styled, "the stylesheets load from the root");
-  assert.equal(result.home, url("index.html"));
+  assert.equal(result.home, url(""));
 });
 
 test("the rail beside a page in a section names the section and marks the page", async (t) => {

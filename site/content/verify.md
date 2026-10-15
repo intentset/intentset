@@ -10,7 +10,7 @@ Start
 {.lead}
 Writing the code is no longer the hard part. Knowing it is right is. An agent that says it is done is worth exactly what the checks behind that word are worth, and a person cannot read every line twenty agents write. This page is the checks that let a change carry its own proof: what each one catches, how to set it up so an agent runs it without being asked, and what a reviewer reads once they are in place.
 
-[Run the adoption with many agents](../adopt/index.html) says how to split the work and protect what an agent can reach. This page is the other half: what makes the work an agent hands back safe to accept.
+[Run the adoption with many agents](../adopt/) says how to split the work and protect what an agent can reach. This page is the other half: what makes the work an agent hands back safe to accept.
 
 None of it asks you to change a control you already have. Who approves a pull request, whether a green one merges on its own, how a release is cut: those stay your rules. What changes is how much of the work arrives at them already proved.
 
@@ -30,7 +30,7 @@ No single check makes a change trustworthy. A unit test cannot see a page that s
 
 ## A test with every claim
 
-A behavior ships with the test that checks it, and a [verification record](../how-it-works/index.html) names that test. A changed behavior ships with the changed test. The model then reports every claim nothing checks, so coverage is measured in promises, not lines: a rule with no test is a gap, listed, whatever percentage a line counter shows.
+A behavior ships with the test that checks it, and a [verification record](../how-it-works/) names that test. A changed behavior ships with the changed test. The model then reports every claim nothing checks, so coverage is measured in promises, not lines: a rule with no test is a gap, listed, whatever percentage a line counter shows.
 
 - **Test against the real thing where it is cheap.** Run the data layer's tests against a local copy of the database, sending it the same conditions production gets, rather than against a mock that agrees with whatever the code assumes.
 - **Let the count only go up.** A gap closed stays closed, because the model lists it again the moment its test goes. An agent asked to "add tests" has a list to work through rather than a guess.
@@ -101,7 +101,7 @@ With the layers in place, a pull request carries its proof: the records it chang
 
 ## Have your agent set it up
 
-Like everything on [the adoption page](../adopt/index.html), this is work an agent does well: a workflow, a branch rule, a test helper that measures contrast, a script that captures screenshots. Point it here:
+Like everything on [the adoption page](../adopt/), this is work an agent does well: a workflow, a branch rule, a test helper that measures contrast, a script that captures screenshots. Point it here:
 
 ```text
 Read https://intentset.org/verify/. I want every change in this repository to
@@ -112,4 +112,4 @@ would add and in what order, and every question you cannot answer from the
 repository. Stop there until I have read it.
 ```
 
-[[Run the adoption](../adopt/index.html)]{.button .primary} [[How it works](../how-it-works/index.html)]{.button}
+[[Run the adoption](../adopt/)]{.button .primary} [[How it works](../how-it-works/)]{.button}

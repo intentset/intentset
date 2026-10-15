@@ -219,11 +219,11 @@ test("How it works is a page of its own, in Start's rail with its contents, and 
   assert.match(page, /<nav aria-label="Contents">/, "the explanation has a contents rail");
   assert.match(
     page,
-    /<nav class="site-rail" aria-label="Start">[\s\S]*?<a href="\.\.\/how-it-works\/index\.html" aria-current="page">How it works<\/a>/,
+    /<nav class="site-rail" aria-label="Start">[\s\S]*?<a href="\.\.\/how-it-works\/" aria-current="page">How it works<\/a>/,
   );
-  assert.match(page, /<nav class="site-nav"[\s\S]*?<a href="\.\.\/start\/index\.html" aria-current="page">Start<\/a>/);
+  assert.match(page, /<nav class="site-nav"[\s\S]*?<a href="\.\.\/start\/" aria-current="page">Start<\/a>/);
   const home = main("index.html");
-  assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/index\.html">See how it works<\/a>/);
+  assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/">See how it works<\/a>/);
   assert.doesNotMatch(html.get("index.html") ?? "", /index\.html#how/, "nothing points at the old anchor");
 });
 
@@ -338,8 +338,8 @@ test("the specification pages carry exactly the headings their source files decl
   }
   // Links between the documents are links between their pages.
   const core = html.get("specifications/core/index.html") ?? "";
-  assert.match(core, /href="\.\.\/vsa\/index\.html"/);
-  assert.match(core, /href="\.\.\/profile-typescript-amplify-gen2\/index\.html"/);
+  assert.match(core, /href="\.\.\/vsa\/"/);
+  assert.match(core, /href="\.\.\/profile-typescript-amplify-gen2\/"/);
   // The one .md link left is the banner's, to the source in the repository.
   assert.doesNotMatch(core, /href="(?!https?:)[^"]*\.md"/, "a .md link survived into the core page");
 });
@@ -432,7 +432,7 @@ test("the worked example opens every record on the page, in the act it belongs t
     assert.ok(opening.length > 20, `${record.id}: nothing to compare`);
     assert.ok(flat(read).includes(opening.slice(0, 60)), `${record.id}: the fold lacks its body`);
     // And the way to the record's own page, which the deep links and the search results use.
-    assert.match(fold, new RegExp(`<a href="${record.id}/index\\.html">`), `${record.id}: no way to its own page`);
+    assert.match(fold, new RegExp(`<a href="${record.id}/">`), `${record.id}: no way to its own page`);
 
     const page = main(`example/${record.id}/index.html`);
     const card = page.slice(page.indexOf('<section class="ms-card record"'), page.indexOf("</section>"));
@@ -446,11 +446,7 @@ test("the worked example opens every record on the page, in the act it belongs t
       ...record.links.flatMap(([, ids]) => ids),
       ...pins,
     ]) {
-      assert.match(
-        card,
-        new RegExp(`<a href="\\.\\./${target}/index\\.html">${target}</a>`),
-        `${record.id}: ${target}`,
-      );
+      assert.match(card, new RegExp(`<a href="\\.\\./${target}/">${target}</a>`), `${record.id}: ${target}`);
     }
     // A reviewed record's card says who reviewed it and when, and carries each tip beside the ID it is for.
     if (record.review) assert.ok(cardText.includes(`${record.review.by}, ${record.review.at}`), `${record.id}: review`);
@@ -519,15 +515,12 @@ test("home: the hero, the loop, the role cards, the worked example and status ar
       `${role}: every item is a question the model can answer`,
     );
   }
-  assert.match(home, /<a href="pilot\/index\.html">/, "the home page leads to the pilot");
+  assert.match(home, /<a href="pilot\/">/, "the home page leads to the pilot");
   assert.match(home, /<ol class="ms-steps adopt">/);
   assert.match(home, /<section class="ms-card status"/);
   assert.match(home, /<div class="ms-callout" data-type="note"/);
   assert.match(home, /<h2 id="example">/);
-  assert.match(
-    home,
-    /<span class="ms-span button"><a href="specifications\/index\.html">Read the draft specification<\/a>/,
-  );
+  assert.match(home, /<span class="ms-span button"><a href="specifications\/">Read the draft specification<\/a>/);
 });
 
 test("the build leaves no placeholder behind", async () => {

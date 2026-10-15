@@ -351,4 +351,4 @@ It also exposed defects in the reference implementation, which were fixed before
 
 Tried against the 0.4 release, a one-line change to the slice's code was listed for review with the 21 records that describe it, which is what the next change to the blocked state would meet. It did, on 2026-10-06, when the gate went on.
 
-[[Start with one capability](../start/index.html)]{.button .primary} [[See how it works](../how-it-works/index.html)]{.button}
+[[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}

@@ -101,7 +101,7 @@ test("built with the chat, the privacy page exists and the footer's row links it
   assert.match(html, /<h1[^>]*>Privacy<\/h1>/);
   assert.match(html, /privacy@coralreefventures\.com/);
   const home = await readFile(join(dist, "index.html"), "utf8");
-  assert.match(home, /<nav class="site-footer-nav"[\s\S]*href="(?:\.\/)?privacy\/index\.html"[^>]*>Privacy<\/a>/);
+  assert.match(home, /<nav class="site-footer-nav"[\s\S]*href="(?:\.\/)?privacy\/"[^>]*>Privacy<\/a>/);
 });
 
 test("a visitor asks, the answer streams in with its sources, and a follow-up sends the conversation back", async (t) => {

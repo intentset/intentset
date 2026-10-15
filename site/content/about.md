@@ -11,4 +11,4 @@ Coral Reef Ventures is the organization behind Markset, Intentset, Streamlane, a
 
 The specifications are in draft. The code, the specifications and the conformance suite are public on GitHub under the MIT licence; a contribution guide will follow.
 
-[[Explore Coral Reef Ventures]({{coral}})]{.button .primary} [[Read the draft](../specifications/index.html)]{.button}
+[[Explore Coral Reef Ventures]({{coral}})]{.button .primary} [[Read the draft](../specifications/)]{.button}

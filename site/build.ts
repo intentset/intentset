@@ -68,9 +68,17 @@ export interface BuildOptions {
 export interface InputOptions {
   modelRoot?: string;
 }
+/**
+ * A page's address: its output path without the trailing `index.html`, which a static host serves for a directory.
+ * Every link the site writes uses it, so no address on the site ends in `index.html` (decided 2026-10-15).
+ */
+export function pageAddress(path: string): string {
+  return path.replace(/(^|\/)index\.html$/, "$1");
+}
+
 /** Where a page lives once published: the address canonical, og:url and the sitemap give for it. */
 export function canonicalUrl(path: string): string {
-  return new URL(path.replace(/(^|\/)index\.html$/, "$1"), CANONICAL).href;
+  return new URL(pageAddress(path), CANONICAL).href;
 }
 
 /**
@@ -669,7 +677,7 @@ ${sectionRows.join("\n")}
 
 ## Every code a case expects
 
-The number of cases that expect each code at least once. The [specifications](../specifications/index.html) define what each code means.
+The number of cases that expect each code at least once. The [specifications](../specifications/) define what each code means.
 
 | Code | Sections | Cases |
 |---|---|---|
@@ -677,7 +685,7 @@ ${codeRows.join("\n")}
 
 ## Testing a consumer of the export
 
-A tool that imports an export rather than producing one is checked against ${manifest.cases.length} envelopes for \`${manifest.contract}\`: ${accepted} it must accept and ${manifest.cases.length - accepted} it must reject. Every rejected envelope is an accepted one with one deliberate defect, and several are valid against the schema, so a schema validator alone is not a consumer. The [export contract](../specifications/export/index.html) says what a consumer checks.
+A tool that imports an export rather than producing one is checked against ${manifest.cases.length} envelopes for \`${manifest.contract}\`: ${accepted} it must accept and ${manifest.cases.length - accepted} it must reject. Every rejected envelope is an accepted one with one deliberate defect, and several are valid against the schema, so a schema validator alone is not a consumer. The [export contract](../specifications/export/) says what a consumer checks.
 `;
   return renderPage("conformance/index.html", source, join(root, "tests", "index.json"));
 }
@@ -698,7 +706,7 @@ function rewriteLinks(tree: Root, file: string): void {
     const inRepo = posix.normalize(posix.join(dir, target));
     const spec = SPECS.find((s) => posix.join("spec", s.file) === inRepo);
     if (spec) {
-      link.url = `../${spec.slug}/index.html${fragment ? `#${fragment}` : ""}`;
+      link.url = `../${spec.slug}/${fragment ? `#${fragment}` : ""}`;
     } else {
       link.url = `${REPO}/blob/main/${inRepo}${fragment ? `#${fragment}` : ""}`;
     }
@@ -783,11 +791,9 @@ function foldedRecord(record: ExampleRecord, ref: (id: string) => string): strin
     .trim()
     .replace(/^#\s+.*\n*/, "")
     .replace(/^##(#*)\s/gm, "####$1 ");
-  const inside = [
-    recordFields(record, ref),
-    body,
-    `[Open \`${record.id}\` on a page of its own](${record.id}/index.html)`,
-  ].join("\n\n");
+  const inside = [recordFields(record, ref), body, `[Open \`${record.id}\` on a page of its own](${record.id}/)`].join(
+    "\n\n",
+  );
   const quoted = inside
     .split("\n")
     .map((line) => (line === "" ? ">" : `> ${line}`))
@@ -824,7 +830,7 @@ function publicationFold(publication: ExamplePublication): string {
 function exampleIndex(records: ExampleRecord[], publication: ExamplePublication): Page {
   const byId = new Map(records.map((r) => [r.id, r]));
   const ids = new Set(records.map((r) => r.id));
-  const ref = (id: string) => (ids.has(id) ? `[${id}](${id}/index.html)` : `\`${id}\``);
+  const ref = (id: string) => (ids.has(id) ? `[${id}](${id}/)` : `\`${id}\``);
   const listed = new Set(EXAMPLE_ACTS.flatMap((act) => act.records));
   for (const record of records) {
     if (!listed.has(record.id)) throw new Error(`${record.id} is in the example but in no act of the walkthrough`);
@@ -875,9 +881,9 @@ ${acts}
 
 ## Try the same thing on your own code
 
-Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in Streamlane](../pilot/index.html) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
+Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in Streamlane](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
 
-[[Start with one capability](../start/index.html)]{.button .primary} [[See how it works](../how-it-works/index.html)]{.button}
+[[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
 }
@@ -885,7 +891,7 @@ Nothing above was written by hand for this site. It is the shape an agent produc
 /** One record: its metadata as a card, then the document body, then a way back. */
 function recordPage(record: ExampleRecord, records: ExampleRecord[]): Page {
   const ids = new Set(records.map((r) => r.id));
-  const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/index.html)` : `\`${id}\``);
+  const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/)` : `\`${id}\``);
   const table = recordFields(record, ref);
   const source = `---
 markset: 0
@@ -901,7 +907,7 @@ ${table}
 ${record.body.trim()}
 
 {.site-back}
-[Back to the worked example](../index.html)
+[Back to the worked example](../)
 `;
   return renderPage(`example/${record.id}/index.html`, source, join(root, EXAMPLE_DIR, record.file));
 }
@@ -916,7 +922,7 @@ export function knowledgePath(id: string): string {
  * Built only when there is one.
  */
 function knowledgeIndex(knowledge: PublishedKnowledge[]): Page {
-  const items = knowledge.map(({ record }) => `- [${md(record.title)}](${record.id}/index.html) · \`${record.id}\``);
+  const items = knowledge.map(({ record }) => `- [${md(record.title)}](${record.id}/) · \`${record.id}\``);
   const source = `---
 markset: 0
 ---
@@ -933,7 +939,7 @@ ${items.join("\n")}
 /** One published knowledge record: its metadata as a card, then the body publication released, as a record page is. */
 function knowledgePage(entry: PublishedKnowledge, knowledge: PublishedKnowledge[]): Page {
   const ids = new Set(knowledge.map(({ record }) => record.id));
-  const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/index.html)` : `\`${id}\``);
+  const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/)` : `\`${id}\``);
   const source = `---
 markset: 0
 ---
@@ -948,7 +954,7 @@ ${recordFields(entry.record, ref)}
 ${entry.body}
 
 {.site-back}
-[Back to the published knowledge](../index.html)
+[Back to the published knowledge](../)
 `;
   return renderPage(knowledgePath(entry.record.id), source, entry.path);
 }
@@ -979,7 +985,7 @@ function md(text: string): string {
 function fromRoot(html: string, rootPath: string): string {
   return html.replace(
     /\b(href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)([^"]*)"/gi,
-    (_, name: string, url: string) => `${name}="${rootPath}${url}"`,
+    (_, name: string, url: string) => `${name}="${rootPath}${url === "./" ? "" : url}"`,
   );
 }
 
@@ -992,11 +998,12 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
     // A bar item is current for its whole section, not just its own page, or
     // the bar goes blank the moment a reader follows the rail into one.
     const active = page.path === href || (section !== undefined && section.items[0][1] === href);
-    return `<a href="${rel}${href}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
+    return `<a href="${rel}${pageAddress(href)}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("\n");
   const footerLinks = [...FOOTER_LINKS, ...(askUrl === null ? [] : ([["Privacy", "privacy/index.html"]] as const))]
     .map(
-      ([label, href]) => `<a href="${rel}${href}"${page.path === href ? ' aria-current="page"' : ""}>${esc(label)}</a>`,
+      ([label, href]) =>
+        `<a href="${rel}${pageAddress(href)}"${page.path === href ? ' aria-current="page"' : ""}>${esc(label)}</a>`,
     )
     .join("\n");
   // Where am I, then what is on this page: the section first, because it
@@ -1005,7 +1012,7 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
     ? `<nav class="site-rail" aria-label="${esc(section.title)}"><p class="site-rail-title">${esc(section.title)}</p>\n<ul>\n${section.items
         .map(
           ([label, href]) =>
-            `<li><a href="${rel}${href}"${href === page.path ? ' aria-current="page"' : ""}>${esc(label)}</a></li>`,
+            `<li><a href="${rel}${pageAddress(href)}"${href === page.path ? ' aria-current="page"' : ""}>${esc(label)}</a></li>`,
         )
         .join("\n")}\n</ul></nav>\n`
     : "";
@@ -1050,7 +1057,7 @@ ${askUrl === null ? "" : `<link rel="stylesheet" href="${rel}chat/panel.css">\n`
 <body${page.bodyAttributes}>
 ${SCHEME_SCRIPT}${COPY_SCRIPT}<a class="site-skip" href="#main">Skip to content</a>
 <header class="site-header">
-<a class="site-brand" href="${rel}index.html"><img class="site-mark" src="${rel}icon.svg" alt="" width="28" height="28">${SITE_NAME}</a>
+<a class="site-brand" href="${rel}"><img class="site-mark" src="${rel}icon.svg" alt="" width="28" height="28">${SITE_NAME}</a>
 <nav class="site-nav" aria-label="Main">
 ${nav}
 </nav>

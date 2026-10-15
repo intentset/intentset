@@ -10,7 +10,7 @@ Start
 {.lead}
 Adopting Intentset in a product that already exists is a team's work for a long time: model every capability, move the code into slices, close the gaps the records expose, put a check behind every claim. One person running many agents in parallel can do it in weeks, if the agents can work unattended inside protections that make a mistake cheap. This page is for that person: how to set up, how to split the work, what to settle before a long run, and what to prove before anything lands.
 
-[Start with one capability](../start/index.html) comes first. This page is what to do once the first capability is modelled and you want the rest.
+[Start with one capability](../start/) comes first. This page is what to do once the first capability is modelled and you want the rest.
 
 None of it asks you to change a control you already have. Whether a pull request merges on its own or waits for a reviewer, whether main deploys itself or a release is cut by hand, who may approve what: those are your rules, and this page works inside them. What it changes is how much of the work reaches those controls ready, and how little of a person's time it takes to get there.
 
@@ -32,11 +32,11 @@ An agent that works unattended will, at some point, do the wrong thing with the 
 2. **The environment boundary.** The agent builds, deploys and clicks through a copy of the product that holds no real data and no real credential: a temporary backend of its own, a database it can drop, a browser pointed at its own build. When it is done, the copy is deleted.
 3. **The merge boundary.** Nothing the agent does reaches the main branch except through a pull request and the review your process already requires, with the gate as a required check and, for the records, a person. A branch is cheap to throw away. Main is not.
 
-The amount of automation a product can safely allow is set by the weakest of the three. Before anything is in production, the second boundary costs nothing, because there is no real data to protect, and a product can run with the first and third alone. Coral Reef Ventures' own products run that way today; neither is released. The day one of them is, the first boundary stops being optional, and the [adoption log](../pilot/index.html) will say when each protection went on and what it cost.
+The amount of automation a product can safely allow is set by the weakest of the three. Before anything is in production, the second boundary costs nothing, because there is no real data to protect, and a product can run with the first and third alone. Coral Reef Ventures' own products run that way today; neither is released. The day one of them is, the first boundary stops being optional, and the [adoption log](../pilot/) will say when each protection went on and what it cost.
 
 ## Set up for many agents
 
-Everything the [Start](../start/index.html) page does, and then the pieces that let the work run without you.
+Everything the [Start](../start/) page does, and then the pieces that let the work run without you.
 
 - **The guide, pointed at.** `intentset init` writes `.intentset/agents.md`, and one line in `CLAUDE.md` or `AGENTS.md` points every agent at it. The guide is generated from the toolchain, so what it tells an agent to run cannot disagree with what the gate runs.
 - **The gate, required.** A check on every pull request runs `intentset validate --level L2 --mode migration` against a baseline of the violations that already exist, so only a new one fails, and `intentset review --base origin/main --fail-on-drift`, so a change that touched a slice's code and none of its records is refused unless a commit says why. Make the check required in the branch protection, with the product's own tests beside it. Whatever happens to a green pull request after that, a merge on its own or a reviewer's queue, is your process and stays as it is; the gate means what reaches it is already checked.
@@ -75,11 +75,11 @@ One file per decision, in the repository, with four parts: the context, what was
 
 Agents write them. When an agent chose between alternatives, or you answered a question it asked, the record goes in the same pull request as the change, and reading it is the cheapest review there is: a decision is a paragraph where the code is a thousand lines, and a wrong decision is visible there in a way a wrong line is not. Ask for the rejected alternatives in particular; they are what the next agent needs most, because the rejected alternative is usually the one it will think of first.
 
-Intentset makes the decision part of the model. A `decision` is a record type, with Context, Decision and Consequences as its required sections, and a slice, a contract or a behavior names the decisions that inform it. `intentset context` hands an agent its slice's decisions beside its behaviors and rules, so the next agent reads them before it changes the code, and the drift check lists a slice whose code changed while its decisions and other records did not. In the [adoption log](../pilot/index.html), the decision record that already explained Streamlane's blocked state joined the model by gaining frontmatter, its text unchanged, and came in as approved while every record written that day was a draft: the one record a person had already reviewed.
+Intentset makes the decision part of the model. A `decision` is a record type, with Context, Decision and Consequences as its required sections, and a slice, a contract or a behavior names the decisions that inform it. `intentset context` hands an agent its slice's decisions beside its behaviors and rules, so the next agent reads them before it changes the code, and the drift check lists a slice whose code changed while its decisions and other records did not. In the [adoption log](../pilot/), the decision record that already explained Streamlane's blocked state joined the model by gaining frontmatter, its text unchanged, and came in as approved while every record written that day was a draft: the one record a person had already reviewed.
 
 ## Prove it before it lands
 
-A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again. [Prove the work](../verify/index.html) has each layer in full: the tests, the screens in both color schemes and at each width, the rules held by tests, the gate's configuration and the checks that run after a deploy.
+A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again. [Prove the work](../verify/) has each layer in full: the tests, the screens in both color schemes and at each width, the rules held by tests, the gate's configuration and the checks that run after a deploy.
 
 - **A test with every claim.** A new behavior ships with the test that checks it and the verification record that names the test. A changed behavior ships with the changed test. The verification records are the list of what the product can prove, and a claim with no record on it is a gap the model reports.
 - **Screens checked in a browser, not in the source.** For a behavior with a surface, the agent opens its own build, performs the behavior and reads the result from the page. A screenshot in the pull request is the record of that.
@@ -141,4 +141,4 @@ have read it.
 
 The plan is the page's own first step. Read it, answer what it asks, and the rest is the agent's work, one pull request at a time, each through the gate.
 
-[[Prove the work](../verify/index.html)]{.button .primary} [[The agent guide](../guide/index.html)]{.button}
+[[Prove the work](../verify/)]{.button .primary} [[The agent guide](../guide/)]{.button}

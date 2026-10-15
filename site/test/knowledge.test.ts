@@ -100,9 +100,9 @@ test("the corpus carries the released record as knowledge, at the page the site 
   const page = await readFile(join(dist, knowledgePath("KB-ASMT-SCHEDULE")), "utf8");
   assert.match(page, /Choose a published assessment/);
   // The page sits in the Reference rail, which lists the published knowledge's index, and the index lists it.
-  assert.match(page, /<nav class="site-rail" aria-label="Reference">[\s\S]*href="\.\.\/\.\.\/knowledge\/index\.html"/);
+  assert.match(page, /<nav class="site-rail" aria-label="Reference">[\s\S]*href="\.\.\/\.\.\/knowledge\/"/);
   const index = await readFile(join(dist, "knowledge", "index.html"), "utf8");
-  assert.match(index, /href="KB-ASMT-SCHEDULE\/index\.html"/);
+  assert.match(index, /href="KB-ASMT-SCHEDULE\/"/);
 });
 
 test("this repository's model releases exactly what the corpus and the site carry as knowledge", async () => {
