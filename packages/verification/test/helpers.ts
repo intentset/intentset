@@ -66,7 +66,7 @@ export function validateExpanded(expanded: ExpandedCase): Validated {
     registries = read.registries;
     extra.push(...read.diagnostics);
   }
-  let evidence: Config["evidence"] = { binding: null, globalInputs: [] };
+  let evidence: Config["evidence"] = { binding: null, globalInputs: [], resources: "exercised" };
   if (expanded.configText !== null) {
     const config = readConfig(expanded.configText, CONFIG_PATH);
     extra.push(...config.diagnostics);

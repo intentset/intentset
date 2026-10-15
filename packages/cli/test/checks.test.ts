@@ -873,6 +873,56 @@ test("BEH-EVIDENCE-CURRENT: EVID005 lists a file changed since the run that no s
   );
 });
 
+test("BEH-EVIDENCE-CURRENT: a resource a slice lists is not in the subject unless exercised; EVID006 says what that cannot see", async (t) => {
+  const dir = await committed(t);
+  await importRun(dir, ".intentset/evidence/run.json");
+  write(dir, { "amplify/data/resource.ts": "export const data = 2;\n" });
+  git(dir, "commit", "-q", "-am", "the data resource changes");
+
+  // SLICE-ASMT-SCHEDULE lists RES-ASSESSMENT-DATA and the test does not exercise it: the record stays current, and EVID006 says so.
+  const unexercised = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(verificationLine(unexercised.out), /current-pass {2}\[subject\]/);
+  assert.match(
+    unexercised.out,
+    /warning EVID006 .*1 verification is current though a resource it uses and does not exercise changed.*RES-ASSESSMENT-DATA \(amplify\/data\/resource\.ts\); TEST-ASMT-SCHEDULE\./,
+  );
+  assert.doesNotMatch(unexercised.out, /EVID005/, "EVID006 already lists the file");
+
+  // evidence.resources: used hashes every resource a slice lists, so the same change makes the record stale, and says which file.
+  const config = join(dir, ".intentset", "config.yaml");
+  const before = readFileSync(config, "utf8");
+  writeFileSync(config, `${before}evidence:\n  resources: used\n`);
+  const used = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(verificationLine(used.out), /stale {2}\[subject\]/, "the record was made under the default");
+  writeFileSync(config, before);
+
+  // Exercising the resource puts its files in the subject: a change then makes the record stale, and names the file.
+  const named = RECORD(dir, "TEST-ASMT-SCHEDULE");
+  writeFileSync(
+    named,
+    readFileSync(named, "utf8").replace(/( {4}locator: [^\n]*\n)/, "$1    exercises:\n      - RES-ASSESSMENT-DATA\n"),
+  );
+  git(dir, "commit", "-q", "-am", "the test exercises the data resource");
+  const imported = await importRun(dir, ".intentset/evidence/run-2.json");
+  assert.equal(imported.code, 0, imported.err);
+  write(dir, { "amplify/data/resource.ts": "export const data = 3;\n" });
+  git(dir, "commit", "-q", "-am", "the data resource changes again");
+  const exercised = await run(
+    dir,
+    "validate",
+    "--level",
+    "L3",
+    ...IMPORT,
+    "--evidence",
+    ".intentset/evidence/run-2.json",
+  );
+  assert.match(
+    verificationLine(exercised.out),
+    /stale {2}\[subject\] {2}\(the subject changed since the run at commit [0-9a-f]{9}: .*resource-file amplify\/data\/resource\.ts/,
+  );
+  assert.doesNotMatch(exercised.out, /EVID006/);
+});
+
 test("BEH-EXPORT: where subject binding is in force the export states the repository's verdict and carries the binding", async (t) => {
   const dir = await committed(t);
   await importRun(dir, ".intentset/evidence/run.json");

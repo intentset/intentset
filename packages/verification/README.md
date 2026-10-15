@@ -37,7 +37,7 @@ const { records, diagnostics } = readRunRecords(JSON.parse(await readFile(path, 
 // a record with any problem is reported as EVID001 and left out, so it never counts as evidence
 ```
 
-Only a `pass` whose binding holds is current. Under subject binding, the default where slices claim files, a record carries the hash of its verification's subject (`computeSubject`) and stays current while that is unchanged; under commit binding, which a repository or a gate asks for, it is current only at the assessed commit and graph hash. Keep run records out of the commit they assess.
+Only a `pass` whose binding holds is current. Under subject binding, the default where slices claim files, a record carries the hash of its verification's subject (`computeSubject`) and stays current while that is unchanged (a resource's files count only where the verification exercises it or an implementing slice owns it, `evidence.resources: exercised`; EVID006 reports what that cannot see); under commit binding, which a repository or a gate asks for, it is current only at the assessed commit and graph hash. Keep run records out of the commit they assess.
 
 ## Learn more
 

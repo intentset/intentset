@@ -34,7 +34,7 @@ intentset:
 
 ## Responsibility
 
-Run records, their freshness under the binding in force (a verification's subject, or the commit and graph hash), the subject hash itself, the reporter adapters that turn test reports into them, and what needs a run: the verifications without a current pass, and the arguments that make a test runner run only those (`intentset evidence stale`).
+Run records, their freshness under the binding in force (a verification's subject, or the commit and graph hash), the subject hash itself (a resource's files count where a verification exercises it, ADR 0013 as amended 2026-10-15), the reporter adapters that turn test reports into them, and what needs a run: the verifications without a current pass, and the arguments that make a test runner run only those (`intentset evidence stale`).
 
 The slice is the package `@intentset/verification`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 

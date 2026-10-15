@@ -5,6 +5,23 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## Unreleased
+
+**A resource's files count in a subject only where a verification exercises it (ADR 0013, amended 2026-10-15).** Release 0.7.0 hashed
+the files of every resource an included slice lists in `usesResources`, so one backend change made stale every verification of every web slice that
+talks to that backend: Streamlane's first browser run, judged at a later commit, read current for 5 of 274 verifications, 133 of the stale ones
+because five `amplify-docs` files changed. A resource's files are now in a subject where `verification.exercises` names the resource, or where a slice
+that implements a verified behavior lists it and also claims a file its path matches (its own resource); the slice record's binding fields,
+`usesResources` among them, still count. `evidence.resources: exercised | used` in `.intentset/config.yaml` chooses (default `exercised`; `used` is
+0.7.0's rule and reproduces its hashes exactly; an unknown value is CFG001), and a new warning, EVID006, says how many verifications are current though
+a resource their slices list and they do not exercise changed since their record, naming the resource, its changed files and the verifications (EVID005 no
+longer lists those files). A subject-bound record made under the 0.7.0 rule carries a hash the default does not compute for a verification whose slices
+list resources, so it reads stale until imported again, or until a repository sets `evidence.resources: used`. Core §8 and §11 and the specification's
+`revision` moved, with the S cases of `tests/evidence.json` (new cases for an unexercised, an exercised, an owned and a `used` resource and for EVID006;
+the two cases that tested the 0.7.0 rule say `resources: used` in their configuration, so no existing case changed its `valid` or `diagnostics`), and
+`intentset.spec` did not move. The export did not change: EVID006 travels as a diagnostic, and the `binding` and `note` fields carry nothing new. The
+back-test of `docs/adoption/subject-binding-backtest.md` has a dated section comparing the two rules.
+
 ## 0.7.0 — 2026-10-14
 
 **Export 0.4 and specifications 0.2 are breaking for a consumer that pins export 0.3 or `intentset.spec` `0.1`.** Export 0.4 carries the evidence binding, and the

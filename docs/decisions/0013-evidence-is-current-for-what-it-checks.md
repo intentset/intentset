@@ -1,6 +1,6 @@
 # ADR 0013: Run evidence should be current for what it checks, not for the whole commit
 
-**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). The export and the specifications moved for it in [ADR 0014](0014-export-0.4-carries-the-evidence-binding.md): export 0.4 carries the binding, and `intentset.spec` is `0.2`. Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
+**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). **Amended 2026-10-15 (Gary): a resource's files count in a subject where a verification exercises the resource, not for every slice that lists it** (the Recommendation and Costs and risks sections say what changed; the earlier text stands where it is not marked superseded). The export and the specifications moved for it in [ADR 0014](0014-export-0.4-carries-the-evidence-binding.md): export 0.4 carries the binding, and `intentset.spec` is `0.2`. Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
 
 ## Context
 
@@ -55,7 +55,7 @@ little and later would cost a great deal.
 - the verification record and what it verifies (its behaviors, their rules and scenarios);
 - the slices that implement those behaviors, those they `dependsOn` (transitively) and those the verification
   **declares it exercises** (below): for each, its **binding fields** (`implements`, `dependsOn`, `claims`,
-  `usesResources`, `entrypoints`) and the files its claims resolve to, and the files of every resource it `usesResources`;
+  `usesResources`, `entrypoints`) and the files its claims resolve to, and the files of every resource it `usesResources` *(superseded 2026-10-15: a resource's files count only where a verification exercises it, below)*;
 - the test's own file and the **local files it imports**, transitively, such as an end-to-end helper or fixture;
 - the repository's **global inputs**.
 
@@ -71,7 +71,7 @@ Streamlane's last 300 commits (`docs/adoption/subject-binding-backtest.md`, 2026
   changed with the code moved through the behavior's slices alone.
 - **Resources and the slice record count, but only the parts that bind.** Files no slice claims are the largest gap:
   129 of the 172 code-changing commits touched a file outside every claim (backend resources, shared and composition
-  code), invisible to a hash of claimed files. A slice's `usesResources` is declared and checked by VSA, so the files
+  code), invisible to a hash of claimed files. *(Superseded 2026-10-15: see the amendment below.)* A slice's `usesResources` is declared and checked by VSA, so the files
   of the resources it uses are in its subject (about 6.5 points of per-commit currency, 87.6% against 94.1%, the price
   of closing it). The slice record took part in 64% of subject moves, because it is hashed whole: only the binding
   fields above count, so a prose edit to a slice does not move a subject. A behavior, rule, scenario or verification
@@ -83,6 +83,45 @@ Streamlane's last 300 commits (`docs/adoption/subject-binding-backtest.md`, 2026
   subject when it changes, so the set is a choice and each entry is named in the configuration. What no file holds (the
   deployed environment, its data, a service's version) stays outside the binding, and a record's `environment` field
   says which environment it ran in.
+
+**Amended 2026-10-15 (Gary): a resource's files are hashed where a verification exercises them.** The rule above hashed the files of
+every resource every included slice lists, and Streamlane's first browser run showed what that costs on a web product. The run was imported
+and judged at a later commit, and only 5 of 274 browser verifications read current. The notes named the causes: 133 verifications went stale
+because five `amplify-docs` backend files changed (a web slice that lists the docs backend in `usesResources` hashed all of those files for each
+of its verifications), and three central slices (`SLICE-PLATFORM-ORGANIZATION` 85, `SLICE-PLATFORM-PEOPLE` 44, `SLICE-WORK-ITEMS` 34) sit in
+nearly every closure. Measured on real data, the first resource rule made evidence meaningless for the web, which is the opposite of what the
+binding is for. From this amendment:
+
+- **A resource's files count in a subject where the verification names the resource**: in `verification.exercises`, which already takes
+  slice or registry resource IDs, or where the resource belongs to a slice whose own files the subject already includes by being an
+  implementing slice: the slice lists it in `usesResources` and also claims a file the resource's path matches (a backend slice's own
+  resource, whose files then count as its claims do). A slice that implements a verified behavior and only talks to a backend does not
+  put that backend's files in the subject of every one of its verifications.
+- **The slice record's binding fields still count**, `usesResources` among them, so adding a resource to a slice or removing one still
+  moves its subject.
+- **A report says what the binding could not see** (`EVID006`, a warning): when a current record's verification has slices that list a
+  resource it does not exercise and a file of that resource changed since the record's commit, the report counts those verifications and
+  names the resource, its changed files and the verifications (the first twenty verifications and five files a resource), so a
+  repository can add `exercises` where a check does depend on the resource. It reuses the one `git diff` that EVID005 asks for, and
+  EVID005 no longer lists a file EVID006 already names.
+- **A switch keeps the stricter rule**: `evidence.resources: exercised | used` in `.intentset/config.yaml`, default `exercised`; `used`
+  is the rule of release 0.7.0 and reproduces its subject hashes exactly (it did for 237 of 237 records of Streamlane's store). Anything
+  else is CFG001. A subject-bound record made under the 0.7.0 rule carries a hash the new default does not compute for a verification whose
+  slices list resources, so it reads stale until it is imported again.
+- **What did not change.** The export carries nothing new: EVID006 is one more diagnostic, and the evidence report's `binding` and `note`
+  fields are as before (ADR 0014). `intentset.spec` did not move: no case in the conformance suite changed its `valid` or `diagnostics`
+  (the cases that test the 0.7.0 rule say `resources: used` in their configuration, as the commit-rule cases say `binding: commit`).
+
+The back-test was run again with the same script over the same 300 Streamlane commits, under the current subject hash (a slice's binding
+fields, which the first run's stage 1 hash did not yet separate), and is appended to `docs/adoption/subject-binding-backtest.md`. The
+narrower rule keeps a median 97.2% of verifications current per commit, against 92.3% under `used`; and the share of records still current one commit later is
+78.7% against 74.8%. The replay of the known breakages (#891, #666, #678, #650, #653, #828 and every strong pair in the window) found no
+fix that the old rule saw and the new one does not: 26 of 27 strong pairs move through code under each rule, and the one that moves under
+neither, #650 `TEST-DELIVERY-STRIP`, is the case `exercises` was added for (it would need to name `RES-WORK-BACKEND` or `SLICE-WORK-ITEM-PAGE`).
+Replayed over Streamlane's own store of 237 records, the narrower rule does not by itself bring the browser evidence back: at 13 commits
+after the records' own, 5 of 237 verifications are current under either rule, because the slices that moved
+(a change to `SLICE-PLATFORM-ORGANIZATION` moved 227 of the 237 subjects, `SLICE-PLATFORM-PEOPLE` 186, `SLICE-WORK-ITEMS` 176) dominate. The second cause the run
+named, the central slices, is not addressed here.
 
 **Unclaimed files are reported, not hidden.** A file that changed between a record's commit and the assessed commit,
 and that no slice claims and no resource or global input names, cannot move any subject. The report lists such files
@@ -112,6 +151,14 @@ files rule is what removes them.
   per-merge unit runs useful and does little for a 28-minute nightly browser suite, whose evidence is stale by the next
   merge. That is a property of the repository's pace, and the tail is heavy (a commit that touches a central slice moves
   nearly every subject).
+
+- **Amended 2026-10-15: a green subject says less about a backend.** Under the narrower rule a change to a resource's files that no
+  verification exercises and no implementing slice owns does not make a record stale, which was the false-green gap amendment 1 closed. The
+  exposure is real: in the back-test EVID006 would have reported at 41 of 299 steps, a median 47 verifications at those steps (at most 154 of
+  315), where a resource their slices list changed and they do not exercise. The control is the diagnostic and `exercises`: a repository adds
+  the resource to the verifications that depend on it, and `evidence.resources: used` restores the old rule for a repository that prefers
+  currency to be conservative. The cost of the old rule on the same history was 4.9 points of per-commit currency (92.3% against 97.2%) and,
+  on Streamlane's store, a change to five files of the docs backend moved the subject of 133 verifications.
 
 ## Consequences if accepted
 
