@@ -259,7 +259,7 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
   assert.equal(result.home, url(""));
 });
 
-test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters and follows, at phone and desktop widths", async (t) => {
+test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   for (const width of WIDTHS) {
     const tab = await browser.newPage({ viewport: { width, height: 900 } });
@@ -285,6 +285,21 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters and follow
     await tab.fill(".am-find input", "NO-SUCH-RECORD");
     await tab.press(".am-find input", "Enter");
     assert.match((await tab.locator(".am-panel").textContent()) ?? "", /No record has the ID NO-SUCH-RECORD/);
+    // Full screen: the map fills the viewport, the panel stays on it, and the button undoes it.
+    await tab.click(".am-full");
+    await tab.waitForFunction(() => {
+      const map = document.querySelector(".am-map");
+      return document.fullscreenElement === map || map?.classList.contains("am-expanded");
+    });
+    const box = await tab.locator(".am-svg").boundingBox();
+    assert.ok(box && box.height > 600, `${width}px: full screen fills the height (${box?.height})`);
+    assert.equal(await tab.getAttribute(".am-full", "aria-pressed"), "true");
+    assert.equal(await tab.textContent(".am-full"), "Exit full screen");
+    await tab.click(".am-full");
+    await tab.waitForFunction(
+      () => document.fullscreenElement === null && !document.querySelector(".am-map.am-expanded"),
+    );
+    assert.equal(await tab.getAttribute(".am-full", "aria-pressed"), "false");
     // A second activation of a selected record follows its link, to the site's own address.
     const node = tab.locator('.am-node[data-id="BEH-ASMT-SCHEDULE"] circle');
     await node.click({ force: true });

@@ -26,7 +26,8 @@ picture whose records link to their pages; `atlas-map.js`, the one script the At
 adds finding by ID, showing or hiding each family, panning, zooming, and selecting a record to see only its links.
 `intentset serve` serves `.js` and adds `script-src 'self'` to its policy. `atlasMapLayout`, `mapHtml`, `MAP_SCRIPT`
 and `MAP_STYLES` let a caller place the map in a shell of its own. No dependency was added, and no specification
-version, conformance case, export version or `intentset.spec` moved.
+version, conformance case, export version or `intentset.spec` moved. The map has a Full screen button: the browser's own full screen where
+there is one, and a fixed overlay where there is not (an iPhone).
 
 ## 0.7.1 — 2026-10-15
 

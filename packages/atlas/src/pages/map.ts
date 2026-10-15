@@ -24,7 +24,8 @@ export function mapPage(layout: AtlasMapLayout): PageSource {
         `and ${plural(layout.edges.length, "link")}. Records that link to each other are drawn near each other, so ` +
         "a capability sits among its behaviors, and a behavior among its rules, its slice and its checks.",
       "",
-      "Find a record by its ID, show or hide each family, drag to move and use the wheel or the buttons to zoom. " +
+      "Find a record by its ID, show or hide each family, drag to move, use the wheel or the buttons to zoom, and " +
+        "choose Full screen to give the map the whole screen. " +
         "Select a record to see only it and what it links to, with the links listed under the map; select it again " +
         "to open its page, and press Escape to see everything again." +
         (layout.nodes.length > LABEL_LIMIT ? " IDs show when you zoom in or select a record." : ""),

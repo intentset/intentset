@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-The Atlas has a Map page: every record in the snapshot as a node and every authored link as an edge, laid out when the Atlas is built so the same graph always gives the same picture. A record's color is its family, a draft is outlined dashed, and a verification's ring repeats its evidence status, green only for a current pass; each is also in the record's title. Without the script the picture stands and every record with a page links to it. With it, a reader finds a record by ID, shows or hides each family, pans and zooms, and selects a record to see only it and its links, listed under the map; selecting it again opens its page, and Escape shows everything again.
+The Atlas has a Map page: every record in the snapshot as a node and every authored link as an edge, laid out when the Atlas is built so the same graph always gives the same picture. A record's color is its family, a draft is outlined dashed, and a verification's ring repeats its evidence status, green only for a current pass; each is also in the record's title. Without the script the picture stands and every record with a page links to it. With it, a reader finds a record by ID, shows or hides each family, pans and zooms, fills the screen with the map, and selects a record to see only it and its links, listed under the map; selecting it again opens its page, and Escape shows everything again.
 
 ## Preconditions
 

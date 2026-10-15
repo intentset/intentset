@@ -3,7 +3,8 @@
  * to the SVG that `map.ts` draws and changes nothing in it that a reader without the script needs: it shows the
  * controls, then lets a reader find a record by ID, show or hide each family, pan by dragging, zoom with the wheel or
  * the buttons, and select a record to dim everything but it and its links, with a panel listing them. A second
- * activation of a selected record follows its link. Escape clears the selection.
+ * activation of a selected record follows its link. Escape clears the selection, and then leaves full screen. Full
+ * screen uses the browser's own where it has one, and a fixed overlay where it does not (an iPhone).
  *
  * Plain JavaScript with no dependency, written to the DOM with textContent only, so no record's text is ever parsed
  * as markup. It reads no storage and makes no request.
@@ -38,10 +39,12 @@ export const MAP_SCRIPT = `"use strict";
     const base = { x: vb.x, y: vb.y, w: vb.width, h: vb.height };
     let view = { x: base.x, y: base.y, w: base.w, h: base.h };
     let selected = null;
+    // Labels show once the view is narrow enough that they stop overlapping: further in for a larger model.
+    const labelZoom = Math.max(2.5, Math.sqrt(nodes.size) / 4);
 
     function apply() {
       svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
-      svg.classList.toggle("am-zoomed", view.w < base.w / 2.5);
+      svg.classList.toggle("am-zoomed", view.w < base.w / labelZoom);
     }
     function scale() {
       const r = svg.getBoundingClientRect();
@@ -75,6 +78,13 @@ export const MAP_SCRIPT = `"use strict";
       }
       view.x = x - view.w / 2;
       view.y = y - view.h / 2;
+      // In full screen the panel lies over the map's lower corner: centre the record in what it leaves visible.
+      if (!panel.hidden && getComputedStyle(panel).position === "absolute") {
+        const sr = svg.getBoundingClientRect();
+        const pr = panel.getBoundingClientRect();
+        const covered = Math.max(0, sr.bottom - pr.top);
+        if (pr.width > sr.width / 2) view.y += (covered / 2) * scale();
+      }
       apply();
     }
 
@@ -137,12 +147,57 @@ export const MAP_SCRIPT = `"use strict";
       }
     });
     map.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && selected) {
+      if (event.key !== "Escape") return;
+      if (selected) {
         const was = selected;
         clear();
         was.focus();
+      } else if (map.classList.contains("am-expanded")) {
+        expand(false);
       }
     });
+
+    const full = controls.querySelector(".am-full");
+    const native = typeof map.requestFullscreen === "function" && document.fullscreenEnabled !== false;
+    function expanded() {
+      return document.fullscreenElement === map || map.classList.contains("am-expanded");
+    }
+    function label() {
+      const on = expanded();
+      full.textContent = on ? "Exit full screen" : "Full screen";
+      full.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    function expand(on) {
+      if (native) {
+        if (on) map.requestFullscreen().catch(function () { overlay(true); });
+        else if (document.fullscreenElement === map) document.exitFullscreen();
+        else overlay(false);
+      } else overlay(on);
+    }
+    // The overlay moves the map to the end of <body> while it is open, so no ancestor's layout can contain it, and
+    // puts it back where it was when it closes.
+    let placeholder = null;
+    function overlay(on) {
+      if (on && !placeholder) {
+        placeholder = document.createComment("atlas map");
+        map.before(placeholder);
+        document.body.append(map);
+      } else if (!on && placeholder) {
+        placeholder.replaceWith(map);
+        placeholder = null;
+      }
+      map.classList.toggle("am-expanded", on);
+      document.documentElement.style.overflow = on ? "hidden" : "";
+      label();
+      if (selected) selected.focus();
+      else full.focus();
+    }
+    if (full) {
+      full.addEventListener("click", function () {
+        expand(!expanded());
+      });
+      document.addEventListener("fullscreenchange", label);
+    }
 
     function clear() {
       selected = null;
@@ -164,8 +219,8 @@ export const MAP_SCRIPT = `"use strict";
         const other = nodes.get(link.other);
         if (other) other.classList.add("am-near");
       }
-      if (move) centre(el);
       describe(el, list);
+      if (move) centre(el);
     }
     function describe(el, list) {
       const heading = document.createElement("h3");

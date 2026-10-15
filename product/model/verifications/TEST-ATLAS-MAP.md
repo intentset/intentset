@@ -29,8 +29,8 @@ intentset:
 - `packages/atlas/test/atlas.test.ts`: the test "the same graph gives the same map, whatever order its files are read in"
 - `packages/atlas/test/atlas.test.ts`: the test "a verification's ring is green only for a current pass, and its status is in its title"
 - `packages/atlas/test/atlas.test.ts`: the test "the script writes text, never markup, and asks for nothing"
-- `site/test/browser.test.ts`: the test "the worked example's map finds, focuses, filters and follows, at phone and desktop widths"
+- `site/test/browser.test.ts`: the test "the worked example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths"
 
 ## Expected result
 
-Every test whose title carries `BEH-ATLAS-MAP` passes: each record is one node and each authored link one edge, the map's bytes do not depend on the order the files are read, a verification's ring is green only for a current pass and its status is in its title, the script uses no markup sink, storage or request, and in a browser the map finds a record, marks its links, lists them, filters a family, clears on Escape and follows a selected record's link.
+Every test whose title carries `BEH-ATLAS-MAP` passes: each record is one node and each authored link one edge, the map's bytes do not depend on the order the files are read, a verification's ring is green only for a current pass and its status is in its title, the script uses no markup sink, storage or request, and in a browser the map finds a record, marks its links, lists them, filters a family, clears on Escape, fills the screen and returns, and follows a selected record's link.
