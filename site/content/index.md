@@ -13,7 +13,7 @@ Agents write code faster than anyone can read it. Intentset keeps what your prod
 
 People review the product rather than the diff, and steer it where it needs to go.
 
-[[See how it works](how-it-works/index.html)]{.button .primary} [[Read the draft specification](specifications/index.html)]{.button}
+[[See how it works](how-it-works/)]{.button .primary} [[Read the draft specification](specifications/)]{.button}
 
 > [!NOTE]
 > The specifications are ready for review. The reference toolchain, version {{version}}, is published to try them against.
@@ -122,7 +122,7 @@ A worked model
 ::::columns{ratio="2:3"}
 A teacher chooses when a published student assessment becomes available to a class.
 
-[[Read the worked example](example/index.html)]{.button}
+[[Read the worked example](example/)]{.button}
 
 ::col
 
@@ -152,7 +152,7 @@ In Streamlane, a work management product, the model is a required check on every
 
 Driftline was modelled before any of its code existed, and its first package was checked against what had been approved. It now reads Streamlane back: Streamlane's backend names the behaviors each call delivers, and Driftline counts what each behavior saw.
 
-[Read the adoption log](pilot/index.html), and what it changed in the specifications.
+[Read the adoption log](pilot/), and what it changed in the specifications.
 
 ***
 
@@ -166,7 +166,7 @@ The v0.2 specifications define the product model, traceable vertical slices, a T
 
 The reference toolchain is at {{version}} on npm: validation, architecture checks, evidence, change impact, a Product Atlas, reviewed publication with tips for the product's own interface, agent context and the export, with a guide and a drift check for the agents that keep the model. They are early releases, to try against one real capability.
 
-[Read the specifications](specifications/index.html) · [View the roadmap](roadmap/index.html)
+[Read the specifications](specifications/) · [View the roadmap](roadmap/)
 :::
 
 ***
@@ -177,5 +177,5 @@ The reference toolchain is at {{version}} on npm: validation, architecture check
 {.lead}
 Let an agent model one capability from your code and tests, review what it wrote, and see what it finds.
 
-[[Start with one capability](start/index.html)]{.button .primary} [[Read the draft specification](specifications/index.html)]{.button}
+[[Start with one capability](start/)]{.button .primary} [[Read the draft specification](specifications/)]{.button}
 :::

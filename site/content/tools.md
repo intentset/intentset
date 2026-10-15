@@ -25,7 +25,7 @@ pnpm exec intentset init
 ```
 :::
 
-[[Every command and option](cli/index.html)]{.button .primary} [[Start with one capability](../start/index.html)]{.button}
+[[Every command and option](cli/)]{.button .primary} [[Start with one capability](../start/)]{.button}
 
 ## The MCP server
 
@@ -52,4 +52,4 @@ The command is built from libraries a tool of your own can use directly:
 
 ## The conformance suite
 
-`@intentset/conformance-suite` is the cases every check is held to, the export envelopes a consumer must accept or reject, and the schemas, as data with no dependencies. It is for an implementation that is not this one. [What it holds](../conformance/index.html).
+`@intentset/conformance-suite` is the cases every check is held to, the export envelopes a consumer must accept or reject, and the schemas, as data with no dependencies. It is for an implementation that is not this one. [What it holds](../conformance/).

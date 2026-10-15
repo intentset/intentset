@@ -19,7 +19,7 @@ The publisher selects reviewed knowledge for a specific audience and release, th
 
 Generated pages are views. Product records remain versioned in the repository, and changing a source prompts review of dependent explanations.
 
-[[Read the Markset integration section](../specifications/core/index.html#{{coreMarksetSection}})]{.button .primary} [[Visit Markset]({{markset}})]{.button}
+[[Read the Markset integration section](../specifications/core/#{{coreMarksetSection}})]{.button .primary} [[Visit Markset]({{markset}})]{.button}
 
 > [!NOTE]
 > The reference publisher pins Markset 0.4.1 and validates every document it generates with Markset before writing it.

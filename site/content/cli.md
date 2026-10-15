@@ -27,7 +27,7 @@ The architecture check needs TypeScript 7. In a repository on an earlier TypeScr
 
 ## In a repository
 
-`init` writes the configuration, empty registries and the [agent guide](../../guide/index.html) your agents follow. From then on, CI runs these on every change, and an agent runs them before it finishes:
+`init` writes the configuration, empty registries and the [agent guide](../../guide/) your agents follow. From then on, CI runs these on every change, and an agent runs them before it finishes:
 
 ```sh
 intentset validate --level L2

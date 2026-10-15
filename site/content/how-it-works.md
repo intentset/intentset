@@ -170,7 +170,7 @@ Keep run records in CI or another store you control, never in the commit they as
 
 `intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
 
-A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Streamlane will use the export to link work items to the behaviors they change, and Driftline to attribute usage and errors to slices and behaviors. [Read the export contract](../specifications/export/index.html).
+A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Streamlane will use the export to link work items to the behaviors they change, and Driftline to attribute usage and errors to slices and behaviors. [Read the export contract](../specifications/export/).
 
 ## Context for agents, with limits
 
@@ -184,7 +184,7 @@ Knowledge records are explanations written for an audience, such as teachers. Ea
 
 A knowledge record can also carry tips: one sentence per behavior it explains, for the product to show beside the control that delivers it. They are reviewed and published with the record, so a tooltip cannot outlive the behavior it describes. Each publication writes them to a `help.json` the product reads with `@intentset/help`, which binds every tip to the element naming its behavior and reports the behaviors that have no tip yet.
 
-Markset provides the document format, and Intentset adds metadata and meaning to it without adding any syntax. [See how Markset fits](../markset/index.html).
+Markset provides the document format, and Intentset adds metadata and meaning to it without adding any syntax. [See how Markset fits](../markset/).
 
 ## The Atlas: the model, for review
 
@@ -232,4 +232,4 @@ pnpm exec intentset impact BEH-ASMT-SCHEDULE
 ```
 :::
 
-[[Start with one capability](../start/index.html)]{.button .primary} [[Read the Core specification](../specifications/core/index.html)]{.button}
+[[Start with one capability](../start/)]{.button .primary} [[Read the Core specification](../specifications/core/)]{.button}

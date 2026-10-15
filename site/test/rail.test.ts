@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, normalize } from "node:path";
+import { join, posix } from "node:path";
 import { after, test } from "node:test";
 import { ASK_URL, build, CHAT_PAGES, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor, siteRails } from "../build.ts";
 import { publishedKnowledge } from "../knowledge.ts";
@@ -24,13 +24,20 @@ after(async () => {
   await rm(dist, { recursive: true, force: true });
 });
 
+/** The output path a link on a page leads to: a directory's address is its index.html. */
+function target(page: string, href: string): string {
+  let path = posix.normalize(href.startsWith("/") ? href.slice(1) : posix.join(posix.dirname(page), href));
+  if (path === "." || path === "./") path = "";
+  return path === "" || path.endsWith("/") ? `${path}index.html` : path;
+}
+
 /** The pages a page links to, by output path, from anywhere on it: bar, rail, body and footer. */
 function linksFrom(page: string): Set<string> {
   const out = new Set<string>();
   for (const [, href] of (html.get(page) ?? "").matchAll(/href="([^"#?]*)/g)) {
     if (href === "" || /^[a-z][a-z0-9+.-]*:/i.test(href)) continue;
-    const target = href.startsWith("/") ? normalize(href.slice(1)) : normalize(join(dirname(page), href));
-    if (html.has(target) && target !== page) out.add(target);
+    const to = target(page, href);
+    if (html.has(to) && to !== page) out.add(to);
   }
   return out;
 }
@@ -39,8 +46,17 @@ function linksFrom(page: string): Set<string> {
 function rail(page: string): string[] {
   const nav = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html.get(page) ?? "");
   if (!nav) return [];
-  return [...nav[1].matchAll(/<a href="([^"]*)"/g)].map((m) => normalize(join(dirname(page), m[1])));
+  return [...nav[1].matchAll(/<a href="([^"]*)"/g)].map((m) => target(page, m[1]));
 }
+
+test("no link on the site ends in index.html: a page's address is its directory (decided 2026-10-15)", () => {
+  for (const [page, doc] of html) {
+    for (const [, href] of doc.matchAll(/href="([^"]*)"/g)) {
+      const own = !/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("https://intentset.org/");
+      assert.ok(!own || !/(^|\/)index\.html(#|$)/.test(href), `${page} links ${href}`);
+    }
+  }
+});
 
 test("every URL the site had before the bar changed still answers", () => {
   // The bar changed on 2026-10-05 and no page moved: Reference is the
