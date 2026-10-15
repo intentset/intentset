@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-REVIEW-VIEWS
   links:
     governedBy: [RULE-DETERMINISTIC]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset serve` and gets the Atlas, the internal review pages over the model's export, served locally and rebuilt when a file changes, or written to `--out`: the model, its reports and each artifact, with the snapshot each page describes.
+Someone runs `intentset serve` and gets the Atlas, the internal review pages over the model's export, served locally and rebuilt when a file changes, or written to `--out`: the model, its reports and each artifact, with the snapshot each page describes. Every page opens with a notice that it may hold internal and restricted records and is not for publication. The one exception is an invented example's Atlas, asked for from the library with the `example` notice: its pages say the product is invented and that a team's own Atlas stays internal, which is how intentset.org shows the worked example's.
 
 ## Preconditions
 

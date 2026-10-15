@@ -15,6 +15,8 @@
  *
  * The Atlas is internal: every page says it may hold internal and restricted
  * records and is not for publication, and states the snapshot it describes.
+ * The one exception is an invented example's Atlas (`notice: "example"`),
+ * whose pages say the product is invented instead.
  * Every count names its denominator and whether it measures links or
  * evidence; without run evidence the pages say so rather than show a pass.
  * Deterministic: the same input gives the same bytes.
@@ -57,9 +59,9 @@ function pages(input: AtlasInput): PageSource[] {
 }
 
 /** Every page's Markset source, by the relative path of the HTML it renders to. */
-export function buildAtlasSources(input: AtlasInput): Map<string, string> {
+export function buildAtlasSources(input: AtlasInput, options: AtlasOptions = {}): Map<string, string> {
   const meta = atlasMeta(input.snapshot);
-  return new Map(pages(input).map((page) => [page.path, pageSource(page, meta)]));
+  return new Map(pages(input).map((page) => [page.path, pageSource(page, meta, options.notice)]));
 }
 
 let stylesheet: string | null = null;
@@ -69,7 +71,7 @@ export function buildAtlas(input: AtlasInput, options: AtlasOptions = {}): Map<s
   const meta = atlasMeta(input.snapshot);
   const title = options.title ?? DEFAULT_TITLE;
   const out = new Map<string, string>();
-  for (const page of pages(input)) out.set(page.path, shell(page, pageSource(page, meta), meta, title));
+  for (const page of pages(input)) out.set(page.path, shell(page, pageSource(page, meta, options.notice), meta, title));
   stylesheet ??= readFileSync(defaultStylesheetPath, "utf8");
   out.set(STYLESHEET, stylesheet);
   return out;

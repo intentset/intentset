@@ -26,6 +26,7 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
+import { ATLAS_RAIL, ATLAS_ROOT, atlasLink, type ExampleAtlasPage, exampleAtlas } from "./example-atlas.ts";
 import { EXAMPLE_REQUEST, type ExamplePublication, publishExample } from "./example-publication.ts";
 import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
 import { type ExampleRecord, loadRecords, readYaml, splitFrontmatter } from "./records.ts";
@@ -168,6 +169,7 @@ export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
     items: [
       ["The worked example", "example/index.html"],
       ["The adoption log", "pilot/index.html"],
+      ["The worked example's Atlas", "example/atlas/index.html"],
     ],
   },
 ];
@@ -184,10 +186,11 @@ export function siteRails(knowledge: readonly PublishedKnowledge[]): typeof RAIL
 }
 
 /**
- * The rail a page sits in: the one listing it, or, for a record of the worked example, Examples, and for a page of
- * published knowledge, Reference.
+ * The rail a page sits in: for a page of the worked example's Atlas, the Atlas's own; otherwise the one listing it,
+ * or, for a record of the worked example, Examples, and for a page of published knowledge, Reference.
  */
 export function railFor(path: string, rails: typeof RAILS = RAILS): (typeof RAILS)[number] | undefined {
+  if (path.startsWith(`${ATLAS_ROOT}/`)) return ATLAS_RAIL;
   return (
     rails.find((rail) => rail.items.some(([, href]) => href === path)) ??
     (path.startsWith("example/") ? rails.find((rail) => rail.title === "Examples") : undefined) ??
@@ -419,6 +422,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
 
   const { specs, records, knowledge, tokens } = await siteInputs(inputs);
   const publication = await publishExample(join(root, EXAMPLE_DIR));
+  const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR);
   const rails = siteRails(knowledge);
   const pages: Page[] = [
     ...(await Promise.all(
@@ -429,6 +433,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
     await conformancePage(),
     exampleIndex(records, publication),
     ...records.map((record) => recordPage(record, records)),
+    ...atlas.map((page) => atlasPage(page, atlas)),
     ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
     ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
   ];
@@ -503,9 +508,17 @@ async function contentPage(path: string, file: string, tokens: Record<string, st
   return renderPage(path, text, join(root, "site", "content", file), {}, RAIL_PAGES.has(path));
 }
 
-function renderPage(path: string, source: string, file: string, extra: Partial<Page> = {}, rail = false): Page {
+function renderPage(
+  path: string,
+  source: string,
+  file: string,
+  extra: Partial<Page> = {},
+  rail = false,
+  transform?: (tree: Root) => void,
+): Page {
   const parsed = parseDocument(source);
   failOnErrors(parsed.diagnostics, file);
+  transform?.(parsed.ast as Root);
   const ast = addHeadingIds(parsed.ast);
   return {
     path,
@@ -879,6 +892,12 @@ ${acts}
 
 ***
 
+## The same records, for review
+
+The records above are what an agent writes and a person approves. [The worked example's Atlas](atlas/) is the same records as \`intentset serve\` draws them for the people who review a model: the capability and its behavior, who owns what, verification shown as missing because the check has not been executed, and what publication would release. A team's own Atlas stays inside the team; this one is public because Lantern is invented.
+
+***
+
 ## Try the same thing on your own code
 
 Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in Streamlane](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
@@ -886,6 +905,24 @@ Nothing above was written by hand for this site. It is the shape an agent produc
 [[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
+}
+
+/**
+ * One page of the worked example's Atlas, in the site's shell. Its links to other Atlas pages are pointed at their
+ * addresses on the site; its title says whose Atlas it is, since "Ownership" alone names nothing.
+ */
+function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
+  const paths = new Set(atlas.map((p) => p.atlasPath));
+  const rendered = renderPage(page.path, page.source, join(root, EXAMPLE_DIR), {}, false, (tree) => {
+    visit(tree, (node) => {
+      if (node.type === "link") (node as Link).url = atlasLink(page.atlasPath, (node as Link).url, paths);
+    });
+  });
+  return {
+    ...rendered,
+    title: `${rendered.title} · The worked example's Atlas`,
+    description: `${rendered.title}, from the Atlas of the worked example's records: what intentset serve shows a team about its own model.`,
+  };
 }
 
 /** One record: its metadata as a card, then the document body, then a way back. */

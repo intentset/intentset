@@ -5,6 +5,13 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## Unreleased
+
+**`@intentset/atlas` can draw an invented example's Atlas.** `buildAtlas` and `buildAtlasSources` take `notice:
+"example"`, which opens every page with a note that the product is invented and that a team's own Atlas stays
+internal, in place of the internal banner. The default is unchanged. No specification version, conformance case,
+export version or `intentset.spec` moved. intentset.org uses it to publish the worked example's Atlas.
+
 ## 0.7.1 — 2026-10-15
 
 **A resource's files now count in a subject where a verification exercises them, a dependency can count through its contract as an opt-in, and a selector shared by several verifications gives each a record.** Records made under 0.7.0 read stale until imported again, or until `evidence.resources: used` is set. No specification version, conformance case outcome, export version or `intentset.spec` moved: Core §8 and §11 describe the new subject rule, and the conformance suite gained cases for it without changing an existing one.
