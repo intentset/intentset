@@ -219,7 +219,8 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   contact address, price, legal or privacy claim, or claim that is not true today, such as a tool not yet released.
 - **The bar is five sections by what a reader came to do** (2026-10-05, after markset.org's): Start, Tools,
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
-  each section's pages, shown beside every page in it: Start (start, How it works, the agent guide), Tools (all
+  each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
+  agent guide), Tools (all
   tools, the command), Reference (the specifications, the Markset page, conformance), Examples (the worked example,
   the pilot). No URL moved when the bar changed. `site/test/rail.test.ts` requires every page to be named by the bar,
   a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a

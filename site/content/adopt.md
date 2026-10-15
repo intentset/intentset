@@ -79,7 +79,7 @@ Intentset makes the decision part of the model. A `decision` is a record type, w
 
 ## Prove it before it lands
 
-A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again.
+A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again. [Prove the work](../verify/index.html) has each layer in full: the tests, the screens in both color schemes and at each width, the rules held by tests, the gate's configuration and the checks that run after a deploy.
 
 - **A test with every claim.** A new behavior ships with the test that checks it and the verification record that names the test. A changed behavior ships with the changed test. The verification records are the list of what the product can prove, and a claim with no record on it is a gap the model reports.
 - **Screens checked in a browser, not in the source.** For a behavior with a surface, the agent opens its own build, performs the behavior and reads the result from the page. A screenshot in the pull request is the record of that.
@@ -141,4 +141,4 @@ have read it.
 
 The plan is the page's own first step. Read it, answer what it asks, and the rest is the agent's work, one pull request at a time, each through the gate.
 
-[[The agent guide](../guide/index.html)]{.button .primary} [[Start with one capability](../start/index.html)]{.button}
+[[Prove the work](../verify/index.html)]{.button .primary} [[The agent guide](../guide/index.html)]{.button}
