@@ -30,6 +30,10 @@ export interface PageSource {
   title: string;
   /** Markset source after the header. */
   body: string[];
+  /** HTML placed after the rendered source, which Markset cannot write: the map's SVG. Built here, never from a record's text unescaped. */
+  html?: string;
+  /** Scripts the page loads, relative to the Atlas's root, after `<main>`. Only the map has one (ADR 0015). */
+  scripts?: string[];
 }
 
 /** The pages every page's navigation lists, in order. */
@@ -39,6 +43,7 @@ export const NAV: readonly { path: string; label: string }[] = [
   { path: "verification.html", label: "Verification" },
   { path: "publication.html", label: "Publication" },
   { path: "diagnostics.html", label: "Diagnostics" },
+  { path: "map.html", label: "Map" },
 ];
 
 /** The relative prefix from a page back to the Atlas root: "" or "../". */
@@ -117,7 +122,10 @@ export function checkedTree(path: string, source: string): ReturnType<typeof par
   return parsed.ast;
 }
 
-/** The shared shell: head with the atlas block as JSON, the navigation, and the rendered page in `<main>`. No script. */
+/**
+ * The shared shell: head with the atlas block as JSON, the navigation, and the rendered page in `<main>`. No script,
+ * except the map page's one, after `<main>` (ADR 0015).
+ */
 export function shell(page: PageSource, source: string, meta: AtlasMeta, siteTitle: string): string {
   const root = rootOf(page.path);
   // Charts are drawn by render-html's built-in engine, inline and in front of the table they are drawn from, which
@@ -143,7 +151,8 @@ export function shell(page: PageSource, source: string, meta: AtlasMeta, siteTit
     `<nav aria-label="Atlas pages"><p><strong>${escapeHtml(siteTitle)}</strong> · ${links.join(" · ")}</p></nav>`,
     "</header>",
     '<main class="ms-document">',
-    `${body}</main>`,
+    `${body}${page.html ?? ""}</main>`,
+    ...(page.scripts ?? []).map((src) => `<script src="${root}${escapeHtml(src)}" defer></script>`),
     "</body>",
     "</html>",
     "",

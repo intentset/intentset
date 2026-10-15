@@ -131,7 +131,7 @@ test("every page carries a Content Security Policy that allows its own inline sc
   }
 });
 
-test("every page has exactly one h1, a skip link to main, and no script but the shell's two and the chat's", () => {
+test("every page has exactly one h1, a skip link to main, and no script but the shell's two, the chat's and the Atlas map's", () => {
   // Both scripts are the shell's: one remembers the reader's color scheme across
   // pages, as markset.org's does, and one puts a Copy button on each code block.
   // They sit ahead of the header; nothing inside <main>, which is rendered from a
@@ -141,7 +141,18 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
     assert.match(doc, /<a class="site-skip" href="#main">Skip to content<\/a>/, page);
     assert.match(doc, /<main id="main" class="ms-document" tabindex="-1">/, page);
     // The chat panel's, after </main>, once the chat is launched (chat.test.ts drives it).
-    assert.equal((doc.match(/<script/gi) ?? []).length, ASK_URL === null ? 2 : 3, `${page}: the shell's scripts`);
+    // The worked example's map loads its one script after </main> too (ADR 0015).
+    const map = page === "example/atlas/map/index.html";
+    if (map)
+      assert.ok(
+        doc.indexOf('example/atlas/atlas-map.js" defer>') > doc.indexOf("</main>"),
+        "the map's script after main",
+      );
+    assert.equal(
+      (doc.match(/<script/gi) ?? []).length,
+      (ASK_URL === null ? 2 : 3) + (map ? 1 : 0),
+      `${page}: the shell's scripts`,
+    );
     if (ASK_URL !== null)
       assert.ok(
         doc.indexOf('chat/panel.js" data-ask-url=') > doc.indexOf("</main>"),

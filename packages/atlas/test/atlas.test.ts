@@ -111,11 +111,13 @@ const PAGES = [
   "verification.html",
   "publication.html",
   "diagnostics.html",
+  "map.html",
   "behaviors/BEH-ASMT-SCHEDULE.html",
   "atlas.css",
+  "atlas-map.js",
 ];
 
-test("BEH-ATLAS: the Atlas of the example has the five pages, a page per behavior, and the stylesheet once", () => {
+test("BEH-ATLAS: the Atlas of the example has the six pages, a page per behavior, and the stylesheet once", () => {
   const atlas = buildAtlas(example());
   assert.deepEqual([...atlas.keys()], PAGES);
   assert.ok(
@@ -128,9 +130,19 @@ test("BEH-ATLAS: the Atlas of the example has the five pages, a page per behavio
   }
 });
 
-test("no page carries a script", () => {
+test("no page but the map carries a script, and the map loads only its own, after main (ADR 0015)", () => {
   for (const input of [example(), example({ runs: (hash) => [review(hash)] })]) {
-    for (const [path, html] of pages(buildAtlas(input))) assert.ok(!/<script/i.test(html), path);
+    for (const [path, html] of pages(buildAtlas(input))) {
+      if (path !== "map.html") {
+        assert.ok(!/<script/i.test(html), path);
+        continue;
+      }
+      assert.deepEqual(
+        [...html.matchAll(/<script[^>]*>/gi)].map((m) => m[0]),
+        ['<script src="atlas-map.js" defer>'],
+      );
+      assert.ok(html.indexOf("<script") > html.indexOf("</main>"), "after main");
+    }
   }
 });
 
@@ -202,13 +214,68 @@ test("BEH-ATLAS: the layout is Markset's: the context bundle as a grid of cards,
   // A chart is drawn in front of its table, and the table stays on the page.
   const verification = atlas.get("verification.html") ?? "";
   assert.match(verification, /<svg class="ms-chart" data-chart="bar"[\s\S]*?<table>/);
-  for (const html of atlas.values()) assert.doesNotMatch(html, /<script/i, "still no script");
+  for (const [path, html] of pages(atlas)) if (path !== "map.html") assert.doesNotMatch(html, /<script/i, path);
 });
 
 test("a capability's chart label drops CAP- and shortens a long ID", () => {
   assert.equal(chartLabel("CAP-ASK"), "ASK");
   assert.equal(chartLabel("CAP-LEARN-FROM-QUESTIONS"), "LEARN-FROM-QUESTI…");
   assert.equal(chartLabel("OTHER-ID"), "OTHER-ID");
+});
+
+test("BEH-ATLAS-MAP: every record is a node and every authored link an edge, drawn once", () => {
+  const input = example();
+  const map = buildAtlas(input).get("map.html") ?? "";
+  const nodes = [...map.matchAll(/class="am-node" data-id="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(nodes, [...input.graph.artifacts.keys()].sort());
+  const edges = [...map.matchAll(/<line class="am-edge" data-from="([^"]+)" data-to="([^"]+)"/g)].map(
+    (m) => `${m[1]}>${m[2]}`,
+  );
+  const authored = new Set(
+    input.graph.edges
+      .filter((e) => input.graph.artifacts.has(e.from) && input.graph.artifacts.has(e.to) && e.from !== e.to)
+      .map((e) => `${e.from}>${e.to}`),
+  );
+  for (const edge of authored) assert.ok(edges.includes(edge), `${edge} is drawn`);
+  for (const edge of edges) assert.ok(authored.has(edge), `${edge} is authored`);
+  assert.ok(edges.length >= 10, `only ${edges.length} edges`);
+  assert.doesNotMatch(map, /NaN|Infinity/, "every coordinate is a number");
+  // The picture stands without the script: the controls are hidden until it runs, and every record with a page links it.
+  assert.match(map, /<div class="am-controls" hidden>/);
+  assert.match(map, /<a class="am-node" data-id="BEH-ASMT-SCHEDULE"[^>]* href="behaviors\/BEH-ASMT-SCHEDULE.html"/);
+  assert.match(map, /<g class="am-node" data-id="RULE-ASMT-AUTH"[^>]* tabindex="0"/);
+});
+
+test("BEH-ATLAS-MAP: the same graph gives the same map, whatever order its files are read in", () => {
+  const once = buildAtlas(example()).get("map.html");
+  assert.equal(buildAtlas(example()).get("map.html"), once);
+  assert.equal(buildAtlas(example({ reverse: true })).get("map.html"), once);
+});
+
+test("BEH-ATLAS-MAP: a verification's ring is green only for a current pass, and its status is in its title", () => {
+  const ring = (map: string) =>
+    /data-id="TEST-ASMT-SCHEDULE"[^>]*data-evidence="([^"]+)" data-tone="([^"]+)"/.exec(map);
+  const none = ring(buildAtlas(example()).get("map.html") ?? "");
+  assert.deepEqual(none?.slice(1), ["not assessed", "neutral"]);
+  const passed = ring(buildAtlas(example({ runs: (hash) => [review(hash)] })).get("map.html") ?? "");
+  assert.deepEqual(passed?.slice(1), ["current pass", "success"]);
+  const failed = ring(
+    buildAtlas(example({ runs: (hash) => [review(hash, { result: "fail" })] })).get("map.html") ?? "",
+  );
+  assert.notEqual(failed?.[2], "success");
+  assert.match(
+    buildAtlas(example()).get("map.html") ?? "",
+    /<title>TEST-ASMT-SCHEDULE: [^<]*evidence not assessed\)<\/title>/,
+  );
+});
+
+test("BEH-ATLAS-MAP: the script writes text, never markup, and asks for nothing", () => {
+  const script = buildAtlas(example()).get("atlas-map.js") ?? "";
+  assert.ok(script.length > 1000);
+  assert.doesNotMatch(
+    script,
+    /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function|fetch\(|XMLHttpRequest|localStorage|sessionStorage|import\(/,
+  );
 });
 
 test("every page is Markset version 0 with the derived atlas block, and parses without a diagnostic", () => {

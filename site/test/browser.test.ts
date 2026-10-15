@@ -35,6 +35,7 @@ const PAGES = [
   "pilot/index.html",
   "example/index.html",
   "example/BEH-ASMT-SCHEDULE/index.html",
+  "example/atlas/map/index.html",
   "roadmap/index.html",
   "no/such/page/",
 ];
@@ -105,8 +106,10 @@ async function measure(page: string, width: number): Promise<Measure> {
           return r.width > 0 && (r.left < -0.5 || r.right > innerWidth + 0.5) && !inScroller(el);
         })
         .map((el) => el.outerHTML.slice(0, 80));
+      // A record on the Atlas map is a node the size of its circle; Find and the panel's links are the
+      // equivalent controls a reader can always use instead (WCAG 2.5.8, equivalent), so the map's are not counted.
       const smallLinks = [...document.querySelectorAll("a")]
-        .filter((a) => !a.classList.contains("site-skip"))
+        .filter((a) => !a.classList.contains("site-skip") && !a.closest(".am-svg"))
         .filter((a) => {
           const r = a.getBoundingClientRect();
           return r.width > 0 && r.height < 24;
@@ -254,6 +257,44 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
   assert.equal(result.h1, "Page not found");
   assert.ok(result.styled, "the stylesheets load from the root");
   assert.equal(result.home, url(""));
+});
+
+test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters and follows, at phone and desktop widths", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  for (const width of WIDTHS) {
+    const tab = await browser.newPage({ viewport: { width, height: 900 } });
+    const errors: string[] = [];
+    tab.on("pageerror", (error) => errors.push(error.message));
+    await tab.goto(url("example/atlas/map/index.html"));
+    // The script shows the controls; without it they stay hidden and the picture stands alone.
+    assert.ok(await tab.locator(".am-controls").isVisible(), `${width}px: controls shown`);
+    await tab.fill(".am-find input", "cap-asmt-assign");
+    await tab.press(".am-find input", "Enter");
+    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "CAP-ASMT-ASSIGN");
+    assert.ok((await tab.locator(".am-node.am-near").count()) >= 2, "its links are marked");
+    const panel = (await tab.locator(".am-panel").textContent()) ?? "";
+    assert.match(panel, /CAP-ASMT-ASSIGN: Student assessment assignment/);
+    assert.match(panel, /BEH-ASMT-SCHEDULE/);
+    await tab.locator(".am-panel button", { hasText: "BEH-ASMT-SCHEDULE" }).click();
+    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "BEH-ASMT-SCHEDULE");
+    await tab.keyboard.press("Escape");
+    assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, "Escape shows everything again");
+    await tab.uncheck('.am-filter input[data-group="verification"]');
+    assert.equal(await tab.locator('.am-node[data-group="verification"]:visible').count(), 0, "a family hides");
+    await tab.check('.am-filter input[data-group="verification"]');
+    await tab.fill(".am-find input", "NO-SUCH-RECORD");
+    await tab.press(".am-find input", "Enter");
+    assert.match((await tab.locator(".am-panel").textContent()) ?? "", /No record has the ID NO-SUCH-RECORD/);
+    // A second activation of a selected record follows its link, to the site's own address.
+    const node = tab.locator('.am-node[data-id="BEH-ASMT-SCHEDULE"] circle');
+    await node.click({ force: true });
+    await Promise.all([
+      tab.waitForURL(/\/example\/atlas\/behaviors\/BEH-ASMT-SCHEDULE\/$/),
+      node.click({ force: true }),
+    ]);
+    assert.deepEqual(errors, [], `${width}px: no script error`);
+    await tab.close();
+  }
 });
 
 test("the rail beside a page in a section names the section and marks the page", async (t) => {

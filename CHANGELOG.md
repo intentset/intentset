@@ -12,8 +12,6 @@ case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` t
 internal, in place of the internal banner. The default is unchanged. No specification version, conformance case,
 export version or `intentset.spec` moved. intentset.org uses it to publish the worked example's Atlas.
 
-## Unreleased
-
 **The Atlas is laid out with more of Markset.** A behavior's context bundle is a grid of cards, one per role, which a
 narrow screen reduces to one column; its record text is folded, so the page ends on the checks rather than the source.
 The overview opens its capabilities as cards and, from three capabilities, draws behaviors and coverage per capability
@@ -21,6 +19,14 @@ as a bar chart. The verification page draws its evidence statuses as one when ru
 render-html's built-in engine, drawn in front of the table it is drawn from, which stays on the page; still no script.
 `atlas.css` is Markset's stylesheet with three rules added. No specification version, conformance case, export
 version or `intentset.spec` moved.
+
+**The Atlas has a map (ADR 0015).** `map.html` draws every record as a node and every authored link as an edge, laid
+out when the Atlas is built with a seeded force layout, so the same graph gives the same bytes. Without script it is a
+picture whose records link to their pages; `atlas-map.js`, the one script the Atlas carries and only the map loads,
+adds finding by ID, showing or hiding each family, panning, zooming, and selecting a record to see only its links.
+`intentset serve` serves `.js` and adds `script-src 'self'` to its policy. `atlasMapLayout`, `mapHtml`, `MAP_SCRIPT`
+and `MAP_STYLES` let a caller place the map in a shell of its own. No dependency was added, and no specification
+version, conformance case, export version or `intentset.spec` moved.
 
 ## 0.7.1 — 2026-10-15
 

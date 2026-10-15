@@ -26,7 +26,16 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
-import { ATLAS_RAIL, ATLAS_ROOT, atlasLink, type ExampleAtlasPage, exampleAtlas } from "./example-atlas.ts";
+import { MAP_SCRIPT, MAP_STYLES } from "@intentset/atlas";
+import {
+  ATLAS_MAP_SCRIPT,
+  ATLAS_MAP_STYLES,
+  ATLAS_RAIL,
+  ATLAS_ROOT,
+  atlasLink,
+  type ExampleAtlasPage,
+  exampleAtlas,
+} from "./example-atlas.ts";
 import { EXAMPLE_REQUEST, type ExamplePublication, publishExample } from "./example-publication.ts";
 import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
 import { type ExampleRecord, loadRecords, readYaml, splitFrontmatter } from "./records.ts";
@@ -303,6 +312,9 @@ export interface Page {
   /** Contents rail, as HTML, for the long documents. */
   toc?: string;
   bodyAttributes: string;
+  /** Stylesheets and scripts this page alone loads, from the site's root. Only the Atlas's map has any (ADR 0015). */
+  styles?: string[];
+  scripts?: string[];
 }
 
 /**
@@ -423,6 +435,10 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   const { specs, records, knowledge, tokens } = await siteInputs(inputs);
   const publication = await publishExample(join(root, EXAMPLE_DIR));
   const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR);
+  // The map's one script and its styles, beside the Atlas's pages (ADR 0015).
+  await mkdir(join(out, ATLAS_ROOT), { recursive: true });
+  await writeFile(join(out, ATLAS_MAP_SCRIPT), MAP_SCRIPT);
+  await writeFile(join(out, ATLAS_MAP_STYLES), MAP_STYLES);
   const rails = siteRails(knowledge);
   const pages: Page[] = [
     ...(await Promise.all(
@@ -920,6 +936,8 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
   });
   return {
     ...rendered,
+    body: rendered.body + (page.html ?? ""),
+    ...(page.html === undefined ? {} : { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] }),
     title: `${rendered.title} · The worked example's Atlas`,
     description: `${rendered.title}, from the Atlas of the worked example's records: what intentset serve shows a team about its own model.`,
   };
@@ -1090,7 +1108,7 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
 ${meta}<link rel="icon" type="image/svg+xml" href="${rel}icon.svg">
 <link rel="stylesheet" href="${rel}css/markset.css">
 <link rel="stylesheet" href="${rel}css/site.css">
-${askUrl === null ? "" : `<link rel="stylesheet" href="${rel}chat/panel.css">\n`}</head>
+${askUrl === null ? "" : `<link rel="stylesheet" href="${rel}chat/panel.css">\n`}${(page.styles ?? []).map((href) => `<link rel="stylesheet" href="${rel}${href}">\n`).join("")}</head>
 <body${page.bodyAttributes}>
 ${SCHEME_SCRIPT}${COPY_SCRIPT}<a class="site-skip" href="#main">Skip to content</a>
 <header class="site-header">
@@ -1103,6 +1121,7 @@ ${SCHEME_CONTROL}</header>
 ${rail}<main id="main" class="ms-document" tabindex="-1">
 ${notFound ? fromRoot(page.body, rel) : page.body}</main>
 </div>
+${(page.scripts ?? []).map((src) => `<script src="${rel}${src}" defer></script>\n`).join("")}
 <footer class="site-footer">
 <div>
 <nav class="site-footer-nav" aria-label="Footer">

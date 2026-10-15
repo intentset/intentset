@@ -10,9 +10,9 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
-    implements: [BEH-ATLAS]
+    implements: [BEH-ATLAS, BEH-ATLAS-MAP]
     dependsOn: [SLICE-CORE, SLICE-PUBLISHER]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:

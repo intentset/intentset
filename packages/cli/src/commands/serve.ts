@@ -35,6 +35,7 @@ export interface ServeOptions {
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
 };
 
 /** The Atlas built from a session. */
@@ -185,7 +186,8 @@ export async function serveCommand(options: ServeOptions, sessionOptions: Sessio
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
       "Content-Security-Policy":
-        "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'",
+        // The map's one script is the Atlas's own file (ADR 0015); nothing else runs.
+        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'",
     };
     if (request.method !== "GET") {
       response.writeHead(405, { ...headers, Allow: "GET", "Content-Type": "text/plain; charset=utf-8" });

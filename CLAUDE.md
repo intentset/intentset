@@ -150,6 +150,8 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
   (`ASK_URL` in `site/build.ts`, null until the launch), every page also links `chat/panel.css` and loads
   `chat/panel.js` after `</main>`, with the address in a data attribute: three scripts, still none inside `<main>`, and
   `site/test/chat.test.ts` holds that build. The default build has no chat, and `build.test.ts` holds it at two.
+  The worked example's Atlas map (`/example/atlas/map/`, ADR 0015) loads one more, `example/atlas/atlas-map.js`, also
+  after `</main>`; the same test counts it on that page alone.
 
 ## Layout
 
@@ -254,7 +256,13 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` with the
   Atlas's own rail. It has no run evidence and no commit, because the example's check has not been executed and the
   pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
-  has no public Atlas, and a public mode for one is undecided.
+  has no public Atlas, and a public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml`
+  draws, with links at the site's addresses, and the map's stylesheet and script are written beside the pages.
+- **The Atlas's map** (ADR 0015, `packages/atlas/src/map.ts` and `map-script.ts`) is the one place the Atlas runs a
+  script, and the picture works without it. Its layout is computed at build time and must stay deterministic: no
+  `Math.random`, no trigonometry or `Math.exp` (their results differ between engines), iteration in ID order, and
+  coordinates rounded. The script writes text, never markup (a test refuses `innerHTML`, `eval`, `fetch` and
+  storage), and adds no dependency.
 - **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
   label, not a sentence. The h2s below it are written as sentences and keep theirs.
 - **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose
