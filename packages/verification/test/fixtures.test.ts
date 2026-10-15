@@ -31,6 +31,7 @@ function run(testCase: ConformanceCase) {
           { files },
           {
             globalInputs: validated.evidence.globalInputs,
+            resources: validated.evidence.resources,
             readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
           },
         )
@@ -73,13 +74,18 @@ const REVIEW_STATUS: Record<string, EvidenceStatus> = {
   "S01 a subject record stays current across an unrelated commit": "current-pass",
   "S01 a subject record stays current across a prose edit of a slice record": "current-pass",
   "S01 a subject record stays current across an edit of an unrelated record": "current-pass",
+  "S01 a subject record stays current across a change to a file of a resource a slice lists but no check exercises":
+    "current-pass",
   "S02 a change to a file the verified behavior's slice claims makes a subject record stale": "stale",
   "S02 a change to a file a claim of the slice resolves to by another claim makes a subject record stale": "stale",
   "S02 a change to a dependency slice's file makes a subject record stale": "stale",
   "S02 a change to the test file makes a subject record stale": "stale",
   "S02 a change to a locally imported helper makes a subject record stale": "stale",
   "S02 a change to an exercised slice's file makes a subject record stale": "stale",
+  "S02 a change to an exercised resource's file makes a subject record stale": "stale",
   "S02 a change to a used resource's file makes a subject record stale": "stale",
+  "S02 a change to an unclaimed file of a resource the implementing slice claims into makes a subject record stale":
+    "stale",
   "S02 a change to a global input makes a subject record stale": "stale",
   "S02 a change to the verified behavior's text makes a subject record stale": "stale",
   "S02 a change to a binding field of a slice record makes a subject record stale": "stale",
@@ -89,6 +95,9 @@ const REVIEW_STATUS: Record<string, EvidenceStatus> = {
   "S04 choosing commit binding where no slice claims files is not reported": "current-pass",
   "S05 a file no slice claims and no check names, changed since the record's commit, is reported": "current-pass",
   "S05 files that only claimed, used or declared inputs cover are not reported": "current-pass",
+  "S05 files that only claimed, exercised or declared inputs cover are not reported": "current-pass",
+  "S06 a resource a slice lists and no check exercises changed since the record's commit: the record stays current and the report says what the binding could not see":
+    "current-pass",
   "S05 a record's commit that is not an ancestor of the snapshot cannot be listed, and the report says so without failing":
     "current-pass",
 };

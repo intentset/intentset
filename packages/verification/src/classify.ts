@@ -99,7 +99,7 @@ export interface Classification {
   unknown: RunRecord[];
   /** Records that cannot be evidence for the verification they name (EVID001), by evidence ID. */
   rejected: RejectedRecord[];
-  /** EVID001, EVID002, EVID004 and EVID005, sorted. */
+  /** EVID001, EVID002, EVID004, EVID005 and EVID006, sorted. */
   diagnostics: Diagnostic[];
 }
 
@@ -112,6 +112,13 @@ const NOTE_COMMIT_UNKNOWN = "commit unknown; matched on graph hash";
 
 /** The most files EVID005 lists; the rest are counted. */
 export const UNCLAIMED_LIMIT = 20;
+
+/** The most verifications EVID006 lists, and the most files it lists for each resource; the rest are counted. */
+export const UNEXERCISED_LIMIT = 20;
+const UNEXERCISED_FILES = 5;
+
+/** What EVID006 collects: per resource, the changed files of it and the current verifications that use it without exercising it. */
+type Unexercised = Map<string, { files: Set<string>; verifications: Set<string> }>;
 
 const short = (commit: string) => commit.slice(0, 9);
 
@@ -198,6 +205,7 @@ export function classifyEvidence(
 
   const verifications: Record<string, VerificationEvidence> = {};
   const unclaimed = new Set<string>();
+  const unexercised: Unexercised = new Map();
   for (const id of ids) {
     const artifact = graph.artifacts.get(id);
     const history = (inScope.get(id) ?? []).sort(compareRecords);
@@ -209,8 +217,11 @@ export function classifyEvidence(
       snapshot,
       binding,
       unclaimed,
+      unexercised,
     );
   }
+  // A file of a resource EVID006 reports is not listed here as well: EVID006 says more (which verifications use it).
+  for (const entry of unexercised.values()) for (const file of entry.files) unclaimed.delete(file);
   if (unclaimed.size > 0) {
     const files = [...unclaimed].sort(compareStrings);
     const listed = files.slice(0, UNCLAIMED_LIMIT);
@@ -220,9 +231,32 @@ export function classifyEvidence(
         severity: "warning",
         artifact: null,
         path: null,
-        message: `${files.length} file${files.length === 1 ? "" : "s"} changed since the commit of a subject-bound record and no slice claims, no used resource names and no global input lists ${files.length === 1 ? "it" : "them"}, so ${files.length === 1 ? "it" : "they"} cannot make any evidence stale: ${listed.join(", ")}${files.length > listed.length ? `, and ${files.length - listed.length} more` : ""}.`,
+        message: `${files.length} file${files.length === 1 ? "" : "s"} changed since the commit of a subject-bound record and no slice claims, no exercised resource names and no global input lists ${files.length === 1 ? "it" : "them"}, so ${files.length === 1 ? "it" : "they"} cannot make any evidence stale: ${listed.join(", ")}${files.length > listed.length ? `, and ${files.length - listed.length} more` : ""}.`,
         remediation:
-          "Claim the file in a slice (the architecture check's unclaimed files rule), name its resource in `usesResources`, or list it in `evidence.globalInputs` if it affects every check (Core §8).",
+          "Claim the file in a slice (the architecture check's unclaimed files rule), name its resource in a verification's `exercises`, or list it in `evidence.globalInputs` if it affects every check (Core §8).",
+      }),
+    );
+  }
+  if (unexercised.size > 0) {
+    const resources = [...unexercised].sort(([a], [b]) => compareStrings(a, b));
+    const all = new Set<string>();
+    for (const [, entry] of resources) for (const id of entry.verifications) all.add(id);
+    const verifications = [...all].sort(compareStrings);
+    const listed = verifications.slice(0, UNEXERCISED_LIMIT);
+    const what = resources.map(([id, entry]) => {
+      const files = [...entry.files].sort(compareStrings);
+      const shown = files.slice(0, UNEXERCISED_FILES).join(", ");
+      return `${id} (${shown}${files.length > UNEXERCISED_FILES ? `, and ${files.length - UNEXERCISED_FILES} more` : ""})`;
+    });
+    diagnostics.push(
+      evidenceDiagnostic({
+        code: "EVID006",
+        severity: "warning",
+        artifact: null,
+        path: null,
+        message: `${verifications.length} verification${verifications.length === 1 ? " is" : "s are"} current though a resource ${verifications.length === 1 ? "it uses" : "they use"} and ${verifications.length === 1 ? "does" : "do"} not exercise changed since the commit of ${verifications.length === 1 ? "its" : "their"} record: ${what.join("; ")}; ${listed.join(", ")}${verifications.length > listed.length ? `, and ${verifications.length - listed.length} more` : ""}.`,
+        remediation:
+          "Where a check does depend on that resource, name it in the verification's `exercises` so a change to it makes the record stale, or set `evidence.resources: used` to hash every resource a slice lists (Core §8).",
       }),
     );
   }
@@ -256,6 +290,7 @@ function classifyOne(
   snapshot: EvidenceSnapshot,
   binding: EvidenceBinding,
   unclaimed: Set<string>,
+  unexercised: Unexercised,
 ): VerificationEvidence {
   const counts: ResultCounts = { pass: 0, fail: 0, skip: 0, error: 0 };
   const subjectHash = binding === "subject" ? (snapshot.subjects?.get(verificationId)?.hash ?? null) : null;
@@ -302,6 +337,7 @@ function classifyOne(
   const notes: (string | null)[] = [];
   if (binding === "subject") {
     const unlisted = collectUnclaimed(latest, snapshot, unclaimed);
+    collectUnexercised(verificationId, latest, subject, snapshot, unexercised);
     notes.push(`judged by subject binding; the run was at commit ${short(latest.commit)}${unlisted}`);
   } else if (snapshot.commit === null) notes.push(NOTE_COMMIT_UNKNOWN);
   notes.push(ignored);
@@ -343,6 +379,32 @@ function collectUnclaimed(latest: RunRecord, snapshot: EvidenceSnapshot, unclaim
   }
   for (const path of changed) if (!snapshot.covers(path)) unclaimed.add(path);
   return "";
+}
+
+/**
+ * Collects the resources a current record's verification uses without exercising (EVID006) whose files changed since
+ * the record's commit: the subject cannot see them, so the record stays current, and the report says so. It asks for
+ * the same `changedSince` as EVID005, and has nothing to say when that cannot be answered (EVID005's note says so).
+ */
+function collectUnexercised(
+  verificationId: string,
+  latest: RunRecord,
+  subject: Subject | undefined,
+  snapshot: EvidenceSnapshot,
+  unexercised: Unexercised,
+): void {
+  if (snapshot.changedSince === undefined || subject === undefined || subject.unexercised.length === 0) return;
+  const changed = snapshot.changedSince(latest.commit);
+  if (changed === null || changed.length === 0) return;
+  const moved = new Set(changed);
+  for (const resource of subject.unexercised) {
+    const files = resource.files.filter((path) => moved.has(path));
+    if (files.length === 0) continue;
+    const entry = unexercised.get(resource.id) ?? { files: new Set<string>(), verifications: new Set<string>() };
+    for (const path of files) entry.files.add(path);
+    entry.verifications.add(verificationId);
+    unexercised.set(resource.id, entry);
+  }
 }
 
 function withNote(evidence: Omit<VerificationEvidence, "note">, notes: (string | null)[]): VerificationEvidence {

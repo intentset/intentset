@@ -46,6 +46,13 @@
  *               slice talks to, which no slice claims).
  * The replay (d) reports +lean, and +res beside it.
  *
+ * Two more variants answer ADR 0013's amendment of 2026-10-15 (a resource's
+ * files count where a verification exercises it): **exercised** (+lean, with
+ * the registry's resources passed and `resourceMode: "exercised"`, the new
+ * default) and **used** (the same with `resourceMode: "used"`, the rule of
+ * release 0.7.0). `--resources-section` appends a dated section comparing them
+ * to the report instead of regenerating it (see `renderResources`).
+ *
  * File content is represented by git's blob id: a blob id is the content's
  * hash, so it moves exactly when the bytes move, and it costs one `git
  * ls-files` per commit instead of a read of every file. Nothing is
@@ -66,7 +73,11 @@ import {
 } from "@intentset/architecture";
 import { type Graph, validate } from "@intentset/core";
 import { computeSubject, includedSlices, movedParts, type Subject, verifiedBehaviors } from "@intentset/verification";
+import { marksetCarrier } from "@intentset/markset-adapter";
+import { migrateText } from "../packages/cli/src/commands/migrate.ts";
 import { loadRepository } from "../packages/cli/src/repository.ts";
+import { subjectsOf } from "../packages/cli/src/subject.ts";
+import { readTree } from "../packages/cli/src/tree.ts";
 
 /** Files, present at the root or in the workflows and claimed by no slice, mixed into every subject in the +globals variants. */
 const GLOBAL_CANDIDATES = [
@@ -91,7 +102,7 @@ const DETAILED_PRS = [891, 666, 678, 650, 653, 828];
 /** #891's two named behaviors: their verifications are replayed whether or not the commit touched their tests. */
 const FORCED: Record<number, string[]> = { 891: ["BEH-DEPMAP-LIMITS", "BEH-ORG-REQUEST-TEAM-UNREAD"] };
 
-const VARIANTS = ["claims", "+globals", "+lean", "prod+lean", "+res"] as const;
+const VARIANTS = ["claims", "+globals", "+lean", "prod+lean", "+res", "exercised", "used"] as const;
 type Variant = (typeof VARIANTS)[number];
 
 interface VInfo {
@@ -108,6 +119,8 @@ interface State {
   hashes: Record<Variant, Map<string, string>>;
   subjects: Map<string, Subject>;
   subjectsRes: Map<string, Subject>;
+  subjectsExercised: Map<string, Subject>;
+  subjectsUsed: Map<string, Subject>;
   oids: Map<string, string>;
   sliceFiles: Map<string, string[]>;
   sliceFilesRes: Map<string, string[]>;
@@ -136,6 +149,11 @@ interface FixVerification {
   /** With the used resources' files hashed (+res): whether a claimed or resource file moved, and the touched files still unseen. */
   codeMovedRes: boolean;
   unseenRes: number;
+  /** Whether a claimed file or a resource's file moved the subject, under `exercised` (the new default) and under `used` (release 0.7.0's rule). */
+  codeOrResourceExercised: boolean;
+  codeOrResourceUsed: boolean;
+  /** Under `used`, the resources whose files moved: what `exercises` would have to name for `exercised` to see the same change. */
+  resourcesMovedUsed: string[];
 }
 interface FixReplay {
   pr: number | null;
@@ -157,7 +175,14 @@ interface Results {
     changedE2e: number;
     totalE2e: number;
     graphHashChanged: boolean;
+    /** Verifications whose `exercised` subject did not move although a file of a resource their slices list and they do not exercise did (what EVID006 reports). */
+    currentWithResourceChange: number;
   }[];
+  /** At the newest commit, per verification: slices and files in its subject under each resource mode, and the resources `exercised` leaves out. */
+  sizesByMode: Record<
+    "exercised" | "used",
+    { id: string; slices: number; files: number; left: number; e2e: boolean }[]
+  >;
   survival: Record<Variant, { n: number; kept: number | null }[]>;
   closure: { slice: string; closure: number; files: number }[];
   verificationSize: { id: string; slices: number; files: number; e2e: boolean }[];
@@ -199,9 +224,23 @@ function lsFiles(root: string): Map<string, string> {
   return files;
 }
 
+/**
+ * A commit written for `intentset.spec` 0.1 read with the current reader: the
+ * records' `spec` and `profile` moved to 0.2 in memory, as `intentset migrate
+ * --to 0.2` would, since a 0.2 reader rejects a 0.1 record and the replay of a
+ * history that spans the move would otherwise see an empty model before it.
+ */
+function migrated(inputs: ReturnType<typeof loadRepository>["inputs"]) {
+  return inputs.map((input) => {
+    if (input.frontmatter === null) return input;
+    const text = migrateText(input.source, input.frontmatter, "0.1", "0.2");
+    return text === null ? input : marksetCarrier(input.path, text);
+  });
+}
+
 function build(root: string, sha: string): State {
   const repo = loadRepository(root, "markset");
-  const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
+  const graph = validate(migrated(repo.inputs), repo.registries, { level: "L2" }).graph;
   let arch = resolveConfig();
   try {
     arch = resolveConfig(readArchitectureConfig(readFileSync(join(root, ARCHITECTURE_CONFIG_PATH), "utf8")).config);
@@ -243,6 +282,8 @@ function build(root: string, sha: string): State {
     "+lean": new Map(),
     "prod+lean": new Map(),
     "+res": new Map(),
+    exercised: new Map(),
+    used: new Map(),
   };
   const resourceFiles = new Map(model.resources.map((info) => [info.resource.id, info.files]));
   const sliceFilesRes = new Map<string, string[]>();
@@ -250,9 +291,27 @@ function build(root: string, sha: string): State {
     const extra = slice.meta.usesResources.flatMap((id) => resourceFiles.get(id) ?? []);
     sliceFilesRes.set(slice.id, [...new Set([...(sliceFiles.get(slice.id) ?? []), ...extra])].sort());
   }
+  const registry = new Map(
+    model.resources.map((info) => [info.resource.id, { record: info.resource, files: [...info.files] }]),
+  );
   const subjects = new Map<string, Subject>();
   const subjectsRes = new Map<string, Subject>();
+  const subjectsExercised = new Map<string, Subject>();
+  const subjectsUsed = new Map<string, Subject>();
   for (const id of verifs.keys()) {
+    for (const mode of ["exercised", "used"] as const) {
+      const subject = computeSubject({
+        graph,
+        verificationId: id,
+        readFile,
+        sliceFiles,
+        resources: registry,
+        resourceMode: mode,
+        globalInputs: lean,
+      });
+      hashes[mode].set(id, subject.hash);
+      (mode === "exercised" ? subjectsExercised : subjectsUsed).set(id, subject);
+    }
     hashes.claims.set(id, computeSubject({ graph, verificationId: id, readFile, sliceFiles, globalInputs: [] }).hash);
     hashes["+globals"].set(
       id,
@@ -283,6 +342,8 @@ function build(root: string, sha: string): State {
     hashes,
     subjects,
     subjectsRes,
+    subjectsExercised,
+    subjectsUsed,
     oids,
     sliceFiles,
     sliceFilesRes,
@@ -338,6 +399,8 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
     "+lean": new Map(),
     "prod+lean": new Map(),
     "+res": new Map(),
+    exercised: new Map(),
+    used: new Map(),
   };
   let prev: State | null = null;
   let last: State | null = null;
@@ -381,7 +444,7 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
       }
       if (prev !== null) {
         const p: State = prev;
-        const changed: Record<Variant, number> = { claims: 0, "+globals": 0, "+lean": 0, "prod+lean": 0, "+res": 0 };
+        const changed = Object.fromEntries(VARIANTS.map((v) => [v, 0])) as Record<Variant, number>;
         let common = 0;
         let created = 0;
         let changedE2e = 0;
@@ -412,7 +475,15 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
             }
           }
         }
+        const changedSet = new Set(changedFiles);
+        let currentWithResourceChange = 0;
+        for (const id of state.verifs.keys()) {
+          if (!p.verifs.has(id) || state.hashes.exercised.get(id) !== p.hashes.exercised.get(id)) continue;
+          const left = state.subjectsExercised.get(id)?.unexercised ?? [];
+          if (left.some((resource) => resource.files.some((file) => changedSet.has(file)))) currentWithResourceChange++;
+        }
         perCommit.push({
+          currentWithResourceChange,
           sha,
           total: common,
           created,
@@ -486,7 +557,26 @@ function run(options: { repo: string; ref: string; commits: number }): Results {
     verificationSize.push({ id, slices: slices.size, files: files.size, e2e: info.e2e });
   }
 
+  const sizesByMode = { exercised: [], used: [] } as Results["sizesByMode"];
+  for (const [id, info] of head.verifs) {
+    for (const [mode, map] of [
+      ["exercised", head.subjectsExercised],
+      ["used", head.subjectsUsed],
+    ] as const) {
+      const subject = map.get(id) as Subject;
+      const count = (kind: string) => subject.parts.filter((part) => part.kind === kind).length;
+      sizesByMode[mode].push({
+        id,
+        slices: count("slice"),
+        files: count("slice-file") + count("resource-file"),
+        left: subject.unexercised.length,
+        e2e: info.e2e,
+      });
+    }
+  }
+
   return {
+    sizesByMode,
     ref: options.ref,
     head: head.sha,
     commits,
@@ -579,7 +669,20 @@ function replayFix(prev: State, cur: State, changed: string[], title: string, sh
     const unseen = codeFiles.filter((f) => !included.has(f.owner)).length;
     const seenRes = new Set([...included.keys()].flatMap((sl) => cur.sliceFilesRes.get(sl) ?? []));
     const movedRes = movedParts(prev.subjectsRes.get(id) as Subject, cur.subjectsRes.get(id) as Subject);
+    const byCode = (m: string) => m.startsWith("slice-file ") || m.startsWith("resource-file ");
+    const movedExercised = movedParts(
+      prev.subjectsExercised.get(id) as Subject,
+      cur.subjectsExercised.get(id) as Subject,
+    );
+    const movedUsed = movedParts(prev.subjectsUsed.get(id) as Subject, cur.subjectsUsed.get(id) as Subject);
     verifications.push({
+      codeOrResourceExercised: movedExercised.some(byCode),
+      codeOrResourceUsed: movedUsed.some(byCode),
+      resourcesMovedUsed: [
+        ...new Set(
+          movedUsed.filter((m) => m.startsWith("resource-file ")).map((m) => /\(([^)]+)\)$/.exec(m)?.[1] ?? ""),
+        ),
+      ].sort(),
       codeMovedRes: movedRes.some((m) => m.startsWith("slice-file ")),
       unseenRes: codeFiles.filter((f) => !seenRes.has(f.path)).length,
       id,
@@ -896,6 +999,326 @@ function conclusion(r: Results): string[] {
   ];
 }
 
+/** What replaying a store of run records over the commits after theirs found (ADR 0013, amended 2026-10-15). */
+interface RecordsReplay {
+  base: string;
+  headSha: string;
+  records: number;
+  verifications: number;
+  /** Records whose `subjectHash` the `used` rule reproduces at their own commit: the check that `used` is release 0.7.0's rule. */
+  usedReproduced: number;
+  /** After each later first-parent commit: records whose subject equals the one at their commit, under each rule. */
+  steps: { sha: string; exercised: number; used: number }[];
+  /** At the newest commit, per rule: the records still current and the parts that moved, by the verifications they moved. */
+  atHead: Record<"exercised" | "used", { current: number; causes: { part: string; verifications: number }[] }>;
+}
+
+type PartHashes = Map<string, Map<string, string>>;
+type Hashes = Record<"exercised" | "used", { hash: Map<string, string>; parts: PartHashes }>;
+
+/** Every verification's subject at a checked-out tree under both resource rules, as the CLI computes it (the repository's own configuration). */
+function subjectsAt(root: string): Hashes {
+  const out = {} as Hashes;
+  for (const mode of ["exercised", "used"] as const) {
+    const repo = loadRepository(root, "markset");
+    repo.config.evidence.resources = mode;
+    const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
+    const { subjects } = subjectsOf(repo, graph, readTree(root, repo.config));
+    const hash = new Map<string, string>();
+    const parts: PartHashes = new Map();
+    for (const [id, subject] of subjects) {
+      hash.set(id, subject.hash);
+      parts.set(
+        id,
+        new Map(subject.parts.map((p) => [`${p.kind} ${p.id}${p.owner === undefined ? "" : ` (${p.owner})`}`, p.hash])),
+      );
+    }
+    out[mode] = { hash, parts };
+  }
+  return out;
+}
+
+/**
+ * Judges a store of run records, made at one commit, at each later first-parent
+ * commit up to `ref`, under both resource rules. Under `used` a record's
+ * `subjectHash` is the one release 0.7.0 computed, so `usedReproduced` checks
+ * the rule is the same; under `exercised` the records would be imported again,
+ * so what counts is whether the subject at a later commit equals the subject
+ * at the record's commit, which is what a re-imported record would be judged by.
+ */
+function replayRecords(options: { repo: string; records: string; ref: string }): RecordsReplay {
+  const repo = resolve(options.repo);
+  const records = JSON.parse(readFileSync(options.records, "utf8")) as {
+    verificationId: string;
+    commit: string;
+    subjectHash?: string;
+  }[];
+  const bases = [...new Set(records.map((r) => r.commit))];
+  if (bases.length !== 1) throw new Error(`the records name ${bases.length} commits; the replay takes one`);
+  const base = bases[0];
+  const shas = git(repo, "rev-list", "--first-parent", "--reverse", `${base}..${options.ref}`)
+    .trim()
+    .split("\n")
+    .filter((x) => x !== "");
+  const worktree = join(repo, ".claude", "worktrees", "intentset-subject-records");
+  git(repo, "worktree", "add", "-q", "--detach", "--force", worktree, base);
+  const ids = [...new Set(records.map((r) => r.verificationId))];
+  try {
+    const at = subjectsAt(worktree);
+    const usedReproduced = records.filter(
+      (r) => r.subjectHash !== undefined && at.used.hash.get(r.verificationId) === r.subjectHash,
+    ).length;
+    const steps: RecordsReplay["steps"] = [];
+    let last = at;
+    for (const sha of shas) {
+      git(worktree, "checkout", "-q", "--detach", "--force", sha);
+      last = subjectsAt(worktree);
+      const same = (mode: "exercised" | "used") =>
+        ids.filter((id) => last[mode].hash.get(id) === at[mode].hash.get(id)).length;
+      steps.push({ sha, exercised: same("exercised"), used: same("used") });
+      process.stderr.write(
+        `records ${sha.slice(0, 9)} exercised ${steps[steps.length - 1].exercised} used ${steps[steps.length - 1].used}\n`,
+      );
+    }
+    const atHead = {} as RecordsReplay["atHead"];
+    for (const mode of ["exercised", "used"] as const) {
+      const causes = new Map<string, number>();
+      let current = 0;
+      for (const id of ids) {
+        const before = at[mode].parts.get(id) ?? new Map<string, string>();
+        const after = last[mode].parts.get(id) ?? new Map<string, string>();
+        const moved = new Set<string>();
+        for (const [key, hash] of before) if (after.get(key) !== hash) moved.add(key);
+        for (const key of after.keys()) if (!before.has(key)) moved.add(key);
+        if (at[mode].hash.get(id) === last[mode].hash.get(id)) current++;
+        // A part is named by what moved: a slice's files and a resource's files by their owner, a record by its ID.
+        const named = new Set(
+          [...moved].map((key) => {
+            const owner = /\(([^)]+)\)$/.exec(key)?.[1];
+            const kind = key.split(" ")[0];
+            return owner === undefined ? key : `${kind.replace(/-file$/, "")} ${owner}`;
+          }),
+        );
+        for (const part of named) causes.set(part, (causes.get(part) ?? 0) + 1);
+      }
+      atHead[mode] = {
+        current,
+        causes: [...causes]
+          .map(([part, verifications]) => ({ part, verifications }))
+          .sort((a, b) => b.verifications - a.verifications || (a.part < b.part ? -1 : 1)),
+      };
+    }
+    return {
+      base,
+      headSha: shas[shas.length - 1] ?? base,
+      records: records.length,
+      verifications: ids.length,
+      usedReproduced,
+      steps,
+      atHead,
+    };
+  } finally {
+    try {
+      git(repo, "worktree", "remove", "--force", worktree);
+    } catch {
+      // Left for `git worktree prune`.
+    }
+  }
+}
+
+/**
+ * The section `--resources-section` appends to the report: the comparison of
+ * the two resource rules over the same run, the replay of the known
+ * breakages under each, and, when a store of records was given, what the
+ * rules say of it. Every figure is computed in the run that wrote it.
+ */
+function renderResources(r: Results, rec: RecordsReplay | null, date: string): string {
+  const lines: string[] = [];
+  const out = (s = "") => lines.push(s);
+  const n = r.perCommit.length;
+  const live = r.perCommit.filter((c) => c.total > 0);
+  const third = Math.floor(n / 3);
+  const newest = r.perCommit.slice(2 * third, n).filter((c) => c.total > 0);
+  const kept = (cs: Results["perCommit"], v: Variant) =>
+    sortedNumbers(cs.map((c) => (100 * (c.total - c.changed[v])) / c.total));
+  const changedOf = (cs: Results["perCommit"], v: Variant) => sortedNumbers(cs.map((c) => c.changed[v]));
+  const f1 = (x: number) => `${x.toFixed(1)}%`;
+
+  out(`## Amendment ${date}: a resource's files count where a verification exercises it`);
+  out();
+  out(
+    `The finding that prompted this (Gary, ${date}): Streamlane's first browser run was imported and judged at a later commit, and only 5 of 274 browser verifications read current. Two causes were named: five \`amplify-docs\` backend files that changed, which a web slice listing the docs backend in \`usesResources\` hashed for every one of its verifications (133 verifications), and three central slices in nearly every closure. The replay of the store below reproduces it. ADR 0013 chose the first rule in its amendment 1 (the \`+res\` variant above); the amendment of ${date} narrows it: a resource's files are in a subject only where the verification names the resource in \`exercises\`, or an implementing slice owns it (the slice lists it and claims a file its path matches). \`evidence.resources: exercised | used\` chooses (default \`exercised\`), and EVID006 reports what \`exercised\` cannot see.`,
+  );
+  out();
+  out(
+    `Generated by \`scripts/subject-backtest.ts --resources-section\` over the same ${r.commits.length} first-parent commits of \`${r.ref}\` as the sections above (${r.commits[0].sha.slice(0, 9)} to ${r.head.slice(0, 9)}, ${n} steps). Two variants join the earlier ones: **exercised** (+lean, with the registry's resources passed to \`computeSubject\` and \`resourceMode: "exercised"\`) and **used** (the same with \`resourceMode: "used"\`, which hashes the files of every resource an included slice lists, as release 0.7.0 did; the +res variant added them to the slice's files instead, so the two differ in how they are counted, not in what they cover). +lean passes no registry and so is the lower bound: no resource's files at all. The sections above were generated by the stage 1 hash, which took the whole slice record, so their absolute figures (+lean 94.1%, +res 87.6%) are lower than the ones here, where every variant is the current \`computeSubject\` (a slice's binding fields only); the history is the same, and the two rules are compared inside this section only.`,
+  );
+  out();
+  out("### Kept current per commit");
+  out();
+  out(
+    "| Window | Variant | Commits | Changed per commit: median | p90 | max | Kept current per commit: median | p10 (worst decile) |",
+  );
+  out("|---|---|---|---|---|---|---|---|");
+  for (const [name, cs] of [
+    ["all steps", live],
+    [`newest third (steps ${2 * third + 1}-${n})`, newest],
+  ] as const) {
+    for (const v of ["+lean", "exercised", "used", "+res"] as const) {
+      const ch = changedOf(cs, v);
+      const k = kept(cs, v);
+      out(
+        `| ${name} | ${v} | ${cs.length} | ${percentile(ch, 50)} | ${percentile(ch, 90)} | ${ch[ch.length - 1]} | ${f1(percentile(k, 50))} | ${f1(percentile(k, 10))} |`,
+      );
+    }
+  }
+  out();
+  out(
+    "How long a record made at one commit stays current (the share of (verification, commit) pairs whose subject is unchanged N commits later):",
+  );
+  out();
+  out("| After N commits | +lean | exercised | used | +res |");
+  out("|---|---|---|---|---|");
+  for (const [k, point] of r.survival.exercised.entries()) {
+    const cell = (v: Variant) => (r.survival[v][k].kept === null ? "n/a" : f1(100 * (r.survival[v][k].kept as number)));
+    out(`| ${point.n} | ${cell("+lean")} | ${cell("exercised")} | ${cell("used")} | ${cell("+res")} |`);
+  }
+  out();
+
+  out("### Closure sizes at the newest commit");
+  out();
+  out(
+    "| Rule | Slices per verification: median | p90 | max | Files per verification: median | p90 | max | Verifications whose slices list a resource the subject leaves out |",
+  );
+  out("|---|---|---|---|---|---|---|---|");
+  for (const mode of ["exercised", "used"] as const) {
+    const sl = sortedNumbers(r.sizesByMode[mode].map((v) => v.slices));
+    const fi = sortedNumbers(r.sizesByMode[mode].map((v) => v.files));
+    const left = r.sizesByMode[mode].filter((v) => v.left > 0).length;
+    out(
+      `| ${mode} | ${percentile(sl, 50)} | ${percentile(sl, 90)} | ${sl[sl.length - 1]} | ${percentile(fi, 50)} | ${percentile(fi, 90)} | ${fi[fi.length - 1]} | ${left} of ${r.sizesByMode[mode].length} |`,
+    );
+  }
+  out();
+  const claimsOnly = new Map(r.verificationSize.map((v) => [v.id, v.files]));
+  const withResource = r.sizesByMode.exercised.filter((v) => v.files !== claimsOnly.get(v.id)).length;
+  out(
+    `Files counted are the claimed files of the included slices and the files of the resources in the subject; the global inputs and the test's imports are the same under both. Under \`exercised\` ${withResource} of ${r.sizesByMode.exercised.length} verifications have a resource's files in their subject at all: a resource is in one only when a verification names it in \`exercises\` or an implementing slice lists it and claims a file of it, and ${withResource === 0 ? "neither happens in this history, which is why `exercised` and +lean agree above" : "that is where it happens"}.`,
+  );
+  out();
+
+  out("### What EVID006 would say");
+  out();
+  const seen = r.perCommit.map((c) => c.currentWithResourceChange);
+  const withSome = seen.filter((x) => x > 0);
+  out(
+    `At ${withSome.length} of ${n} steps at least one verification was current under \`exercised\` although a file of a resource its slices list and it does not exercise changed in that step: median ${percentile(sortedNumbers(withSome), 50)} verifications at those steps, 90th percentile ${percentile(sortedNumbers(withSome), 90)}, maximum ${Math.max(0, ...seen)} (of ${live[live.length - 1]?.total ?? 0} compared at the last step). A repository reads that as a count and a list, one diagnostic per report, capped at twenty verifications and five files a resource; adding \`exercises\` where a check does depend on the resource turns those verifications stale on that change.`,
+  );
+  out();
+
+  out("### Replay of the known breakages");
+  out();
+  const pairs = r.fixes.flatMap((f) => f.verifications.map((v) => ({ f, v })));
+  const strong = pairs.filter(({ v }) => v.strong);
+  const lost = strong.filter(({ v }) => v.codeOrResourceUsed && !v.codeOrResourceExercised);
+  out(
+    `A pair is moved *by code or resource* when a claimed file of an included slice or a file of a resource in the subject moved, the only way a code fix that leaves tests and records alone is seen. Strong pairs (the commit changed a behavior, rule or scenario the verification verifies): ${strong.length}; moved by code or resource under \`used\` ${strong.filter(({ v }) => v.codeOrResourceUsed).length}, under \`exercised\` ${strong.filter(({ v }) => v.codeOrResourceExercised).length}. Weak pairs (only the test file changed): ${pairs.length - strong.length}; under \`used\` ${pairs.filter(({ v }) => !v.strong && v.codeOrResourceUsed).length}, under \`exercised\` ${pairs.filter(({ v }) => !v.strong && v.codeOrResourceExercised).length}.`,
+  );
+  out();
+  out(
+    lost.length === 0
+      ? "No strong pair that moved by code or resource under `used` stopped moving under `exercised`."
+      : `Strong pairs that moved by code or resource under \`used\` and no longer do under \`exercised\`: ${lost.length}. Each needs \`exercises\` naming the resource in the last column to be seen.`,
+  );
+  out();
+  out(
+    "| PR | Verification | End-to-end | Moved by code or resource: used | exercised | `exercises` that would restore it |",
+  );
+  out("|---|---|---|---|---|---|");
+  for (const pr of DETAILED_PRS) {
+    const f = r.fixes.find((x) => x.pr === pr);
+    if (f === undefined) {
+      out(`| #${pr} | not in the replayed set | | | | |`);
+      continue;
+    }
+    for (const v of f.verifications.filter((x) => x.strong)) {
+      const unclaimed = [
+        ...new Set(
+          f.codeFiles
+            .map((c) => /^unclaimed \(resource:([^)]+)\)$/.exec(c.owner)?.[1])
+            .filter((x): x is string => x !== undefined),
+        ),
+      ];
+      const need =
+        v.codeOrResourceUsed && !v.codeOrResourceExercised
+          ? v.resourcesMovedUsed.join(", ") || "none named"
+          : !v.codeOrResourceUsed
+            ? `neither rule sees it; naming ${[...v.outside, ...unclaimed].join(", ") || "what the touched files belong to"} in exercises would`
+            : "not needed";
+      out(
+        `| #${pr} | ${v.id} | ${v.e2e ? "yes" : "no"} | ${v.codeOrResourceUsed ? "yes" : "no"} | ${v.codeOrResourceExercised ? "yes" : "no"} | ${need} |`,
+      );
+    }
+  }
+  out();
+  if (lost.length > 0) {
+    out("Every strong pair that stopped moving by code or resource:");
+    out();
+    out("| PR | Verification | End-to-end | `exercises` needed |");
+    out("|---|---|---|---|");
+    for (const { f, v } of lost)
+      out(
+        `| ${f.pr === null ? f.sha.slice(0, 9) : `#${f.pr}`} | ${v.id} | ${v.e2e ? "yes" : "no"} | ${v.resourcesMovedUsed.join(", ") || "none named"} |`,
+      );
+    out();
+  }
+
+  if (rec !== null) {
+    out("### A store of Streamlane's run records, judged at later commits");
+    out();
+    out(
+      `The records are the asset \`playwright.json\` of the release \`evidence-records\` in Coral-Reef-Ventures/streamlane: ${rec.records} records for ${rec.verifications} verifications, all made at ${rec.base.slice(0, 9)}. The subjects are the CLI's own (\`subjectsOf\`, the repository's configuration, which names no global input), over temporary worktrees of Streamlane at ${rec.base.slice(0, 9)} and at each of the ${rec.steps.length} first-parent commits after it up to ${rec.headSha.slice(0, 9)}. Under \`used\` the subject at the records' commit reproduces the records' \`subjectHash\` for ${rec.usedReproduced} of ${rec.records} records, so \`used\` is release 0.7.0's rule exactly. Records made under \`exercised\` do not exist yet, so the column counts the verifications whose subject at the later commit equals their subject at ${rec.base.slice(0, 9)}, which is what a record imported again at that commit would be judged by.`,
+    );
+    out();
+    out("| After commit | Commits since | Current under exercised | Current under used |");
+    out("|---|---|---|---|");
+    for (const [i, step] of rec.steps.entries()) {
+      out(
+        `| ${step.sha.slice(0, 9)} | ${i + 1} | ${step.exercised} of ${rec.verifications} | ${step.used} of ${rec.verifications} |`,
+      );
+    }
+    out();
+    for (const mode of ["exercised", "used"] as const) {
+      const top = rec.atHead[mode].causes
+        .slice(0, 12)
+        .map((c) => `${c.part} (${c.verifications})`)
+        .join(", ");
+      out(
+        `Under \`${mode}\` at ${rec.headSha.slice(0, 9)}: ${rec.atHead[mode].current} of ${rec.verifications} current. Parts that moved, by the verifications they moved: ${top || "none"}.`,
+      );
+      out();
+    }
+  }
+
+  out("### What this says");
+  out();
+  const keptAll = (v: Variant) => percentile(kept(live, v), 50);
+  out(
+    `Per commit, the narrower rule keeps a median ${f1(keptAll("exercised"))} of verifications current against ${f1(keptAll("used"))} under \`used\` and ${f1(keptAll("+lean"))} with no resource files at all (newest third: ${f1(percentile(kept(newest, "exercised"), 50))}, ${f1(percentile(kept(newest, "used"), 50))} and ${f1(percentile(kept(newest, "+lean"), 50))}); the worst decile of commits keeps ${f1(percentile(kept(live, "exercised"), 10))} under \`exercised\` and ${f1(percentile(kept(live, "used"), 10))} under \`used\`. ${lost.length === 0 ? "Every strong breakage the replay found by code or resource under `used` is still found under `exercised`." : `${lost.length} strong breakage${lost.length === 1 ? "" : "s"} found under \`used\` ${lost.length === 1 ? "is" : "are"} not found under \`exercised\` without \`exercises\`, named above.`}`,
+  );
+  if (rec !== null) {
+    const last = rec.steps[rec.steps.length - 1];
+    const best = Math.max(0, ...rec.steps.map((step) => step.exercised - step.used));
+    const top = rec.atHead.exercised.causes[0];
+    out();
+    out(
+      `On Streamlane's own records the narrower rule is not enough alone: at ${rec.headSha.slice(0, 9)} ${last?.exercised ?? 0} of ${rec.verifications} verifications are current under \`exercised\` and ${last?.used ?? 0} under \`used\`, and at no commit of the ${rec.steps.length} after the records' own did \`exercised\` keep more than ${best} more of them current than \`used\`. What dominates is the slices that moved${top === undefined ? "" : `, ${top.part} above all (${top.verifications} of ${rec.verifications} verifications)`}; a resource's files add to the staleness on top of those, and leaving them out does not make a record current while a central slice in its closure keeps changing.`,
+    );
+  }
+  out();
+  return lines.join("\n");
+}
+
 function main(): void {
   const { values } = parseArgs({
     options: {
@@ -905,6 +1328,10 @@ function main(): void {
       out: { type: "string", default: "docs/adoption/subject-binding-backtest.md" },
       cache: { type: "string" },
       "from-cache": { type: "boolean", default: false },
+      "resources-section": { type: "boolean", default: false },
+      records: { type: "string" },
+      "records-cache": { type: "string" },
+      date: { type: "string" },
     },
   });
   let results: Results;
@@ -913,6 +1340,25 @@ function main(): void {
   } else {
     results = run({ repo: values.repo as string, ref: values.ref as string, commits: Number(values.commits) });
     if (values.cache !== undefined) writeFileSync(values.cache, JSON.stringify(results));
+  }
+  if (values["resources-section"]) {
+    let replay: RecordsReplay | null = null;
+    const recordsCache = values["records-cache"];
+    if (values["from-cache"] && recordsCache !== undefined && existsSync(recordsCache)) {
+      replay = JSON.parse(readFileSync(recordsCache, "utf8")) as RecordsReplay;
+    } else if (values.records !== undefined) {
+      replay = replayRecords({ repo: values.repo as string, records: values.records, ref: values.ref as string });
+      if (recordsCache !== undefined) writeFileSync(recordsCache, JSON.stringify(replay));
+    }
+    const date = values.date ?? new Date().toISOString().slice(0, 10);
+    const path = resolve(values.out as string);
+    const existing = readFileSync(path, "utf8");
+    const heading = "\n## Amendment ";
+    const at = existing.indexOf(heading);
+    const body = at === -1 ? existing.replace(/\n+$/, "") : existing.slice(0, at).replace(/\n+$/, "");
+    writeFileSync(path, `${body}\n\n${renderResources(results, replay, date)}\n`);
+    process.stderr.write(`appended the resources section to ${values.out}\n`);
+    return;
   }
   const text = render(results);
   mkdirSync(dirname(resolve(values.out as string)), { recursive: true });

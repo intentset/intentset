@@ -30,6 +30,7 @@ export function bindingFor(repo: Repository, graph: Graph, given: EvidenceBindin
 export function sourceFor(repo: Repository, graph: Graph, tree: Tree): SubjectSource {
   return subjectSource(graph, repo.registries, tree, {
     globalInputs: repo.config.evidence.globalInputs,
+    resources: repo.config.evidence.resources,
     readFile: (path) => {
       try {
         return readFileSync(join(repo.root, path));

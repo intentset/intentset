@@ -148,7 +148,9 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
   });
 
   test("the hash of a fixed input is pinned, so a change to the format is a decision", () => {
-    assert.equal(hashOf(), "6ca38ac8b3f2e2a9aa7a485463e71b8e66972e0625985672ebc2f35b2c977a9d");
+    assert.equal(hashOf(), "d7b2dd72267041ba689fbd2ee9f57dd457bf624b3ccdc0709c2989d8b88cf103");
+    // `used` is the rule of 0.7.0, and hashes this input as 0.7.0 did.
+    assert.equal(hashOf({ resourceMode: "used" }), "6ca38ac8b3f2e2a9aa7a485463e71b8e66972e0625985672ebc2f35b2c977a9d");
   });
 
   test("it includes the implementing slice, its dependsOn closure and no other slice", () => {
@@ -197,19 +199,6 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
       "the verification record": { nodes: { "TEST-A": { ...BASE["TEST-A"], version: "2" } } },
       "a locally imported helper": { files: { "tests/helpers/fixture.ts": "fixture!" } },
       "a file the helper imports, transitively": { files: { "tests/helpers/deeper.ts": "deeper!" } },
-      "a file of a resource the slice uses": { files: { "data/table.ts": "table!" } },
-      "the resource's registry entry": {
-        resources: new Map([
-          ...RESOURCES,
-          ["RES-DATA", { record: { id: "RES-DATA", path: "data/**" }, files: ["data/table.ts"] }],
-        ]),
-      },
-      "a file added to the resource": {
-        resources: new Map([
-          ...RESOURCES,
-          ["RES-DATA", { ...(RESOURCES.get("RES-DATA") as object), files: ["data/table.ts", "data/new.ts"] } as never],
-        ]),
-      },
       "a binding field of the implementing slice: its claims": {
         nodes: {
           "SLICE-A": {
@@ -261,6 +250,11 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
       base,
       "the file of a resource no included slice uses",
     );
+    assert.equal(
+      hashOf({ files: { "data/table.ts": "table!" } }),
+      base,
+      "the file of a resource an included slice lists in usesResources but no check exercises and no implementing slice claims into",
+    );
     assert.equal(hashOf({ files: { "tests/helpers/unrelated.ts": "x" } }), base, "a helper the test does not import");
     assert.equal(hashOf({ nodes: { "BEH-Z": { type: "behavior", version: "9" } } }), base, "an unrelated behavior");
     assert.equal(hashOf({ nodes: { "TEST-Z": { ...BASE["TEST-Z"], version: "9" } } }), base, "another verification");
@@ -294,11 +288,120 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     const subject = computeSubject(input({ nodes: exercising }));
     assert.deepEqual(
       subject.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
+      [["RES-OTHER", "exercises"]],
+    );
+    const used = computeSubject(input({ nodes: exercising, resourceMode: "used" }));
+    assert.deepEqual(
+      used.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
       [
         ["RES-DATA", "usesResources"],
         ["RES-OTHER", "exercises"],
       ],
     );
+  });
+
+  test("a resource named in exercises counts whether or not a slice lists it, and says so with exercises", () => {
+    const exercising: Record<string, Node> = {
+      "TEST-A": {
+        ...BASE["TEST-A"],
+        verification: { ...(BASE["TEST-A"].verification as Node["verification"] & object), exercises: ["RES-DATA"] },
+      },
+    };
+    const declared = computeSubject(input({ nodes: exercising }));
+    assert.deepEqual(
+      declared.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
+      [["RES-DATA", "exercises"]],
+    );
+    assert.notEqual(
+      hashOf({ nodes: exercising, files: { "data/table.ts": "table!" } }),
+      declared.hash,
+      "an exercised resource's file moves the subject",
+    );
+    assert.deepEqual(declared.unexercised, []);
+  });
+
+  test("a resource an included slice only lists is not hashed, and the subject says what it left out", () => {
+    const subject = computeSubject(input());
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "resource" || p.kind === "resource-file"),
+      [],
+    );
+    assert.deepEqual(subject.unexercised, [{ id: "RES-DATA", files: ["data/table.ts"] }]);
+    assert.deepEqual(computeSubject(input({ resourceMode: "used" })).unexercised, []);
+  });
+
+  test("the slice's usesResources is a binding field, so listing or unlisting a resource still moves the subject", () => {
+    const unlisted = { "SLICE-A": { ...BASE["SLICE-A"], slice: { ...BASE["SLICE-A"].slice, usesResources: [] } } };
+    assert.notEqual(hashOf({ nodes: unlisted }), hashOf());
+    assert.deepEqual(computeSubject(input({ nodes: unlisted })).unexercised, []);
+  });
+
+  test("a resource the implementing slice lists and claims a file of is its own, and its files count as its claims do", () => {
+    const own = { ...SLICE_FILES, "SLICE-A": ["a/one.ts", "a/two.ts", "data/table.ts"] };
+    const subject = computeSubject(input({ sliceFiles: own }));
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
+      [["RES-DATA", "usesResources"]],
+    );
+    assert.deepEqual(subject.unexercised, []);
+    const widened = new Map([
+      ["RES-DATA", { record: { id: "RES-DATA", path: "data/**" }, files: ["data/table.ts", "data/other.ts"] }],
+    ]);
+    const before = hashOf({ sliceFiles: own, resources: widened });
+    assert.notEqual(
+      hashOf({ sliceFiles: own, resources: widened, files: { "data/other.ts": "other!" } }),
+      before,
+      "a file of the resource the slice does not claim still moves the subject: the whole resource is its own",
+    );
+  });
+
+  test("a resource a dependency slice owns does not count: only an implementing slice's own resource does", () => {
+    const nodes = {
+      "SLICE-B": {
+        type: "slice",
+        links: { dependsOn: ["SLICE-C"] },
+        slice: { usesResources: ["RES-OTHER"] },
+      },
+    };
+    const sliceFiles = { ...SLICE_FILES, "SLICE-B": ["b/b.ts", "data/other.ts"] };
+    const subject = computeSubject(input({ nodes, sliceFiles }));
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "resource"),
+      [],
+    );
+    assert.deepEqual(subject.unexercised, [
+      { id: "RES-DATA", files: ["data/table.ts"] },
+      { id: "RES-OTHER", files: ["data/other.ts"] },
+    ]);
+  });
+
+  test("used mode hashes the files of every resource an included slice lists", () => {
+    const base = hashOf({ resourceMode: "used" });
+    assert.notEqual(hashOf({ resourceMode: "used", files: { "data/table.ts": "table!" } }), base);
+    assert.notEqual(
+      hashOf({
+        resourceMode: "used",
+        resources: new Map([
+          ...RESOURCES,
+          ["RES-DATA", { record: { id: "RES-DATA", path: "data/**" }, files: ["data/table.ts"] }],
+        ]),
+      }),
+      base,
+      "the registry entry",
+    );
+    assert.notEqual(
+      hashOf({
+        resourceMode: "used",
+        resources: new Map([
+          ...RESOURCES,
+          ["RES-DATA", { ...(RESOURCES.get("RES-DATA") as object), files: ["data/table.ts", "data/new.ts"] } as never],
+        ]),
+      }),
+      base,
+      "a file added to the resource",
+    );
+    assert.equal(hashOf({ resourceMode: "used", files: { "data/other.ts": "other!" } }), base, "an unlisted resource");
+    assert.notEqual(base, hashOf());
   });
 
   test("a slice's binding fields are hashed in any order, and its prose not at all", () => {
@@ -342,7 +445,7 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     const after = computeSubject(input({ files: { "b/b.ts": "b!", "pnpm-lock.yaml": "lock!" } }));
     assert.deepEqual(movedParts(before, after), ["global-input pnpm-lock.yaml", "slice-file b/b.ts (SLICE-B)"]);
     assert.deepEqual(movedParts(before, before), []);
-    const kinds = new Set(before.parts.map((p) => p.kind));
+    const kinds = new Set(computeSubject(input({ resourceMode: "used" })).parts.map((p) => p.kind));
     for (const kind of SUBJECT_PART_KINDS) assert.ok(kinds.has(kind), kind);
   });
 

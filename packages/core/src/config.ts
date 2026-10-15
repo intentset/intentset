@@ -8,13 +8,13 @@
 import type { Diagnostic } from "./diagnostics.ts";
 import { compareStrings, makeDiagnostic } from "./report.ts";
 import { patternProblem } from "./validate.ts";
-import { type Config, EVIDENCE_BINDINGS } from "./types.ts";
+import { type Config, EVIDENCE_BINDINGS, EVIDENCE_RESOURCES } from "./types.ts";
 import { parseYamlDetailed } from "./yaml.ts";
 
 export const DEFAULT_SCOPE = ["**/*.md"];
 export const DEFAULT_IGNORE = ["node_modules/**", "dist/**", ".git/**"];
 const KNOWN_KEYS = ["repository", "scope", "registries", "ignore", "evidence"];
-const EVIDENCE_KEYS = ["binding", "globalInputs"];
+const EVIDENCE_KEYS = ["binding", "globalInputs", "resources"];
 
 /** Core §11: read the repository configuration. Shape problems are CFG001. */
 export function readConfig(text: string, path: string): { config: Config; diagnostics: Diagnostic[] } {
@@ -24,7 +24,7 @@ export function readConfig(text: string, path: string): { config: Config; diagno
     scope: [...DEFAULT_SCOPE],
     registries: null,
     ignore: [...DEFAULT_IGNORE],
-    evidence: { binding: null, globalInputs: [] },
+    evidence: { binding: null, globalInputs: [], resources: "exercised" },
   };
   const parsed = parseYamlDetailed(text);
   if (parsed.error) {
@@ -103,7 +103,7 @@ export function readConfig(text: string, path: string): { config: Config; diagno
   return { config, diagnostics };
 }
 
-/** `evidence:` (Core §8): the binding asked for and the global inputs, each optional. */
+/** `evidence:` (Core §8): the binding asked for, the global inputs and which resource files a subject hashes, each optional. */
 function readEvidence(
   value: unknown,
   config: Config,
@@ -114,7 +114,7 @@ function readEvidence(
     report(
       "/evidence",
       "`evidence` must be a mapping.",
-      "Write `binding` and `globalInputs` under `evidence:`, or remove it.",
+      "Write `binding`, `globalInputs` and `resources` under `evidence:`, or remove it.",
     );
     return;
   }
@@ -136,6 +136,17 @@ function readEvidence(
         "/evidence/binding",
         "`evidence.binding` must be subject or commit.",
         "Write `binding: subject` (the default where slices exist) or `binding: commit` (Core §8).",
+      );
+    }
+  }
+  if (mapping.resources !== undefined && mapping.resources !== null) {
+    if ((EVIDENCE_RESOURCES as readonly unknown[]).includes(mapping.resources)) {
+      config.evidence.resources = mapping.resources as Config["evidence"]["resources"];
+    } else {
+      report(
+        "/evidence/resources",
+        "`evidence.resources` must be exercised or used.",
+        "Write `resources: exercised` (the default: a resource's files count where a verification exercises it) or `resources: used` (the files of every resource an included slice lists, Core §8).",
       );
     }
   }

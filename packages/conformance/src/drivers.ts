@@ -65,7 +65,7 @@ function validateTree(expanded: ExpandedCase): Validated {
   }
 
   const extra: Diagnostic[] = [];
-  let evidence: Config["evidence"] = { binding: null, globalInputs: [] };
+  let evidence: Config["evidence"] = { binding: null, globalInputs: [], resources: "exercised" };
   let registries: Registries = EMPTY_REGISTRIES;
   if (expanded.registriesText !== null) {
     const read = readRegistries(expanded.registriesText, REGISTRIES_PATH);
@@ -109,6 +109,7 @@ function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvide
           { files },
           {
             globalInputs: evidence.globalInputs,
+            resources: evidence.resources,
             readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
           },
         )

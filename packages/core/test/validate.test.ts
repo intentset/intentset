@@ -151,7 +151,7 @@ test("readConfig applies defaults and reports CFG001", () => {
     scope: DEFAULT_SCOPE,
     registries: "registries.yaml",
     ignore: DEFAULT_IGNORE,
-    evidence: { binding: null, globalInputs: [] },
+    evidence: { binding: null, globalInputs: [], resources: "exercised" },
   });
   assert.deepEqual(DEFAULT_SCOPE, ["**/*.md"]);
   assert.deepEqual(DEFAULT_IGNORE, ["node_modules/**", "dist/**", ".git/**"]);
@@ -169,19 +169,31 @@ test("readConfig applies defaults and reports CFG001", () => {
   assert.equal(bad.config.registries, null);
 });
 
-test("BEH-EVIDENCE-CURRENT: evidence in the configuration names the binding and the global inputs, both optional", () => {
+test("BEH-EVIDENCE-CURRENT: evidence in the configuration names the binding, the global inputs and which resource files a subject hashes, each optional", () => {
   const read = (evidence: string) =>
     readConfig(`repository: example/x\nevidence:\n${evidence}`, ".intentset/config.yaml");
   const both = read(
     "  binding: commit\n  globalInputs:\n    - pnpm-lock.yaml\n    - tsconfig*.json\n    - pnpm-lock.yaml\n",
   );
   assert.deepEqual(both.diagnostics, []);
-  assert.deepEqual(both.config.evidence, { binding: "commit", globalInputs: ["pnpm-lock.yaml", "tsconfig*.json"] });
-  assert.deepEqual(read("  binding: subject\n").config.evidence, { binding: "subject", globalInputs: [] });
+  assert.deepEqual(both.config.evidence, {
+    binding: "commit",
+    globalInputs: ["pnpm-lock.yaml", "tsconfig*.json"],
+    resources: "exercised",
+  });
+  assert.deepEqual(read("  resources: used\n").config.evidence, { binding: null, globalInputs: [], resources: "used" });
+  assert.deepEqual(read("  resources: exercised\n").diagnostics, []);
+  assert.deepEqual(read("  binding: subject\n").config.evidence, {
+    binding: "subject",
+    globalInputs: [],
+    resources: "exercised",
+  });
   assert.deepEqual(read("  globalInputs: []\n").diagnostics, []);
 
   const bad = (evidence: string) => read(evidence).diagnostics.map((d) => [d.code, d.field]);
   assert.deepEqual(bad("  binding: graph\n"), [["CFG001", "/evidence/binding"]]);
+  assert.deepEqual(bad("  resources: all\n"), [["CFG001", "/evidence/resources"]]);
+  assert.deepEqual(read("  resources: all\n").config.evidence.resources, "exercised");
   assert.deepEqual(bad("  globalInputs: pnpm-lock.yaml\n"), [["CFG001", "/evidence/globalInputs"]]);
   assert.deepEqual(bad("  globalInputs:\n    - ../outside\n"), [["CFG001", "/evidence/globalInputs/0"]]);
   assert.deepEqual(bad("  other: 1\n"), [["CFG001", "/evidence/other"]]);

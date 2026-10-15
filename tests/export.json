@@ -770,7 +770,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
+        "subjectHash": "d35d22932eef5f7c468af5126c5517721fa94e1f0f6b56c070b21b5bc216dd5b"
       }
     ],
     "valid": true,
@@ -786,11 +786,11 @@
               "id": "TEST-ASMT-SCHEDULE",
               "status": "current-pass",
               "binding": "subject",
-              "subject": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98",
+              "subject": "d35d22932eef5f7c468af5126c5517721fa94e1f0f6b56c070b21b5bc216dd5b",
               "latest": {
                 "evidenceId": "EV-SUBJECT-01",
                 "binding": "subject",
-                "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
+                "subjectHash": "d35d22932eef5f7c468af5126c5517721fa94e1f0f6b56c070b21b5bc216dd5b"
               }
             }
           ]
@@ -891,7 +891,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
+        "subjectHash": "d35d22932eef5f7c468af5126c5517721fa94e1f0f6b56c070b21b5bc216dd5b"
       }
     ],
     "valid": false,
@@ -917,12 +917,12 @@
               "id": "TEST-ASMT-SCHEDULE",
               "status": "stale",
               "binding": "subject",
-              "subject": "8855391a0d67cf8fa4dc002461118f5af826d8c2e08be94460679ae306fde4cf",
+              "subject": "bc16c8df66fa53bae3a82867c4298ae51d2b27de055fd246afbc5d4ff0c63534",
               "note": "the subject changed since the run at commit bbbbbbbbb: slice-file src/features/assessment/schedule/index.ts (SLICE-ASMT-SCHEDULE)",
               "latest": {
                 "evidenceId": "EV-SUBJECT-01",
                 "binding": "subject",
-                "subjectHash": "45fdc979985e5767c50d1c4f0cdea8ac7b5c08c0092c11c0b1284f9a1c2c9d98"
+                "subjectHash": "d35d22932eef5f7c468af5126c5517721fa94e1f0f6b56c070b21b5bc216dd5b"
               }
             }
           ]

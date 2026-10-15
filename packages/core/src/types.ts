@@ -299,12 +299,22 @@ export interface Config {
 export const EVIDENCE_BINDINGS = ["subject", "commit"] as const;
 export type EvidenceBinding = (typeof EVIDENCE_BINDINGS)[number];
 
-/** `evidence:` in `.intentset/config.yaml`; both members optional. */
+/**
+ * Which resource files a subject hashes (Core §8, ADR 0013 as amended 2026-10-15): `exercised` (the default) counts a
+ * resource's files where the verification names the resource in `exercises` or an implementing slice owns it; `used`
+ * counts the files of every resource an included slice lists in `usesResources`.
+ */
+export const EVIDENCE_RESOURCES = ["exercised", "used"] as const;
+export type EvidenceResources = (typeof EVIDENCE_RESOURCES)[number];
+
+/** `evidence:` in `.intentset/config.yaml`; every member optional. */
 export interface EvidenceConfig {
   /** The binding a repository asks for; null leaves the default (subject where slices exist, else commit). */
   binding: EvidenceBinding | null;
   /** Files whose change affects every check and that belong to no slice: paths or patterns, mixed into every subject. */
   globalInputs: string[];
+  /** Which resource files a subject hashes; `exercised` unless the repository asks for `used`. */
+  resources: EvidenceResources;
 }
 
 /** Conformance levels, Core §11. Checks above the requested level do not run. */

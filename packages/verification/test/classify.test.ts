@@ -171,6 +171,7 @@ const subject: Subject = {
     { kind: "slice-file", id: "src/a.ts", hash: "h1", owner: "SLICE-A", path: "src/a.ts" },
     { kind: "test", id: "tests/a.test.ts", hash: "h2", path: "tests/a.test.ts" },
   ],
+  unexercised: [{ id: "RES-A", files: ["backend/a.ts", "backend/b.ts"] }],
 };
 const bound = (overrides: Partial<RunRecord> = {}) =>
   review(OLD_HASH, { commit: OLD_COMMIT, binding: "subject", subjectHash: SUBJECT_HASH, ...overrides });
@@ -306,5 +307,57 @@ describe("BEH-EVIDENCE-CURRENT: subject binding", () => {
   test("EVID005 is not reported under commit binding", () => {
     const at = under("commit", { changedSince: () => ["misc/x.txt"], covers: () => false });
     assert.deepEqual(classifyEvidence(graph, [review(hash)], at).diagnostics, []);
+  });
+});
+
+describe("BEH-EVIDENCE-CURRENT: what the binding could not see (EVID006)", () => {
+  test("EVID006 names a used resource the verification does not exercise when a file of it changed, and the record stays current", () => {
+    const at = under("subject", { changedSince: () => ["backend/a.ts", "docs/x.md"], covers: () => true });
+    const result = classifyEvidence(graph, [bound()], at);
+    const found = result.diagnostics.filter((d) => d.code === "EVID006");
+    assert.equal(found.length, 1);
+    assert.equal(found[0].severity, "warning");
+    assert.equal(found[0].origin, "evidence");
+    assert.match(
+      found[0].message,
+      /^1 verification is current though a resource it uses and does not exercise changed since the commit of its record: RES-A \(backend\/a\.ts\); TEST-ASMT-SCHEDULE\.$/,
+    );
+    assert.doesNotMatch(found[0].message, /backend\/b\.ts|docs\/x\.md/);
+    assert.equal(result.verifications["TEST-ASMT-SCHEDULE"].status, "current-pass", "a warning, not a failure");
+  });
+
+  test("EVID006 is silent when no file of the unexercised resource changed, when git cannot say, and for a stale record", () => {
+    const quiet = under("subject", { changedSince: () => ["docs/x.md"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound()], quiet).diagnostics, []);
+    const unknown = under("subject", { changedSince: () => null, covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound()], unknown).diagnostics, []);
+    const stale = under("subject", { changedSince: () => ["backend/a.ts"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [bound({ subjectHash: MOVED_HASH })], stale).diagnostics, []);
+  });
+
+  test("EVID006 is silent when the subject leaves nothing out, and under commit binding", () => {
+    const none = under("subject", {
+      subjects: new Map([["TEST-ASMT-SCHEDULE", { ...subject, unexercised: [] }]]),
+      changedSince: () => ["backend/a.ts"],
+      covers: () => true,
+    });
+    assert.deepEqual(classifyEvidence(graph, [bound()], none).diagnostics, []);
+    const commit = under("commit", { changedSince: () => ["backend/a.ts"], covers: () => true });
+    assert.deepEqual(classifyEvidence(graph, [review(hash)], commit).diagnostics, []);
+  });
+
+  test("EVID006 lists up to twenty verifications and five files for each resource, and counts the rest", () => {
+    const many = Array.from({ length: 7 }, (_, i) => `backend/f${i}.ts`);
+    const wide: Subject = { ...subject, unexercised: [{ id: "RES-A", files: many }] };
+    const at = under("subject", {
+      subjects: new Map([["TEST-ASMT-SCHEDULE", wide]]),
+      changedSince: () => many,
+      covers: () => true,
+    });
+    const found = classifyEvidence(graph, [bound()], at).diagnostics.filter((d) => d.code === "EVID006");
+    assert.match(
+      found[0].message,
+      /RES-A \(backend\/f0\.ts, backend\/f1\.ts, backend\/f2\.ts, backend\/f3\.ts, backend\/f4\.ts, and 2 more\)/,
+    );
   });
 });
