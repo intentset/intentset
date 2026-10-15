@@ -114,6 +114,15 @@ export function verificationPage(model: Model): PageSource {
   } else {
     const statuses = verifications.map((v) => model.evidenceOf(v.meta.id)?.status ?? "unresolved");
     body.push(
+      ":::figure[Verification definitions by evidence status at this snapshot. The table is the count; the chart is drawn from it.]{chart=bar}",
+      ...table(
+        ["Evidence status", "Verification definitions"],
+        STATUS_ORDER.map((s) => [text(STATUS_WORDS[s].word), `${statuses.filter((status) => status === s).length}`]),
+      ),
+      ":::",
+      "",
+    );
+    body.push(
       ...STATUS_ORDER.map((s) => {
         const n = statuses.filter((status) => status === s).length;
         return `- ${badge(STATUS_WORDS[s].word, STATUS_WORDS[s].tone)} ${ofTotal(n, verifications.length, "verification definition")}: ${text(STATUS_WORDS[s].meaning)}`;

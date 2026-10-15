@@ -76,6 +76,7 @@ export function overviewPage(model: Model): PageSource {
 
   body.push("## Capabilities", "");
   if (capabilities.length === 0) body.push("No capability records are in this snapshot.", "");
+  else body.push(...capabilityCards(model, capabilities), ...coverageChart(model, capabilities));
   for (const capability of capabilities) body.push(...capabilitySection(model, capability));
 
   const orphans = behaviors.filter((b) => model.get(b.meta.parent ?? "")?.meta.type !== "capability");
@@ -90,6 +91,59 @@ export function overviewPage(model: Model): PageSource {
     );
   }
   return { path: "index.html", title: "Product and capability overview", body };
+}
+
+/** Every capability as a card: its behaviors, how many a verification names and, with evidence, how many pass. */
+function capabilityCards(model: Model, capabilities: Artifact[]): string[] {
+  const items = capabilities.map((capability) => {
+    const id = capability.meta.id;
+    const behaviors = model.into(id, "parent", "behavior");
+    const linked = behaviors.filter((b) => model.linked(b)).length;
+    const verified = model.hasEvidence
+      ? `${ofTotal(behaviors.filter((b) => model.coverageOf(b)?.verified === true).length, behaviors.length, "behavior")} verified (evidence)`
+      : "verified: not assessed";
+    return [
+      `- :::card[${text(id)}]{compact=true}`,
+      `  ${link(text(capability.meta.title), `#${id}`)}`,
+      "",
+      `  {.small}`,
+      `  ${capability.meta.status} · ${plural(behaviors.length, "behavior")} · ${ofTotal(linked, behaviors.length, "behavior")} named by a verification (links) · ${verified}`,
+      "  :::",
+    ].join("\n");
+  });
+  return ["::::grid{cols=3}", ...items, "::::", ""];
+}
+
+/** Behaviors per capability against those a verification names (and, with evidence, those that pass), as a chart. */
+function coverageChart(model: Model, capabilities: Artifact[]): string[] {
+  // One bar is no comparison: below three capabilities the cards say it all.
+  if (capabilities.length < 3) return [];
+  const header = ["Capability", "Behaviors", "Named by a verification (links)"];
+  if (model.hasEvidence) header.push("Current pass (evidence)");
+  const rows = capabilities.map((capability) => {
+    const behaviors = model.into(capability.meta.id, "parent", "behavior");
+    // The chart's category axis has room for about eighteen characters, so the label drops a leading CAP- and
+    // shortens what is still longer; the table under the chart keeps every ID whole.
+    const row = [
+      text(chartLabel(capability.meta.id)),
+      `${behaviors.length}`,
+      `${behaviors.filter((b) => model.linked(b)).length}`,
+    ];
+    if (model.hasEvidence) row.push(`${behaviors.filter((b) => model.coverageOf(b)?.verified === true).length}`);
+    return row;
+  });
+  return [
+    ":::figure[Behaviors by capability (named by ID without its CAP- prefix, a long one shortened), and how many of them a verification names. Each bar is a count, never a percentage.]{chart=bar}",
+    ...table(header, rows),
+    ":::",
+    "",
+  ];
+}
+
+/** A capability's ID as a chart label: without a leading CAP-, and at most eighteen characters. */
+export function chartLabel(id: string): string {
+  const label = id.replace(/^CAP-/, "");
+  return label.length <= 18 ? label : `${label.slice(0, 17)}…`;
 }
 
 /** A nested list of spine artifacts under their navigation parents, with a visited set. */

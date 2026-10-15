@@ -61,15 +61,18 @@ export function behaviorPage(model: Model, behavior: Artifact): PageSource {
       "besides the behavior, each under the first role it has.",
     "",
   );
+  // One card per role, in a grid that a narrow screen reduces to one column.
+  body.push("::::grid{cols=3}");
   for (const role of Object.keys(ROLE_HEADINGS) as Exclude<ContextRole, "start">[]) {
     const inRole = members.filter((a) => a.role === role);
     if (inRole.length === 0 && !ALWAYS.has(role)) continue;
     const tone = inRole.length === 0 ? (EMPTY_TONE[role] ?? "neutral") : "neutral";
-    body.push(`:::card[${ROLE_HEADINGS[role]} (${inRole.length})]{tone=${tone}}`);
-    if (inRole.length === 0) body.push(emptyRole(role));
-    else body.push(...inRole.map((a) => `- ${bundleEntry(a)}`));
-    body.push(":::", "");
+    body.push(`- :::card[${ROLE_HEADINGS[role]} (${inRole.length})]{tone=${tone}}`);
+    if (inRole.length === 0) body.push(`  ${emptyRole(role)}`);
+    else body.push(...inRole.map((a) => `  - ${bundleEntry(a)}`));
+    body.push("  :::", "");
   }
+  body.push("::::", "");
 
   const claims = model.claimsOf(id);
   const linked = claims.filter((c) => model.linked(c)).length;
@@ -156,7 +159,8 @@ export function behaviorPage(model: Model, behavior: Artifact): PageSource {
     "",
     `The body of ${code(behavior.path)} as written, shown as source and never interpreted.`,
     "",
-    ...fenced(behavior.body, "markdown"),
+    "> [!NOTE]- Show the record's text",
+    ...fenced(behavior.body, "markdown").map((line) => (line === "" ? ">" : `> ${line}`)),
     "",
   );
   return { path, title: `${id}: ${meta.title}`, body };

@@ -12,6 +12,16 @@ case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` t
 internal, in place of the internal banner. The default is unchanged. No specification version, conformance case,
 export version or `intentset.spec` moved. intentset.org uses it to publish the worked example's Atlas.
 
+## Unreleased
+
+**The Atlas is laid out with more of Markset.** A behavior's context bundle is a grid of cards, one per role, which a
+narrow screen reduces to one column; its record text is folded, so the page ends on the checks rather than the source.
+The overview opens its capabilities as cards and, from three capabilities, draws behaviors and coverage per capability
+as a bar chart. The verification page draws its evidence statuses as one when run evidence is supplied. Each chart is
+render-html's built-in engine, drawn in front of the table it is drawn from, which stays on the page; still no script.
+`atlas.css` is Markset's stylesheet with three rules added. No specification version, conformance case, export
+version or `intentset.spec` moved.
+
 ## 0.7.1 — 2026-10-15
 
 **A resource's files now count in a subject where a verification exercises them, a dependency can count through its contract as an opt-in, and a selector shared by several verifications gives each a record.** Records made under 0.7.0 read stale until imported again, or until `evidence.resources: used` is set. No specification version, conformance case outcome, export version or `intentset.spec` moved: Core §8 and §11 describe the new subject rule, and the conformance suite gained cases for it without changing an existing one.

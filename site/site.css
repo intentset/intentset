@@ -440,3 +440,6 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
   .site-layout.has-rail { display: block; }
   .ms-card.status { background: none; color: inherit; border: 1px solid var(--ms-border); }
 }
+
+/* A long path in a card, as the Atlas pages write them, wraps rather than leaving the card. */
+.ms-grid-item code { overflow-wrap: anywhere; }

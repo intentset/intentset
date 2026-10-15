@@ -120,7 +120,9 @@ export function checkedTree(path: string, source: string): ReturnType<typeof par
 /** The shared shell: head with the atlas block as JSON, the navigation, and the rendered page in `<main>`. No script. */
 export function shell(page: PageSource, source: string, meta: AtlasMeta, siteTitle: string): string {
   const root = rootOf(page.path);
-  const body = renderHtml(checkedTree(page.path, source), { diagrams: false, charts: false });
+  // Charts are drawn by render-html's built-in engine, inline and in front of the table they are drawn from, which
+  // stays on the page; diagrams stay off, because their engines are commands outside this package.
+  const body = renderHtml(checkedTree(page.path, source), { diagrams: false });
   const links = NAV.map(({ path, label }) => {
     const current = path === page.path ? ' aria-current="page"' : "";
     return `<a href="${root}${path}"${current}>${escapeHtml(label)}</a>`;
