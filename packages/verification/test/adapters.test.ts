@@ -552,4 +552,51 @@ describe("parsePlaywrightJson", () => {
     );
     assert.deepEqual(unmatched, []);
   });
+
+  test("a selector two verifications share gives each its own record from the same tests (a copy of a Playwright report)", () => {
+    const options: ToRunRecordsOptions = {
+      ...OPTIONS,
+      verifications: new Map<string, string | string[]>([
+        ["accepts a future time [schedule-review-v1]", ["VER-SECOND", "VER-FIRST"]],
+        ["rejects a past time", "VER-REJECT"],
+        ["no test has this", ["VER-LOST-B", "VER-LOST-A"]],
+      ]),
+    };
+    const { records, unmatched } = toRunRecords(parsePlaywrightJson(PLAYWRIGHT), options);
+    assert.deepEqual(
+      records.map((r) => [r.verificationId, r.result]),
+      [
+        ["VER-FIRST", "pass"],
+        ["VER-REJECT", "fail"],
+        ["VER-SECOND", "pass"],
+      ],
+    );
+    const [first, , second] = records;
+    assert.match(first.rationale ?? "", /^\d+ tests? matched accepts a future time \[schedule-review-v1\]: /);
+    assert.equal(first.rationale, second.rationale, "the same tests, so the same rationale");
+    assert.equal(new Set(records.map((r) => r.evidenceId)).size, 3, "each record has its own evidence ID");
+    assert.deepEqual(
+      unmatched,
+      ["no test has this"],
+      "an unmatched selector lists once, however many verifications name it",
+    );
+    assert.deepEqual(
+      toRunRecords(parsePlaywrightJson(PLAYWRIGHT), options),
+      { records, unmatched },
+      "the same every time",
+    );
+  });
+
+  test("the order a selector's verifications are given in does not change the records", () => {
+    const given = (ids: string[]) =>
+      toRunRecords(parsePlaywrightJson(PLAYWRIGHT), {
+        ...OPTIONS,
+        verifications: new Map([["rejects a past time", ids]]),
+      });
+    assert.deepEqual(given(["VER-B", "VER-A"]), given(["VER-A", "VER-B"]));
+    assert.deepEqual(
+      given(["VER-B", "VER-A"]).records.map((r) => r.verificationId),
+      ["VER-A", "VER-B"],
+    );
+  });
 });

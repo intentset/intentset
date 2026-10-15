@@ -99,7 +99,7 @@ export interface Classification {
   unknown: RunRecord[];
   /** Records that cannot be evidence for the verification they name (EVID001), by evidence ID. */
   rejected: RejectedRecord[];
-  /** EVID001, EVID002, EVID004, EVID005 and EVID006, sorted. */
+  /** EVID001, EVID002, EVID004, EVID005, EVID006 and EVID007, sorted. */
   diagnostics: Diagnostic[];
 }
 
@@ -116,6 +116,13 @@ export const UNCLAIMED_LIMIT = 20;
 /** The most verifications EVID006 lists, and the most files it lists for each resource; the rest are counted. */
 export const UNEXERCISED_LIMIT = 20;
 const UNEXERCISED_FILES = 5;
+
+/** The most verifications EVID007 lists, and the most files it lists for each dependency slice; the rest are counted. */
+export const DEPENDENCY_INTERNALS_LIMIT = 20;
+const DEPENDENCY_INTERNALS_FILES = 5;
+
+/** What EVID007 collects: per dependency slice, the changed files of it outside its entrypoints and the current verifications that depend on it. */
+type Internals = Map<string, { files: Set<string>; verifications: Set<string> }>;
 
 /** What EVID006 collects: per resource, the changed files of it and the current verifications that use it without exercising it. */
 type Unexercised = Map<string, { files: Set<string>; verifications: Set<string> }>;
@@ -206,6 +213,7 @@ export function classifyEvidence(
   const verifications: Record<string, VerificationEvidence> = {};
   const unclaimed = new Set<string>();
   const unexercised: Unexercised = new Map();
+  const internals: Internals = new Map();
   for (const id of ids) {
     const artifact = graph.artifacts.get(id);
     const history = (inScope.get(id) ?? []).sort(compareRecords);
@@ -218,6 +226,7 @@ export function classifyEvidence(
       binding,
       unclaimed,
       unexercised,
+      internals,
     );
   }
   // A file of a resource EVID006 reports is not listed here as well: EVID006 says more (which verifications use it).
@@ -261,6 +270,30 @@ export function classifyEvidence(
     );
   }
 
+  if (internals.size > 0) {
+    const slices = [...internals].sort(([a], [b]) => compareStrings(a, b));
+    const all = new Set<string>();
+    for (const [, entry] of slices) for (const id of entry.verifications) all.add(id);
+    const verifications = [...all].sort(compareStrings);
+    const listed = verifications.slice(0, DEPENDENCY_INTERNALS_LIMIT);
+    const what = slices.map(([id, entry]) => {
+      const files = [...entry.files].sort(compareStrings);
+      const shown = files.slice(0, DEPENDENCY_INTERNALS_FILES).join(", ");
+      return `${id} (${shown}${files.length > DEPENDENCY_INTERNALS_FILES ? `, and ${files.length - DEPENDENCY_INTERNALS_FILES} more` : ""})`;
+    });
+    diagnostics.push(
+      evidenceDiagnostic({
+        code: "EVID007",
+        severity: "warning",
+        artifact: null,
+        path: null,
+        message: `${verifications.length} verification${verifications.length === 1 ? " is" : "s are"} current though a slice ${verifications.length === 1 ? "it depends" : "they depend"} on changed outside its entrypoints and contracts since the commit of ${verifications.length === 1 ? "its" : "their"} record: ${what.join("; ")}; ${listed.join(", ")}${verifications.length > listed.length ? `, and ${verifications.length - listed.length} more` : ""}.`,
+        remediation:
+          "Where a check does depend on that slice's internals, name the slice in the verification's `exercises` so a change to it makes the record stale, or set `evidence.dependencies: files` to hash every file a dependency claims (Core §8).",
+      }),
+    );
+  }
+
   return {
     snapshot: {
       commit: snapshot.commit,
@@ -291,6 +324,7 @@ function classifyOne(
   binding: EvidenceBinding,
   unclaimed: Set<string>,
   unexercised: Unexercised,
+  internals: Internals,
 ): VerificationEvidence {
   const counts: ResultCounts = { pass: 0, fail: 0, skip: 0, error: 0 };
   const subjectHash = binding === "subject" ? (snapshot.subjects?.get(verificationId)?.hash ?? null) : null;
@@ -338,6 +372,7 @@ function classifyOne(
   if (binding === "subject") {
     const unlisted = collectUnclaimed(latest, snapshot, unclaimed);
     collectUnexercised(verificationId, latest, subject, snapshot, unexercised);
+    collectInternals(verificationId, latest, subject, snapshot, internals);
     notes.push(`judged by subject binding; the run was at commit ${short(latest.commit)}${unlisted}`);
   } else if (snapshot.commit === null) notes.push(NOTE_COMMIT_UNKNOWN);
   notes.push(ignored);
@@ -404,6 +439,32 @@ function collectUnexercised(
     for (const path of files) entry.files.add(path);
     entry.verifications.add(verificationId);
     unexercised.set(resource.id, entry);
+  }
+}
+
+/**
+ * Collects the dependency slices a current record's verification counts only through their entrypoints and contracts
+ * (EVID007) whose other files changed since the record's commit: the subject cannot see them, so the record stays
+ * current, and the report says so. Like EVID006 it has nothing to say when git cannot answer.
+ */
+function collectInternals(
+  verificationId: string,
+  latest: RunRecord,
+  subject: Subject | undefined,
+  snapshot: EvidenceSnapshot,
+  internals: Internals,
+): void {
+  if (snapshot.changedSince === undefined || subject === undefined || subject.dependencyInternals.length === 0) return;
+  const changed = snapshot.changedSince(latest.commit);
+  if (changed === null || changed.length === 0) return;
+  const moved = new Set(changed);
+  for (const slice of subject.dependencyInternals) {
+    const files = slice.files.filter((path) => moved.has(path));
+    if (files.length === 0) continue;
+    const entry = internals.get(slice.id) ?? { files: new Set<string>(), verifications: new Set<string>() };
+    for (const path of files) entry.files.add(path);
+    entry.verifications.add(verificationId);
+    internals.set(slice.id, entry);
   }
 }
 

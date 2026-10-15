@@ -4698,5 +4698,1200 @@
     "valid": true,
     "diagnostics": [],
     "notes": "binding: commit needs no subjectHash and is judged by the existing rule: this one is a current pass at the snapshot."
+  },
+  {
+    "section": "evidence",
+    "name": "D01 a change to a dependency slice's internal file keeps a subject record current under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 2;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "notes": "SLICE-ASMT-SCHEDULE dependsOn SLICE-ASMT-CORE, a dependency of TEST-ASMT-SCHEDULE that no verification exercises. src/platform/core/internal.ts is claimed by it and is not one of its entrypoints, so under dependencies: entrypoint (Core §8) it is not part of the subject: the record stays current. No git history is supplied, so nothing is reported either (EVID007 needs it). The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D01 the same change moves the subject under dependencies: files",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "files"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 2;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "55b359eafed34e00f8fb452601e1b56652d4359f32c89ae2a7570420b3979585"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "The same tree and change as the case above with dependencies: files, the rule of release 0.7.0: every file the dependency's claims resolve to is in the subject, so the record is stale. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 55b359eafed3...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D02 a change to a dependency slice's entrypoint file makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 2;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "src/platform/core/index.ts is SLICE-ASMT-CORE's entrypoint, its public surface, which a dependent counts under either rule. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D02 a change to a dependency slice's contract record makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name and a locale. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "SLICE-ASMT-CORE exposes CONTRACT-ASMT-CORE, whose record is in a dependent's subject under dependencies: entrypoint, so a changed interface makes the record stale although no file changed. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D02 a change to a decision a dependency slice's contract names makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module and one error type.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "CONTRACT-ASMT-CORE is informedBy ADR-ASMT-CORE, so the decision is part of the subject with the contract (Core §8). The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D02 a change to a dependency slice's dependsOn makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n    dependsOn:\n    - SLICE-ASMT-OTHER\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "SLICE-ASMT-CORE now dependsOn SLICE-ASMT-OTHER: its dependsOn is a binding field, and the new dependency enters the subject. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D02 a change to a dependency slice's binding fields makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "SLICE-ASMT-CORE claims one more path: its claims are a binding field, so the subject moves although no file did. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D03 a change to the implementing slice's own internal file makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 2;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "SLICE-ASMT-SCHEDULE implements the verified behavior, so every file it claims counts, entrypoint or not: the rule only narrows what a dependency contributes. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D03 a change to an exercised slice's internal file makes a subject record stale under dependencies: entrypoint",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts",
+          "intentset.verification.exercises": [
+            "SLICE-ASMT-EXERCISED"
+          ]
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 1;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 2;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "eaf95605de8db140cd9c5905945489784a44e68dd04fe160387f6eb21b438da8"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "TEST-ASMT-SCHEDULE declares verification.exercises: [SLICE-ASMT-EXERCISED], so that slice contributes every file it claims, as an implementing slice does. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash eaf95605de8d...); its commit and graph hash are other than the snapshot's, as after any later commit."
+  },
+  {
+    "section": "evidence",
+    "name": "D04 a dependency slice's internal change that the subject could not see is reported: the record stays current and EVID007 names the slice, the file and the verification",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "entrypoint"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 2;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "d92d39c73dc19f04e01484b35acf71377ed277ea1fe428683b2a23f2444a6119"
+      }
+    ],
+    "valid": true,
+    "diagnostics": [
+      "EVID007"
+    ],
+    "notes": "git reports src/platform/core/internal.ts and src/features/assessment/schedule/index.ts changed since the record's commit. The first is claimed by SLICE-ASMT-CORE, a dependency of TEST-ASMT-SCHEDULE, and is not one of its entrypoints, so the record is current and the case stays valid; EVID007 names the slice, the changed file and the verification so the repository can name the slice in exercises where the check does depend on it. The second is the implementing slice's entrypoint, which is part of the subject and listed by nothing. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash d92d39c73dc1...); its commit and graph hash are other than the snapshot's, as after any later commit.",
+    "changedSince": {
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": [
+        "src/platform/core/internal.ts",
+        "src/features/assessment/schedule/index.ts"
+      ]
+    }
+  },
+  {
+    "section": "evidence",
+    "name": "D04 under dependencies: files nothing is left unseen, so a dependency's changed file makes the record stale and EVID007 stays silent",
+    "baseline": "scheduling",
+    "request": {
+      "product": "PRD-LANTERN",
+      "release": "pilot-1"
+    },
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "files"
+      }
+    },
+    "level": "L3",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.dependsOn": [
+            "SLICE-ASMT-CORE"
+          ]
+        }
+      },
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.verification.method": "automated",
+          "intentset.verification.locator": "tests/schedule.test.ts"
+        }
+      }
+    },
+    "files": {
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    exposes:\n    - CONTRACT-ASMT-CORE\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "CONTRACT-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/contract/0.2\n  id: CONTRACT-ASMT-CORE\n  type: contract\n  title: Platform core contract\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  links:\n    informedBy:\n    - ADR-ASMT-CORE\n---\n\n# Platform core contract\n\n## Interface\n\nInput: a name. Success: a handle.\n\n## Compatibility\n\nRemoving a field is breaking.\n",
+      "ADR-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-CORE\n  type: decision\n  title: Keep the platform core small\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Keep the platform core small\n\n## Context\n\nMany slices call the core.\n\n## Decision\n\nThe core exposes one index module.\n\n## Consequences\n\nChanges to its public face are reviewed.\n",
+      "SLICE-ASMT-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/slice/0.2\n  id: SLICE-ASMT-OTHER\n  type: slice\n  title: Assessment other platform slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/other/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/other/**\n    usesResources: []\n---\n\n# Assessment other platform slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module and the contract it exposes.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+    },
+    "sources": {
+      "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
+      "src/features/assessment/schedule/domain/policies/future.ts": "export const future = 1;\n",
+      "amplify/functions/schedule-assessment/handler.ts": "export const handler = 1;\n",
+      "amplify/data/resource.ts": "export const data = 1;\n",
+      "src/platform/core/index.ts": "export const core = 1;\n",
+      "src/platform/core/internal.ts": "export const internal = 2;\n",
+      "src/platform/other/index.ts": "export const other = 1;\n",
+      "src/platform/exercised/index.ts": "export const exercised = 1;\n",
+      "src/platform/exercised/internal.ts": "export const exercisedInternal = 1;\n",
+      "src/other/unrelated.ts": "export const unrelated = 1;\n",
+      "tests/schedule.test.ts": "import { fixture } from \"./helpers/fixture.ts\";\nexport const run = fixture;\n",
+      "tests/helpers/fixture.ts": "export const fixture = 1;\n",
+      "pnpm-lock.yaml": "lockfileVersion: 1\n",
+      "README.txt": "notes\n"
+    },
+    "evidence": [
+      {
+        "evidenceId": "EV-SUBJECT-01",
+        "verificationId": "TEST-ASMT-SCHEDULE",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "graphHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "environment": "ci",
+        "scope": {
+          "product": "PRD-LANTERN",
+          "release": "pilot-1"
+        },
+        "tool": {
+          "name": "node:test",
+          "version": "v24.15.0"
+        },
+        "reviewer": null,
+        "startedAt": "2026-10-14T09:00:00Z",
+        "finishedAt": "2026-10-14T09:05:00Z",
+        "result": "pass",
+        "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
+        "binding": "subject",
+        "subjectHash": "55b359eafed34e00f8fb452601e1b56652d4359f32c89ae2a7570420b3979585"
+      }
+    ],
+    "valid": false,
+    "diagnostics": [
+      "CORE007",
+      "CORE007",
+      "CORE007",
+      "CORE007"
+    ],
+    "notes": "The same history as the case above with dependencies: files: the changed file is in the subject, so the record is stale and nothing is left for EVID007 to report. The record is bound to the subject of TEST-ASMT-SCHEDULE as the tree stands before the change this case makes (subject hash 55b359eafed3...); its commit and graph hash are other than the snapshot's, as after any later commit.",
+    "changedSince": {
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": [
+        "src/platform/core/internal.ts"
+      ]
+    }
   }
 ]

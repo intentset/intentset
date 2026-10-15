@@ -7,6 +7,7 @@ import {
   type DocumentInput,
   EMPTY_REGISTRIES,
   type Config,
+  DEFAULT_EVIDENCE_DEPENDENCIES,
   type Diagnostic,
   type Registries,
   type ValidationResult,
@@ -65,7 +66,12 @@ function validateTree(expanded: ExpandedCase): Validated {
   }
 
   const extra: Diagnostic[] = [];
-  let evidence: Config["evidence"] = { binding: null, globalInputs: [], resources: "exercised" };
+  let evidence: Config["evidence"] = {
+    binding: null,
+    globalInputs: [],
+    resources: "exercised",
+    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
+  };
   let registries: Registries = EMPTY_REGISTRIES;
   if (expanded.registriesText !== null) {
     const read = readRegistries(expanded.registriesText, REGISTRIES_PATH);
@@ -110,6 +116,7 @@ function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvide
           {
             globalInputs: evidence.globalInputs,
             resources: evidence.resources,
+            dependencies: evidence.dependencies,
             readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
           },
         )

@@ -8,7 +8,13 @@
  * subject at all. Pure: it reads the tree it is given and the file
  * contents through the function it is given.
  */
-import type { EvidenceResources, Graph, Registries } from "@intentset/core";
+import {
+  DEFAULT_EVIDENCE_DEPENDENCIES,
+  type EvidenceDependencies,
+  type EvidenceResources,
+  type Graph,
+  type Registries,
+} from "@intentset/core";
 import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
 import { extractImports } from "./extract.ts";
 import { isCode } from "./paths.ts";
@@ -23,6 +29,8 @@ export interface SubjectSourceOptions {
   globalInputs: readonly string[];
   /** `evidence.resources`: `exercised` (the default) or `used`; the evidence package's subject reads it from the source this returns. */
   resources?: EvidenceResources;
+  /** `evidence.dependencies`: what a dependency slice contributes; the subject reads it from the source this returns. */
+  dependencies?: EvidenceDependencies;
   /** The bytes of a repository-relative file, or undefined when it does not exist. */
   readFile: (path: string) => Uint8Array | undefined;
 }
@@ -35,6 +43,7 @@ export interface ArchitectureSubjectSource {
   localImports: (path: string) => string[];
   globalInputs: string[];
   resourceMode: EvidenceResources;
+  dependencyMode: EvidenceDependencies;
   covers: (path: string) => boolean;
 }
 
@@ -136,5 +145,15 @@ export function subjectSource(
     return covered.has(path);
   };
 
-  return { readFile: options.readFile, sliceFiles, resources, localImports, globalInputs, resourceMode, covers };
+  const dependencyMode = options.dependencies ?? DEFAULT_EVIDENCE_DEPENDENCIES;
+  return {
+    readFile: options.readFile,
+    sliceFiles,
+    resources,
+    localImports,
+    globalInputs,
+    resourceMode,
+    dependencyMode,
+    covers,
+  };
 }

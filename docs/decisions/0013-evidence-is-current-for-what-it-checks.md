@@ -1,6 +1,6 @@
 # ADR 0013: Run evidence should be current for what it checks, not for the whole commit
 
-**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). **Amended 2026-10-15 (Gary): a resource's files count in a subject where a verification exercises the resource, not for every slice that lists it** (the Recommendation and Costs and risks sections say what changed; the earlier text stands where it is not marked superseded). The export and the specifications moved for it in [ADR 0014](0014-export-0.4-carries-the-evidence-binding.md): export 0.4 carries the binding, and `intentset.spec` is `0.2`. Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
+**Status:** accepted, 2026-10-14 (Gary, after reviewing the revision). **Amended 2026-10-15 (Gary): a resource's files count in a subject where a verification exercises the resource, not for every slice that lists it** (the Recommendation and Costs and risks sections say what changed; the earlier text stands where it is not marked superseded). **Amended 2026-10-15 (second): a dependency slice can count through its contract, as an opt-in** (`evidence.dependencies: entrypoint`; the default stays `files`, the measured finding and the decision rule are in the section "Amended 2026-10-15 (second)" below; nothing above is superseded). The export and the specifications moved for the first amendment in [ADR 0014](0014-export-0.4-carries-the-evidence-binding.md): export 0.4 carries the binding, and `intentset.spec` is `0.2`. Proposed and revised the same day; it changes Core §8. The back-test below was not run first: Gary accepted without it, so it is the first implementation step, and its result sets the closure limits and where `exercises` is required, not whether the decision stands.
 
 ## Context
 
@@ -123,6 +123,44 @@ after the records' own, 5 of 237 verifications are current under either rule, be
 (a change to `SLICE-PLATFORM-ORGANIZATION` moved 227 of the 237 subjects, `SLICE-PLATFORM-PEOPLE` 186, `SLICE-WORK-ITEMS` 176) dominate. The second cause the run
 named, the central slices, is not addressed here.
 
+**Amended 2026-10-15 (second): a dependency counts through its contract, as an opt-in.** Amendment 1 left a second cause of the browser store's staleness
+open: "the central slices, which sit in nearly every closure, is not addressed here". The candidate rule, `evidence.dependencies: entrypoint | files`: a
+**dependency** slice (reached only through `dependsOn`: not a slice that implements a verified behavior and not one the verification `exercises`)
+contributes its binding fields, the files its `entrypoints` name (its public surface, VSA §3) and the records of the contracts it `exposes` or
+`consumes` and the decisions those contracts are `informedBy`, and not its other claimed files; a verification's own implementing slices and its
+`exercises`-named slices still contribute every file and, per amendment 1, their own resources. `files` is the rule of 0.7.0 and amendment 1. Before the
+change it was measured with `scripts/subject-backtest.ts --dependencies-section`, over the same 300 Streamlane commits (76969df09 to 852c5f09e) and a
+replay of the 237 browser records made at 63fd216e3, judged at origin/main (ea7d2808d, 15 commits later), against a decision rule written before the
+run: `entrypoint` becomes the default only if it keeps at least 60% of the 237 records current at the later commit and its replayed fixes show no more
+than 2 false greens; otherwise it is an opt-in. The figures are in `docs/adoption/subject-binding-backtest.md`, "Amendment 2026-10-15 (second)":
+
+- **Per commit it helps:** a median 98.0% of verifications kept current per commit against 97.2% (worst decile 6.5% against 4.5%; newest third 47.3%
+  against 21.8%), 85.4% still current after one commit against 78.7% (50.1% against 37.6% after five), and a median 17 files hashed per verification
+  against 87.
+- **On the store it does not:** 5 of 237 records current under either rule (10 of 237 at each of the first ten later commits, then 5). The central
+  slices that `files` moved through their internals, `SLICE-PLATFORM-PEOPLE` (186 of 237) and `SLICE-WORK-ITEMS` (176), stop moving, but
+  `SLICE-PLATFORM-ORGANIZATION` still moves 227 of 237 because its entrypoint `session-provider.tsx` and its record's `implements` really changed
+  (public teams and organizations, #951 to #963), and `SLICE-WORK-COMMENTS` 135 for the same reason. A dependency counted through its contract cannot hide a
+  contract that changed.
+- **False greens:** over the 299 steps a file a dependency claims outside its entrypoint changed in 95 steps, at 43 of which `entrypoint` kept current
+  verifications `files` would have invalidated (3464 verification-step pairs, 269 distinct verifications); 19 of the 57 replayed fix commits moved some
+  verification under `files` that stayed current under `entrypoint`. Of the 27 strong pairs (a fix and a verification of a behavior it changed) 26 move
+  through code under both rules and none is moved by `files` alone: **0 false greens against a limit of 2.** The one pair neither rule sees, #650
+  `TEST-DELIVERY-STRIP`, is the one amendment 1 attributed to a missing `exercises`.
+- **The decision rule:** the gain (5 of 237, against 60%) is under the bar, so **the default does not change: `files` stays the default and `entrypoint`
+  ships as an opt-in.** The false-green condition would have passed.
+
+What ships, either way: the key (CFG001 for an unknown value), the rule in `computeSubject` and the architecture package's `subjectSource`, Core §8 and
+§11, a warning, EVID007, that says how many verifications are current though a file of a slice they depend on changed outside its entrypoints and
+contracts and names the slice, its changed files (first five) and the verifications (first twenty), reusing the one `git diff` EVID005 and EVID006 ask
+for, and conformance cases (S cases D01 to D04: an internal change keeps a record current under `entrypoint` and moves it under `files`; an entrypoint
+file, a contract record, a decision a contract names, a dependency's `dependsOn` and its claims move it; the implementing slice's own files and an
+exercised slice still count fully; EVID007 lists the unseen change). `intentset.spec` did not move and no existing case changed. Two parts the
+amendment decided: a dependency's contract records are the contracts it `exposes` or `consumes` (the brief called them its `contracts` links, which are
+these two) and the decisions they name, each by the hash of its whole record; and a dependency's file that another part of the subject hashes (the test, a
+global input, an entrypoint of another slice) is not reported by EVID007. A repository whose slices have small, stable public surfaces can choose
+`entrypoint` today, and EVID007 says what it cost; the figures above say it does not rescue a store whose central slices keep changing their entrypoints.
+
 **Unclaimed files are reported, not hidden.** A file that changed between a record's commit and the assessed commit,
 and that no slice claims and no resource or global input names, cannot move any subject. The report lists such files
 (`EVID005`, a warning; EVID003 was already the locator check, and the fallback below is EVID004), so a repository sees what the binding could not see, and the architecture check's unclaimed
@@ -142,6 +180,10 @@ files rule is what removes them.
 - **A weaker default statement.** At the default, a current record says the check's subject is unchanged since it
   passed, not that the commit as a whole was tested. The commit mode exists so that a gate that needs the stronger
   statement can ask for it.
+- **Amended 2026-10-15 (second): `entrypoint` is the weaker statement.** A repository that sets it accepts that a check which drives a dependency
+  without declaring it (`exercises`) can read current after a change to the dependency's internals. EVID007 reports every such case, and the replay
+  found none among the fixes that repaired a behavior, but a slice whose public surface says less than its behavior does is a gap the control (the diagnostic
+  and `exercises`) must close by review.
 - **Large dependency closures.** Measured on Streamlane: the median verification hashes 8 slices and 87 files, the 90th
   percentile 26 slices and 200 files, the largest 32 slices and 228 files, and six slices have a closure of at least half
   the model. A change to a central slice makes most evidence stale. That is honest. There is no cap, because the wide

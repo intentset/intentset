@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import {
+  DEFAULT_EVIDENCE_DEPENDENCIES,
   DEFAULT_IGNORE,
   DEFAULT_SCOPE,
   DOCUMENT_MAX_BYTES,
@@ -151,7 +152,7 @@ test("readConfig applies defaults and reports CFG001", () => {
     scope: DEFAULT_SCOPE,
     registries: "registries.yaml",
     ignore: DEFAULT_IGNORE,
-    evidence: { binding: null, globalInputs: [], resources: "exercised" },
+    evidence: { binding: null, globalInputs: [], resources: "exercised", dependencies: DEFAULT_EVIDENCE_DEPENDENCIES },
   });
   assert.deepEqual(DEFAULT_SCOPE, ["**/*.md"]);
   assert.deepEqual(DEFAULT_IGNORE, ["node_modules/**", "dist/**", ".git/**"]);
@@ -180,19 +181,31 @@ test("BEH-EVIDENCE-CURRENT: evidence in the configuration names the binding, the
     binding: "commit",
     globalInputs: ["pnpm-lock.yaml", "tsconfig*.json"],
     resources: "exercised",
+    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
   });
-  assert.deepEqual(read("  resources: used\n").config.evidence, { binding: null, globalInputs: [], resources: "used" });
+  assert.deepEqual(read("  resources: used\n").config.evidence, {
+    binding: null,
+    globalInputs: [],
+    resources: "used",
+    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
+  });
+  assert.equal(read("  dependencies: entrypoint\n").config.evidence.dependencies, "entrypoint");
+  assert.equal(read("  dependencies: files\n").config.evidence.dependencies, "files");
+  assert.deepEqual(read("  dependencies: files\n").diagnostics, []);
   assert.deepEqual(read("  resources: exercised\n").diagnostics, []);
   assert.deepEqual(read("  binding: subject\n").config.evidence, {
     binding: "subject",
     globalInputs: [],
     resources: "exercised",
+    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
   });
   assert.deepEqual(read("  globalInputs: []\n").diagnostics, []);
 
   const bad = (evidence: string) => read(evidence).diagnostics.map((d) => [d.code, d.field]);
   assert.deepEqual(bad("  binding: graph\n"), [["CFG001", "/evidence/binding"]]);
   assert.deepEqual(bad("  resources: all\n"), [["CFG001", "/evidence/resources"]]);
+  assert.deepEqual(bad("  dependencies: everything\n"), [["CFG001", "/evidence/dependencies"]]);
+  assert.equal(read("  dependencies: everything\n").config.evidence.dependencies, DEFAULT_EVIDENCE_DEPENDENCIES);
   assert.deepEqual(read("  resources: all\n").config.evidence.resources, "exercised");
   assert.deepEqual(bad("  globalInputs: pnpm-lock.yaml\n"), [["CFG001", "/evidence/globalInputs"]]);
   assert.deepEqual(bad("  globalInputs:\n    - ../outside\n"), [["CFG001", "/evidence/globalInputs/0"]]);

@@ -119,17 +119,18 @@ export function evidenceImportCommand(session: Session, options: EvidenceImportO
     return fail(`--out ${options.out} exists; run records are history, so import into a new file.`);
   }
 
-  // Selector -> verification, from the automated verifications that are not retired, first ID winning a shared selector.
-  const verifications = new Map<string, string>();
+  // Selector -> every verification that names it, from the automated verifications that are not retired: a selector
+  // two verifications share (one test verifying two behaviors) gives each of them a record.
+  const verifications = new Map<string, string[]>();
   const shared: string[] = [];
   for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
     const meta = graph.artifacts.get(id)?.meta;
     if (meta?.type !== "verification" || meta.status === "retired" || meta.verification?.method !== "automated")
       continue;
     const selector = meta.verification.selector;
-    if (verifications.has(selector)) shared.push(`${selector} (${verifications.get(selector)} and ${id})`);
-    else verifications.set(selector, id);
+    verifications.set(selector, [...(verifications.get(selector) ?? []), id]);
   }
+  for (const [selector, ids] of verifications) if (ids.length > 1) shared.push(`${selector} (${ids.join(", ")})`);
 
   // Core §8: where subject binding is in force each record carries its verification's subject hash; otherwise the
   // records are what they always were. The commit and graph hash go in either way, as provenance.
@@ -187,10 +188,12 @@ export function evidenceImportCommand(session: Session, options: EvidenceImportO
   }
   lines.push(
     `Unmatched selectors (${converted.unmatched.length}): ${converted.unmatched.length === 0 ? "none" : "no test title carries them, so their verifications get no record from this run and read as missing"}`,
-    ...converted.unmatched.map((selector) => `  - ${selector} (${verifications.get(selector)})`),
+    ...converted.unmatched.map((selector) => `  - ${selector} (${(verifications.get(selector) ?? []).join(", ")})`),
   );
   if (shared.length > 0) {
-    lines.push(`Selectors shared by two verifications, matched to the first only (${shared.length}):`);
+    lines.push(
+      `Selectors shared by several verifications, each of which gets a record from the same tests (${shared.length}):`,
+    );
     lines.push(...shared.map((item) => `  - ${item}`));
   }
   if (parsed.problems.length > 0) {

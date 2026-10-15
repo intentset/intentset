@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   type Config,
+  DEFAULT_EVIDENCE_DEPENDENCIES,
   type Diagnostic,
   type DocumentInput,
   EMPTY_REGISTRIES,
@@ -66,7 +67,12 @@ export function validateExpanded(expanded: ExpandedCase): Validated {
     registries = read.registries;
     extra.push(...read.diagnostics);
   }
-  let evidence: Config["evidence"] = { binding: null, globalInputs: [], resources: "exercised" };
+  let evidence: Config["evidence"] = {
+    binding: null,
+    globalInputs: [],
+    resources: "exercised",
+    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
+  };
   if (expanded.configText !== null) {
     const config = readConfig(expanded.configText, CONFIG_PATH);
     extra.push(...config.diagnostics);

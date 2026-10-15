@@ -126,11 +126,138 @@ function input(
     resources: RESOURCES,
     localImports: (path) => IMPORTS[path] ?? [],
     globalInputs: ["pnpm-lock.yaml", "tsconfig.json"],
+    dependencyMode: "files",
     ...overrides,
   };
 }
 
 const hashOf = (overrides?: Parameters<typeof input>[0]) => computeSubject(input(overrides)).hash;
+
+/**
+ * SLICE-B is a dependency of the implementing SLICE-A with a public surface (b/index.ts), a contract it exposes and the
+ * decision that contract names, and a file of its own (b/internal.ts) that nothing public imports.
+ */
+const ENTRYPOINT = {
+  dependencyMode: "entrypoint" as const,
+  nodes: {
+    "SLICE-B": {
+      type: "slice",
+      links: { dependsOn: ["SLICE-C"], exposes: ["CON-B"], informedBy: ["ADR-B"] },
+      slice: { claims: [{ kind: "source", path: "b/**" }], entrypoints: ["b/index.ts"] },
+    },
+    "CON-B": { type: "contract", links: { informedBy: ["ADR-B2"] } },
+    "ADR-B": { type: "decision" },
+    "ADR-B2": { type: "decision" },
+  },
+  sliceFiles: { ...SLICE_FILES, "SLICE-B": ["b/index.ts", "b/internal.ts"] },
+  files: { "b/index.ts": "public", "b/internal.ts": "private" },
+};
+
+describe("BEH-EVIDENCE-CURRENT: a dependency counts through its contract (dependencies: entrypoint)", () => {
+  test("a change to a dependency's internal file does not move the subject, and files mode does", () => {
+    const base = hashOf(ENTRYPOINT);
+    assert.equal(hashOf({ ...ENTRYPOINT, files: { ...ENTRYPOINT.files, "b/internal.ts": "private!" } }), base);
+    const files = (extra: Record<string, string> = {}) =>
+      hashOf({ ...ENTRYPOINT, dependencyMode: "files", files: { ...ENTRYPOINT.files, ...extra } });
+    assert.notEqual(files({ "b/internal.ts": "private!" }), files());
+  });
+
+  test("an entrypoint file, a contract record, a decision it names or the dependency's own binding fields move it", () => {
+    const base = hashOf(ENTRYPOINT);
+    assert.notEqual(hashOf({ ...ENTRYPOINT, files: { ...ENTRYPOINT.files, "b/index.ts": "public!" } }), base);
+    const changed = (id: string) =>
+      hashOf({
+        ...ENTRYPOINT,
+        nodes: { ...ENTRYPOINT.nodes, [id]: { ...ENTRYPOINT.nodes[id as "CON-B"], version: "2" } },
+      });
+    assert.notEqual(changed("CON-B"), base);
+    assert.notEqual(changed("ADR-B2"), base);
+    const withSlice = (slice: Node) => hashOf({ ...ENTRYPOINT, nodes: { ...ENTRYPOINT.nodes, "SLICE-B": slice } });
+    const sliceB = ENTRYPOINT.nodes["SLICE-B"];
+    assert.notEqual(withSlice({ ...sliceB, links: { ...sliceB.links, dependsOn: [] } }), base, "its dependsOn");
+    assert.notEqual(
+      withSlice({
+        ...sliceB,
+        slice: {
+          ...sliceB.slice,
+          claims: [
+            { kind: "source", path: "b/**" },
+            { kind: "source", path: "x/**" },
+          ],
+        },
+      }),
+      base,
+      "its claims",
+    );
+    assert.notEqual(
+      withSlice({ ...sliceB, slice: { ...sliceB.slice, usesResources: ["RES-OTHER"] } }),
+      base,
+      "its resources",
+    );
+    assert.notEqual(
+      withSlice({ ...sliceB, slice: { ...sliceB.slice, entrypoints: ["b/internal.ts"] } }),
+      base,
+      "its entrypoints",
+    );
+  });
+
+  test("the contract and decision records are parts, owned by none, and the dependency's internals are listed", () => {
+    const subject = computeSubject(input(ENTRYPOINT));
+    const kinds = (kind: string) => subject.parts.filter((p) => p.kind === kind).map((p) => p.id);
+    assert.deepEqual(kinds("contract"), ["CON-B"]);
+    assert.deepEqual(kinds("decision"), ["ADR-B2"]);
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "slice-file" && p.owner === "SLICE-B").map((p) => p.id),
+      ["b/index.ts"],
+    );
+    assert.deepEqual(subject.dependencyInternals, [
+      { id: "SLICE-B", files: ["b/internal.ts"] },
+      { id: "SLICE-C", files: ["c/c.ts"] },
+    ]);
+    assert.deepEqual(computeSubject(input({ ...ENTRYPOINT, dependencyMode: "files" })).dependencyInternals, []);
+  });
+
+  test("the implementing slice's own files, and an exercised slice's, count fully", () => {
+    const base = hashOf(ENTRYPOINT);
+    assert.notEqual(hashOf({ ...ENTRYPOINT, files: { ...ENTRYPOINT.files, "a/two.ts": "two!" } }), base);
+    const exercising = {
+      "TEST-A": {
+        type: "verification",
+        links: { verifies: ["BEH-A"] },
+        verification: {
+          method: "automated" as const,
+          locator: "tests/a.test.ts",
+          selector: "a",
+          exercises: ["SLICE-B"],
+        },
+      },
+    };
+    const exercised = { ...ENTRYPOINT, nodes: { ...ENTRYPOINT.nodes, ...exercising } };
+    const before = hashOf(exercised);
+    assert.notEqual(hashOf({ ...exercised, files: { ...exercised.files, "b/internal.ts": "private!" } }), before);
+    assert.deepEqual(computeSubject(input(exercised)).dependencyInternals, [{ id: "SLICE-C", files: ["c/c.ts"] }]);
+  });
+
+  test("a dependency file another part hashes is not reported as unseen", () => {
+    const nodes = {
+      ...ENTRYPOINT.nodes,
+      "SLICE-C": {
+        type: "slice",
+        slice: { claims: [{ kind: "source", path: "c/**" }], entrypoints: ["b/internal.ts"] },
+      },
+    };
+    const subject = computeSubject(input({ ...ENTRYPOINT, nodes }));
+    assert.deepEqual(subject.dependencyInternals, [{ id: "SLICE-C", files: ["c/c.ts"] }]);
+  });
+
+  test("a dependency of a dependency is a dependency too", () => {
+    const subject = computeSubject(input(ENTRYPOINT));
+    assert.deepEqual(
+      subject.parts.filter((p) => p.kind === "slice-file" && p.owner === "SLICE-C"),
+      [],
+    );
+  });
+});
 
 describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
   test("the same inputs give the same hash, in any order of files and inputs", () => {
@@ -445,7 +572,7 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     const after = computeSubject(input({ files: { "b/b.ts": "b!", "pnpm-lock.yaml": "lock!" } }));
     assert.deepEqual(movedParts(before, after), ["global-input pnpm-lock.yaml", "slice-file b/b.ts (SLICE-B)"]);
     assert.deepEqual(movedParts(before, before), []);
-    const kinds = new Set(computeSubject(input({ resourceMode: "used" })).parts.map((p) => p.kind));
+    const kinds = new Set(computeSubject(input({ resourceMode: "used", ...ENTRYPOINT })).parts.map((p) => p.kind));
     for (const kind of SUBJECT_PART_KINDS) assert.ok(kinds.has(kind), kind);
   });
 
