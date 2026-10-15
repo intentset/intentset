@@ -131,6 +131,7 @@ export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
       ["Start with one capability", "start/index.html"],
       ["How it works", "how-it-works/index.html"],
       ["Run the adoption", "adopt/index.html"],
+      ["Prove the work", "verify/index.html"],
       ["The agent guide", "guide/index.html"],
     ],
   },
@@ -259,6 +260,7 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["how-it-works/index.html", "how-it-works.md"],
   ["start/index.html", "start.md"],
   ["adopt/index.html", "adopt.md"],
+  ["verify/index.html", "verify.md"],
   ["pilot/index.html", "pilot.md"],
   ["tools/index.html", "tools.md"],
   ["tools/cli/index.html", "cli.md"],
@@ -451,6 +453,7 @@ when it exists. The records are Markset documents, so Markset's authoring guide 
 - [Specifications](${site}/specifications/): the source of truth
 - [The intentset command](${site}/tools/cli/): every command, option and exit code
 - [Run the adoption](${site}/adopt/): how one person runs an adoption through many agents, and how to set that up
+- [Prove the work](${site}/verify/): the checks that let a change carry its own proof, and how to set them up
 - [Markset authoring guide](${EXTERNAL.markset}guide.md): the document syntax the records are written in
 `;
 }
@@ -483,6 +486,7 @@ const RAIL_PAGES = new Set([
   "pilot/index.html",
   "start/index.html",
   "tools/index.html",
+  "verify/index.html",
 ]);
 
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */

@@ -24,6 +24,7 @@ const PAGES = [
   "start/index.html",
   "how-it-works/index.html",
   "adopt/index.html",
+  "verify/index.html",
   "guide/index.html",
   "tools/index.html",
   "tools/cli/index.html",
