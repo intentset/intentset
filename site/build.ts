@@ -49,10 +49,11 @@ export const NOT_FOUND = "404.html";
 
 /**
  * The chat's address: the backend's `POST /ask` on its branch (amplify/backend.ts, SLICE-ASK). While it is null, the
- * site is built without the chat. Set in the change that launched the chat, with the privacy page; the address is the
- * API of the Amplify app intentset-chat (d20jjgxbjnk8kx), branch main.
+ * site is built without the chat. Set in the change that launched the chat, with the privacy page. Since 2026-10-14 the
+ * address is prod's: the API of the Amplify app intentset-chat (d2c2z3nz9gou1a) in Coral Reef's prod account
+ * (amplify/environments.json), branch main.
  */
-export const ASK_URL: string | null = "https://qjlqykgg6e.execute-api.us-east-2.amazonaws.com/v1/ask";
+export const ASK_URL: string | null = "https://0ue3mcr2pe.execute-api.us-east-2.amazonaws.com/v1/ask";
 
 /**
  * What a build may change from the defaults: the chat's address, so a test can build the site against a stub, and
