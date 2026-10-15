@@ -6,7 +6,7 @@ intentset:
   id: CAP-ASK
   type: capability
   title: Ask the documentation a question
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

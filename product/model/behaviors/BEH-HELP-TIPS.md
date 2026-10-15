@@ -6,7 +6,7 @@ intentset:
   id: BEH-HELP-TIPS
   type: behavior
   title: Tips are bound to the controls that deliver a behavior
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

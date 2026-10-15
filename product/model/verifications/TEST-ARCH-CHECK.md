@@ -6,7 +6,7 @@ intentset:
   id: TEST-ARCH-CHECK
   type: verification
   title: The architecture check holds code to its slices
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

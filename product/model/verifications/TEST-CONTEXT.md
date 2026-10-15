@@ -6,7 +6,7 @@ intentset:
   id: TEST-CONTEXT
   type: verification
   title: Context returns what an ID or a file promises
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

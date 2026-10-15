@@ -6,7 +6,7 @@ intentset:
   id: BEH-ARCH-BASELINE
   type: behavior
   title: A baseline holds existing violations and blocks new ones
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

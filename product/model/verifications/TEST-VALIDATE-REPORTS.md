@@ -6,7 +6,7 @@ intentset:
   id: TEST-VALIDATE-REPORTS
   type: verification
   title: Validate reports every problem as a sorted diagnostic
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: BEH-VALIDATE-REPORTS
   type: behavior
   title: Validate reports every problem in the model as a diagnostic
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

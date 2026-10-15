@@ -6,7 +6,7 @@ intentset:
   id: SLICE-PUBLISHER
   type: slice
   title: The publisher package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: BEH-EVIDENCE-IMPORT
   type: behavior
   title: Evidence import turns a test report into run records
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: BEH-QUESTIONS-REPORT
   type: behavior
   title: Maintainers get a report of what visitors asked
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

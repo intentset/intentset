@@ -6,7 +6,7 @@ intentset:
   id: TEST-MARKSET-CARRIER
   type: verification
   title: Records are read as Markset with Markset's own diagnostics
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

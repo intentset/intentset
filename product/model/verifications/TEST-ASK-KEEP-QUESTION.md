@@ -6,7 +6,7 @@ intentset:
   id: TEST-ASK-KEEP-QUESTION
   type: verification
   title: An answered question is kept scrubbed for the retention period
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

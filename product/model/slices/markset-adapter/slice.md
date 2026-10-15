@@ -6,7 +6,7 @@ intentset:
   id: SLICE-MARKSET-ADAPTER
   type: slice
   title: The markset-adapter package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

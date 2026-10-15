@@ -6,7 +6,7 @@ intentset:
   id: TEST-EVIDENCE-IMPORT
   type: verification
   title: Evidence import binds a test report to the commit
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

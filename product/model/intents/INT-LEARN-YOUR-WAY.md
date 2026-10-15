@@ -6,7 +6,7 @@ intentset:
   id: INT-LEARN-YOUR-WAY
   type: intent
   title: Visitors learn Intentset the way they learn best
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

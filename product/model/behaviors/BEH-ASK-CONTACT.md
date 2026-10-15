@@ -6,7 +6,7 @@ intentset:
   id: BEH-ASK-CONTACT
   type: behavior
   title: A visitor who wants to get in touch is pointed to the way in
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

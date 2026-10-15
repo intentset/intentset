@@ -6,7 +6,7 @@ intentset:
   id: CAP-PUBLISH
   type: capability
   title: Publish knowledge, and help beside the controls
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

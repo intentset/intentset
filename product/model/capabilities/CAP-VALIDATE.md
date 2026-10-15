@@ -6,7 +6,7 @@ intentset:
   id: CAP-VALIDATE
   type: capability
   title: Check the records
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

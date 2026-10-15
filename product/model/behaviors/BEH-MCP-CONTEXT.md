@@ -6,7 +6,7 @@ intentset:
   id: BEH-MCP-CONTEXT
   type: behavior
   title: The MCP server gives agents the model read-only
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

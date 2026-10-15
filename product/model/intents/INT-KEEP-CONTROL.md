@@ -6,7 +6,7 @@ intentset:
   id: INT-KEEP-CONTROL
   type: intent
   title: People keep control of what their agents build
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

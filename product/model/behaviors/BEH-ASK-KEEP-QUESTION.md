@@ -6,7 +6,7 @@ intentset:
   id: BEH-ASK-KEEP-QUESTION
   type: behavior
   title: A question and its answer are kept, scrubbed, for 90 days
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: SLICE-MCP
   type: slice
   title: The mcp package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: BEH-CONTEXT
   type: behavior
   title: Context gives an agent what the code it will change promises
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: CAP-LEARN-FROM-QUESTIONS
   type: capability
   title: Learn from the questions visitors ask
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

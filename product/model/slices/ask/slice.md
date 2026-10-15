@@ -6,7 +6,7 @@ intentset:
   id: SLICE-ASK
   type: slice
   title: The chat on intentset.org
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

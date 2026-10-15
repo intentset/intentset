@@ -6,7 +6,7 @@ intentset:
   id: TEST-ASK-NOT-IN-DOCS
   type: verification
   title: An uncited answer is kept as not answered
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

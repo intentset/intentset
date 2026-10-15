@@ -6,7 +6,7 @@ intentset:
   id: SLICE-ATLAS
   type: slice
   title: The atlas package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

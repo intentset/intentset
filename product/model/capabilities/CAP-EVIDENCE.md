@@ -6,7 +6,7 @@ intentset:
   id: CAP-EVIDENCE
   type: capability
   title: Say which checks pass at this commit
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

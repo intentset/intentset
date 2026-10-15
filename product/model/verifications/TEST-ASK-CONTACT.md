@@ -6,7 +6,7 @@ intentset:
   id: TEST-ASK-CONTACT
   type: verification
   title: A contact request is answered with the get-involved page
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: OUT-QUESTIONS-ANSWERED
   type: outcome
   title: A visitor's question is answered from the published documentation
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

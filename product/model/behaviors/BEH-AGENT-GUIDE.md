@@ -6,7 +6,7 @@ intentset:
   id: BEH-AGENT-GUIDE
   type: behavior
   title: Init writes a configuration and the agent guide, and overwrites nothing
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

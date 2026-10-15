@@ -6,7 +6,7 @@ intentset:
   id: SLICE-ARCHITECTURE
   type: slice
   title: The architecture package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

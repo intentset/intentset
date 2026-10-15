@@ -6,7 +6,7 @@ intentset:
   id: BEH-ATLAS
   type: behavior
   title: Atlas renders review pages over an export
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

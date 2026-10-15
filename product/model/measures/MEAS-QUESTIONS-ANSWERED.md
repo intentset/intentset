@@ -6,7 +6,7 @@ intentset:
   id: MEAS-QUESTIONS-ANSWERED
   type: measure
   title: Share of the chat's questions answered with a cited source
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

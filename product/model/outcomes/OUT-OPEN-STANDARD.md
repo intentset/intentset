@@ -6,7 +6,7 @@ intentset:
   id: OUT-OPEN-STANDARD
   type: outcome
   title: Another implementation can be built and checked against the specifications
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

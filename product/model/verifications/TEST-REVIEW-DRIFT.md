@@ -6,7 +6,7 @@ intentset:
   id: TEST-REVIEW-DRIFT
   type: verification
   title: Review lists slices whose code changed while their records did not
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

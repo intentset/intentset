@@ -6,7 +6,7 @@ intentset:
   id: TEST-ARCH-BASELINE
   type: verification
   title: A baseline turns known violations into warnings and blocks new ones
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

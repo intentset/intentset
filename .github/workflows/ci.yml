@@ -27,7 +27,8 @@ jobs:
       - run: pnpm test
       # Intentset's own evidence: the tests again with the TAP reporter, imported as run records for each verification
       # whose selector a test title carries, then the model validated at L3, which reports link coverage and
-      # current-pass coverage apart. Every record is a draft, so a missing run is reported, not failed.
+      # current-pass coverage apart. An approved behavior needs a current pass, which this run supplies; the rules are drafts,
+      # since none has a verification, so they are reported, not failed.
       - run: pnpm run model:evidence --environment github-actions --uri-base "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       - run: pnpm run intentset validate --level L3 --mode strict
       - run: pnpm run conformance

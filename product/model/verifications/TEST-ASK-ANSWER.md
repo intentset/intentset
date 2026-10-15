@@ -6,7 +6,7 @@ intentset:
   id: TEST-ASK-ANSWER
   type: verification
   title: The chat streams an answer with its sources
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
