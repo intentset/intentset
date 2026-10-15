@@ -5,10 +5,9 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.7.0 — 2026-10-14
 
-**Export 0.4 and specifications 0.2 are breaking for a consumer that pins export 0.3 or `intentset.spec` `0.1`; the
-release that carries them is 0.7.0 (not yet released).** Export 0.4 carries the evidence binding, and the
+**Export 0.4 and specifications 0.2 are breaking for a consumer that pins export 0.3 or `intentset.spec` `0.1`.** Export 0.4 carries the evidence binding, and the
 specifications and `intentset.spec` move from `0.1` to `0.2` (ADR 0014), and the conformance suite's cases move with them (new export and consumer cases, `0.2` in every fixture). The worked example's knowledge is also
 approved, reviewed and carries two tips, the walkthrough shows what publication writes for it, the example says
 "student assessment", and intentset.org gained a Copy button.
