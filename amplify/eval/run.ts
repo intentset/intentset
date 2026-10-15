@@ -6,7 +6,7 @@
  *
  * Run it before any change to the prompt, the model or limits.ts's model, and put the table in the pull request:
  *
- *   pnpm run chat:eval                 (builds the corpus first; AWS profile coral-reef unless AWS_PROFILE is set)
+ *   pnpm run chat:eval                 (builds the corpus first; AWS profile crv-sandbox unless AWS_PROFILE is set)
  *   pnpm run chat:eval -- --only drift-gate,contact
  */
 import { randomUUID } from "node:crypto";
@@ -23,7 +23,7 @@ import { type EvalAnswer, type EvalQuestion, judge, origin, readQuestions, unkno
 const here = import.meta.dirname;
 const { values } = parseArgs({ options: { only: { type: "string" }, concurrency: { type: "string" } } });
 
-process.env.AWS_PROFILE ??= "coral-reef";
+process.env.AWS_PROFILE ??= "crv-sandbox";
 
 const corpus = checkCorpus(JSON.parse(await readFile(join(here, "..", "functions", "ask", "corpus.json"), "utf8")));
 let questions = readQuestions(JSON.parse(await readFile(join(here, "questions.json"), "utf8")));

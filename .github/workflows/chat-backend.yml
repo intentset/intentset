@@ -1,7 +1,15 @@
-# The chat's backend (amplify/, SLICE-ASK) on its branch, `main` of the Amplify app in the coral-reef project
-# (us-east-2), deployed with `ampx pipeline-deploy` through the role CHAT_DEPLOY_ROLE_ARN, which trusts this
-# repository's main only. The corpus is built from the same commit first, so the chat answers from what the site
-# publishes. Until the repository variables exist, the job is skipped.
+# The chat's backend (amplify/, SLICE-ASK) in its environments (amplify/environments.json; Streamlane ADR 0087): an
+# Amplify app with no repository connected in each of Coral Reef's dev, staging and prod accounts, deployed with
+# `ampx pipeline-deploy --branch main` in the GitHub environment of the same name, whose role (`github-deploy-intentset`,
+# coral-reef-site's infra/accounts/baseline.yml) only that environment may assume:
+#
+# - dev, on every push to main that touches the backend or the corpus's sources;
+# - staging, nightly, from the commit dev last deployed, when it is new to staging;
+# - prod, only when the product owner starts this workflow by hand (Actions, Chat backend, Run workflow, prod). An
+#   agent never starts it. With no commit given, prod ships what staging last deployed.
+#
+# The corpus is built from the same commit first, so the chat answers from what the site publishes. Dev and staging
+# subscribe no inbox to their alarms. Each deploy moves the tag deployed/chat/<environment> to the commit it shipped.
 name: Chat backend
 on:
   push:
@@ -17,20 +25,67 @@ on:
       - packages/cli/src/**
       - pnpm-lock.yaml
       - .github/workflows/chat-backend.yml
+  schedule:
+    - cron: "45 8 * * *"
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy
+        type: choice
+        options: [staging, prod]
+        required: true
+      ref:
+        description: The commit to ship (empty for what the environment below last deployed)
+        type: string
+        required: false
 permissions:
-  contents: read
+  contents: write
   id-token: write
-concurrency:
-  group: chat-backend
-  cancel-in-progress: false
 jobs:
+  choose:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.choose.outputs.environment }}
+      sha: ${{ steps.choose.outputs.sha }}
+    steps:
+      - id: choose
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          INPUT_ENVIRONMENT: ${{ inputs.environment }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          # The commit an environment last deployed successfully: its deployed/chat/<environment> tag.
+          last() {
+            gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/deployed/chat/$1" --jq .object.sha 2>/dev/null || true
+          }
+          case "$EVENT" in
+            push) environment=dev; sha=$GITHUB_SHA ;;
+            schedule)
+              environment=staging; sha=$(last dev)
+              if [ -n "$sha" ] && [ "$sha" = "$(last staging)" ]; then echo "staging already has $sha"; sha=""; fi ;;
+            workflow_dispatch)
+              environment=$INPUT_ENVIRONMENT
+              if [ -n "$INPUT_REF" ]; then sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$INPUT_REF" --jq .sha)
+              elif [ "$environment" = prod ]; then sha=$(last staging)
+              else sha=$(last dev); fi
+              [ -n "$sha" ] || { echo "Nothing to ship: no successful deploy below $environment"; exit 1; } ;;
+          esac
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Deploying ${sha:-nothing} to $environment"
+
   deploy:
-    if: vars.CHAT_AMPLIFY_APP_ID != '' && vars.CHAT_DEPLOY_ROLE_ARN != ''
+    needs: choose
+    if: needs.choose.outputs.sha != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: ${{ needs.choose.outputs.environment }}
+    concurrency: chat-backend-${{ needs.choose.outputs.environment }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.choose.outputs.sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -40,8 +95,25 @@ jobs:
       - run: pnpm run corpus
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.CHAT_DEPLOY_ROLE_ARN }}
-          aws-region: us-east-2
-      - run: pnpm exec ampx pipeline-deploy --branch main --app-id "${{ vars.CHAT_AMPLIFY_APP_ID }}"
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: chat-backend-${{ needs.choose.outputs.environment }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Deploy the backend to the environment's app
         env:
+          ENVIRONMENT: ${{ needs.choose.outputs.environment }}
           CI: "true"
+        run: |
+          cfg=$(jq -ce --arg e "$ENVIRONMENT" '.[$e]' amplify/environments.json)
+          account=$(aws sts get-caller-identity --query Account --output text)
+          [ "$account" = "$(jq -r .account <<<"$cfg")" ] || { echo "$ENVIRONMENT is not account $account"; exit 1; }
+          # Unset in prod, so its alarms go to the inbox (amplify/settings.ts); empty in dev and staging.
+          if jq -e 'has("alarmEmail")' <<<"$cfg" > /dev/null; then export INTENTSET_ALARM_EMAIL=$(jq -r .alarmEmail <<<"$cfg"); fi
+          pnpm exec ampx pipeline-deploy --branch main --app-id "$(jq -r .appId <<<"$cfg")" --outputs-out-dir "$RUNNER_TEMP"
+          echo "$ENVIRONMENT's chat answers at $(jq -r .custom.askUrl "$RUNNER_TEMP/amplify_outputs.json")"
+      - name: Record what this environment runs
+        env:
+          ENVIRONMENT: ${{ needs.choose.outputs.environment }}
+          SHA: ${{ needs.choose.outputs.sha }}
+        run: |
+          git tag -f "deployed/chat/$ENVIRONMENT" "$SHA"
+          git push -f origin "refs/tags/deployed/chat/$ENVIRONMENT"

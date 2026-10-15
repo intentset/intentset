@@ -1,0 +1,5 @@
+{
+  "dev": { "account": "171180525205", "appId": "d22c45rv1281ko", "alarmEmail": "" },
+  "staging": { "account": "715844023793", "appId": "d3oj0d9j9c9tbi", "alarmEmail": "" },
+  "prod": { "account": "027677878969", "appId": "d2c2z3nz9gou1a" }
+}
