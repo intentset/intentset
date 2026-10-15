@@ -94,15 +94,18 @@ assert.deepEqual(bindTips({ querySelectorAll: () => [schedule, assign] }, help.h
 assert.equal(schedule.getAttribute("title"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
 assert.equal(assign.hasAttribute("title"), false);
 
-// atlas renders, with no script anywhere.
+// atlas renders, with no script but the map's one, which only the map page loads (ADR 0015).
 const atlas = buildAtlas({
   graph: result.graph,
   registries,
   diagnostics: result.diagnostics,
   snapshot: { commit: null, graphHash: hash, scope: ["**/*.md"], level: "L1" },
 });
-assert.ok(atlas.has("index.html"));
-for (const html of atlas.values()) assert.ok(!html.includes("<script"));
+assert.ok(atlas.has("index.html") && atlas.has("map.html") && atlas.has("atlas-map.js"));
+for (const [path, html] of atlas) {
+  if (path === "map.html") assert.deepEqual(html.match(/<script[^>]*>/g), ['<script src="atlas-map.js" defer>']);
+  else assert.ok(!html.includes("<script"), path);
+}
 
 // mcp builds a server in each mode.
 assert.ok(
