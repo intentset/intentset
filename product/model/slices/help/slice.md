@@ -6,7 +6,7 @@ intentset:
   id: SLICE-HELP
   type: slice
   title: The help package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

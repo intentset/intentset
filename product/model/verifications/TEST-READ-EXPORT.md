@@ -6,7 +6,7 @@ intentset:
   id: TEST-READ-EXPORT
   type: verification
   title: readExport refuses an export that breaks the contract
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

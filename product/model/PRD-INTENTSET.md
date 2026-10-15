@@ -6,7 +6,7 @@ intentset:
   id: PRD-INTENTSET
   type: product
   title: Intentset
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
@@ -21,7 +21,7 @@ Intentset is the v0.2 specifications, the conformance suite, the reference imple
 
 The model covers the packages under `packages/` and the chat on intentset.org (`amplify/` and `site/chat/`), which answers visitors' questions from the published documentation. The rest of the site, the specifications and the conformance cases are outside it: the site is composition over the CLI, and the specifications and cases are checked by the conformance harness and the repository's tests rather than described by records.
 
-Every record is a draft until a maintainer promotes it.
+A maintainer approved the model on 2026-10-15, all but ten records: OUT-DOCS-IMPROVE, which waits for a measure, and the nine rules, which have no verification because the tests that touch a rule check only part of it. A record written since is a draft until a maintainer approves it.
 
 ## Sources
 

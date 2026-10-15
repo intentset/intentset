@@ -6,7 +6,7 @@ intentset:
   id: TEST-MIGRATE
   type: verification
   title: Migrate rewrites two values per record and refuses a dirty tree
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

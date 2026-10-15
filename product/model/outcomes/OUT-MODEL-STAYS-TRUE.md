@@ -6,7 +6,7 @@ intentset:
   id: OUT-MODEL-STAYS-TRUE
   type: outcome
   title: The model stays true as the code changes
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

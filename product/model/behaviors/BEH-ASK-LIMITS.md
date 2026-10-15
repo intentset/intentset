@@ -6,7 +6,7 @@ intentset:
   id: BEH-ASK-LIMITS
   type: behavior
   title: The chat refuses, politely, past its limits
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

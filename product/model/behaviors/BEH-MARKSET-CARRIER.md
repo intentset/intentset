@@ -6,7 +6,7 @@ intentset:
   id: BEH-MARKSET-CARRIER
   type: behavior
   title: A record written in Markset is read with Markset's own diagnostics
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: CAP-CONFORMANCE
   type: capability
   title: Check an implementation against the suite
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

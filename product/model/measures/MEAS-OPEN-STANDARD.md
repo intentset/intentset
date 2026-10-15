@@ -6,7 +6,7 @@ intentset:
   id: MEAS-OPEN-STANDARD
   type: measure
   title: Other implementations checked against the published suite
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
@@ -15,7 +15,7 @@ intentset:
   measure:
     metric: other_implementations_conforming
     baseline: unknown
-    target: 'Proposed, for the maintainers to confirm: at least one implementation other than this one'
+    target: 'at least one implementation other than this one'
     window: '12 months after v0.1-draft'
     source: conformance-claims
     direction: increase

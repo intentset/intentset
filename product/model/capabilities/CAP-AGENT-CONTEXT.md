@@ -6,7 +6,7 @@ intentset:
   id: CAP-AGENT-CONTEXT
   type: capability
   title: Give agents what to load and say what they did not update
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

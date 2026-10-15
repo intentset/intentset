@@ -6,7 +6,7 @@ intentset:
   id: TEST-ASK-LIMITS
   type: verification
   title: The chat refuses past its limits without a model call
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

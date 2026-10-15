@@ -6,7 +6,7 @@ intentset:
   id: TEST-EVIDENCE-CURRENT
   type: verification
   title: Only a pass whose binding holds counts
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

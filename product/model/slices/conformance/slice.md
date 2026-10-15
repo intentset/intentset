@@ -6,7 +6,7 @@ intentset:
   id: SLICE-CONFORMANCE
   type: slice
   title: The conformance package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

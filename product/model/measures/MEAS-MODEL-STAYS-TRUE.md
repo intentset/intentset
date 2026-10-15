@@ -6,7 +6,7 @@ intentset:
   id: MEAS-MODEL-STAYS-TRUE
   type: measure
   title: Changes to a slice's code that leave its records behind
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
@@ -15,7 +15,7 @@ intentset:
   measure:
     metric: unacknowledged_drift_share
     baseline: unknown
-    target: 'Proposed, for the maintainers to confirm: none of the pull requests in a month'
+    target: 'none of the pull requests in a month'
     window: 'Each calendar month after v0.1-draft'
     source: review-reports
     direction: decrease

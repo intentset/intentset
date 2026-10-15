@@ -6,7 +6,7 @@ intentset:
   id: TEST-AGENT-GUIDE
   type: verification
   title: Init and guide write the agent guide and overwrite nothing
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

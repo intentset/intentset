@@ -6,7 +6,7 @@ intentset:
   id: OUT-REVIEW-THE-PRODUCT
   type: outcome
   title: A reviewer reads what a change does to the product
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

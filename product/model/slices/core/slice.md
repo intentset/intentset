@@ -6,7 +6,7 @@ intentset:
   id: SLICE-CORE
   type: slice
   title: The core package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

@@ -6,7 +6,7 @@ intentset:
   id: BEH-PUBLISH
   type: behavior
   title: Publication projects reviewed knowledge for one audience
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

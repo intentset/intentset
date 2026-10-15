@@ -6,7 +6,7 @@ intentset:
   id: BEH-ARCH-CHECK
   type: behavior
   title: The architecture check holds the code to its slices
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

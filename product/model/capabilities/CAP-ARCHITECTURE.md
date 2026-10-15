@@ -6,7 +6,7 @@ intentset:
   id: CAP-ARCHITECTURE
   type: capability
   title: Check the code against its slices
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

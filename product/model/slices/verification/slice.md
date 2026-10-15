@@ -6,7 +6,7 @@ intentset:
   id: SLICE-VERIFICATION
   type: slice
   title: The verification package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

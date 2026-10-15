@@ -6,7 +6,7 @@ intentset:
   id: CAP-REVIEW-VIEWS
   type: capability
   title: Show the model to a reviewer
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

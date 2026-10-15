@@ -6,7 +6,7 @@ intentset:
   id: TEST-MCP-CONTEXT
   type: verification
   title: The MCP server answers read-only
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

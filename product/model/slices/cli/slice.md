@@ -6,7 +6,7 @@ intentset:
   id: SLICE-CLI
   type: slice
   title: The cli package
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

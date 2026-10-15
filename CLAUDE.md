@@ -322,7 +322,8 @@ from source (the installed bin points at `dist/`, which only the build writes).
 - **Evidence**: `pnpm run model:evidence` reruns the tests with node:test's TAP reporter into `.intentset/evidence/`
   (ignored) and imports them with `intentset evidence import --from node-tap`, bound to the commit, so it refuses an
   uncommitted tree. The `test` job in `ci.yml` runs it after `pnpm test` and then validates at L3, which reports link
-  coverage and current-pass coverage apart; every record is a draft, so a missing run is reported and fails nothing.
+  coverage and current-pass coverage apart; an approved behavior with no current pass fails it, and the rules, drafts with
+  no verification, are reported and fail nothing.
   `intentset evidence stale` (ADR 0013, BEH-EVIDENCE-STALE) lists what has no current pass, as a table, JSON, or the
   arguments for `playwright`, `vitest` or `node-test` to run only those tests; read-only, exit 0 unless `--check`
   finds something to run. A runner's pattern is a substring match where `selectorMatches` is whole-token, so it may run
@@ -336,7 +337,9 @@ from source (the installed bin points at `dist/`, which only the build writes).
   model:review` (`--fail-on-drift` against the base). There is no architecture baseline: the last one, 17 VSA003
   errors of tests reaching into the conformance harness's modules, was retired on 2026-10-10, so any new violation is
   an error. A refactor answers drift with an `Intentset-Unchanged: SLICE-…` trailer.
-- **Every record is a draft** until a maintainer promotes it.
+- **Approved by a maintainer on 2026-10-15**, all but ten records: OUT-DOCS-IMPROVE waits for a measure (CORE003
+  refuses an approved outcome nothing measures), and the nine rules have no verification (CORE007 refuses an approved
+  rule at L3 without one). A new record is a draft until a maintainer approves it; an agent never approves one.
 
 ## The chat's backend
 

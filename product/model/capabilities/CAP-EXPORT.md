@@ -6,7 +6,7 @@ intentset:
   id: CAP-EXPORT
   type: capability
   title: Hand the model to other tools under a contract
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

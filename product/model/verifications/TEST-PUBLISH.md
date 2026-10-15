@@ -6,7 +6,7 @@ intentset:
   id: TEST-PUBLISH
   type: verification
   title: Publication projects reviewed knowledge and fails closed
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

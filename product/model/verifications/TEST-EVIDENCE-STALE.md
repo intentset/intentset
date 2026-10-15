@@ -6,7 +6,7 @@ intentset:
   id: TEST-EVIDENCE-STALE
   type: verification
   title: Evidence stale selects what has no current pass and escapes it for each runner
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

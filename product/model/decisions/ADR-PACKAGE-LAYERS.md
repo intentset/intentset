@@ -6,7 +6,7 @@ intentset:
   id: ADR-PACKAGE-LAYERS
   type: decision
   title: A package slice declares no layers, and its VSA006 warning stays
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

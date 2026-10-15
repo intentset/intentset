@@ -6,7 +6,7 @@ intentset:
   id: BEH-IMPACT
   type: behavior
   title: Impact lists what depends on an artifact
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

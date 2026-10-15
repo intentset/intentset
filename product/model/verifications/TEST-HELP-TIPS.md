@@ -6,7 +6,7 @@ intentset:
   id: TEST-HELP-TIPS
   type: verification
   title: The help file is read and its tips bound to controls
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

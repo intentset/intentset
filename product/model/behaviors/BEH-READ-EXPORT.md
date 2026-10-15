@@ -6,7 +6,7 @@ intentset:
   id: BEH-READ-EXPORT
   type: behavior
   title: A consumer refuses an export that breaks the contract
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

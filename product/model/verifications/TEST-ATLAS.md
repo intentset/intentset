@@ -6,7 +6,7 @@ intentset:
   id: TEST-ATLAS
   type: verification
   title: Serve renders the Atlas over the export
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

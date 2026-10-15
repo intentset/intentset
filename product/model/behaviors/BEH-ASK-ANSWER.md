@@ -6,7 +6,7 @@ intentset:
   id: BEH-ASK-ANSWER
   type: behavior
   title: The chat answers a question from the documentation, with its sources
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

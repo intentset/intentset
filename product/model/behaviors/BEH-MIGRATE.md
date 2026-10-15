@@ -6,7 +6,7 @@ intentset:
   id: BEH-MIGRATE
   type: behavior
   title: Migrate moves the records to the next specification version and changes nothing else
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

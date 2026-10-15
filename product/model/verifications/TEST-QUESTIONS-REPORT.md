@@ -6,7 +6,7 @@ intentset:
   id: TEST-QUESTIONS-REPORT
   type: verification
   title: The questions report selects its period and fails without access
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

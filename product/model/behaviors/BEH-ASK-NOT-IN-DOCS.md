@@ -6,7 +6,7 @@ intentset:
   id: BEH-ASK-NOT-IN-DOCS
   type: behavior
   title: The chat says when the documentation does not answer
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

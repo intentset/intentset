@@ -6,7 +6,7 @@ intentset:
   id: BEH-EXPORT
   type: behavior
   title: Graph prints the model as the export envelope
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

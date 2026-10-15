@@ -6,7 +6,7 @@ intentset:
   id: MEAS-REVIEW-THE-PRODUCT
   type: measure
   title: Reviewers who judge a change from its records
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

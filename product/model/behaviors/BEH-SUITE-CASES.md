@@ -6,7 +6,7 @@ intentset:
   id: BEH-SUITE-CASES
   type: behavior
   title: The conformance suite is published as data
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

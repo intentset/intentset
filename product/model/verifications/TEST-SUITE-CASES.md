@@ -6,7 +6,7 @@ intentset:
   id: TEST-SUITE-CASES
   type: verification
   title: The conformance suite package ships the cases as data
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
