@@ -254,7 +254,7 @@ export function mapHtml(layout: AtlasMapLayout, root = "", href: (path: string) 
         `<label><input type="checkbox" data-group="${group}" checked> <span class="am-swatch" data-group="${group}"></span>${escapeHtml(label)}</label>`,
     ),
     "</fieldset>",
-    '<div class="am-zoom"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="reset">Fit</button></div>',
+    '<div class="am-zoom"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="reset">Fit</button><button type="button" class="am-full" aria-pressed="false">Full screen</button></div>',
     "</div>",
   ];
   const [bx, by, bw, bh] = layout.box;
@@ -317,6 +317,7 @@ export const MAP_STYLES = `
 .am-node text { font-size: 9px; fill: var(--ms-fg); cursor: pointer; paint-order: stroke; stroke: var(--ms-surface); stroke-width: 3px; }
 .am-many .am-node text { display: none; }
 .am-many.am-zoomed .am-node text, .am-focus .am-node.am-selected text, .am-focus .am-node.am-near text { display: inline; }
+.am-many.am-focus .am-node:not(.am-selected):not(.am-near) text { display: none; }
 [data-group="purpose"] { --am-c: var(--am-purpose); } [data-group="meaning"] { --am-c: var(--am-meaning); }
 [data-group="architecture"] { --am-c: var(--am-architecture); } [data-group="verification"] { --am-c: var(--am-verification); }
 [data-group="knowledge"] { --am-c: var(--am-knowledge); }
@@ -334,6 +335,14 @@ export const MAP_STYLES = `
 .am-panel { margin-top: .5rem; padding: .75rem 1rem; border: 1px solid var(--ms-border); border-radius: var(--ms-radius); background: var(--ms-surface); }
 .am-panel h3 { margin: 0 0 .25rem; font-size: 1rem; }
 .am-panel ul { margin: .25rem 0 0; padding-left: 1.2rem; }
+/* Full screen: the map fills the screen, the controls above it and the panel over its corner. Where the browser has no
+   element full screen (an iPhone), the same layout is a fixed overlay. */
+.am-map:fullscreen, .am-map.am-expanded { display: flex; flex-direction: column; box-sizing: border-box; padding: .75rem;
+  background: var(--ms-bg); color: var(--ms-fg); overflow: hidden; }
+.am-map.am-expanded { position: fixed; inset: 0; z-index: 1000; }
+.am-map:fullscreen .am-svg, .am-map.am-expanded .am-svg { flex: 1; height: auto; min-height: 0; }
+.am-map:fullscreen .am-panel, .am-map.am-expanded .am-panel { position: absolute; right: 1.25rem; bottom: 1.25rem;
+  width: min(22rem, calc(100% - 2.5rem)); max-height: 40%; overflow: auto; margin: 0; box-shadow: 0 4px 16px rgb(0 0 0 / .2); }
 .am-panel button { font: inherit; background: none; border: 0; padding: 0; color: var(--ms-link, inherit); text-decoration: underline; cursor: pointer; }
 .am-hide-purpose [data-group="purpose"], .am-hide-purpose .am-edge[data-g1="purpose"], .am-hide-purpose .am-edge[data-g2="purpose"],
 .am-hide-meaning [data-group="meaning"], .am-hide-meaning .am-edge[data-g1="meaning"], .am-hide-meaning .am-edge[data-g2="meaning"],
