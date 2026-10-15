@@ -21,7 +21,15 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 - **Streamlane**, a work management product, where the model is a required check on every pull request, and [what it has caught](../pilot/) has already changed the specifications and the toolchain.
 - **Driftline**, modelled before any of its code existed, so the model comes before the code.
+- **Intentset itself**, which models its own packages and is checked by the toolchain it builds. A maintainer approved that model on 2026-10-15, and every behavior in it has a current passing run.
 - **At least one outside adopter**, on a codebase we did not write.
+
+## Next
+
+Planned, not released. Each arrives in a release when it is ready, and the list changes as adopters say what they need.
+
+- **A map of the model in the Atlas.** An interactive view of every record and the links between them: search for an ID, filter by type or status, and select a record to see what it connects to. Each record shows its evidence status, and missing evidence never reads as a pass. The pages work without it.
+- **Richer Atlas pages.** The review pages laid out with more of Markset: capabilities as cards, a behavior's context in tabs, and coverage drawn as charts from the tables already on the page.
 
 ## Not planned
 
