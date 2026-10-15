@@ -15,6 +15,7 @@ import { classifyEvidence, coverage, type RunRecord } from "@intentset/verificat
 import { parseDocument } from "@markset-lang/parser";
 import { defaultStylesheetPath } from "@markset-lang/render-html";
 import { type AtlasInput, buildAtlas, buildAtlasSources } from "../src/index.ts";
+import { chartLabel } from "../src/pages/overview.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
 const dir = join(root, "examples", "scheduling");
@@ -117,7 +118,10 @@ const PAGES = [
 test("BEH-ATLAS: the Atlas of the example has the five pages, a page per behavior, and the stylesheet once", () => {
   const atlas = buildAtlas(example());
   assert.deepEqual([...atlas.keys()], PAGES);
-  assert.equal(atlas.get("atlas.css"), readFileSync(defaultStylesheetPath, "utf8"));
+  assert.ok(
+    atlas.get("atlas.css")?.startsWith(readFileSync(defaultStylesheetPath, "utf8")),
+    "Markset's stylesheet, then the Atlas's few additions",
+  );
   for (const [path, html] of pages(atlas)) {
     const href = `${"../".repeat(path.split("/").length - 1)}atlas.css`;
     assert.ok(html.includes(`<link rel="stylesheet" href="${href}">`), path);
@@ -183,6 +187,28 @@ test("BEH-ATLAS: an invented example's Atlas says so on every page instead of th
   for (const [path, source] of buildAtlasSources(input)) {
     assert.ok(source.includes("Internal: not for publication"), path);
   }
+});
+
+test("BEH-ATLAS: the layout is Markset's: the context bundle as a grid of cards, the record text folded, coverage drawn as charts", () => {
+  const input = example({ runs: (hash) => [review(hash)] });
+  const atlas = buildAtlas(input);
+  const behavior = atlas.get("behaviors/BEH-ASMT-SCHEDULE.html") ?? "";
+  assert.match(behavior, /<div class="ms-grid" data-cols="3"/);
+  assert.ok(
+    (behavior.match(/class="ms-grid-item">\s*<section class="ms-card/g) ?? []).length >= 4,
+    "one card per role",
+  );
+  assert.match(behavior, /<details class="ms-callout"/, "the record text is folded");
+  // A chart is drawn in front of its table, and the table stays on the page.
+  const verification = atlas.get("verification.html") ?? "";
+  assert.match(verification, /<svg class="ms-chart" data-chart="bar"[\s\S]*?<table>/);
+  for (const html of atlas.values()) assert.doesNotMatch(html, /<script/i, "still no script");
+});
+
+test("a capability's chart label drops CAP- and shortens a long ID", () => {
+  assert.equal(chartLabel("CAP-ASK"), "ASK");
+  assert.equal(chartLabel("CAP-LEARN-FROM-QUESTIONS"), "LEARN-FROM-QUESTI…");
+  assert.equal(chartLabel("OTHER-ID"), "OTHER-ID");
 });
 
 test("every page is Markset version 0 with the derived atlas block, and parses without a diagnostic", () => {

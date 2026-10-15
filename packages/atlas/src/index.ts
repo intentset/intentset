@@ -66,13 +66,24 @@ export function buildAtlasSources(input: AtlasInput, options: AtlasOptions = {})
 
 let stylesheet: string | null = null;
 
+/**
+ * What the Atlas adds to Markset's default stylesheet: a grid item that holds one card lets the card be the surface,
+ * as intentset.org's stylesheet does, so the card keeps its tone; and a long path in a card wraps inside it.
+ */
+const ATLAS_STYLES = `
+/* Intentset Atlas */
+.ms-grid-item:has(> .ms-card:only-child) { border: 0; padding: 0; background: none; }
+.ms-grid-item > .ms-card { height: 100%; box-sizing: border-box; }
+.ms-grid-item code { overflow-wrap: anywhere; }
+`;
+
 /** The Atlas: relative path to file contents, every page as HTML plus `atlas.css`. */
 export function buildAtlas(input: AtlasInput, options: AtlasOptions = {}): Map<string, string> {
   const meta = atlasMeta(input.snapshot);
   const title = options.title ?? DEFAULT_TITLE;
   const out = new Map<string, string>();
   for (const page of pages(input)) out.set(page.path, shell(page, pageSource(page, meta, options.notice), meta, title));
-  stylesheet ??= readFileSync(defaultStylesheetPath, "utf8");
+  stylesheet ??= readFileSync(defaultStylesheetPath, "utf8") + ATLAS_STYLES;
   out.set(STYLESHEET, stylesheet);
   return out;
 }
