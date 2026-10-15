@@ -335,8 +335,8 @@ from source (the installed bin points at `dist/`, which only the build writes).
 
 ## The chat's backend
 
-`amplify/` is the chat's backend (SLICE-ASK), Amplify Gen 2 in us-east-2 in the coral-reef project, the same project
-and rules as coral-reef-site: every Regional resource in us-east-2, no Lambda@Edge, and us-east-1 only where a service requires it, such as a CloudFront certificate (allowed since 2026-10-12). It is a
+`amplify/` is the chat's backend (SLICE-ASK), Amplify Gen 2 in us-east-2 in Coral Reef's environment accounts (below),
+with the same rules as coral-reef-site: every Regional resource in us-east-2, no Lambda@Edge, and us-east-1 only where a service requires it, such as a CloudFront certificate (allowed since 2026-10-12). It is a
 pnpm workspace member of its own (`@intentset/chat-backend`) with its own `tsconfig.json`, so nothing it depends on
 reaches a published package.
 
@@ -372,28 +372,32 @@ reaches a published package.
   a right answer cites (any of them) or the outcome it records, covering the concepts, the command, the
   specifications, the VSA check, the drift gate, an off-topic question, a contact request, a question the documents
   do not answer and a prompt injection. `pnpm run chat:eval` builds the corpus and runs every question through `ask()`
-  and `bedrockModel()` against Bedrock with the `coral-reef` profile and an in-memory store (nothing is written to
+  and `bedrockModel()` against Bedrock with the `crv-sandbox` profile and an in-memory store (nothing is written to
   DynamoDB, nothing counts against the day's budget), prints a pass/fail table and the estimated cost (about $0.90 a
   run on Sonnet 4.6 when the prompt changed and the cache is written; about $0.50 when it is warm), and exits 1 on any
   failure. **Run it before any change to the prompt, the model or `limits.ts`'s model, and put its table and cost in
   the pull request.** Change an expectation only when the expectation was wrong, never to pass a wrong answer.
   `amplify/test/eval.test.ts` holds the file's shape, its coverage, and that every expected source is in the corpus.
-- **An agent's sandbox**: `pnpm run sandbox` deploys `intentset-agent` with the `coral-reef` profile; exercise it, then
-  delete it with `pnpm exec ampx sandbox delete --identifier intentset-agent --profile coral-reef --yes`, check that no
+- **An agent's sandbox**: `pnpm run sandbox` deploys `intentset-agent` with the `crv-sandbox` profile (the agents' account); exercise it, then
+  delete it with `pnpm exec ampx sandbox delete --identifier intentset-agent --profile crv-sandbox --yes`, check that no
   `/aws/lambda/amplify-intentset*` log group, `intentset-ask-*` table or `intentset-ask-*` web ACL is left, and move
   `.amplify/artifacts` out of the way (CDK's hotswap cache remembers the deleted stacks).
-- **The branch** deploys from `.github/workflows/chat-backend.yml`: on a push to main that touches the backend or the
-  corpus's sources, it builds the corpus and runs `ampx pipeline-deploy --branch main` on the Amplify app named by the
-  repository variable `CHAT_AMPLIFY_APP_ID`, through the role `CHAT_DEPLOY_ROLE_ARN`, which trusts this repository's
-  main only. Until both variables exist the job is skipped.
-- **The launch** is one change: `ASK_URL` in `site/build.ts` set to the branch's `POST /ask`. It builds the panel and
+- **The environments** (2026-10-14, Streamlane ADR 0087): an Amplify app with no repository connected in each of
+  Coral Reef's dev, staging and prod accounts (`amplify/environments.json`), deployed by
+  `.github/workflows/chat-backend.yml` with `ampx pipeline-deploy --branch main` in the GitHub environment of the same
+  name, through its `AWS_ROLE_ARN` (`github-deploy-intentset`, which only that environment may assume): dev on a push
+  to main that touches the backend or the corpus's sources, staging nightly from what dev last shipped, and **prod only
+  when the product owner starts it by hand; an agent never does**. Each moves the tag `deployed/chat/<environment>`.
+  Dev and staging set `INTENTSET_ALARM_EMAIL` empty, so their alarms reach no inbox (`settings.ts`). intentset.org's
+  `ASK_URL` names prod's. The old project's app (`d20jjgxbjnk8kx` in 865000063691) served it until the move.
+- **The launch** was one change: `ASK_URL` in `site/build.ts` set to prod's `POST /ask`. It builds the panel and
   the privacy page (`CHAT_PAGES`, `site/content/privacy.md`, approved 2026-10-09, linked from the footer's row) into
   the site. `amplify/test/retention.test.ts` holds the page to the periods in `limits.ts` and the logs' month.
 
 ## Learning from questions
 
 The chat keeps each question 90 days, scrubbed (CAP-LEARN-FROM-QUESTIONS). `pnpm run questions:report` reads them,
-read-only, with the `coral-reef` profile unless `AWS_PROFILE` or keys say otherwise (`amplify/questions/`,
+read-only, with the `crv-prod` profile (where prod keeps them) unless `AWS_PROFILE` or keys say otherwise (`amplify/questions/`,
 BEH-QUESTIONS-REPORT; `--help` lists the options). The questions are visitor data and this repository is public: the
 report goes to standard output, an `--out` inside the repository is warned about, and no report, brief or question is
 ever committed. The checks' own conversations are left out by their id prefixes (`--exclude-prefix`); a new check

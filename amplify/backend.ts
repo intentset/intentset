@@ -18,10 +18,10 @@ import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 import { invokedModels, limits } from "./functions/ask/limits.ts";
 import { METRIC_NAMESPACE } from "./functions/ask/log.ts";
 import { ask } from "./functions/ask/resource.ts";
-import { ALARM_EMAIL, allowedOrigins } from "./settings.ts";
+import { alarmEmail, allowedOrigins } from "./settings.ts";
 
 /**
- * The chat's backend (SLICE-ASK), all in us-east-2 in the coral-reef project: the function, two tables, an API
+ * The chat's backend (SLICE-ASK), all in us-east-2, one deployment per environment account (environments.json): the function, two tables, an API
  * Gateway REST API that streams the answer, and a regional web application firewall in front of it. The function has
  * no URL of its own, so nothing reaches it except through the firewall.
  */
@@ -135,10 +135,11 @@ new CfnWebACLAssociation(stack, "AskWebAclAssociation", {
   webAclArn: webAcl.attrArn,
 });
 
-// Alarms, to an inbox on the branch (a sandbox's topic has no subscriber): an error or a throttle on the function, the
+// Alarms, to an inbox on prod's branch (a sandbox's topic, and dev's and staging's, have no subscriber): an error or a throttle on the function, the
 // day's estimated spend past 80% of its budget, the chat refusing for the budget, and the firewall blocking a flood.
 const notices = new Topic(stack, "AskNotices", { topicName: named("intentset-ask-notices") });
-if (branch) notices.addSubscription(new EmailSubscription(ALARM_EMAIL));
+const inbox = alarmEmail(branch);
+if (inbox) notices.addSubscription(new EmailSubscription(inbox));
 const fiveMinutes = Duration.minutes(5);
 const alarm = (id: string, metric: Metric, threshold: number) =>
   new Alarm(stack, id, {

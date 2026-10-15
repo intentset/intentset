@@ -18,3 +18,15 @@ export function allowedOrigins(branch: boolean): string[] {
 
 /** Where the branch's alarms go: the family's inbox, as coral-reef-site's do. */
 export const ALARM_EMAIL = "hello@coralreefventures.com";
+
+/**
+ * The inbox the branch's alarm topic subscribes, from `INTENTSET_ALARM_EMAIL` at synth: unset means ALARM_EMAIL, and
+ * empty means none, which dev and staging set (`.github/workflows/chat-backend.yml`) so their confirmation requests and
+ * alarms never reach the real inbox. A sandbox subscribes nothing.
+ */
+export function alarmEmail(branch: boolean, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  if (!branch) return undefined;
+  const value = env.INTENTSET_ALARM_EMAIL;
+  if (value === undefined) return ALARM_EMAIL;
+  return value.trim() || undefined;
+}

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The backend of the chat on intentset.org: Amplify Gen 2 in us-east-2, in the coral-reef project (SLICE-ASK).",
+  "description": "The backend of the chat on intentset.org: Amplify Gen 2 in us-east-2, in Coral Reef's dev, staging and prod accounts (SLICE-ASK).",
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "0.34.4",
     "@anthropic-ai/sdk": "0.132.1",

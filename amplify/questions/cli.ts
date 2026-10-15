@@ -19,8 +19,8 @@ import {
  * `pnpm run questions:report [--days N] [--out FILE] [--gaps] [--exclude-prefix P ...] [--table T] [--profile P]`
  * (BEH-QUESTIONS-REPORT). Reads the questions table, read-only, and writes the report, or with `--gaps` the brief an
  * agent drafts knowledge from, to stdout or FILE. Credentials come from the default chain; with neither AWS_PROFILE
- * nor keys in the environment it uses the `coral-reef` profile. Without access it says so in one line, writes
- * nothing and exits 1.
+ * nor keys in the environment it uses the `crv-prod` profile, where prod keeps the questions. Without access it says
+ * so in one line, writes nothing and exits 1.
  */
 
 const usage = `usage: pnpm run questions:report [--days N] [--out FILE] [--gaps] [--exclude-prefix PREFIX ...]
@@ -31,7 +31,7 @@ const usage = `usage: pnpm run questions:report [--days N] [--out FILE] [--gaps]
                         (${defaultExcludePrefixes.join(", ")}); --exclude-prefix "" leaves nothing out
   --table T             the table (default intentset-ask-questions)
   --region R            its Region (default us-east-2)
-  --profile P           the AWS profile (default AWS_PROFILE, else coral-reef unless keys are in the environment)`;
+  --profile P           the AWS profile (default AWS_PROFILE, else crv-prod unless keys are in the environment)`;
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -84,7 +84,7 @@ if (args.out !== undefined) {
 }
 
 if (args.profile) process.env.AWS_PROFILE = args.profile;
-else if (!process.env.AWS_PROFILE && !process.env.AWS_ACCESS_KEY_ID) process.env.AWS_PROFILE = "coral-reef";
+else if (!process.env.AWS_PROFILE && !process.env.AWS_ACCESS_KEY_ID) process.env.AWS_PROFILE = "crv-prod";
 
 const to = new Date();
 const window = { from: new Date(to.getTime() - days * 86_400_000), to };
