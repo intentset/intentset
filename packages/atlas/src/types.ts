@@ -119,7 +119,16 @@ export interface AtlasInput {
   architecture?: AtlasArchitecture | null;
 }
 
+/**
+ * The notice at the top of every page. `internal`, the default, says the pages may hold internal and restricted
+ * records and are not for publication. `example` is for an Atlas drawn from an invented product's records, such as the
+ * worked example intentset.org shows: it says the product is invented and that a team's own Atlas stays internal.
+ */
+export type AtlasNotice = "internal" | "example";
+
 export interface AtlasOptions {
   /** The name in every page's navigation and title. Default "Intentset Atlas". */
   title?: string;
+  /** The notice at the top of every page. Default `internal`. */
+  notice?: AtlasNotice;
 }

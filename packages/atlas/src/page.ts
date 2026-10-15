@@ -10,7 +10,7 @@ import { emitYaml, type YamlValue } from "@intentset/publisher";
 import { parseDocument } from "@markset-lang/parser";
 import { renderHtml } from "@markset-lang/render-html";
 import { code, escapeHtml, text } from "./text.ts";
-import type { AtlasSnapshot } from "./types.ts";
+import type { AtlasNotice, AtlasSnapshot } from "./types.ts";
 
 export const ATLAS_PROFILE = "intentset/atlas/0.2";
 /** The top-level frontmatter key of an Atlas page; never `intentset`, so no page reads as a canonical record. */
@@ -69,8 +69,24 @@ export function snapshotLine(snapshot: AtlasSnapshot): string {
   return `Snapshot: ${commit} · graph hash ${text(snapshot.graphHash.slice(0, 12))} · level ${text(snapshot.level)} · ${scope}`;
 }
 
+/** The notice every page opens with: internal unless the records are an invented example's. */
+const NOTICES: Record<AtlasNotice, string[]> = {
+  internal: [
+    "> [!WARNING] Internal: not for publication",
+    "> This Atlas is a derived view of the repository's records and may contain internal and restricted ones. " +
+      "Keep it inside the organization. The files are authoritative; published knowledge comes only from the " +
+      "publisher's projection, never from these pages.",
+  ],
+  example: [
+    "> [!NOTE] An invented example",
+    "> This Atlas is drawn from the records of an invented product, so it can be published to show what the Atlas " +
+      "shows. A team's own Atlas may contain internal and restricted records and stays inside the organization. " +
+      "The files are authoritative; these pages are a derived view of them.",
+  ],
+};
+
 /** The complete Markset source of a page. */
-export function pageSource(page: PageSource, meta: AtlasMeta): string {
+export function pageSource(page: PageSource, meta: AtlasMeta, notice: AtlasNotice = "internal"): string {
   const yaml = emitYaml({ markset: 0, [ATLAS_KEY]: meta as unknown as YamlValue });
   return [
     "---",
@@ -80,10 +96,7 @@ export function pageSource(page: PageSource, meta: AtlasMeta): string {
     "",
     `# ${text(page.title)}`,
     "",
-    "> [!WARNING] Internal: not for publication",
-    "> This Atlas is a derived view of the repository's records and may contain internal and restricted ones. " +
-      "Keep it inside the organization. The files are authoritative; published knowledge comes only from the " +
-      "publisher's projection, never from these pages.",
+    ...NOTICES[notice],
     "",
     "{.small}",
     snapshotLine(meta.snapshot),

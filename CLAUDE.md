@@ -221,7 +221,7 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
   each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
   agent guide), Tools (all
-  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (the worked example,
+  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (the worked example, its Atlas,
   the pilot). No URL moved when the bar changed. `site/test/rail.test.ts` requires every page to be named by the bar,
   a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
   rail.
@@ -250,6 +250,11 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   changes a pinned hash: review the knowledge against the change, re-pin it (`shasum -a 256`) and update `reviewedAt`,
   or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
   record used to be patches `status: draft` itself.
+- **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
+  drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` with the
+  Atlas's own rail. It has no run evidence and no commit, because the example's check has not been executed and the
+  pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
+  has no public Atlas, and a public mode for one is undecided.
 - **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
   label, not a sentence. The h2s below it are written as sentences and keep theirs.
 - **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose

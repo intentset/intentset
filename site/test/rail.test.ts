@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
 import { after, test } from "node:test";
 import { ASK_URL, build, CHAT_PAGES, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor, siteRails } from "../build.ts";
+import { ATLAS_RAIL } from "../example-atlas.ts";
 import { publishedKnowledge } from "../knowledge.ts";
 
 const dist = await mkdtemp(join(tmpdir(), "intentset-rail-"));
@@ -83,18 +84,22 @@ test("every URL the site had before the bar changed still answers", () => {
   }
 });
 
-test("every page is named by the bar, a rail or the footer's row, or is a record the worked example or the published knowledge lists", () => {
+test("every page is named by the bar, a rail or the footer's row, or is a record the worked example, the published knowledge or the Atlas lists", () => {
   // The privacy page is in the footer's row once the chat is launched.
   const chat = ASK_URL === null ? [] : CHAT_PAGES.map(([path]): [string, string] => ["", path]);
-  const named = new Set([...NAV, ...FOOTER_LINKS, ...chat, ...rails.flatMap((r) => r.items)].map(([, href]) => href));
+  const named = new Set(
+    [...NAV, ...FOOTER_LINKS, ...chat, ...rails.flatMap((r) => r.items), ...ATLAS_RAIL.items].map(([, href]) => href),
+  );
   const examples = linksFrom("example/index.html");
   const knowledge = linksFrom("knowledge/index.html");
+  const atlas = linksFrom("example/atlas/index.html");
   for (const page of pages) {
     // Home is the wordmark, on every page.
     if (page === NOT_FOUND || page === "index.html") continue;
     if (named.has(page)) continue;
     assert.ok(
-      (page.startsWith("example/") && examples.has(page)) || (page.startsWith("knowledge/") && knowledge.has(page)),
+      (page.startsWith("example/") && (examples.has(page) || atlas.has(page))) ||
+        (page.startsWith("knowledge/") && knowledge.has(page)),
       `${page} is reachable only from a sentence: give it a place in a rail`,
     );
   }

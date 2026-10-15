@@ -166,6 +166,25 @@ test("BEH-ATLAS: every page states the snapshot and the internal banner", () => 
   }
 });
 
+test("BEH-ATLAS: an invented example's Atlas says so on every page instead of the internal banner", () => {
+  const input = example();
+  for (const built of [buildAtlas(input, { notice: "example" }), buildAtlasSources(input, { notice: "example" })]) {
+    let checked = 0;
+    for (const [path, page] of built) {
+      if (!path.endsWith(".html")) continue;
+      assert.ok(page.includes("An invented example"), path);
+      assert.ok(page.includes("stays inside the organization"), path);
+      assert.ok(!page.includes("Internal: not for publication"), path);
+      checked++;
+    }
+    assert.ok(checked > 5, `only ${checked} pages`);
+  }
+  // The default stays internal.
+  for (const [path, source] of buildAtlasSources(input)) {
+    assert.ok(source.includes("Internal: not for publication"), path);
+  }
+});
+
 test("every page is Markset version 0 with the derived atlas block, and parses without a diagnostic", () => {
   for (const input of [example(), example({ runs: (hash) => [review(hash, { result: "fail" })] })]) {
     for (const [path, source] of buildAtlasSources(input)) {

@@ -30,6 +30,7 @@ import {
   statusLabel,
   termTips,
 } from "../build.ts";
+import { ATLAS_RAIL } from "../example-atlas.ts";
 import { loadRecords } from "../records.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
@@ -63,7 +64,7 @@ function main(page: string): string {
   return doc.slice(doc.indexOf("<main"), doc.indexOf("</main>"));
 }
 
-test("the page list is the content pages, the specifications, the guide, conformance and one page per record", () => {
+test("the page list is the content pages, the specifications, the guide, conformance, one page per record and the example's Atlas", () => {
   const expected = [
     ...CONTENT_PAGES.map(([path]) => path),
     // The privacy page, once the chat is launched.
@@ -73,6 +74,9 @@ test("the page list is the content pages, the specifications, the guide, conform
     "conformance/index.html",
     "example/index.html",
     ...records.map((r) => `example/${r.id}/index.html`),
+    // The worked example's Atlas: its five pages, and one per behavior.
+    ...ATLAS_RAIL.items.slice(1).map(([, path]) => path),
+    ...records.filter((r) => r.type === "behavior").map((r) => `example/atlas/behaviors/${r.id}/index.html`),
   ].sort();
   assert.deepEqual([...pages].sort(), expected);
   assert.ok(records.length >= 10, "the worked example has fewer records than expected");
