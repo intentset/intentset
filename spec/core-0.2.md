@@ -3,7 +3,7 @@ title: Intentset Core Specification v0.2
 id: intentset/core/0.2
 status: draft
 revision: 2026-10-14
-implementation: 0.6.1
+implementation: 0.7.0
 ---
 
 # Intentset Core Specification v0.2
