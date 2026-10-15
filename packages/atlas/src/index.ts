@@ -25,9 +25,12 @@ import { readFileSync } from "node:fs";
 import { graphHash } from "@intentset/core";
 import { defaultStylesheetPath } from "@markset-lang/render-html";
 import { Model } from "./model.ts";
+import { type AtlasMapLayout, layoutMap, MAP_STYLES, mapHtml } from "./map.ts";
+import { MAP_SCRIPT } from "./map-script.ts";
 import { atlasMeta, type PageSource, pageSource, STYLESHEET, shell } from "./page.ts";
 import { behaviorPage } from "./pages/behavior.ts";
 import { diagnosticsPage } from "./pages/diagnostics.ts";
+import { mapPage } from "./pages/map.ts";
 import { overviewPage } from "./pages/overview.ts";
 import { ownershipPage } from "./pages/ownership.ts";
 import { publicationPage } from "./pages/publication.ts";
@@ -36,6 +39,11 @@ import type { AtlasInput, AtlasOptions } from "./types.ts";
 
 export { ATLAS_KEY, ATLAS_PROFILE, type AtlasMeta, NAV, STYLESHEET, snapshotLine } from "./page.ts";
 export { STATUS_WORDS } from "./model.ts";
+export { type AtlasMapLayout, GROUPS, MAP_STYLES, type MapEdge, type MapNode, mapHtml } from "./map.ts";
+export { MAP_SCRIPT } from "./map-script.ts";
+
+/** The map's script, as the Atlas writes it beside the pages. */
+export const MAP_SCRIPT_FILE = "atlas-map.js";
 export type * from "./types.ts";
 
 export const DEFAULT_TITLE = "Intentset Atlas";
@@ -48,14 +56,21 @@ function pages(input: AtlasInput): PageSource[] {
     );
   }
   const model = new Model(input);
+  const layout = layoutMap(model);
   return [
     overviewPage(model),
     ownershipPage(model),
     verificationPage(model),
     publicationPage(model),
     diagnosticsPage(model),
+    { ...mapPage(layout), html: mapHtml(layout) },
     ...model.ofType("behavior").map((behavior) => behaviorPage(model, behavior)),
   ];
+}
+
+/** The map's layout, for a caller that places the map in a shell of its own, as intentset.org does. */
+export function atlasMapLayout(input: AtlasInput): AtlasMapLayout {
+  return layoutMap(new Model(input));
 }
 
 /** Every page's Markset source, by the relative path of the HTML it renders to. */
@@ -83,7 +98,8 @@ export function buildAtlas(input: AtlasInput, options: AtlasOptions = {}): Map<s
   const title = options.title ?? DEFAULT_TITLE;
   const out = new Map<string, string>();
   for (const page of pages(input)) out.set(page.path, shell(page, pageSource(page, meta, options.notice), meta, title));
-  stylesheet ??= readFileSync(defaultStylesheetPath, "utf8") + ATLAS_STYLES;
+  stylesheet ??= readFileSync(defaultStylesheetPath, "utf8") + ATLAS_STYLES + MAP_STYLES;
   out.set(STYLESHEET, stylesheet);
+  out.set(MAP_SCRIPT_FILE, MAP_SCRIPT);
   return out;
 }

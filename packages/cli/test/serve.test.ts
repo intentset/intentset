@@ -96,6 +96,9 @@ test("BEH-ATLAS: serve prints the URL, the snapshot and the warning, serves the 
   assert.equal(index.type, "text/html; charset=utf-8");
   assert.match(index.body, /not for publication/i);
   assert.equal((await raw(serving.url, "/atlas.css")).type, "text/css; charset=utf-8");
+  // The map and its one script, which the policy lets run from the Atlas itself and nowhere else (ADR 0015).
+  assert.equal((await raw(serving.url, "/map.html")).status, 200);
+  assert.equal((await raw(serving.url, "/atlas-map.js")).type, "text/javascript; charset=utf-8");
   assert.equal((await raw(serving.url, "/behaviors/BEH-ASMT-SCHEDULE.html")).status, 200);
   assert.equal((await raw(serving.url, "/verification.html")).status, 200);
 

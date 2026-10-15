@@ -28,8 +28,7 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 Planned, not released. Each arrives in a release when it is ready, and the list changes as adopters say what they need.
 
-- **A map of the model in the Atlas.** An interactive view of every record and the links between them: search for an ID, filter by type or status, and select a record to see what it connects to. Each record shows its evidence status, and missing evidence never reads as a pass. The pages work without it.
-- **Richer Atlas pages.** The review pages laid out with more of Markset: capabilities as cards, a behavior's context in tabs, and coverage drawn as charts from the tables already on the page.
+- **The Atlas's map and richer pages, in the next release.** A map of every record and the links between them, which a reader can search, filter and focus, and review pages laid out with more of Markset: cards, folded record text, and charts drawn from the tables already on the page. Both are built, and [the worked example's Atlas](../example/atlas/map/) shows them; `intentset serve` gets them when the toolchain next releases.
 
 ## Not planned
 

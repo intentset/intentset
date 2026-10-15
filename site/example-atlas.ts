@@ -11,7 +11,14 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
-import { NAV as ATLAS_NAV, buildAtlasSources } from "@intentset/atlas";
+import {
+  NAV as ATLAS_NAV,
+  type AtlasInput,
+  atlasMapLayout,
+  buildAtlasSources,
+  MAP_SCRIPT_FILE,
+  mapHtml,
+} from "@intentset/atlas";
 import { graphHash, plainCarrier, readRegistries, validate } from "@intentset/core";
 
 /** Where the Atlas's pages live on the site. */
@@ -24,7 +31,13 @@ export interface ExampleAtlasPage {
   path: string;
   /** The page's Markset source, as the Atlas wrote it. */
   source: string;
+  /** The map's SVG and controls, with links at the site's addresses; only the map page has them (ADR 0015). */
+  html?: string;
 }
+
+/** Where the site serves the map's one script and its styles, beside the Atlas's pages. */
+export const ATLAS_MAP_SCRIPT = `${ATLAS_ROOT}/${MAP_SCRIPT_FILE}`;
+export const ATLAS_MAP_STYLES = `${ATLAS_ROOT}/atlas-map.css`;
 
 /** The site's output path for an Atlas page: `index.html` stays the root, `x/y.html` becomes `x/y/index.html`. */
 export function atlasSitePath(atlasPath: string): string {
@@ -55,19 +68,24 @@ export async function exampleAtlas(exampleDir: string, relativeDir: string): Pro
   const inputs = await Promise.all(
     names.map(async (name) => plainCarrier(`${relativeDir}/${name}`, await readFile(join(exampleDir, name), "utf8"))),
   );
-  const level = "L1";
+  const level = "L1" as const;
   const result = validate(inputs, registries, { level });
-  const sources = buildAtlasSources(
-    {
-      graph: result.graph,
-      registries,
-      diagnostics: result.diagnostics,
-      snapshot: { commit: null, graphHash: graphHash(result.graph), scope: [`${relativeDir}/**`], level },
-      evidence: null,
-    },
-    { notice: "example" },
-  );
-  return [...sources].map(([atlasPath, source]) => ({ atlasPath, path: atlasSitePath(atlasPath), source }));
+  const input: AtlasInput = {
+    graph: result.graph,
+    registries,
+    diagnostics: result.diagnostics,
+    snapshot: { commit: null, graphHash: graphHash(result.graph), scope: [`${relativeDir}/**`], level },
+    evidence: null,
+  };
+  const sources = buildAtlasSources(input, { notice: "example" });
+  const paths = new Set(sources.keys());
+  const map = mapHtml(atlasMapLayout(input), "", (path) => atlasLink("map.html", path, paths));
+  return [...sources].map(([atlasPath, source]) => ({
+    atlasPath,
+    path: atlasSitePath(atlasPath),
+    source,
+    ...(atlasPath === "map.html" ? { html: map } : {}),
+  }));
 }
 
 /**
