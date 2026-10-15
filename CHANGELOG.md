@@ -5,7 +5,9 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.7.1 — 2026-10-15
+
+**A resource's files now count in a subject where a verification exercises them, a dependency can count through its contract as an opt-in, and a selector shared by several verifications gives each a record.** Records made under 0.7.0 read stale until imported again, or until `evidence.resources: used` is set. No specification version, export version or `intentset.spec` moved.
 
 **A dependency slice can count through its contract, as an opt-in, and a selector two verifications share gives each a record (ADR 0013, amended 2026-10-15, second).**
 Under 0.7.0 a slice reached only through `dependsOn` puts every file its claims resolve to in a subject, so a change to a central slice moves nearly every
