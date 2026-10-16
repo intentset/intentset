@@ -169,8 +169,9 @@ export const MAP_SCRIPT = `"use strict";
     }
     function expand(on) {
       if (native) {
-        if (on) map.requestFullscreen().catch(function () { overlay(true); });
-        else if (document.fullscreenElement === map) document.exitFullscreen();
+        // The label follows as soon as the browser has changed state, and again on its fullscreenchange event.
+        if (on) map.requestFullscreen().then(label, function () { overlay(true); });
+        else if (document.fullscreenElement === map) document.exitFullscreen().then(label, label);
         else overlay(false);
       } else overlay(on);
     }
