@@ -1,6 +1,6 @@
 {
   "name": "@intentset/site",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "description": "The intentset.org site: every page a Markset document rendered by the Markset reference implementation.",

@@ -5,7 +5,9 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.8.0 — 2026-10-15
+
+**The Atlas gains a map of every record and link, explorable and able to fill the screen, review pages laid out with more of Markset, and a notice for an invented example's Atlas.** Minor, because each adds to `@intentset/atlas`'s API and `intentset serve`'s output without changing what an existing caller gets. No specification version, conformance case outcome, export version or `intentset.spec` moved.
 
 **`@intentset/atlas` can draw an invented example's Atlas.** `buildAtlas` and `buildAtlasSources` take `notice:
 "example"`, which opens every page with a note that the product is invented and that a team's own Atlas stays
@@ -26,8 +28,8 @@ picture whose records link to their pages; `atlas-map.js`, the one script the At
 adds finding by ID, showing or hiding each family, panning, zooming, and selecting a record to see only its links.
 `intentset serve` serves `.js` and adds `script-src 'self'` to its policy. `atlasMapLayout`, `mapHtml`, `MAP_SCRIPT`
 and `MAP_STYLES` let a caller place the map in a shell of its own. No dependency was added, and no specification
-version, conformance case, export version or `intentset.spec` moved. The map has a Full screen button: the browser's own full screen where
-there is one, and a fixed overlay where there is not (an iPhone).
+version, conformance case, export version or `intentset.spec` moved. The map has a Full screen button: the browser's
+own full screen where there is one, and a fixed overlay where there is not (an iPhone).
 
 ## 0.7.1 — 2026-10-15
 

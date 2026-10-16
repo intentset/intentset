@@ -6,7 +6,7 @@ say why the product is changing, what the change should produce and how that wil
 promises, which code delivers it and how it is checked. You keep them true as part of every change, in the same commit as the
 code, so that people can review what the product does without reading every line of what changed.
 
-Written by `intentset init` (intentset 0.7.1). To refresh it, delete it and run
+Written by `intentset init` (intentset 0.8.0). To refresh it, delete it and run
 `pnpm exec intentset init --agents`; `pnpm exec intentset guide` prints it without writing a file.
 
 ## Before you change code

@@ -1,6 +1,6 @@
 {
   "name": "@intentset/publisher",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Audience and release projection of reviewed knowledge into Markset documents with provenance.",
   "keywords": [
     "intentset",
@@ -35,8 +35,8 @@
     }
   },
   "dependencies": {
-    "@intentset/core": "^0.7.1",
-    "@intentset/markset-adapter": "^0.7.1",
+    "@intentset/core": "^0.8.0",
+    "@intentset/markset-adapter": "^0.8.0",
     "@markset-lang/parser": "0.4.1",
     "@markset-lang/render-html": "0.4.1"
   }
