@@ -9,7 +9,7 @@
         "INSTALL_SOURCE=aws-cli"
       ],
       "env": {
-        "AWS_MCP_PROXY_PROFILES": "coral-reef"
+        "AWS_MCP_PROXY_PROFILES": "crv-sandbox"
       }
     }
   }

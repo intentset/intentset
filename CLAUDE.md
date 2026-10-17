@@ -410,7 +410,8 @@ reaches a published package.
   to main that touches the backend or the corpus's sources, staging nightly from what dev last shipped, and **prod only
   when the product owner starts it by hand; an agent never does**. Each moves the tag `deployed/chat/<environment>`.
   Dev and staging set `INTENTSET_ALARM_EMAIL` empty, so their alarms reach no inbox (`settings.ts`). intentset.org's
-  `ASK_URL` names prod's. The old project's app (`d20jjgxbjnk8kx` in 865000063691) served it until the move.
+  `ASK_URL` names prod's. The old project's app (`d20jjgxbjnk8kx` in 865000063691) served it until the move; that account was closed on
+  2026-10-16.
 - **The launch** was one change: `ASK_URL` in `site/build.ts` set to prod's `POST /ask`. It builds the panel and
   the privacy page (`CHAT_PAGES`, `site/content/privacy.md`, approved 2026-10-09, linked from the footer's row) into
   the site. `amplify/test/retention.test.ts` holds the page to the periods in `limits.ts` and the logs' month.

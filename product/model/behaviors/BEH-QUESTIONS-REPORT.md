@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   parent: CAP-LEARN-FROM-QUESTIONS
   links:
     governedBy: [RULE-ASK-NO-IDENTITY]
@@ -30,7 +30,7 @@ A maintainer runs `pnpm run questions:report`, which reads the questions table, 
 
 ## Preconditions
 
-AWS credentials that can read the questions table, from the default chain: `--profile`, else `AWS_PROFILE`, else the `coral-reef` profile when no keys are in the environment.
+AWS credentials that can read the questions table, from the default chain: `--profile`, else `AWS_PROFILE`, else the `crv-prod` profile, where prod keeps the questions, when no keys are in the environment.
 
 ## Outcomes
 
