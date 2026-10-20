@@ -153,7 +153,7 @@ The reference profile maps all of this onto TypeScript and AWS Amplify Gen 2. A 
 
 A verification record defines how a claim is checked: an automated test, named by its file and a stable selector, or a manual review procedure. That definition is not evidence. It says how to check, not that anyone did.
 
-Evidence is a separate run record: this check, on this commit, against this version of the graph, in this environment, passed, failed, was skipped or errored. `intentset evidence import` turns a Vitest or node test report from CI into run records.
+Evidence is a separate run record: this check, on this commit, against this version of the graph, in this environment, passed, failed, was skipped or errored. `intentset evidence import` turns a Vitest, Playwright or node test report from CI into run records.
 
 > [!NOTE] Linked is not verified
 > Only a pass whose binding holds counts. By default a pass counts while what its check is about is unchanged: the behavior, the slices that deliver it and the files they claim, the test and what it imports. A repository, or a release gate, can ask for the stricter rule, a pass on the commit under review. A pass that no longer holds is stale, and skipped, errored and missing runs never count as passing. Reports always show two numbers side by side: how many claims have a check linked, and how many have a current pass.
@@ -170,7 +170,7 @@ Keep run records in CI or another store you control, never in the commit they as
 
 `intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
 
-A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Streamlane will use the export to link work items to the behaviors they change, and Driftline to attribute usage and errors to slices and behaviors. [Read the export contract](../specifications/export/).
+A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Driftline reads Streamlane's export to attribute the usage it sees to Streamlane's behaviors. [Read the export contract](../specifications/export/).
 
 ## Context for agents, with limits
 
@@ -198,7 +198,7 @@ Conformance comes in five levels, each including the ones before it. Start at th
 |---|---|---|
 | L1 Product model | Records parse, link and read correctly | The model is well formed |
 | L2 Traceable implementation | Ownership and architecture checks | Each behavior has one owner, and the code respects it |
-| L3 Verified product | Current passing evidence | Each claim passed on this commit |
+| L3 Verified product | Current passing evidence | Each claim has a current pass |
 | L4 Published knowledge | Reviewed audience projections | What you publish is authorized and traceable |
 | L5 Continuous product truth | CI checks, impact reports and release automation | All of the above, kept true on every change |
 

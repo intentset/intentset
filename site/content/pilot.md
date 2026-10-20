@@ -16,7 +16,7 @@ Both products' repositories are private, so this page counts and describes their
 
 ## Where it stands
 
-Counted on 2026-10-10 on each product's main branch, with Intentset's own checks (the 0.6 release) and from the records themselves. Streamlane's architecture figures and record count were taken again on 2026-10-11, after the entry below; the rows on approvals and behaviors are from 2026-10-10.
+Counted on 2026-10-19 on each product's main branch, with Intentset's own checks (the 0.8 release) and from the records themselves.
 
 ### Streamlane
 
@@ -24,37 +24,39 @@ Counted on 2026-10-10 on each product's main branch, with Intentset's own checks
 | Count | Value |
 |---|---|
 | [Baselined architecture violations]{.term tip="Structural problems that already existed when the check was switched on. They are tolerated, so only a new one fails a change. This number should only go down."} | 0 |
-| [Slices]{.term tip="A slice is one feature of the product: the code that builds it and the records that describe it."} | 43 |
-| [Records]{.term tip="A record is a short Markdown file stating one thing about the product, such as a behavior, a rule or a decision. Intentset checks records against each other and against the code."} | 98 |
-| [Records approved]{.term tip="Records a person has reviewed and accepted. The rest are drafts: checked, but held to looser rules until someone approves them."} | 4 |
-| [Behaviors declared]{.term tip="A behavior is one thing the product does that a person could observe, such as refusing to start blocked work."} | 21 |
-| [Behaviors named in code]{.term tip="Behaviors whose code says, in one line, which behavior it delivers. That is what lets a log line or a test be traced back to its record."} | 8 |
+| [Slices]{.term tip="A slice is one feature of the product: the code that builds it and the records that describe it."} | 56 |
+| [Records]{.term tip="A record is a short Markdown file stating one thing about the product, such as a behavior, a rule or a decision. Intentset checks records against each other and against the code."} | 1,282 |
+| [Records approved]{.term tip="Records a person has reviewed and accepted. The rest are drafts: checked, but held to looser rules until someone approves them."} | 1,277 |
+| [Behaviors declared]{.term tip="A behavior is one thing the product does that a person could observe, such as refusing to start blocked work."} | 318 |
+| [Behaviors with a verification record]{.term tip="A record that names the test proving a behavior works."} | 312 |
+| [Behaviors named in code]{.term tip="Behaviors whose backend code says, in one line, which behavior it delivers. That is what lets a log line or a test be traced back to its record."} | 117 |
+| [Unit and contract checks with a current pass]{.term tip="A pass whose binding still holds: what the check is about has not changed since it ran."} | 331 of 332 |
 :::
 
-Streamlane's check reports 0 errors and 92 warnings, in strict mode with no baseline. Errors fail a change; warnings are only reported. The warnings are:
+Streamlane's check reports 0 errors and 42 warnings, in strict mode with no baseline. Errors fail a change; warnings are only reported. The warnings are:
 
-- 46 on draft slices that have no behaviors yet.
-- 29 files the check cannot place in one layer, so their imports are not layer-checked.
-- 15 imports, from the app's route pages, of a slice's private file instead of its entrypoint. The pages lie outside the declared scope, so they are reported and do not fail.
-- 2 slices that do not list a backend that lists them.
+- 24 on slices with files the check cannot place in one layer, so their imports are not layer-checked.
+- 17 imports, from the app's route pages, of a slice's private file instead of its entrypoint. The pages lie outside the declared scope, so they are reported and do not fail.
+- 1 slice that uses a backend whose registry entry does not list it.
 
-Of the 98 records, all but a handful are drafts. The behaviors are as counted on 2026-10-10: 21, of which 8 are named in the backend's code and one more in the web app, with five that have a [verification record]{.term tip="A record that names the test proving a behavior works."}.
+Of the 684 verification records, 352 name a browser test. Their evidence is checked at each release rather than on every commit, because one change to a slice many others depend on makes most of their records stale at once. The 94 published help articles are all approved, and 79 carry tips for the controls they explain.
 
-The number to watch was the baseline. It could only go down, and it did: from 472 when the check was switched on to 0 on 2026-10-11, while Streamlane grew from 37 slices to 43. Nothing is tolerated now.
+The baseline went from 472 when the check was switched on to 0 on 2026-10-11, while Streamlane grew from 37 slices to 43. Nothing has been tolerated since.
 
 ### Driftline
 
 :::metrics
 | Count | Value |
 |---|---|
-| Records | 33 |
-| [Records promoted]{.term tip="Records a person has moved past draft: approved, or marked as built."} | 6 |
-| Slices | 6 |
-| Slices with code | 1 |
+| Records | 202 |
+| [Records promoted]{.term tip="Records a person has moved past draft: approved, or marked as built."} | 138 |
+| Slices | 12 |
+| Behaviors | 23 |
+| Verification records | 103 |
 | Validation errors | 0 |
 :::
 
-Driftline's check reports 21 warnings, all on drafts: five slices whose code is not written yet and that have no behaviors, and six [outcomes]{.term tip="An outcome is a result the product is meant to bring about for the people using it."} with no [measure]{.term tip="A record saying how an outcome is measured."} yet. Driftline reads usage evidence and writes none, so its two behaviors are proved by its tests rather than named in its code.
+Driftline's check reports 5 warnings, all on drafts: four slices whose code is not written yet and that implement no behavior, and one rule no behavior names yet.
 
 ## 2026-10-10 to 2026-10-11: The baseline reaches zero
 
