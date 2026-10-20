@@ -123,7 +123,10 @@ test("the function may invoke only the model and its fallback, through the US pr
     for (const region of ["us-east-1", "us-east-2", "us-west-2"]) {
       assert.ok(policies.includes(`arn:aws:bedrock:${region}::foundation-model/${bare}`), `${bare} in ${region}`);
     }
-    assert.ok(policies.includes(`:inference-profile/${id}`), id);
+    assert.ok(
+      policies.includes(`arn:aws:bedrock:${model.region}:`) && policies.includes(`:inference-profile/${id}`),
+      id,
+    );
   }
   assert.doesNotMatch(policies, /"bedrock:\*"|foundation-model\/\*/);
 });
