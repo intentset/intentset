@@ -30,7 +30,7 @@ import {
   statusLabel,
   termTips,
 } from "../build.ts";
-import { ATLAS_RAIL } from "../example-atlas.ts";
+import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
 import { loadRecords } from "../records.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
@@ -74,8 +74,9 @@ test("the page list is the content pages, the specifications, the guide, conform
     "conformance/index.html",
     "example/index.html",
     ...records.map((r) => `example/${r.id}/index.html`),
-    // The worked example's Atlas: its five pages, and one per behavior.
-    ...ATLAS_RAIL.items.slice(1).map(([, path]) => path),
+    // The worked example's Atlas: its map, its five review pages, and one per behavior.
+    ATLAS_MAP_PAGE,
+    ...REVIEW_PAGES.map(([, path]) => path),
     ...records.filter((r) => r.type === "behavior").map((r) => `example/atlas/behaviors/${r.id}/index.html`),
   ].sort();
   assert.deepEqual([...pages].sort(), expected);

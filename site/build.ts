@@ -26,15 +26,16 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
-import { MAP_SCRIPT, MAP_STYLES } from "@intentset/atlas";
+import { MAP_SCRIPT, MAP_STYLES, placeHtml } from "@intentset/atlas";
 import {
+  ATLAS_MAP_PAGE,
   ATLAS_MAP_SCRIPT,
   ATLAS_MAP_STYLES,
-  ATLAS_RAIL,
   ATLAS_ROOT,
   atlasLink,
   type ExampleAtlasPage,
   exampleAtlas,
+  REVIEW_PAGES,
 } from "./example-atlas.ts";
 import { EXAMPLE_REQUEST, type ExamplePublication, publishExample } from "./example-publication.ts";
 import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
@@ -125,24 +126,45 @@ export const SITE_NAME = "Intentset";
  * while the tools had no page at all. How it works moved into Start's rail, the
  * Markset page into Reference's, and Roadmap took the slot markset.org gives its
  * Playground, because an early release's reader asks first where it stands.
- * Every page kept its URL: Reference is the specifications index, Examples the
- * worked example's.
+ * Every page kept its URL: Reference is the specifications index. Examples
+ * opens on Lantern's map (2026-10-20), the most useful view of the example; the
+ * walkthrough kept /example/.
  */
 export const NAV: Array<[string, string]> = [
   ["Start", "start/index.html"],
   ["Tools", "tools/index.html"],
   ["Reference", "specifications/index.html"],
-  ["Examples", "example/index.html"],
+  ["Examples", ATLAS_MAP_PAGE],
   ["Roadmap", "roadmap/index.html"],
 ];
+
+/** An entry in a rail: a page, as label and output path, or a group of entries under a label that is not a link. */
+export type RailItem = [string, string] | { label: string; items: RailItem[] };
+export interface Rail {
+  title: string;
+  items: RailItem[];
+}
+
+/** A rail's pages in the order it lists them, its groups opened. */
+export function railLinks(rail: Rail): Array<[string, string]> {
+  const flat = (items: RailItem[]): Array<[string, string]> =>
+    items.flatMap((item) => (Array.isArray(item) ? [item] : flat(item.items)));
+  return flat(rail.items);
+}
 
 /**
  * The rails: the pages that belong to each bar item, listed beside every page
  * in that section. The bar cannot hold everything, and a page reached only from
  * a sentence is one most readers never find, so the rest are here. A test
  * requires every page to be in the bar, a rail or the footer's row.
+ *
+ * Examples is one rail for the whole section (2026-10-20): Lantern, the
+ * invented example, with its map, the walkthrough and the review pages the
+ * Atlas draws from the same records, then the adoption log. Until then the
+ * Atlas's pages had a rail of their own that led back to the walkthrough,
+ * whose rail led to the Atlas.
  */
-export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
+export const RAILS: Rail[] = [
   {
     title: "Start",
     items: [
@@ -176,9 +198,15 @@ export const RAILS: Array<{ title: string; items: Array<[string, string]> }> = [
   {
     title: "Examples",
     items: [
-      ["The worked example", "example/index.html"],
+      {
+        label: "Lantern, a worked example",
+        items: [
+          ["The map", ATLAS_MAP_PAGE],
+          ["The walkthrough", "example/index.html"],
+          { label: "Review pages", items: REVIEW_PAGES },
+        ],
+      },
       ["The adoption log", "pilot/index.html"],
-      ["The worked example's Atlas", "example/atlas/index.html"],
     ],
   },
 ];
@@ -195,13 +223,12 @@ export function siteRails(knowledge: readonly PublishedKnowledge[]): typeof RAIL
 }
 
 /**
- * The rail a page sits in: for a page of the worked example's Atlas, the Atlas's own; otherwise the one listing it,
- * or, for a record of the worked example, Examples, and for a page of published knowledge, Reference.
+ * The rail a page sits in: the one listing it, or, for any other page of the worked example (a record's page, a
+ * behavior's review page), Examples, and for a page of published knowledge, Reference.
  */
-export function railFor(path: string, rails: typeof RAILS = RAILS): (typeof RAILS)[number] | undefined {
-  if (path.startsWith(`${ATLAS_ROOT}/`)) return ATLAS_RAIL;
+export function railFor(path: string, rails: typeof RAILS = RAILS): Rail | undefined {
   return (
-    rails.find((rail) => rail.items.some(([, href]) => href === path)) ??
+    rails.find((rail) => railLinks(rail).some(([, href]) => href === path)) ??
     (path.startsWith("example/") ? rails.find((rail) => rail.title === "Examples") : undefined) ??
     (path.startsWith("knowledge/") ? rails.find((rail) => rail.title === "Reference") : undefined)
   );
@@ -881,14 +908,14 @@ markset: 0
 ---
 
 {.eyebrow}
-Worked example
+Lantern, a worked example · The walkthrough
 
 # Schedule a student assessment
 
 {.lead}
-One capability of an invented product, written down the way Intentset asks for it: ${records.length} records, each a Markdown file a person reads in under a minute, which together connect a reason for the product to change to the code that would deliver it and the check that would hold it.
+One capability of Lantern, an invented product, written down the way Intentset asks for it: ${records.length} records, each a Markdown file a person reads in under a minute, which together connect a reason for the product to change to the code that would deliver it and the check that would hold it.
 
-Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in order and the chain closes; open any record to see exactly what a person writes and what an agent reads.
+Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in order and the chain closes; open any record to see exactly what a person writes and what an agent reads. [The map](atlas/map/) draws the same ${records.length} records and every link between them in one picture.
 
 :::metrics
 | Count | Value |
@@ -910,7 +937,7 @@ ${acts}
 
 ## The same records, for review
 
-The records above are what an agent writes and a person approves. [The worked example's Atlas](atlas/) is the same records as \`intentset serve\` draws them for the people who review a model: the capability and its behavior, who owns what, verification shown as missing because the check has not been executed, and what publication would release. A team's own Atlas stays inside the team; this one is public because Lantern is invented.
+The records above are what an agent writes and a person approves. [The map](atlas/map/) and the [review pages](atlas/) are the same records as \`intentset serve\` draws them for the people who review a model: the capability and its behavior, who owns what, verification shown as missing because the check has not been executed, and what publication would release. A team's own Atlas stays inside the team; Lantern's is public because Lantern is invented.
 
 ***
 
@@ -923,23 +950,43 @@ Nothing above was written by hand for this site. It is the shape an agent produc
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
 }
 
+/** The example's name, wherever the site names it: the rail, the eyebrows and the map page's heading. */
+export const EXAMPLE_NAME = "Lantern, a worked example";
+
 /**
  * One page of the worked example's Atlas, in the site's shell. Its links to other Atlas pages are pointed at their
- * addresses on the site; its title says whose Atlas it is, since "Ownership" alone names nothing.
+ * addresses on the site, and an eyebrow and its title say whose pages they are, since "Ownership" alone names nothing.
+ * The map is the example's landing page (2026-10-20), so it takes the example's name for its heading and, under the
+ * picture, links the walkthrough and the review pages.
  */
 function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
   const paths = new Set(atlas.map((p) => p.atlasPath));
-  const rendered = renderPage(page.path, page.source, join(root, EXAMPLE_DIR), {}, false, (tree) => {
+  const isMap = page.html !== undefined;
+  let source = page.source.replace(
+    /^# (.*)$/m,
+    (_, title: string) =>
+      `{.eyebrow}\n${isMap ? "The map" : `${EXAMPLE_NAME} · Review page`}\n\n# ${isMap ? EXAMPLE_NAME : title}`,
+  );
+  if (isMap) {
+    const ways =
+      "Read the same records in order, each open where it stands, in [the walkthrough](../../), or review them as a " +
+      `team would on the review pages: ${REVIEW_PAGES.map(([label, path]) => `[${label}](../${pageAddress(path).slice(ATLAS_ROOT.length + 1)})`).join(", ")}.`;
+    if (!source.includes("\n## Reading the map\n")) throw new Error("the Atlas's map page has no section to precede");
+    source = source.replace("\n## Reading the map\n", `\n${ways}\n\n## Reading the map\n`);
+  }
+  const rendered = renderPage(page.path, source, join(root, EXAMPLE_DIR), {}, false, (tree) => {
     visit(tree, (node) => {
       if (node.type === "link") (node as Link).url = atlasLink(page.atlasPath, (node as Link).url, paths);
     });
   });
   return {
     ...rendered,
-    body: rendered.body + (page.html ?? ""),
-    ...(page.html === undefined ? {} : { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] }),
-    title: `${rendered.title} · The worked example's Atlas`,
-    description: `${rendered.title}, from the Atlas of the worked example's records: what intentset serve shows a team about its own model.`,
+    body: placeHtml(rendered.body, page.html ?? ""),
+    ...(isMap ? { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] } : {}),
+    title: isMap ? EXAMPLE_NAME : `${rendered.title} · ${EXAMPLE_NAME}`,
+    description: isMap
+      ? "Lantern, an invented product, as a map of every record and every link between them, with the walkthrough and the review pages drawn from the same records."
+      : `${rendered.title}, a review page of Lantern's records: what intentset serve shows a team about its own model.`,
   };
 }
 
@@ -953,7 +1000,7 @@ markset: 0
 ---
 
 {.eyebrow}
-Worked example · ${md(record.type)}
+Lantern, a worked example · ${md(record.type)}
 
 :::card{.record}
 ${table}
@@ -962,7 +1009,7 @@ ${table}
 ${record.body.trim()}
 
 {.site-back}
-[Back to the worked example](../)
+[Back to the walkthrough](../) · [Lantern on the map](../atlas/map/)
 `;
   return renderPage(`example/${record.id}/index.html`, source, join(root, EXAMPLE_DIR, record.file));
 }
@@ -1052,7 +1099,7 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
   const nav = NAV.map(([label, href]) => {
     // A bar item is current for its whole section, not just its own page, or
     // the bar goes blank the moment a reader follows the rail into one.
-    const active = page.path === href || (section !== undefined && section.items[0][1] === href);
+    const active = page.path === href || (section !== undefined && railLinks(section)[0][1] === href);
     return `<a href="${rel}${pageAddress(href)}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("\n");
   const footerLinks = [...FOOTER_LINKS, ...(askUrl === null ? [] : ([["Privacy", "privacy/index.html"]] as const))]
@@ -1063,13 +1110,17 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
     .join("\n");
   // Where am I, then what is on this page: the section first, because it
   // answers the question a reader arriving from a search result has.
+  // A group is a list inside its label's item, so it reads as nested to assistive technology too.
+  const railList = (items: RailItem[]): string =>
+    `<ul>\n${items
+      .map((item) =>
+        Array.isArray(item)
+          ? `<li><a href="${rel}${pageAddress(item[1])}"${item[1] === page.path ? ' aria-current="page"' : ""}>${esc(item[0])}</a></li>`
+          : `<li class="site-rail-group"><span class="site-rail-label">${esc(item.label)}</span>\n${railList(item.items)}</li>`,
+      )
+      .join("\n")}\n</ul>`;
   const sectionNav = section
-    ? `<nav class="site-rail" aria-label="${esc(section.title)}"><p class="site-rail-title">${esc(section.title)}</p>\n<ul>\n${section.items
-        .map(
-          ([label, href]) =>
-            `<li><a href="${rel}${pageAddress(href)}"${href === page.path ? ' aria-current="page"' : ""}>${esc(label)}</a></li>`,
-        )
-        .join("\n")}\n</ul></nav>\n`
+    ? `<nav class="site-rail" aria-label="${esc(section.title)}"><p class="site-rail-title">${esc(section.title)}</p>\n${railList(section.items)}</nav>\n`
     : "";
   const contentsNav = page.toc
     ? `<nav aria-label="Contents"><p class="site-rail-title">On this page</p>\n${page.toc}</nav>\n`

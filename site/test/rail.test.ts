@@ -11,8 +11,19 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
 import { after, test } from "node:test";
-import { ASK_URL, build, CHAT_PAGES, FOOTER_LINKS, NAV, NOT_FOUND, RAILS, railFor, siteRails } from "../build.ts";
-import { ATLAS_RAIL } from "../example-atlas.ts";
+import {
+  ASK_URL,
+  build,
+  CHAT_PAGES,
+  FOOTER_LINKS,
+  NAV,
+  NOT_FOUND,
+  RAILS,
+  railFor,
+  railLinks,
+  siteRails,
+} from "../build.ts";
+import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
 import { publishedKnowledge } from "../knowledge.ts";
 
 const dist = await mkdtemp(join(tmpdir(), "intentset-rail-"));
@@ -87,9 +98,7 @@ test("every URL the site had before the bar changed still answers", () => {
 test("every page is named by the bar, a rail or the footer's row, or is a record the worked example, the published knowledge or the Atlas lists", () => {
   // The privacy page is in the footer's row once the chat is launched.
   const chat = ASK_URL === null ? [] : CHAT_PAGES.map(([path]): [string, string] => ["", path]);
-  const named = new Set(
-    [...NAV, ...FOOTER_LINKS, ...chat, ...rails.flatMap((r) => r.items), ...ATLAS_RAIL.items].map(([, href]) => href),
-  );
+  const named = new Set([...NAV, ...FOOTER_LINKS, ...chat, ...rails.flatMap(railLinks)].map(([, href]) => href));
   const examples = linksFrom("example/index.html");
   const knowledge = linksFrom("knowledge/index.html");
   const atlas = linksFrom("example/atlas/index.html");
@@ -104,8 +113,9 @@ test("every page is named by the bar, a rail or the footer's row, or is a record
     );
   }
   // Every rail entry is a page that was built.
-  for (const { title, items } of rails) {
-    for (const [label, href] of items) assert.ok(html.has(href), `${title} rail: ${label} (${href}) was not built`);
+  for (const rail of rails) {
+    for (const [label, href] of railLinks(rail))
+      assert.ok(html.has(href), `${rail.title} rail: ${label} (${href}) was not built`);
   }
 });
 
@@ -139,30 +149,31 @@ test("a page in a section carries its section's rail, marks itself once, and the
     }
     assert.deepEqual(
       rail(page),
-      section.items.map(([, href]) => href),
+      railLinks(section).map(([, href]) => href),
       `${page}: the ${section.title} rail`,
     );
     const nav = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(doc)?.[1] ?? "";
     const marked = (nav.match(/aria-current="page"/g) ?? []).length;
     // A record of the worked example is in the section without being in its list.
-    assert.equal(marked, section.items.some(([, href]) => href === page) ? 1 : 0, `${page}: rail marks ${marked}`);
-    const barLabel = NAV.find(([, href]) => href === section.items[0][1])?.[0];
+    assert.equal(marked, railLinks(section).some(([, href]) => href === page) ? 1 : 0, `${page}: rail marks ${marked}`);
+    const barLabel = NAV.find(([, href]) => href === railLinks(section)[0][1])?.[0];
     assert.deepEqual(current, [barLabel], `${page}: the bar marks ${current.join(", ") || "nothing"}`);
   }
   // Each bar item but Roadmap opens its section's rail.
   assert.deepEqual(
-    RAILS.map((r) => r.items[0][1]),
+    RAILS.map((r) => railLinks(r)[0][1]),
     NAV.filter(([label]) => label !== "Roadmap").map(([, href]) => href),
   );
 });
 
 test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the adoption and the guide", () => {
-  const reference = RAILS.find((r) => r.title === "Reference")?.items.map(([, href]) => href) ?? [];
+  const links = (title: string) => railLinks(RAILS.find((r) => r.title === title) ?? { title, items: [] });
+  const reference = links("Reference").map(([, href]) => href);
   for (const page of ["specifications/core/index.html", "markset/index.html", "conformance/index.html"]) {
     assert.ok(reference.includes(page), `Reference lacks ${page}`);
   }
-  assert.ok(RAILS.find((r) => r.title === "Tools")?.items.some(([, href]) => href === "tools/cli/index.html"));
-  const start = RAILS.find((r) => r.title === "Start")?.items.map(([, href]) => href) ?? [];
+  assert.ok(links("Tools").some(([, href]) => href === "tools/cli/index.html"));
+  const start = links("Start").map(([, href]) => href);
   assert.deepEqual(start, [
     "start/index.html",
     "how-it-works/index.html",
@@ -170,4 +181,61 @@ test("Reference holds the specifications, the Markset page and conformance; Tool
     "verify/index.html",
     "guide/index.html",
   ]);
+});
+
+test("Examples is one rail on every page of the section: Lantern's map, the walkthrough and its review pages, then the adoption log (2026-10-20)", () => {
+  const examples = RAILS.find((r) => r.title === "Examples");
+  assert.ok(examples);
+  // Lantern is a group, its review pages a group inside it, so the rail is nested lists and its labels are not links.
+  assert.deepEqual(examples.items, [
+    {
+      label: "Lantern, a worked example",
+      items: [
+        ["The map", ATLAS_MAP_PAGE],
+        ["The walkthrough", "example/index.html"],
+        { label: "Review pages", items: REVIEW_PAGES },
+      ],
+    },
+    ["The adoption log", "pilot/index.html"],
+  ]);
+  assert.deepEqual(
+    REVIEW_PAGES.map(([label]) => label),
+    ["Overview", "Ownership", "Verification", "Publication", "Diagnostics"],
+  );
+  // The bar's Examples opens on the map, and no rail of the section leads in a circle back to another.
+  assert.deepEqual(
+    NAV.find(([label]) => label === "Examples"),
+    ["Examples", "example/atlas/map/index.html"],
+  );
+  const expected = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html.get(ATLAS_MAP_PAGE) ?? "")?.[1] ?? "";
+  assert.match(
+    expected,
+    /<li class="site-rail-group"><span class="site-rail-label">Lantern, a worked example<\/span>\n<ul>/,
+  );
+  assert.match(expected, /<li class="site-rail-group"><span class="site-rail-label">Review pages<\/span>\n<ul>/);
+  const section = pages.filter((page) => page.startsWith("example/") || page === "pilot/index.html");
+  assert.ok(section.length > 20, `only ${section.length} pages in Examples`);
+  for (const page of section) {
+    assert.deepEqual(
+      rail(page),
+      railLinks(examples).map(([, href]) => href),
+      `${page}: the Examples rail`,
+    );
+    assert.equal(railFor(page, rails)?.title, "Examples", page);
+  }
+});
+
+test("every address of the worked example still answers: the walkthrough at /example/, the map and every review page under /example/atlas/", () => {
+  for (const page of [
+    "example/index.html",
+    "example/atlas/index.html",
+    "example/atlas/map/index.html",
+    "example/atlas/ownership/index.html",
+    "example/atlas/verification/index.html",
+    "example/atlas/publication/index.html",
+    "example/atlas/diagnostics/index.html",
+    "example/atlas/behaviors/BEH-ASMT-SCHEDULE/index.html",
+  ]) {
+    assert.ok(html.has(page), `${page} no longer exists`);
+  }
 });

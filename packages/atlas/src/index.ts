@@ -37,7 +37,16 @@ import { publicationPage } from "./pages/publication.ts";
 import { verificationPage } from "./pages/verification.ts";
 import type { AtlasInput, AtlasOptions } from "./types.ts";
 
-export { ATLAS_KEY, ATLAS_PROFILE, type AtlasMeta, NAV, STYLESHEET, snapshotLine } from "./page.ts";
+export {
+  ATLAS_KEY,
+  ATLAS_PROFILE,
+  type AtlasMeta,
+  MAP_SLOT,
+  NAV,
+  placeHtml,
+  STYLESHEET,
+  snapshotLine,
+} from "./page.ts";
 export { STATUS_WORDS } from "./model.ts";
 export { type AtlasMapLayout, GROUPS, MAP_STYLES, type MapEdge, type MapNode, mapHtml } from "./map.ts";
 export { MAP_SCRIPT } from "./map-script.ts";

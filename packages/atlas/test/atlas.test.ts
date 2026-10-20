@@ -14,7 +14,7 @@ import {
 import { classifyEvidence, coverage, type RunRecord } from "@intentset/verification";
 import { parseDocument } from "@markset-lang/parser";
 import { defaultStylesheetPath } from "@markset-lang/render-html";
-import { type AtlasInput, buildAtlas, buildAtlasSources } from "../src/index.ts";
+import { type AtlasInput, type AtlasMapLayout, atlasMapLayout, buildAtlas, buildAtlasSources } from "../src/index.ts";
 import { chartLabel } from "../src/pages/overview.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
@@ -250,6 +250,111 @@ test("BEH-ATLAS-MAP: the same graph gives the same map, whatever order its files
   const once = buildAtlas(example()).get("map.html");
   assert.equal(buildAtlas(example()).get("map.html"), once);
   assert.equal(buildAtlas(example({ reverse: true })).get("map.html"), once);
+});
+
+test("BEH-ATLAS-MAP: the map comes first, after one sentence, and how to read and use it follows the picture", () => {
+  for (const notice of ["internal", "example"] as const) {
+    const map = buildAtlas(example(), { notice }).get("map.html") ?? "";
+    const main = map.slice(map.indexOf("<main"), map.indexOf("</main>"));
+    const lead = main.indexOf('<p class="lead">');
+    const controls = main.indexOf('<div class="am-map">');
+    const svg = main.indexOf('<svg class="am-svg');
+    const reading = main.indexOf("Reading the map</h2>");
+    const using = main.indexOf("Using the map</h2>");
+    assert.ok(lead > 0 && lead < controls && controls < svg && svg < reading && reading < using, notice);
+    // Between the lead sentence and the map, nothing: the lead is one sentence, and the slot is filled, not left as a rule.
+    assert.equal(main.slice(main.indexOf("</p>", lead) + 4, controls).trim(), "");
+    assert.equal((main.slice(lead, main.indexOf("</p>", lead)).match(/\. /g) ?? []).length, 0, "one sentence");
+    assert.doesNotMatch(main, /<hr class="am-slot">/);
+    for (const words of ["Color", "A dashed outline", "verification's ring", "Find a record by its ID"]) {
+      assert.ok(main.indexOf(words, svg) > svg, `${words} is below the map`);
+    }
+  }
+  // The source alone keeps a rule where the map stands, so it still reads in order without the Atlas's shell.
+  const source = buildAtlasSources(example()).get("map.html") ?? "";
+  assert.match(source, /\{\.am-slot\}\n\*\*\*\n/);
+});
+
+/** Every node's circle and label as boxes, read back from the drawing; a label is about six units a character. */
+function footprints(layout: AtlasMapLayout) {
+  return layout.nodes.map((node) => ({
+    id: node.id,
+    circle: { left: node.x - node.r, right: node.x + node.r, top: node.y - node.r, bottom: node.y + node.r },
+    label: {
+      left: node.x + node.r + 3,
+      right: node.x + node.r + 3 + node.id.length * 6,
+      top: node.y - 4.5,
+      bottom: node.y + 4.5,
+    },
+  }));
+}
+type Box = { left: number; right: number; top: number; bottom: number };
+const overlaps = (a: Box, b: Box) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+/** A crowded graph with long IDs: clusters of behaviors around capabilities, each with rules and a check. */
+function crowded(n: number): AtlasInput {
+  const artifacts = new Map();
+  const edges: { kind: string; from: string; to: string }[] = [];
+  const add = (id: string, type: string) =>
+    artifacts.set(id, { meta: { id, type, title: id, status: "draft" }, path: `${id}.md` });
+  for (let c = 0; c < n / 10; c++) {
+    const cap = `CAP-CLUSTER-${c}`;
+    add(cap, "capability");
+    for (let b = 0; b < 3; b++) {
+      const beh = `BEH-CLUSTER-${c}-BEHAVIOR-${b}`;
+      add(beh, "behavior");
+      edges.push({ kind: "realizes", from: beh, to: cap });
+      const rule = `RULE-CLUSTER-${c}-${b}`;
+      add(rule, "rule");
+      edges.push({ kind: "governedBy", from: beh, to: rule });
+      const check = `TEST-CLUSTER-${c}-${b}`;
+      add(check, "verification");
+      edges.push({ kind: "verifies", from: check, to: beh });
+    }
+  }
+  const graph = { artifacts, edges, derived: [], out: new Map(), in: new Map() };
+  return {
+    graph,
+    registries: {},
+    diagnostics: [],
+    snapshot: { commit: null, graphHash: "", scope: [], level: "L1" },
+    evidence: null,
+  } as unknown as AtlasInput;
+}
+
+test("BEH-ATLAS-MAP: no label overlaps another record's label or circle, and the box fits the drawing", () => {
+  for (const [name, input] of [
+    ["the example", example()],
+    ["a crowded graph", crowded(100)],
+  ] as const) {
+    const layout = atlasMapLayout(input);
+    assert.ok(layout.nodes.length <= 120, `${name}: labels show, so they must not overlap`);
+    const prints = footprints(layout);
+    for (const [i, a] of prints.entries()) {
+      for (const b of prints.slice(i + 1)) {
+        assert.ok(!overlaps(a.label, b.label), `${name}: ${a.id}'s label overlaps ${b.id}'s`);
+        assert.ok(!overlaps(a.label, b.circle), `${name}: ${a.id}'s label covers ${b.id}`);
+        assert.ok(!overlaps(b.label, a.circle), `${name}: ${b.id}'s label covers ${a.id}`);
+        assert.ok(!overlaps(a.circle, b.circle), `${name}: ${a.id} and ${b.id} overlap`);
+      }
+    }
+    // The box holds every circle and label, with no more than a small margin on any side.
+    const [x, y, w, h] = layout.box;
+    const left = Math.min(...prints.map((p) => p.circle.left));
+    const right = Math.max(...prints.map((p) => p.label.right));
+    const top = Math.min(...prints.map((p) => Math.min(p.circle.top, p.label.top)));
+    const bottom = Math.max(...prints.map((p) => Math.max(p.circle.bottom, p.label.bottom)));
+    for (const [side, slack] of [
+      ["left", left - x],
+      ["right", x + w - right],
+      ["top", top - y],
+      ["bottom", y + h - bottom],
+    ] as const) {
+      assert.ok(slack >= 0 && slack <= 24, `${name}: ${side} margin ${slack}`);
+    }
+    // The same graph, the same bytes: the separation is part of the deterministic layout.
+    assert.deepEqual(atlasMapLayout(input), layout);
+  }
 });
 
 test("BEH-ATLAS-MAP: a verification's ring is green only for a current pass, and its status is in its title", () => {

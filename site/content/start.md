@@ -64,7 +64,7 @@ From then on, the agent that changes the code updates the records in the same co
 
 Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved.
 
-[[Read the adoption log](../pilot/)]{.button .primary} [[Open the worked example](../example/)]{.button}
+[[Read the adoption log](../pilot/)]{.button .primary} [[Open Lantern, a worked example](../example/atlas/map/)]{.button}
 
 > [!NOTE]
 > The reference toolchain is an early release, at {{version}}. The architecture check needs TypeScript 7; in a repository on an earlier TypeScript, run the toolchain without installing it, as `npx -p @intentset/cli -p typescript@7 intentset`, or with pnpm as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.

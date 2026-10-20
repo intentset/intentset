@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-ATLAS-MAP]
   verification:
@@ -27,10 +27,12 @@ intentset:
 
 - `packages/atlas/test/atlas.test.ts`: the test "every record is a node and every authored link an edge, drawn once"
 - `packages/atlas/test/atlas.test.ts`: the test "the same graph gives the same map, whatever order its files are read in"
+- `packages/atlas/test/atlas.test.ts`: the test "the map comes first, after one sentence, and how to read and use it follows the picture"
+- `packages/atlas/test/atlas.test.ts`: the test "no label overlaps another record's label or circle, and the box fits the drawing"
 - `packages/atlas/test/atlas.test.ts`: the test "a verification's ring is green only for a current pass, and its status is in its title"
 - `packages/atlas/test/atlas.test.ts`: the test "the script writes text, never markup, and asks for nothing"
 - `site/test/browser.test.ts`: the test "the worked example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths"
 
 ## Expected result
 
-Every test whose title carries `BEH-ATLAS-MAP` passes: each record is one node and each authored link one edge, the map's bytes do not depend on the order the files are read, a verification's ring is green only for a current pass and its status is in its title, the script uses no markup sink, storage or request, and in a browser the map finds a record, marks its links, lists them, filters a family, clears on Escape, fills the screen and returns, and follows a selected record's link.
+Every test whose title carries `BEH-ATLAS-MAP` passes: each record is one node and each authored link one edge, the map's bytes do not depend on the order the files are read, the map stands right after the page's one opening sentence with the legend and the instructions below it, no ID overlaps another record's ID or circle in the example or in a crowded graph of a hundred records, the frame fits the drawing within a small margin, a verification's ring is green only for a current pass and its status is in its title, the script uses no markup sink, storage or request, and in a browser the map finds a record, marks its links, lists them, filters a family, clears on Escape, fills the screen and returns, and follows a selected record's link.

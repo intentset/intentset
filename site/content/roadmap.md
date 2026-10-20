@@ -28,7 +28,7 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 Nothing is announced beyond the current release. What comes next is decided by what adopters find, and is listed here when it is planned.
 
-The latest release, {{version}}, added the Atlas's map of every record and the links between them, which a reader can search, filter and focus, and review pages laid out with more of Markset. [The worked example's Atlas](../example/atlas/map/) shows them.
+The latest release, {{version}}, added the Atlas's map of every record and the links between them, which a reader can search, filter and focus, and review pages laid out with more of Markset. [Lantern, the worked example](../example/atlas/map/), shows them.
 
 ## Not planned
 

@@ -192,6 +192,38 @@ export function layoutMap(model: Model): AtlasMapLayout {
     }
   }
 
+  // Where the labels show, no two records' footprints (the circle and the ID beside it) may overlap: the force layout
+  // spaces points, not words, so a pass pushes overlapping footprints apart. A larger map shows its labels only when
+  // zoomed in or in focus, and is left as the forces placed it.
+  const radii = artifacts.map((artifact) => RADIUS[artifact.meta.type] ?? 5);
+  const footprints = artifacts.map((artifact, i) => footprint(radii[i], n <= LABEL_LIMIT ? artifact.meta.id : ""));
+  if (n <= LABEL_LIMIT && n > 1) {
+    // Labels are wide and short, so separating them alone stacks a crowded map into a tall column. The forces' picture
+    // is first widened by each of a few fixed factors, separated, and the one whose drawing is closest to the frame's
+    // proportions is kept: the first such, so the choice is as deterministic as the rest.
+    let best: { x: Float64Array; y: Float64Array; miss: number } | null = null;
+    for (const widen of WIDEN) {
+      const wx = x.map((value) => value * widen);
+      const wy = y.slice();
+      separate(wx, wy, footprints);
+      let [left, right, top, bottom] = [Infinity, -Infinity, Infinity, -Infinity];
+      for (let i = 0; i < n; i++) {
+        left = Math.min(left, wx[i] - footprints[i].left);
+        right = Math.max(right, wx[i] + footprints[i].right);
+        top = Math.min(top, wy[i] - footprints[i].up);
+        bottom = Math.max(bottom, wy[i] + footprints[i].up);
+      }
+      const aspect = (right - left) / (bottom - top);
+      // Distance in ratio rather than difference, so too tall and too wide by the same factor weigh the same.
+      const miss = aspect > ASPECT ? aspect / ASPECT : ASPECT / aspect;
+      if (best === null || miss < best.miss) best = { x: wx, y: wy, miss };
+    }
+    if (best !== null) {
+      x.set(best.x);
+      y.set(best.y);
+    }
+  }
+
   const nodes: MapNode[] = artifacts.map((artifact, i) => {
     const { meta } = artifact;
     let evidence: MapNode["evidence"] = null;
@@ -213,19 +245,79 @@ export function layoutMap(model: Model): AtlasMapLayout {
       href: pageOf(artifact),
       x: round(x[i]),
       y: round(y[i]),
-      r: RADIUS[meta.type] ?? 5,
+      r: radii[i],
     };
   });
-  const pad = 40;
-  const xs = nodes.map((node) => node.x);
-  const ys = nodes.map((node) => node.y);
-  const minX = n === 0 ? 0 : Math.min(...xs) - pad;
-  const minY = n === 0 ? 0 : Math.min(...ys) - pad;
-  // A label runs to the right of its node, about six units a character at the map's type size.
-  const right = nodes.map((node) => node.x + node.r + 4 + node.id.length * 6);
-  const width = n === 0 ? 2 * pad : Math.max(...right) - minX + pad;
-  const height = n === 0 ? 2 * pad : Math.max(...ys) - minY + pad;
-  return { nodes, edges, box: [round(minX), round(minY), round(width), round(height)] };
+  // The box fits the drawing, labels included, with a small margin, so the picture fills the frame it is drawn in.
+  const pad = 16;
+  if (n === 0) return { nodes, edges, box: [0, 0, 2 * pad, 2 * pad] };
+  const minX = Math.min(...nodes.map((node, i) => node.x - footprints[i].left)) - pad;
+  const minY = Math.min(...nodes.map((node, i) => node.y - footprints[i].up)) - pad;
+  // Every label counts, including those a large map shows only when zoomed in.
+  const maxX = Math.max(...nodes.map((node) => node.x + node.r + LABEL_GAP + labelWidth(node.id))) + pad;
+  const maxY = Math.max(...nodes.map((node, i) => node.y + footprints[i].up)) + pad;
+  return { nodes, edges, box: [round(minX), round(minY), round(maxX - minX), round(maxY - minY)] };
+}
+
+/** The factors the forces' picture is widened by before its labels are separated, and the proportions aimed for. */
+const WIDEN = [1, 1.25, 1.5, 2, 2.5, 3] as const;
+const ASPECT = 1.4;
+
+/** The space between a node's circle and its label, and the label's estimated width at the map's type size. */
+const LABEL_GAP = 3;
+function labelWidth(id: string): number {
+  // About six units a character at 9px, a little generous so an estimate never undercounts a label.
+  return id.length * 6;
+}
+
+/** The space a node takes on the map, around its centre: the circle, and its ID to the right when labels show. */
+interface Footprint {
+  left: number;
+  right: number;
+  up: number;
+}
+
+function footprint(r: number, label: string): Footprint {
+  return {
+    left: r + 1,
+    right: label === "" ? r + 1 : r + LABEL_GAP + labelWidth(label) + 2,
+    // A label is about nine units tall around its centre line; a large circle is taller.
+    up: Math.max(r, 6) + 1,
+  };
+}
+
+/**
+ * Push apart every two footprints that overlap, along the axis where they overlap least (for two labels, nearly
+ * always up and down, which keeps the picture's shape), half each way, in ID order, for a fixed number of passes.
+ * Arithmetic only, so the result is the same on every machine.
+ */
+function separate(x: Float64Array, y: Float64Array, prints: readonly Footprint[]): void {
+  const n = prints.length;
+  const gap = 2;
+  for (let pass = 0; pass < 400; pass++) {
+    let moved = false;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = prints[i];
+        const b = prints[j];
+        const ox = Math.min(x[i] + a.right, x[j] + b.right) - Math.max(x[i] - a.left, x[j] - b.left) + gap;
+        const oy = Math.min(y[i] + a.up, y[j] + b.up) - Math.max(y[i] - a.up, y[j] - b.up) + gap;
+        if (ox <= 0 || oy <= 0) continue;
+        moved = true;
+        if (oy <= ox) {
+          // The one higher on the map moves up; on a tie, the earlier ID.
+          const sign = y[i] < y[j] || (y[i] === y[j] && i < j) ? -1 : 1;
+          y[i] += (sign * oy) / 2;
+          y[j] -= (sign * oy) / 2;
+        } else {
+          const sign = x[i] < x[j] || (x[i] === x[j] && i < j) ? -1 : 1;
+          x[i] += (sign * ox) / 2;
+          x[j] -= (sign * ox) / 2;
+        }
+      }
+    }
+    if (!moved) break;
+  }
 }
 
 function compareEdges(a: Edge, b: Edge): number {
@@ -310,7 +402,7 @@ export const MAP_STYLES = `
 .am-filter legend { float: left; margin-right: .5rem; padding: 0; font-weight: 600; }
 .am-swatch { display: inline-block; width: .7em; height: .7em; border-radius: 50%; margin-right: .3em; background: var(--am-meaning); }
 .am-zoom button { min-width: 2.75rem; min-height: 2.75rem; margin-right: .25rem; }
-.am-svg { display: block; width: 100%; height: min(75vh, 48rem); border: 1px solid var(--ms-border); border-radius: var(--ms-radius); background: var(--ms-surface); touch-action: none; }
+.am-svg { display: block; width: 100%; height: auto; max-height: min(75vh, 48rem); min-height: 14rem; border: 1px solid var(--ms-border); border-radius: var(--ms-radius); background: var(--ms-surface); touch-action: none; }
 .am-svg.am-grabbing { cursor: grabbing; }
 .am-edge { stroke: var(--ms-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .am-node circle { fill: var(--am-meaning); stroke: var(--ms-surface); stroke-width: 1.5; }
@@ -340,7 +432,7 @@ export const MAP_STYLES = `
 .am-map:fullscreen, .am-map.am-expanded { display: flex; flex-direction: column; box-sizing: border-box; padding: .75rem;
   background: var(--ms-bg); color: var(--ms-fg); overflow: hidden; }
 .am-map.am-expanded { position: fixed; inset: 0; z-index: 1000; }
-.am-map:fullscreen .am-svg, .am-map.am-expanded .am-svg { flex: 1; height: auto; min-height: 0; }
+.am-map:fullscreen .am-svg, .am-map.am-expanded .am-svg { flex: 1; height: auto; min-height: 0; max-height: none; }
 .am-map:fullscreen .am-panel, .am-map.am-expanded .am-panel { position: absolute; right: 1.25rem; bottom: 1.25rem;
   width: min(22rem, calc(100% - 2.5rem)); max-height: 40%; overflow: auto; margin: 0; box-shadow: 0 4px 16px rgb(0 0 0 / .2); }
 .am-panel button { font: inherit; background: none; border: 0; padding: 0; color: var(--ms-link, inherit); text-decoration: underline; cursor: pointer; }
