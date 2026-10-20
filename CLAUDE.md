@@ -376,7 +376,9 @@ reaches a published package.
   has no URL of its own.
 - **The model.** Claude Sonnet 4.6 through `us.anthropic.claude-sonnet-4-6`, effort `low`, no fallback, until
   Anthropic approves the account's use case for Opus 5.5 on Bedrock (submitted 2026-10-09; until then Bedrock answers
-  Opus 4.7 and later with "not available for this account"). Then `limits.ts` names Opus 5.5 with the SDK's
+  Opus 4.7 and later with "not available for this account"). The function calls Bedrock in us-east-1 (`model.region`,
+  2026-10-20): us-east-2's endpoint answered prod and dev with ServiceUnavailable after the Marketplace agreement was
+  renewed, while us-east-1's answered; the profile already routes inference there. Then `limits.ts` names Opus 5.5 with the SDK's
   refusal-fallback middleware to Opus 4.8, and Opus 5.5's prices; the corpus goes as cited document blocks, the last one cached for an hour,
   after a system prompt with no date in it. The profile routes to us-east-1, us-east-2 and us-west-2; the SCP
   `p-mlfzkjk2` opens us-west-2 to Bedrock only through an inference profile, and the function's grants name the two
