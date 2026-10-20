@@ -304,9 +304,24 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full
     assert.ok(
       await tab.evaluate(() => document.fullscreenElement === null && !document.querySelector(".am-map.am-expanded")),
     );
+    // Leaving full screen gives the map back its height from the drawing's proportions and restores the scroll, which
+    // the browser may finish a frame or two later: a click aimed before then lands where the record no longer is.
+    await tab.waitForFunction(
+      () =>
+        new Promise((resolve) => {
+          const box = () => JSON.stringify(document.querySelector(".am-svg")?.getBoundingClientRect());
+          const before = box();
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(box() === before)));
+        }),
+    );
     // A second activation of a selected record follows its link, to the site's own address.
     const node = tab.locator('.am-node[data-id="BEH-ASMT-SCHEDULE"] circle');
     await node.click({ force: true });
+    assert.equal(
+      await tab.locator(".am-node.am-selected").getAttribute("data-id"),
+      "BEH-ASMT-SCHEDULE",
+      `${width}px: the first activation selects the record`,
+    );
     await Promise.all([
       tab.waitForURL(/\/example\/atlas\/behaviors\/BEH-ASMT-SCHEDULE\/$/),
       node.click({ force: true }),
