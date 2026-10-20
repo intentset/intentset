@@ -85,6 +85,7 @@ Some claims are about the live product, not the code: a page is locked to invite
 - **A smoke test after every deploy,** signing in as a temporary user and walking one flow end to end, so a deploy that went green and serves nothing is caught at once.
 - **A scheduled check of each live claim.** Coral Reef Ventures checks every day that the sites it keeps locked still refuse a visitor without an invitation and serve an invitee, and by hand after every deploy of one.
 - **Run evidence, bound to what it checked.** `intentset evidence import --from vitest` (or `--from playwright`) turns a test report into run records bound to the commit and to each verification's subject, the files its check is about. A pass stays current while those files are unchanged and goes stale when they change, and `intentset evidence stale --format playwright` prints the arguments that make the runner run only the stale ones. The model then says which of its claims hold today, not which were ever tested.
+- **A slow suite is checked at each release.** A browser suite that takes half an hour cannot run on every commit, and a change to a slice many others depend on makes most of its records stale at once. Check the fast tests' evidence on every commit, and ask for one full, green run of the slow suite on the exact commit a release ships, with a recorded reason when someone ships without it.
 
 ## A clean signal
 

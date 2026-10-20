@@ -19,16 +19,16 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 1.0 is the version you can build on without expecting breaking changes. Real codebases decide what it keeps:
 
-- **Streamlane**, a work management product, where the model is a required check on every pull request, and [what it has caught](../pilot/) has already changed the specifications and the toolchain.
-- **Driftline**, modelled before any of its code existed, so the model comes before the code.
+- **Streamlane**, a work management product, where the model is a required check on every pull request, and [what it has caught](../pilot/) has already changed the specifications and the toolchain. Its model holds 1,282 records, and its unit tests' evidence is imported on every commit.
+- **Driftline**, modelled before any of its code existed, so the model comes before the code. It reads Streamlane's export and its usage evidence back.
 - **Intentset itself**, which models its own packages and is checked by the toolchain it builds. A maintainer approved that model on 2026-10-15, and every behavior in it has a current passing run.
 - **At least one outside adopter**, on a codebase we did not write.
 
 ## Next
 
-Planned, not released. Each arrives in a release when it is ready, and the list changes as adopters say what they need.
+Nothing is announced beyond the current release. What comes next is decided by what adopters find, and is listed here when it is planned.
 
-- **The Atlas's map and richer pages, in the next release.** A map of every record and the links between them, which a reader can search, filter and focus, and review pages laid out with more of Markset: cards, folded record text, and charts drawn from the tables already on the page. Both are built, and [the worked example's Atlas](../example/atlas/map/) shows them; `intentset serve` gets them when the toolchain next releases.
+The latest release, {{version}}, added the Atlas's map of every record and the links between them, which a reader can search, filter and focus, and review pages laid out with more of Markset. [The worked example's Atlas](../example/atlas/map/) shows them.
 
 ## Not planned
 

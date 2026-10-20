@@ -148,7 +148,7 @@ In practice
 {.lead}
 Coral Reef Ventures is adopting Intentset in two of its own products, and recording what it catches, what it costs and what it changes.
 
-In Streamlane, a work management product, the model is a required check on every pull request. The first capability modelled, from the code, tests and decision records the repository already held, listed what nobody had: two of three rules had no test, and three behaviors were checked only in the browser. The check now runs against 37 slices and 86 records, over a baseline of the violations that were already there, which may shrink and may not grow.
+In Streamlane, a work management product, the model is a required check on every pull request. The first capability modelled, from the code, tests and decision records the repository already held, listed what nobody had: two of three rules had no test, and three behaviors were checked only in the browser. The check now runs in strict mode against 56 slices and 1,282 records, with no tolerated violations left: the baseline of those already there reached zero on 2026-10-11.
 
 Driftline was modelled before any of its code existed, and its first package was checked against what had been approved. It now reads Streamlane back: Streamlane's backend names the behaviors each call delivers, and Driftline counts what each behavior saw.
 
