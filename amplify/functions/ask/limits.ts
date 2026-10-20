@@ -55,7 +55,12 @@ export const model: { id: string; fallbackId: string | null; effort: "low"; regi
   /** Used only when the model declines a request on a safety ground; none while Sonnet 4.6 answers. */
   fallbackId: null,
   effort: "low",
-  region: "us-east-2",
+  /**
+   * Bedrock is called in us-east-1, not the function's own us-east-2 (2026-10-20): after the Marketplace agreement for
+   * Sonnet 4.6 was renewed, us-east-2's endpoint answered the prod and dev accounts with ServiceUnavailable while
+   * us-east-1's answered. The US profile routes inference to us-east-1 already; only the call's entry point moves.
+   */
+  region: "us-east-1",
 };
 
 /** The models the function may invoke: the model, and its refusal fallback when it has one. */
