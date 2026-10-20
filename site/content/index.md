@@ -120,9 +120,9 @@ A worked model
 
 :::::card[Example: Schedule a student assessment]{.example}
 ::::columns{ratio="2:3"}
-A teacher chooses when a published student assessment becomes available to a class.
+In Lantern, an invented product, a teacher chooses when a published student assessment becomes available to a class.
 
-[[Read the worked example](example/)]{.button}
+[[See Lantern on the map](example/atlas/map/)]{.button} [[Read the walkthrough](example/)]{.button}
 
 ::col
 

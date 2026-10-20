@@ -188,7 +188,7 @@ Markset provides the document format, and Intentset adds metadata and meaning to
 
 ## The Atlas: the model, for review
 
-`intentset serve` builds the Product Atlas, local pages for reviewing the model: capabilities and behaviors, owners, verification status and publication readiness. Every count says what it counts (linked checks or current passes), over which scope and which snapshot. Missing or stale evidence is shown as missing or stale, never folded into a green status.
+`intentset serve` builds the Product Atlas, local pages for reviewing the model: capabilities and behaviors, owners, verification status and publication readiness. Every count says what it counts (linked checks or current passes), over which scope and which snapshot. Missing or stale evidence is shown as missing or stale, never folded into a green status. [Lantern, the worked example](../example/atlas/map/), opens on its map: every record and every link between them in one picture, with the review pages beside it.
 
 ## Adopt in levels
 

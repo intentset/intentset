@@ -5,6 +5,27 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## Unreleased
+
+**The Atlas's map comes first on its page, no ID on it overlaps another record, and the picture fills its frame.** A patch to `@intentset/atlas`: `intentset serve`'s `map.html` changes, and no existing caller's call does. No specification version, conformance case, export version or `intentset.spec` moved.
+
+**The map comes first.** `map.html` opens, after its notice and snapshot line, on one sentence saying what the map
+holds, then the map and its controls; how to read it (the legend) and how to use it follow below the picture, under
+headings of their own. The page's Markset source marks where the map stands with a classed thematic break
+(`{.am-slot}` then `***`), so the source alone still reads in order; `placeHtml` and `MAP_SLOT` let a caller that renders
+the source in a shell of its own put the map there, as intentset.org does. A page with no slot gets its HTML after the
+rendered source, as before.
+
+**No ID overlaps another record, and the frame fits the drawing.** After the force layout, where the IDs show (up to
+120 records), a fixed number of passes push apart any two records whose circle and ID overlap, along the axis where
+they overlap least, in ID order and with arithmetic only, so the same graph still gives the same bytes. Because IDs
+are wide and short, separating them alone stacks a crowded map into a tall column, so the forces' picture is first
+widened by each of six fixed factors and the one whose drawing comes closest to 1.4:1 is kept (on this repository's
+own 96 records, a 1025 by 698 drawing rather than 597 by 883). The SVG's
+view box is fitted to what is drawn, IDs included, with a 16-unit margin rather than 40, and the map's height follows
+the drawing's proportions (up to 75% of the screen) instead of a fixed height, so the picture fills its frame rather
+than sitting in the middle of it. Full screen is unchanged. No dependency was added.
+
 ## 0.8.0 — 2026-10-15
 
 **The Atlas gains a map of every record and link, explorable and able to fill the screen, review pages laid out with more of Markset, and a notice for an invented example's Atlas.** Minor, because each adds to `@intentset/atlas`'s API and `intentset serve`'s output without changing what an existing caller gets. No specification version, conformance case outcome, export version or `intentset.spec` moved.

@@ -7,7 +7,8 @@
  * example's records, not a commit of this repository.
  *
  * The site renders each page's Markset source in its own shell, under /example/atlas/, so the Atlas wears the bar,
- * the Examples rail and the site's addresses: `ownership.html` is served at `example/atlas/ownership/`.
+ * the Examples rail and the site's addresses: `ownership.html` is served at `example/atlas/ownership/`. The map is
+ * the example's landing page, named after it; the other five are its review pages.
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
@@ -46,17 +47,16 @@ export function atlasSitePath(atlasPath: string): string {
     : `${ATLAS_ROOT}/${atlasPath.replace(/\.html$/, "")}/index.html`;
 }
 
+/** The map: Lantern's landing page, where the Examples bar item and every way into the example lead (2026-10-20). */
+export const ATLAS_MAP_PAGE = atlasSitePath("map.html");
+
 /**
- * The rail beside every Atlas page: the way back to the worked example, which also keeps Examples marked in the bar,
- * then the Atlas's own five pages in its order. A behavior's page is in the section without being in the list.
+ * The Atlas's review pages in its own order, the map apart: the Examples rail lists them under Lantern. A behavior's
+ * page is in the section without being in the list; the overview links each one.
  */
-export const ATLAS_RAIL: { title: string; items: Array<[string, string]> } = {
-  title: "The Atlas",
-  items: [
-    ["The worked example", "example/index.html"],
-    ...ATLAS_NAV.map(({ path, label }): [string, string] => [label, atlasSitePath(path)]),
-  ],
-};
+export const REVIEW_PAGES: Array<[string, string]> = ATLAS_NAV.filter(({ path }) => path !== "map.html").map(
+  ({ path, label }): [string, string] => [label, atlasSitePath(path)],
+);
 
 /** The example at `exampleDir` (repository-relative `relativeDir`), validated and drawn as the Atlas's pages. */
 export async function exampleAtlas(exampleDir: string, relativeDir: string): Promise<ExampleAtlasPage[]> {

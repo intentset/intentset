@@ -223,8 +223,11 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
   each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
   agent guide), Tools (all
-  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (the worked example, its Atlas,
-  the pilot). No URL moved when the bar changed. `site/test/rail.test.ts` requires every page to be named by the bar,
+  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
+  of the section, 2026-10-20: "Lantern, a worked example", a group holding the map, the walkthrough and "Review pages",
+  a group of the Atlas's five other pages; then the adoption log). A rail entry is a page or a group whose label is not
+  a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the map
+  (`/example/atlas/map/`); the walkthrough kept `/example/`. No URL moved when the bar or the rail changed. `site/test/rail.test.ts` requires every page to be named by the bar,
   a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
   rail.
 - `{{version}}` in a content page is the root `package.json` version; a test fails on a typed `at 0.x` or
@@ -253,15 +256,19 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
   record used to be patches `status: draft` itself.
 - **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
-  drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` with the
-  Atlas's own rail. It has no run evidence and no commit, because the example's check has not been executed and the
+  drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the
+  Examples rail. The map is Lantern's landing page (2026-10-20): its h1 is "Lantern, a worked example", it links the
+  walkthrough and the review pages under the picture, and every way into the example (the bar, the home page, Start,
+  Tools, How it works, the roadmap) leads to it. It has no run evidence and no commit, because the example's check has not been executed and the
   pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
   has no public Atlas, and a public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml`
-  draws, with links at the site's addresses, and the map's stylesheet and script are written beside the pages.
+  draws, with links at the site's addresses, placed in the page's map slot (`placeHtml`), and the map's stylesheet and
+  script are written beside the pages.
 - **The Atlas's map** (ADR 0015, `packages/atlas/src/map.ts` and `map-script.ts`) is the one place the Atlas runs a
   script, and the picture works without it. Its layout is computed at build time and must stay deterministic: no
   `Math.random`, no trigonometry or `Math.exp` (their results differ between engines), iteration in ID order, and
-  coordinates rounded. The script writes text, never markup (a test refuses `innerHTML`, `eval`, `fetch` and
+  coordinates rounded. The map comes first on its page, the legend and instructions below it, and where IDs show no
+  ID may overlap another record (a separation pass after the forces, tested on a crowded graph). The script writes text, never markup (a test refuses `innerHTML`, `eval`, `fetch` and
   storage), and adds no dependency.
 - **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
   label, not a sentence. The h2s below it are written as sentences and keep theirs.
