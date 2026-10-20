@@ -5,7 +5,7 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.8.1 — 2026-10-20
 
 **The Atlas's map comes first on its page, no ID on it overlaps another record, and the picture fills its frame.** A patch to `@intentset/atlas`: `intentset serve`'s `map.html` changes, and no existing caller's call does. No specification version, conformance case, export version or `intentset.spec` moved.
 

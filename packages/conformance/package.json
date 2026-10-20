@@ -1,6 +1,6 @@
 {
   "name": "@intentset/conformance",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "description": "Conformance harness: validates tests/*.json against spec/conformance.schema.json and runs each section's driver against this implementation.",
   "license": "MIT",
@@ -10,10 +10,10 @@
     ".": "./src/harness.ts"
   },
   "dependencies": {
-    "@intentset/architecture": "^0.8.0",
-    "@intentset/core": "^0.8.0",
-    "@intentset/markset-adapter": "^0.8.0",
-    "@intentset/publisher": "^0.8.0",
-    "@intentset/verification": "^0.8.0"
+    "@intentset/architecture": "^0.8.1",
+    "@intentset/core": "^0.8.1",
+    "@intentset/markset-adapter": "^0.8.1",
+    "@intentset/publisher": "^0.8.1",
+    "@intentset/verification": "^0.8.1"
   }
 }
