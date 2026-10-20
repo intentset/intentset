@@ -58,6 +58,83 @@ The baseline went from 472 when the check was switched on to 0 on 2026-10-11, wh
 
 Driftline's check reports 5 warnings, all on drafts: four slices whose code is not written yet and that implement no behavior, and one rule no behavior names yet.
 
+## 2026-10-16 to 2026-10-18: Usage evidence reaches the help
+
+Streamlane's backend already named, in one line, the behavior each call delivers, so Driftline could count what each behavior saw. The help assistant, which answers a person's question from the reviewed help, was the one part that named nothing. From 2026-10-16 it does (Streamlane #1001): an answer, a refusal, an answer marked unhelpful and an admin's usage report each name their behavior, and a question that hit the daily cap names none. The line carries the behavior, the outcome and the organization, never the question.
+
+By 2026-10-19, 117 of Streamlane's 318 behaviors were named in its backend code. On 2026-10-18 Driftline moved to the second version of its usage evidence format (Driftline #56) and wrote down how it reads an outcome's evidence, with Streamlane's first readings (#57). Streamlane's product owner set the first target on one of its outcomes, a median time blocked under three days, before any baseline exists; the measure record says so.
+
+### What it achieved
+
+- **The help can be judged by use.** How often a question is answered, how often the help has nothing to say and which articles are marked unhelpful are now counted by behavior, from the same line every other call writes.
+- **Nothing private was added to the log.** The rule set when usage evidence started, no person and no content, held for the one feature whose input is a person's own words.
+
+### What it cost
+
+- **A behavior named in code is a promise.** Each name says the call does what the record describes, so the names had to follow the outcome, not the operation: a capped question is not an answer.
+
+## 2026-10-14 to 2026-10-15: Evidence at L3, measured on a real product
+
+[Run evidence]{.term tip="A record that one check passed, failed, was skipped or errored, at a particular commit, in a particular environment."} is what moves a claim from "a check is linked" to "the check passes now". Streamlane began collecting it in two ways. On every push to main, a workflow reruns the unit and contract tests and imports their reports as run records. The browser tests need a deployed backend and take about half an hour, so they run on a shared sandbox and their records go to a store outside the repository.
+
+0.7.0 made a record [current]{.term tip="A pass still counts while what its check is about is unchanged: the behavior, the slices that deliver it, the test and what it imports."} for as long as what its check is about is unchanged, rather than for one commit. The first full browser run, judged at a later commit, was current for 5 of 274 verifications. Two causes, both measured:
+
+- **A backend change reached every page that talks to it.** 133 of the stale records went stale because five backend files changed. 0.7.1 counts a backend's files only where a test exercises that backend, and warns about the rest.
+- **A central slice reached almost everything.** One slice that nearly every page depends on moved 227 of 237 subjects. Counting such a dependency only through its declared surface was tried against the history first. It kept 5 current on Streamlane, no better, because that surface had really changed, so it shipped as an option and the default stayed.
+
+The same import also showed a bug: a test that verified two behaviors gave a record to the first and silently none to the second. 0.7.1 gives each its record.
+
+Streamlane then settled where each kind of evidence is checked. The unit and contract tests are checked on every commit: on 2026-10-19, 331 of 332 had a current pass. The browser tests are checked at each release, by the exact commit. A production deploy is refused for a commit no full, passing browser run covers, unless a person gives a reason that is written to the run's log (Streamlane #990). A full run on 2026-10-15 ran 655 tests: 643 passed, 10 were skipped, and 2 failed under the load of the full suite and passed when run alone.
+
+### What it achieved
+
+- **The model says which claims hold today.** A behavior's status in the export is a current pass, a stale one, a failure or nothing, from the product's own runs.
+- **The rule was tested on a product before it was kept.** Each change to what counts was measured on Streamlane's records and on Intentset's own history, and the version that did not help did not become the default.
+- **A release ships with its evidence.** The gate asks for one thing, a full passing run of the commit being shipped, and the person who overrides it says why.
+
+### What it cost
+
+- **Browser evidence is stale between releases, by design.** With a central slice that changes often, most browser records stopped counting within hours of the run. Checking them per commit would mean a half-hour run per commit.
+- **A full run finds load as well as bugs.** The two tests that failed only in the full run took a rerun to tell apart from real failures.
+- **Records are history.** A record made under the older rule reads stale until it is imported again, so the store was rebuilt from a fresh run.
+
+### What changed in Intentset
+
+0.7.1 (2026-10-15): a backend's files count only where a test exercises it, a dependency can count through its declared surface as an option, two new warnings say what moved without making a record stale, and a test that verifies several behaviors gives each a record. Intentset's decision on evidence binding was amended twice, each amendment with the measurement behind it.
+
+## 2026-10-14 to 2026-10-15: Specifications 0.2 and export 0.4
+
+0.7.0 moved the specifications to 0.2 and the export to 0.4, which carries how each record's evidence is judged. Streamlane moved in one pull request (#937): one command rewrote the version lines of 750 records and left every other byte alone. Driftline moved the next day (Driftline #33), and since 2026-10-13 it fetches Streamlane's latest export from Streamlane's main branch rather than reading a checkout (#31).
+
+### What it achieved
+
+- **A breaking change was one command.** A reader of 0.2 refuses a record that says 0.1 and says how to move it, so no product could half-move.
+- **Driftline reads what Streamlane ships.** It reads the export Streamlane's own checks produce, not a copy of the repository.
+
+### What it cost
+
+- **Every reviewed article had to be reviewed again, mechanically.** A reviewed help article is pinned to the exact bytes of the records it explains. The migration changed every record's bytes, so 270 pins were renewed in the same change.
+- **The help went dark on main until the same day's fix.** The published help moved to the new version, and the app's help reader, still on the old one, refused it and showed "No help is published" until it was upgraded (Streamlane #950).
+- **Every open change conflicted.** A change to every record collides with every pull request that touches one, so the move was merged quickly and the others rebased with the same command.
+
+### What changed in Intentset
+
+`intentset migrate` is the one command that rewrites records, and it refuses a tree with uncommitted changes so the rewrite is a change of its own.
+
+## 2026-10-11: The help is published from the model
+
+On 2026-10-11 Streamlane approved and published 48 help articles from its model, with their tips on the controls they explain (Streamlane #635). Each article is pinned to the records it explains: when one of them changes, the article is no longer reviewed and drops out of what is published until a person reviews it again. A check on every pull request holds the published files to what the model says, and reports the behaviors that have no tip yet. By 2026-10-19 there were 94 articles, 79 of them with tips, and the help assistant answers only from them.
+
+### What it achieved
+
+- **Help cannot outlive the behavior.** A change to a behavior takes its explanation out of the product until someone reviews it.
+- **The gaps are a list.** Behaviors with no tip are reported, not discovered by a reader.
+
+### What it cost
+
+- **Generated files in every change.** The published help names the model it came from, so any change to the model changes it, and two changes that both touch the model conflict there. The fix each time is to publish again after rebasing.
+- **A change to a behavior is also a review.** Editing a behavior an approved article explains takes the article out of the published help, so a small wording fix has a second step.
+
 ## 2026-10-10 to 2026-10-11: The baseline reaches zero
 
 By 2026-10-10 the baseline held 469 violations. Streamlane wrote a plan to retire it (#533) and followed it in steps, each its own pull request with the gate on. The imports that reached past a slice's entrypoint became imports through it, so every slice's entrypoint is a plain list of what other slices may use. Pieces several slices shared moved out into shared code, and the app's shell became [composition]{.term tip="Code above the slices that wires them together. It may use each slice only through its entrypoint, and no slice may import it."}. The plan's first step took the baseline to one entry, the dependency cycle.
