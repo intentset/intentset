@@ -22,7 +22,7 @@ Drafts can still change, and each change is recorded with its reason in the repo
 - **Streamlane**, a work management product, where the model is a required check on every pull request, and [what it has caught](../pilot/) has already changed the specifications and the toolchain. Its model holds 1,282 records, and its unit tests' evidence is imported on every commit.
 - **Driftline**, modelled before any of its code existed, so the model comes before the code. It reads Streamlane's export and its usage evidence back.
 - **Intentset itself**, which models its own packages and is checked by the toolchain it builds. A maintainer approved that model on 2026-10-15, and every behavior in it has a current passing run.
-- **Outside adopters**, on codebases we did not write. The first began adding Intentset to its own repository in October 2026, and its pilot is under way. What it has found so far changed the architecture check in {{version}}.
+- **Outside adopters**, on codebases we did not write. The first began adding Intentset to its own repository in October 2026, and its pilot is under way. A pilot is complete when Intentset has been a required check on every pull request for four consecutive weeks and the adopter's baseline of known violations has only shrunk. What it has found so far changed the architecture check in {{version}}.
 
 ## Next
 

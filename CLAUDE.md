@@ -352,6 +352,9 @@ from source (the installed bin points at `dist/`, which only the build writes).
   source `chat-questions`), through the questions report. Each of the toolchain's three outcomes has one too, saying
   "not measured yet" with the evidence source it is to come from (`evidenceSources` in `.intentset/registries.yaml`),
   a baseline of `unknown`, and a target the maintainers confirm. OUT-DOCS-IMPROVE has none yet (a CORE009 warning).
+  MEAS-OUTSIDE-PILOT (2026-10-21, a draft under OUT-MODEL-STAYS-TRUE) is the alpha exit in `docs/implementation-plan.md`:
+  an outside codebase with Intentset a required check for four consecutive weeks and a baseline that only shrank. It and
+  the site's roadmap never name the adopter (Gary, 2026-10-21).
   Never write a reading no source produced.
 - **The gate**: the `model` job in `ci.yml` runs `pnpm run model:validate` (L2, strict mode) and `pnpm run
   model:review` (`--fail-on-drift` against the base). There is no architecture baseline: the last one, 17 VSA003
