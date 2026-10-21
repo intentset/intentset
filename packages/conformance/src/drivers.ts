@@ -231,6 +231,8 @@ export const vsaDriver: Driver = (expanded) => {
     {
       level: expanded.level,
       today: FIXTURE_TODAY,
+      mode: expanded.architecture.mode,
+      baseline: expanded.architecture.baseline,
     },
   );
   const all = [...diagnostics, ...architecture.diagnostics];

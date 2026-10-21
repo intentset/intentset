@@ -7,11 +7,16 @@
 export { AREA_REVIEW_REQUIRED, areaOf, backendAreaOf, checkAreas, isAreaSchema } from "./areas.ts";
 export {
   applyBaseline,
+  type BaselineComparison,
   type BaselineEntry,
+  compareBaselines,
+  describeEntry,
   fingerprint,
   type Mode,
   parseBaseline,
   plainMessage,
+  STALE_ENTRY_CODE,
+  staleEntryDiagnostics,
   writeBaseline,
 } from "./baseline.ts";
 export { type BoundaryResult, checkBoundaries, checkJsx, checkUnclassified, type SliceEdge } from "./boundaries.ts";

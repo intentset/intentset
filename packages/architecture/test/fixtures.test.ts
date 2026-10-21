@@ -49,7 +49,12 @@ export function runVsa(expanded: ExpandedCase): VsaRun {
     result.graph,
     registries,
     { files },
-    { level: expanded.level, today: "2026-10-02" },
+    {
+      level: expanded.level,
+      today: "2026-10-02",
+      mode: expanded.architecture.mode,
+      baseline: expanded.architecture.baseline,
+    },
   );
   return { diagnostics: [...result.diagnostics, ...extra, ...architecture.diagnostics], architecture };
 }

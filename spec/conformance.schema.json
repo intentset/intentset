@@ -84,6 +84,29 @@
           "items": { "type": "string" }
         }
       },
+      "architecture": {
+        "type": "object",
+        "description": "VSA cases: how the architecture check runs. `mode` is `migration`, the default, or `strict` (VSA §9), and `baseline` holds the entries of a baseline of known violations. No specification defines an entry's fingerprint, so a case's entries are written to match no diagnostic, which every implementation reports as stale (VSA014) in migration mode.",
+        "additionalProperties": false,
+        "properties": {
+          "mode": { "enum": ["migration", "strict"] },
+          "baseline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["code", "path", "fingerprint"],
+              "additionalProperties": false,
+              "properties": {
+                "code": { "type": "string" },
+                "path": { "type": ["string", "null"] },
+                "artifact": { "type": "string" },
+                "message": { "type": "string" },
+                "fingerprint": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
       "request": {
         "type": "object",
         "description": "A publication request for publication cases.",

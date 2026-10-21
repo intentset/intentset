@@ -21,7 +21,7 @@ import {
   sortDiagnostics,
 } from "@intentset/core";
 import { AREA_REVIEW_REQUIRED, checkAreas } from "./areas.ts";
-import { applyBaseline, type BaselineEntry, type Mode } from "./baseline.ts";
+import { applyBaseline, type BaselineEntry, type Mode, staleEntryDiagnostics } from "./baseline.ts";
 import { checkBoundaries, checkJsx, checkUnclassified } from "./boundaries.ts";
 import { checkClaims } from "./claims.ts";
 import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
@@ -44,6 +44,8 @@ export interface CheckOptions {
   /** Exception records handed in, in addition to architecture/exceptions/*.yaml in the tree. */
   exceptions?: readonly (ExceptionRecord | Record<string, unknown>)[];
   baseline?: readonly BaselineEntry[];
+  /** The baseline file's repository-relative path, which a stale entry's VSA014 names. Default none. */
+  baselinePath?: string;
   /** "migration" applies the baseline; "strict" ignores it. Default migration. */
   mode?: Mode;
   /** The date exceptions expire against, YYYY-MM-DD. Default today, UTC. */
@@ -73,7 +75,7 @@ export interface ArchitectureSummary {
   excepted: number;
   /** Diagnostics the baseline turned into warnings (migration mode only). */
   baselined: number;
-  /** Baseline entries that matched nothing and can be retired. */
+  /** Baseline entries that matched nothing: each is a VSA014 error until the baseline is written without it. */
   baselineStale: number;
   /** What could not be checked: never a pass (invariant 6). */
   unresolved: string[];
@@ -194,7 +196,8 @@ export function checkArchitecture(
     ...excepted.recordFindings.map((item) => item.diagnostic),
   ];
   const baseline = applyBaseline(diagnostics, options.baseline ?? [], mode);
-  diagnostics = sortDiagnostics(baseline.diagnostics);
+  const stale = staleEntryDiagnostics(baseline.stale, options.baseline ?? [], options.baselinePath ?? null);
+  diagnostics = sortDiagnostics([...baseline.diagnostics, ...stale]);
 
   const owned = (path: string) => {
     const kind = model.regionOf(path).kind;

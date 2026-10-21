@@ -72,11 +72,13 @@ commands
   context <ID|path> [--include-restricted]
                             the bounded engineering context of an artifact, with paths and
                             bodies; given a file a slice claims, the context of that slice
-  review [--base <ref>] [--fail-on-drift]
+  review [--base <ref>] [--fail-on-drift] [--baseline <file> [--fail-on-baseline-growth]]
                             the local review report: checks, coverage, the impact of what
                             changed, and each slice whose code changed while its records did
                             not; --fail-on-drift exits 1 for any such slice no commit
-                            acknowledged with an Intentset-Unchanged trailer
+                            acknowledged with an Intentset-Unchanged trailer. With --baseline,
+                            the entries the base's copy did not hold and those it retired;
+                            --fail-on-baseline-growth exits 1 for any it did not hold
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
         [--published-at <time>]
@@ -123,7 +125,8 @@ options
   --version                 print "intentset <version>", the checker version a report names
 
 exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift,
-            unacknowledged drift), 2 invocation or tool failure`;
+            unacknowledged drift; with --fail-on-baseline-growth, a baseline
+            entry the base did not hold), 2 invocation or tool failure`;
 
 const COMMANDS = [
   "init",
@@ -179,7 +182,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
   ],
   impact: LEVEL_OPTIONS,
   context: ["include-restricted", ...LEVEL_OPTIONS],
-  review: ["base", "fail-on-drift", ...LEVEL_OPTIONS],
+  review: ["base", "fail-on-drift", "fail-on-baseline-growth", ...LEVEL_OPTIONS],
   serve: ["port", "host", "out", ...LEVEL_OPTIONS],
   mcp: [
     "mode",
@@ -439,11 +442,21 @@ export async function main(argv: string[], io: Io): Promise<number> {
             ? "the highest the inputs allow: run records were given or found"
             : `the highest the inputs allow: no run records were given or found in ${EVIDENCE_DIR}/, so L3 and L4 were not checked`;
       }
+      if (values["fail-on-baseline-growth"] && values.baseline === undefined) {
+        return usage(
+          "--fail-on-baseline-growth compares a baseline with the base's copy; give it with --baseline <file>",
+        );
+      }
       const session = openSession(command, sessionOptions(level), io);
       if (typeof session === "number") return session;
       return reviewCommand(
         session,
-        { base: values.base, levelReason: reason, failOnDrift: values["fail-on-drift"] },
+        {
+          base: values.base,
+          levelReason: reason,
+          failOnDrift: values["fail-on-drift"],
+          failOnBaselineGrowth: values["fail-on-baseline-growth"],
+        },
         values.json,
         io,
       );
@@ -519,6 +532,7 @@ function parse(argv: string[]) {
       example: { type: "boolean", default: false },
       agents: { type: "boolean", default: false },
       "fail-on-drift": { type: "boolean", default: false },
+      "fail-on-baseline-growth": { type: "boolean", default: false },
       format: { type: "string" },
       "include-bodies": { type: "boolean", default: false },
       release: { type: "string" },

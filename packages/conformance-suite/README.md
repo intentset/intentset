@@ -68,6 +68,9 @@ need no patch logic:
   origin `syntax` and Markset's own codes (`COLUMNS_SINGLE`, not AREA###). Absent means `plain`: frontmatter and headings
   only, and no diagnostic of the reader's own.
 - `evidence` carries run records (Core §8) and `request` a publication request, for the sections that need them.
+- `architecture`, for a VSA case, is how the architecture check runs: `mode` (`migration` when absent, or `strict`)
+  and `baseline`, the entries of a baseline of known violations (VSA §9). An entry's fingerprint is your
+  implementation's own, so a case's entries match no diagnostic: in migration mode each is stale, VSA014.
 
 ## What you must match
 
