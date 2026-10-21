@@ -28,6 +28,7 @@ import {
   shortestCycle,
   stripJsonComments,
   stronglyConnected,
+  UI_FRAMEWORKS,
   validatePattern,
   writeBaseline,
 } from "../src/index.ts";
@@ -209,6 +210,15 @@ const q = 4 / 2 / 1; const cjs = require("./cjs");
     assert.equal(extractImports("z.ts", "export = thing;\n").exports.opaque, true);
     assert.equal(extractImports("z.ts", "export const { a, b } = thing;\n").exports.opaque, true);
   });
+});
+
+test("BEH-ARCH-LAYER-PACKAGES: the extractor gives the line of a file's first JSX element, and none in a .ts file", () => {
+  assert.equal(
+    extractImports("a.tsx", "const n = 1;\nexport const A = () => (\n  <>\n    <b>{n}</b>\n  </>\n);\n").jsx,
+    3,
+  );
+  assert.equal(extractImports("a.tsx", "export const f = <T,>(x: T) => x;\n").jsx, null, "type parameters are not JSX");
+  assert.equal(extractImports("a.ts", "export const lt = 1 < 2;\n").jsx, null);
 });
 
 describe("BEH-ARCH-LAYER-NAMES: following a name to the file that defines it (VSA006)", () => {
@@ -608,6 +618,33 @@ describe("configuration", () => {
     );
   });
 
+  test("BEH-ARCH-LAYER-PACKAGES: forbiddenPackages maps layers to package patterns and replaces the default whole", () => {
+    const good = readArchitectureConfig('forbiddenPackages:\n  policy: [react/**, "@mui/**"]\n  external: []\n');
+    assert.deepEqual(good.diagnostics, []);
+    assert.deepEqual(good.config.forbiddenPackages, { policy: ["react/**", "@mui/**"], external: [] });
+    assert.deepEqual(resolveConfig(good.config).forbiddenPackages, { policy: ["react/**", "@mui/**"], external: [] });
+    assert.deepEqual(resolveConfig().forbiddenPackages, {
+      policy: UI_FRAMEWORKS,
+      model: UI_FRAMEWORKS,
+      external: UI_FRAMEWORKS,
+    });
+    for (const bad of ["forbiddenPackages: [react]\n", "forbiddenPackages:\n  policy: [../react]\n"]) {
+      const read = readArchitectureConfig(bad);
+      assert.deepEqual(
+        read.diagnostics.map((d) => [d.code, d.field]),
+        [["CFG001", "/forbiddenPackages"]],
+      );
+      assert.equal(read.config.forbiddenPackages, undefined, "the key keeps its default");
+    }
+  });
+
+  test("BEH-ARCH-LAYER-PACKAGES: a package pattern matches the specifier and its subpaths, not a longer name", () => {
+    assert.ok(matchPattern("react/**", "react"));
+    assert.ok(matchPattern("react/**", "react/jsx-runtime"));
+    assert.ok(!matchPattern("react/**", "react-dom"));
+    assert.ok(matchPattern("@mui/**", "@mui/material/styles"));
+  });
+
   test("a parse failure is CFG001 with its line", () => {
     const { diagnostics } = readArchitectureConfig("a: 1\na: 2\n");
     assert.equal(diagnostics[0].code, "CFG001");
@@ -890,6 +927,59 @@ describe("BEH-ARCH-LAYER-NAMES: checkArchitecture judges a name by the file that
     assert.deepEqual(summary.unresolved, [
       'src/a/ui/hook.ts:1: the name legacy "../index" passes on could not be followed to the file that defines it (src/a/client/legacy.js exports names this reader cannot list), so its layer was not checked',
     ]);
+  });
+});
+
+describe("BEH-ARCH-LAYER-PACKAGES: what a layer may import from packages, and where JSX may be rendered", () => {
+  // SLICE-A declares no layers, so the reference layout's client/, domain/policies/ and domain/models/ are its own.
+  const graph = graphOf({ "SLICE-A.md": slice("SLICE-A", "src/a") });
+  const run = (files: [string, string][], config = {}) =>
+    checkArchitecture(
+      graph,
+      EMPTY_REGISTRIES,
+      { files: new Map<string, string>([["src/a/index.ts", "export const a = 1;\n"], ...files]) },
+      { today: "2026-10-02", config },
+    ).diagnostics.filter((d) => d.code !== "VSA006");
+
+  test("a UI framework in a policy, a model or the client seam is TS007, by the specifier as written", () => {
+    const diagnostics = run([
+      ["src/a/domain/policies/p.ts", 'import { useMemo } from "react";\nexport const p = useMemo;\n'],
+      ["src/a/domain/models/m.ts", 'import type { ReactNode } from "react";\nexport type M = ReactNode;\n'],
+      ["src/a/client/c.ts", 'import { jsx } from "react/jsx-runtime";\nexport const c = jsx;\n'],
+      ["src/a/ui/u.ts", 'import { useState } from "react";\nexport const u = useState;\n'],
+    ]);
+    assert.deepEqual(
+      diagnostics.map((d) => `${d.code} ${d.path}:${d.location?.line}`),
+      ["TS007 src/a/client/c.ts:1", "TS007 src/a/domain/models/m.ts:1", "TS007 src/a/domain/policies/p.ts:1"],
+    );
+    assert.equal(
+      diagnostics[2].message,
+      'src/a/domain/policies/p.ts is in the policy layer of SLICE-A and imports "react", a package the policy layer may not import (forbiddenPackages: react/**).',
+    );
+  });
+
+  test("a repository's forbiddenPackages replaces the default, and a backend SDK stays AMP006's", () => {
+    const files: [string, string][] = [
+      ["src/a/domain/policies/p.ts", 'import { useMemo } from "react";\nimport { alpha } from "@mui/material";\n'],
+      ["src/a/domain/models/m.ts", 'import type { Schema } from "@aws-amplify/backend";\nexport type M = Schema;\n'],
+    ];
+    const diagnostics = run(files, { forbiddenPackages: { policy: ["@mui/**"], model: ["@aws-amplify/**"] } });
+    assert.deepEqual(
+      diagnostics.map((d) => `${d.code} ${d.path}:${d.location?.line}`),
+      ["AMP006 src/a/domain/models/m.ts:1", "TS007 src/a/domain/policies/p.ts:2"],
+    );
+  });
+
+  test("JSX outside the presentation layer is TS008 at its first element; presentation, entrypoints and tests may render", () => {
+    const diagnostics = run([
+      ["src/a/client/Badge.tsx", "export const n = 1;\nexport const Badge = () => <b>{n}</b>;\n"],
+      ["src/a/ui/Card.tsx", "export const Card = () => <div />;\n"],
+      ["src/a/client/Badge.test.tsx", "export const t = <i />;\n"],
+    ]);
+    assert.deepEqual(
+      diagnostics.map((d) => `${d.code} ${d.path}:${d.location?.line}`),
+      ["TS008 src/a/client/Badge.tsx:2"],
+    );
   });
 });
 

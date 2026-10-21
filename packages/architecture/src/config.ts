@@ -53,6 +53,11 @@ export interface ArchitectureConfig {
   backendSdks: string[];
   /** The internal layer matrix (profile §3): each layer may import itself and the layers listed. */
   layerMatrix: Record<string, string[]>;
+  /**
+   * Packages a layer may not import, by layer name: specifier patterns matched, as backendSdks are, against the
+   * specifier as written with `node:` removed (TS007). A layer not named may import any package.
+   */
+  forbiddenPackages: Record<string, string[]>;
   /** Export conditions tried first when resolving a workspace package's entry, before types, import and default. */
   conditions: string[];
   /** Areas (profile §9). Empty for a repository with one backend, which none of AMP007 to AMP013 concern. */
@@ -62,6 +67,21 @@ export interface ArchitectureConfig {
   /** The one frontend file that may import area schemas, type-only, and call generateClient (AMP011). */
   schemaBridge: string | null;
 }
+
+/**
+ * The UI frameworks profile §3 keeps out of policies, models and the client seam by default. A repository adds its
+ * UI kit and data-fetching hooks (`@mui/**`, `@tanstack/react-query/**`) in `forbiddenPackages`.
+ */
+export const UI_FRAMEWORKS = [
+  "react/**",
+  "react-dom/**",
+  "react-native/**",
+  "preact/**",
+  "vue/**",
+  "svelte/**",
+  "solid-js/**",
+  "@angular/**",
+];
 
 export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
   scope: ["**"],
@@ -83,6 +103,7 @@ export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
     model: ["model"],
     external: ["external", "model"],
   },
+  forbiddenPackages: { policy: UI_FRAMEWORKS, model: UI_FRAMEWORKS, external: UI_FRAMEWORKS },
   conditions: [],
   areas: [],
   sharedBackend: [],
@@ -121,7 +142,9 @@ const PATTERN_KEYS = new Set<string>([
   "sharedBackend",
 ]);
 
-const KNOWN_KEYS = [...LIST_KEYS, "screensGlob", "layerMatrix", "areas", "schemaBridge"].sort(compareStrings);
+const KNOWN_KEYS = [...LIST_KEYS, "screensGlob", "layerMatrix", "forbiddenPackages", "areas", "schemaBridge"].sort(
+  compareStrings,
+);
 
 /** The defaults with a partial configuration laid over them; a key given replaces the default whole. */
 export function resolveConfig(...layers: (Partial<ArchitectureConfig> | undefined)[]): ArchitectureConfig {
@@ -221,6 +244,26 @@ export function readArchitectureConfig(
           "Write each layer as `presentation: [presentation, application]`.",
         );
       } else config.layerMatrix = matrix;
+      continue;
+    }
+    if (key === "forbiddenPackages") {
+      const lists = readMatrix(value);
+      const bad =
+        lists === null
+          ? undefined
+          : Object.values(lists)
+              .flat()
+              .find((pattern) => pattern === "" || validatePattern(pattern) !== null);
+      if (lists === null || bad !== undefined) {
+        report(
+          field,
+          at(field),
+          lists === null
+            ? "forbiddenPackages must map each layer name to a list of package patterns."
+            : `Pattern ${bad} in \`forbiddenPackages\` ${bad === "" ? "is empty" : validatePattern(bad as string)}.`,
+          'Write each layer as `policy: [react/**, "@mui/**"]`.',
+        );
+      } else config.forbiddenPackages = lists;
       continue;
     }
     if (!Array.isArray(value) || !value.every((item) => typeof item === "string" && item !== "")) {

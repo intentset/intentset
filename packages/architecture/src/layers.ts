@@ -30,6 +30,24 @@ export function layerOf(slice: SliceInfo, path: string): LayerOf {
   return { layer: null, reason: matches.length === 0 ? "none" : "ambiguous", candidates: matches };
 }
 
+/** The reference layout's folders for the layers a slice that declares none still has (profile §1). */
+const FALLBACK_LAYERS: [string, string][] = [
+  ["external", "client"],
+  ["policy", "domain/policies"],
+  ["model", "domain/models"],
+];
+
+/**
+ * The layer a file is in for the package and JSX rules (TS007, TS008): the one layer it is declared in, or, for a
+ * slice that declares no layers, its client/, domain/policies/ or domain/models/ folder under the entrypoint
+ * directory above it. Null when it is in none, or in more than one.
+ */
+export function fileLayer(slice: SliceInfo, path: string): string | null {
+  if (Object.keys(slice.meta.layers).length > 0) return layerOf(slice, path).layer;
+  for (const [layer, folder] of FALLBACK_LAYERS) if (matchAny(under(slice, [folder], path), path)) return layer;
+  return null;
+}
+
 /** The fallback folders under the root a path belongs to, or under every root when no path is given. */
 function under(slice: SliceInfo, folders: string[], path?: string): string[] {
   const roots = path === undefined ? slice.roots : [rootOf(slice, path)].filter((root) => root !== null);

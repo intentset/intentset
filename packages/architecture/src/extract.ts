@@ -90,6 +90,11 @@ export interface Extraction {
   imports: RawImport[];
   problems: ExtractProblem[];
   exports: LocalExports;
+  /**
+   * The line of the file's first JSX element or fragment, or null. Under the automatic runtime a file that renders
+   * needs no import, so this is the only sign of it (TS008).
+   */
+  jsx: number | null;
 }
 
 interface Token {
@@ -640,7 +645,12 @@ export function extractImports(path: string, text: string): Extraction {
     }
   }
 
-  return { imports, problems, exports };
+  // A nested element is pushed before the one around it, so the first is the lowest line, not the first token.
+  let jsx: number | null = null;
+  for (const token of tokens) {
+    if (token.kind === SyntaxKind.JsxElement && (jsx === null || token.line < jsx)) jsx = token.line;
+  }
+  return { imports, problems, exports, jsx };
 }
 
 /** What an Amplify schema declares at its top level (profile §9, AMP009). */
