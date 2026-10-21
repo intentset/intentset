@@ -94,6 +94,8 @@ export interface Session {
   snapshot: Snapshot;
   tree?: Tree;
   architecture?: ArchitectureResult;
+  /** L2 and above, with --baseline: the baseline read, and its path relative to the root, or null outside it. */
+  baseline?: { given: string; path: string | null; entries: BaselineEntry[] };
   evidence?: EvidenceRun;
   /** L4: the active knowledge artifacts checked for publication readiness, by ID. */
   publication?: { checked: string[] };
@@ -129,13 +131,17 @@ export function openSession(command: string, options: SessionOptions, io: Io): S
 
   if (at(level, "L2")) {
     let baseline: BaselineEntry[] = [];
+    let baselinePath: string | null = null;
     if (options.baseline !== undefined) {
-      const read = readBaseline(resolve(io.cwd, options.baseline));
+      const file = resolve(io.cwd, options.baseline);
+      const read = readBaseline(file);
       if (typeof read === "string") {
         io.stderr(`intentset ${command}: --baseline ${options.baseline}: ${read}\n`);
         return 2;
       }
       baseline = read;
+      baselinePath = insideRoot(root, file);
+      session.baseline = { given: options.baseline, path: baselinePath, entries: baseline };
     }
     const tree = readTree(root, repo.config);
     const architecture = checkArchitecture(
@@ -146,6 +152,7 @@ export function openSession(command: string, options: SessionOptions, io: Io): S
         level,
         mode: options.mode ?? "migration",
         baseline,
+        ...(baselinePath === null ? {} : { baselinePath }),
         today: options.today ?? new Date().toISOString().slice(0, 10),
         ...(repo.config.registries === null ? {} : { registriesPath: repo.config.registries }),
       },

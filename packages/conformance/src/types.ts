@@ -38,6 +38,8 @@ export interface ConformanceCase {
   evidence?: Record<string, unknown>[];
   /** Per run record commit, the files git would report changed between it and the snapshot (evidence cases). */
   changedSince?: Record<string, string[]>;
+  /** VSA cases: the architecture check's mode and baseline (VSA §9). */
+  architecture?: ArchitectureRun;
   request?: PublicationRequest;
   valid: boolean;
   diagnostics?: string[];
@@ -64,7 +66,15 @@ export interface ExpandedCase {
   carrier: Carrier;
   evidence: Record<string, unknown>[];
   changedSince: Record<string, string[]>;
+  /** The mode and baseline the architecture check runs with; migration and no baseline when the case gives none. */
+  architecture: Required<ArchitectureRun>;
   request: PublicationRequest | null;
+}
+
+/** How a VSA case runs the architecture check. A baseline entry is `{ code, path, artifact?, message?, fingerprint }`. */
+export interface ArchitectureRun {
+  mode?: "migration" | "strict";
+  baseline?: { code: string; path: string | null; artifact?: string; message?: string; fingerprint: string }[];
 }
 
 /**

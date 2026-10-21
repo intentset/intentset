@@ -76,6 +76,7 @@ export function expandCase(testCase: ConformanceCase, options: ExpandOptions): E
     carrier: testCase.carrier ?? "plain",
     evidence: testCase.evidence ?? [],
     changedSince: testCase.changedSince ?? {},
+    architecture: { mode: testCase.architecture?.mode ?? "migration", baseline: testCase.architecture?.baseline ?? [] },
     request: testCase.request ?? null,
   };
 }

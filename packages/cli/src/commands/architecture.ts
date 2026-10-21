@@ -4,11 +4,12 @@
  * in migration mode, the baseline, over every file the configuration does
  * not ignore. Diagnostics like validate's, then the summary with what was not
  * checked and what is left to review. `--write-baseline` writes the one file
- * it names. Nothing else is written.
+ * it names, and says how many entries the file it replaces did not hold and
+ * how many of its entries are gone. Nothing else is written.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { writeBaseline } from "@intentset/architecture";
+import { type BaselineEntry, compareBaselines, parseBaseline, writeBaseline } from "@intentset/architecture";
 import { count, formatDiagnostic, type Io, json, TOOL } from "../output.ts";
 import { outputProblem } from "../outputs.ts";
 import { architectureLines } from "../reports.ts";
@@ -35,6 +36,12 @@ export function architectureCommand(
       return 2;
     }
     const entries = writeBaseline(diagnostics);
+    let replaced: BaselineEntry[] | null = null;
+    try {
+      if (existsSync(target)) replaced = parseBaseline(readFileSync(target, "utf8"));
+    } catch {
+      replaced = null;
+    }
     try {
       writeFileSync(target, `${JSON.stringify(entries, null, 2)}\n`);
     } catch (error) {
@@ -43,8 +50,15 @@ export function architectureCommand(
       );
       return 2;
     }
+    const change =
+      replaced === null
+        ? ""
+        : (() => {
+            const { added, removed, replaced: smaller } = compareBaselines(replaced, entries);
+            return ` (${added.length} the file did not hold, ${removed.length + smaller.length} retired)`;
+          })();
     io.stderr(
-      `intentset architecture check: wrote ${count(entries.length, "baseline entry", "baseline entries")} to ${options.writeBaseline}\n`,
+      `intentset architecture check: wrote ${count(entries.length, "baseline entry", "baseline entries")} to ${options.writeBaseline}${change}\n`,
     );
   }
 

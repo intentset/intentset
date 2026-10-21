@@ -160,6 +160,33 @@ test("BEH-ARCH-BASELINE: a baseline written by --write-baseline turns known viol
   assert.equal(broken.code, 2);
 });
 
+test("BEH-ARCH-BASELINE-STALE: an entry whose violation is gone is VSA014 until the baseline is written again", async (t) => {
+  const dir = await example(t);
+  edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: approved");
+  await run(dir, "architecture", "check", "--write-baseline", "baseline.json");
+  // The source tree arrives: the four missing paths the baseline held are there now.
+  write(dir, vsaCase("VSA baseline").sources ?? {});
+  const stale = await run(dir, "architecture", "check", "--baseline", "baseline.json");
+  assert.equal(stale.code, 1, stale.out);
+  assert.equal((stale.out.match(/^baseline\.json error VSA014 /gm) ?? []).length, 4, stale.out);
+  assert.match(stale.out, /would let it come back: VSA002 /);
+  assert.match(stale.out, /4 stale baseline entries/);
+  assert.equal((await run(dir, "architecture", "check", "--baseline", "baseline.json", "--mode", "strict")).code, 0);
+
+  const rewritten = await run(
+    dir,
+    "architecture",
+    "check",
+    "--baseline",
+    "baseline.json",
+    "--write-baseline",
+    "baseline.json",
+  );
+  assert.match(rewritten.err, /wrote 0 baseline entries to baseline\.json \(0 the file did not hold, 4 retired\)/);
+  const after = await run(dir, "architecture", "check", "--baseline", "baseline.json");
+  assert.equal(after.code, 0, after.out);
+});
+
 test("a file with no text extension is in the tree, so importing a stylesheet resolves", async (t) => {
   const dir = await withSources(t);
   write(dir, {
@@ -545,6 +572,49 @@ test("BEH-REVIEW-DRIFT: review lists a slice whose code changed while none of it
   assert.equal(acknowledged.code, 0, acknowledged.out);
   assert.match(acknowledged.out, /\(1, 0 not acknowledged\)/);
   assert.match(acknowledged.out, /- Acknowledged: a commit since the base says this changes no behavior/);
+});
+
+const HOOK = "src/features/assessment/schedule/ui/hooks/use-schedule.ts";
+const HOOK_CALLS_CLIENT = vsaCase("VSA006 a UI hook calls the client directly").sources?.[HOOK] as string;
+
+test("BEH-REVIEW-BASELINE: review lists the baseline entries the base did not hold, and --fail-on-baseline-growth fails on them", async (t) => {
+  const dir = await committed(t);
+  write(dir, { [HOOK]: HOOK_CALLS_CLIENT });
+  await run(dir, "architecture", "check", "--write-baseline", "baseline.json");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "adopt with one violation baselined");
+
+  // The change lets a second violation in and writes the baseline again to hold it.
+  write(dir, { [POLICY]: `import { useMemo } from "react";\n${STRICTER}export const memo = useMemo;\n` });
+  await run(dir, "architecture", "check", "--baseline", "baseline.json", "--write-baseline", "baseline.json");
+  git(dir, "commit", "-q", "-am", "a policy imports react");
+
+  const review = await run(dir, "review", "--base", "HEAD~1", "--baseline", "baseline.json");
+  assert.equal(review.code, 0, "growth is listed, not failed, without --fail-on-baseline-growth");
+  assert.match(review.out, /^## Baseline \(baseline\.json: 2 entries, 1 at the base\)$/m);
+  const added = review.out.slice(review.out.indexOf("### Added since the base"), review.out.indexOf("### Retired"));
+  assert.match(added, /^### Added since the base \(1\)$/m);
+  assert.match(added, new RegExp(`^- TS007 ${POLICY.replaceAll(".", "\\.")}: .* imports "react"`, "m"));
+  const failed = await run(
+    dir,
+    "review",
+    "--base",
+    "HEAD~1",
+    "--baseline",
+    "baseline.json",
+    "--fail-on-baseline-growth",
+  );
+  assert.equal(failed.code, 1);
+  const json = JSON.parse((await run(dir, "review", "--base", "HEAD~1", "--baseline", "baseline.json", "--json")).out);
+  assert.deepEqual(
+    [json.baseline.entries, json.baseline.atBase, json.baseline.added.length, json.baseline.removed.length],
+    [2, 1, 1, 0],
+  );
+
+  // Against the commit before the baseline existed, every entry is new.
+  const adopted = await run(dir, "review", "--base", "HEAD~2", "--baseline", "baseline.json");
+  assert.match(adopted.out, /The base has no such file, so every entry is new\./);
+  assert.equal((await run(dir, "review", "--fail-on-baseline-growth")).code, 2, "the flag needs --baseline");
 });
 
 test("BEH-REVIEW-DRIFT: review lists no drift when a record describing the slice changed with its code, or when nothing it claims as code did", async (t) => {

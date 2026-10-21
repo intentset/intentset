@@ -7,6 +7,7 @@ import {
   buildImportGraph,
   buildModel,
   checkArchitecture,
+  compareBaselines,
   covers,
   expandClaims,
   extractImports,
@@ -26,6 +27,7 @@ import {
   Resolver,
   seamPatterns,
   shortestCycle,
+  staleEntryDiagnostics,
   stripJsonComments,
   stronglyConnected,
   UI_FRAMEWORKS,
@@ -516,7 +518,8 @@ describe("BEH-ARCH-BASELINE: baseline (VSA §9)", () => {
 
   test("migration: known violations become baselined warnings, new ones stay errors", () => {
     const baseline = writeBaseline([known]);
-    assert.deepEqual(Object.keys(baseline[0]), ["code", "path", "artifact", "fingerprint"]);
+    assert.deepEqual(Object.keys(baseline[0]), ["code", "path", "artifact", "message", "fingerprint"]);
+    assert.equal(baseline[0].message, "SLICE-A imports a private file of SLICE-B.");
     const out = applyBaseline([known, fresh], baseline, "migration");
     assert.equal(out.baselined, 1);
     assert.equal(out.diagnostics[0].severity, "warning");
@@ -546,6 +549,96 @@ describe("BEH-ARCH-BASELINE: baseline (VSA §9)", () => {
     const baseline = writeBaseline([known, fresh]);
     assert.deepEqual(parseBaseline(JSON.stringify(baseline)), baseline);
     assert.throws(() => parseBaseline("{}"), /JSON array/);
+  });
+});
+
+describe("BEH-ARCH-BASELINE-STALE: a baseline only shrinks (VSA §9)", () => {
+  const entry = (code: string, path: string, message: string, fingerprint = `${code}:${path}:${message}`) => ({
+    code,
+    path,
+    artifact: "SLICE-A",
+    message,
+    fingerprint,
+  });
+
+  test("a stale entry is VSA014, pointing at its index, and writing the baseline again leaves it out", () => {
+    const kept = entry("VSA006", "src/a/ui/h.ts", "src/a/ui/h.ts imports the client.");
+    const gone = entry("VSA006", "src/a/ui/g.ts", "src/a/ui/g.ts imports the client.");
+    const [stale] = staleEntryDiagnostics([gone], [kept, gone], ".intentset/baseline.json");
+    assert.deepEqual(
+      [stale.code, stale.severity, stale.artifact, stale.path, stale.field],
+      ["VSA014", "error", "SLICE-A", ".intentset/baseline.json", "/1"],
+    );
+    assert.equal(
+      stale.message,
+      "A baseline entry matches no diagnostic, so the violation it held is gone and the entry would let it come back: VSA006 src/a/ui/g.ts: src/a/ui/g.ts imports the client.",
+    );
+    assert.deepEqual(writeBaseline([stale]), [], "VSA014 is never recorded");
+    const old = { code: "VSA003", path: "src/x.ts", fingerprint: "0123456789abcdef0123" };
+    assert.match(
+      staleEntryDiagnostics([old], [old], null)[0].message,
+      /: VSA003 src\/x\.ts \(fingerprint 0123456789abcdef\)\.$/,
+    );
+  });
+
+  test("an entry's message is optional when read, and must be a string", () => {
+    const old = '[{"code":"VSA003","path":"src/x.ts","fingerprint":"f"}]';
+    assert.deepEqual(parseBaseline(old), [{ code: "VSA003", path: "src/x.ts", fingerprint: "f" }]);
+    assert.throws(() => parseBaseline('[{"code":"VSA003","path":null,"message":1,"fingerprint":"f"}]'), /message\?/);
+  });
+
+  test("compareBaselines: entries match one for one; the rest are added or retired", () => {
+    const a = entry("VSA006", "src/a.ts", "a.");
+    const b = entry("VSA006", "src/b.ts", "b.");
+    const c = entry("VSA003", "src/c.ts", "c.");
+    const result = compareBaselines([a, b], [a, a, c]);
+    assert.deepEqual(
+      result.added.map((e) => e.path),
+      ["src/c.ts", "src/a.ts"],
+      "a second copy of a held entry is new; sorted by code, then path",
+    );
+    assert.deepEqual(
+      result.removed.map((e) => e.path),
+      ["src/b.ts"],
+    );
+    assert.deepEqual(compareBaselines(null, [a]).added, [a], "with no base copy every entry is new");
+  });
+
+  test("compareBaselines: an entry whose file was renamed moved, with or without a message", () => {
+    const from = entry("VSA006", "src/old.ts", "src/old.ts imports src/client/api.ts.");
+    const to = entry("VSA006", "src/new.ts", "src/new.ts imports src/client/api.ts.");
+    const renames = new Map([["src/old.ts", "src/new.ts"]]);
+    assert.deepEqual(compareBaselines([from], [to], renames), {
+      added: [],
+      removed: [],
+      moved: [{ from, to }],
+      replaced: [],
+    });
+    const different = entry("VSA006", "src/new.ts", "src/new.ts imports src/client/other.ts.");
+    assert.equal(compareBaselines([from], [different], renames).added.length, 1, "a different violation is not a move");
+    const bare = (e: ReturnType<typeof entry>) => ({
+      code: e.code,
+      path: e.path,
+      artifact: e.artifact,
+      fingerprint: e.fingerprint,
+    });
+    assert.equal(compareBaselines([bare(from)], [bare(to)], renames).moved.length, 1);
+    assert.equal(compareBaselines([from], [to]).added.length, 1, "no rename, no move");
+  });
+
+  test("compareBaselines: a cycle replaced by one among fewer slices, or the same with no more edges, is a shrink", () => {
+    const cycle = (slices: string[], observed: number) =>
+      entry(
+        "VSA005",
+        "product/a.md",
+        `Slices ${slices.join(", ")} form a compile-time dependency cycle, ${[...slices, slices[0]].join(" -> ")}, from ${observed} observed import edges and 0 declared dependsOn edges.`,
+      );
+    const big = cycle(["SLICE-A", "SLICE-B", "SLICE-C"], 3);
+    assert.equal(compareBaselines([big], [cycle(["SLICE-A", "SLICE-B"], 5)]).replaced.length, 1);
+    assert.equal(compareBaselines([big], [cycle(["SLICE-A", "SLICE-B", "SLICE-C"], 2)]).replaced.length, 1);
+    const grown = compareBaselines([big], [cycle(["SLICE-A", "SLICE-B", "SLICE-C"], 4)]);
+    assert.deepEqual([grown.added.length, grown.removed.length, grown.replaced.length], [1, 1, 0]);
+    assert.equal(compareBaselines([big], [cycle(["SLICE-A", "SLICE-D"], 1)]).added.length, 1);
   });
 });
 

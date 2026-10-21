@@ -1,6 +1,6 @@
 /**
- * The git reads `review` needs: a base to compare with and the files changed
- * since it. Every call is a read and passes --no-optional-locks, so not even
+ * The git reads `review` needs: a base to compare with, the files changed
+ * since it, the files it renamed and a file's text at the base. Every call is a read and passes --no-optional-locks, so not even
  * git's own index refresh is written (invariant 7). Paths come back relative
  * to the repository root the CLI is working in, which may be a subdirectory
  * of the git work tree.
@@ -118,4 +118,26 @@ export function trackedChanges(root: string): string[] | null {
   const out = git(root, ["status", "--porcelain", "--untracked-files=no", "-z"]);
   if (out === null) return null;
   return out.split("\0").filter((entry) => entry !== "");
+}
+
+/** A file's text at `commit`, by its path relative to the root, or null when the commit has no such file. */
+export function fileAt(root: string, commit: string, path: string): string | null {
+  return git(root, ["show", `${commit}:./${path}`]);
+}
+
+/**
+ * The files renamed between `commit` and the working tree, as git's rename detection finds them, old path to new,
+ * relative to the root. A rename whose new file is untracked is not seen until it is added.
+ */
+export function renamesSince(root: string, commit: string): Map<string, string> {
+  const fields = paths(git(root, ["diff", "--relative", "--name-status", "-M", "-z", commit]));
+  const renames = new Map<string, string>();
+  for (let i = 0; i < fields.length; ) {
+    const status = fields[i];
+    if (status.startsWith("R") || status.startsWith("C")) {
+      if (status.startsWith("R")) renames.set(fields[i + 1], fields[i + 2]);
+      i += 3;
+    } else i += 2;
+  }
+  return renames;
 }

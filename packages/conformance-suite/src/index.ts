@@ -48,6 +48,15 @@ export interface SuiteCase {
   evidence?: Record<string, unknown>[];
   /** For an evidence case: per run record commit, the files git would report changed between it and the snapshot. */
   changedSince?: Record<string, string[]>;
+  /**
+   * For a VSA case: the architecture check's `mode` (`migration` when absent) and `baseline`, the entries of a
+   * baseline of known violations. An entry's fingerprint is the implementation's own, so a case's entries match no
+   * diagnostic and test what a stale entry is (VSA014).
+   */
+  architecture?: {
+    mode?: "migration" | "strict";
+    baseline?: { code: string; path: string | null; artifact?: string; message?: string; fingerprint: string }[];
+  };
   request?: PublicationRequest;
   /** True when no diagnostic is an error. */
   valid: boolean;
