@@ -71,10 +71,17 @@ export interface ExpandedCase {
   request: PublicationRequest | null;
 }
 
-/** How a VSA case runs the architecture check. A baseline entry is `{ code, path, artifact?, message?, fingerprint }`. */
+/** How a VSA case runs the architecture check. A baseline entry is `{ code, path, artifact?, name?, message?, fingerprint }`. */
 export interface ArchitectureRun {
   mode?: "migration" | "strict";
-  baseline?: { code: string; path: string | null; artifact?: string; message?: string; fingerprint: string }[];
+  baseline?: {
+    code: string;
+    path: string | null;
+    artifact?: string;
+    name?: string;
+    message?: string;
+    fingerprint: string;
+  }[];
 }
 
 /**

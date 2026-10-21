@@ -9,8 +9,11 @@ export {
   applyBaseline,
   type BaselineComparison,
   type BaselineEntry,
+  baselineKeys,
+  type BaselineSubject,
   compareBaselines,
   describeEntry,
+  FINGERPRINT_V2,
   fingerprint,
   type Mode,
   parseBaseline,
@@ -63,8 +66,8 @@ export {
   type SchemaReference,
   type TakenName,
 } from "./extract.ts";
-export type { Finding, SubjectEdge } from "./finding.ts";
-export { buildImportGraph, type ImportEdge, type ImportGraph, type UnresolvedImport } from "./imports.ts";
+export type { Finding, SubjectEdge, Taken } from "./finding.ts";
+export { buildImportGraph, type ImportEdge, type ImportGraph, takenBy, type UnresolvedImport } from "./imports.ts";
 export { type Definition, NameIndex, type Origin } from "./names.ts";
 export { fileLayer, inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";
 export { checkOwnership } from "./ownership.ts";

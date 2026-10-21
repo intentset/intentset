@@ -21,7 +21,13 @@ import {
   sortDiagnostics,
 } from "@intentset/core";
 import { AREA_REVIEW_REQUIRED, checkAreas } from "./areas.ts";
-import { applyBaseline, type BaselineEntry, type Mode, staleEntryDiagnostics } from "./baseline.ts";
+import {
+  applyBaseline,
+  type BaselineEntry,
+  type BaselineSubject,
+  type Mode,
+  staleEntryDiagnostics,
+} from "./baseline.ts";
 import { checkBoundaries, checkJsx, checkUnclassified } from "./boundaries.ts";
 import { checkClaims } from "./claims.ts";
 import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
@@ -88,6 +94,11 @@ export interface ArchitectureResult {
   summary: ArchitectureSummary;
   /** The resolved import graph, for reports and impact views. */
   edges: ImportEdge[];
+  /**
+   * What each diagnostic that came from a finding is about, keyed by the diagnostic objects in `diagnostics`: what
+   * `writeBaseline` needs to write entries a later run matches (VSA §9).
+   */
+  subjects: ReadonlyMap<Diagnostic, BaselineSubject>;
   /**
    * Where every file falls, sorted by path: each production file's region and
    * owner, every test file with the slice its claims match, and nothing for a
@@ -195,7 +206,17 @@ export function checkArchitecture(
     ...recordProblems.map((item) => item.diagnostic),
     ...excepted.recordFindings.map((item) => item.diagnostic),
   ];
-  const baseline = applyBaseline(diagnostics, options.baseline ?? [], mode);
+  const about = new Map<Diagnostic, BaselineSubject>();
+  for (const item of [...excepted.findings, ...recordProblems, ...excepted.recordFindings]) {
+    about.set(item.diagnostic, { edges: item.edges, ...(item.taken !== undefined ? { taken: item.taken } : {}) });
+  }
+  const baseline = applyBaseline(diagnostics, options.baseline ?? [], mode, (diagnostic) => about.get(diagnostic));
+  // applyBaseline maps one for one, so the subjects follow the diagnostics it returns.
+  const subjects = new Map<Diagnostic, BaselineSubject>();
+  baseline.diagnostics.forEach((diagnostic, i) => {
+    const subject = about.get(diagnostics[i]);
+    if (subject !== undefined) subjects.set(diagnostic, subject);
+  });
   const stale = staleEntryDiagnostics(baseline.stale, options.baseline ?? [], options.baselinePath ?? null);
   diagnostics = sortDiagnostics([...baseline.diagnostics, ...stale]);
 
@@ -230,7 +251,7 @@ export function checkArchitecture(
     ownership.push({ path, region: region.kind, owner: region.owner ?? null });
   }
   ownership.sort((a, b) => compareStrings(a.path, b.path));
-  return { diagnostics, summary, edges: imports.edges, ownership };
+  return { diagnostics, summary, edges: imports.edges, ownership, subjects };
 }
 
 /**

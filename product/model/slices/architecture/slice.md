@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 1
   links:
-    implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE, BEH-ARCH-LAYER-NAMES, BEH-ARCH-LAYER-PACKAGES, BEH-ARCH-BASELINE-STALE]
+    implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE, BEH-ARCH-LAYER-NAMES, BEH-ARCH-LAYER-PACKAGES, BEH-ARCH-BASELINE-STALE, BEH-ARCH-BASELINE-IDENTITY]
     dependsOn: [SLICE-CORE]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
@@ -44,4 +44,4 @@ The exports of `packages/architecture/src/index.ts`, reached by other packages a
 
 ## Verification
 
-The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK), TEST-ARCH-BASELINE (BEH-ARCH-BASELINE), TEST-ARCH-LAYER-NAMES (BEH-ARCH-LAYER-NAMES), TEST-ARCH-LAYER-PACKAGES (BEH-ARCH-LAYER-PACKAGES) and TEST-ARCH-BASELINE-STALE (BEH-ARCH-BASELINE-STALE). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK), TEST-ARCH-BASELINE (BEH-ARCH-BASELINE), TEST-ARCH-LAYER-NAMES (BEH-ARCH-LAYER-NAMES), TEST-ARCH-LAYER-PACKAGES (BEH-ARCH-LAYER-PACKAGES), TEST-ARCH-BASELINE-STALE (BEH-ARCH-BASELINE-STALE) and TEST-ARCH-BASELINE-IDENTITY (BEH-ARCH-BASELINE-IDENTITY). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

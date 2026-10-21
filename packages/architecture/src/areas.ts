@@ -16,7 +16,7 @@
 import type { AreaConfig } from "./config.ts";
 import { extractSchema, findCalls, type SchemaKind } from "./extract.ts";
 import { type Finding, finding, listSome } from "./finding.ts";
-import type { ImportEdge } from "./imports.ts";
+import { type ImportEdge, takenBy } from "./imports.ts";
 import { isCode } from "./paths.ts";
 import { compareStrings, matchAny } from "./patterns.ts";
 import type { Model } from "./regions.ts";
@@ -113,6 +113,7 @@ export function checkAreas(model: Model, edges: readonly ImportEdge[]): AreaChec
           remediation:
             "Move what both need into the shared backend package, and reach the other area's data through its published resource names (profile §9, AMP008, AMP012).",
           edges: [{ from: edge.from, to: edge.to }],
+          taken: takenBy(edge),
         }),
       );
     } else if (from === null && matchAny(sharedBackend, edge.from)) {
@@ -126,6 +127,7 @@ export function checkAreas(model: Model, edges: readonly ImportEdge[]): AreaChec
           remediation:
             "Pass what the shared code needs in as a parameter, or move the code into the area that owns it (profile §9, AMP008).",
           edges: [{ from: edge.from, to: edge.to }],
+          taken: takenBy(edge),
         }),
       );
     }

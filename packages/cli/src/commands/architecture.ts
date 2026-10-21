@@ -35,7 +35,7 @@ export function architectureCommand(
       io.stderr(`intentset architecture check: --write-baseline ${options.writeBaseline} ${problem}; not written.\n`);
       return 2;
     }
-    const entries = writeBaseline(diagnostics);
+    const entries = writeBaseline(diagnostics, (diagnostic) => architecture.subjects.get(diagnostic));
     let replaced: BaselineEntry[] | null = null;
     try {
       if (existsSync(target)) replaced = parseBaseline(readFileSync(target, "utf8"));
@@ -54,8 +54,12 @@ export function architectureCommand(
       replaced === null
         ? ""
         : (() => {
-            const { added, removed, replaced: smaller } = compareBaselines(replaced, entries);
-            return ` (${added.length} the file did not hold, ${removed.length + smaller.length} retired)`;
+            const { added, removed, replaced: smaller, rewritten } = compareBaselines(replaced, entries);
+            const form =
+              rewritten.length === 0
+                ? ""
+                : `, ${count(rewritten.length, "entry", "entries")} rewritten in the current form as ${rewritten.reduce((sum, item) => sum + item.to.length, 0)}`;
+            return ` (${added.length} the file did not hold, ${removed.length + smaller.length} retired${form})`;
           })();
     io.stderr(
       `intentset architecture check: wrote ${count(entries.length, "baseline entry", "baseline entries")} to ${options.writeBaseline}${change}\n`,

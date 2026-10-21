@@ -594,7 +594,7 @@ test("BEH-REVIEW-BASELINE: review lists the baseline entries the base did not ho
   assert.match(review.out, /^## Baseline \(baseline\.json: 2 entries, 1 at the base\)$/m);
   const added = review.out.slice(review.out.indexOf("### Added since the base"), review.out.indexOf("### Retired"));
   assert.match(added, /^### Added since the base \(1\)$/m);
-  assert.match(added, new RegExp(`^- TS007 ${POLICY.replaceAll(".", "\\.")}: .* imports "react"`, "m"));
+  assert.match(added, new RegExp(`^- TS007 ${POLICY.replaceAll(".", "\\.")} \\[useMemo\\]: .* imports "react"`, "m"));
   const failed = await run(
     dir,
     "review",
