@@ -5,6 +5,20 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## 0.9.0 — 2026-10-21
+
+**The architecture check judges what an import takes rather than the file it names, keeps UI frameworks and JSX out of policies, models and the client seam, and holds a migration baseline to "may shrink, may not grow", one imported name at a time.** Minor: new rules, a new configuration key, a new case field and new API in `@intentset/architecture` and `@intentset/cli`, and stricter results that a repository may see as new errors (below). The specifications changed (VSA, the reference profile and Core, revision 2026-10-21) without invalidating any case, so `intentset.spec` stays `0.2`; the conformance suite gained 12 cases and an optional `architecture` case field; the export did not move.
+
+**VSA006 judges a name by the layer of the file that defines it (#86, VSA §5, profile §3).** An entrypoint is in no layer, so a hook that took a client function through its slice's entrypoint, a barrel in a layer it may import, or another slice's entrypoint passed. The extractor now records the names each import takes and what each file exports; `NameIndex` follows a name through `export … from`, exported import bindings and `export *` to the file that declares it, and the layer matrix is applied there, across a contract too. A name it cannot follow is listed as not checked.
+
+**Policies, models and the client seam do not import UI frameworks or render JSX (#87, profile §3).** `forbiddenPackages` in `.intentset/architecture.yaml` maps a layer to package patterns, matched on the specifier as written; the default names the UI frameworks for `policy`, `model` and `external`, and a mapping a repository gives replaces it. TS007 reports a forbidden package, TS008 JSX outside presentation.
+
+**A migration baseline may shrink and may not grow (#88, VSA §9).** In migration mode an entry that matches nothing is VSA014, an error until the baseline is written again. `intentset review --baseline <file>` lists the entries the base's copy did not hold and those it retired, reading a renamed file's entry as moved and a smaller cycle as a shrink, and `--fail-on-baseline-growth` exits 1 on growth. `--write-baseline` says what it added and retired.
+
+**A baseline entry holds what a finding is about, one imported name at a time (#20, #88).** An entry's fingerprint no longer hashes the message, so a reworded message, such as AMP007's list of declared areas, keeps its entry; a finding about an import has one entry per name, so taking another name from a baselined import is an error naming it, and dropping one retires its entry. Entries carry the name and the message. A baseline written by 0.8 still matches as it is; written again, it takes the new form, which review calls a rewrite, not growth.
+
+**What an upgrade may show.** VSA006 for UI that takes client code through an entrypoint or barrel; TS007 for a UI framework in a policy, model or client file; TS008 for JSX outside presentation; VSA014 for each baseline entry whose violation is gone. A baseline absorbs none of the first three, since they are new findings. Set `forbiddenPackages` to change TS007's default.
+
 ## 0.8.1 — 2026-10-20
 
 **The Atlas's map comes first on its page, no ID on it overlaps another record, and the picture fills its frame.** A patch to `@intentset/atlas`: `intentset serve`'s `map.html` changes, and no existing caller's call does. No specification version, conformance case, export version or `intentset.spec` moved.
