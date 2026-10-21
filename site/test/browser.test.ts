@@ -262,7 +262,10 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
 test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   for (const width of WIDTHS) {
-    const tab = await browser.newPage({ viewport: { width, height: 900 } });
+    // Reduced motion turns off the site's smooth scrolling. With it on, scrolling a record into view is an animation,
+    // and a forced click does not wait for it to end: on a slow machine the click lands mid-scroll on the background,
+    // which clears the selection instead of following the link. Reproduced under 8x CPU throttling, 2 runs in 16; with reduced motion, none in 40.
+    const tab = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
     const errors: string[] = [];
     tab.on("pageerror", (error) => errors.push(error.message));
     await tab.goto(url("example/atlas/map/index.html"));
