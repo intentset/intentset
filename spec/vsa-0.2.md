@@ -2,7 +2,7 @@
 title: Intentset Traceable Vertical Slice Architecture Specification v0.2
 id: intentset/vsa/0.2
 status: draft
-revision: 2026-10-14
+revision: 2026-10-21
 implementation: 0.8.1
 ---
 
@@ -27,7 +27,7 @@ The architecture regions are composition, product slices, shared neutral abstrac
 | VSA003 | Consumers MUST NOT import another slice's private implementation | Resolved dependency graph |
 | VSA004 | All cross-slice dependencies MUST be declared; each consumed contract MUST have one exposing owner | Observed vs declared edges |
 | VSA005 | Slice compile-time dependencies MUST be acyclic | Strongly connected components |
-| VSA006 | Dependencies inside a slice MUST obey its declared layer policy | Layer import graph |
+| VSA006 | Dependencies inside a slice MUST obey its declared layer policy, judged by the layer that defines what is imported (§5) | Layer import graph, with each name followed to its definition |
 | VSA007 | Business behavior MUST NOT be owned by shared, infrastructure, or composition | Architecture review + claimed ownership |
 | VSA008 | Each implemented behavior MUST identify verification definitions, including negative/authorization cases where applicable | Core verification links + review |
 | VSA009 | Source, backend, and contract artifacts MUST have explicit accountable ownership | Path/resource claim resolution |
@@ -85,10 +85,12 @@ Events MAY decouple compile-time dependencies through a neutral event contract r
 
 The portable invariant is that presentation/composition MUST NOT become a dependency of lower-level product logic. Profiles MUST provide a concrete allowed matrix. The reference profile retains use-cases → client as an external-access seam while keeping policies/models independent of backend technology.
 
+A layer policy applies to what an import takes, not only to the file it names. A name taken through an entrypoint, or through any other file that passes it on, is judged by the layer of the file that defines it, whether that file is in the importer's slice or in the slice whose contract the name is taken through: a declared foreign contract does not widen what a layer may reach (VSA006). A name a checker cannot follow to its definition is unresolved, never passed (§2). (Decided 2026-10-21, after an adopter found that more than a quarter of its UI's imports of client code went through an entrypoint, where no layer was judged.)
+
 | Region | May depend on | Must not depend on |
 |---|---|---|
 | Composition | Declared slice composition surfaces, neutral shared, infrastructure setup | Private business logic through ad hoc imports |
-| Slice | Own permitted layers; declared foreign contracts; shared; infrastructure through seam | Foreign internals |
+| Slice | Own permitted layers; declared foreign contracts, within what the importing layer may reach; shared; infrastructure through seam | Foreign internals |
 | Shared | Shared neutral abstractions | Infrastructure, slices, composition, owned business policy |
 | Infrastructure | Infrastructure, shared neutral abstractions, external libraries | Slices or composition |
 
@@ -118,4 +120,4 @@ Adopt by declared scope. Baseline existing violations, block new violations, and
 
 ## 10. Conformance fixtures
 
-A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; a slice with an entrypoint in each of two packages; two entrypoints in one package; deep import through relative path; a deep import from outside the declared scope; alias and re-export bypass; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.2.
+A VSA implementation MUST be testable independently from the reference CLI. Required cases include: valid public import; a slice with an entrypoint in each of two packages; two entrypoints in one package; deep import through relative path; a deep import from outside the declared scope; alias and re-export bypass; a layer bypass through an entrypoint, another slice's contract or a barrel; missing dependency; compile-time cycle; overlap/empty path claim; resource consumer with no ownership conflict; backend call outside seam; composition-only screen import by another slice; expired exception; orphaned behavior after slice deletion. Diagnostic IDs MUST remain stable within v0.2.

@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 1
   links:
-    implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE]
+    implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE, BEH-ARCH-LAYER-NAMES]
     dependsOn: [SLICE-CORE]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
@@ -44,4 +44,4 @@ The exports of `packages/architecture/src/index.ts`, reached by other packages a
 
 ## Verification
 
-The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK) and TEST-ARCH-BASELINE (BEH-ARCH-BASELINE). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK), TEST-ARCH-BASELINE (BEH-ARCH-BASELINE) and TEST-ARCH-LAYER-NAMES (BEH-ARCH-LAYER-NAMES). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

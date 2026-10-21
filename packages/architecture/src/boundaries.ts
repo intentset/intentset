@@ -20,7 +20,15 @@
  *              package first, since that is the surface it should use.
  *   5. AMP006  a policy or model file importing its slice's client seam or
  *              infrastructure, or a backend SDK.
- *   6. VSA006  an edge inside one slice that the layer matrix does not allow.
+ *   6. VSA006  an edge inside one slice that the layer matrix does not allow;
+ *              or, where the edge's own target is allowed or in no layer (an
+ *              entrypoint, a barrel in a permitted layer, another slice's
+ *              entrypoint), a name it takes that is defined in a layer the
+ *              importer's may not import. The file that defines a name
+ *              decides, however many files pass it on, and another slice's
+ *              contract does not widen what a layer may reach (VSA §5,
+ *              profile §3). A name that cannot be followed is listed as not
+ *              checked.
  *
  * Beside those: TS002 (warning) when one slice reaches another's entrypoint
  * by relative path although an alias for it is configured; AMP002 when a
@@ -42,7 +50,8 @@ import { isAreaSchema } from "./areas.ts";
 import { type Finding, finding, listSome } from "./finding.ts";
 import type { ImportEdge } from "./imports.ts";
 import { inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
-import { matchAny, matchPattern } from "./patterns.ts";
+import { NameIndex } from "./names.ts";
+import { compareStrings, matchAny, matchPattern } from "./patterns.ts";
 import { describePackage, type Model, type Region, type SliceInfo } from "./regions.ts";
 import type { Resolver } from "./resolve.ts";
 
@@ -61,6 +70,8 @@ export interface BoundaryResult {
   fileEdges: number;
   /** Those between two different slices. */
   crossSliceEdges: number;
+  /** Names a layered file takes that could not be followed to the file that defines them: not checked, never passed. */
+  untraced: string[];
 }
 
 function how(edge: ImportEdge): string {
@@ -118,9 +129,15 @@ function describeRegion(region: Region): string {
   }
 }
 
-export function checkBoundaries(model: Model, edges: readonly ImportEdge[], resolver: Resolver): BoundaryResult {
+export function checkBoundaries(
+  model: Model,
+  edges: readonly ImportEdge[],
+  resolver: Resolver,
+  names: NameIndex = new NameIndex(edges, new Map()),
+): BoundaryResult {
   const { config } = model;
   const findings: Finding[] = [];
+  const untraced: string[] = [];
   const sliceEdges = new Map<string, SliceEdge>();
   let fileEdges = 0;
   let crossSliceEdges = 0;
@@ -168,6 +185,63 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
       message: `${who} lies outside the declared scope and ${how(edge)}, a private file of ${target.id} reached through ${through(edge)}; ${describeSurfaces(model, target, from)}.`,
       remediation: `${importInstead(model, target, from)} and have it export what is needed (VSA003). ${why}`,
       ...subject,
+    });
+  };
+
+  /** What the layer matrix lets `layer` import, itself first. */
+  const allowedFrom = (layer: string): string[] =>
+    [layer, ...(config.layerMatrix[layer] ?? [])].filter((value, i, all) => all.indexOf(value) === i);
+
+  // VSA006 for the names an edge takes through files that pass them on: each is judged by the layer of the file
+  // that defines it, in the importer's slice or in the slice whose entrypoint it came through.
+  const passedOn = (edge: ImportEdge, source: SliceInfo): Finding | null => {
+    const from = edge.from;
+    const a = layerOf(source, from);
+    if (a.layer === null || !knownLayer(config, a.layer)) return null;
+    const refused = new Map<string, { names: string[]; through: string[]; layer: string; owner: SliceInfo }>();
+    for (const definition of names.definitions(edge)) {
+      const { origin } = definition;
+      if (origin.kind === "untraced") {
+        const what = definition.name === "*" ? "the names" : `the name ${definition.name}`;
+        untraced.push(
+          `${from}:${edge.line}: ${what} "${edge.specifier}" passes on could not be followed to the file that defines ${definition.name === "*" ? "them" : "it"} (${origin.why}), so ${definition.name === "*" ? "their layers were" : "its layer was"} not checked`,
+        );
+        continue;
+      }
+      // A name the edge's own target defines is judged with the edge itself; a package's, by the package rules.
+      if (origin.kind === "package" || origin.through.length === 0) continue;
+      const owner = sliceOf(model.regionOf(origin.file));
+      if (owner === undefined) continue;
+      const b = layerOf(owner, origin.file);
+      if (b.layer === null || !knownLayer(config, b.layer) || layerAllows(config, a.layer, b.layer)) continue;
+      const entry = refused.get(origin.file) ?? { names: [], through: origin.through, layer: b.layer, owner };
+      entry.names.push(definition.name);
+      refused.set(origin.file, entry);
+    }
+    if (refused.size === 0) return null;
+    const files = [...refused.keys()].sort(compareStrings);
+    const foreign = files.some((file) => refused.get(file)?.owner.id !== source.id);
+    const parts = files.map((file) => {
+      const entry = refused.get(file) as { names: string[]; through: string[]; layer: string; owner: SliceInfo };
+      const of = entry.owner.id === source.id ? "" : ` of ${entry.owner.id}`;
+      const via = entry.through.length > 1 ? ` by way of ${entry.through.slice(1).join(", ")}` : "";
+      return `${entry.names.join(", ")} from ${file}, in the ${entry.layer} layer${of}${via}`;
+    });
+    const owners = [...new Set(files.map((file) => refused.get(file)?.owner.id as string))].filter(
+      (id) => id !== source.id,
+    );
+    return finding({
+      code: "VSA006",
+      artifact: source.id,
+      path: from,
+      location: { line: edge.line },
+      message: `${from} is in the ${a.layer} layer of ${source.id} and ${how(edge)}, which passes on ${parts.join("; and ")}.`,
+      remediation: `The ${a.layer} layer may import ${allowedFrom(a.layer).join(", ")}, whichever file passes a name on${foreign ? ", and another slice's contract does not widen that" : ""}; take what it needs from a layer it may import, such as a use-case that makes the call (profile §3).`,
+      edges: [
+        { from, to: edge.to as string },
+        ...files.map((file) => ({ from, to: file })),
+        ...owners.map((id) => ({ from: source.id, to: id })),
+      ],
     });
   };
 
@@ -415,6 +489,10 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
           );
         }
       }
+      if (source !== undefined) {
+        const passed = passedOn(edge, source);
+        if (passed !== null) findings.push(passed);
+      }
       continue;
     }
 
@@ -455,12 +533,13 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
     if (target !== undefined) {
       const a = layerOf(source, from);
       const b = layerOf(source, to);
-      if (a.layer === null || b.layer === null || !knownLayer(config, a.layer) || !knownLayer(config, b.layer))
-        continue;
-      if (!layerAllows(config, a.layer, b.layer)) {
-        const allowed = [a.layer, ...(config.layerMatrix[a.layer] ?? [])].filter(
-          (value, i, all) => all.indexOf(value) === i,
-        );
+      if (
+        a.layer !== null &&
+        b.layer !== null &&
+        knownLayer(config, a.layer) &&
+        knownLayer(config, b.layer) &&
+        !layerAllows(config, a.layer, b.layer)
+      ) {
         findings.push(
           finding({
             code: "VSA006",
@@ -468,15 +547,18 @@ export function checkBoundaries(model: Model, edges: readonly ImportEdge[], reso
             path: from,
             location,
             message: `${from} is in the ${a.layer} layer of ${source.id} and ${how(edge)}, which is in the ${b.layer} layer.`,
-            remediation: `The ${a.layer} layer may import ${allowed.join(", ")}; move the dependency so it flows downward (profile §3).`,
+            remediation: `The ${a.layer} layer may import ${allowedFrom(a.layer).join(", ")}; move the dependency so it flows downward (profile §3).`,
             ...subject,
           }),
         );
+        continue;
       }
+      const passed = passedOn(edge, source);
+      if (passed !== null) findings.push(passed);
     }
   }
 
-  return { findings, sliceEdges, fileEdges, crossSliceEdges };
+  return { findings, sliceEdges, fileEdges, crossSliceEdges, untraced: [...new Set(untraced)].sort(compareStrings) };
 }
 
 /** One warning per slice whose code files are in no declared layer, or in a layer the matrix does not know (VSA006). */
