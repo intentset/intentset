@@ -32,8 +32,12 @@
  *
  * Beside those: TS002 (warning) when one slice reaches another's entrypoint
  * by relative path although an alias for it is configured; AMP002 when a
- * slice file outside its client seam imports a backend SDK; TS001 (warning)
- * when an entrypoint re-exports with `export *`.
+ * slice file outside its client seam imports a backend SDK; TS007 when a
+ * slice file imports a package its layer's `forbiddenPackages` names, such as
+ * a UI framework in a policy, a model or the client seam; TS001 (warning)
+ * when an entrypoint re-exports with `export *`. TS008, a slice file outside
+ * presentation that renders JSX, is `checkJsx`: it reads the file, not an
+ * edge.
  *
  * Test files get the separate pass profile §3 asks for: they may import
  * their own slice's internals, and VSA003 and TS003 still apply to anyone
@@ -49,7 +53,7 @@
 import { isAreaSchema } from "./areas.ts";
 import { type Finding, finding, listSome } from "./finding.ts";
 import type { ImportEdge } from "./imports.ts";
-import { inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
+import { fileLayer, inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
 import { NameIndex } from "./names.ts";
 import { compareStrings, matchAny, matchPattern } from "./patterns.ts";
 import { describePackage, type Model, type Region, type SliceInfo } from "./regions.ts";
@@ -307,11 +311,8 @@ export function checkBoundaries(
     }
 
     if (edge.to === null) {
-      if (
-        source !== undefined &&
-        !model.underBackend(from) &&
-        matchAny(config.backendSdks, edge.specifier.replace(/^node:/, ""))
-      ) {
+      const specifier = edge.specifier.replace(/^node:/, "");
+      if (source !== undefined && !model.underBackend(from) && matchAny(config.backendSdks, specifier)) {
         if (isPure(source, from)) {
           findings.push(
             finding({
@@ -338,6 +339,23 @@ export function checkBoundaries(
             }),
           );
         }
+        continue;
+      }
+      const layer = source !== undefined && !model.underBackend(from) ? fileLayer(source, from) : null;
+      const pattern =
+        layer === null ? undefined : (config.forbiddenPackages[layer] ?? []).find((p) => matchPattern(p, specifier));
+      if (source !== undefined && layer !== null && pattern !== undefined) {
+        findings.push(
+          finding({
+            code: "TS007",
+            artifact,
+            path: from,
+            location,
+            message: `${from} is in the ${layer} layer of ${source.id} and ${how(edge)}, a package the ${layer} layer may not import (forbiddenPackages: ${pattern}).`,
+            remediation: forbiddenRemediation(layer, specifier),
+            edges: [{ from, to: edge.specifier }],
+          }),
+        );
       }
       continue;
     }
@@ -559,6 +577,50 @@ export function checkBoundaries(
   }
 
   return { findings, sliceEdges, fileEdges, crossSliceEdges, untraced: [...new Set(untraced)].sort(compareStrings) };
+}
+
+function forbiddenRemediation(layer: string, specifier: string): string {
+  if (layer === "policy" || layer === "model") {
+    return `Policies and models stay free of UI and transport: keep what needs "${specifier}" in the presentation layer and pass plain values in (profile §3, TS007).`;
+  }
+  if (layer === "external") {
+    return `The client seam is transport: return plain values from it, and let a hook in the presentation layer hold the state "${specifier}" provides (profile §3, TS007).`;
+  }
+  return `Move what needs "${specifier}" to a layer that may import it, or change forbiddenPackages in .intentset/architecture.yaml if the policy is wrong (TS007).`;
+}
+
+/** The profile's layers other than presentation, which render no JSX (TS008). A layer of the repository's own naming is not judged. */
+const NO_JSX_LAYERS = ["application", "policy", "model", "external"];
+
+/**
+ * TS008: a slice file outside the presentation layer that renders JSX. The automatic runtime needs no import for it,
+ * so this reads the file rather than an edge. Composition, shared code and tests may render; a file in no layer is
+ * VSA006's warning already.
+ */
+export function checkJsx(model: Model, jsx: ReadonlyMap<string, number>): Finding[] {
+  const findings: Finding[] = [];
+  for (const path of [...jsx.keys()].sort(compareStrings)) {
+    if (!model.inScope(path) || model.isTest(path) || model.underBackend(path)) continue;
+    const region = model.regionOf(path);
+    const slice = region.kind === "slice" ? model.sliceById.get(region.owner as string) : undefined;
+    if (slice === undefined || slice.meta.entrypoints.includes(path)) continue;
+    const layer = fileLayer(slice, path);
+    if (layer === null || !NO_JSX_LAYERS.includes(layer)) continue;
+    findings.push(
+      finding({
+        code: "TS008",
+        artifact: slice.id,
+        path,
+        location: { line: jsx.get(path) as number },
+        message: `${path} is in the ${layer} layer of ${slice.id} and renders JSX, which only the presentation layer may.`,
+        remediation:
+          layer === "external"
+            ? "The client seam is transport: return data from it and render it in a component under the presentation layer (profile §3, TS008)."
+            : "Move the markup into a component in the presentation layer, and pass it the values this file computes (profile §3, TS008).",
+      }),
+    );
+  }
+  return findings;
 }
 
 /** One warning per slice whose code files are in no declared layer, or in a layer the matrix does not know (VSA006). */

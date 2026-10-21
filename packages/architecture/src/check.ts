@@ -22,7 +22,7 @@ import {
 } from "@intentset/core";
 import { AREA_REVIEW_REQUIRED, checkAreas } from "./areas.ts";
 import { applyBaseline, type BaselineEntry, type Mode } from "./baseline.ts";
-import { checkBoundaries, checkUnclassified } from "./boundaries.ts";
+import { checkBoundaries, checkJsx, checkUnclassified } from "./boundaries.ts";
 import { checkClaims } from "./claims.ts";
 import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
 import { checkDependencies } from "./dependencies.ts";
@@ -167,6 +167,7 @@ export function checkArchitecture(
   const boundaries = checkBoundaries(model, imports.edges, resolver, new NameIndex(imports.edges, imports.exports));
   findings.push(...boundaries.findings);
   unresolved.push(...boundaries.untraced);
+  findings.push(...checkJsx(model, imports.jsx));
   findings.push(...checkUnclassified(model));
   const areaCheck = checkAreas(model, imports.edges);
   findings.push(...areaCheck.findings);

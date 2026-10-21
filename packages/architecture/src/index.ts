@@ -14,7 +14,7 @@ export {
   plainMessage,
   writeBaseline,
 } from "./baseline.ts";
-export { type BoundaryResult, checkBoundaries, checkUnclassified, type SliceEdge } from "./boundaries.ts";
+export { type BoundaryResult, checkBoundaries, checkJsx, checkUnclassified, type SliceEdge } from "./boundaries.ts";
 export {
   type ArchitectureResult,
   type ArchitectureSummary,
@@ -32,6 +32,7 @@ export {
   MAX_AREAS,
   readArchitectureConfig,
   resolveConfig,
+  UI_FRAMEWORKS,
 } from "./config.ts";
 export { checkDependencies, shortestCycle, stronglyConnected } from "./dependencies.ts";
 export {
@@ -60,7 +61,7 @@ export {
 export type { Finding, SubjectEdge } from "./finding.ts";
 export { buildImportGraph, type ImportEdge, type ImportGraph, type UnresolvedImport } from "./imports.ts";
 export { type Definition, NameIndex, type Origin } from "./names.ts";
-export { inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";
+export { fileLayer, inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";
 export { checkOwnership } from "./ownership.ts";
 export { type ArchitectureSubjectSource, type SubjectSourceOptions, subjectSource } from "./subject-source.ts";
 export { expandClaims, matchAny, matchPattern, validatePattern } from "./patterns.ts";

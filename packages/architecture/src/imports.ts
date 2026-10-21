@@ -40,6 +40,8 @@ export interface ImportGraph {
   unresolved: UnresolvedImport[];
   /** What each code file exports of its own, by path. */
   exports: Map<string, LocalExports>;
+  /** The line of the first JSX element in each file that renders one, by path. */
+  jsx: Map<string, number>;
 }
 
 /** Build the graph over every code file in `files` (already filtered of ignored paths). */
@@ -47,10 +49,12 @@ export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: R
   const edges: ImportEdge[] = [];
   const unresolved: UnresolvedImport[] = [];
   const exported = new Map<string, LocalExports>();
+  const rendered = new Map<string, number>();
   for (const path of [...files.keys()].sort(compareStrings)) {
     if (!isCode(path)) continue;
-    const { imports, problems, exports } = extractImports(path, files.get(path) as string);
+    const { imports, problems, exports, jsx } = extractImports(path, files.get(path) as string);
     exported.set(path, exports);
+    if (jsx !== null) rendered.set(path, jsx);
     for (const problem of problems) {
       unresolved.push({ path, line: problem.line, specifier: null, message: problem.message });
     }
@@ -80,5 +84,5 @@ export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: R
       });
     }
   }
-  return { edges, unresolved, exports: exported };
+  return { edges, unresolved, exports: exported, jsx: rendered };
 }
