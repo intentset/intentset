@@ -6,7 +6,7 @@ intentset:
   id: MEAS-OUTSIDE-PILOT
   type: measure
   title: Outside codebases that complete the pilot
-  status: draft
+  status: approved
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
