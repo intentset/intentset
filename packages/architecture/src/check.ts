@@ -29,6 +29,7 @@ import { checkDependencies } from "./dependencies.ts";
 import { applyExceptions, type ExceptionRecord, readExceptionRecord, readExceptions } from "./exceptions.ts";
 import { type Finding, finding } from "./finding.ts";
 import { buildImportGraph, type ImportEdge } from "./imports.ts";
+import { NameIndex } from "./names.ts";
 import { checkOwnership } from "./ownership.ts";
 import { isCode } from "./paths.ts";
 import { compareStrings } from "./patterns.ts";
@@ -163,8 +164,9 @@ export function checkArchitecture(
 
   findings.push(...checkClaims(model, graph, registriesPath));
   findings.push(...checkOwnership(model, graph, level));
-  const boundaries = checkBoundaries(model, imports.edges, resolver);
+  const boundaries = checkBoundaries(model, imports.edges, resolver, new NameIndex(imports.edges, imports.exports));
   findings.push(...boundaries.findings);
+  unresolved.push(...boundaries.untraced);
   findings.push(...checkUnclassified(model));
   const areaCheck = checkAreas(model, imports.edges);
   findings.push(...areaCheck.findings);

@@ -4,7 +4,7 @@
  * for a package outside the repository, the specifier alone. What could not
  * be read or resolved is returned beside the edges, never folded into them.
  */
-import { extractImports } from "./extract.ts";
+import { extractImports, type LocalExports, type TakenName } from "./extract.ts";
 import { isCode } from "./paths.ts";
 import { compareStrings } from "./patterns.ts";
 import type { Resolver, Via } from "./resolve.ts";
@@ -24,6 +24,8 @@ export interface ImportEdge {
   via: Via;
   /** Resolved through a `*` alias, an exports pattern or a package without exports (TS006). */
   wildcardAlias: boolean;
+  /** The names it takes from the target (`RawImport.names`). */
+  names: TakenName[];
 }
 
 export interface UnresolvedImport {
@@ -36,15 +38,19 @@ export interface UnresolvedImport {
 export interface ImportGraph {
   edges: ImportEdge[];
   unresolved: UnresolvedImport[];
+  /** What each code file exports of its own, by path. */
+  exports: Map<string, LocalExports>;
 }
 
 /** Build the graph over every code file in `files` (already filtered of ignored paths). */
 export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: Resolver): ImportGraph {
   const edges: ImportEdge[] = [];
   const unresolved: UnresolvedImport[] = [];
+  const exported = new Map<string, LocalExports>();
   for (const path of [...files.keys()].sort(compareStrings)) {
     if (!isCode(path)) continue;
-    const { imports, problems } = extractImports(path, files.get(path) as string);
+    const { imports, problems, exports } = extractImports(path, files.get(path) as string);
+    exported.set(path, exports);
     for (const problem of problems) {
       unresolved.push({ path, line: problem.line, specifier: null, message: problem.message });
     }
@@ -70,8 +76,9 @@ export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: R
         wildcardExport: raw.wildcard,
         via: resolution.via,
         wildcardAlias: resolution.wildcard,
+        names: raw.names,
       });
     }
   }
-  return { edges, unresolved };
+  return { edges, unresolved, exports: exported };
 }

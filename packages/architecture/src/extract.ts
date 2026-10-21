@@ -28,6 +28,10 @@
  * Anything this module cannot read is returned as a problem, never dropped:
  * a dynamic import with a computed specifier, or a token the scanner could
  * not terminate (invariant 6).
+ *
+ * Beside each reference it records the names the reference takes, and beside
+ * the file the names the file exports itself, so a name taken through an
+ * entrypoint or a barrel can be followed to the file that defines it (VSA006).
  */
 import { LanguageVariant, SyntaxKind } from "typescript/unstable/ast";
 import { computeLineStarts, createScanner, tokenIsIdentifierOrKeyword } from "typescript/unstable/ast/scanner";
@@ -44,6 +48,37 @@ export interface RawImport {
   reexport: boolean;
   /** `export * from "x"` or `export * as ns from "x"`. */
   wildcard: boolean;
+  /**
+   * The names it takes from the module, in source order. `name` is the name
+   * in that module (`default` for a default import), `as` the local binding
+   * or, for a re-export, the name exported here. A name of `*` takes every
+   * name the module exports: a namespace import, `import X = require("x")`,
+   * `export * as ns from "x"`, a dynamic import or require (with `as` empty),
+   * and `export * from "x"` (with `as` `*`, every name but `default` under
+   * its own). A side-effect import takes none.
+   */
+  names: TakenName[];
+}
+
+export interface TakenName {
+  name: string;
+  as: string;
+  /** `import type`, `export type`, or the specifier itself marked `type`. */
+  typeOnly: boolean;
+}
+
+/** What a file exports of its own, rather than from another module by `export ... from`. */
+export interface LocalExports {
+  /** Names declared and exported here: `export function f`, `export const a`, `export default ...`. */
+  declared: string[];
+  /**
+   * `export { a as b }` with no module, and `export default a`: `name` is the
+   * local binding, `as` the exported name. Whether the binding was imported,
+   * which makes it a re-export, is for the reader of the file's imports.
+   */
+  bindings: TakenName[];
+  /** An export this reader cannot name: `export =`, `module.exports`, a destructured declaration. */
+  opaque: boolean;
 }
 
 export interface ExtractProblem {
@@ -54,6 +89,7 @@ export interface ExtractProblem {
 export interface Extraction {
   imports: RawImport[];
   problems: ExtractProblem[];
+  exports: LocalExports;
 }
 
 interface Token {
@@ -348,10 +384,14 @@ function describe(kind: SyntaxKind): string {
   }
 }
 
-/** Extract every module reference from one file. */
+/** Words that open a declaration after `export default` rather than name a binding. */
+const DECLARATION_WORDS = new Set(["function", "class", "async", "abstract", "interface", "enum", "namespace"]);
+
+/** Extract every module reference from one file, with the names each takes and the names the file exports itself. */
 export function extractImports(path: string, text: string): Extraction {
   const { tokens, problems } = tokenize(path, text);
   const imports: RawImport[] = [];
+  const exports: LocalExports = { declared: [], bindings: [], opaque: false };
   const consumed = new Set<number>();
 
   const word = (i: number, text?: string): boolean => {
@@ -365,6 +405,8 @@ export function extractImports(path: string, text: string): Extraction {
   const add = (i: number, fields: Omit<RawImport, "specifier" | "line">) => {
     imports.push({ specifier: tokens[i].value, line: tokens[i].line, ...fields });
   };
+  /** A name as written in a specifier list: an identifier, a keyword such as `default`, or a string. */
+  const nameAt = (i: number): string | null => (word(i) ? tokens[i].text : isString(i) ? tokens[i].value : null);
   /** Index of the token closing the bracket opened at i, or tokens.length. */
   const closing = (i: number, open: SyntaxKind, close: SyntaxKind): number => {
     let depth = 0;
@@ -374,27 +416,82 @@ export function extractImports(path: string, text: string): Extraction {
     }
     return tokens.length;
   };
+  /**
+   * The specifiers between braces, `a`, `type B`, `c as d`, `"e-f" as g`:
+   * `name` is the first name, `as` the second or the first again.
+   */
+  const specifiers = (open: number, close: number, typeOnly: boolean): TakenName[] => {
+    const out: TakenName[] = [];
+    let k = open + 1;
+    while (k < close) {
+      let end = k;
+      while (end < close && !is(end, SyntaxKind.CommaToken)) end++;
+      let at = k;
+      let typed = typeOnly;
+      if (word(at, "type") && end - at > 1 && !(word(at + 1, "as") && end - at === 3)) {
+        typed = true;
+        at++;
+      }
+      const name = nameAt(at);
+      if (name !== null) {
+        const alias = word(at + 1, "as") && at + 2 < end ? nameAt(at + 2) : null;
+        out.push({ name, as: alias ?? name, typeOnly: typed });
+      }
+      k = end + 1;
+    }
+    return out;
+  };
   /** Named elements between braces: true when every one is written `type X`. */
   const allTyped = (open: number, close: number): boolean => {
-    let count = 0;
-    let typed = 0;
-    let start = true;
-    for (let k = open + 1; k < close; k++) {
-      if (is(k, SyntaxKind.CommaToken)) {
-        start = true;
-        continue;
-      }
-      if (start) {
-        count++;
-        if (word(k, "type") && word(k + 1) && !word(k + 1, "as")) typed++;
-        start = false;
+    const list = specifiers(open, close, false);
+    return list.length > 0 && list.every((item) => item.typeOnly);
+  };
+  /** The bindings of `import d, * as ns, { a } from`, written between `start` and the `from` at `end`. */
+  const importBindings = (start: number, end: number, typeOnly: boolean): TakenName[] => {
+    const out: TakenName[] = [];
+    for (let k = start; k < end; k++) {
+      if (is(k, SyntaxKind.OpenBraceToken)) {
+        const close = closing(k, SyntaxKind.OpenBraceToken, SyntaxKind.CloseBraceToken);
+        out.push(...specifiers(k, close, typeOnly));
+        k = close;
+      } else if (is(k, SyntaxKind.AsteriskToken) && word(k + 1, "as") && word(k + 2)) {
+        out.push({ name: "*", as: tokens[k + 2].text, typeOnly });
+        k += 2;
+      } else if (word(k)) {
+        out.push({ name: "default", as: tokens[k].text, typeOnly });
       }
     }
-    return count > 0 && typed === count;
+    return out;
   };
   /** A call such as `import(x)` or `require(x)` that is really a method declaration `import(x) { ... }`. */
   const isMethod = (open: number): boolean =>
     is(closing(open, SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken) + 1, SyntaxKind.OpenBraceToken);
+  const every = (typeOnly: boolean): TakenName[] => [{ name: "*", as: "", typeOnly }];
+
+  /** `export <declaration>` with its name at i, after `export` and any `declare`. Returns false when it is not one. */
+  const declaration = (i: number): boolean => {
+    let k = i;
+    for (;;) {
+      if (word(k, "declare") || word(k, "async") || word(k, "abstract")) k++;
+      else if (word(k, "const") && word(k + 1, "enum")) k++;
+      else break;
+    }
+    if (word(k, "function")) {
+      k++;
+      if (is(k, SyntaxKind.AsteriskToken)) k++;
+    } else if (["class", "interface", "enum", "namespace", "module", "import"].some((kind) => word(k, kind))) k++;
+    else if (word(k, "type") && word(k + 1) && !is(k + 1, SyntaxKind.OpenBraceToken)) k++;
+    else if (word(k, "const") || word(k, "let") || word(k, "var") || word(k, "using")) {
+      k++;
+      if (is(k, SyntaxKind.OpenBraceToken) || is(k, SyntaxKind.OpenBracketToken)) {
+        exports.opaque = true;
+        return true;
+      }
+    } else return false;
+    if (!word(k)) return false;
+    exports.declared.push(tokens[k].text);
+    return true;
+  };
 
   for (let i = 0; i < tokens.length; i++) {
     if (consumed.has(i) || afterDot(i)) continue;
@@ -402,7 +499,8 @@ export function extractImports(path: string, text: string): Extraction {
     if (word(i, "import") && tokens[i].kind === SyntaxKind.ImportKeyword) {
       if (is(i + 1, SyntaxKind.OpenParenToken)) {
         if (isLiteral(i + 2) && (is(i + 3, SyntaxKind.CloseParenToken) || is(i + 3, SyntaxKind.CommaToken))) {
-          add(i + 2, { typeOnly: word(i - 1, "typeof"), dynamic: true, reexport: false, wildcard: false });
+          const typeOnly = word(i - 1, "typeof");
+          add(i + 2, { typeOnly, dynamic: true, reexport: false, wildcard: false, names: every(typeOnly) });
         } else if (!is(i + 2, SyntaxKind.CloseParenToken) && !isMethod(i + 1)) {
           problems.push({
             line: tokens[i].line,
@@ -432,12 +530,13 @@ export function extractImports(path: string, text: string): Extraction {
         j++;
       }
       if (isString(j)) {
-        add(j, { typeOnly, dynamic: false, reexport: false, wildcard: false });
+        add(j, { typeOnly, dynamic: false, reexport: false, wildcard: false, names: [] });
         continue;
       }
       if (word(j) && is(j + 1, SyntaxKind.EqualsToken)) {
         if (word(j + 2, "require") && is(j + 3, SyntaxKind.OpenParenToken) && isString(j + 4)) {
-          add(j + 4, { typeOnly, dynamic: false, reexport: false, wildcard: false });
+          const names = [{ name: "*", as: tokens[j].text, typeOnly }];
+          add(j + 4, { typeOnly, dynamic: false, reexport: false, wildcard: false, names });
           consumed.add(j + 2);
         }
         continue;
@@ -454,7 +553,8 @@ export function extractImports(path: string, text: string): Extraction {
         }
         if (word(k, "from") && isString(k + 1)) {
           const typed = typeOnly || (typedNamed && !hasPlainBinding);
-          add(k + 1, { typeOnly: typed, dynamic: false, reexport: false, wildcard: false });
+          const names = importBindings(j, k, typeOnly);
+          add(k + 1, { typeOnly: typed, dynamic: false, reexport: false, wildcard: false, names });
           i = k + 1;
           break;
         }
@@ -475,26 +575,62 @@ export function extractImports(path: string, text: string): Extraction {
       }
       if (is(j, SyntaxKind.AsteriskToken)) {
         let k = j + 1;
+        const as = word(k, "as") && nameAt(k + 1) !== null ? (nameAt(k + 1) as string) : "*";
         if (word(k, "as")) k += 2;
         if (word(k, "from") && isString(k + 1)) {
-          add(k + 1, { typeOnly, dynamic: false, reexport: true, wildcard: true });
+          const names = [{ name: "*", as, typeOnly }];
+          add(k + 1, { typeOnly, dynamic: false, reexport: true, wildcard: true, names });
           i = k + 1;
         }
         continue;
       }
       if (is(j, SyntaxKind.OpenBraceToken)) {
         const close = closing(j, SyntaxKind.OpenBraceToken, SyntaxKind.CloseBraceToken);
+        const names = specifiers(j, close, typeOnly);
         if (word(close + 1, "from") && isString(close + 2)) {
-          add(close + 2, { typeOnly: typeOnly || allTyped(j, close), dynamic: false, reexport: true, wildcard: false });
+          add(close + 2, {
+            typeOnly: typeOnly || allTyped(j, close),
+            dynamic: false,
+            reexport: true,
+            wildcard: false,
+            names,
+          });
           i = close + 2;
+        } else {
+          exports.bindings.push(...names);
+          i = close;
         }
+        continue;
       }
+      if (is(j, SyntaxKind.EqualsToken)) {
+        exports.opaque = true;
+        continue;
+      }
+      if (word(j, "default")) {
+        // `export default name;` exports a binding, which may be an import; anything else is declared here.
+        const named =
+          word(j + 1) &&
+          !DECLARATION_WORDS.has(tokens[j + 1].text) &&
+          (j + 2 >= tokens.length || is(j + 2, SyntaxKind.SemicolonToken) || tokens[j + 2].line > tokens[j + 1].line);
+        if (named) exports.bindings.push({ name: tokens[j + 1].text, as: "default", typeOnly: false });
+        else exports.declared.push("default");
+        continue;
+      }
+      if (!word(j, "as")) declaration(j);
+      continue;
+    }
+
+    if (
+      (word(i, "module") && is(i + 1, SyntaxKind.DotToken) && word(i + 2, "exports")) ||
+      (word(i, "exports") && (is(i + 1, SyntaxKind.DotToken) || is(i + 1, SyntaxKind.OpenBracketToken)))
+    ) {
+      exports.opaque = true;
       continue;
     }
 
     if (word(i, "require") && is(i + 1, SyntaxKind.OpenParenToken) && !word(i - 1, "function")) {
       if (isLiteral(i + 2) && is(i + 3, SyntaxKind.CloseParenToken)) {
-        add(i + 2, { typeOnly: false, dynamic: true, reexport: false, wildcard: false });
+        add(i + 2, { typeOnly: false, dynamic: true, reexport: false, wildcard: false, names: every(false) });
       } else if (!is(i + 2, SyntaxKind.CloseParenToken) && !isMethod(i + 1)) {
         problems.push({
           line: tokens[i].line,
@@ -504,7 +640,7 @@ export function extractImports(path: string, text: string): Extraction {
     }
   }
 
-  return { imports, problems };
+  return { imports, problems, exports };
 }
 
 /** What an Amplify schema declares at its top level (profile §9, AMP009). */

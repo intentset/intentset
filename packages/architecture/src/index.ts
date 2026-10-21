@@ -46,6 +46,7 @@ export {
 export {
   type Extraction,
   extractImports,
+  type LocalExports,
   extractSchema,
   findCalls,
   type RawImport,
@@ -54,9 +55,11 @@ export {
   type SchemaExtraction,
   type SchemaKind,
   type SchemaReference,
+  type TakenName,
 } from "./extract.ts";
 export type { Finding, SubjectEdge } from "./finding.ts";
 export { buildImportGraph, type ImportEdge, type ImportGraph, type UnresolvedImport } from "./imports.ts";
+export { type Definition, NameIndex, type Origin } from "./names.ts";
 export { inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";
 export { checkOwnership } from "./ownership.ts";
 export { type ArchitectureSubjectSource, type SubjectSourceOptions, subjectSource } from "./subject-source.ts";

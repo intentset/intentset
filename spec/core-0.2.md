@@ -2,7 +2,7 @@
 title: Intentset Core Specification v0.2
 id: intentset/core/0.2
 status: draft
-revision: 2026-10-15
+revision: 2026-10-21
 implementation: 0.8.1
 ---
 
@@ -29,6 +29,7 @@ Revisions that changed what a reader who conformed earlier sees, recorded so tha
 | 2026-10-14 (`0.2`) | **`intentset.spec` moves from `0.1` to `0.2`** (ADR 0013, ADR 0014). The row above changes what an existing run record means, because evidence is judged by the subject it checked unless a repository asks for commit binding, so the specifications move rather than a record of `0.1` meaning two things. A document declares `spec: '0.2'` and `profile: intentset/<type>/0.2`, and one that declares `0.1` is rejected (§4). The reference implementation's `intentset migrate --to 0.2` rewrites those two values and nothing else. |
 | 2026-10-15 (`0.2`, no move) | **A resource's files are in a subject only where a verification exercises it** (§8, ADR 0013 amended 2026-10-15). Release 0.7.0 hashed the files of every resource an included slice lists in `usesResources`, so one backend change made stale every verification of every slice that talks to it. The default is now `evidence.resources: exercised`, and the earlier rule is `evidence.resources: used`. No case changed its `valid` or `diagnostics` (the cases that test the earlier rule now say `used` in their configuration, as the commit-rule cases said `binding: commit`), so this does not move `intentset.spec`; a subject-bound record made under the earlier rule carries a hash the default no longer computes for a verification whose slices list resources, and reads stale until it is imported again, or until the repository sets `evidence.resources: used`, which reproduces the earlier hashes exactly. |
 | 2026-10-15 (`0.2`, no move, second) | **A dependency slice can count through its contract** (§8, ADR 0013 amended 2026-10-15, second). A slice reached only through `dependsOn` contributes every file its claims resolve to, so a change to a central slice moves nearly every subject: `SLICE-PLATFORM-ORGANIZATION` moved 227 of the 237 records of Streamlane's store. `evidence.dependencies: entrypoint` makes such a slice contribute its binding fields, its entrypoint files and the records of its contracts and their decisions, and `files`, the default, is the earlier rule; the back-test did not justify making `entrypoint` the default (ADR 0013). A new warning, EVID007, says what `entrypoint` could not see. Nothing changes for a repository that does not set the key, and no existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move. |
+| 2026-10-21 (`0.2`, no move) | **VSA006 judges a name by the layer of the file that defines it** (VSA §5, profile §3). A name an import takes through an entrypoint, a barrel or another slice's contract was judged by the file the import named, and an entrypoint is in no layer, so a hook could take a client function through one and pass. A repository whose layers took names that way sees VSA006 errors it did not see before. No existing case changed its `valid` or `diagnostics` (the cases for the bypass are new), so `intentset.spec` does not move. |
 
 ## 2. Semantic model and granularity
 

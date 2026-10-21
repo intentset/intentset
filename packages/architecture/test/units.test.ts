@@ -4,6 +4,7 @@ import { type Diagnostic, EMPTY_REGISTRIES, type Graph, plainCarrier, validate }
 import {
   applyBaseline,
   applyExceptions,
+  buildImportGraph,
   buildModel,
   checkArchitecture,
   covers,
@@ -17,6 +18,8 @@ import {
   extractSchema,
   findCalls,
   MAX_AREAS,
+  NameIndex,
+  type Origin,
   readArchitectureConfig,
   readExceptionRecord,
   resolveConfig,
@@ -160,6 +163,106 @@ const q = 4 / 2 / 1; const cjs = require("./cjs");
     assert.equal(out.imports.length, 1);
     assert.equal(out.problems.length, 1);
     assert.match(out.problems[0].message, /template literal/);
+  });
+
+  test("BEH-ARCH-LAYER-NAMES: each reference records the names it takes, and the file what it exports itself", () => {
+    const names = (specifier: string) =>
+      by(specifier)?.names.map((n) => `${n.name}>${n.as}${n.typeOnly ? ":type" : ""}`);
+    assert.deepEqual(names("./a.js"), ["A>A:type"]);
+    assert.deepEqual(names("../b"), ["default>d", "B>B:type", "c>c"]);
+    assert.deepEqual(names("./t"), ["T1>T1:type", "T2>T2:type"]);
+    assert.deepEqual(names("ns-pkg"), ["*>ns"], "a namespace import takes every name");
+    assert.deepEqual(names("./side"), [], "a side-effect import takes none");
+    assert.deepEqual(names("./req"), ["*>X"]);
+    assert.deepEqual(names("./star"), ["*>*"], "export * passes every name on under its own");
+    assert.deepEqual(names("./starns"), ["*>nsx"]);
+    assert.deepEqual(names("./named"), ["a>a", "b>bb"]);
+    assert.deepEqual(names("./q"), ["Q>Q:type"]);
+    assert.deepEqual(names("./dyn"), ["*>"]);
+    assert.deepEqual(names("./typed"), ["*>:type"]);
+    assert.deepEqual(names("./cjs"), ["*>"]);
+
+    const own = extractImports(
+      "y.ts",
+      [
+        'import d from "./d";',
+        "export { local, d as dee, type T };",
+        "export default d;",
+        "export const k = 1;",
+        "export async function f() {}",
+        "export function* g() {}",
+        "export abstract class K {}",
+        "export declare const dd: number;",
+        "export type TT = string;",
+        "export interface II {}",
+        "export const enum E { A }",
+      ].join("\n"),
+    ).exports;
+    assert.deepEqual(own.declared, ["k", "f", "g", "K", "dd", "TT", "II", "E"]);
+    assert.deepEqual(
+      own.bindings.map((n) => `${n.name}>${n.as}${n.typeOnly ? ":type" : ""}`),
+      ["local>local", "d>dee", "T>T:type", "d>default"],
+    );
+    assert.equal(own.opaque, false);
+    assert.deepEqual(extractImports("z.ts", "export default function () {}\n").exports.declared, ["default"]);
+    assert.equal(extractImports("z.js", "module.exports = { a: 1 };\n").exports.opaque, true);
+    assert.equal(extractImports("z.ts", "export = thing;\n").exports.opaque, true);
+    assert.equal(extractImports("z.ts", "export const { a, b } = thing;\n").exports.opaque, true);
+  });
+});
+
+describe("BEH-ARCH-LAYER-NAMES: following a name to the file that defines it (VSA006)", () => {
+  const files = new Map<string, string>([
+    [
+      "src/index.ts",
+      'export { api } from "./client/api";\nexport * from "./barrel";\nexport * as all from "./barrel";\n',
+    ],
+    ["src/client/api.ts", "export const api = 1;\n"],
+    ["src/barrel.ts", 'import { model } from "./model";\nexport { model };\nexport * from "./more";\n'],
+    ["src/model.ts", "export interface model {}\n"],
+    ["src/more.ts", 'export const more = 1;\nexport default 2;\nexport * from "some-pkg";\n'],
+    ["src/loop-a.ts", 'export { x } from "./loop-b";\n'],
+    ["src/loop-b.ts", 'export { x } from "./loop-a";\n'],
+    ["src/cjs.js", "module.exports = {};\n"],
+    ["src/through-cjs.ts", 'export * from "./cjs.js";\n'],
+  ]);
+  const resolver = new Resolver(files, resolveConfig());
+  const graph = buildImportGraph(files, resolver);
+  const index = new NameIndex(graph.edges, graph.exports);
+  const where = (origin: Origin) =>
+    origin.kind === "file"
+      ? `${origin.file} via [${origin.through.join(", ")}]`
+      : origin.kind === "package"
+        ? `package ${origin.specifier}`
+        : `untraced: ${origin.why}`;
+
+  test("through export from, an exported import binding and export *, however deep", () => {
+    assert.equal(where(index.trace("src/index.ts", "api")), "src/client/api.ts via [src/index.ts]");
+    assert.equal(where(index.trace("src/index.ts", "model")), "src/model.ts via [src/index.ts, src/barrel.ts]");
+    assert.equal(where(index.trace("src/index.ts", "more")), "src/more.ts via [src/index.ts, src/barrel.ts]");
+    assert.equal(where(index.trace("src/more.ts", "more")), "src/more.ts via []", "a file that declares the name");
+    assert.equal(where(index.trace("src/index.ts", "all")), "src/barrel.ts via [src/index.ts]");
+  });
+
+  test("export * never passes default on, and a name only a package can provide is the package's", () => {
+    assert.equal(where(index.trace("src/barrel.ts", "default")), "src/barrel.ts via []");
+    assert.equal(where(index.trace("src/index.ts", "elsewhere")), "package some-pkg");
+  });
+
+  test("a re-export cycle or an export this reader cannot name is untraced, never guessed", () => {
+    assert.match(where(index.trace("src/loop-a.ts", "x")), /^untraced: its re-exports form a cycle/);
+    assert.match(where(index.trace("src/through-cjs.ts", "y")), /^untraced: src\/cjs\.js exports names/);
+  });
+
+  test("a namespace import takes every name, each traced", () => {
+    const edges = buildImportGraph(
+      new Map([...files, ["src/use.ts", 'import * as everything from "./barrel";\n']]),
+      resolver,
+    ).edges.filter((edge) => edge.from === "src/use.ts");
+    assert.deepEqual(
+      index.definitions(edges[0]).map((d) => `${d.name}: ${where(d.origin)}`),
+      ["model: src/model.ts via [src/barrel.ts]", "more: src/more.ts via [src/barrel.ts]"],
+    );
   });
 });
 
@@ -737,6 +840,56 @@ describe("checkArchitecture: declared scope and modes", () => {
     ]);
     assert.ok(diagnostics.some((d) => d.code === "TS004" && d.severity === "warning" && d.location?.line === 1));
     assert.ok(summary.reviewRequired.some((rule) => rule.startsWith("VSA012")));
+  });
+});
+
+describe("BEH-ARCH-LAYER-NAMES: checkArchitecture judges a name by the file that defines it", () => {
+  const layered = slice("SLICE-A", "src/a").replace(
+    "layers: {}",
+    "layers:\n      presentation: [src/a/ui/**]\n      application: [src/a/use-cases/**]\n      external: [src/a/client/**]",
+  );
+  const graph = graphOf({ "SLICE-A.md": layered });
+  const run = (hook: string, extra: [string, string][] = []) =>
+    checkArchitecture(
+      graph,
+      EMPTY_REGISTRIES,
+      {
+        files: new Map<string, string>([
+          ["src/a/index.ts", 'export { call } from "./client/api";\nexport { run } from "./use-cases/run";\n'],
+          ["src/a/client/api.ts", "export const call = 1;\n"],
+          ["src/a/use-cases/run.ts", 'import { call } from "../client/api";\nexport const run = call;\n'],
+          ["src/a/ui/hook.ts", hook],
+          ...extra,
+        ]),
+      },
+      { today: "2026-10-02" },
+    );
+
+  test("a use-case through the entrypoint is allowed; the client through it is VSA006, naming the name and its file", () => {
+    assert.deepEqual(run('import { run } from "../index";\nexport const h = run;\n').diagnostics, []);
+    const { diagnostics } = run('import { call, run } from "../index";\nexport const h = [call, run];\n');
+    assert.deepEqual(
+      diagnostics.map((d) => `${d.code} ${d.path}:${d.location?.line}`),
+      ["VSA006 src/a/ui/hook.ts:1"],
+    );
+    assert.equal(
+      diagnostics[0].message,
+      'src/a/ui/hook.ts is in the presentation layer of SLICE-A and imports "../index", which passes on call from src/a/client/api.ts, in the external layer.',
+    );
+  });
+
+  test("a name that cannot be followed is listed as not checked, never passed", () => {
+    const { diagnostics, summary } = run('import { legacy } from "../index";\nexport const h = legacy;\n', [
+      ["src/a/index.ts", 'export * from "./client/legacy.js";\n'],
+      ["src/a/client/legacy.js", "module.exports = { legacy: 1 };\n"],
+    ]);
+    assert.deepEqual(
+      diagnostics.map((d) => d.code),
+      ["TS001"],
+    );
+    assert.deepEqual(summary.unresolved, [
+      'src/a/ui/hook.ts:1: the name legacy "../index" passes on could not be followed to the file that defines it (src/a/client/legacy.js exports names this reader cannot list), so its layer was not checked',
+    ]);
   });
 });
 

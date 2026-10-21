@@ -2,7 +2,7 @@
 title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.2
 id: intentset/typescript-amplify-gen2/0.2
 status: draft
-revision: 2026-10-14
+revision: 2026-10-21
 implementation: 0.8.1
 ---
 
@@ -68,6 +68,8 @@ Each row may import itself plus listed targets. Test files MAY import their own 
 | `domain/models` | models |
 | `client` | models |
 | `index.ts` (each entrypoint) | explicit contract-safe types, constants, policies, use-cases, client functions, and hooks that do not import other slices |
+
+The matrix judges the file that defines each name an import takes, however the import reaches it: directly, through the slice's own entrypoint, through a barrel in a layer the importer may import, or through another slice's entrypoint, where the defining file's layer is the one that slice declares (VSA §5). A hook that takes a client function through any of them calls the backend directly. The `index.ts` row says what a contract may export, not what every layer may take from it: a client function on a contract is there for use-cases. Type-only names count, as type-only imports do (TS004). A name the checker cannot follow, such as one an `export *` of a CommonJS module may provide, is reported as not checked.
 
 UI MUST NOT call the backend directly. Policies/models MUST NOT import UI, clients, or cloud SDKs. Client code MAY use technical infrastructure. Use-cases MAY orchestrate declared foreign slice contracts. Shared neutral types/utilities are available to each layer. Features may import neutral infrastructure; backend operations remain restricted to client seams. Shared MUST NOT import infrastructure; infrastructure MAY import shared. Application initialization may configure technical clients but MUST NOT perform product service calls or own stores. The UI matrix encodes a downward flow and one responsibility per folder; type-only dependencies still count for cycle analysis. Pure exported policies MAY be called through another slice's public contract when dependency direction remains valid. Avoid a use-case importing a client that imports the use-case back.
 
