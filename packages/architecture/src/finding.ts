@@ -19,6 +19,18 @@ export interface Finding {
   paths: string[];
   /** File-level and slice-level edges the finding concerns. */
   edges: SubjectEdge[];
+  /** For a finding about one import: what the baseline holds it by, one name at a time (VSA §9). */
+  taken?: Taken;
+}
+
+/** One import, as a baseline identifies it: how it imports, what it targets and the names it takes. */
+export interface Taken {
+  /** `import`, `re-export` or `dynamic`. */
+  kind: string;
+  /** The file it resolves to, or the package specifier. */
+  to: string;
+  /** `name`, `type name` for a type-only one, `*` for every name; empty for a side-effect import. */
+  names: string[];
 }
 
 export interface FindingFields {
@@ -32,6 +44,7 @@ export interface FindingFields {
   remediation: string;
   paths?: string[];
   edges?: SubjectEdge[];
+  taken?: Taken;
 }
 
 /** One diagnostic, members in contract order, optional members present only when known. */
@@ -49,7 +62,12 @@ export function finding(fields: FindingFields): Finding {
   };
   const paths = new Set(fields.paths ?? []);
   if (fields.path !== null) paths.add(fields.path);
-  return { diagnostic, paths: [...paths].sort(), edges: fields.edges ?? [] };
+  return {
+    diagnostic,
+    paths: [...paths].sort(),
+    edges: fields.edges ?? [],
+    ...(fields.taken !== undefined ? { taken: fields.taken } : {}),
+  };
 }
 
 /** "1 file" / "3 files". */

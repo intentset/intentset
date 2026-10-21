@@ -4,6 +4,8 @@ import { type Diagnostic, EMPTY_REGISTRIES, type Graph, plainCarrier, validate }
 import {
   applyBaseline,
   applyExceptions,
+  type BaselineEntry,
+  baselineKeys,
   buildImportGraph,
   buildModel,
   checkArchitecture,
@@ -613,6 +615,7 @@ describe("BEH-ARCH-BASELINE-STALE: a baseline only shrinks (VSA §9)", () => {
       removed: [],
       moved: [{ from, to }],
       replaced: [],
+      rewritten: [],
     });
     const different = entry("VSA006", "src/new.ts", "src/new.ts imports src/client/other.ts.");
     assert.equal(compareBaselines([from], [different], renames).added.length, 1, "a different violation is not a move");
@@ -639,6 +642,143 @@ describe("BEH-ARCH-BASELINE-STALE: a baseline only shrinks (VSA §9)", () => {
     const grown = compareBaselines([big], [cycle(["SLICE-A", "SLICE-B", "SLICE-C"], 4)]);
     assert.deepEqual([grown.added.length, grown.removed.length, grown.replaced.length], [1, 1, 0]);
     assert.equal(compareBaselines([big], [cycle(["SLICE-A", "SLICE-D"], 1)]).added.length, 1);
+  });
+});
+
+describe("BEH-ARCH-BASELINE-IDENTITY: an entry holds what a finding is about, one imported name at a time", () => {
+  const diagnostic = (fields: Partial<Diagnostic>): Diagnostic => ({
+    code: "VSA006",
+    severity: "error",
+    origin: "architecture",
+    artifact: "SLICE-A",
+    path: "src/a/ui/hook.ts",
+    message: "src/a/ui/hook.ts imports the client.",
+    remediation: "Fix it.",
+    ...fields,
+  });
+  const taken = (names: string[]) => ({
+    edges: [{ from: "src/a/ui/hook.ts", to: "src/a/client/api.ts" }],
+    taken: { kind: "import", to: "src/a/client/api.ts", names },
+  });
+
+  test("a message that names unrelated state no longer moves a fingerprint (#20)", () => {
+    const before = diagnostic({
+      code: "AMP007",
+      field: "/intentset/slice/domain",
+      message: "…; the areas are platform.",
+    });
+    const after = { ...before, message: "…; the areas are delivery, platform." };
+    assert.deepEqual(baselineKeys(after), baselineKeys(before));
+    assert.notEqual(fingerprint(after), fingerprint(before), "the fingerprint before 0.9 did move");
+    const noField = diagnostic({ code: "TS004", message: "A computed specifier." });
+    assert.notDeepEqual(
+      baselineKeys(noField),
+      baselineKeys({ ...noField, message: "Another." }),
+      "with no other identity the message is it",
+    );
+    assert.match(baselineKeys(before)[0].fingerprint, /^v2-[0-9a-f]{64}$/);
+  });
+
+  test("an import is one key per name: a type-only name is its own, and the order of names does not matter", () => {
+    const d = diagnostic({});
+    const keys = baselineKeys(d, taken(["submitOrder", "fetchOrder", "type Order"]));
+    assert.deepEqual(
+      keys.map((key) => key.name),
+      ["fetchOrder", "submitOrder", "type Order"],
+    );
+    assert.deepEqual(baselineKeys(d, taken(["fetchOrder"]))[0], keys[0]);
+    assert.notEqual(baselineKeys(d, taken(["Order"]))[0].fingerprint, keys[2].fingerprint);
+    assert.deepEqual(
+      baselineKeys(d, taken([])).map((key) => key.name),
+      [null],
+      "a side-effect import is one key",
+    );
+    const written = writeBaseline([d], () => taken(["fetchOrder", "submitOrder"]));
+    assert.deepEqual(written.map((entry) => entry.name).sort(), ["fetchOrder", "submitOrder"]);
+    assert.ok(written.every((entry) => entry.fingerprint.startsWith("v2-") && entry.message === d.message));
+  });
+
+  test("a baselined import that takes another name is an error naming it, and the name it held is not stale", () => {
+    const d = diagnostic({});
+    const baseline = writeBaseline([d], () => taken(["fetchOrder"]));
+    const grown = applyBaseline([d], baseline, "migration", () => taken(["fetchOrder", "submitOrder"]));
+    assert.equal(grown.diagnostics[0].severity, "error");
+    assert.equal(
+      grown.diagnostics[0].message,
+      "src/a/ui/hook.ts imports the client (not in the baseline: submitOrder).",
+    );
+    assert.equal(plainMessage(grown.diagnostics[0].message), d.message);
+    assert.deepEqual(grown.stale, []);
+    const shrunk = applyBaseline(
+      [d],
+      writeBaseline([d], () => taken(["fetchOrder", "submitOrder"])),
+      "migration",
+      () => taken(["fetchOrder"]),
+    );
+    assert.equal(shrunk.diagnostics[0].severity, "warning");
+    assert.deepEqual(
+      shrunk.stale.map((entry) => entry.name),
+      ["submitOrder"],
+      "a dropped name retires its entry",
+    );
+  });
+
+  test("an entry written before 0.9 still matches by its whole message", () => {
+    const d = diagnostic({});
+    const old = { code: d.code, path: d.path, artifact: "SLICE-A", fingerprint: fingerprint(d) };
+    const out = applyBaseline([d], [old], "migration", () => taken(["fetchOrder", "submitOrder"]));
+    assert.equal(out.diagnostics[0].severity, "warning");
+    assert.deepEqual(out.stale, []);
+  });
+
+  test("compareBaselines reads an old entry written again as one entry per name as a rewrite, not growth", () => {
+    const d = diagnostic({});
+    const old = { code: d.code, path: d.path, artifact: "SLICE-A", fingerprint: fingerprint(d) };
+    const now = writeBaseline([d], () => taken(["fetchOrder", "submitOrder"]));
+    const result = compareBaselines([old], now);
+    assert.deepEqual([result.added, result.removed], [[], []]);
+    assert.deepEqual(result.rewritten, [{ from: old, to: now }]);
+    const elsewhere = writeBaseline([diagnostic({ path: "src/a/ui/other.ts" })], () => taken(["x"]));
+    assert.equal(compareBaselines([old], [...now, ...elsewhere]).added.length, 1, "another file's entry is growth");
+  });
+
+  test("checkArchitecture: the swap #88 measured is a new error and a stale entry, and a renamed area list is neither", () => {
+    const layered = slice("SLICE-A", "src/a").replace(
+      "layers: {}",
+      "layers:\n      presentation: [src/a/ui/**]\n      external: [src/a/client/**]",
+    );
+    const graph = graphOf({ "SLICE-A.md": layered });
+    const run = (hook: string, baseline?: BaselineEntry[]) =>
+      checkArchitecture(
+        graph,
+        EMPTY_REGISTRIES,
+        {
+          files: new Map([
+            ["src/a/index.ts", "export {};\n"],
+            ["src/a/client/orders.ts", "export const fetchOrder = 1;\nexport const submitOrder = 2;\n"],
+            ["src/a/client/payments.ts", "export const capture = 3;\n"],
+            ["src/a/ui/hook.ts", hook],
+          ]),
+        },
+        { today: "2026-10-02", ...(baseline ? { baseline, mode: "migration" as const } : {}) },
+      );
+    const first = run('import { fetchOrder } from "../client/orders";\n');
+    const baseline = writeBaseline(first.diagnostics, (d) => first.subjects.get(d));
+    assert.deepEqual(
+      baseline.map((entry) => `${entry.code} ${entry.name}`),
+      ["VSA006 fetchOrder"],
+    );
+    const more = run('import { fetchOrder, submitOrder } from "../client/orders";\n', baseline);
+    assert.deepEqual(
+      more.diagnostics.map((d) => `${d.severity} ${d.code}`),
+      ["error VSA006"],
+    );
+    assert.match(more.diagnostics[0].message, /\(not in the baseline: submitOrder\)\.$/);
+    const swapped = run('import { capture } from "../client/payments";\n', baseline);
+    assert.deepEqual(swapped.diagnostics.map((d) => `${d.severity} ${d.code}`).sort(), [
+      "error VSA006",
+      "error VSA014",
+    ]);
   });
 });
 
@@ -923,7 +1063,7 @@ describe("checkArchitecture: declared scope and modes", () => {
 
   test("migration applies a baseline and strict ignores it", () => {
     const first = checkArchitecture(graph, EMPTY_REGISTRIES, { files }, { config, today: "2026-10-02" });
-    const baseline = writeBaseline(first.diagnostics);
+    const baseline = writeBaseline(first.diagnostics, (d) => first.subjects.get(d));
     const migration = checkArchitecture(
       graph,
       EMPTY_REGISTRIES,

@@ -52,7 +52,7 @@
  */
 import { isAreaSchema } from "./areas.ts";
 import { type Finding, finding, listSome } from "./finding.ts";
-import type { ImportEdge } from "./imports.ts";
+import { type ImportEdge, takenBy } from "./imports.ts";
 import { fileLayer, inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
 import { NameIndex } from "./names.ts";
 import { compareStrings, matchAny, matchPattern } from "./patterns.ts";
@@ -165,7 +165,10 @@ export function checkBoundaries(
       if (source !== undefined && inSeam(source, from) && matchAny(config.responseParserModules, to)) return null;
     }
     const who = test ? `Test file ${from}` : from;
-    const subject = { edges: [{ from, to }, ...(owner !== null ? [{ from: owner, to: target.id }] : [])] };
+    const subject = {
+      edges: [{ from, to }, ...(owner !== null ? [{ from: owner, to: target.id }] : [])],
+      taken: takenBy(edge),
+    };
     const why = "It is a warning because the importer lies outside the declared scope (VSA §9).";
     if (isScreen(to)) {
       if (!test && matchAny(config.routerFiles, from)) return null;
@@ -202,7 +205,8 @@ export function checkBoundaries(
     const from = edge.from;
     const a = layerOf(source, from);
     if (a.layer === null || !knownLayer(config, a.layer)) return null;
-    const refused = new Map<string, { names: string[]; through: string[]; layer: string; owner: SliceInfo }>();
+    type Refused = { names: string[]; typed: string[]; through: string[]; layer: string; owner: SliceInfo };
+    const refused = new Map<string, Refused>();
     for (const definition of names.definitions(edge)) {
       const { origin } = definition;
       if (origin.kind === "untraced") {
@@ -218,15 +222,22 @@ export function checkBoundaries(
       if (owner === undefined) continue;
       const b = layerOf(owner, origin.file);
       if (b.layer === null || !knownLayer(config, b.layer) || layerAllows(config, a.layer, b.layer)) continue;
-      const entry = refused.get(origin.file) ?? { names: [], through: origin.through, layer: b.layer, owner };
+      const entry = refused.get(origin.file) ?? {
+        names: [],
+        typed: [],
+        through: origin.through,
+        layer: b.layer,
+        owner,
+      };
       entry.names.push(definition.name);
+      entry.typed.push(`${definition.typeOnly ? "type " : ""}${definition.name} from ${origin.file}`);
       refused.set(origin.file, entry);
     }
     if (refused.size === 0) return null;
     const files = [...refused.keys()].sort(compareStrings);
     const foreign = files.some((file) => refused.get(file)?.owner.id !== source.id);
     const parts = files.map((file) => {
-      const entry = refused.get(file) as { names: string[]; through: string[]; layer: string; owner: SliceInfo };
+      const entry = refused.get(file) as Refused;
       const of = entry.owner.id === source.id ? "" : ` of ${entry.owner.id}`;
       const via = entry.through.length > 1 ? ` by way of ${entry.through.slice(1).join(", ")}` : "";
       return `${entry.names.join(", ")} from ${file}, in the ${entry.layer} layer${of}${via}`;
@@ -246,6 +257,11 @@ export function checkBoundaries(
         ...files.map((file) => ({ from, to: file })),
         ...owners.map((id) => ({ from: source.id, to: id })),
       ],
+      // Each name with the file that defines it, so a name passed on from another file is a new entry.
+      taken: {
+        ...takenBy(edge),
+        names: files.flatMap((file) => (refused.get(file) as Refused).typed).sort(compareStrings),
+      },
     });
   };
 
@@ -273,6 +289,7 @@ export function checkBoundaries(
             message: `Test file ${from} ${how(edge)}, a screen of ${target.id}, and tests must not bypass another slice's contract.`,
             remediation: `Test ${target.id}'s screens from ${target.id}'s own tests, or drive them through the router (profile §3).`,
             edges: [{ from, to: edge.to }],
+            taken: takenBy(edge),
           }),
         );
       } else if (!target.meta.entrypoints.includes(edge.to)) {
@@ -285,6 +302,7 @@ export function checkBoundaries(
             message: `Test file ${from} ${how(edge)}, a private file of ${target.id}; ${describeSurfaces(model, target, from)}.`,
             remediation: `${importInstead(model, target, from)} instead; tests may reach only their own slice's internals (profile §3).`,
             edges: [{ from, to: edge.to }],
+            taken: takenBy(edge),
           }),
         );
       }
@@ -306,6 +324,7 @@ export function checkBoundaries(
           message: `The entrypoint of ${source.id} re-exports everything from "${edge.specifier}" with a wildcard, which can publish private modules as contract.`,
           remediation: "Export the reviewed names explicitly (VSA §4, TS001).",
           edges: [{ from, to: edge.to ?? edge.specifier }],
+          taken: takenBy(edge),
         }),
       );
     }
@@ -324,6 +343,7 @@ export function checkBoundaries(
               remediation:
                 "Keep SDK and generated client types out of policies and models; adapt them in the client seam (AMP006).",
               edges: [{ from, to: edge.specifier }],
+              taken: takenBy(edge),
             }),
           );
         } else if (!inSeam(source, from)) {
@@ -336,6 +356,7 @@ export function checkBoundaries(
               message: `${from} ${how(edge)}, a backend SDK, outside the client seam of ${source.id}.`,
               remediation: `Move the backend call into ${source.id}'s client seam and call that from here (AMP002, VSA010).`,
               edges: [{ from, to: edge.specifier }],
+              taken: takenBy(edge),
             }),
           );
         }
@@ -354,6 +375,7 @@ export function checkBoundaries(
             message: `${from} is in the ${layer} layer of ${source.id} and ${how(edge)}, a package the ${layer} layer may not import (forbiddenPackages: ${pattern}).`,
             remediation: forbiddenRemediation(layer, specifier),
             edges: [{ from, to: edge.specifier }],
+            taken: takenBy(edge),
           }),
         );
       }
@@ -372,7 +394,10 @@ export function checkBoundaries(
       sliceEdges.set(key, entry);
     }
     if (!model.inScope(to) && target === undefined) continue;
-    const subject = { edges: [{ from, to }, ...(source && target ? [{ from: source.id, to: target.id }] : [])] };
+    const subject = {
+      edges: [{ from, to }, ...(source && target ? [{ from: source.id, to: target.id }] : [])],
+      taken: takenBy(edge),
+    };
 
     // 1. AMP001, and AMP011 for an area repository's schema bridge (profile §9). The shared backend
     // package is backend code: what it may import is AMP008's question.

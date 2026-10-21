@@ -17,7 +17,8 @@
  * With `--baseline`, it compares the baseline with the base's copy (VSA §9:
  * a baseline may shrink and may not grow): the entries the base did not hold,
  * those it held that are gone, those that moved with a renamed file, and
- * cycles replaced by smaller ones. `--fail-on-baseline-growth` fails on any
+ * cycles replaced by smaller ones, and entries written before 0.9 rewritten
+ * in the current form. `--fail-on-baseline-growth` fails on any
  * entry the base did not hold; a deliberate addition is the caller's call.
  */
 import {
@@ -296,6 +297,13 @@ function baselineSection(review: BaselineReview): string[] {
   list(
     "Moved with a renamed file",
     (review.moved ?? []).map(({ from, to }) => `${from.code} ${from.path} -> ${to.path}`),
+  );
+  list(
+    "Rewritten in the current form",
+    (review.rewritten ?? []).map(({ from, to }) => {
+      const names = to.map((entry) => entry.name).filter((name) => name !== undefined);
+      return `${describeEntry(from)} -> ${count(to.length, "entry", "entries")}${names.length > 0 ? `: ${names.join(", ")}` : ""}`;
+    }),
   );
   list(
     "Cycles replaced by smaller ones",

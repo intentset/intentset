@@ -5,14 +5,24 @@
  * warning marked "(baselined)" and is counted apart; in strict mode the
  * baseline is ignored, so the two modes are always distinguishable.
  *
- * An entry fingerprints the code, path, artifact, field and message, and the
- * messages carry no line numbers, so moving an import does not unbaseline it
- * while a new file, a new target or a larger cycle is a new fingerprint and
- * stays an error. Matching is one entry per diagnostic: a baseline of one
- * violation does not absorb a second copy of it. An entry also keeps the
- * message it was written from, so a reader of the file, or of a diff of it,
- * sees what each entry holds, and a review can tell a moved entry from a new
- * one.
+ * An entry fingerprints what a finding is about, not how its message reads
+ * (0.9, closing #20 and #88): the code, path, artifact and field, then, for a
+ * finding about one import, how it imports, its target and one name it takes,
+ * so a finding about an import is held one name at a time; for another finding
+ * with edges, its file and slice edges; for one with neither edges nor a
+ * field, its message, which is all that tells it from another. Nothing hashed
+ * carries a line number, so moving an import does not unbaseline it, while a
+ * new file, a new target, a new name or a larger cycle is a new entry and
+ * stays an error. A message that names unrelated state, such as AMP007's list
+ * of declared areas, no longer moves a fingerprint. Matching is one entry per
+ * key: a baseline of one violation does not absorb a second copy of it. An
+ * entry also keeps the name and the message it was written from, so a reader
+ * of the file, or of a diff of it, sees what each entry holds.
+ *
+ * An entry written before 0.9 fingerprints the whole message. It still
+ * matches, by that fingerprint, and goes when the baseline is written again,
+ * which writes the current form; a review reads that as a rewrite, not as
+ * growth.
  *
  * A baseline only shrinks. An entry that matches nothing in migration mode is
  * VSA014, an error: the violation it held is gone, and the entry would let it
@@ -21,6 +31,7 @@
  */
 import { canonicalJson, type Diagnostic, sha256Hex } from "@intentset/core";
 import { annotate } from "./exceptions.ts";
+import type { SubjectEdge, Taken } from "./finding.ts";
 import { compareStrings } from "./patterns.ts";
 
 export type Mode = "migration" | "strict";
@@ -29,15 +40,28 @@ export interface BaselineEntry {
   code: string;
   path: string | null;
   artifact?: string;
+  /** For an entry about an import, the one name it holds (`type X` for a type-only name, `*` for every name). */
+  name?: string;
   /** The diagnostic's message without notes. Written since 0.9; an older file's entries have none. */
   message?: string;
+  /** `v2-` and a hash of what the finding is about since 0.9; a bare hash of the whole message before. */
   fingerprint: string;
 }
+
+/** What a diagnostic is about beyond its code and place, from the finding it came from. */
+export interface BaselineSubject {
+  edges: readonly SubjectEdge[];
+  taken?: Taken;
+}
+
+/** The prefix of a fingerprint written since 0.9. */
+export const FINGERPRINT_V2 = "v2-";
 
 /** A stale entry: reported, never recorded in a baseline. */
 export const STALE_ENTRY_CODE = "VSA014";
 
-const NOTES = / \((?:baselined|excepted by [^()]*|exception [^()]* expired [^()]*)\)(?=\.?$)/;
+const NOTES =
+  / \((?:baselined|excepted by [^()]*|exception [^()]* expired [^()]*|not in the baseline: [^()]*)\)(?=\.?$)/;
 
 /** The message without the notes exceptions and baselines add. */
 export function plainMessage(message: string): string {
@@ -49,6 +73,7 @@ export function plainMessage(message: string): string {
   return out;
 }
 
+/** The fingerprint before 0.9: the whole message. Kept so a baseline written then still matches. */
 export function fingerprint(diagnostic: Diagnostic): string {
   return sha256Hex(
     canonicalJson({
@@ -66,20 +91,57 @@ function isBaselined(diagnostic: Diagnostic): boolean {
 }
 
 /**
- * Record every error, and every diagnostic already baselined, as the baseline to adopt. Sorted. A stale entry's
- * VSA014 is not recorded: writing the baseline again is how a stale entry is retired.
+ * The keys a diagnostic is held by: one for each name a finding about an import takes, else one. `subject` is what
+ * the finding is about; a diagnostic with none, such as a configuration error, is held by its field or its message.
  */
-export function writeBaseline(diagnostics: readonly Diagnostic[]): BaselineEntry[] {
+export function baselineKeys(
+  diagnostic: Diagnostic,
+  subject?: BaselineSubject,
+): { name: string | null; fingerprint: string }[] {
+  const place = {
+    code: diagnostic.code,
+    path: diagnostic.path,
+    artifact: diagnostic.artifact,
+    field: diagnostic.field ?? null,
+  };
+  const key = (identity: Record<string, unknown>, name: string | null) => ({
+    name,
+    fingerprint: `${FINGERPRINT_V2}${sha256Hex(canonicalJson({ ...place, ...identity, name }))}`,
+  });
+  if (subject?.taken !== undefined) {
+    const { kind, to, names } = subject.taken;
+    const each = names.length === 0 ? [null] : [...new Set(names)].sort(compareStrings);
+    return each.map((name) => key({ kind, to }, name));
+  }
+  if (subject !== undefined && subject.edges.length > 0) {
+    const edges = [...new Set(subject.edges.map((edge) => `${edge.from} -> ${edge.to}`))].sort(compareStrings);
+    return [key({ edges }, null)];
+  }
+  if (diagnostic.field !== undefined) return [key({}, null)];
+  return [key({ message: plainMessage(diagnostic.message) }, null)];
+}
+
+/**
+ * Record every error, and every diagnostic already baselined, as the baseline to adopt: one entry per key. Sorted.
+ * A stale entry's VSA014 is not recorded: writing the baseline again is how a stale entry is retired.
+ */
+export function writeBaseline(
+  diagnostics: readonly Diagnostic[],
+  subjectOf: (diagnostic: Diagnostic) => BaselineSubject | undefined = () => undefined,
+): BaselineEntry[] {
   return diagnostics
     .filter((diagnostic) => diagnostic.severity === "error" || isBaselined(diagnostic))
     .filter((diagnostic) => diagnostic.code !== STALE_ENTRY_CODE)
-    .map((diagnostic) => ({
-      code: diagnostic.code,
-      path: diagnostic.path,
-      ...(diagnostic.artifact !== null ? { artifact: diagnostic.artifact } : {}),
-      message: plainMessage(diagnostic.message),
-      fingerprint: fingerprint(diagnostic),
-    }))
+    .flatMap((diagnostic) =>
+      baselineKeys(diagnostic, subjectOf(diagnostic)).map((key) => ({
+        code: diagnostic.code,
+        path: diagnostic.path,
+        ...(diagnostic.artifact !== null ? { artifact: diagnostic.artifact } : {}),
+        ...(key.name !== null ? { name: key.name } : {}),
+        message: plainMessage(diagnostic.message),
+        fingerprint: key.fingerprint,
+      })),
+    )
     .sort(
       (a, b) =>
         compareStrings(a.code, b.code) ||
@@ -101,14 +163,16 @@ export function parseBaseline(text: string): BaselineEntry[] {
       typeof entry.fingerprint !== "string" ||
       !(typeof entry.path === "string" || entry.path === null) ||
       !(entry.artifact === undefined || typeof entry.artifact === "string") ||
+      !(entry.name === undefined || typeof entry.name === "string") ||
       !(entry.message === undefined || typeof entry.message === "string")
     ) {
-      throw new Error(`baseline entry ${i} is not { code, path, artifact?, message?, fingerprint }`);
+      throw new Error(`baseline entry ${i} is not { code, path, artifact?, name?, message?, fingerprint }`);
     }
     return {
       code: entry.code,
       path: entry.path as string | null,
       ...(typeof entry.artifact === "string" ? { artifact: entry.artifact } : {}),
+      ...(typeof entry.name === "string" ? { name: entry.name } : {}),
       ...(typeof entry.message === "string" ? { message: entry.message } : {}),
       fingerprint: entry.fingerprint,
     };
@@ -116,14 +180,16 @@ export function parseBaseline(text: string): BaselineEntry[] {
 }
 
 /**
- * Apply a baseline. In migration mode each entry turns one matching error
- * into a "(baselined)" warning; entries nothing matched are returned as
- * stale. Strict mode returns the diagnostics unchanged.
+ * Apply a baseline. In migration mode an error is baselined, a "(baselined)" warning, when an entry holds each of its
+ * keys, or, for a baseline written before 0.9, when one entry holds its whole message. An error with some of its
+ * names held stays an error, noting the names the baseline does not hold, and the held ones are not stale. Entries
+ * nothing matched are returned as stale. Strict mode returns the diagnostics unchanged.
  */
 export function applyBaseline(
   diagnostics: readonly Diagnostic[],
   baseline: readonly BaselineEntry[],
   mode: Mode = "migration",
+  subjectOf: (diagnostic: Diagnostic) => BaselineSubject | undefined = () => undefined,
 ): { diagnostics: Diagnostic[]; baselined: number; stale: BaselineEntry[] } {
   if (mode === "strict") return { diagnostics: [...diagnostics], baselined: 0, stale: [] };
   const remaining = new Map<string, BaselineEntry[]>();
@@ -132,14 +198,24 @@ export function applyBaseline(
     list.push(entry);
     remaining.set(entry.fingerprint, list);
   }
+  const held = (fingerprint: string) => (remaining.get(fingerprint)?.length ?? 0) > 0;
+  const take = (fingerprint: string) => remaining.get(fingerprint)?.pop();
   let baselined = 0;
   const out = diagnostics.map((diagnostic) => {
     if (diagnostic.severity !== "error") return diagnostic;
-    const list = remaining.get(fingerprint(diagnostic));
-    if (list === undefined || list.length === 0) return diagnostic;
-    list.pop();
-    baselined++;
-    return { ...diagnostic, severity: "warning" as const, message: annotate(diagnostic.message, "baselined") };
+    const keys = baselineKeys(diagnostic, subjectOf(diagnostic));
+    const have = keys.filter((key) => held(key.fingerprint));
+    const legacy = fingerprint(diagnostic);
+    if (have.length === keys.length || held(legacy)) {
+      if (have.length === keys.length) for (const key of keys) take(key.fingerprint);
+      else take(legacy);
+      baselined++;
+      return { ...diagnostic, severity: "warning" as const, message: annotate(diagnostic.message, "baselined") };
+    }
+    for (const key of have) take(key.fingerprint);
+    if (have.length === 0) return diagnostic;
+    const missing = keys.filter((key) => !have.includes(key)).map((key) => key.name ?? "it");
+    return { ...diagnostic, message: annotate(diagnostic.message, `not in the baseline: ${missing.join(", ")}`) };
   });
   const stale = [...remaining.values()].flat().sort((a, b) => compareStrings(a.fingerprint, b.fingerprint));
   return { diagnostics: out, baselined, stale };
@@ -147,7 +223,7 @@ export function applyBaseline(
 
 /** What an entry says it holds: its code, path and message, or its fingerprint when it was written without one. */
 export function describeEntry(entry: BaselineEntry): string {
-  const where = `${entry.code} ${entry.path ?? "(no path)"}`;
+  const where = `${entry.code} ${entry.path ?? "(no path)"}${entry.name === undefined ? "" : ` [${entry.name}]`}`;
   return entry.message === undefined
     ? `${where} (fingerprint ${entry.fingerprint.slice(0, 16)})`
     : `${where}: ${entry.message}`;
@@ -187,6 +263,11 @@ export interface BaselineComparison {
   moved: { from: BaselineEntry; to: BaselineEntry }[];
   /** A VSA005 cycle replaced by one among the same slices or fewer, with no more edges: a shrink, not growth. */
   replaced: { from: BaselineEntry; to: BaselineEntry }[];
+  /**
+   * An entry written before 0.9 and the entries written since for the same code, path and artifact (and message,
+   * where both carry one): the same violations in the current form, one entry per name.
+   */
+  rewritten: { from: BaselineEntry; to: BaselineEntry[] }[];
 }
 
 const CYCLE =
@@ -245,6 +326,7 @@ export function compareBaselines(
   };
   const moved = pair((from, to) => {
     if (from.code !== to.code || from.artifact !== to.artifact || from.path === null || to.path === null) return false;
+    if (from.name !== to.name) return false;
     if (renamed(from.path, renames) !== to.path) return false;
     if (from.message === undefined || to.message === undefined) return renames.get(from.path) === to.path;
     return renamed(from.message, renames) === to.message;
@@ -255,6 +337,22 @@ export function compareBaselines(
     if (old === null || now === null || ![...now.slices].every((slice) => old.slices.has(slice))) return false;
     return now.slices.size < old.slices.size || now.edges <= old.edges;
   });
+  const rewritten: { from: BaselineEntry; to: BaselineEntry[] }[] = [];
+  for (const from of [...removed]) {
+    if (from.fingerprint.startsWith(FINGERPRINT_V2)) continue;
+    const to = added.filter(
+      (entry) =>
+        entry.fingerprint.startsWith(FINGERPRINT_V2) &&
+        entry.code === from.code &&
+        entry.path === from.path &&
+        entry.artifact === from.artifact &&
+        (from.message === undefined || entry.message === from.message),
+    );
+    if (to.length === 0) continue;
+    rewritten.push({ from, to });
+    removed = removed.filter((entry) => entry !== from);
+    added = added.filter((entry) => !to.includes(entry));
+  }
   const order = (a: BaselineEntry, b: BaselineEntry) =>
     compareStrings(a.code, b.code) ||
     compareStrings(a.path ?? "", b.path ?? "") ||
@@ -265,5 +363,6 @@ export function compareBaselines(
     removed: removed.sort(order),
     moved: moved.sort(byTo),
     replaced: replaced.sort(byTo),
+    rewritten: rewritten.sort((a, b) => order(a.from, b.from)),
   };
 }

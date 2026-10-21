@@ -55,7 +55,14 @@ export interface SuiteCase {
    */
   architecture?: {
     mode?: "migration" | "strict";
-    baseline?: { code: string; path: string | null; artifact?: string; message?: string; fingerprint: string }[];
+    baseline?: {
+      code: string;
+      path: string | null;
+      artifact?: string;
+      name?: string;
+      message?: string;
+      fingerprint: string;
+    }[];
   };
   request?: PublicationRequest;
   /** True when no diagnostic is an error. */

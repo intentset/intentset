@@ -5,6 +5,7 @@
  * be read or resolved is returned beside the edges, never folded into them.
  */
 import { extractImports, type LocalExports, type TakenName } from "./extract.ts";
+import type { Taken } from "./finding.ts";
 import { isCode } from "./paths.ts";
 import { compareStrings } from "./patterns.ts";
 import type { Resolver, Via } from "./resolve.ts";
@@ -85,4 +86,14 @@ export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: R
     }
   }
   return { edges, unresolved, exports: exported, jsx: rendered };
+}
+
+/** The import as a baseline identifies it (VSA §9): one entry per name it takes. */
+export function takenBy(edge: ImportEdge): Taken {
+  const names = edge.names.map((taken) => `${taken.typeOnly || edge.typeOnly ? "type " : ""}${taken.name}`);
+  return {
+    kind: edge.reexport ? "re-export" : edge.dynamic ? "dynamic" : "import",
+    to: edge.to ?? edge.specifier,
+    names: [...new Set(names)].sort(compareStrings),
+  };
 }
