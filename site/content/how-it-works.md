@@ -139,11 +139,12 @@ The slice record says which files it owns, which entrypoints are its public surf
 
 - another slice importing a private file instead of an entrypoint
 - a dependency between slices that nobody declared, or a cycle between them
-- a layer importing one it is not allowed to
+- a layer importing one it is not allowed to, directly or through an entrypoint or any other file that passes the import on
+- a business rule, a model or the code that calls the backend importing an interface framework or rendering markup
 - two slices claiming the same file
 - product behavior living in shared or infrastructure code
 
-A real codebase rarely starts clean, so adoption is by scope. Record today's violations as a baseline, block new ones, and retire the baseline over time.
+A real codebase rarely starts clean, so adoption is by scope. Record today's violations as a baseline, block new ones, and retire the baseline over time. A baseline may shrink and may not grow: an entry whose violation is gone fails until it is removed, an import is held one imported name at a time, and `intentset review` lists every entry a change added.
 
 A product can also be modelled before it is built. While a slice is a draft, an entrypoint that does not exist yet and a claim that matches no file are warnings, so the check passes from the first commit. Approving the slice makes them errors.
 
