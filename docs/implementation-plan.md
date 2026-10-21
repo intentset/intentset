@@ -230,7 +230,11 @@ contains no internal title or path, checked by grepping the output for every int
   publishers configured, then `release.yml`.
 - The adoption guide on the site replaces "no installation command exists" with the real one, and only then.
 
-Exit: the roadmap's definition of alpha done, with an external adopter.
+Exit: the roadmap's definition of alpha done, with an external adopter. Defined 2026-10-21 (MEAS-OUTSIDE-PILOT): one
+codebase Coral Reef Ventures did not write completes the pilot, with Intentset a required check on every pull request
+for four consecutive weeks (`validate --level L2 --mode migration` against its baseline, and `review --fail-on-drift
+--baseline <file> --fail-on-baseline-growth`) and its baseline only shrinking, no entry its base did not hold merged in
+those weeks. The first outside adoption began in October 2026.
 
 ### After 0.1: what the export's consumers need (0.2, 2026-10-03)
 
