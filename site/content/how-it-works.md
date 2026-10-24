@@ -10,7 +10,7 @@ How it works
 {.lead}
 Intentset has two halves. One is a set of conventions for writing down what your product does, as ordinary files your agents keep beside the code. The other is a toolchain that reads those files and tells you, plainly, whether the code, the tests and the explanations you publish still agree with them.
 
-This page walks through it in the order you would meet it: the files, the model they form, how ownership and evidence attach to it, and what the tools do with the result.
+This page walks through it in the order you would meet it: the files, the model they form, how ownership and evidence attach to it, and what the tools do with the result. For a gentler start, [page through the introduction]({{introduction}}), a slide deck that explains the idea in plain words before it reaches the files and tools.
 
 ## The short version
 

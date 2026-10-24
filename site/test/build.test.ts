@@ -299,12 +299,14 @@ test("every install command on the site names a published package of this reposi
   assert.ok(named > 0, "the Start page names the package to install");
 });
 
-test("the only destinations outside the site are the repository, Markset, Coral Reef and the profile's references", () => {
+test("the only destinations outside the site are the repository, Markset, Coral Reef, the introduction and the profile's references", () => {
   const allowed = new Set([
     new URL(REPO).host,
     SITE_HOST,
     new URL(EXTERNAL.markset).host,
     new URL(EXTERNAL.coralReef).host,
+    // The introduction deck, linked and never embedded.
+    new URL(EXTERNAL.introduction).host,
     // Cited by the reference profile, rendered from its source.
     "www.typescriptlang.org",
     "docs.amplify.aws",
@@ -316,6 +318,8 @@ test("the only destinations outside the site are the repository, Markset, Coral 
   }
   assert.match(html.get("markset/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
   assert.match(html.get("about/index.html") ?? "", new RegExp(`href="${EXTERNAL.coralReef}"`));
+  assert.match(html.get("index.html") ?? "", new RegExp(`href="${EXTERNAL.introduction}"`));
+  assert.match(html.get("how-it-works/index.html") ?? "", new RegExp(`href="${EXTERNAL.introduction}"`));
   assert.match(html.get("roadmap/index.html") ?? "", new RegExp(`href="${REPO}">Contribute on GitHub`));
 });
 

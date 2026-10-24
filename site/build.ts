@@ -104,10 +104,15 @@ export function cardUrl(): string {
   return new URL(CARD.file, CANONICAL).href;
 }
 
-/** The two confirmed destinations outside this site. */
+/**
+ * The confirmed destinations outside this site. The introduction is a slide deck
+ * shared publicly from claude.ai (decided 2026-10-24): the site links it and
+ * never embeds it, so no page loads anything from another origin.
+ */
 export const EXTERNAL = {
   markset: "https://markset.org/",
   coralReef: "https://coralreefventures.com/",
+  introduction: "https://claude.ai/artifact/5nenDwVnYPRW6aKqyNQYPE",
 };
 
 /**
@@ -409,6 +414,7 @@ export async function siteInputs(options: InputOptions = {}): Promise<{
     repo: REPO,
     markset: EXTERNAL.markset,
     coral: EXTERNAL.coralReef,
+    introduction: EXTERNAL.introduction,
     version: VERSION,
     // The command's own help, so the CLI page cannot drift from it.
     usage: USAGE,
