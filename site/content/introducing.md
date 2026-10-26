@@ -259,7 +259,7 @@ A worked example
 > [!NOTE]- Speaker notes
 > Lantern is the invented product the Intentset site uses as its worked example. Here one behavior sits in the middle, and every other record points at it: the intent that explains why it exists, the rule it must keep, the part of the code that delivers it, the checks that prove it, and the guide that explains it to teachers. Ask about any one of them and you can reach all the others.
 
-::::card{#loop .slide}
+::::card{#loop .slide .dense}
 
 {.eyebrow}
 How it fits
@@ -461,7 +461,7 @@ Records
 
 ## Open files, explicit meaning
 
-::::columns
+::::columns{ratio="5:6"}
 
 ```markdown
 ---
@@ -492,11 +492,11 @@ assessment is rejected without creating a schedule.
 :::grid{cols=2}
 - ### One file per record
 
-  Markdown with YAML frontmatter, reviewed in the same pull request as the code.
+  Markdown with YAML frontmatter, reviewed with the code.
 
 - ### Frontmatter is for tools
 
-  A stable ID, a type, a status, an owner, its audiences and its links.
+  A stable ID, type, status, owner, audiences and links.
 
 - ### The body is for people
 
@@ -504,7 +504,7 @@ assessment is rejected without creating a schedule.
 
 - ### The files are the truth
 
-  Graphs, reports and pages are views rebuilt from them. No tool rewrites them.
+  Graphs, reports and pages are views rebuilt from them.
 :::
 
 ::::
@@ -515,7 +515,7 @@ assessment is rejected without creating a schedule.
 > [!NOTE]- Speaker notes
 > This is the behavior from Lantern as a file, slightly abridged. The part between the dashes is what the tools read. The part below is what people read. Because it is just a file in the repository, it is reviewed in the same pull request as the code, reads on GitHub with nothing installed, and needs no database or hosted service.
 
-::::card{#types .slide}
+::::card{#types .slide .dense}
 
 {.eyebrow}
 A typed model
@@ -577,6 +577,12 @@ Links
 | verification | `verifies` → | behavior, rule, scenario |
 | knowledge | `explains` → | behavior, rule, capability |
 
+:::grid{cols=1}
+- ### Validation reads, never writes
+
+  `intentset validate`: every reference resolves, nothing loops, required sections are there.
+:::
+
 ::col
 
 :::grid{cols=1}
@@ -587,10 +593,6 @@ Links
 - ### IDs are permanent
 
   Moving a file or rewording a title keeps the ID. A split retires the old one with `replacedBy`.
-
-- ### Validation reads, never writes
-
-  `intentset validate`: every reference resolves, nothing loops, required sections are there.
 :::
 
 ::::
@@ -601,7 +603,7 @@ Links
 > [!NOTE]- Speaker notes
 > Relationships are frontmatter fields on the record that points. The tools derive every inverse, so there is no second copy to fall out of step. Every diagnostic names the file, the field and how to fix it.
 
-:::::card{#slices .slide}
+:::::card{#slices .slide .dense}
 
 {.eyebrow}
 Ownership · optional, and worth it
@@ -639,7 +641,7 @@ It declares the files it owns and its public entrypoints. Other slices collabora
 > [!NOTE]- Speaker notes
 > Agents follow the shape of the code they are shown. If every behavior has one owning slice, an agent handed that slice's context makes a change that stays inside it. A product can even be modelled before it is built: while a slice is a draft, missing files are warnings, and approving it makes them errors. The reference profile maps this onto TypeScript and AWS Amplify Gen 2.
 
-::::card{#evidence .slide}
+::::card{#evidence .slide .dense}
 
 {.eyebrow}
 Evidence
@@ -689,7 +691,7 @@ Evidence
 > [!NOTE]- Speaker notes
 > A verification record is a definition, not evidence: it says how to check, not that anyone did. Evidence is a run record produced by CI. Run records are never committed, because a record in the commit it assesses is stale the moment it lands. `intentset evidence stale` lists which checks need a run.
 
-::::card{#drift .slide}
+::::card{#drift .slide .dense}
 
 {.eyebrow}
 Working with agents

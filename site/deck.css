@@ -116,8 +116,10 @@ body {
 .slide .ms-column > * + * { margin-top: calc(var(--ms-space) * 0.8); }
 .slide .ms-grid-item.spotlight { --ink: var(--spot-ink); --soft: var(--spot-soft); --accent: var(--spot-soft); background: var(--spot); border-color: transparent; color: var(--spot-ink); }
 
-/* Tables: a tinted header band and hairlines, no box. */
-.slide table { font-size: var(--t-table); line-height: 1.35; }
+/* Tables: a tinted header band and hairlines, no box. A table is set to its slide's width at any size, its words
+ * breaking where they must, where Markset would otherwise let a narrow screen scroll it past the slide's edge. */
+.slide table { display: table; width: 100%; font-size: var(--t-table); line-height: 1.35; }
+.slide :is(th, td) { overflow-wrap: anywhere; hyphens: auto; }
 .slide :is(th, td) { padding: 0.5em 0.8em; border-bottom: 1px solid var(--rule); vertical-align: top; text-align: left; }
 .slide th { background: var(--box); font-weight: 600; }
 .slide tr:last-child td { border-bottom: 0; }
@@ -236,13 +238,16 @@ body {
     border-radius: calc(24 * var(--u) + 0.25rem);
     scroll-snap-align: start;
   }
-  /* The six slides that carry the most (a diagram, a record, a change told five ways, the links, the tools, the
-   * figures) keep the scale the rest of the deck was first set in, so they still fit their frame. */
+  /* The slides that carry the most keep the scale the rest of the deck was first set in, so they still fit their
+   * frame. The deck names no font, so a slide has to fit in the widest a reader's system may supply: each keeps a
+   * twentieth of its height spare in DejaVu Sans, which Linux falls back to and is wider than San Francisco or
+   * Segoe UI. */
   .ms-document > .slide.dense {
     --t-title: calc(68 * var(--u)); --t-h3: calc(36 * var(--u)); --t-body: calc(29 * var(--u));
     --t-lead: calc(40 * var(--u)); --t-small: calc(24 * var(--u)); --t-table: calc(26 * var(--u));
     --t-stat: calc(88 * var(--u)); --t-code: calc(21 * var(--u));
   }
+  .ms-document > .slide.dense :is(th, td) { padding: 0.4em 0.6em; }
   /* The type is set in container units, which the slide's own font-size cannot use: its children carry it. */
   .ms-document > .slide { font-size: 1rem; }
   .ms-document > .slide > * { font-size: var(--t-body); }
@@ -257,7 +262,6 @@ body {
   .slide .ms-grid[data-cols="3"] { --ms-cols: 3; }
   .slide .ms-grid[data-cols="4"] { --ms-cols: 4; }
   .slide .ms-grid.five { --ms-cols: 5; }
-  .slide table { display: table; width: 100%; }
   .slide .changes li { position: relative; padding-left: 8.5em; }
   .slide .changes li > .badge:first-child { position: absolute; left: 0; top: 0.05em; box-sizing: border-box; width: 7.5em; margin: 0; text-align: center; }
 
@@ -275,8 +279,8 @@ body {
   .slide .ms-grid.lantern {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-template-areas: ". . intent intent . ." "rule rule behavior behavior slice slice" ". verify verify knows knows .";
-    gap: calc(56 * var(--u)) calc(64 * var(--u));
-    margin-top: calc(var(--ms-space) * 1.1);
+    gap: calc(44 * var(--u)) calc(64 * var(--u));
+    margin-top: calc(var(--ms-space) * 0.6);
   }
   .lantern > .ms-grid-item { position: relative; }
   .lantern > .ms-grid-item:nth-child(1) { grid-area: intent; }
