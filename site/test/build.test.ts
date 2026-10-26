@@ -16,6 +16,7 @@ import {
   EXTERNAL,
   FOOTER,
   FOOTER_LINKS,
+  INTRODUCTION,
   NAV,
   NOT_FOUND,
   COPY_SCRIPT,
@@ -267,7 +268,7 @@ test("CNAME names the homepage's host, and the shell links the two stylesheets r
   await access(join(dist, "css", "markset.css"));
   await access(join(dist, "icon.svg"));
   // Nothing loaded from another origin: the IA names no external dependencies.
-  for (const css of ["site.css", "markset.css"]) {
+  for (const css of ["site.css", "markset.css", "deck.css"]) {
     const source = await readFile(join(dist, "css", css), "utf8");
     assert.doesNotMatch(source, /@import|@font-face|url\(["']?(https?:)?\/\//, css);
   }
@@ -299,14 +300,12 @@ test("every install command on the site names a published package of this reposi
   assert.ok(named > 0, "the Start page names the package to install");
 });
 
-test("the only destinations outside the site are the repository, Markset, Coral Reef, the introduction and the profile's references", () => {
+test("the only destinations outside the site are the repository, Markset, Coral Reef and the profile's references", () => {
   const allowed = new Set([
     new URL(REPO).host,
     SITE_HOST,
     new URL(EXTERNAL.markset).host,
     new URL(EXTERNAL.coralReef).host,
-    // The introduction deck, linked and never embedded.
-    new URL(EXTERNAL.introduction).host,
     // Cited by the reference profile, rendered from its source.
     "www.typescriptlang.org",
     "docs.amplify.aws",
@@ -318,9 +317,76 @@ test("the only destinations outside the site are the repository, Markset, Coral 
   }
   assert.match(html.get("markset/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
   assert.match(html.get("about/index.html") ?? "", new RegExp(`href="${EXTERNAL.coralReef}"`));
-  assert.match(html.get("index.html") ?? "", new RegExp(`href="${EXTERNAL.introduction}"`));
-  assert.match(html.get("how-it-works/index.html") ?? "", new RegExp(`href="${EXTERNAL.introduction}"`));
   assert.match(html.get("roadmap/index.html") ?? "", new RegExp(`href="${REPO}">Contribute on GitHub`));
+});
+
+/** The deck's slides, in its order (decided 2026-10-26: published here, in Markset, rather than linked on claude.ai). */
+const DECK = [
+  "cover",
+  "problem",
+  "trust",
+  "idea",
+  "behavior",
+  "five",
+  "lantern",
+  "loop",
+  "review",
+  "questions",
+  "honest",
+  "not",
+  "under",
+  "record",
+  "types",
+  "measure",
+  "links",
+  "slices",
+  "evidence",
+  "drift",
+  "views",
+  "publish",
+  "levels",
+  "practice",
+  "try",
+];
+
+test("the introduction is a deck of 25 slides in order, each with its notes folded beneath it, on its own theme", () => {
+  const page = html.get(INTRODUCTION.page) ?? "";
+  const body = main(INTRODUCTION.page);
+  assert.match(page, /<title>Introducing Intentset · Intentset<\/title>/);
+  assert.match(body, /<h1 id="introducing-intentset">Introducing Intentset<\/h1>/);
+  const description = /<meta name="description" content="([^"]+)">/.exec(page)?.[1] ?? "";
+  assert.ok(description.startsWith("What Intentset is, why it exists and how it works"), description);
+  // A slide is a card carrying .slide, and what follows it is its notes, a folded NOTE callout: in document order
+  // the two alternate, a slide and then its notes, 25 times.
+  const order = [
+    ...body.matchAll(
+      /<section class="ms-card slide[^"]*" id="([^"]+)"|<details class="ms-callout notes" data-type="note">\n<summary class="ms-callout-title">Speaker notes<\/summary>/g,
+    ),
+  ].map((m) => m[1] ?? "notes");
+  assert.deepEqual(
+    order,
+    DECK.flatMap((id) => [id, "notes"]),
+  );
+  // The five parts each open on their first slide.
+  for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
+  // Every caveat the slides carry.
+  for (const caveat of ["Illustrative figures, not a live report", "Illustrative · not a live report"]) {
+    assert.ok(text(body).includes(caveat), caveat);
+  }
+  // Its theme is this page's alone, and like every stylesheet here it loads nothing from another origin.
+  assert.ok(page.includes(`<link rel="stylesheet" href="../${INTRODUCTION.stylesheet}">`));
+  for (const [other, doc] of html)
+    if (other !== INTRODUCTION.page) assert.ok(!doc.includes(INTRODUCTION.stylesheet), other);
+  // Ids are unique on the page, so every slide and every heading can be linked.
+  const ids = [...page.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, [...new Set(ids)], "no id is repeated");
+  // Nothing on it leaves the site: its links are to the site's own pages and its own slides.
+  for (const [, href] of body.matchAll(/href="([^"]+)"/g)) assert.ok(!/^[a-z][a-z0-9+.-]*:/i.test(href), href);
+});
+
+test("the home page and How it works lead to the introduction on the site", () => {
+  assert.match(main("index.html"), /<a href="introducing\/">Page through the introduction<\/a>/);
+  assert.match(main("how-it-works/index.html"), /<a href="\.\.\/introducing\/">page through the introduction<\/a>/);
 });
 
 /** The headings a Markdown source declares, outside code fences, as the text a reader sees. */

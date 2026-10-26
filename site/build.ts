@@ -104,15 +104,10 @@ export function cardUrl(): string {
   return new URL(CARD.file, CANONICAL).href;
 }
 
-/**
- * The confirmed destinations outside this site. The introduction is a slide deck
- * shared publicly from claude.ai (decided 2026-10-24): the site links it and
- * never embeds it, so no page loads anything from another origin.
- */
+/** The two confirmed destinations outside this site. */
 export const EXTERNAL = {
   markset: "https://markset.org/",
   coralReef: "https://coralreefventures.com/",
-  introduction: "https://claude.ai/artifact/5nenDwVnYPRW6aKqyNQYPE",
 };
 
 /**
@@ -122,6 +117,15 @@ export const EXTERNAL = {
 export const SIBLING = { name: "Markset", url: EXTERNAL.markset };
 
 export const SITE_NAME = "Intentset";
+
+/**
+ * The introduction, the deck "Introducing Intentset", published on the site itself in Markset (decided 2026-10-26)
+ * rather than linked on claude.ai, so it is a content page like any other and nothing on it comes from another
+ * origin. A slide is a card carrying `.slide` and its speaker notes are a folded NOTE callout beneath it, the pattern
+ * of Markset's own deck example; everything that makes it a deck is its theme, site/deck.css, which this page alone
+ * loads.
+ */
+export const INTRODUCTION = { page: "introducing/index.html", stylesheet: "css/deck.css" };
 
 /**
  * The bar: five sections, by what a reader came to do, as markset.org's is
@@ -174,6 +178,7 @@ export const RAILS: Rail[] = [
     title: "Start",
     items: [
       ["Start with one capability", "start/index.html"],
+      ["Introducing Intentset", INTRODUCTION.page],
       ["How it works", "how-it-works/index.html"],
       ["Run the adoption", "adopt/index.html"],
       ["Prove the work", "verify/index.html"],
@@ -310,6 +315,7 @@ const EXAMPLE_DIR = "examples/scheduling";
 export const CONTENT_PAGES: Array<[string, string]> = [
   ["index.html", "index.md"],
   ["how-it-works/index.html", "how-it-works.md"],
+  [INTRODUCTION.page, "introducing.md"],
   ["start/index.html", "start.md"],
   ["adopt/index.html", "adopt.md"],
   ["verify/index.html", "verify.md"],
@@ -344,7 +350,10 @@ export interface Page {
   /** Contents rail, as HTML, for the long documents. */
   toc?: string;
   bodyAttributes: string;
-  /** Stylesheets and scripts this page alone loads, from the site's root. Only the Atlas's map has any (ADR 0015). */
+  /**
+   * Stylesheets and scripts this page alone loads, from the site's root: the Atlas's map has both (ADR 0015), and the
+   * introduction its deck theme.
+   */
   styles?: string[];
   scripts?: string[];
 }
@@ -414,7 +423,6 @@ export async function siteInputs(options: InputOptions = {}): Promise<{
     repo: REPO,
     markset: EXTERNAL.markset,
     coral: EXTERNAL.coralReef,
-    introduction: EXTERNAL.introduction,
     version: VERSION,
     // The command's own help, so the CLI page cannot drift from it.
     usage: USAGE,
@@ -449,6 +457,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await writeFile(join(out, "CNAME"), `${SITE_HOST}\n`);
   await cp(defaultStylesheetPath, join(out, "css", "markset.css"));
   await cp(join(root, "site", "site.css"), join(out, "css", "site.css"));
+  await cp(join(root, "site", "deck.css"), join(out, INTRODUCTION.stylesheet));
   await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
   // The social card, drawn by hand with `pnpm run social-card` and committed, so
   // neither CI nor a deploy needs a browser to produce it. See site/social-card.ts.
@@ -554,7 +563,8 @@ const RAIL_PAGES = new Set([
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
   const text = await contentSource(file, tokens);
-  return renderPage(path, text, join(root, "site", "content", file), {}, RAIL_PAGES.has(path));
+  const extra = path === INTRODUCTION.page ? { styles: [INTRODUCTION.stylesheet] } : {};
+  return renderPage(path, text, join(root, "site", "content", file), extra, RAIL_PAGES.has(path));
 }
 
 function renderPage(
