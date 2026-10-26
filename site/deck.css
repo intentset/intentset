@@ -222,10 +222,10 @@ body {
   .ms-document { max-width: min(100%, calc((100svh - 4rem) * 16 / 9)); }
   .ms-document > .slide {
     --u: calc(100cqi / 1920);
-    --t-eyebrow: calc(24 * var(--u)); --t-display: calc(112 * var(--u)); --t-title: calc(68 * var(--u));
-    --t-statement: calc(84 * var(--u)); --t-h3: calc(36 * var(--u)); --t-body: calc(29 * var(--u));
-    --t-lead: calc(40 * var(--u)); --t-small: calc(24 * var(--u)); --t-table: calc(26 * var(--u));
-    --t-stat: calc(88 * var(--u)); --t-code: calc(21 * var(--u));
+    --t-eyebrow: calc(26 * var(--u)); --t-display: calc(120 * var(--u)); --t-title: calc(76 * var(--u));
+    --t-statement: calc(92 * var(--u)); --t-h3: calc(42 * var(--u)); --t-body: calc(36 * var(--u));
+    --t-lead: calc(48 * var(--u)); --t-small: calc(28 * var(--u)); --t-table: calc(31 * var(--u));
+    --t-stat: calc(96 * var(--u)); --t-code: calc(24 * var(--u));
     --ms-space: calc(36 * var(--u));
     --ms-radius: calc(16 * var(--u));
     container-type: inline-size;
@@ -235,6 +235,13 @@ body {
     padding: 6.25% 6.667% 6.667%;
     border-radius: calc(24 * var(--u) + 0.25rem);
     scroll-snap-align: start;
+  }
+  /* The six slides that carry the most (a diagram, a record, a change told five ways, the links, the tools, the
+   * figures) keep the scale the rest of the deck was first set in, so they still fit their frame. */
+  .ms-document > .slide.dense {
+    --t-title: calc(68 * var(--u)); --t-h3: calc(36 * var(--u)); --t-body: calc(29 * var(--u));
+    --t-lead: calc(40 * var(--u)); --t-small: calc(24 * var(--u)); --t-table: calc(26 * var(--u));
+    --t-stat: calc(88 * var(--u)); --t-code: calc(21 * var(--u));
   }
   /* The type is set in container units, which the slide's own font-size cannot use: its children carry it. */
   .ms-document > .slide { font-size: 1rem; }

@@ -219,7 +219,7 @@ A product reviewer starts at the top and drills down. An engineer starts from th
 > [!NOTE]- Speaker notes
 > Each question is answered by its own kind of record, shown in small type under each card. Thirteen kinds in all, but you never need all of them on day one. The point is that they are linked, so you can walk from why a feature exists all the way to the test that proves it.
 
-::::card{#lantern .slide}
+::::card{#lantern .slide .dense}
 
 {.eyebrow}
 A worked example
@@ -311,7 +311,7 @@ How it fits
 > [!NOTE]- Speaker notes
 > The division of labor is the point. Agents do the writing: they draft records, change the code and keep the records in step. People do the deciding: only a person moves a record from draft to approved, and passing every automated check never counts as approval.
 
-:::::card{#review .slide}
+:::::card{#review .slide .dense}
 
 {.eyebrow}
 What the reviewer reads
@@ -454,7 +454,7 @@ The files, the links between them, who owns what in the code, how evidence count
 > [!NOTE]- Speaker notes
 > From here on the deck is for the people who will set Intentset up and live with it day to day: engineers, technical product managers and anyone configuring agents.
 
-:::::card{#record .slide}
+:::::card{#record .slide .dense}
 
 {.eyebrow}
 Records
@@ -560,7 +560,7 @@ A behavior can pass every check and ship while its outcome is missed. Verificati
 > [!NOTE]- Speaker notes
 > A measure names its metric, baseline, target, window and evidence source before anyone collects data. Intentset does not collect telemetry or compute the metric; the systems named as sources do that, and the reading can come back to the record later as outcome evidence.
 
-:::::card{#links .slide}
+:::::card{#links .slide .dense}
 
 {.eyebrow}
 Links
@@ -730,7 +730,7 @@ Working with agents
 > [!NOTE]- Speaker notes
 > Point your agents at the guide with one line in CLAUDE.md or AGENTS.md. The drift check is what keeps the model honest over time: code cannot change quietly underneath a promise, because either the records change too, or the commit says explicitly that behavior did not.
 
-::::card{#views .slide}
+::::card{#views .slide .dense}
 
 {.eyebrow}
 The tools
@@ -829,7 +829,7 @@ Each level includes the ones before it. A claim always names its scope and snaps
 > [!NOTE]- Speaker notes
 > `intentset validate --level L3` runs every check up to that level. Most teams start at L1 on one capability, add ownership and evidence as they go, and widen the scope from there.
 
-:::::card{#practice .slide .quiet}
+:::::card{#practice .slide .quiet .dense}
 
 {.eyebrow}
 In practice
