@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+  <title>A path that drifts away from the one intended</title>
+  <circle cx="12" cy="28" r="6" fill="#000"/>
+  <path d="M24 28h68" stroke-dasharray="1 9" opacity=".5"/>
+  <circle cx="104" cy="28" r="8" opacity=".5"/>
+  <path d="M24 28c26 0 40 6 54 20s20 20 28 21"/>
+  <path d="M97 61l10 8-11 6"/>
+</svg>

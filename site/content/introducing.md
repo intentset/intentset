@@ -8,12 +8,12 @@ A slide deck
 # Introducing Intentset
 
 {.lead}
-What Intentset is, why it exists and how it works, in 25 slides: plain words first, then the files, the checks and the tools under the hood. Each slide's speaker notes are folded beneath it.
+What Intentset is, why it exists and how it works, in 24 slides: plain words first, then the files, the checks and the tools under the hood. Each slide's speaker notes are folded beneath it.
 
 {.deck-parts}
 1. [Why Intentset exists](#cover): agents write code faster than anyone can read it.
 2. [The idea in plain words](#idea): the product's promises, written down and kept true.
-3. [How a team works with it](#loop), and what it will not do.
+3. [How a team works with it](#loop): who writes, who decides, and what a reviewer reads.
 4. [Under the hood](#under): records, links, ownership, evidence and the tools that read them.
 5. [Adopting it](#levels), one capability and one level at a time.
 
@@ -50,81 +50,94 @@ The problem
 ## Agents write faster than anyone can read
 
 {.lead}
-A team used to understand its product because it wrote the code. Now agents write most of it, in changes too long to read line by line.
+A team used to understand its product because it wrote the code. Now agents write most of it, in pull requests too long to read line by line.
 
 :::grid{cols=2 .stats}
-- **2,140 lines**
+- One pull request, as an agent hands it to a reviewer
 
-  of code in one change, across 31 files
+  **6,800 lines**
 
-  What an agent hands a reviewer
+  of code changed, across 74 files
 
 - {.spotlight}
+  The same pull request, as a person can read it
+
   **A few dozen**
 
   lines of records, in product language
-
-  What a person can actually read and question
 :::
-
-{.caveat}
-Illustrative figures, not a live report
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Nobody can review thousands of lines of generated code properly, every day. But the same change, described as what it does to the product, is short enough to read. That gap is what Intentset fills.
+> Both boxes are one pull request, of a size agent-written changes reach every day, and many run larger. Nobody can review thousands of lines of generated code properly, every day. But the same change, described as what it does to the product, is short enough to read. That gap is what Intentset fills.
 
 ::::card{#trust .slide .turn}
 
 ## Without a record of what the product promises, every change asks for trust.
 
 :::grid{cols=3 .ruled}
-- Behavior shifts without anyone deciding it should.
-- Debt gathers where nobody looks.
-- What the product does is known only to the code, and to whichever agent read it last.
+- In every change
+
+  Behavior shifts without anyone deciding it should.
+
+- Over months
+
+  Debt gathers where nobody looks.
+
+- When someone asks
+
+  What the product does is known only to the code, and to whichever agent read it last.
 :::
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> This is the risk in one sentence. If nobody wrote down what the product is supposed to do, nobody can tell whether a change kept it. Review turns into trusting the agent.
+> This is the risk in one sentence. If nobody wrote down what the product is supposed to do, nobody can tell whether a change kept it. Review turns into trusting the agent. Each change shifts a little behavior nobody chose; over months the shortcuts pile up out of sight; and when a customer or a colleague asks what the product does, the only answer is in the code.
 
 ::::card{#idea .slide}
 
 {.eyebrow}
 The idea
 
-## Write the promises down, and keep them true
+## Write down what the product promises, and keep it true
 
 {.lead}
-Intentset keeps four things connected, as short, readable files that live beside the code and change with it.
+For each thing the product does, a few short files beside the code answer four questions. The examples are from Lantern, an invented school product.
 
-:::grid{cols=4}
-- ### What it promises
+:::grid{cols=4 .promise}
+- ### The promise
 
-  What the product does for people, and why.
+  What the product does, including what it refuses.
 
-- ### Who delivers it
+  A teacher schedules an assessment for a future time, never a past one.
 
-  The one part of the code accountable for each promise.
+- ### The code
 
-- ### How it is checked
+  The one part of the code accountable for keeping it.
 
-  The tests that prove it, and whether they pass now.
+  The scheduling code, and nothing else.
 
-- ### What we tell people
+- ### The proof
 
-  Reviewed explanations for customers and colleagues.
+  The tests that check it, and whether they pass on this code.
+
+  Two tests, both passing on this commit.
+
+- ### The words
+
+  What customers and colleagues are told about it.
+
+  The teachers' guide to scheduling.
 :::
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Four questions, kept in one connected set of records: what does the product promise, which code delivers it, how do we know it works, and what may we say about it. Agents update these records whenever they change the code. People review them.
+> This is the whole idea on one slide. Take one thing the product does, here scheduling an assessment in Lantern, and write down four things about it: the promise itself, including what it refuses; which part of the code is accountable for it; the tests that check it, and whether they pass right now; and what customers are told about it. Those four stay connected, and they live in the repository, so they change in the same commit as the code. When the code changes and the promise does not, that shows up at review. Agents do the writing. People decide what the promises are.
 
 :::::card{#behavior .slide}
 
@@ -140,13 +153,17 @@ One recognizable thing the product does, **including how it fails.**
 
 :::grid{cols=1 .contrast}
 - {.good}
-  A behavior
+  A behavior: one thing the product does
 
   "Schedule a student assessment for a future time"
 
-- Too vague to be one
+  Small enough to test, and it can pass or fail.
+
+- Not a behavior: a topic
 
   "Student assessments"
+
+  It names an area of the product, not something it does.
 :::
 
 ::col
@@ -170,7 +187,7 @@ Lantern, an invented product
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Everything in Intentset is organized around behaviors. A behavior is small enough to recognize and to test, and it always says what happens when things go wrong, not only when they go right. The example comes from Lantern, an invented education product used throughout the Intentset site.
+> Everything in Intentset is organized around behaviors. "Student assessments" is a heading in a roadmap, not a promise: there is nothing in it to test. "Schedule a student assessment for a future time" is one. A behavior is small enough to recognize and to test, and it always says what happens when things go wrong, not only when they go right. The example comes from Lantern, an invented education product used throughout the Intentset site.
 
 ::::card{#five .slide}
 
@@ -296,39 +313,41 @@ How it fits
 
   ### Review the product
 
-  The reviewer reads what changed in behavior, and all it could reach.
+  Before the pull request merges, its reviewer reads which promises it changed, not the diff.
 
 - 06
 
   ### Explain it
 
-  Explanations whose sources changed wait for review before going out.
+  Explanations go to each audience: a customer knowledge base, tips in the product, a guide for support.
 :::
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> The division of labor is the point. Agents do the writing: they draft records, change the code and keep the records in step. People do the deciding: only a person moves a record from draft to approved, and passing every automated check never counts as approval.
+> The division of labor is the point. Agents do the writing: they draft records, change the code and keep the records in step. People do the deciding: only a person moves a record from draft to approved, and passing every automated check never counts as approval. Step five is the next slide: the pull request's reviewer reads it as a change to the product, not as a diff. Step six is where the same records reach people outside the team, as help articles for customers, tips beside the controls in the product, and guides for the people who support it.
 
 :::::card{#review .slide .dense}
 
 {.eyebrow}
-What the reviewer reads
+Step 05 · the product review
 
 ## Review the product, not the diff
 
 ::::columns{ratio="1:2"}
 
 {.lead}
-One change, told as what it does to the product.
+One pull request, told as what it does to the product.
 
-Records are short, written in product language, and show clearly what changed: a few dozen lines a person can review, where the code runs to thousands.
+- **When:** before it merges, once its automated checks have run.
+- **Who:** the pull request's reviewer, often whoever owns the product decision.
+- **How:** from `intentset review`, beside the code review, which still checks the code.
 
 ::col
 
 :::card{.panel .changes}
-- [Code]{.badge} 2,140 lines changed in 31 files
+- [Code]{.badge} 6,800 lines changed in 74 files
 - [Behavior]{.badge .info} **Schedule a student assessment** now also refuses a release time after the term ends
 - [Rule]{.badge} **Release time** was "any future time"; now "a future time before the term ends"
 - [Checks]{.badge} Two updated; one passes on this commit, one has not run
@@ -345,7 +364,7 @@ Illustrative · not a live report
 
 {.notes}
 > [!NOTE]- Speaker notes
-> The story of this change in one line: the rule about when an assessment may open was tightened so teachers cannot schedule past the end of term, and the scheduling behavior now refuses those times. That is what a reviewer reads instead of, or before, two thousand lines of code: which promise changed, which rule moved, which checks ran, which customer explanation now needs another look, and whether any code changed without its records. One honest gap is visible too: one of the two checks has not run yet.
+> The story of this change in one line: the rule about when an assessment may open was tightened so teachers cannot schedule past the end of term, and the scheduling behavior now refuses those times. That is what a reviewer reads instead of, or before, nearly seven thousand lines of code: which promise changed, which rule moved, which checks ran, which customer explanation now needs another look, and whether any code changed without its records. One honest gap is visible too: one of the two checks has not run yet.
 
 ::::card{#questions .slide}
 
@@ -391,52 +410,33 @@ What you can ask
 {.eyebrow}
 Honest numbers
 
-## Linked is not verified
+## Having a test is not passing it
+
+{.lead}
+Many dashboards turn green as soon as a promise has a test attached. Intentset reports two numbers, side by side.
 
 :::grid{cols=2}
-- Number one
+- Linked · 12 of 12 promises
 
-  ### Linked
+  ### Has a test
 
-  A check exists for this promise. Nobody has said it passes.
+  A test is attached to the promise. Nothing yet says it ran, or that it passed.
 
 - {.spotlight}
-  Number two
+  Current pass · 7 of 12 promises
 
-  ### Current pass
+  ### Passes now
 
-  The check passed, and nothing it is about has changed since.
+  Its test passed, on code that has not changed since.
 :::
 
-Stale, skipped, errored, failed or missing results **never** count as passing. Reports always show both numbers, side by side.
-
-{.chips}
-[pass, current: counts]{.badge .info} [stale]{.badge} [skip]{.badge} [error]{.badge} [fail]{.badge} [missing: none of these count]{.badge}
+The other five are shown as what they are: stale, skipped, failed, errored or never run. **None of them counts as a pass.**
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Many dashboards go green as soon as a test is linked to a requirement. Intentset keeps two numbers apart: how many promises have a check at all, and how many have a check that passed on the code as it stands now. Anything that cannot be confirmed is shown as exactly that.
-
-::::card{#not .slide .quiet}
-
-{.eyebrow}
-Clear limits
-
-## What it does not do
-
-- **It does not prove the product correct.** A linked, passing test can still check the wrong thing; people judge whether a check is adequate.
-- **It does not replace your issue tracker.** Tickets describe changes; records describe the behavior that persists after them.
-- **It is not a plan for one task.** Records describe the product as it stands, outlive every change, and are checked on every commit.
-- **It needs no database or hosted service,** and no particular test framework or cloud.
-- **Its checks never run your code,** call the network or edit your files.
-
-::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> It helps to be precise about scope. Intentset is a record of what the product does and the evidence for it. It sits beside your tracker and your tests rather than replacing them, and its checks only read.
+> In this example every one of twelve promises has a test, so a dashboard that counts links would show all twelve green. Only seven have a test that passed on the code as it stands now. The other five might be fine, but nobody can say so: a test that passed last month, on code that has changed since, proves nothing about today. Intentset keeps the two numbers apart and shows both.
 
 ::::card{#under .slide .part}
 

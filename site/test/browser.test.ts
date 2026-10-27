@@ -386,7 +386,7 @@ test("the introduction is a 16:9 slide to a window on a desktop, a column of car
     return { tab, result };
   };
   const desktop = await slides(1440, 900);
-  assert.equal(desktop.result.length, 25);
+  assert.equal(desktop.result.length, 24);
   for (const slide of desktop.result) {
     assert.ok(Math.abs(slide.ratio - 16 / 9) < 0.01, `${slide.id}: 16:9 at 1440 by 900 (${slide.ratio.toFixed(3)})`);
     assert.ok(slide.height <= 900, `${slide.id}: fits the window`);
@@ -454,7 +454,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.presenting);
   assert.deepEqual(s.current, ["cover"]);
   assert.equal(s.top, "cover", "the cover is what the window shows");
-  assert.equal(s.count, "1 / 25");
+  assert.equal(s.count, "1 / 24");
   // The largest 16:9 that fits 1440 by 900 is 1440 by 810.
   assert.ok(
     Math.abs(s.width - 1440) < 1 && Math.abs(s.height - 810) < 1,
@@ -463,7 +463,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.inertHeader, "the page behind is out of reach");
   for (const key of ["ArrowRight", "PageDown", " "]) await tab.keyboard.press(key);
   s = await shown();
-  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 25", "#idea"]);
+  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 24", "#idea"]);
   await tab.keyboard.press("ArrowLeft");
   await tab.mouse.click(720, 300);
   s = await shown();
@@ -482,7 +482,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   );
   await tab.keyboard.press("End");
   s = await shown();
-  assert.deepEqual([s.current, s.count], [["try"], "25 / 25"]);
+  assert.deepEqual([s.current, s.count], [["try"], "24 / 24"]);
   assert.ok(await tab.getByRole("button", { name: "Next slide" }).isDisabled(), "nothing after the last slide");
   await tab.keyboard.press("Escape");
   s = await shown();

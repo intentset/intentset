@@ -337,7 +337,6 @@ const DECK = [
   "review",
   "questions",
   "honest",
-  "not",
   "under",
   "record",
   "types",
@@ -353,7 +352,7 @@ const DECK = [
   "try",
 ];
 
-test("the introduction is a deck of 25 slides in order, each with its notes folded beneath it, on its own theme", () => {
+test("the introduction is a deck of 24 slides in order, each with its notes folded beneath it, on its own theme", async () => {
   const page = html.get(INTRODUCTION.page) ?? "";
   const body = main(INTRODUCTION.page);
   assert.match(page, /<title>Introducing Intentset · Intentset<\/title>/);
@@ -361,7 +360,7 @@ test("the introduction is a deck of 25 slides in order, each with its notes fold
   const description = /<meta name="description" content="([^"]+)">/.exec(page)?.[1] ?? "";
   assert.ok(description.startsWith("What Intentset is, why it exists and how it works"), description);
   // A slide is a card carrying .slide, and what follows it is its notes, a folded NOTE callout: in document order
-  // the two alternate, a slide and then its notes, 25 times.
+  // the two alternate, a slide and then its notes, 24 times.
   const order = [
     ...body.matchAll(
       /<section class="ms-card slide[^"]*" id="([^"]+)"|<details class="ms-callout notes" data-type="note">\n<summary class="ms-callout-title">Speaker notes<\/summary>/g,
@@ -373,10 +372,13 @@ test("the introduction is a deck of 25 slides in order, each with its notes fold
   );
   // The five parts each open on their first slide.
   for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
-  // Every caveat the slides carry.
-  for (const caveat of ["Illustrative figures, not a live report", "Illustrative · not a live report"]) {
-    assert.ok(text(body).includes(caveat), caveat);
-  }
+  // The one caveat the slides carry, on the example review.
+  assert.ok(text(body).includes("Illustrative · not a live report"));
+  // Every picture its theme draws is published beside it.
+  const theme = await readFile(join(dist, INTRODUCTION.stylesheet), "utf8");
+  const pictures = [...theme.matchAll(/url\("\.\.\/([^"]+)"\)/g)].map((m) => m[1] ?? "");
+  assert.ok(pictures.filter((p) => p.startsWith(`${INTRODUCTION.pictures}/`)).length === 3, pictures.join());
+  for (const picture of pictures) await access(join(dist, picture));
   // Its theme is this page's alone, and like every stylesheet here it loads nothing from another origin.
   assert.ok(page.includes(`<link rel="stylesheet" href="../${INTRODUCTION.stylesheet}">`));
   for (const [other, doc] of html)
