@@ -156,21 +156,14 @@ test("a page in a section carries its section's rail, marks itself once, and the
     const marked = (nav.match(/aria-current="page"/g) ?? []).length;
     // A record of the worked example is in the section without being in its list.
     assert.equal(marked, railLinks(section).some(([, href]) => href === page) ? 1 : 0, `${page}: rail marks ${marked}`);
-    const barLabel = NAV.find(([, href]) => railLinks(section).some(([, h]) => h === href))?.[0];
+    const barLabel = NAV.find(([, href]) => href === railLinks(section)[0][1])?.[0];
     assert.deepEqual(current, [barLabel], `${page}: the bar marks ${current.join(", ") || "nothing"}`);
   }
-  // Each bar item but Roadmap opens a page in its section's rail, one section each: the first page, except Start,
-  // which opens its first step, after the introduction and How it works (2026-10-27).
+  // Each bar item but Roadmap opens its section's rail at its first page; Start's is the introduction (2026-10-27).
   assert.deepEqual(
-    RAILS.map((r) => NAV.filter(([, href]) => railLinks(r).some(([, h]) => h === href)).map(([label]) => label)),
-    NAV.filter(([label]) => label !== "Roadmap").map(([label]) => [label]),
+    RAILS.map((r) => railLinks(r)[0][1]),
+    NAV.filter(([label]) => label !== "Roadmap").map(([, href]) => href),
   );
-  for (const rail of RAILS.filter((r) => r.title !== "Start")) {
-    assert.ok(
-      NAV.some(([, href]) => href === railLinks(rail)[0][1]),
-      `${rail.title} opens at its rail's first page`,
-    );
-  }
 });
 
 test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the introduction, the adoption and the guide", () => {
