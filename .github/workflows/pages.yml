@@ -1,4 +1,4 @@
-name: Pages
+name: Deploy intentset.org
 on:
   push:
     branches: [main]
