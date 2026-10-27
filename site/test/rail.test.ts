@@ -166,7 +166,7 @@ test("a page in a section carries its section's rail, marks itself once, and the
   );
 });
 
-test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the adoption and the guide", () => {
+test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the introduction, the adoption and the guide", () => {
   const links = (title: string) => railLinks(RAILS.find((r) => r.title === title) ?? { title, items: [] });
   const reference = links("Reference").map(([, href]) => href);
   for (const page of ["specifications/core/index.html", "markset/index.html", "conformance/index.html"]) {
@@ -176,6 +176,7 @@ test("Reference holds the specifications, the Markset page and conformance; Tool
   const start = links("Start").map(([, href]) => href);
   assert.deepEqual(start, [
     "start/index.html",
+    "introducing/index.html",
     "how-it-works/index.html",
     "adopt/index.html",
     "verify/index.html",

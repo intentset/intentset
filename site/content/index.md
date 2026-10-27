@@ -15,7 +15,7 @@ People review the product rather than the diff, and steer it where it needs to g
 
 [[See how it works](how-it-works/)]{.button .primary} [[Read the draft specification](specifications/)]{.button}
 
-New to Intentset? [Page through the introduction]({{introduction}}), a slide deck that starts in plain words and ends under the hood.
+New to Intentset? [Page through the introduction](introducing/), a slide deck that starts in plain words and ends under the hood.
 
 > [!NOTE]
 > The specifications are ready for review. The reference toolchain, version {{version}}, is published to try them against.

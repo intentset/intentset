@@ -23,6 +23,7 @@ const PAGES = [
   "index.html",
   "start/index.html",
   "how-it-works/index.html",
+  "introducing/index.html",
   "adopt/index.html",
   "verify/index.html",
   "guide/index.html",
@@ -356,6 +357,71 @@ test("the rail beside a page in a section names the section and marks the page",
     if (width >= 1440) assert.ok(result.beside, "on a desktop the rail sits beside the page");
     else assert.ok(result.above, "on a phone the rail stacks above the page");
   }
+});
+
+test("the introduction is a 16:9 slide to a window on a desktop, a column of cards on a phone, and Page Down moves slide to slide", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  const slides = async (width: number, height: number) => {
+    const tab = await browser!.newPage({ viewport: { width, height }, reducedMotion: "reduce" });
+    await tab.goto(url("introducing/index.html"));
+    const result = await tab.evaluate(() => {
+      const main = document.querySelector("main")!.getBoundingClientRect();
+      return [...document.querySelectorAll<HTMLElement>("main > .slide")].map((slide) => {
+        const box = slide.getBoundingClientRect();
+        // Anything drawn outside its slide overlaps the next one, or the notes beneath it.
+        const outside = [...slide.querySelectorAll("*")].filter((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || el.closest("pre")) return false;
+          return r.bottom > box.bottom + 0.5 || r.right > box.right + 0.5 || r.left < box.left - 0.5;
+        });
+        return {
+          id: slide.id,
+          ratio: box.width / box.height,
+          height: box.height,
+          fillsMain: Math.abs(box.width - main.width) < 1,
+          outside: outside.map((el) => el.outerHTML.slice(0, 60)),
+        };
+      });
+    });
+    return { tab, result };
+  };
+  const desktop = await slides(1440, 900);
+  assert.equal(desktop.result.length, 25);
+  for (const slide of desktop.result) {
+    assert.ok(Math.abs(slide.ratio - 16 / 9) < 0.01, `${slide.id}: 16:9 at 1440 by 900 (${slide.ratio.toFixed(3)})`);
+    assert.ok(slide.height <= 900, `${slide.id}: fits the window`);
+    assert.ok(slide.fillsMain, `${slide.id}: as wide as the document`);
+    assert.deepEqual(slide.outside, [], `${slide.id}: nothing outside the slide`);
+  }
+  // Snapping makes Page Down the next slide.
+  const tab = desktop.tab;
+  await tab.locator("#cover").evaluate((el) => el.scrollIntoView());
+  await tab.waitForTimeout(500);
+  const seen: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    await tab.keyboard.press("PageDown");
+    // The snap lands after the key's own scroll.
+    await tab.waitForTimeout(1000);
+    seen.push(
+      await tab.evaluate(
+        () =>
+          [...document.querySelectorAll("main > .slide")].find((el) => Math.abs(el.getBoundingClientRect().top) < 40)
+            ?.id ?? "",
+      ),
+    );
+  }
+  assert.deepEqual(seen, ["problem", "trust", "idea"]);
+  await tab.close();
+  const phone = await slides(390, 844);
+  for (const slide of phone.result) {
+    assert.ok(slide.fillsMain, `${slide.id}: as wide as the document at 390px`);
+    assert.deepEqual(slide.outside, [], `${slide.id}: nothing outside the slide at 390px`);
+  }
+  assert.ok(
+    phone.result.some((slide) => slide.ratio < 1),
+    "at 390px the frames let go: a slide is as tall as its content",
+  );
+  await phone.tab.close();
 });
 
 test("the navigation wraps below the brand at phone width and sits beside it on a desktop", async (t) => {
