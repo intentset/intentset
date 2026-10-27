@@ -10,7 +10,7 @@
 #
 # The corpus is built from the same commit first, so the chat answers from what the site publishes. Dev and staging
 # subscribe no inbox to their alarms. Each deploy moves the tag deployed/chat/<environment> to the commit it shipped.
-name: Chat backend
+name: Deploy chat backend
 # Names the environment in the runs list, which otherwise titles every run the same.
 run-name: >-
   Chat backend: ${{ github.event_name == 'workflow_dispatch' && inputs.environment
