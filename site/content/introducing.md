@@ -18,7 +18,7 @@ What Intentset is, why it exists and how it works, in 25 slides: plain words fir
 5. [Adopting it](#levels), one capability and one level at a time.
 
 {.deck-hint}
-On a wide screen each slide fills the window, and Page Down moves to the next. Printed, it is one slide to a page, without the notes.
+On a wide screen, Present shows one slide at a time, filling the screen: the arrow keys, Space and Page Down move between them, N shows the speaker notes, and Esc comes back here. Printed, it is one slide to a page, without the notes.
 
 ::::card{#cover .slide .cover}
 

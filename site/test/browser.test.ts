@@ -424,6 +424,83 @@ test("the introduction is a 16:9 slide to a window on a desktop, a column of car
   await phone.tab.close();
 });
 
+test("Present shows one slide at a time filling the window, moves by key, click and control, shows the notes, and Esc returns to the page at that slide", async (t) => {
+  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
+  const tab = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  await tab.goto(url("introducing/index.html"));
+  const shown = () =>
+    tab.evaluate(() => {
+      const current = [...document.querySelectorAll<HTMLElement>("main > .slide.is-current")];
+      const box = current[0]?.getBoundingClientRect();
+      // What is on top in the middle of the window, and in the corner of the page the slide does not cover.
+      const top = document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest(".slide")?.id ?? "";
+      return {
+        presenting: document.documentElement.classList.contains("presenting"),
+        current: current.map((s) => s.id),
+        count: document.querySelector(".deck-count")?.textContent ?? "",
+        top,
+        width: box?.width ?? 0,
+        height: box?.height ?? 0,
+        notes: document.querySelector<HTMLElement>(".deck-notes")?.hidden === false,
+        notesText: document.querySelector(".deck-notes")?.textContent?.trim() ?? "",
+        hash: location.hash,
+        inertHeader: (document.querySelector(".site-header") as HTMLElement).inert,
+      };
+    });
+  const present = tab.getByRole("button", { name: "Present" });
+  assert.ok(await present.isVisible(), "a wide screen offers Present");
+  await present.click();
+  let s = await shown();
+  assert.ok(s.presenting);
+  assert.deepEqual(s.current, ["cover"]);
+  assert.equal(s.top, "cover", "the cover is what the window shows");
+  assert.equal(s.count, "1 / 25");
+  // The largest 16:9 that fits 1440 by 900 is 1440 by 810.
+  assert.ok(
+    Math.abs(s.width - 1440) < 1 && Math.abs(s.height - 810) < 1,
+    `fills the window (${s.width} by ${s.height})`,
+  );
+  assert.ok(s.inertHeader, "the page behind is out of reach");
+  for (const key of ["ArrowRight", "PageDown", " "]) await tab.keyboard.press(key);
+  s = await shown();
+  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 25", "#idea"]);
+  await tab.keyboard.press("ArrowLeft");
+  await tab.mouse.click(720, 300);
+  s = await shown();
+  assert.deepEqual(s.current, ["idea"], "back one by key, on one by a click on the slide");
+  await tab.getByRole("button", { name: "Next slide" }).click();
+  s = await shown();
+  assert.deepEqual(s.current, ["behavior"]);
+  await tab.keyboard.press("n");
+  s = await shown();
+  assert.ok(s.notes && s.notesText.length > 40, "N shows the slide's speaker notes");
+  assert.ok(!s.notesText.startsWith("Speaker notes"), "without the callout's title");
+  // With the notes open, the slide fits the 70 per cent of the window above them.
+  assert.ok(
+    s.height <= 900 * 0.7 + 1 && Math.abs(s.width / s.height - 16 / 9) < 0.01,
+    `fits above the notes (${s.height})`,
+  );
+  await tab.keyboard.press("End");
+  s = await shown();
+  assert.deepEqual([s.current, s.count], [["try"], "25 / 25"]);
+  assert.ok(await tab.getByRole("button", { name: "Next slide" }).isDisabled(), "nothing after the last slide");
+  await tab.keyboard.press("Escape");
+  s = await shown();
+  assert.ok(!s.presenting && s.current.length === 0 && !s.inertHeader, "Esc ends the presentation");
+  const back = await tab.evaluate(() => Math.abs(document.getElementById("try")!.getBoundingClientRect().top));
+  assert.ok(back < 40, `the page is at the slide the presentation ended on (${back})`);
+  await tab.close();
+  // On a phone there is no frame, so nothing to present.
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await phone.goto(url("introducing/index.html"));
+  assert.equal(
+    await phone.getByRole("button", { name: "Present" }).isVisible(),
+    false,
+    "a phone is not offered Present",
+  );
+  await phone.close();
+});
+
 test("the navigation wraps below the brand at phone width and sits beside it on a desktop", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   const position = async (width: number) => {

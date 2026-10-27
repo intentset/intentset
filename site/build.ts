@@ -123,9 +123,9 @@ export const SITE_NAME = "Intentset";
  * rather than linked on claude.ai, so it is a content page like any other and nothing on it comes from another
  * origin. A slide is a card carrying `.slide` and its speaker notes are a folded NOTE callout beneath it, the pattern
  * of Markset's own deck example; everything that makes it a deck is its theme, site/deck.css, which this page alone
- * loads.
+ * loads, and site/deck.js, which adds Present: one slide at a time, filling the screen.
  */
-export const INTRODUCTION = { page: "introducing/index.html", stylesheet: "css/deck.css" };
+export const INTRODUCTION = { page: "introducing/index.html", stylesheet: "css/deck.css", script: "js/deck.js" };
 
 /**
  * The bar: five sections, by what a reader came to do, as markset.org's is
@@ -177,9 +177,9 @@ export const RAILS: Rail[] = [
   {
     title: "Start",
     items: [
-      ["Start with one capability", "start/index.html"],
       ["Introducing Intentset", INTRODUCTION.page],
       ["How it works", "how-it-works/index.html"],
+      ["Start with one capability", "start/index.html"],
       ["Run the adoption", "adopt/index.html"],
       ["Prove the work", "verify/index.html"],
       ["The agent guide", "guide/index.html"],
@@ -351,8 +351,8 @@ export interface Page {
   toc?: string;
   bodyAttributes: string;
   /**
-   * Stylesheets and scripts this page alone loads, from the site's root: the Atlas's map has both (ADR 0015), and the
-   * introduction its deck theme.
+   * Stylesheets and scripts this page alone loads, from the site's root: the Atlas's map has both (ADR 0015), and so
+   * does the introduction, its deck theme and Present.
    */
   styles?: string[];
   scripts?: string[];
@@ -458,6 +458,8 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await cp(defaultStylesheetPath, join(out, "css", "markset.css"));
   await cp(join(root, "site", "site.css"), join(out, "css", "site.css"));
   await cp(join(root, "site", "deck.css"), join(out, INTRODUCTION.stylesheet));
+  await mkdir(join(out, "js"), { recursive: true });
+  await cp(join(root, "site", "deck.js"), join(out, INTRODUCTION.script));
   await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
   // The social card, drawn by hand with `pnpm run social-card` and committed, so
   // neither CI nor a deploy needs a browser to produce it. See site/social-card.ts.
@@ -563,7 +565,7 @@ const RAIL_PAGES = new Set([
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
   const text = await contentSource(file, tokens);
-  const extra = path === INTRODUCTION.page ? { styles: [INTRODUCTION.stylesheet] } : {};
+  const extra = path === INTRODUCTION.page ? { styles: [INTRODUCTION.stylesheet], scripts: [INTRODUCTION.script] } : {};
   return renderPage(path, text, join(root, "site", "content", file), extra, RAIL_PAGES.has(path));
 }
 
@@ -1114,8 +1116,10 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
   const section = railFor(page.path, rails);
   const nav = NAV.map(([label, href]) => {
     // A bar item is current for its whole section, not just its own page, or
-    // the bar goes blank the moment a reader follows the rail into one.
-    const active = page.path === href || (section !== undefined && railLinks(section)[0][1] === href);
+    // the bar goes blank the moment a reader follows the rail into one. The
+    // item's page is in its section's rail, though not always first: Start's
+    // rail opens with the introduction, and the bar opens Start's first step.
+    const active = page.path === href || (section !== undefined && railLinks(section).some(([, h]) => h === href));
     return `<a href="${rel}${pageAddress(href)}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("\n");
   const footerLinks = [...FOOTER_LINKS, ...(askUrl === null ? [] : ([["Privacy", "privacy/index.html"]] as const))]
