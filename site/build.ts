@@ -137,10 +137,11 @@ export const INTRODUCTION = { page: "introducing/index.html", stylesheet: "css/d
  * Playground, because an early release's reader asks first where it stands.
  * Every page kept its URL: Reference is the specifications index. Examples
  * opens on Lantern's map (2026-10-20), the most useful view of the example; the
- * walkthrough kept /example/.
+ * walkthrough kept /example/. Start opens on the introduction (2026-10-27), the
+ * first page of its rail, so a newcomer meets what Intentset is before what to do.
  */
 export const NAV: Array<[string, string]> = [
-  ["Start", "start/index.html"],
+  ["Start", INTRODUCTION.page],
   ["Tools", "tools/index.html"],
   ["Reference", "specifications/index.html"],
   ["Examples", ATLAS_MAP_PAGE],
@@ -1116,10 +1117,8 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
   const section = railFor(page.path, rails);
   const nav = NAV.map(([label, href]) => {
     // A bar item is current for its whole section, not just its own page, or
-    // the bar goes blank the moment a reader follows the rail into one. The
-    // item's page is in its section's rail, though not always first: Start's
-    // rail opens with the introduction, and the bar opens Start's first step.
-    const active = page.path === href || (section !== undefined && railLinks(section).some(([, h]) => h === href));
+    // the bar goes blank the moment a reader follows the rail into one.
+    const active = page.path === href || (section !== undefined && railLinks(section)[0][1] === href);
     return `<a href="${rel}${pageAddress(href)}"${active ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("\n");
   const footerLinks = [...FOOTER_LINKS, ...(askUrl === null ? [] : ([["Privacy", "privacy/index.html"]] as const))]

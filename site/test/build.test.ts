@@ -242,7 +242,7 @@ test("How it works is a page of its own, in Start's rail with its contents, and 
     page,
     /<nav class="site-rail" aria-label="Start">[\s\S]*?<a href="\.\.\/how-it-works\/" aria-current="page">How it works<\/a>/,
   );
-  assert.match(page, /<nav class="site-nav"[\s\S]*?<a href="\.\.\/start\/" aria-current="page">Start<\/a>/);
+  assert.match(page, /<nav class="site-nav"[\s\S]*?<a href="\.\.\/introducing\/" aria-current="page">Start<\/a>/);
   const home = main("index.html");
   assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/">See how it works<\/a>/);
   assert.doesNotMatch(html.get("index.html") ?? "", /index\.html#how/, "nothing points at the old anchor");
