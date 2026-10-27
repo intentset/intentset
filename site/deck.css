@@ -17,7 +17,7 @@
  *   .caveat     the line at a slide's foot that says what its figures are
  *   .notes      the folded callout after each slide, holding what the speaker says
  *
- * and a few that lay out one slide's boxes: .stats, .ruled, .promise, .contrast, .five, .lantern, .loop, .asks, .flow,
+ * and a few that lay out one slide's boxes: .stats, .ruled, .promise, .contrast, .lantern, .loop, .asks, .flow,
  * .changes, .band, .cta. The pictures on the risk's slide are site/deck/*.svg, drawn as masks in the slide's ink. The colors are Intentset's palette, the slides' own: #173b38 ink, #2c6a54 green, #7cc3a8,
  * #f3f9f8, #e6f0ed, #cddad7 and #4f615d, each light-dark() pair resolving through the site's color scheme.
  *
@@ -165,8 +165,9 @@ body {
 .slide .ruled .ms-grid-item > p:first-child { color: var(--soft); }
 .slide .ruled .ms-grid-item > p + p { color: var(--ink); }
 
-/* The idea: what each record says, then Lantern's example of it beneath a rule. */
+/* The idea: each of the five questions, then Lantern's answer beneath a rule. */
 .slide .promise .ms-grid-item { display: flex; flex-direction: column; }
+.slide .promise .ms-grid-item > h3 { color: var(--accent); }
 .slide .promise .ms-grid-item > p:first-of-type { margin-bottom: calc(var(--ms-space) * 0.6); color: var(--ink); }
 .slide .promise .ms-grid-item > p:last-child { margin-top: auto; padding-top: calc(var(--ms-space) * 0.6); border-top: 1px solid var(--rule); font-size: var(--t-small); font-style: italic; }
 
@@ -183,11 +184,6 @@ body {
 /* The connected view's promise sits on the ink, as the slide drew it. */
 .slide .lantern > .ms-grid-item.spotlight { --spot: #173b38; }
 
-/* Five questions: the record types under each, in the small mono line. */
-.slide .five .ms-grid-item > h3 { color: var(--accent); }
-.slide .five .ms-grid-item > p { color: var(--ink); }
-.slide .five .ms-grid-item > p:last-child { font-size: var(--t-small); color: var(--soft); }
-.slide .five .ms-grid-item > p:last-child code { color: inherit; }
 
 /* The loop and the asks: a label or a list under each title. */
 .slide .asks .ms-grid-item ul { font-size: var(--t-small); }
@@ -267,7 +263,7 @@ body {
   .slide .ms-columns { grid-template-columns: var(--ms-ratio, repeat(auto-fit, minmax(0, 1fr))); }
   .slide .ms-grid[data-cols="3"] { --ms-cols: 3; }
   .slide .ms-grid[data-cols="4"] { --ms-cols: 4; }
-  .slide .ms-grid.five { --ms-cols: 5; }
+  .slide .ms-grid.promise { --ms-cols: 5; }
   .slide .changes li { position: relative; padding-left: 8.5em; }
   .slide .changes li > .badge:first-child { position: absolute; left: 0; top: 0.05em; box-sizing: border-box; width: 7.5em; margin: 0; text-align: center; }
 

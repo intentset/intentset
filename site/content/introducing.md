@@ -8,7 +8,7 @@ A slide deck
 # Introducing Intentset
 
 {.lead}
-What Intentset is, why it exists and how it works, in 24 slides: plain words first, then the files, the checks and the tools under the hood. Each slide's speaker notes are folded beneath it.
+What Intentset is, why it exists and how it works, in 23 slides: plain words first, then the files, the checks and the tools under the hood. Each slide's speaker notes are folded beneath it.
 
 {.deck-parts}
 1. [Why Intentset exists](#cover): agents write code faster than anyone can read it.
@@ -102,33 +102,39 @@ A team used to understand its product because it wrote the code. Now agents writ
 {.eyebrow}
 The idea
 
-## Write down what the product promises, and keep it true
+## Write the promises down, and keep them true
 
 {.lead}
-For each thing the product does, a few short files beside the code answer four questions. The examples are from Lantern, an invented school product.
+Five questions about each thing the product does, answered in short files beside the code. The answers here are Lantern's, an invented school product.
 
 :::grid{cols=4 .promise}
-- ### The promise
+- ### Why
 
-  What the product does, including what it refuses.
+  Why build it, and did it work?
 
-  A teacher schedules an assessment for a future time, never a past one.
+  Help teachers prepare learning in advance.
 
-- ### The code
+- ### What
 
-  The one part of the code accountable for keeping it.
+  What does it do, and refuse?
+
+  Schedule an assessment for a future time, never a past one.
+
+- ### Where
+
+  Which code keeps the promise?
 
   The scheduling code, and nothing else.
 
-- ### The proof
+- ### Proof
 
-  The tests that check it, and whether they pass on this code.
+  Is it tested, and passing now?
 
   Two tests, both passing on this commit.
 
-- ### The words
+- ### Words
 
-  What customers and colleagues are told about it.
+  What is each audience told?
 
   The teachers' guide to scheduling.
 :::
@@ -137,7 +143,7 @@ For each thing the product does, a few short files beside the code answer four q
 
 {.notes}
 > [!NOTE]- Speaker notes
-> This is the whole idea on one slide. Take one thing the product does, here scheduling an assessment in Lantern, and write down four things about it: the promise itself, including what it refuses; which part of the code is accountable for it; the tests that check it, and whether they pass right now; and what customers are told about it. Those four stay connected, and they live in the repository, so they change in the same commit as the code. When the code changes and the promise does not, that shows up at review. Agents do the writing. People decide what the promises are.
+> This is the whole idea on one slide. Take one thing the product does, here scheduling an assessment in Lantern, and write down five things about it: why it exists and how you would know it worked; what it does, including what it refuses; which part of the code is accountable for it; the tests that check it, and whether they pass right now; and what each audience is told about it. They live in the repository as short, linked files, so they change in the same commit as the code, and when the code changes and the promise does not, that shows up at review. Agents do the writing. People decide what the promises are. Because the files are linked, a product reviewer can start at why and drill down, an engineer can start from the code they are changing, and both arrive at the same promise.
 
 :::::card{#behavior .slide}
 
@@ -188,53 +194,6 @@ Lantern, an invented product
 {.notes}
 > [!NOTE]- Speaker notes
 > Everything in Intentset is organized around behaviors. "Student assessments" is a heading in a roadmap, not a promise: there is nothing in it to test. "Schedule a student assessment for a future time" is one. A behavior is small enough to recognize and to test, and it always says what happens when things go wrong, not only when they go right. The example comes from Lantern, an invented education product used throughout the Intentset site.
-
-::::card{#five .slide}
-
-{.eyebrow}
-One connected model
-
-## Five questions, one model
-
-:::grid{cols=4 .five}
-- ### Why
-
-  Why are we building this, and how will we know it worked?
-
-  `intent, outcome, measure`
-
-- ### What
-
-  What can people do, and what must always stay true?
-
-  `capability, behavior, rule, scenario`
-
-- ### Where
-
-  Which part of the code delivers it, and why was it built that way?
-
-  `slice, contract, decision`
-
-- ### Proof
-
-  How is each promise checked, and does the check pass now?
-
-  `verification`
-
-- ### Words
-
-  What may we tell each audience about it?
-
-  `knowledge`
-:::
-
-A product reviewer starts at the top and drills down. An engineer starts from the code they are changing. Both arrive at the same behavior.
-
-::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> Each question is answered by its own kind of record, shown in small type under each card. Thirteen kinds in all, but you never need all of them on day one. The point is that they are linked, so you can walk from why a feature exists all the way to the test that proves it.
 
 ::::card{#lantern .slide .dense}
 

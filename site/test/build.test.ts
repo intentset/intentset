@@ -331,7 +331,6 @@ const DECK = [
   "trust",
   "idea",
   "behavior",
-  "five",
   "lantern",
   "loop",
   "review",
@@ -352,7 +351,7 @@ const DECK = [
   "try",
 ];
 
-test("the introduction is a deck of 24 slides in order, each with its notes folded beneath it, on its own theme", async () => {
+test("the introduction is a deck of 23 slides in order, each with its notes folded beneath it, on its own theme", async () => {
   const page = html.get(INTRODUCTION.page) ?? "";
   const body = main(INTRODUCTION.page);
   assert.match(page, /<title>Introducing Intentset · Intentset<\/title>/);
@@ -360,7 +359,7 @@ test("the introduction is a deck of 24 slides in order, each with its notes fold
   const description = /<meta name="description" content="([^"]+)">/.exec(page)?.[1] ?? "";
   assert.ok(description.startsWith("What Intentset is, why it exists and how it works"), description);
   // A slide is a card carrying .slide, and what follows it is its notes, a folded NOTE callout: in document order
-  // the two alternate, a slide and then its notes, 24 times.
+  // the two alternate, a slide and then its notes, 23 times.
   const order = [
     ...body.matchAll(
       /<section class="ms-card slide[^"]*" id="([^"]+)"|<details class="ms-callout notes" data-type="note">\n<summary class="ms-callout-title">Speaker notes<\/summary>/g,
