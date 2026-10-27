@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+  <title>Code behind a lock</title>
+  <rect x="8" y="8" width="76" height="62" rx="6"/>
+  <path d="M8 22h76"/>
+  <path d="M36 34l-9 11 9 11M56 34l9 11-9 11M50 31l-8 28"/>
+  <path d="M93 50v-8a9 9 0 0 1 18 0v8"/>
+  <rect x="86" y="50" width="32" height="24" rx="4" fill="#000"/>
+</svg>

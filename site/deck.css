@@ -17,8 +17,8 @@
  *   .caveat     the line at a slide's foot that says what its figures are
  *   .notes      the folded callout after each slide, holding what the speaker says
  *
- * and a few that lay out one slide's boxes: .stats, .ruled, .contrast, .five, .lantern, .loop, .asks, .flow, .chips,
- * .changes, .band, .cta. The colors are Intentset's palette, the slides' own: #173b38 ink, #2c6a54 green, #7cc3a8,
+ * and a few that lay out one slide's boxes: .stats, .ruled, .promise, .contrast, .lantern, .loop, .asks, .flow,
+ * .changes, .band, .cta. The pictures on the risk's slide are site/deck/*.svg, drawn as masks in the slide's ink. The colors are Intentset's palette, the slides' own: #173b38 ink, #2c6a54 green, #7cc3a8,
  * #f3f9f8, #e6f0ed, #cddad7 and #4f615d, each light-dark() pair resolving through the site's color scheme.
  *
  * On a screen at least 60rem wide and 34rem tall, and in print, each slide is a 16:9 frame sized to fit the window,
@@ -147,32 +147,43 @@ body {
 .slide.cover .small { font-family: var(--ms-font-mono); }
 
 /* The problem: two figures side by side, the second picked out. */
-.slide .stats .ms-grid-item > p { font-family: inherit; font-size: inherit; font-weight: 400; letter-spacing: 0; color: var(--ink); }
-.slide .stats .ms-grid-item > p:first-child { font-family: var(--ms-font-body); font-size: var(--t-stat); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
-.slide .stats .ms-grid-item > p:last-child { font-size: var(--t-small); color: var(--soft); }
+/* The problem: what each box is first, in the small label, then the figure and what it counts. */
+.slide .stats .ms-grid-item > p:first-child { color: var(--soft); }
+.slide .stats .ms-grid-item > p + p { font-family: inherit; font-size: inherit; font-weight: 400; letter-spacing: 0; color: var(--ink); }
+.slide .stats .ms-grid-item > p:nth-child(2) { font-family: var(--ms-font-body); font-size: var(--t-stat); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
 .ms-document .slide.turn h2 { font-size: var(--t-statement); line-height: 1.12; }
 
-/* The risk: three lines under a rule, no boxes. */
+/* The risk: three lines under a rule, no boxes, each under its picture and the small line that says when. */
 .slide .ruled .ms-grid-item { background: none; border: 0; border-top: 4px solid var(--rule); border-radius: 0; padding: var(--ms-space) 0 0; }
-.slide .ruled .ms-grid-item > p:first-child { font-family: inherit; font-size: var(--t-body); font-weight: 400; letter-spacing: 0; color: var(--ink); }
+.slide .ruled .ms-grid-item::before {
+  content: ""; display: block; height: calc(var(--t-body) * 3); aspect-ratio: 3 / 2; margin-bottom: calc(var(--ms-space) * 0.6);
+  background: var(--ink); mask: var(--picture) left center / contain no-repeat;
+}
+.slide .ruled .ms-grid-item:nth-child(1) { --picture: url("../img/deck/shift.svg"); }
+.slide .ruled .ms-grid-item:nth-child(2) { --picture: url("../img/deck/debt.svg"); }
+.slide .ruled .ms-grid-item:nth-child(3) { --picture: url("../img/deck/hidden.svg"); }
+.slide .ruled .ms-grid-item > p:first-child { color: var(--soft); }
+.slide .ruled .ms-grid-item > p + p { color: var(--ink); }
+
+/* The idea: each of the five questions, then Lantern's answer beneath a rule. */
+.slide .promise .ms-grid-item { display: flex; flex-direction: column; }
+.slide .promise .ms-grid-item > h3 { color: var(--accent); }
+.slide .promise .ms-grid-item > p:first-of-type { margin-bottom: calc(var(--ms-space) * 0.6); color: var(--ink); }
+.slide .promise .ms-grid-item > p:last-child { margin-top: auto; padding-top: calc(var(--ms-space) * 0.6); border-top: 1px solid var(--rule); font-size: var(--t-small); font-style: italic; }
 
 /* A behavior: a good example and a vague one, on a left rule. */
 .slide .contrast .ms-grid-item { background: none; border: 0; border-left: 4px solid var(--rule); border-radius: 0; padding: 0.2em 0 0.2em 1em; }
 .slide .contrast .ms-grid-item.good { border-left-color: var(--accent); }
 .slide .contrast .ms-grid-item > p:first-child { color: var(--soft); }
 .slide .contrast .ms-grid-item.good > p:first-child { color: var(--accent); }
-.slide .contrast .ms-grid-item > p + p { color: var(--ink); }
+.slide .contrast .ms-grid-item > p:nth-child(2) { color: var(--ink); }
+.slide .contrast .ms-grid-item > p:nth-child(3) { font-size: var(--t-small); }
 .slide .panel > p { color: var(--soft); }
 .slide .panel > p strong { color: var(--ink); }
 
 /* The connected view's promise sits on the ink, as the slide drew it. */
 .slide .lantern > .ms-grid-item.spotlight { --spot: #173b38; }
 
-/* Five questions: the record types under each, in the small mono line. */
-.slide .five .ms-grid-item > h3 { color: var(--accent); }
-.slide .five .ms-grid-item > p { color: var(--ink); }
-.slide .five .ms-grid-item > p:last-child { font-size: var(--t-small); color: var(--soft); }
-.slide .five .ms-grid-item > p:last-child code { color: inherit; }
 
 /* The loop and the asks: a label or a list under each title. */
 .slide .asks .ms-grid-item ul { font-size: var(--t-small); }
@@ -186,16 +197,6 @@ body {
 .slide .changes li > .badge:first-child { display: block; width: fit-content; margin-bottom: 0.25em; white-space: nowrap; }
 .slide .badge { font-family: var(--ms-font-mono); font-size: 0.78em; letter-spacing: 0.02em; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); }
 .slide .badge.info { color: var(--spot-ink); background: var(--spot); border-color: transparent; }
-
-/* Honest numbers: the outcomes as chips. */
-.slide .chips { display: flex; flex-wrap: wrap; gap: 0.5em; }
-.slide .chips .badge { font-size: var(--t-small); padding: 0.2em 0.9em; border-radius: 999px; background: none; border: 2px solid var(--rule); }
-.slide .chips .badge.info { background: #7cc3a8; color: #173b38; border-color: #7cc3a8; font-weight: 700; }
-
-/* What it does not do: each limit's first words in ink. */
-.slide.quiet > ul { list-style: none; padding: 0; color: var(--soft); }
-.slide.quiet > ul > li + li { margin-top: 0.7em; }
-.slide.quiet > ul strong { color: var(--ink); }
 
 /* Ownership: the line beneath, as a band. */
 .slide .band { padding: 0.8em 1em; border-left: 4px solid var(--accent); background: var(--box); border-radius: 0 var(--ms-radius) var(--ms-radius) 0; }
@@ -262,7 +263,7 @@ body {
   .slide .ms-columns { grid-template-columns: var(--ms-ratio, repeat(auto-fit, minmax(0, 1fr))); }
   .slide .ms-grid[data-cols="3"] { --ms-cols: 3; }
   .slide .ms-grid[data-cols="4"] { --ms-cols: 4; }
-  .slide .ms-grid.five { --ms-cols: 5; }
+  .slide .ms-grid.promise { --ms-cols: 5; }
   .slide .changes li { position: relative; padding-left: 8.5em; }
   .slide .changes li > .badge:first-child { position: absolute; left: 0; top: 0.05em; box-sizing: border-box; width: 7.5em; margin: 0; text-align: center; }
 

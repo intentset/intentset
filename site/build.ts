@@ -125,7 +125,12 @@ export const SITE_NAME = "Intentset";
  * of Markset's own deck example; everything that makes it a deck is its theme, site/deck.css, which this page alone
  * loads, and site/deck.js, which adds Present: one slide at a time, filling the screen.
  */
-export const INTRODUCTION = { page: "introducing/index.html", stylesheet: "css/deck.css", script: "js/deck.js" };
+export const INTRODUCTION = {
+  page: "introducing/index.html",
+  stylesheet: "css/deck.css",
+  script: "js/deck.js",
+  pictures: "img/deck",
+};
 
 /**
  * The bar: five sections, by what a reader came to do, as markset.org's is
@@ -461,6 +466,8 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await cp(join(root, "site", "deck.css"), join(out, INTRODUCTION.stylesheet));
   await mkdir(join(out, "js"), { recursive: true });
   await cp(join(root, "site", "deck.js"), join(out, INTRODUCTION.script));
+  // The pictures deck.css draws on the slides, as masks in the slide's ink.
+  await cp(join(root, "site", "deck"), join(out, INTRODUCTION.pictures), { recursive: true });
   await cp(join(root, "site", "icon.svg"), join(out, "icon.svg"));
   // The social card, drawn by hand with `pnpm run social-card` and committed, so
   // neither CI nor a deploy needs a browser to produce it. See site/social-card.ts.
