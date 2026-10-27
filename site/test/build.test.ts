@@ -133,7 +133,7 @@ test("every page carries a Content Security Policy that allows its own inline sc
   }
 });
 
-test("every page has exactly one h1, a skip link to main, and no script but the shell's two, the chat's and the Atlas map's", () => {
+test("every page has exactly one h1, a skip link to main, and no script but the shell's two, the chat's, the Atlas map's and the deck's", () => {
   // Both scripts are the shell's: one remembers the reader's color scheme across
   // pages, as markset.org's does, and one puts a Copy button on each code block.
   // They sit ahead of the header; nothing inside <main>, which is rendered from a
@@ -150,9 +150,13 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
         doc.indexOf('example/atlas/atlas-map.js" defer>') > doc.indexOf("</main>"),
         "the map's script after main",
       );
+    // The introduction loads Present after </main> the same way.
+    const deck = page === INTRODUCTION.page;
+    if (deck)
+      assert.ok(doc.indexOf(`${INTRODUCTION.script}" defer>`) > doc.indexOf("</main>"), "the deck's script after main");
     assert.equal(
       (doc.match(/<script/gi) ?? []).length,
-      (ASK_URL === null ? 2 : 3) + (map ? 1 : 0),
+      (ASK_URL === null ? 2 : 3) + (map || deck ? 1 : 0),
       `${page}: the shell's scripts`,
     );
     if (ASK_URL !== null)

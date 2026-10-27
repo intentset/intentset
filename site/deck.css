@@ -2,7 +2,8 @@
  *
  * "Introducing Intentset" is a Markset document like every other page, and this file is all that makes it a deck,
  * as examples/lectern.css is for Markset's own deck example: a slide is a card carrying .slide, and its speaker notes
- * are the folded NOTE callout beneath it. No syntax, no script. The page names these roles:
+ * are the folded NOTE callout beneath it. No syntax; the one script, site/deck.js, adds Present and nothing the page
+ * needs to be read. The page names these roles:
  *
  *   .slide      one slide
  *   .cover      the title slide, on the ink ground
@@ -308,6 +309,61 @@ body {
     position: absolute; left: 100%; top: 50%; width: calc(56 * var(--u)); transform: translateY(-50%);
     text-align: center; font-size: var(--t-h3); line-height: 1; color: var(--accent);
   }
+}
+
+/* ---- presenting ---------------------------------------------------------------------------------------------- */
+/* Present (site/deck.js) shows one slide at a time, filling the screen. The button is the page's one primary action,
+ * drawn as the site's primary button is; deck.js hides it below the frame's query, where there is nothing to present. */
+.deck-present-button {
+  display: inline-flex; align-items: center; gap: 0.6em; box-sizing: border-box; min-height: 2.75rem;
+  padding: 0.6rem 1.4rem; border: 1px solid var(--ms-fg); border-radius: var(--ms-radius);
+  background: var(--ms-fg); color: var(--ms-bg); font: inherit; font-size: 0.95rem; font-weight: 650; line-height: 1.2;
+  cursor: pointer;
+}
+.deck-present-button::before { content: "▶" / ""; font-size: 0.75em; }
+.deck-present-button:hover { background: color-mix(in oklab, var(--ms-fg), var(--ms-bg) 15%); }
+.ms-document > .deck-present + .deck-hint { margin-top: 0.75rem; }
+
+/* The current slide is fixed over the page at the largest 16:9 that fits, above a stage that hides the rest, and its
+ * padding is restated from that width, since a fixed box's percentages are the window's. With the notes open the
+ * slide fits the space above them. */
+@media screen and (min-width: 60rem) and (min-height: 34rem) {
+  html.presenting { --deck-bar: 0px; overflow: hidden; scroll-snap-type: none; }
+  html.presenting.deck-with-notes { --deck-bar: 30dvh; }
+  html.presenting body::before { content: ""; position: fixed; inset: 0; z-index: 200; background: #0d1716; }
+  html.presenting .ms-document > .slide.is-current {
+    --w: min(100vw, (100dvh - var(--deck-bar)) * 16 / 9);
+    position: fixed; z-index: 201; inset: 0 0 var(--deck-bar); box-sizing: border-box;
+    width: var(--w); height: calc(var(--w) * 9 / 16); max-width: none; margin: auto; aspect-ratio: auto;
+    padding: calc(var(--w) * 0.0625) calc(var(--w) * 0.06667) calc(var(--w) * 0.06667);
+    border: 0; border-radius: 0; box-shadow: none; cursor: default;
+  }
+  html.presenting.deck-with-notes .ms-document > .slide.is-current { border-radius: 0 0 calc(var(--w) * 0.0125) calc(var(--w) * 0.0125); }
+
+  .deck-bar:focus { outline: none; }
+  .deck-bar { position: fixed; inset: auto 0 0; z-index: 202; display: flex; flex-direction: column; color: #e4ebe7; font-size: 0.95rem; }
+  .deck-notes {
+    box-sizing: border-box; height: calc(30dvh - 3.25rem); overflow-y: auto; padding: 1rem max(1.5rem, calc((100vw - 52rem) / 2));
+    line-height: 1.55; color: #c9d4cf;
+  }
+  .deck-notes > * + * { margin-top: 0.6rem; }
+  .deck-notes code { color: #7cc3a8; background: none; padding: 0; }
+  .deck-controls {
+    display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem; height: 3.25rem; padding: 0 1rem;
+    transition: opacity 0.3s;
+  }
+  html.idle:not(.deck-with-notes) .deck-controls { opacity: 0; }
+  html.idle:not(.deck-with-notes) { cursor: none; }
+  .deck-controls button {
+    min-width: 2.75rem; min-height: 2.75rem; padding: 0 0.8rem; border: 0; border-radius: 0.5rem;
+    background: rgb(255 255 255 / 0.08); color: inherit; font: inherit; cursor: pointer;
+  }
+  .deck-controls button:hover:not(:disabled) { background: rgb(255 255 255 / 0.18); }
+  .deck-controls button:disabled { opacity: 0.35; cursor: default; }
+  .deck-controls button[aria-pressed="true"] { background: #2c6a54; }
+  .deck-controls button:focus-visible { outline: 2px solid #7cc3a8; outline-offset: 2px; }
+  .deck-count { min-width: 4.5rem; text-align: center; font-family: var(--ms-font-mono); font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { .deck-controls { transition: none; } }
 }
 
 @media print {
