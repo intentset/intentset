@@ -202,7 +202,7 @@ test("Examples is one rail on every page of the section: Lantern's map, the walk
   ]);
   assert.deepEqual(
     REVIEW_PAGES.map(([label]) => label),
-    ["Overview", "Ownership", "Verification", "Publication", "Diagnostics"],
+    ["Overview", "Records", "Ownership", "Verification", "Publication", "Diagnostics"],
   );
   // The bar's Examples opens on the map, and no rail of the section leads in a circle back to another.
   assert.deepEqual(
@@ -236,7 +236,10 @@ test("every address of the worked example still answers: the walkthrough at /exa
     "example/atlas/verification/index.html",
     "example/atlas/publication/index.html",
     "example/atlas/diagnostics/index.html",
-    "example/atlas/behaviors/BEH-ASMT-SCHEDULE/index.html",
+    "example/atlas/records/index.html",
+    // A record's page was the walkthrough's until the Atlas's took its address (2026-11-02). The behavior's Atlas
+    // page, example/atlas/behaviors/BEH-ASMT-SCHEDULE/, moved there with it, so that each record has one page.
+    "example/BEH-ASMT-SCHEDULE/index.html",
   ]) {
     assert.ok(html.has(page), `${page} no longer exists`);
   }

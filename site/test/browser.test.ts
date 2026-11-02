@@ -326,10 +326,7 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full
       "BEH-ASMT-SCHEDULE",
       `${width}px: the first activation selects the record`,
     );
-    await Promise.all([
-      tab.waitForURL(/\/example\/atlas\/behaviors\/BEH-ASMT-SCHEDULE\/$/),
-      node.click({ force: true }),
-    ]);
+    await Promise.all([tab.waitForURL(/\/example\/BEH-ASMT-SCHEDULE\/$/), node.click({ force: true })]);
     assert.deepEqual(errors, [], `${width}px: no script error`);
     await tab.close();
   }

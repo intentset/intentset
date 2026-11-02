@@ -24,15 +24,16 @@ export interface AtlasMeta {
 }
 
 export interface PageSource {
-  /** Relative output path, e.g. `behaviors/BEH-X.html`. */
+  /** Relative output path, e.g. `records/BEH-X.html`. */
   path: string;
   /** The page's level-one heading and `<title>`. */
   title: string;
   /** Markset source after the header. */
   body: string[];
   /**
-   * HTML Markset cannot write, the map's SVG, placed where the source's map slot is (`MAP_SLOT_SOURCE`), or after the
-   * rendered source when it has none. Built here, never from a record's text unescaped.
+   * HTML the page's own source cannot carry, placed where the source's slot is (`MAP_SLOT_SOURCE`), or after the
+   * rendered source when it has none: the map's SVG, or a record's text, rendered from its own parse
+   * (record-text.ts). Built here, never from a record's text unescaped.
    */
   html?: string;
   /** Scripts the page loads, relative to the Atlas's root, after `<main>`. Only the map has one (ADR 0015). */
@@ -41,7 +42,7 @@ export interface PageSource {
 
 /**
  * Where a page's HTML goes in its Markset source: a classed thematic break, so a reader of the source alone (or a
- * renderer that does not place the map) sees a rule where the map would stand.
+ * renderer that does not place the HTML) sees a rule where the map or the record's text would stand.
  */
 export const MAP_SLOT_SOURCE: readonly string[] = ["{.am-slot}", "***"];
 /** The slot as render-html writes it. */
@@ -57,6 +58,7 @@ export function placeHtml(rendered: string, html: string): string {
 /** The pages every page's navigation lists, in order. */
 export const NAV: readonly { path: string; label: string }[] = [
   { path: "index.html", label: "Overview" },
+  { path: "records.html", label: "Records" },
   { path: "ownership.html", label: "Ownership" },
   { path: "verification.html", label: "Verification" },
   { path: "publication.html", label: "Publication" },

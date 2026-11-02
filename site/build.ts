@@ -500,7 +500,6 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
     guidePage(),
     await conformancePage(),
     exampleIndex(records, publication),
-    ...records.map((record) => recordPage(record, records)),
     ...atlas.map((page) => atlasPage(page, atlas)),
     ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
     ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
@@ -983,15 +982,17 @@ export const EXAMPLE_NAME = "Lantern, a worked example";
  * One page of the worked example's Atlas, in the site's shell. Its links to other Atlas pages are pointed at their
  * addresses on the site, and an eyebrow and its title say whose pages they are, since "Ownership" alone names nothing.
  * The map is the example's landing page (2026-10-20), so it takes the example's name for its heading and, under the
- * picture, links the walkthrough and the review pages.
+ * picture, links the walkthrough and the review pages. A record's page is the record's one page on the site
+ * (2026-11-02): its text first, then its links and what the review pages say about it.
  */
 function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
   const paths = new Set(atlas.map((p) => p.atlasPath));
-  const isMap = page.html !== undefined;
+  const isMap = page.atlasPath === "map.html";
+  const isRecord = page.atlasPath.startsWith("records/");
+  const eyebrow = isMap ? "The map" : `${EXAMPLE_NAME} · ${isRecord ? "Record" : "Review page"}`;
   let source = page.source.replace(
     /^# (.*)$/m,
-    (_, title: string) =>
-      `{.eyebrow}\n${isMap ? "The map" : `${EXAMPLE_NAME} · Review page`}\n\n# ${isMap ? EXAMPLE_NAME : title}`,
+    (_, title: string) => `{.eyebrow}\n${eyebrow}\n\n# ${isMap ? EXAMPLE_NAME : title}`,
   );
   if (isMap) {
     const ways =
@@ -1012,32 +1013,10 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
     title: isMap ? EXAMPLE_NAME : `${rendered.title} · ${EXAMPLE_NAME}`,
     description: isMap
       ? "Lantern, an invented product, as a map of every record and every link between them, with the walkthrough and the review pages drawn from the same records."
-      : `${rendered.title}, a review page of Lantern's records: what intentset serve shows a team about its own model.`,
+      : isRecord
+        ? `${rendered.title}, one of Lantern's records: its text as written, its links, and what the review pages say about it.`
+        : `${rendered.title}, a review page of Lantern's records: what intentset serve shows a team about its own model.`,
   };
-}
-
-/** One record: its metadata as a card, then the document body, then a way back. */
-function recordPage(record: ExampleRecord, records: ExampleRecord[]): Page {
-  const ids = new Set(records.map((r) => r.id));
-  const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/)` : `\`${id}\``);
-  const table = recordFields(record, ref);
-  const source = `---
-markset: 0
----
-
-{.eyebrow}
-Lantern, a worked example · ${md(record.type)}
-
-:::card{.record}
-${table}
-:::
-
-${record.body.trim()}
-
-{.site-back}
-[Back to the walkthrough](../) · [Lantern on the map](../atlas/map/)
-`;
-  return renderPage(`example/${record.id}/index.html`, source, join(root, EXAMPLE_DIR, record.file));
 }
 
 /** The address of a published knowledge record's page, relative to the site's root. */

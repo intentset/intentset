@@ -10,6 +10,7 @@
 import { type Artifact, compareStrings } from "@intentset/core";
 import { CLAIM_TYPES, type Model, STATUS_ORDER, STATUS_WORDS } from "../model.ts";
 import type { PageSource } from "../page.ts";
+import { recordPath } from "../record-text.ts";
 import { badge, code, idLink, link, ofTotal, plural, table, text } from "../text.ts";
 import type { ClaimCounts } from "../types.ts";
 import { evidenceCell, latestRun } from "./shared.ts";
@@ -185,10 +186,10 @@ function claimRow(model: Model, claim: Artifact): string[] {
     const method = model.get(v)?.meta.verification?.method ?? "method not declared";
     const status = model.evidenceOf(v)?.status;
     const word = status === undefined ? "" : ` ${STATUS_WORDS[status].word}`;
-    return `${idLink(v, `#${v}`)} ${method}${word}`;
+    return `${idLink(v, recordPath(v))} ${method}${word}`;
   });
   return [
-    `${claim.meta.type === "behavior" ? link(code(id), `behaviors/${id}.html`) : code(id)} ${text(claim.meta.title)}`,
+    `${idLink(id, recordPath(id))} ${text(claim.meta.title)}`,
     claim.meta.type,
     claim.meta.status,
     model.evidenceRequired(claim.meta.status) ? "yes" : "no",
@@ -210,9 +211,7 @@ function verificationSection(model: Model, verification: Artifact): string[] {
     `- **Verifies:** ${
       named.length === 0
         ? "nothing"
-        : named
-            .map((c) => (model.get(c)?.meta.type === "behavior" ? link(code(c), `behaviors/${c}.html`) : code(c)))
-            .join(", ")
+        : named.map((c) => idLink(c, model.get(c) === undefined ? null : recordPath(c))).join(", ")
     }`,
     `- **Evidence:** ${evidenceCell(model, id)}`,
     `- **Latest run:** ${latestRun(model, id)}`,
@@ -234,6 +233,7 @@ function verificationSection(model: Model, verification: Artifact): string[] {
       `status ${verification.meta.status}`,
       `owner ${text(verification.meta.owner)}`,
       code(verification.path),
+      link("its page", recordPath(id)),
     ].join(" · "),
     "",
     ...items,

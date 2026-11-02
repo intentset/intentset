@@ -11,7 +11,8 @@ import { type Artifact, compareStrings, VISIBILITIES, type Visibility } from "@i
 import { PROJECTION_ADMITS, type PublicationRequest, project, reviewStatus } from "@intentset/publisher";
 import type { Model } from "../model.ts";
 import type { PageSource } from "../page.ts";
-import { badge, code, link, ofTotal, series, table, text } from "../text.ts";
+import { recordPath } from "../record-text.ts";
+import { badge, code, idLink, link, ofTotal, series, table, text } from "../text.ts";
 import { reviewCell } from "./shared.ts";
 
 interface Readiness {
@@ -62,7 +63,13 @@ export function publicationPage(model: Model): PageSource {
       `## ${text(id)}: ${text(meta.title)}`,
       "",
       "{.small .muted}",
-      ["knowledge", `status ${meta.status}`, `owner ${text(meta.owner)}`, code(artifact.path)].join(" · "),
+      [
+        "knowledge",
+        `status ${meta.status}`,
+        `owner ${text(meta.owner)}`,
+        code(artifact.path),
+        link("its page", recordPath(id)),
+      ].join(" · "),
       "",
       `- **Visibility:** ${meta.visibility}`,
       `- **Audiences:** ${meta.audiences.map(text).join(", ")}`,
@@ -81,9 +88,7 @@ export function publicationPage(model: Model): PageSource {
       `- **Explains:** ${
         explains.length === 0
           ? "nothing"
-          : explains
-              .map((e) => (model.get(e)?.meta.type === "behavior" ? link(code(e), `behaviors/${e}.html`) : code(e)))
-              .join(", ")
+          : explains.map((e) => idLink(e, model.get(e) === undefined ? null : recordPath(e))).join(", ")
       }`,
       "",
       ...table(

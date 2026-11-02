@@ -8,6 +8,7 @@
 import { type Artifact, type ArtifactType, hasErrors } from "@intentset/core";
 import type { Model } from "../model.ts";
 import type { PageSource } from "../page.ts";
+import { recordPath } from "../record-text.ts";
 import { badge, code, idLink, link, ofTotal, plural, table, text } from "../text.ts";
 
 const SPINE: readonly ArtifactType[] = ["product", "intent", "outcome", "measure", "capability"];
@@ -154,8 +155,9 @@ function spine(model: Model, items: Artifact[], seen: Set<string>, depth = 0): s
     const id = item.meta.id;
     if (seen.has(id)) continue;
     seen.add(id);
-    const href = item.meta.type === "capability" ? `index.html#${id}` : null;
-    lines.push(`${pad}- ${idLink(id, href)} ${text(item.meta.title)} · ${item.meta.type} · ${item.meta.status}`);
+    lines.push(
+      `${pad}- ${idLink(id, recordPath(id))} ${text(item.meta.title)} · ${item.meta.type} · ${item.meta.status}`,
+    );
     const children = model
       .into(id, "parent")
       .map((child) => model.get(child) as Artifact)
@@ -173,8 +175,11 @@ function capabilitySection(model: Model, capability: Artifact): string[] {
     "capability",
     `status ${capability.meta.status}`,
     `owner ${text(capability.meta.owner)}`,
-    parent === undefined ? "no parent" : `parent ${code(parent)}`,
+    parent === undefined
+      ? "no parent"
+      : `parent ${idLink(parent, model.get(parent) === undefined ? null : recordPath(parent))}`,
     code(capability.path),
+    link("its page", recordPath(id)),
   ];
   const lines = [
     `{#${id}}`,
@@ -216,9 +221,9 @@ function behaviorTable(model: Model, behaviors: Artifact[]): string[] {
       ? ofTotal(claims.filter((claim) => model.coverageOf(claim)?.verified === true).length, claims.length, "claim")
       : "not assessed";
     return [
-      `${link(code(id), `behaviors/${id}.html`)} ${text(behavior.meta.title)}`,
+      `${idLink(id, recordPath(id))} ${text(behavior.meta.title)}`,
       behavior.meta.status,
-      owners.length === 0 ? badge("no owner", "warn") : owners.map((o) => idLink(o, `ownership.html#${o}`)).join(", "),
+      owners.length === 0 ? badge("no owner", "warn") : owners.map((o) => idLink(o, recordPath(o))).join(", "),
       ofTotal(linked, claims.length, "claim"),
       verified,
     ];

@@ -74,11 +74,11 @@ test("the page list is the content pages, the specifications, the guide, conform
     "guide/index.html",
     "conformance/index.html",
     "example/index.html",
+    // Each record's one page, the Atlas's, at the address the walkthrough links (2026-11-02).
     ...records.map((r) => `example/${r.id}/index.html`),
-    // The worked example's Atlas: its map, its five review pages, and one per behavior.
+    // The worked example's Atlas: its map and its six review pages.
     ATLAS_MAP_PAGE,
     ...REVIEW_PAGES.map(([, path]) => path),
-    ...records.filter((r) => r.type === "behavior").map((r) => `example/atlas/behaviors/${r.id}/index.html`),
   ].sort();
   assert.deepEqual([...pages].sort(), expected);
   assert.ok(records.length >= 10, "the worked example has fewer records than expected");
@@ -525,25 +525,39 @@ test("the worked example opens every record on the page, in the act it belongs t
     // And the way to the record's own page, which the deep links and the search results use.
     assert.match(fold, new RegExp(`<a href="${record.id}/">`), `${record.id}: no way to its own page`);
 
+    // The record's page is the Atlas's (2026-11-02): its text first, rendered, then its links and what the review
+    // pages say about it, every record it names linked to that record's page.
     const page = main(`example/${record.id}/index.html`);
-    const card = page.slice(page.indexOf('<section class="ms-card record"'), page.indexOf("</section>"));
-    const cardText = text(card);
-    for (const value of [record.id, record.type, record.status, record.owner, record.visibility, ...record.audiences]) {
-      assert.ok(cardText.includes(value), `${record.id}: card lacks ${value}`);
+    const title = record.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.match(page, new RegExp(`<h1 id="[^"]+">${record.id}: ${title}</h1>`), `${record.id}: its heading`);
+    const pageText = text(page);
+    for (const value of [record.type, record.status, record.owner, record.visibility, ...record.audiences]) {
+      assert.ok(pageText.includes(value), `${record.id}: the page lacks ${value}`);
     }
-    const pins = record.review?.pins ?? [];
+    const written = page.indexOf('id="the-record"');
+    assert.ok(written > 0, `${record.id}: no record text`);
+    assert.ok(flat(text(page.slice(written))).includes(opening.slice(0, 60)), `${record.id}: the page lacks its body`);
+    for (const [, heading] of record.body.matchAll(/^## (.+)$/gm)) {
+      assert.match(page.slice(written), new RegExp(`<h3>${heading}</h3>`), `${record.id}: ${heading}, a level down`);
+    }
     for (const target of [
       ...(record.parent ? [record.parent] : []),
       ...record.links.flatMap(([, ids]) => ids),
-      ...pins,
+      ...(record.review?.pins ?? []),
     ]) {
-      assert.match(card, new RegExp(`<a href="\\.\\./${target}/">${target}</a>`), `${record.id}: ${target}`);
+      assert.match(
+        page,
+        new RegExp(`<a href="\\.\\./${target}/"><code>${target}</code></a>`),
+        `${record.id}: ${target}`,
+      );
     }
-    // A reviewed record's card says who reviewed it and when, and carries each tip beside the ID it is for.
-    if (record.review) assert.ok(cardText.includes(`${record.review.by}, ${record.review.at}`), `${record.id}: review`);
-    for (const [id, tip] of record.tips) assert.ok(cardText.includes(`${id} · ${tip}`), `${record.id}: tip for ${id}`);
+    // A reviewed record's page says who reviewed it and when, and carries each tip beside the ID it is for.
+    if (record.review) {
+      assert.ok(pageText.includes(`by ${record.review.by}, ${record.review.at}`), `${record.id}: review`);
+    }
+    for (const [id, tip] of record.tips)
+      assert.ok(pageText.includes(`Tip for ${id} : ${tip}`), `${record.id}: tip for ${id}`);
     // The body is rendered, the frontmatter is not.
-    assert.match(page, new RegExp(`<h1 id="[^"]+">${record.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</h1>`));
     assert.doesNotMatch(page, /intentset:\s*\n\s*spec:/, `${record.id}: frontmatter leaked into the page`);
     assert.doesNotMatch(page, /<pre/, `${record.id}: frontmatter rendered as a code block`);
   }

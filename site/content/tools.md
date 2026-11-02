@@ -33,7 +33,7 @@ pnpm exec intentset init
 
 ## The Product Atlas
 
-`@intentset/atlas` draws a model as static review pages: products and capabilities, each behavior with its rules, ownership, verification and publication readiness, and the diagnostics. `intentset serve` shows them while you work and `--out` writes them to a folder. The Atlas is internal: every page says it may hold restricted records and names the snapshot it describes. [Lantern's map and review pages](../example/atlas/map/) are the one exception, public because Lantern is invented.
+`@intentset/atlas` draws a model as static review pages: every record on a page of its own with its text and its links, products and capabilities, each behavior with its rules, ownership, verification and publication readiness, and the diagnostics. `intentset serve` shows them while you work and `--out` writes them to a folder. The Atlas is internal: every page says it may hold restricted records and names the snapshot it describes. [Lantern's map and review pages](../example/atlas/map/) are the one exception, public because Lantern is invented.
 
 ## The publisher and the help runtime
 

@@ -52,6 +52,7 @@ export class Model {
   readonly graph: Graph;
   readonly #byType = new Map<ArtifactType, Artifact[]>();
   readonly #perClaim = new Map<string, ClaimCoverage>();
+  #byPath: Map<string, string> | undefined;
 
   constructor(input: AtlasInput) {
     this.input = input;
@@ -72,6 +73,12 @@ export class Model {
 
   get(id: string): Artifact | undefined {
     return this.graph.artifacts.get(id);
+  }
+
+  /** The ID of the record whose file is at a repository-relative path, if one is. */
+  byPath(path: string): string | undefined {
+    this.#byPath ??= new Map([...this.graph.artifacts.values()].map((a) => [a.path, a.meta.id]));
+    return this.#byPath.get(path);
   }
 
   get hasEvidence(): boolean {

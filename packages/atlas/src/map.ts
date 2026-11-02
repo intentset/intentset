@@ -11,6 +11,7 @@
  */
 import { type Artifact, type ArtifactType, compareStrings, type Edge } from "@intentset/core";
 import { type Model, STATUS_WORDS } from "./model.ts";
+import { recordPath } from "./record-text.ts";
 import { escapeHtml } from "./text.ts";
 
 /** The five families a node's color says, each named in the legend. */
@@ -40,23 +41,9 @@ const RADIUS: Partial<Record<ArtifactType, number>> = {
   slice: 7,
 };
 
-/** Where a record is shown on the Atlas's pages, relative to the Atlas's root; null when no page shows it. */
-export function pageOf(artifact: Artifact): string | null {
-  const id = artifact.meta.id;
-  switch (artifact.meta.type) {
-    case "behavior":
-      return `behaviors/${id}.html`;
-    case "capability":
-      return `index.html#${id}`;
-    case "slice":
-      return `ownership.html#${id}`;
-    case "verification":
-      return `verification.html#${id}`;
-    case "knowledge":
-      return `publication.html#${id}`;
-    default:
-      return null;
-  }
+/** Where a record is shown on the Atlas's pages, relative to the Atlas's root: every record has a page. */
+export function pageOf(artifact: Artifact): string {
+  return recordPath(artifact.meta.id);
 }
 
 export interface MapNode {
