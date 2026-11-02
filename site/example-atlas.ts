@@ -8,7 +8,9 @@
  *
  * The site renders each page's Markset source in its own shell, under /example/atlas/, so the Atlas wears the bar,
  * the Examples rail and the site's addresses: `ownership.html` is served at `example/atlas/ownership/`. The map is
- * the example's landing page, named after it; the other five are its review pages.
+ * the example's landing page, named after it; the others in the Atlas's navigation are its review pages. A record's
+ * page is served where the example's records always were, `records/BEH-ASMT-SCHEDULE.html` at
+ * `example/BEH-ASMT-SCHEDULE/`, so each record has one page, the one every fold of the walkthrough links (2026-11-02).
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
@@ -16,9 +18,11 @@ import {
   NAV as ATLAS_NAV,
   type AtlasInput,
   atlasMapLayout,
-  buildAtlasSources,
+  buildAtlasPages,
   MAP_SCRIPT_FILE,
   mapHtml,
+  recordPath,
+  relativeLink,
 } from "@intentset/atlas";
 import { graphHash, plainCarrier, readRegistries, validate } from "@intentset/core";
 
@@ -26,13 +30,16 @@ import { graphHash, plainCarrier, readRegistries, validate } from "@intentset/co
 export const ATLAS_ROOT = "example/atlas";
 
 export interface ExampleAtlasPage {
-  /** The page's path in the Atlas, e.g. `behaviors/BEH-ASMT-SCHEDULE.html`. */
+  /** The page's path in the Atlas, e.g. `records/BEH-ASMT-SCHEDULE.html`. */
   atlasPath: string;
-  /** The site's output path, e.g. `example/atlas/behaviors/BEH-ASMT-SCHEDULE/index.html`. */
+  /** The site's output path, e.g. `example/BEH-ASMT-SCHEDULE/index.html`. */
   path: string;
   /** The page's Markset source, as the Atlas wrote it. */
   source: string;
-  /** The map's SVG and controls, with links at the site's addresses; only the map page has them (ADR 0015). */
+  /**
+   * HTML for the page's slot, with links at the site's addresses: the map's SVG and controls (ADR 0015), or a
+   * record's text, rendered.
+   */
   html?: string;
 }
 
@@ -40,8 +47,13 @@ export interface ExampleAtlasPage {
 export const ATLAS_MAP_SCRIPT = `${ATLAS_ROOT}/${MAP_SCRIPT_FILE}`;
 export const ATLAS_MAP_STYLES = `${ATLAS_ROOT}/atlas-map.css`;
 
-/** The site's output path for an Atlas page: `index.html` stays the root, `x/y.html` becomes `x/y/index.html`. */
+/**
+ * The site's output path for an Atlas page: `index.html` stays the root, a record's page is the example's page for
+ * that record, `example/<ID>/index.html`, and `x.html` becomes `x/index.html`.
+ */
 export function atlasSitePath(atlasPath: string): string {
+  const record = /^records\/([^/]+)\.html$/.exec(atlasPath);
+  if (record !== null) return `${posix.dirname(ATLAS_ROOT)}/${record[1]}/index.html`;
   return atlasPath === "index.html"
     ? `${ATLAS_ROOT}/index.html`
     : `${ATLAS_ROOT}/${atlasPath.replace(/\.html$/, "")}/index.html`;
@@ -51,8 +63,8 @@ export function atlasSitePath(atlasPath: string): string {
 export const ATLAS_MAP_PAGE = atlasSitePath("map.html");
 
 /**
- * The Atlas's review pages in its own order, the map apart: the Examples rail lists them under Lantern. A behavior's
- * page is in the section without being in the list; the overview links each one.
+ * The Atlas's review pages in its own order, the map apart: the Examples rail lists them under Lantern. A record's
+ * page is in the section without being in the list; Records lists every one.
  */
 export const REVIEW_PAGES: Array<[string, string]> = ATLAS_NAV.filter(({ path }) => path !== "map.html").map(
   ({ path, label }): [string, string] => [label, atlasSitePath(path)],
@@ -77,14 +89,17 @@ export async function exampleAtlas(exampleDir: string, relativeDir: string): Pro
     snapshot: { commit: null, graphHash: graphHash(result.graph), scope: [`${relativeDir}/**`], level },
     evidence: null,
   };
-  const sources = buildAtlasSources(input, { notice: "example" });
-  const paths = new Set(sources.keys());
+  const paths = new Set([...ATLAS_NAV.map(({ path }) => path), ...[...result.graph.artifacts.keys()].map(recordPath)]);
+  const pages = buildAtlasPages(input, {
+    notice: "example",
+    link: (from, to) => atlasLink(from, relativeLink(from, to), paths),
+  });
   const map = mapHtml(atlasMapLayout(input), "", (path) => atlasLink("map.html", path, paths));
-  return [...sources].map(([atlasPath, source]) => ({
+  return pages.map(({ path: atlasPath, source, html }) => ({
     atlasPath,
     path: atlasSitePath(atlasPath),
     source,
-    ...(atlasPath === "map.html" ? { html: map } : {}),
+    ...(atlasPath === "map.html" ? { html: map } : html === undefined ? {} : { html }),
   }));
 }
 

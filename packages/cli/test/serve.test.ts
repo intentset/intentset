@@ -99,14 +99,14 @@ test("BEH-ATLAS: serve prints the URL, the snapshot and the warning, serves the 
   // The map and its one script, which the policy lets run from the Atlas itself and nowhere else (ADR 0015).
   assert.equal((await raw(serving.url, "/map.html")).status, 200);
   assert.equal((await raw(serving.url, "/atlas-map.js")).type, "text/javascript; charset=utf-8");
-  assert.equal((await raw(serving.url, "/behaviors/BEH-ASMT-SCHEDULE.html")).status, 200);
+  assert.equal((await raw(serving.url, "/records/BEH-ASMT-SCHEDULE.html")).status, 200);
   assert.equal((await raw(serving.url, "/verification.html")).status, 200);
 
   for (const path of [
     "/../.intentset/config.yaml",
     "/..%2f.intentset%2fconfig.yaml",
     "/%2e%2e/%2e%2e/package.json",
-    "/behaviors/../../product/scheduling/PRD-LANTERN.md",
+    "/records/../../product/scheduling/PRD-LANTERN.md",
     "/product/scheduling/PRD-LANTERN.md",
     "/.intentset/registries.yaml",
     "//etc/passwd",
@@ -127,7 +127,7 @@ test("BEH-ATLAS: serve rebuilds when a record changes, so a reload shows the edi
   const before = snapshot(dir);
   const serving = await serve(dir);
   t.after(() => serving.stop());
-  const page = "/behaviors/BEH-ASMT-SCHEDULE.html";
+  const page = "/records/BEH-ASMT-SCHEDULE.html";
   assert.doesNotMatch((await raw(serving.url, page)).body, /for a class/);
   await raw(serving.url, "/");
   assert.doesNotMatch(serving.output(), /^rebuilt:/m, "nothing changed, so nothing was rebuilt");
@@ -157,7 +157,7 @@ test("BEH-ATLAS: serve --out writes the Atlas and exits, the same bytes twice, n
     .map(String)
     .sort();
   assert.ok(files.includes("index.html") && files.includes("atlas.css"));
-  assert.ok(files.includes(join("behaviors", "BEH-ASMT-SCHEDULE.html")));
+  assert.ok(files.includes(join("records", "BEH-ASMT-SCHEDULE.html")));
   const second = await run(dir, "serve", "--out", "dist/again");
   assert.equal(second.code, 1);
   for (const file of files.filter((f) => f.includes("."))) {

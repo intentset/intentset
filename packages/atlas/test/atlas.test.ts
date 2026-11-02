@@ -14,7 +14,14 @@ import {
 import { classifyEvidence, coverage, type RunRecord } from "@intentset/verification";
 import { parseDocument } from "@markset-lang/parser";
 import { defaultStylesheetPath } from "@markset-lang/render-html";
-import { type AtlasInput, type AtlasMapLayout, atlasMapLayout, buildAtlas, buildAtlasSources } from "../src/index.ts";
+import {
+  type AtlasInput,
+  type AtlasMapLayout,
+  atlasMapLayout,
+  buildAtlas,
+  buildAtlasPages,
+  buildAtlasSources,
+} from "../src/index.ts";
 import { chartLabel } from "../src/pages/overview.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
@@ -107,17 +114,18 @@ function pages(atlas: Map<string, string>): [string, string][] {
 
 const PAGES = [
   "index.html",
+  "records.html",
   "ownership.html",
   "verification.html",
   "publication.html",
   "diagnostics.html",
   "map.html",
-  "behaviors/BEH-ASMT-SCHEDULE.html",
+  ...files.map(({ name }) => `records/${name.replace(/\.md$/, ".html")}`),
   "atlas.css",
   "atlas-map.js",
 ];
 
-test("BEH-ATLAS: the Atlas of the example has the six pages, a page per behavior, and the stylesheet once", () => {
+test("BEH-ATLAS: the Atlas of the example has the seven pages, a page per record, and the stylesheet once", () => {
   const atlas = buildAtlas(example());
   assert.deepEqual([...atlas.keys()], PAGES);
   assert.ok(
@@ -201,20 +209,122 @@ test("BEH-ATLAS: an invented example's Atlas says so on every page instead of th
   }
 });
 
-test("BEH-ATLAS: the layout is Markset's: the context bundle as a grid of cards, the record text folded, coverage drawn as charts", () => {
+test("BEH-ATLAS: the layout is Markset's: the record's text first, the context bundle as a grid of cards, coverage drawn as charts", () => {
   const input = example({ runs: (hash) => [review(hash)] });
   const atlas = buildAtlas(input);
-  const behavior = atlas.get("behaviors/BEH-ASMT-SCHEDULE.html") ?? "";
+  const behavior = atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "";
   assert.match(behavior, /<div class="ms-grid" data-cols="3"/);
   assert.ok(
     (behavior.match(/class="ms-grid-item">\s*<section class="ms-card/g) ?? []).length >= 4,
     "one card per role",
   );
-  assert.match(behavior, /<details class="ms-callout"/, "the record text is folded");
+  assert.match(
+    behavior,
+    /<h2 id="the-record">The record<\/h2>\s*<h3>Behavior<\/h3>\s*<p>A teacher submits[\s\S]*<h2 id="context-bundle">/,
+    "the record's text, rendered, with its sections a level down and before what the Atlas derives",
+  );
+  assert.doesNotMatch(behavior, /<details/, "nothing is folded away");
   // A chart is drawn in front of its table, and the table stays on the page.
   const verification = atlas.get("verification.html") ?? "";
   assert.match(verification, /<svg class="ms-chart" data-chart="bar"[\s\S]*?<table>/);
   for (const [path, html] of pages(atlas)) if (path !== "map.html") assert.doesNotMatch(html, /<script/i, path);
+});
+
+test("BEH-ATLAS: every record has a page that opens with its text, rendered, before anything the Atlas derives", () => {
+  const atlas = buildAtlas(example());
+  for (const { name, source } of files) {
+    const id = name.replace(/\.md$/, "");
+    const page = atlas.get(`records/${id}.html`) ?? "";
+    const body = source.slice(source.indexOf("\n---\n", 4) + 5);
+    // The first sentence of the record's first section, as a reader sees it.
+    const sentence = (body.split(/\n## [^\n]+\n/)[1] ?? "")
+      .trim()
+      .split(/(?<=\.)\s/)[0]
+      .replace(/\s+/g, " ");
+    assert.ok(sentence.length > 20, `${id}: nothing to compare`);
+    const text = textOf(page);
+    const at = text.indexOf(sentence);
+    assert.ok(at > text.indexOf("The record"), `${id}: its text is on its page, under The record`);
+    for (const derived of ["Context bundle", "Links"]) {
+      if (text.includes(derived)) assert.ok(at < text.indexOf(derived), `${id}: its text comes before ${derived}`);
+    }
+    assert.doesNotMatch(page, /<details/, `${id}: nothing is folded away`);
+    assert.equal((page.match(/<h1[\s>]/g) ?? []).length, 1, `${id}: its own title heading is dropped`);
+  }
+});
+
+test("BEH-ATLAS: Records lists every record by type, and every record ID on the review pages links to its page", () => {
+  const atlas = buildAtlas(example());
+  const records = atlas.get("records.html") ?? "";
+  for (const { name } of files) {
+    const id = name.replace(/\.md$/, "");
+    assert.ok(records.includes(`<a href="records/${id}.html"><code>${id}</code></a>`), `Records lists ${id}`);
+  }
+  assert.match(textOf(records), /Products \(1\).*Behaviors \(1\).*Rules \(2\).*Verifications \(1\).*Decisions \(1\)/);
+  for (const page of ["index.html", "ownership.html", "verification.html", "publication.html", "records.html"]) {
+    assert.ok(atlas.get(page)?.includes('<a href="records.html"'), `${page}: Records is in the navigation`);
+  }
+  // A rule, a verification, a slice and a knowledge record were IDs without a page, or anchors on a review page.
+  const verification = atlas.get("verification.html") ?? "";
+  assert.ok(verification.includes('<a href="records/RULE-ASMT-AUTH.html"><code>RULE-ASMT-AUTH</code></a>'));
+  assert.ok(verification.includes('<a href="records/TEST-ASMT-SCHEDULE.html"><code>TEST-ASMT-SCHEDULE</code></a>'));
+  assert.ok(atlas.get("index.html")?.includes('<a href="records/SLICE-ASMT-SCHEDULE.html">'));
+  assert.ok(atlas.get("publication.html")?.includes('<a href="records/BEH-ASMT-SCHEDULE.html">'));
+  for (const path of ["index.html", "ownership.html", "verification.html", "publication.html", "diagnostics.html"]) {
+    const html = atlas.get(path) ?? "";
+    assert.doesNotMatch(html, /href="[^"#]+#[A-Z][A-Z0-9]*-/, `${path}: a record ID links its page, not an anchor`);
+  }
+});
+
+test("BEH-ATLAS: a record's page lists the links written in it and, derived, those other records write to it", () => {
+  const atlas = buildAtlas(example());
+  const rule = textOf(atlas.get("records/RULE-ASMT-AUTH.html") ?? "");
+  assert.ok(rule.includes("Governs (derived): BEH-ASMT-SCHEDULE Schedule a student assessment"));
+  assert.ok(rule.includes("Verified by (derived): TEST-ASMT-SCHEDULE"));
+  const scenario = textOf(atlas.get("records/SCN-ASMT-SCHEDULE.html") ?? "");
+  assert.ok(scenario.includes("Illustrates: BEH-ASMT-SCHEDULE"));
+  const measure = textOf(atlas.get("records/MEAS-PREPARE-ADOPTION.html") ?? "");
+  assert.ok(measure.includes("Parent: OUT-PREPARE"));
+  assert.ok(measure.includes("Target: 60% of assignments scheduled at least one day before they open"));
+  const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
+  assert.ok(knowledge.includes("Review: review current reviewed by team-assessment"));
+  assert.ok(knowledge.includes("Tip for RULE-ASMT-FUTURE: The release time must be in the future."));
+  const slice = atlas.get("records/SLICE-ASMT-SCHEDULE.html") ?? "";
+  assert.ok(slice.includes('href="../ownership.html#SLICE-ASMT-SCHEDULE"'), "a slice's page leads to its ownership");
+});
+
+test("BEH-ATLAS: in a record's text, a safe link stays, a link to another record's file leads to its page, an ID in code links it, and anything else keeps only its words", () => {
+  const input = example({
+    edit: (name, source) =>
+      name === "RULE-ASMT-AUTH.md"
+        ? `${source}\nSee [the rule](RULE-ASMT-FUTURE.md#constraint), \`BEH-ASMT-SCHEDULE\`, [the docs](https://example.com/docs), ` +
+          "[a script](javascript:alert(1)), [a file](../../README.md) and ![a picture](diagram.png).\n"
+        : source,
+  });
+  const page = buildAtlas(input).get("records/RULE-ASMT-AUTH.html") ?? "";
+  assert.ok(page.includes('<a href="RULE-ASMT-FUTURE.html">the rule</a>'));
+  assert.ok(page.includes('<a href="BEH-ASMT-SCHEDULE.html"><code>BEH-ASMT-SCHEDULE</code></a>'));
+  assert.ok(page.includes('<a href="https://example.com/docs">the docs</a>'));
+  assert.doesNotMatch(page, /javascript:|README\.md|diagram\.png|<img/);
+  assert.ok(textOf(page).includes("a script, a file and a picture."));
+
+  // The site serves the pages at addresses of its own, and says where the record's text links lead.
+  const site = buildAtlasPages(input, { link: (from, to) => `/site/${to}?from=${from}` });
+  const html = site.find((p) => p.path === "records/RULE-ASMT-AUTH.html")?.html ?? "";
+  assert.ok(
+    html.includes('<a href="/site/records/RULE-ASMT-FUTURE.html?from=records/RULE-ASMT-AUTH.html">the rule</a>'),
+  );
+  assert.equal(site.find((p) => p.path === "map.html")?.html, undefined, "the map's HTML is mapHtml's");
+});
+
+test("BEH-ATLAS: a record's text that does not parse as Markset is shown as written, and the page says so", () => {
+  const input = example({
+    edit: (name, source) => (name === "SCN-ASMT-SCHEDULE.md" ? `${source}\n:::nope\nunclosed\n` : source),
+  });
+  const page = textOf(buildAtlas(input).get("records/SCN-ASMT-SCHEDULE.html") ?? "");
+  assert.ok(page.includes("Shown as written"));
+  assert.ok(page.includes("does not parse as Markset (DIRECTIVE_UNKNOWN_NAME)"));
+  assert.ok(page.includes(":::nope unclosed"));
 });
 
 test("a capability's chart label drops CAP- and shortens a long ID", () => {
@@ -242,8 +352,9 @@ test("BEH-ATLAS-MAP: every record is a node and every authored link an edge, dra
   assert.doesNotMatch(map, /NaN|Infinity/, "every coordinate is a number");
   // The picture stands without the script: the controls are hidden until it runs, and every record with a page links it.
   assert.match(map, /<div class="am-controls" hidden>/);
-  assert.match(map, /<a class="am-node" data-id="BEH-ASMT-SCHEDULE"[^>]* href="behaviors\/BEH-ASMT-SCHEDULE.html"/);
-  assert.match(map, /<g class="am-node" data-id="RULE-ASMT-AUTH"[^>]* tabindex="0"/);
+  assert.match(map, /<a class="am-node" data-id="BEH-ASMT-SCHEDULE"[^>]* href="records\/BEH-ASMT-SCHEDULE.html"/);
+  assert.match(map, /<a class="am-node" data-id="RULE-ASMT-AUTH"[^>]* href="records\/RULE-ASMT-AUTH.html"/);
+  assert.doesNotMatch(map, /<g class="am-node"/, "every record has a page, so every node is a link");
 });
 
 test("BEH-ATLAS-MAP: the same graph gives the same map, whatever order its files are read in", () => {
@@ -407,7 +518,7 @@ test("without evidence the Atlas says so, shows link coverage only, and counts n
   assert.ok(verification.includes("Verified at this snapshot not assessed"));
   assert.ok(!verification.includes("current pass 1 of"));
   assert.ok(textOf(atlas.get("index.html") as string).includes("No run evidence supplied"));
-  const behavior = textOf(atlas.get("behaviors/BEH-ASMT-SCHEDULE.html") as string);
+  const behavior = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") as string);
   assert.ok(behavior.includes("Verified: not assessed, because no run evidence was supplied."));
 });
 
@@ -418,7 +529,7 @@ test("a pass recorded against another graph hash reads as stale, in words, and v
   assert.ok(verification.includes("stale 1 of 1 verification definition"));
   assert.ok(verification.includes("current pass 0 of 1 verification definition"));
   assert.ok(verification.includes("Verified at this snapshot 0 of 1 0 of 2 0 of 1 evidence"));
-  const behavior = textOf(atlas.get("behaviors/BEH-ASMT-SCHEDULE.html") as string);
+  const behavior = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") as string);
   assert.ok(behavior.includes("stale"));
   assert.ok(behavior.includes(`EV-REVIEW-001 pass, finished 2026-09-30T09:45:00Z, at commit ${COMMIT.slice(0, 12)}`));
   assert.ok(behavior.includes("Verified at this snapshot: 0 of 4 claims (evidence)."));
@@ -458,9 +569,16 @@ test("every status word is on the verification page in text, with or without evi
   }
 });
 
-test("no count is a percentage", () => {
-  for (const [path, html] of pages(buildAtlas(example({ runs: (hash) => [review(hash)] })))) {
-    assert.ok(!/\d\s*%/.test(textOf(html)), path);
+test("no count is a percentage: a percent sign is only ever a record's own words, such as a measure's target", () => {
+  const input = example({ runs: (hash) => [review(hash)] });
+  const targets = [...input.graph.artifacts.values()].flatMap((a) => a.meta.measure?.target ?? []);
+  assert.ok(
+    targets.some((target) => target.includes("%")),
+    "the example has a target to except",
+  );
+  for (const [path, html] of pages(buildAtlas(input))) {
+    const derived = targets.reduce((page, target) => page.replaceAll(target, ""), textOf(html));
+    assert.ok(!/\d\s*%/.test(derived), path);
   }
 });
 
@@ -498,7 +616,7 @@ test("record text cannot open markup: titles and bodies are escaped", () => {
         : source,
   });
   const atlas = buildAtlas(input);
-  const behavior = atlas.get("behaviors/BEH-ASMT-SCHEDULE.html") as string;
+  const behavior = atlas.get("records/BEH-ASMT-SCHEDULE.html") as string;
   assert.ok(!/<script/i.test(behavior));
   assert.ok(!behavior.includes("<b>"));
   assert.ok(textOf(behavior).includes(hostile));

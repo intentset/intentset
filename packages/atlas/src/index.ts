@@ -1,8 +1,8 @@
 /**
  * @intentset/atlas: static review pages over a validated graph (Core §10,
- * milestone M4). Product and capability overview, behavior detail,
- * engineering ownership, verification status, publication readiness and
- * diagnostics.
+ * milestone M4). Product and capability overview, every record on a page of
+ * its own with its text first (a behavior's with its detail), engineering
+ * ownership, verification status, publication readiness and diagnostics.
  *
  * Every page is generated as Markset source, with `markset: 0` and a derived
  * `intentset/atlas/0.2` block in its frontmatter, then parsed back and
@@ -22,19 +22,21 @@
  * Deterministic: the same input gives the same bytes.
  */
 import { readFileSync } from "node:fs";
-import { graphHash } from "@intentset/core";
+import { type Artifact, compareStrings, graphHash } from "@intentset/core";
 import { defaultStylesheetPath } from "@markset-lang/render-html";
 import { Model } from "./model.ts";
 import { type AtlasMapLayout, layoutMap, MAP_STYLES, mapHtml } from "./map.ts";
 import { MAP_SCRIPT } from "./map-script.ts";
 import { atlasMeta, type PageSource, pageSource, STYLESHEET, shell } from "./page.ts";
-import { behaviorPage } from "./pages/behavior.ts";
 import { diagnosticsPage } from "./pages/diagnostics.ts";
 import { mapPage } from "./pages/map.ts";
 import { overviewPage } from "./pages/overview.ts";
 import { ownershipPage } from "./pages/ownership.ts";
 import { publicationPage } from "./pages/publication.ts";
+import { recordPage } from "./pages/record.ts";
+import { recordsPage } from "./pages/records.ts";
 import { verificationPage } from "./pages/verification.ts";
+import { type PageLink, relativeLink } from "./record-text.ts";
 import type { AtlasInput, AtlasOptions } from "./types.ts";
 
 export {
@@ -50,6 +52,7 @@ export {
 export { STATUS_WORDS } from "./model.ts";
 export { type AtlasMapLayout, GROUPS, MAP_STYLES, type MapEdge, type MapNode, mapHtml } from "./map.ts";
 export { MAP_SCRIPT } from "./map-script.ts";
+export { type PageLink, recordPath, relativeLink } from "./record-text.ts";
 
 /** The map's script, as the Atlas writes it beside the pages. */
 export const MAP_SCRIPT_FILE = "atlas-map.js";
@@ -57,8 +60,8 @@ export type * from "./types.ts";
 
 export const DEFAULT_TITLE = "Intentset Atlas";
 
-/** The pages, in a fixed order: the five top-level pages, then one per behavior by ID. */
-function pages(input: AtlasInput): PageSource[] {
+/** The pages, in a fixed order: the navigation's pages, then one per record by ID. */
+function pages(input: AtlasInput, pageLink: PageLink = relativeLink): PageSource[] {
   if (graphHash(input.graph) !== input.snapshot.graphHash) {
     throw new Error(
       "atlas: the snapshot's graph hash is not the hash of the graph given; the Atlas must state the snapshot it shows",
@@ -68,12 +71,15 @@ function pages(input: AtlasInput): PageSource[] {
   const layout = layoutMap(model);
   return [
     overviewPage(model),
+    recordsPage(model),
     ownershipPage(model),
     verificationPage(model),
     publicationPage(model),
     diagnosticsPage(model),
     { ...mapPage(layout), html: mapHtml(layout) },
-    ...model.ofType("behavior").map((behavior) => behaviorPage(model, behavior)),
+    ...[...model.graph.artifacts.keys()]
+      .sort(compareStrings)
+      .map((id) => recordPage(model, model.get(id) as Artifact, pageLink)),
   ];
 }
 
@@ -84,8 +90,28 @@ export function atlasMapLayout(input: AtlasInput): AtlasMapLayout {
 
 /** Every page's Markset source, by the relative path of the HTML it renders to. */
 export function buildAtlasSources(input: AtlasInput, options: AtlasOptions = {}): Map<string, string> {
+  return new Map(buildAtlasPages(input, options).map((page) => [page.path, page.source]));
+}
+
+/** One page for a caller that renders the Markset in a shell of its own, as intentset.org does. */
+export interface AtlasPage {
+  path: string;
+  source: string;
+  /** HTML for the source's slot (`placeHtml`): a record's text. The map's comes from `mapHtml`. */
+  html?: string;
+}
+
+/**
+ * Every page's Markset source, with the HTML a record's page places in its slot. `link` writes the address of one
+ * Atlas page on another, in that HTML; the source's own links are relative, for the caller to point.
+ */
+export function buildAtlasPages(input: AtlasInput, options: AtlasOptions & { link?: PageLink } = {}): AtlasPage[] {
   const meta = atlasMeta(input.snapshot);
-  return new Map(pages(input).map((page) => [page.path, pageSource(page, meta, options.notice)]));
+  return pages(input, options.link).map((page) => ({
+    path: page.path,
+    source: pageSource(page, meta, options.notice),
+    ...(page.html === undefined || page.path === "map.html" ? {} : { html: page.html }),
+  }));
 }
 
 let stylesheet: string | null = null;

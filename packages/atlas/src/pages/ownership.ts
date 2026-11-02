@@ -8,6 +8,7 @@
 import { type Artifact, compareStrings, type LinkKind } from "@intentset/core";
 import type { Model } from "../model.ts";
 import type { PageSource } from "../page.ts";
+import { recordPath } from "../record-text.ts";
 import { badge, code, idLink, link, ofTotal, plural, table, text } from "../text.ts";
 import { diagnosticItem } from "./diagnostics.ts";
 
@@ -45,9 +46,7 @@ export function ownershipPage(model: Model): PageSource {
     body.push(
       `${ofTotal(unowned.length, behaviors.length, "behavior")} have no slice implementing them.`,
       "",
-      ...unowned.map(
-        (b) => `- ${link(code(b.meta.id), `behaviors/${b.meta.id}.html`)} ${text(b.meta.title)} · ${b.meta.status}`,
-      ),
+      ...unowned.map((b) => `- ${idLink(b.meta.id, recordPath(b.meta.id))} ${text(b.meta.title)} · ${b.meta.status}`),
       "",
     );
   }
@@ -69,7 +68,7 @@ export function ownershipPage(model: Model): PageSource {
             ? "none"
             : [...r.consumers]
                 .sort(compareStrings)
-                .map((c) => idLink(c, model.get(c)?.meta.type === "slice" ? `#${c}` : null))
+                .map((c) => idLink(c, model.get(c) === undefined ? null : recordPath(c)))
                 .join(", "),
         ]),
       ),
@@ -115,6 +114,7 @@ function sliceSection(model: Model, slice: Artifact): string[] {
     `owner ${text(slice.meta.owner)}`,
     ...(meta === undefined ? [] : [`domain ${text(meta.domain)}`]),
     code(slice.path),
+    link("its page", recordPath(id)),
   ];
   const lines = [
     `{#${id}}`,
@@ -133,17 +133,12 @@ function sliceSection(model: Model, slice: Artifact): string[] {
   if (meta?.rationale !== undefined) items.push(`- **Rationale:** ${text(meta.rationale)}`);
   for (const { kind, label } of RELATIONS) {
     const targets = model.from(id, kind);
-    const written = targets.map((t) => {
-      const target = model.get(t) as Artifact;
-      const href =
-        target.meta.type === "behavior" ? `behaviors/${t}.html` : target.meta.type === "slice" ? `#${t}` : null;
-      return `${idLink(t, href)} ${text(target.meta.title)}`;
-    });
+    const written = targets.map((t) => `${idLink(t, recordPath(t))} ${text((model.get(t) as Artifact).meta.title)}`);
     items.push(`- **${label}:** ${written.length === 0 ? "none" : written.join("; ")}`);
   }
   const dependents = model.into(id, "dependsOn", "slice");
   items.push(
-    `- **Depended on by:** ${dependents.length === 0 ? "none" : dependents.map((d) => idLink(d, `#${d}`)).join(", ")}`,
+    `- **Depended on by:** ${dependents.length === 0 ? "none" : dependents.map((d) => idLink(d, recordPath(d))).join(", ")}`,
   );
   const resources = model.input.registries.resources
     .filter((r) => (meta?.usesResources ?? []).includes(r.id) || r.consumers.includes(id))

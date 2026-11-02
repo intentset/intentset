@@ -1,8 +1,9 @@
 # @intentset/atlas
 
-The Atlas: static review pages over a validated model, for the people who approve what agents write. Capabilities
-and behaviors, ownership, verification status with missing and stale evidence shown as such, and publication
-readiness, each count naming its snapshot and denominator. Every page is Markset rendered to HTML.
+The Atlas: static review pages over a validated model, for the people who approve what agents write. Every record
+on a page of its own, its text first; capabilities and behaviors, ownership, verification status with missing and
+stale evidence shown as such, and publication readiness, each count naming its snapshot and denominator. Every page
+is Markset rendered to HTML.
 
 ## Install
 

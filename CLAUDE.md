@@ -257,7 +257,10 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   record used to be patches `status: draft` itself.
 - **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
   drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the
-  Examples rail. The map is Lantern's landing page (2026-10-20): its h1 is "Lantern, a worked example", it links the
+  Examples rail. Each record's page is the Atlas's (2026-11-02): served at `/example/<ID>/`, the address the
+  walkthrough's folds always linked, it opens with the record's text and then its links, and Records, a review page,
+  lists every one; the site's own record page and the Atlas's behavior page at `/example/atlas/behaviors/<ID>/` gave
+  way to it, so each record has one page, inside the navigation. The map is Lantern's landing page (2026-10-20): its h1 is "Lantern, a worked example", it links the
   walkthrough and the review pages under the picture, and every way into the example (the bar, the home page, Start,
   Tools, How it works, the roadmap) leads to it. It has no run evidence and no commit, because the example's check has not been executed and the
   pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
