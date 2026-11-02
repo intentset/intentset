@@ -55,6 +55,16 @@ function linksFrom(page: string): Set<string> {
 }
 
 /** The hrefs of the section rail on a page, as output paths. */
+/** A record of the worked example's page: the rail names it beneath Records, the entry that lists it (2026-11-02). */
+const RECORD_PAGE = /^example\/[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\/index\.html$/;
+const RECORDS = "example/atlas/records/index.html";
+
+/** The rail a page should carry: its section's links, and a record's page beneath Records. */
+function expectedRail(page: string, section: Parameters<typeof railLinks>[0]): string[] {
+  const links = railLinks(section).map(([, href]) => href);
+  return RECORD_PAGE.test(page) ? links.flatMap((href) => (href === RECORDS ? [href, page] : [href])) : links;
+}
+
 function rail(page: string): string[] {
   const nav = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html.get(page) ?? "");
   if (!nav) return [];
@@ -147,15 +157,18 @@ test("a page in a section carries its section's rail, marks itself once, and the
       assert.deepEqual(rail(page), [], `${page} belongs to no section and has a rail`);
       continue;
     }
-    assert.deepEqual(
-      rail(page),
-      railLinks(section).map(([, href]) => href),
-      `${page}: the ${section.title} rail`,
-    );
+    assert.deepEqual(rail(page), expectedRail(page, section), `${page}: the ${section.title} rail`);
     const nav = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(doc)?.[1] ?? "";
     const marked = (nav.match(/aria-current="page"/g) ?? []).length;
-    // A record of the worked example is in the section without being in its list.
-    assert.equal(marked, railLinks(section).some(([, href]) => href === page) ? 1 : 0, `${page}: rail marks ${marked}`);
+    // A record of the worked example is named beneath Records, which is marked as where the reader is.
+    assert.equal(marked, expectedRail(page, section).includes(page) ? 1 : 0, `${page}: rail marks ${marked}`);
+    if (RECORD_PAGE.test(page)) {
+      assert.match(
+        nav,
+        /<a href="[^"]*atlas\/records\/" aria-current="true">Records<\/a>/,
+        `${page}: Records is marked`,
+      );
+    } else assert.doesNotMatch(nav, /aria-current="true"/, `${page}: nothing is marked as a place`);
     const barLabel = NAV.find(([, href]) => href === railLinks(section)[0][1])?.[0];
     assert.deepEqual(current, [barLabel], `${page}: the bar marks ${current.join(", ") || "nothing"}`);
   }
@@ -218,11 +231,7 @@ test("Examples is one rail on every page of the section: Lantern's map, the walk
   const section = pages.filter((page) => page.startsWith("example/") || page === "pilot/index.html");
   assert.ok(section.length > 20, `only ${section.length} pages in Examples`);
   for (const page of section) {
-    assert.deepEqual(
-      rail(page),
-      railLinks(examples).map(([, href]) => href),
-      `${page}: the Examples rail`,
-    );
+    assert.deepEqual(rail(page), expectedRail(page, examples), `${page}: the Examples rail`);
     assert.equal(railFor(page, rails)?.title, "Examples", page);
   }
 });

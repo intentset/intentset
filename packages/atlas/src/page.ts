@@ -152,7 +152,9 @@ export function shell(page: PageSource, source: string, meta: AtlasMeta, siteTit
   // stays on the page; diagrams stay off, because their engines are commands outside this package.
   const body = renderHtml(checkedTree(page.path, source), { diagrams: false });
   const links = NAV.map(({ path, label }) => {
-    const current = path === page.path ? ' aria-current="page"' : "";
+    // A record's page is in Records, so Records stays marked while a reader is on one.
+    const current =
+      path === page.path || (path === "records.html" && page.path.startsWith("records/")) ? ' aria-current="page"' : "";
     return `<a href="${root}${path}"${current}>${escapeHtml(label)}</a>`;
   });
   return [

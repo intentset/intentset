@@ -4,6 +4,7 @@ import { join, posix, resolve } from "node:path";
 import { test } from "node:test";
 import {
   type Diagnostic,
+  parseYaml,
   type DocumentInput,
   graphHash,
   type Level,
@@ -220,8 +221,8 @@ test("BEH-ATLAS: the layout is Markset's: the record's text first, the context b
   );
   assert.match(
     behavior,
-    /<h2 id="the-record">The record<\/h2>\s*<h3>Behavior<\/h3>\s*<p>A teacher submits[\s\S]*<h2 id="context-bundle">/,
-    "the record's text, rendered, with its sections a level down and before what the Atlas derives",
+    /<h2 id="the-record">The record<\/h2>\s*<section class="ms-card record"[\s\S]*?<\/table>\s*<h3>Behavior<\/h3>\s*<p>A teacher submits[\s\S]*?<\/section>\s*<p class="derived">[\s\S]*<h2 id="context-bundle">/,
+    "the record in one card, its fields then its text with its sections a level down, before what the Atlas derives",
   );
   assert.doesNotMatch(behavior, /<details/, "nothing is folded away");
   // A chart is drawn in front of its table, and the table stays on the page.
@@ -276,19 +277,66 @@ test("BEH-ATLAS: Records lists every record by type, and every record ID on the 
   }
 });
 
-test("BEH-ATLAS: a record's page lists the links written in it and, derived, those other records write to it", () => {
+/** The record's card on its page: its path, its fields and its text, as a reader sees them. */
+function card(page: string): string {
+  const start = page.indexOf('<section class="ms-card record"');
+  assert.ok(start > 0, "the page has the record's card");
+  return page.slice(start, page.indexOf("</section>", start));
+}
+
+test("BEH-ATLAS: a record's card holds every value its frontmatter writes, and nothing derived", () => {
   const atlas = buildAtlas(example());
-  const rule = textOf(atlas.get("records/RULE-ASMT-AUTH.html") ?? "");
-  assert.ok(rule.includes("Governs (derived): BEH-ASMT-SCHEDULE Schedule a student assessment"));
-  assert.ok(rule.includes("Verified by (derived): TEST-ASMT-SCHEDULE"));
-  const scenario = textOf(atlas.get("records/SCN-ASMT-SCHEDULE.html") ?? "");
-  assert.ok(scenario.includes("Illustrates: BEH-ASMT-SCHEDULE"));
-  const measure = textOf(atlas.get("records/MEAS-PREPARE-ADOPTION.html") ?? "");
-  assert.ok(measure.includes("Parent: OUT-PREPARE"));
-  assert.ok(measure.includes("Target: 60% of assignments scheduled at least one day before they open"));
+  // Every value, and the keys of the maps a record keys by its own data (tips and extensions by ID, layers by name).
+  const leaves = (value: unknown, keyed = false): string[] =>
+    Array.isArray(value)
+      ? value.flatMap((v) => leaves(v, keyed))
+      : value !== null && typeof value === "object"
+        ? Object.entries(value).flatMap(([key, inner]) => [
+            ...(keyed ? [key] : []),
+            ...leaves(inner, keyed || key === "layers"),
+          ])
+        : [String(value)];
+  for (const { name, source } of files) {
+    const id = name.replace(/\.md$/, "");
+    const yaml = parseYaml(source.slice(4, source.indexOf("\n---\n", 4)));
+    const block = (yaml.value?.intentset ?? {}) as Record<string, unknown>;
+    const read = textOf(card(atlas.get(`records/${id}.html`) ?? ""));
+    for (const [key, value] of Object.entries(block)) {
+      for (const leaf of leaves(value, key === "tips" || key === "extensions")) {
+        assert.ok(read.includes(leaf), `${id}: ${key} ${leaf} is in its card`);
+      }
+    }
+    assert.ok(read.includes(`examples/scheduling/${name}`), `${id}: the card names its file`);
+    assert.ok(!read.includes("derived"), `${id}: nothing derived is in the card`);
+  }
+});
+
+test("BEH-ATLAS: a record's page links its file where a source address is given, and names the path either way", () => {
+  const without = buildAtlas(example()).get("records/RULE-ASMT-AUTH.html") ?? "";
+  assert.ok(card(without).includes("<code>examples/scheduling/RULE-ASMT-AUTH.md</code>"));
+  assert.doesNotMatch(without, /View the file/);
+  const github = buildAtlas(example(), { source: (path) => `https://github.example/repo/blob/main/${path}` });
+  assert.ok(
+    card(github.get("records/RULE-ASMT-AUTH.html") ?? "").includes(
+      '<a href="https://github.example/repo/blob/main/examples/scheduling/RULE-ASMT-AUTH.md">View the file on GitHub</a>',
+    ),
+  );
+});
+
+test("BEH-ATLAS: a record's page says where it sits, keeps Records marked, and lists the records that link to it", () => {
+  const atlas = buildAtlas(example());
+  const rule = atlas.get("records/RULE-ASMT-AUTH.html") ?? "";
+  assert.ok(rule.includes('<a href="../records.html" aria-current="page">Records</a>'), "Records is marked");
+  assert.ok(textOf(rule).includes("Records › Rules › RULE-ASMT-AUTH"));
+  assert.ok(atlas.get("records.html")?.includes('id="rule"'), "the breadcrumb's anchor is on Records");
+  assert.ok(textOf(rule).includes("Governs: BEH-ASMT-SCHEDULE Schedule a student assessment"));
+  assert.ok(textOf(rule).includes("Verified by: TEST-ASMT-SCHEDULE"));
+  const behavior = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "");
+  assert.ok(
+    behavior.includes("In the model: PRD-LANTERN › INT-PREPARE › OUT-PREPARE › CAP-ASMT-ASSIGN › BEH-ASMT-SCHEDULE"),
+  );
   const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
   assert.ok(knowledge.includes("Review: review current reviewed by team-assessment"));
-  assert.ok(knowledge.includes("Tip for RULE-ASMT-FUTURE: The release time must be in the future."));
   const slice = atlas.get("records/SLICE-ASMT-SCHEDULE.html") ?? "";
   assert.ok(slice.includes('href="../ownership.html#SLICE-ASMT-SCHEDULE"'), "a slice's page leads to its ownership");
 });
@@ -322,7 +370,7 @@ test("BEH-ATLAS: a record's text that does not parse as Markset is shown as writ
     edit: (name, source) => (name === "SCN-ASMT-SCHEDULE.md" ? `${source}\n:::nope\nunclosed\n` : source),
   });
   const page = textOf(buildAtlas(input).get("records/SCN-ASMT-SCHEDULE.html") ?? "");
-  assert.ok(page.includes("Shown as written"));
+  assert.ok(page.includes("Text shown as written"));
   assert.ok(page.includes("does not parse as Markset (DIRECTIVE_UNKNOWN_NAME)"));
   assert.ok(page.includes(":::nope unclosed"));
 });

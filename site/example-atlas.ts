@@ -23,6 +23,7 @@ import {
   mapHtml,
   recordPath,
   relativeLink,
+  type SourceUrl,
 } from "@intentset/atlas";
 import { graphHash, plainCarrier, readRegistries, validate } from "@intentset/core";
 
@@ -70,8 +71,15 @@ export const REVIEW_PAGES: Array<[string, string]> = ATLAS_NAV.filter(({ path })
   ({ path, label }): [string, string] => [label, atlasSitePath(path)],
 );
 
-/** The example at `exampleDir` (repository-relative `relativeDir`), validated and drawn as the Atlas's pages. */
-export async function exampleAtlas(exampleDir: string, relativeDir: string): Promise<ExampleAtlasPage[]> {
+/**
+ * The example at `exampleDir` (repository-relative `relativeDir`), validated and drawn as the Atlas's pages, each
+ * record's page linking its file at `source` when given.
+ */
+export async function exampleAtlas(
+  exampleDir: string,
+  relativeDir: string,
+  source?: SourceUrl,
+): Promise<ExampleAtlasPage[]> {
   const registries = readRegistries(
     await readFile(join(exampleDir, "registries.yaml"), "utf8"),
     `${relativeDir}/registries.yaml`,
@@ -93,6 +101,7 @@ export async function exampleAtlas(exampleDir: string, relativeDir: string): Pro
   const pages = buildAtlasPages(input, {
     notice: "example",
     link: (from, to) => atlasLink(from, relativeLink(from, to), paths),
+    ...(source === undefined ? {} : { source }),
   });
   const map = mapHtml(atlasMapLayout(input), "", (path) => atlasLink("map.html", path, paths));
   return pages.map(({ path: atlasPath, source, html }) => ({

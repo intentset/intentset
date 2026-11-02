@@ -10,7 +10,8 @@ import type { PageSource } from "../page.ts";
 import { recordPath } from "../record-text.ts";
 import { idLink, plural, text } from "../text.ts";
 
-const HEADINGS: Record<ArtifactType, string> = {
+/** Each type as the Records page heads it, and as a record's page names where it is listed. */
+export const TYPE_HEADINGS: Record<ArtifactType, string> = {
   product: "Products",
   intent: "Intents",
   outcome: "Outcomes",
@@ -39,7 +40,8 @@ export function recordsPage(model: Model): PageSource {
   for (const type of present) {
     const records = model.ofType(type);
     body.push(
-      `## ${HEADINGS[type]} (${records.length})`,
+      `{#${type}}`,
+      `## ${TYPE_HEADINGS[type]} (${records.length})`,
       "",
       ...records.map((r) => `- ${idLink(r.meta.id, recordPath(r.meta.id))} ${text(r.meta.title)} · ${r.meta.status}`),
       "",
