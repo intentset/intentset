@@ -33,6 +33,7 @@ import {
   ATLAS_MAP_STYLES,
   ATLAS_ROOT,
   atlasLink,
+  atlasSitePath,
   type ExampleAtlasPage,
   exampleAtlas,
   REVIEW_PAGES,
@@ -362,6 +363,11 @@ export interface Page {
    */
   styles?: string[];
   scripts?: string[];
+  /**
+   * A page no rail lists, shown in the rail under the entry that lists it elsewhere: a record's page sits under
+   * Records, marked as where the reader is, with the record named beneath it as the page.
+   */
+  railPlace?: { under: string; label: string };
 }
 
 /**
@@ -486,7 +492,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
 
   const { specs, records, knowledge, tokens } = await siteInputs(inputs);
   const publication = await publishExample(join(root, EXAMPLE_DIR));
-  const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR);
+  const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR, (path) => `${REPO}/blob/main/${path}`);
   // The map's one script and its styles, beside the Atlas's pages (ADR 0015).
   await mkdir(join(out, ATLAS_ROOT), { recursive: true });
   await writeFile(join(out, ATLAS_MAP_SCRIPT), MAP_SCRIPT);
@@ -1010,6 +1016,14 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
     ...rendered,
     body: placeHtml(rendered.body, page.html ?? ""),
     ...(isMap ? { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] } : {}),
+    ...(isRecord
+      ? {
+          railPlace: {
+            under: atlasSitePath("records.html"),
+            label: page.atlasPath.slice("records/".length, -".html".length),
+          },
+        }
+      : {}),
     title: isMap ? EXAMPLE_NAME : `${rendered.title} · ${EXAMPLE_NAME}`,
     description: isMap
       ? "Lantern, an invented product, as a map of every record and every link between them, with the walkthrough and the review pages drawn from the same records."
@@ -1120,7 +1134,9 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
     `<ul>\n${items
       .map((item) =>
         Array.isArray(item)
-          ? `<li><a href="${rel}${pageAddress(item[1])}"${item[1] === page.path ? ' aria-current="page"' : ""}>${esc(item[0])}</a></li>`
+          ? item[1] === page.railPlace?.under
+            ? `<li><a href="${rel}${pageAddress(item[1])}" aria-current="true">${esc(item[0])}</a>\n<ul>\n<li><a href="${rel}${pageAddress(page.path)}" aria-current="page">${esc(page.railPlace.label)}</a></li>\n</ul></li>`
+            : `<li><a href="${rel}${pageAddress(item[1])}"${item[1] === page.path ? ' aria-current="page"' : ""}>${esc(item[0])}</a></li>`
           : `<li class="site-rail-group"><span class="site-rail-label">${esc(item.label)}</span>\n${railList(item.items)}</li>`,
       )
       .join("\n")}\n</ul>`;

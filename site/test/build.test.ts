@@ -553,10 +553,18 @@ test("the worked example opens every record on the page, in the act it belongs t
     }
     // A reviewed record's page says who reviewed it and when, and carries each tip beside the ID it is for.
     if (record.review) {
-      assert.ok(pageText.includes(`by ${record.review.by}, ${record.review.at}`), `${record.id}: review`);
+      assert.ok(
+        pageText.includes(`Reviewed by ${record.review.by} Reviewed at ${record.review.at}`),
+        `${record.id}: review`,
+      );
     }
     for (const [id, tip] of record.tips)
-      assert.ok(pageText.includes(`Tip for ${id} : ${tip}`), `${record.id}: tip for ${id}`);
+      assert.ok(pageText.includes(`Tip for ${id} ${tip}`), `${record.id}: tip for ${id}`);
+    // The card links the file on GitHub, at main, which every push to main rebuilds this page from.
+    assert.ok(
+      page.includes(`<a href="${REPO}/blob/main/examples/scheduling/${record.file}">View the file on GitHub</a>`),
+      `${record.id}: no link to its file`,
+    );
     // The body is rendered, the frontmatter is not.
     assert.doesNotMatch(page, /intentset:\s*\n\s*spec:/, `${record.id}: frontmatter leaked into the page`);
     assert.doesNotMatch(page, /<pre/, `${record.id}: frontmatter rendered as a code block`);

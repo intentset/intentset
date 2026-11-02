@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   parent: CAP-REVIEW-VIEWS
   links:
     governedBy: [RULE-DETERMINISTIC]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset serve` and gets the Atlas, the internal review pages over the model's export, served locally and rebuilt when a file changes, or written to `--out`: the model, its reports and each artifact, with the snapshot each page describes. Every record has a page of its own, listed by type on the Records page, and every ID on the other pages and the map links to it. A record's page opens with its text, rendered as written with its links kept only where they are safe, then what the Atlas derives: a behavior's context bundle, claims and evidence, and for any other record the links written in it and the links other records write to it. Text that does not parse as Markset is shown as written, and the page says so. Every page opens with a notice that it may hold internal and restricted records and is not for publication. The one exception is an invented example's Atlas, asked for from the library with the `example` notice: its pages say the product is invented and that a team's own Atlas stays internal, which is how intentset.org shows the worked example's.
+Someone runs `intentset serve` and gets the Atlas, the internal review pages over the model's export, served locally and rebuilt when a file changes, or written to `--out`: the model, its reports and each artifact, with the snapshot each page describes. Every record has a page of its own, listed by type on the Records page, and every ID on the other pages and the map links to it. A record's page says where it sits, among the records and in the model, and keeps Records marked in the navigation. Then comes the record, in one card that holds nothing else: its file's path, linked to the file where a source address is given, every field of its frontmatter, and its text, rendered as written with its links kept only where they are safe. Everything after the card is what the Atlas derives, and the page says so: a behavior's context bundle, claims and evidence, and for any other record the links other records write to it. Text that does not parse as Markset is shown as written, and the page says so. Every page opens with a notice that it may hold internal and restricted records and is not for publication. The one exception is an invented example's Atlas, asked for from the library with the `example` notice: its pages say the product is invented and that a team's own Atlas stays internal, which is how intentset.org shows the worked example's.
 
 ## Preconditions
 

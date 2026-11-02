@@ -1,14 +1,15 @@
 /**
- * records/<ID>.html: one record, whatever its type. Its text comes first, as
- * written and rendered (record-text.ts), because that is what the record says;
- * what the Atlas derives about it follows. A behavior's page then carries its
- * detail (Core §10): its context bundle, the same one `contextFor` gives an
- * agent, as one card per role; its claims and their evidence; its verification
- * definitions with their evidence status; and the knowledge that explains it
- * with its review status. Every other record lists its links, those written in
- * it and those written about it in other records, and what its type adds: a
- * verification's method and evidence, a knowledge record's review, a measure's
- * metric and target, a slice's kind and entrypoints.
+ * records/<ID>.html: one record, whatever its type. It opens with where the
+ * record sits, among the records and in the model, and then the record itself,
+ * in one card that holds nothing else: the file's path (and, given a source
+ * address, a link to the file), every field of its frontmatter, and its text,
+ * rendered (record-text.ts). Everything after the card is derived, and the page
+ * says so. A behavior's page then carries its detail (Core §10): its context
+ * bundle, the same one `contextFor` gives an agent, as one card per role; its
+ * claims and their evidence; its verification definitions with their evidence
+ * status; and the knowledge that explains it with its review status. Every other
+ * record lists the records that link to it, and what the Atlas reads about its
+ * type: a verification's evidence, a knowledge record's review status.
  */
 import {
   type Artifact,
@@ -23,7 +24,9 @@ import { reviewStatus } from "@intentset/publisher";
 import { type Model, STATUS_WORDS } from "../model.ts";
 import { MAP_SLOT_SOURCE, type PageSource } from "../page.ts";
 import { type PageLink, recordPath, recordText } from "../record-text.ts";
+import type { SourceUrl } from "../types.ts";
 import { badge, code, fenced, idLink, link, ofTotal, plural, series, table, text } from "../text.ts";
+import { TYPE_HEADINGS } from "./records.ts";
 import { evidenceCell, latestRun, reviewCell } from "./shared.ts";
 
 const ROLE_HEADINGS: Record<Exclude<ContextRole, "start">, string> = {
@@ -68,49 +71,49 @@ const SHOWN_ON: Partial<Record<Artifact["meta"]["type"], { page: string; label: 
   knowledge: { page: "publication.html", label: "the publication page, with what each projection would publish" },
 };
 
-export function recordPage(model: Model, artifact: Artifact, pageLink?: PageLink): PageSource {
+export function recordPage(model: Model, artifact: Artifact, pageLink?: PageLink, source?: SourceUrl): PageSource {
   const { meta } = artifact;
   const id = meta.id;
   const ancestry = model.ancestry(id);
   const body: string[] = [
-    "{.small .muted}",
-    [
-      meta.type,
-      `status ${meta.status}`,
-      `owner ${text(meta.owner)}`,
-      `visibility ${meta.visibility}`,
-      `audiences ${meta.audiences.map(text).join(", ")}`,
-      code(artifact.path),
-    ].join(" · "),
+    `${link("Records", "../records.html")} › ${link(TYPE_HEADINGS[meta.type], `../records.html#${meta.type}`)} › ${code(id)}`,
     "",
   ];
+  if (ancestry.length > 0) {
+    body.push(`In the model: ${[...ancestry.map((a) => idLink(a, `${a}.html`)), code(id)].join(" › ")}`, "");
+  }
 
-  // The text first, then the two fields that place the record: where it sits and where it is available.
+  // The record, and nothing but the record, in one card: where its file is, its frontmatter, its text.
   const written = recordText(model, artifact, pageLink);
+  const url = source?.(artifact.path) ?? null;
   body.push("## The record", "");
-  if ("html" in written) {
-    if (written.html.trim() === "") body.push("The record has no text beyond its title.", "");
-    else body.push(...MAP_SLOT_SOURCE, "");
-  } else {
+  if (!("html" in written)) {
     body.push(
-      `> [!WARNING] Shown as written`,
+      `> [!WARNING] Text shown as written`,
       `> The text of ${code(artifact.path)} does not parse as Markset (${written.unparsed.map(code).join(", ")}), ` +
         "so it is shown as source rather than rendered. The validation report has the details.",
       "",
-      ...fenced(artifact.body, "markdown"),
-      "",
     );
   }
-  if (ancestry.length > 0) {
-    // Full size, not small: its links are tap targets.
-    body.push(
-      `Navigation: ${[link("Overview", "../index.html"), ...ancestry.map((a) => idLink(a, `${a}.html`))].join(" › ")}`,
-      "",
-    );
-  }
-  if (meta.availability !== undefined || meta.type === "behavior" || meta.type === "knowledge") {
-    body.push("{.small}", availabilityLine(meta.availability), "");
-  }
+  body.push(
+    ":::card{.record}",
+    "{.record-source}",
+    `${code(artifact.path)}${url === null ? "" : ` · ${link("View the file on GitHub", url)}`}`,
+    "",
+    ...fields(model, artifact),
+    "",
+  );
+  if (!("html" in written)) body.push(...fenced(artifact.body, "markdown"), "");
+  else if (written.html.trim() === "") body.push("The record has no text beyond its title.", "");
+  else body.push(...MAP_SLOT_SOURCE, "");
+  body.push(
+    ":::",
+    "",
+    "{.derived}",
+    "Everything below is derived: the Atlas reads it from this record and the others, and none of it is written in " +
+      "the file.",
+    "",
+  );
 
   if (meta.type === "behavior") body.push(...behaviorSections(model, artifact));
   else body.push(...typeSections(model, artifact), ...linkSection(model, id));
@@ -234,104 +237,141 @@ function behaviorSections(model: Model, behavior: Artifact): string[] {
   return body;
 }
 
-/** What a record's type adds to its fields: a verification's check, a knowledge record's review, and so on. */
+/** What the Atlas reads about a record of this type: a verification's evidence, a knowledge record's review. */
 function typeSections(model: Model, artifact: Artifact): string[] {
-  const { meta } = artifact;
-  const id = meta.id;
-  switch (meta.type) {
-    case "verification": {
-      const check = meta.verification;
-      const named = model.from(id, "verifies");
+  const id = artifact.meta.id;
+  switch (artifact.meta.type) {
+    case "verification":
       return [
-        "## Verification",
+        "## Evidence",
         "",
-        `- **Method:** ${check === undefined ? "not declared" : check.method} · locator ${
-          check === undefined ? "not declared" : code(check.locator)
-        } · selector ${check === undefined ? "not declared" : code(check.selector)}`,
-        `- **Verifies:** ${named.length === 0 ? "nothing" : named.map((c) => idLink(c, `${c}.html`)).join(", ")}`,
         `- **Evidence:** ${evidenceCell(model, id)}`,
         `- **Latest run:** ${latestRun(model, id)}`,
         "",
       ];
-    }
-    case "knowledge": {
-      const tips = Object.entries(meta.tips ?? {});
-      return [
-        "## Review",
-        "",
-        `- **Review:** ${reviewCell(reviewStatus(model.graph, artifact))}`,
-        ...(meta.reviewedBy === undefined && meta.reviewedAt === undefined
-          ? []
-          : [`- **Reviewed:** by ${text(meta.reviewedBy ?? "nobody named")}, ${text(meta.reviewedAt ?? "no date")}`]),
-        ...tips.map(([target, tip]) => `- **Tip for ${idLink(target, `${target}.html`)}:** ${text(tip)}`),
-        "",
-      ];
-    }
-    case "measure": {
-      const measure = meta.measure;
-      if (measure === undefined) return [];
-      return [
-        "## Measure",
-        "",
-        `- **Metric:** ${code(measure.metric)}${measure.direction === undefined ? "" : `, to ${measure.direction}`}`,
-        `- **Baseline:** ${text(measure.baseline)}`,
-        `- **Target:** ${text(measure.target)}`,
-        `- **Window:** ${text(measure.window)}`,
-        `- **Source:** ${text(measure.source)}`,
-        "",
-      ];
-    }
-    case "slice": {
-      const slice = meta.slice;
-      if (slice === undefined) return [];
-      return [
-        "## Slice",
-        "",
-        `- **Kind:** ${slice.kind} · domain ${text(slice.domain)}`,
-        `- **${slice.entrypoints.length === 1 ? "Entrypoint" : "Entrypoints"}:** ${slice.entrypoints.map(code).join(", ")}`,
-        ...(slice.rationale === undefined ? [] : [`- **Rationale:** ${text(slice.rationale)}`]),
-        "",
-      ];
-    }
+    case "knowledge":
+      return ["## Review", "", `- **Review:** ${reviewCell(reviewStatus(model.graph, artifact))}`, ""];
     default:
       return [];
   }
 }
 
-/** Every link written in the record, then every link another record writes to it, which the graph derives. */
+/** Every field of the record's frontmatter, as written, with each record it names linked to its page. */
+function fields(model: Model, artifact: Artifact): string[] {
+  const { meta } = artifact;
+  const ref = (other: string) => idLink(other, model.get(other) === undefined ? null : `${other}.html`);
+  const value = (v: unknown): string => {
+    if (typeof v === "string") return model.get(v) === undefined ? text(v) : ref(v);
+    if (Array.isArray(v)) return v.length === 0 ? "none" : v.map(value).join(", ");
+    if (v !== null && typeof v === "object") {
+      return Object.entries(v)
+        .map(([key, inner]) => `${model.get(key) === undefined ? text(key) : ref(key)}: ${value(inner)}`)
+        .join("; ");
+    }
+    return text(String(v));
+  };
+  const rows: [string, string][] = [];
+  const shown = new Set<string>();
+  const add = (key: string, label: string, cell: string | undefined) => {
+    shown.add(key);
+    if (cell !== undefined) rows.push([label, cell]);
+  };
+  add("id", "ID", code(meta.id));
+  add("title", "Title", text(meta.title));
+  add("type", "Type", meta.type);
+  add("status", "Status", meta.status);
+  add("owner", "Owner", text(meta.owner));
+  add("visibility", "Visibility", meta.visibility);
+  add("audiences", "Audiences", value(meta.audiences));
+  add("revision", "Revision", meta.revision === undefined ? undefined : `${meta.revision}`);
+  add("parent", "Parent", meta.parent === undefined ? undefined : ref(meta.parent));
+  shown.add("links");
+  for (const kind of LINK_KINDS) {
+    const ids = kind === "parent" ? undefined : meta.links[kind];
+    if (ids !== undefined && ids.length > 0) rows.push([LINK_LABELS[kind].written, ids.map(ref).join(", ")]);
+  }
+  const availability = meta.availability;
+  add(
+    "availability",
+    "Availability",
+    availability === undefined
+      ? meta.type === "behavior" || meta.type === "knowledge"
+        ? "none declared, so publication of anything about it fails closed"
+        : undefined
+      : `products ${value(availability.products)} · releases ${value(availability.releases)} · roles ${value(
+          availability.roles,
+        )} · editions ${value(availability.editions)} · flags ${value(availability.flags)}`,
+  );
+  add("reviewedBy", "Reviewed by", meta.reviewedBy === undefined ? undefined : text(meta.reviewedBy));
+  add("reviewedAt", "Reviewed at", meta.reviewedAt === undefined ? undefined : text(meta.reviewedAt));
+  shown.add("tips");
+  for (const [target, tip] of Object.entries(meta.tips ?? {})) rows.push([`Tip for ${ref(target)}`, text(tip)]);
+  shown.add("slice");
+  if (meta.slice !== undefined) {
+    const slice = meta.slice;
+    rows.push(["Slice kind", slice.kind], ["Domain", text(slice.domain)]);
+    if (slice.rationale !== undefined) rows.push(["Rationale", text(slice.rationale)]);
+    rows.push([slice.entrypoints.length === 1 ? "Entrypoint" : "Entrypoints", slice.entrypoints.map(code).join(", ")]);
+    const layers = Object.keys(slice.layers).sort(compareStrings);
+    if (layers.length > 0) {
+      rows.push([
+        "Layers",
+        layers.map((layer) => `${text(layer)} ${(slice.layers[layer] ?? []).map(code).join(", ")}`).join("; "),
+      ]);
+    }
+    if (slice.claims.length > 0) rows.push(["Claims", slice.claims.map((c) => `${c.kind} ${code(c.path)}`).join("; ")]);
+    if (slice.usesResources.length > 0) rows.push(["Uses resources", slice.usesResources.map(code).join(", ")]);
+  }
+  shown.add("verification");
+  if (meta.verification !== undefined) {
+    const check = meta.verification;
+    rows.push(["Method", check.method], ["Locator", code(check.locator)], ["Selector", code(check.selector)]);
+    if (check.exercises !== undefined && check.exercises.length > 0) {
+      rows.push(["Exercises", check.exercises.map(ref).join(", ")]);
+    }
+  }
+  shown.add("measure");
+  if (meta.measure !== undefined) {
+    const measure = meta.measure;
+    rows.push(["Metric", code(measure.metric)]);
+    if (measure.direction !== undefined) rows.push(["Direction", measure.direction]);
+    rows.push(
+      ["Baseline", text(measure.baseline)],
+      ["Target", text(measure.target)],
+      ["Window", text(measure.window)],
+      ["Source", text(measure.source)],
+    );
+  }
+  shown.add("extensions");
+  for (const [key, extension] of Object.entries(meta.extensions ?? {})) {
+    rows.push([`Extension ${code(key)}`, value(extension)]);
+  }
+  add("spec", "Format", `spec ${code(meta.spec)} · profile ${code(meta.profile)}`);
+  shown.add("profile");
+  // Whatever else the frontmatter holds is shown as it is, so no field is left off the page.
+  for (const [key, other] of Object.entries(meta)) if (!shown.has(key)) rows.push([code(key), value(other)]);
+  for (const [key, other] of Object.entries(artifact.foreign)) rows.push([code(key), value(other)]);
+  return table(["Field", "Value"], rows);
+}
+
+/** Every link another record writes to this one, which the graph derives; the record's own are in its card. */
 function linkSection(model: Model, id: string): string[] {
   const entry = (other: string) => `${idLink(other, `${other}.html`)} ${text(model.get(other)?.meta.title ?? "")}`;
   const items: string[] = [];
   for (const kind of LINK_KINDS) {
-    const targets = model.from(id, kind);
-    if (targets.length > 0) items.push(`- **${LINK_LABELS[kind].written}:** ${targets.map(entry).join("; ")}`);
-  }
-  for (const kind of LINK_KINDS) {
     const sources = model.into(id, kind);
-    if (sources.length > 0) {
-      items.push(`- **${LINK_LABELS[kind].derived}** (derived): ${sources.map(entry).join("; ")}`);
-    }
+    if (sources.length > 0) items.push(`- **${LINK_LABELS[kind].derived}:** ${sources.map(entry).join("; ")}`);
   }
   return [
-    "## Links",
+    "## Linked from other records",
     "",
     items.length === 0
-      ? "No link is written in this record, and no other record links to it."
-      : "Written in this record, then written in other records about it, which the graph derives (Core §5).",
+      ? "No other record links to this one."
+      : "The links other records write to this one, read the other way (Core §5).",
     "",
     ...items,
     ...(items.length === 0 ? [] : [""]),
   ];
-}
-
-function availabilityLine(availability: Artifact["meta"]["availability"]): string {
-  if (availability === undefined)
-    return "Availability: none declared, so publication of anything about it fails closed.";
-  const list = (values: string[]) => (values.length === 0 ? "none" : values.map(text).join(", "));
-  return (
-    `Availability: products ${list(availability.products)} · releases ${list(availability.releases)} · ` +
-    `roles ${list(availability.roles)} · editions ${list(availability.editions)} · flags ${list(availability.flags)}`
-  );
 }
 
 function bundleEntry(a: ContextArtifact): string {

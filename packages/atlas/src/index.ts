@@ -37,7 +37,7 @@ import { recordPage } from "./pages/record.ts";
 import { recordsPage } from "./pages/records.ts";
 import { verificationPage } from "./pages/verification.ts";
 import { type PageLink, relativeLink } from "./record-text.ts";
-import type { AtlasInput, AtlasOptions } from "./types.ts";
+import type { AtlasInput, AtlasOptions, SourceUrl } from "./types.ts";
 
 export {
   ATLAS_KEY,
@@ -61,7 +61,7 @@ export type * from "./types.ts";
 export const DEFAULT_TITLE = "Intentset Atlas";
 
 /** The pages, in a fixed order: the navigation's pages, then one per record by ID. */
-function pages(input: AtlasInput, pageLink: PageLink = relativeLink): PageSource[] {
+function pages(input: AtlasInput, pageLink: PageLink = relativeLink, source?: SourceUrl): PageSource[] {
   if (graphHash(input.graph) !== input.snapshot.graphHash) {
     throw new Error(
       "atlas: the snapshot's graph hash is not the hash of the graph given; the Atlas must state the snapshot it shows",
@@ -79,7 +79,7 @@ function pages(input: AtlasInput, pageLink: PageLink = relativeLink): PageSource
     { ...mapPage(layout), html: mapHtml(layout) },
     ...[...model.graph.artifacts.keys()]
       .sort(compareStrings)
-      .map((id) => recordPage(model, model.get(id) as Artifact, pageLink)),
+      .map((id) => recordPage(model, model.get(id) as Artifact, pageLink, source)),
   ];
 }
 
@@ -107,7 +107,7 @@ export interface AtlasPage {
  */
 export function buildAtlasPages(input: AtlasInput, options: AtlasOptions & { link?: PageLink } = {}): AtlasPage[] {
   const meta = atlasMeta(input.snapshot);
-  return pages(input, options.link).map((page) => ({
+  return pages(input, options.link, options.source).map((page) => ({
     path: page.path,
     source: pageSource(page, meta, options.notice),
     ...(page.html === undefined || page.path === "map.html" ? {} : { html: page.html }),
@@ -125,6 +125,12 @@ const ATLAS_STYLES = `
 .ms-grid-item:has(> .ms-card:only-child) { border: 0; padding: 0; background: none; }
 .ms-grid-item > .ms-card { height: 100%; box-sizing: border-box; }
 .ms-grid-item code { overflow-wrap: anywhere; }
+/* A record's own card: its path, its fields and its text, and nothing derived. */
+.ms-card.record table { margin: 0 0 1rem; }
+.ms-card.record th { display: none; }
+.ms-card.record td { vertical-align: top; overflow-wrap: anywhere; }
+.ms-card.record td:first-child { width: 9rem; color: var(--ms-fg-muted); }
+.derived { color: var(--ms-fg-muted); }
 `;
 
 /** The Atlas: relative path to file contents, every page as HTML plus `atlas.css`. */
@@ -132,7 +138,8 @@ export function buildAtlas(input: AtlasInput, options: AtlasOptions = {}): Map<s
   const meta = atlasMeta(input.snapshot);
   const title = options.title ?? DEFAULT_TITLE;
   const out = new Map<string, string>();
-  for (const page of pages(input)) out.set(page.path, shell(page, pageSource(page, meta, options.notice), meta, title));
+  for (const page of pages(input, relativeLink, options.source))
+    out.set(page.path, shell(page, pageSource(page, meta, options.notice), meta, title));
   stylesheet ??= readFileSync(defaultStylesheetPath, "utf8") + ATLAS_STYLES + MAP_STYLES;
   out.set(STYLESHEET, stylesheet);
   out.set(MAP_SCRIPT_FILE, MAP_SCRIPT);

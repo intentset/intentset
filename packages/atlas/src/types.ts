@@ -126,9 +126,14 @@ export interface AtlasInput {
  */
 export type AtlasNotice = "internal" | "example";
 
+/** Where a reader can open a record's file, from its repository-relative path: a repository host's page for it. */
+export type SourceUrl = (path: string) => string;
+
 export interface AtlasOptions {
   /** The name in every page's navigation and title. Default "Intentset Atlas". */
   title?: string;
   /** The notice at the top of every page. Default `internal`. */
   notice?: AtlasNotice;
+  /** Where each record's page links its file. Without one, a record's page names the path and links nothing. */
+  source?: SourceUrl;
 }

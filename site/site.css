@@ -153,7 +153,7 @@ body { --site-scheme-w: 5.6rem; }
 .site-toc a:hover { color: var(--ms-fg); text-decoration: underline; }
 .site-rail-title { margin: 0 0 0.5rem; font-size: 0.72rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ms-fg-muted); }
 .site-toc nav + nav { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--ms-border); }
-.site-rail a[aria-current="page"] { color: var(--ms-fg); font-weight: 650; }
+.site-rail a[aria-current] { color: var(--ms-fg); font-weight: 650; }
 /* A group in a rail (Examples: Lantern, and its review pages): a label that is not a link, its pages indented under it. */
 .site-rail-label { display: block; padding-block: 0.3rem; color: var(--ms-fg); font-weight: 600; }
 .site-rail ul ul { margin-left: 0.15rem; padding-left: 0.85rem; border-left: 1px solid var(--ms-border); }
@@ -164,6 +164,8 @@ body { --site-scheme-w: 5.6rem; }
   .site-rail ul ul { display: flex; flex-wrap: wrap; column-gap: 1rem; }
   .site-rail ul ul .site-rail-group { flex-basis: 100%; display: flex; flex-wrap: wrap; column-gap: 1rem; }
   .site-rail ul ul ul { margin-left: 0; padding-left: 0; border-left: 0; }
+  /* A record's page, named beneath Records: on a line of pages it runs on after Records, in the same line. */
+  .site-rail ul ul ul li:has(> ul), .site-rail ul ul ul li > ul { display: contents; }
 }
 
 .site-footer {
@@ -304,13 +306,22 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .ms-document table { font-size: 0.95rem; }
 .ms-document table a { display: inline-block; padding-block: 0.1rem; }
 .ms-document pre { font-size: 0.85rem; }
-.ms-card.record { padding: 0.5rem 1.25rem; }
-.ms-card.record table { margin: 0; font-size: 0.95rem; }
+/* A record's own card, on its page: the file's path, its frontmatter as fields, then its text. Nothing the Atlas
+ * derives goes in it, so the card's edge is where the record ends; the line under it says so. */
+.ms-card.record { padding: 0.75rem 1.5rem 1.5rem; }
+.ms-card.record table { margin: 0 0 1.5rem; font-size: 0.95rem; }
 .ms-card.record th { display: none; }
-.ms-card.record td { padding: 0.5rem 0.75rem 0.5rem 0; vertical-align: top; }
-.ms-card.record tr:last-child td { border-bottom: 0; }
-.ms-card.record td:first-child { width: 8rem; color: var(--ms-fg-muted); font-size: 0.85rem; }
-.ms-document > .ms-card.record + h1 { margin-top: 2rem; font-size: clamp(2rem, 4vw, 3rem); }
+.ms-card.record td { padding: 0.5rem 0.75rem 0.5rem 0; vertical-align: top; overflow-wrap: anywhere; }
+.ms-card.record td:first-child { width: 9rem; color: var(--ms-fg-muted); font-size: 0.85rem; }
+.record-source { font-size: 0.9rem; color: var(--ms-fg-muted); }
+.record-source a { display: inline-block; padding-block: 0.25rem; }
+.derived { margin-top: 1.5rem; font-size: 0.95rem; color: var(--ms-fg-muted); }
+/* On a phone a field's name sits above its value, so a long path or pattern has the card's whole width. */
+@media (max-width: 47.5rem) {
+  .ms-card.record { padding-inline: 1rem; }
+  .ms-card.record :is(tr, td) { display: block; }
+  .ms-card.record td:first-child { width: auto; padding-bottom: 0; border-bottom: 0; }
+}
 .site-back { margin-top: var(--site-section); padding-top: 1.5rem; border-top: 1px solid var(--ms-border); }
 .site-back a { display: inline-block; padding-block: 0.25rem; }
 
