@@ -99,7 +99,7 @@ importers:
   packages/architecture:
     dependencies:
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       typescript:
         specifier: ^7.0.2
@@ -108,10 +108,10 @@ importers:
   packages/atlas:
     dependencies:
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       '@intentset/publisher':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../publisher
       '@markset-lang/parser':
         specifier: 0.4.1
@@ -123,28 +123,28 @@ importers:
   packages/cli:
     dependencies:
       '@intentset/architecture':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../architecture
       '@intentset/atlas':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../atlas
       '@intentset/conformance-suite':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../conformance-suite
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       '@intentset/markset-adapter':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../markset-adapter
       '@intentset/mcp':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../mcp
       '@intentset/publisher':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../publisher
       '@intentset/verification':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../verification
     devDependencies:
       '@modelcontextprotocol/sdk':
@@ -154,19 +154,19 @@ importers:
   packages/conformance:
     dependencies:
       '@intentset/architecture':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../architecture
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       '@intentset/markset-adapter':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../markset-adapter
       '@intentset/publisher':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../publisher
       '@intentset/verification':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../verification
 
   packages/conformance-suite: {}
@@ -178,7 +178,7 @@ importers:
   packages/markset-adapter:
     dependencies:
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       '@markset-lang/parser':
         specifier: 0.4.1
@@ -190,10 +190,10 @@ importers:
   packages/mcp:
     dependencies:
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       '@intentset/publisher':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../publisher
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.0
@@ -202,10 +202,10 @@ importers:
   packages/publisher:
     dependencies:
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
       '@intentset/markset-adapter':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../markset-adapter
       '@markset-lang/parser':
         specifier: 0.4.1
@@ -217,7 +217,7 @@ importers:
   packages/verification:
     dependencies:
       '@intentset/core':
-        specifier: ^0.9.0
+        specifier: ^0.10.0
         version: link:../core
 
   site:
@@ -1874,6 +1874,7 @@ packages:
   '@opentelemetry/sdk-trace-base@2.12.0':
     resolution: {integrity: sha512-JOERgZCxRM06FEJ5kEWxlSRChah6MmXDx3KwCruqEv/iEyLkTokCSemf2y1w8oIHtfrr8EVTpzebq/31vn2Cpg==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
@@ -1992,6 +1993,7 @@ packages:
   '@smithy/core@3.35.2':
     resolution: {integrity: sha512-ejTukBuP/Pg3t9N8Ux+0zKsXeHWm7p6W3HbXFOyltKasSxZwCFmvTut7kBdZSCF3m9y1bXXyVu6p2xuMFcsTyQ==}
     engines: {node: '>=18.0.0'}
+    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.5.2':
     resolution: {integrity: sha512-A9uSdn72ozbRUSit0eib0TW7nXuNPlaeM0zcGkJ+nE6tFcSDbnmtwoxbTCFBukVQcszDAyvsd7+rTduPTXpygg==}
