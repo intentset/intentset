@@ -6,6 +6,7 @@
  * count names its denominator and what it measures.
  */
 import { type Artifact, type ArtifactType, hasErrors } from "@intentset/core";
+import { middle } from "../chart.ts";
 import type { Model } from "../model.ts";
 import type { PageSource } from "../page.ts";
 import { recordPath } from "../record-text.ts";
@@ -123,8 +124,8 @@ function coverageChart(model: Model, capabilities: Artifact[]): string[] {
   if (model.hasEvidence) header.push("Current pass (evidence)");
   const rows = capabilities.map((capability) => {
     const behaviors = model.into(capability.meta.id, "parent", "behavior");
-    // The chart's category axis has room for about eighteen characters, so the label drops a leading CAP- and
-    // shortens what is still longer; the table under the chart keeps every ID whole.
+    // The label drops a leading CAP- and, past forty characters, loses its middle; the table under the chart keeps
+    // every ID whole. The chart's rows grow with the number of capabilities, so every label has room.
     const row = [
       text(chartLabel(capability.meta.id)),
       `${behaviors.length}`,
@@ -134,17 +135,19 @@ function coverageChart(model: Model, capabilities: Artifact[]): string[] {
     return row;
   });
   return [
-    ":::figure[Behaviors by capability (named by ID without its CAP- prefix, a long one shortened), and how many of them a verification names. Each bar is a count, never a percentage.]{chart=bar}",
+    ":::figure[Behaviors by capability (named by ID without its CAP- prefix, a very long one shortened in the middle), and how many of them a verification names. Each bar is a count, never a percentage.]{chart=bar}",
     ...table(header, rows),
     ":::",
     "",
   ];
 }
 
-/** A capability's ID as a chart label: without a leading CAP-, and at most eighteen characters. */
+/** The longest chart label: the chart's axis gives a label this many characters, then the middle goes. */
+export const CHART_LABEL_MAX = 40;
+
+/** A capability's ID as a chart label: without a leading CAP-, and at most forty characters, cut in the middle. */
 export function chartLabel(id: string): string {
-  const label = id.replace(/^CAP-/, "");
-  return label.length <= 18 ? label : `${label.slice(0, 17)}…`;
+  return middle(id.replace(/^CAP-/, ""), CHART_LABEL_MAX);
 }
 
 /** A nested list of spine artifacts under their navigation parents, with a visited set. */
