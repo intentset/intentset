@@ -5,9 +5,15 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.10.0 — 2026-11-03
 
-**The Atlas stays readable on a model of thousands of records: the overview's chart grows a row per capability, and the map's IDs and circles keep one size on screen at any zoom, with no two IDs overlapping.** A patch to `@intentset/atlas`: `index.html`, `verification.html` (chart SVG), `map.html`'s styles and `atlas-map.js` change; no existing caller's call does. No specification version, conformance case, export version or `intentset.spec` moved.
+**Every record in the Atlas has a page that opens with what the record says, and the Atlas stays readable on a model of thousands of records.** Minor: new pages and a new `source` option in `@intentset/atlas`, and one moved address in `intentset serve`'s output (below). No specification version, conformance case, export version or `intentset.spec` moved.
+
+**Every record has a page (#108, #109).** `intentset serve` writes `records/<ID>.html` for every record, not only behaviors, and a Records page lists them all by type. A page opens with `Records › <type> › <ID>` and the record's chain of parents, then the record in one card: its file's path, every frontmatter field as a row, and its text rendered from the record's own parse (text that does not parse as Markset is shown as written, and the page says so). What the Atlas derives follows the card: links other records write to it, and what its type adds. Every record ID on the overview, ownership, verification and publication pages, and every node on the map, links to its page. The `source` option names where the files live, so the card links each one; without it, nothing is linked.
+
+**Moved address.** `behaviors/<ID>.html` is now `records/<ID>.html`. A link into an Atlas built by 0.9.0 or earlier that names a behavior's page must change.
+
+**The overview's chart and the map stay readable on thousands of records (#110).** `index.html`, `verification.html` (chart SVG), `map.html`'s styles and `atlas-map.js` change; no existing caller's call does.
 
 **The chart's rows no longer squeeze.** Markset's built-in bar chart draws a fixed 340-unit figure, so with 45 capabilities each row was about 5 units: labels overlapped, were cut to 17 characters (several became the same) and the bars were hairlines. The Atlas now hands render-html its own bar engine through the `charts` option (every other chart type stays Markset's): same classes and tokens, a row of at least 26 units per category, the category axis as wide as the longest label, a repeated value axis and ruled rows once there are more than 12 categories, and the same 340-unit figure as before for a few. A capability's label is its ID without CAP-, whole up to 40 characters and cut in the middle past that, so two IDs that start alike still differ. The table under the chart is unchanged. Markset's own engine could take the same rule; that is Markset's to decide.
 
