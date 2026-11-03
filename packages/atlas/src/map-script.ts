@@ -6,6 +6,13 @@
  * activation of a selected record follows its link. Escape clears the selection, and then leaves full screen. Full
  * screen uses the browser's own where it has one, and a fixed overlay where it does not (an iPhone).
  *
+ * Sizes are constant on screen, whatever the zoom (ADR 0015, amended): a record's circle and its ID keep about the size
+ * they have at the map's fit, within bounds, and the IDs shown are those that fit. A small model (no `am-many` class)
+ * shows every ID, as its layout spaced them. A large one shows an ID only where its box on screen overlaps no other
+ * shown ID and no other record's circle, taking records in a fixed priority (the selected record and its links, the
+ * focused one, then product, capability and slice records before behaviors, rules and checks, the most linked first),
+ * so zooming in shows more of them and no two shown IDs ever overlap.
+ *
  * Plain JavaScript with no dependency, written to the DOM with textContent only, so no record's text is ever parsed
  * as markup. It reads no storage and makes no request.
  */
@@ -39,12 +46,168 @@ export const MAP_SCRIPT = `"use strict";
     const base = { x: vb.x, y: vb.y, w: vb.width, h: vb.height };
     let view = { x: base.x, y: base.y, w: base.w, h: base.h };
     let selected = null;
-    // Labels show once the view is narrow enough that they stop overlapping: further in for a larger model.
-    const labelZoom = Math.max(2.5, Math.sqrt(nodes.size) / 4);
+    const many = svg.classList.contains("am-many");
+    svg.classList.add("am-js");
+
+    // What the label pass needs of each record, read once: its place, its drawn radius, its text, and its rank.
+    const TIER = { product: 0, intent: 0, outcome: 0, measure: 1, capability: 1, slice: 1, behavior: 2, decision: 2, contract: 2, rule: 3, scenario: 3, knowledge: 4, verification: 4 };
+    const items = [];
+    for (const el of nodes.values()) {
+      const circle = el.querySelector("circle");
+      const text = el.querySelector("text");
+      items.push({
+        el: el,
+        circle: circle,
+        text: text,
+        i: items.length,
+        id: el.dataset.id,
+        group: el.dataset.group,
+        x: Number(circle.getAttribute("cx")),
+        y: Number(circle.getAttribute("cy")),
+        r: Number(circle.getAttribute("r")),
+        len: text.textContent.length,
+        tier: TIER[el.dataset.type] === undefined ? 3 : TIER[el.dataset.type],
+        degree: (links.get(el.dataset.id) || []).length,
+        shown: !many,
+        sized: -1,
+        view: false,
+      });
+    }
+    // The priority order: a lower tier first, then the more linked, then by ID, so it never depends on the DOM's order.
+    const order = items.slice().sort(rankOrder);
+    const byId = new Map(items.map(function (item) { return [item.id, item]; }));
+    const hidden = new Set();
+    // Constants in CSS pixels: the type size, a label's height, its gap from its circle, how wide an uppercase ID is per
+    // unit of type size (generous), the circle's smallest radius and the most it grows from its fit-size, the grid cell.
+    const FONT = 12;
+    const BOX_H = 16;
+    const GAP = 4;
+    const EM = 0.7;
+    const MIN_R = 2.5;
+    const GROW = 1.5;
+    const CELL = 8;
+    let sizing = 0;
+    let lastScale = -1;
+    let grid = new Int32Array(0);
+    let cols = 0;
+    let gridRows = 0;
+    let gridPad = 0;
 
     function apply() {
       svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
-      svg.classList.toggle("am-zoomed", view.w < base.w / labelZoom);
+      relabel();
+    }
+    // Sizes every record in view and decides which IDs show. Run on every view change: one pass over the records and,
+    // for a large model, one greedy pass over the ranked ones, on a grid of CELL-pixel cells holding who took each.
+    function relabel() {
+      const rect = svg.getBoundingClientRect();
+      if (!(rect.width > 0 && rect.height > 0)) return;
+      const s = scale();
+      if (s !== lastScale) {
+        lastScale = s;
+        sizing++;
+      }
+      const origin = toSvg(rect.left, rect.top);
+      // Records left of the frame may still have an ID reaching into it, so the grid starts a long label's width left.
+      const padLeft = many ? Math.ceil(36 * FONT * EM) : 0;
+      cols = Math.ceil((rect.width + padLeft) / CELL) + 1;
+      const rows = Math.ceil((rect.height + 2 * BOX_H) / CELL) + 1;
+      if (many) {
+        if (grid.length < cols * rows) grid = new Int32Array(cols * rows);
+        else grid.fill(0, 0, cols * rows);
+        gridRows = rows;
+        gridPad = padLeft;
+      }
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        item.px = (item.x - origin.x) / s;
+        item.py = (item.y - origin.y) / s;
+        item.view =
+          !hidden.has(item.group) &&
+          item.px >= -padLeft &&
+          item.px <= rect.width - 8 &&
+          item.py >= -BOX_H &&
+          item.py <= rect.height + BOX_H;
+        if (!item.view) continue;
+        if (item.sized !== sizing) {
+          item.sized = sizing;
+          // The circle at its fit-size where zoomed out, at most GROW times that on screen where zoomed in, and never
+          // under MIN_R pixels: a circle never balloons with the zoom.
+          item.ru = Math.max(MIN_R * s, Math.min(item.r, GROW * item.r * s));
+          item.circle.setAttribute("r", String(item.ru));
+        }
+        item.rpx = item.ru / s;
+      }
+      const fontUnits = many ? FONT * s : Math.min(FONT * s, 9);
+      const fontPx = fontUnits / s;
+      for (const item of items) item.next = !many;
+      if (many) {
+        // Shown whatever is under them: the selected record and the focused one. Then the selected record's links, then
+        // every other record by rank (none, when a record is selected: the rest of the map is dimmed), each only where
+        // its box overlaps no shown ID and no circle of a record ranked before it.
+        const focus = document.activeElement && document.activeElement.closest ? document.activeElement.closest(".am-node") : null;
+        const must = [];
+        if (selected) must.push(byId.get(selected.dataset.id));
+        if (focus && nodes.get(focus.dataset.id) === focus) must.push(byId.get(focus.dataset.id));
+        for (const item of must) {
+          if (!item.view) continue;
+          item.next = true;
+          take(item.px + item.rpx + GAP, item.py - BOX_H / 2, item.px + item.rpx + GAP + item.len * fontPx * EM, item.py + BOX_H / 2, item.i + 1);
+        }
+        const rest = selected ? (links.get(selected.dataset.id) || []).map(function (link) { return byId.get(link.other); }).filter(Boolean).sort(rankOrder) : order;
+        for (const item of rest) {
+          if (!item.view || item.next) continue;
+          item.next = place(item, fontPx);
+          // Its circle then holds its place against the records ranked after it, which keep clear of it.
+          take(item.px - item.rpx, item.py - item.rpx, item.px + item.rpx, item.py + item.rpx, item.i + 1);
+        }
+      }
+      for (const item of items) {
+        if (item.next !== item.shown) {
+          item.shown = item.next;
+          item.el.classList.toggle("am-label", item.shown);
+        }
+        if (item.shown && item.view) {
+          const t = item.text;
+          t.setAttribute("x", String(item.x + item.ru + GAP * s));
+          t.setAttribute("y", String(item.y + fontUnits * 0.35));
+          t.setAttribute("font-size", String(fontUnits));
+          t.setAttribute("stroke-width", String(3 * s));
+        }
+      }
+    }
+    function rankOrder(a, b) {
+      return a.tier - b.tier || b.degree - a.degree || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    }
+    // Take the record's label box if nothing is in it, and say whether it did. The record's own circle is not in the way.
+    function place(item, fontPx) {
+      const left = item.px + item.rpx + GAP;
+      const top = item.py - BOX_H / 2;
+      const owner = item.i + 1;
+      const c = span(left, top, left + item.len * fontPx * EM, top + BOX_H);
+      for (let y = c[1]; y <= c[3]; y++) {
+        for (let x = c[0]; x <= c[2]; x++) {
+          const v = grid[y * cols + x];
+          if (v !== 0 && v !== owner) return false;
+        }
+      }
+      take(left, top, left + item.len * fontPx * EM, top + BOX_H, owner);
+      return true;
+    }
+    function span(l, t, r, b) {
+      const last = cols - 1;
+      return [
+        Math.min(last, Math.max(0, Math.floor((l + gridPad) / CELL))),
+        Math.min(gridRows - 1, Math.max(0, Math.floor((t + BOX_H) / CELL))),
+        Math.min(last, Math.max(0, Math.floor((r + gridPad) / CELL))),
+        Math.min(gridRows - 1, Math.max(0, Math.floor((b + BOX_H) / CELL))),
+      ];
+    }
+    function take(l, t, r, b, owner) {
+      const c = span(l, t, r, b);
+      for (let y = c[1]; y <= c[3]; y++) {
+        for (let x = c[0]; x <= c[2]; x++) grid[y * cols + x] = owner;
+      }
     }
     function scale() {
       const r = svg.getBoundingClientRect();
@@ -206,6 +369,7 @@ export const MAP_SCRIPT = `"use strict";
       for (const el of svg.querySelectorAll(".am-selected, .am-near")) el.classList.remove("am-selected", "am-near");
       panel.hidden = true;
       panel.replaceChildren();
+      relabel();
     }
     function select(id, move) {
       const el = nodes.get(id);
@@ -222,6 +386,7 @@ export const MAP_SCRIPT = `"use strict";
       }
       describe(el, list);
       if (move) centre(el);
+      else relabel();
     }
     function describe(el, list) {
       const heading = document.createElement("h3");
@@ -291,6 +456,9 @@ export const MAP_SCRIPT = `"use strict";
     for (const box of controls.querySelectorAll("input[type=checkbox][data-group]")) {
       box.addEventListener("change", function () {
         svg.classList.toggle("am-hide-" + box.dataset.group, !box.checked);
+        if (box.checked) hidden.delete(box.dataset.group);
+        else hidden.add(box.dataset.group);
+        relabel();
       });
     }
     for (const button of controls.querySelectorAll("button[data-zoom]")) {
@@ -303,6 +471,11 @@ export const MAP_SCRIPT = `"use strict";
         }
       });
     }
+    // A record taking focus shows its ID, and the sizes follow the frame when it changes (full screen, a rotation).
+    svg.addEventListener("focusin", relabel);
+    svg.addEventListener("focusout", relabel);
+    if (typeof ResizeObserver === "function") new ResizeObserver(relabel).observe(svg);
+    relabel();
   }
 })();
 `;

@@ -9,6 +9,7 @@ import { canonicalJson } from "@intentset/core";
 import { emitYaml, type YamlValue } from "@intentset/publisher";
 import { parseDocument } from "@markset-lang/parser";
 import { renderHtml } from "@markset-lang/render-html";
+import { atlasChartEngine } from "./chart.ts";
 import { code, escapeHtml, text } from "./text.ts";
 import type { AtlasNotice, AtlasSnapshot } from "./types.ts";
 
@@ -148,9 +149,10 @@ export function checkedTree(path: string, source: string): ReturnType<typeof par
  */
 export function shell(page: PageSource, source: string, meta: AtlasMeta, siteTitle: string): string {
   const root = rootOf(page.path);
-  // Charts are drawn by render-html's built-in engine, inline and in front of the table they are drawn from, which
-  // stays on the page; diagrams stay off, because their engines are commands outside this package.
-  const body = renderHtml(checkedTree(page.path, source), { diagrams: false });
+  // Charts are drawn by the Atlas's engine (chart.ts: render-html's, with a bar chart that grows with its categories),
+  // inline and in front of the table they are drawn from, which stays on the page; diagrams stay off, because their
+  // engines are commands outside this package.
+  const body = renderHtml(checkedTree(page.path, source), { diagrams: false, charts: { engine: atlasChartEngine } });
   const links = NAV.map(({ path, label }) => {
     // A record's page is in Records, so Records stays marked while a reader is on one.
     const current =

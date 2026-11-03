@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-ATLAS]
   verification:
@@ -27,10 +27,11 @@ intentset:
 
 - `packages/atlas/test/atlas.test.ts`: the test "the Atlas of the example has the six pages, a page per behavior, and the stylesheet once"
 - `packages/atlas/test/atlas.test.ts`: the test "every page states the snapshot and the internal banner"
+- `packages/atlas/test/atlas.test.ts`: the test "the overview's chart stays readable at any number of capabilities: a row each, whole labels, bars you can see"
 - `packages/cli/test/serve.test.ts`: the test "serve prints the URL, the snapshot and the warning, serves the Atlas, and refuses everything else"
 - `packages/cli/test/serve.test.ts`: the test "serve rebuilds when a record changes, so a reload shows the edit, and writes nothing"
 - `packages/cli/test/serve.test.ts`: the test "serve --out writes the Atlas and exits, the same bytes twice, never into scope or over files"
 
 ## Expected result
 
-Every test whose title carries `BEH-ATLAS` passes. The server prints its URL and snapshot, serves the five pages and a page per behavior, each stating the snapshot and the internal banner, refuses every other request, shows an edit on the next request and writes nothing; `--out` writes the same bytes twice and never into the scope or over a file.
+Every test whose title carries `BEH-ATLAS` passes. The server prints its URL and snapshot, serves the five pages and a page per behavior, each stating the snapshot and the internal banner, refuses every other request, draws the overview's chart with one row of at least 20 units and one whole, distinct label per capability however many there are, shows an edit on the next request and writes nothing; `--out` writes the same bytes twice and never into the scope or over a file.

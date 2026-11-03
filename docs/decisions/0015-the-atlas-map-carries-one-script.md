@@ -34,6 +34,15 @@ has to work at that size too.
   all but it and its links with a panel listing them, select again to follow its link, Escape to clear. It writes to
   the page with `textContent` only, so no record's text is parsed as markup, and reads no storage and makes no request.
   A test refuses `innerHTML`, `eval`, `fetch` and storage in it.
+- **Sizes are constant on screen (amended 2026-11-03).** A record's circle and ID are drawn in user units, so on a model
+  of a few thousand records the first zoom that showed IDs showed them 60 pixels tall and on top of one another. The
+  script now sets, on every view change, each circle's radius and each shown ID's size from the zoom, so type stays at
+  about 12 pixels and a circle at most 1.5 times its size at the fit. A small model (120 records or fewer, whose layout
+  already spaces every ID) shows all of them; a larger one shows an ID only where its box overlaps no other shown ID
+  and no circle of a record ranked before it, taking the selected record, the focused one and the selected record's
+  links first, then product, intent and outcome records, then capabilities and slices, behaviors, rules, and checks,
+  the most linked first and by ID after that. The pass is one sweep over the records and one over the ranked ones on a
+  grid of eight-pixel cells; about 5 ms a wheel step on 3,800 records (the layout in the file is unchanged).
 - **No dependency.** The layout is about a hundred lines and the script about 250; a graph library (Cytoscape, sigma,
   D3's force module) was the alternative, rejected because the package would take a dependency, and with it a supply
   chain, for what is a fixed layout and a few event handlers, and because a library computing layout in the browser

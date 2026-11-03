@@ -180,8 +180,8 @@ export function layoutMap(model: Model): AtlasMapLayout {
   }
 
   // Where the labels show, no two records' footprints (the circle and the ID beside it) may overlap: the force layout
-  // spaces points, not words, so a pass pushes overlapping footprints apart. A larger map shows its labels only when
-  // zoomed in or in focus, and is left as the forces placed it.
+  // spaces points, not words, so a pass pushes overlapping footprints apart. A larger map shows its labels only where
+  // the script finds room for them, and is left as the forces placed it.
   const radii = artifacts.map((artifact) => RADIUS[artifact.meta.type] ?? 5);
   const footprints = artifacts.map((artifact, i) => footprint(radii[i], n <= LABEL_LIMIT ? artifact.meta.id : ""));
   if (n <= LABEL_LIMIT && n > 1) {
@@ -240,7 +240,7 @@ export function layoutMap(model: Model): AtlasMapLayout {
   if (n === 0) return { nodes, edges, box: [0, 0, 2 * pad, 2 * pad] };
   const minX = Math.min(...nodes.map((node, i) => node.x - footprints[i].left)) - pad;
   const minY = Math.min(...nodes.map((node, i) => node.y - footprints[i].up)) - pad;
-  // Every label counts, including those a large map shows only when zoomed in.
+  // Every label counts, including those a large map shows only where there is room.
   const maxX = Math.max(...nodes.map((node) => node.x + node.r + LABEL_GAP + labelWidth(node.id))) + pad;
   const maxY = Math.max(...nodes.map((node, i) => node.y + footprints[i].up)) + pad;
   return { nodes, edges, box: [round(minX), round(minY), round(maxX - minX), round(maxY - minY)] };
@@ -311,7 +311,7 @@ function compareEdges(a: Edge, b: Edge): number {
   return compareStrings(a.from, b.from) || compareStrings(a.to, b.to) || compareStrings(a.kind, b.kind);
 }
 
-/** Above this many records the labels show only on a record in focus, its links, or when zoomed in. */
+/** Above this many records an ID shows only where it fits: the layout does not space them, the script picks them. */
 export const LABEL_LIMIT = 120;
 
 /**
@@ -392,23 +392,25 @@ export const MAP_STYLES = `
 .am-svg { display: block; width: 100%; height: auto; max-height: min(75vh, 48rem); min-height: 14rem; border: 1px solid var(--ms-border); border-radius: var(--ms-radius); background: var(--ms-surface); touch-action: none; }
 .am-svg.am-grabbing { cursor: grabbing; }
 .am-edge { stroke: var(--ms-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.am-node circle { fill: var(--am-meaning); stroke: var(--ms-surface); stroke-width: 1.5; }
-.am-node text { font-size: 9px; fill: var(--ms-fg); cursor: pointer; paint-order: stroke; stroke: var(--ms-surface); stroke-width: 3px; }
+.am-node circle { fill: var(--am-meaning); stroke: var(--ms-surface); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+/* Sizes in user units are for the picture alone; the script sets each shown ID's size and each circle's radius so they
+   stay about the same on screen at any zoom, and the halo's width with them. */
+.am-node text { fill: var(--ms-fg); cursor: pointer; paint-order: stroke; stroke: var(--ms-surface); }
+.am-svg:not(.am-js) .am-node text { font-size: 9px; stroke-width: 3px; }
 .am-many .am-node text { display: none; }
-.am-many.am-zoomed .am-node text, .am-focus .am-node.am-selected text, .am-focus .am-node.am-near text { display: inline; }
-.am-many.am-focus .am-node:not(.am-selected):not(.am-near) text { display: none; }
+.am-many.am-js .am-node.am-label text { display: inline; }
 [data-group="purpose"] { --am-c: var(--am-purpose); } [data-group="meaning"] { --am-c: var(--am-meaning); }
 [data-group="architecture"] { --am-c: var(--am-architecture); } [data-group="verification"] { --am-c: var(--am-verification); }
 [data-group="knowledge"] { --am-c: var(--am-knowledge); }
 .am-node circle, .am-swatch { fill: var(--am-c); background: var(--am-c); }
 .am-node[data-status="draft"] circle { stroke: var(--am-c); stroke-dasharray: 2 1.5; fill-opacity: .35; }
-.am-node[data-tone] circle { stroke-width: 3; }
+.am-node[data-tone] circle { stroke-width: 3px; }
 .am-node[data-tone="success"] circle { stroke: var(--am-pass); }
 .am-node[data-tone="danger"] circle { stroke: var(--am-fail); }
 .am-node[data-tone="warn"] circle { stroke: var(--am-warn); }
 .am-node[data-tone="neutral"] circle { stroke: var(--ms-muted, var(--ms-border)); }
 .am-node:focus { outline: none; }
-.am-node:focus-visible circle, .am-node.am-selected circle { stroke: var(--ms-fg); stroke-width: 3; }
+.am-node:focus-visible circle, .am-node.am-selected circle { stroke: var(--ms-fg); stroke-width: 3px; }
 .am-focus .am-node:not(.am-selected):not(.am-near), .am-focus .am-edge:not(.am-near) { opacity: .15; }
 .am-focus .am-edge.am-near { stroke: var(--ms-fg); stroke-width: 1.5; }
 .am-panel { margin-top: .5rem; padding: .75rem 1rem; border: 1px solid var(--ms-border); border-radius: var(--ms-radius); background: var(--ms-surface); }

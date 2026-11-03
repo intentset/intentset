@@ -23,7 +23,9 @@ import {
   buildAtlasPages,
   buildAtlasSources,
 } from "../src/index.ts";
+import { barRowHeight, middle } from "../src/chart.ts";
 import { chartLabel } from "../src/pages/overview.ts";
+import { largeModel } from "./large-model.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
 const dir = join(root, "examples", "scheduling");
@@ -375,10 +377,60 @@ test("BEH-ATLAS: a record's text that does not parse as Markset is shown as writ
   assert.ok(page.includes(":::nope unclosed"));
 });
 
-test("a capability's chart label drops CAP- and shortens a long ID", () => {
+test("a capability's chart label drops CAP-, keeps up to forty characters whole and cuts a longer one in the middle", () => {
   assert.equal(chartLabel("CAP-ASK"), "ASK");
-  assert.equal(chartLabel("CAP-LEARN-FROM-QUESTIONS"), "LEARN-FROM-QUESTI…");
+  assert.equal(chartLabel("CAP-LEARN-FROM-QUESTIONS"), "LEARN-FROM-QUESTIONS");
   assert.equal(chartLabel("OTHER-ID"), "OTHER-ID");
+  const long = chartLabel("CAP-CONTENT-GENERATION-WITH-A-VERY-LONG-NAME-INDEED-ONE");
+  assert.equal(long.length, 40);
+  assert.ok(long.startsWith("CONTENT-GENERATION") && long.endsWith("INDEED-ONE".slice(-6)) && long.includes("…"), long);
+  // Two IDs alike for their first thirty characters still differ after the cut, because the end is kept.
+  assert.notEqual(
+    chartLabel("CAP-CONTENT-GENERATION-WITH-A-VERY-LONG-NAME-ALPHA"),
+    chartLabel("CAP-CONTENT-GENERATION-WITH-A-VERY-LONG-NAME-OMEGA"),
+  );
+  assert.equal(middle("ABCDEFGHIJ", 10), "ABCDEFGHIJ");
+});
+
+/** The overview's chart SVG: its viewBox height and the category labels it draws, in order. */
+function overviewChart(html: string) {
+  const svg = html.match(/<svg class="ms-chart" data-chart="bar" viewBox="0 0 (\d+) (\d+)"[\s\S]*?<\/svg>/);
+  assert.ok(svg, "the overview draws a bar chart");
+  const labels = [
+    ...svg[0].matchAll(/<text class="ms-chart-tick" x="[\d.]+" y="[\d.]+" text-anchor="end">([^<]*)<\/text>/g),
+  ].map((m) => m[1]);
+  const bars = [...svg[0].matchAll(/<path class="ms-chart-bar" data-series="(\d)" d="M[\d.]+,([\d.]+)h[^"]*"/g)].map(
+    (m) => ({
+      series: Number(m[1]),
+      y: Number(m[2]),
+    }),
+  );
+  return { width: Number(svg[1]), height: Number(svg[2]), labels, bars };
+}
+
+test("BEH-ATLAS: the overview's chart stays readable at any number of capabilities: a row each, whole labels, bars you can see", () => {
+  // A few capabilities: the same 340-unit figure Markset's own engine draws.
+  const few = overviewChart(buildAtlas(largeModel(4, 2).input).get("index.html") ?? "");
+  assert.equal(few.height, 340);
+  // 45 capabilities with long, alike IDs: the figure grows, every label is there whole and distinct, no two rows are
+  // closer than a line of type, and a bar is at least eight units thick.
+  const model = largeModel(45, 4);
+  const chart = overviewChart(buildAtlas(model.input).get("index.html") ?? "");
+  assert.equal(chart.labels.length, 45);
+  assert.equal(new Set(chart.labels).size, 45, "every label differs from the others");
+  assert.deepEqual(
+    chart.labels,
+    model.capabilities.map((id) => id.replace(/^CAP-/, "")),
+    "every label whole, in order",
+  );
+  const rows = chart.bars.filter((bar) => bar.series === 1).map((bar) => bar.y);
+  assert.equal(rows.length, 45);
+  const pitch = (rows[44] - rows[0]) / 44;
+  assert.ok(pitch >= 20, `a row is ${pitch} units tall, room for its 12-unit label`);
+  assert.ok(chart.height >= 45 * 20, `the figure grows to ${chart.height}`);
+  assert.equal(barRowHeight(45, 2), 26);
+  // And a hundred, still one row each.
+  assert.equal(overviewChart(buildAtlas(largeModel(100, 1).input).get("index.html") ?? "").labels.length, 100);
 });
 
 test("BEH-ATLAS-MAP: every record is a node and every authored link an edge, drawn once", () => {
