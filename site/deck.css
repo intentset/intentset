@@ -223,6 +223,12 @@ body {
  * padding in percent stand in for the 1920 grid on the slide itself. Container units serve its contents. */
 @media print, (min-width: 60rem) and (min-height: 34rem) {
   html { scroll-snap-type: y proximity; }
+  /* The top of the page and its end are snap positions too. Without them the page above the cover (the bar, the rail,
+   * the parts) and the footer below the last slide were positions no snap could keep, so a browser that re-snaps
+   * after a layout change, as Chromium and current Firefox do on a click's focus, pulled the page onto the nearest
+   * slide: a click on the bar or the rail scrolled to the cover instead of following the link (Zen, 2026-11-05). */
+  .site-header { scroll-snap-align: start; }
+  .site-footer { scroll-snap-align: end; }
   .ms-document { max-width: min(100%, calc((100svh - 4rem) * 16 / 9)); }
   .ms-document > .slide {
     --u: calc(100cqi / 1920);
