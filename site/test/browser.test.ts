@@ -408,6 +408,18 @@ test("the introduction is a 16:9 slide to a window on a desktop, a column of car
     );
   }
   assert.deepEqual(seen, ["problem", "trust", "idea"]);
+  // The top of the page holds through a re-snap: a layout change and a focus, as a click makes, leave the bar where it
+  // is. Before the header was a snap position, Chromium moved to the cover here and Zen did on every click.
+  await tab.evaluate(() => window.scrollTo(0, 0));
+  await tab.waitForTimeout(500);
+  await tab.evaluate(() => {
+    document.body.style.paddingTop = "1px";
+    void document.body.offsetHeight;
+    document.body.style.paddingTop = "";
+  });
+  await tab.locator("main").focus();
+  await tab.waitForTimeout(800);
+  assert.equal(await tab.evaluate(() => Math.round(window.scrollY)), 0, "a re-snap at the top keeps the top");
   await tab.close();
   const phone = await slides(390, 844);
   for (const slide of phone.result) {
