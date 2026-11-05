@@ -6,11 +6,11 @@ intentset:
   id: BEH-ARCH-CHECK
   type: behavior
   title: The architecture check holds the code to its slices
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-ARCHITECTURE
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC, RULE-UNRESOLVED-NOT-PASS]
@@ -30,11 +30,11 @@ Someone runs `intentset architecture check`. Every in-scope file is resolved to 
 
 ## Preconditions
 
-A model with slices; `.intentset/architecture.yaml` when the repository's layout differs from the reference layout; TypeScript 7.
+A model with slices; `.intentset/architecture.yaml` when the repository's layout differs from the reference layout; TypeScript 7, the `typescript` the package resolves as its peer, which is needed only by the checks that read source (this one, validate at L2 and above, review, and a subject-bound evidence read), never by the rest of the toolchain.
 
 ## Outcomes
 
-Success: exit 0 with no errors. Failure: each violation is a diagnostic naming the file, the import and the rule, and the command exits 1. An import it cannot resolve is reported, never passed.
+Success: exit 0 with no errors. Failure: each violation is a diagnostic naming the file, the import and the rule, and the command exits 1. An import it cannot resolve is reported, never passed. Where the TypeScript the package resolves is older than 7 or absent, the command stops with a message naming the version found and the command that runs the toolchain with its own TypeScript, and exits 2; `init`, `validate` at L1 and every other command that reads no source still run there.
 
 ## Sources
 

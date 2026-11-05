@@ -3,7 +3,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { TypeScriptMissingError } from "@intentset/architecture";
 import { validateSchema } from "../../conformance/src/harness.ts";
+import { typescriptMissing } from "../src/commands/shared.ts";
 import { edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
 
 test("BEH-AGENT-GUIDE: init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
@@ -628,4 +630,61 @@ test("BEH-MIGRATE: migrate refuses a tree with uncommitted changes, and a target
   const notGit = await run(bare, "migrate", "--to", "0.2");
   assert.equal(notGit.code, 2);
   assert.match(notGit.err, /not a git work tree/);
+});
+
+test("BEH-CONTEXT: context of a file no slice claims names the file, never a malformed ID, and exits 1", async (t) => {
+  const dir = await example(t);
+  const result = await run(dir, "context", "src/nowhere/else.ts");
+  assert.equal(result.code, 1);
+  assert.match(
+    result.err,
+    /error VSA009 No slice claims src\/nowhere\/else\.ts, so there is no context to load for it/,
+  );
+  assert.doesNotMatch(result.err, /not an artifact ID/);
+  const json = JSON.parse((await run(dir, "context", "src/nowhere/else.ts", "--json")).out);
+  assert.equal(json.diagnostics[0].code, "VSA009");
+  assert.equal(json.diagnostics[0].path, "src/nowhere/else.ts");
+});
+
+test("BEH-AGENT-GUIDE: init's registries say what each list holds, and the guide carries a verification template and the way to see one record of each type", async (t) => {
+  const dir = temp(t);
+  assert.equal((await run(dir, "init")).code, 0);
+  const registries = readFileSync(join(dir, ".intentset", "registries.yaml"), "utf8");
+  assert.match(
+    registries,
+    /^roles: \[\] +# roles of the product's users, such as shopper; a product with none still names one$/m,
+  );
+  assert.match(
+    registries,
+    /^# one release, one role and one edition, so fill each of those before the first record\.$/m,
+  );
+  const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
+  assert.match(guide, /^ {2}profile: intentset\/verification\/0\.2$/m);
+  assert.match(guide, /^ {4}selector: the test's title, or the describe's name$/m);
+  assert.match(guide, /`npx intentset init --example --root <an empty directory>` writes one record of each type/);
+  assert.match(
+    guide,
+    /A capability sits\nunder an outcome, an outcome under an intent, and an intent under the product/,
+  );
+  const validate = await run(dir, "validate");
+  assert.equal(validate.code, 0, validate.out + validate.err);
+});
+
+test("BEH-ARCH-CHECK: without TypeScript 7 the command says what it found and what to run, instead of a module error", () => {
+  const found = new TypeScriptMissingError("5.9.3", new Error("Cannot find module"));
+  const text = typescriptMissing(found, ["architecture", "check", "--mode", "strict"]);
+  assert.match(
+    text,
+    /^intentset: the architecture check needs TypeScript 7, and the `typescript` this repository gives @intentset\/architecture is 5\.9\.3\./,
+  );
+  assert.match(
+    text,
+    /`pnpm dlx --package=@intentset\/cli --package=typescript@7 intentset architecture check --mode strict`/,
+  );
+  assert.match(text, /`npx -p @intentset\/cli -p typescript@7 intentset architecture check --mode strict`/);
+  const none = typescriptMissing(new TypeScriptMissingError(null, new Error("x")), []);
+  assert.match(
+    none,
+    /no `typescript` resolves from @intentset\/architecture\. .*`npx -p @intentset\/cli -p typescript@7 intentset`/,
+  );
 });

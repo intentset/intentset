@@ -21,6 +21,18 @@ import { changedSince } from "./git.ts";
 import type { Repository } from "./repository.ts";
 import type { Tree } from "./tree.ts";
 
+/** Where run records are read from when no --evidence is given. Local output: not to be committed. */
+export const EVIDENCE_DIR = ".intentset/evidence";
+
+/**
+ * The run records under EVIDENCE_DIR are the toolchain's own output, never part of a subject, so a change to them
+ * says nothing about evidence and is left out of what `changedSince` answers: EVID005 would otherwise list the file
+ * `evidence import --out` has just written, until it is ignored or committed.
+ */
+function outsideEvidence(paths: string[] | null): string[] | null {
+  return paths === null ? null : paths.filter((path) => path !== EVIDENCE_DIR && !path.startsWith(`${EVIDENCE_DIR}/`));
+}
+
 /** The binding in force: the option, else the configuration, else the default (Core §8). */
 export function bindingFor(repo: Repository, graph: Graph, given: EvidenceBinding | undefined): BindingDecision {
   return resolveBinding(given ?? repo.config.evidence.binding, hasSliceClaims(graph));
@@ -56,7 +68,7 @@ export function subjectsOf(repo: Repository, graph: Graph, tree: Tree): Subjects
     subjects: subjectsFor(graph, source),
     source,
     changedSince: (commit) => {
-      if (!asked.has(commit)) asked.set(commit, changedSince(repo.root, commit));
+      if (!asked.has(commit)) asked.set(commit, outsideEvidence(changedSince(repo.root, commit)));
       return asked.get(commit) ?? null;
     },
   };
