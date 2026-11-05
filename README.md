@@ -1,8 +1,81 @@
 # Intentset
 
-Keep product intent connected to what you ship. Intentset connects what a product is meant to do with the slices
-that implement it, the checks that verify it, and the knowledge you share with customers, as readable Markdown files
-in your repository. The graph, reports, Atlas and published knowledge are views of those files.
+**Keep control of what your agents build.** Agents write code faster than anyone can read it. Intentset keeps what
+your product promises, which code delivers each promise and how it is checked, in readable Markdown records in your
+repository that your agents update with every change. People review the product rather than the diff, and steer it
+where it needs to go. [How it works](https://intentset.org/how-it-works/) · [Why now](https://coralreefventures.com/articles/code-outruns-review/)
+
+Three repositories at one education company have adopted it, each from a different place:
+
+- [Before scale](https://coralreefventures.com/articles/intentset-before-scale/): a 265,000-line app wrote its
+  promises down before agents took on most of its work, took its architecture baseline from 97 violations to zero in a
+  day, then merged 186 pull requests in twelve days; writing it down found security gaps code review had not.
+- [In a million lines](https://coralreefventures.com/articles/intentset-in-a-million-lines/): a five-area platform
+  of 560,000 lines and 26,000 tests is writing itself down one area at a time; the first twelve days found more than
+  500 gaps, and one modeled behavior led to four authorization fixes in four days.
+- [Before launch](https://coralreefventures.com/articles/intentset-before-launch/): a month-old, 18,000-line product
+  wrote its 41 behaviors and bound every one to the test that proves it, in one pull request, before anyone depended
+  on it.
+
+## Try it in five minutes
+
+From a repository that has never seen Intentset to its first passing check, the same steps as
+[intentset.org/start](https://intentset.org/start/). Install, then let `init` write the configuration, the registries
+and the guide your agents follow:
+
+```sh
+npm install --save-dev @intentset/cli
+npx intentset init
+```
+
+Point your agents at the guide with one line, `@.intentset/agents.md` in CLAUDE.md or `Before changing code, read
+.intentset/agents.md and follow it.` in AGENTS.md. Name what records may refer to in `.intentset/registries.yaml`; one
+of each is enough to start, and a behavior needs a release, a role and an edition to name:
+
+```yaml
+owners:
+- team-shop
+audiences:
+- engineering
+- product
+releases:
+- v1
+roles:
+- shopper
+editions:
+- standard
+flags: []
+evidenceSources: []
+resources: []
+```
+
+Then ask your agent to write one capability down:
+
+```text
+Read .intentset/agents.md. Model the <capability> capability from its code, tests and
+decision records, as draft records under product/: the product, the intent and the
+outcome the capability serves, the capability, its behaviors with their rules and
+scenarios, the slice that owns the code, and an automated verification record for each
+test that checks it, with the test file as its locator and the test's title as its
+selector. Use only the names .intentset/registries.yaml holds. Leave every record a
+draft. Run intentset validate and fix what it reports until it reports no error.
+```
+
+Check what it wrote, bind the tests to this commit, and read the model with its evidence:
+
+```sh
+npx intentset validate --level L2
+npx vitest run --reporter=json --outputFile=reports/vitest.json
+npx intentset evidence import --from vitest reports/vitest.json \
+  --out .intentset/evidence/local.json --product <PRD-ID> --release v1
+npx intentset validate --level L3
+```
+
+The last line says `verified: 1 of 1 behavior`: a promise, the code that owns it, and a test that passed on this
+commit. Add `reports/` and `.intentset/evidence/` to `.gitignore`. With pnpm, `pnpm add --save-dev @intentset/cli`,
+then `pnpm exec intentset` wherever `npx intentset` appears; the architecture check needs TypeScript 7, and the note
+at the end of [the Start page](https://intentset.org/start/) says when that needs a different command. To see one
+record of each type first, `npx intentset init --example --root <an empty directory>` writes the worked example there.
 
 **Status: v0.2 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
@@ -20,16 +93,7 @@ Ten packages are published under the `@intentset` scope: `core`, `markset-adapte
   [`tests/consumer/`](tests/consumer/)
 - Site: intentset.org, built from [`site/`](site/)
 
-## Try it
-
-```sh
-npm install --save-dev @intentset/cli
-npx intentset init --repository you/repo --example
-npx intentset validate
-npx intentset impact BEH-ASMT-SCHEDULE
-```
-
-With pnpm, `pnpm add --save-dev @intentset/cli`, then `pnpm exec intentset` wherever `npx intentset` appears.
+## Try it from a checkout
 
 From a checkout of this repository, which uses pnpm (pinned in `package.json`; `corepack enable` provides it):
 
