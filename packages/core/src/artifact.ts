@@ -472,6 +472,8 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
 
 interface ListOptions {
   minItems?: number;
+  /** What to do about a list shorter than `minItems`, when "add a value" is not enough of an answer. */
+  minItemsRemediation?: string;
   pattern?: RegExp;
   /** Code for a repeated entry; CORE001 unless the list is a relationship. */
   duplicateCode?: string;
@@ -529,7 +531,7 @@ function stringList(
       problem(
         field,
         `\`${name}\` must list at least ${options.minItems} entr${options.minItems === 1 ? "y" : "ies"}.`,
-        `Add at least one value to ${name}.`,
+        options.minItemsRemediation ?? `Add at least one value to ${name}.`,
       );
     }
     return null;
@@ -601,7 +603,15 @@ function readAvailability(value: unknown, field: string, problem: Problem): Avai
       ok = false;
       continue;
     }
-    const list = stringList(value[key], `${field}/${key}`, key, problem, { minItems: key === "flags" ? 0 : 1 });
+    // Availability intersects on every dimension (Core §7), so an empty one would apply the artifact nowhere; a
+    // product with no roles or editions of its own still names one of each, and registers it.
+    const list = stringList(value[key], `${field}/${key}`, key, problem, {
+      minItems: key === "flags" ? 0 : 1,
+      minItemsRemediation:
+        key === "products"
+          ? "Name the product the artifact belongs to."
+          : `List at least one of the ${key} the artifact applies to, from the registries; a product with no ${key} of its own still names one (such as ${key === "roles" ? "user" : key === "editions" ? "standard" : "v1"}) and registers it.`,
+    });
     if (list === null) ok = false;
     else out[key] = list;
   }

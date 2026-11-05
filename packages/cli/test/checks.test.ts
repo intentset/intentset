@@ -4,6 +4,7 @@
  * with the source tree the VSA fixtures give it.
  */
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -648,7 +649,7 @@ test("BEH-CONTEXT: context of a file a slice claims is that slice's context, and
 
   const unclaimed = await run(dir, "context", "NOTES.txt");
   assert.equal(unclaimed.code, 1);
-  assert.match(unclaimed.err, /CORE003/);
+  assert.match(unclaimed.err, /VSA009 No slice claims NOTES\.txt/);
 });
 
 test("review runs at L4 when run records are present", async (t) => {
@@ -1274,4 +1275,69 @@ test("BEH-EVIDENCE-STALE: a manual verification is listed apart and never needs 
   assert.match(stray.err, /--check is not an option of evidence import/);
   const missingRoot = await run(temp(t), "evidence", "stale");
   assert.equal(missingRoot.code, 2);
+});
+
+test("BEH-EVIDENCE-CURRENT: EVID005 leaves out the run records under .intentset/evidence, the toolchain's own output", async (t) => {
+  const dir = await committed(t);
+  await importRun(dir, ".intentset/evidence/run.json");
+  // The run record just written is an untracked change since the record's commit; nothing claims it, and nothing should.
+  const l3 = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.doesNotMatch(l3.out, /EVID005/, l3.out);
+  assert.match(verificationLine(l3.out), /current-pass {2}\[subject\]/);
+  write(dir, { "scripts/release.sh": "echo release\n" });
+  const other = await run(dir, "validate", "--level", "L3", ...IMPORT);
+  assert.match(
+    other.out,
+    /warning EVID005 .*1 file changed since .*: scripts\/release\.sh\./,
+    "another untracked file is still listed, alone",
+  );
+});
+
+test("BEH-ARCH-CHECK: without TypeScript, init and validate at L1 still run, and the checks that read source stop with the command to run", async (t) => {
+  // The CLI is run in a child process whose module resolution refuses `typescript`, as pnpm's does in a
+  // repository on TypeScript 5 (it resolves the peer to the repository's own copy); the hook is the test's.
+  const dir = temp(t);
+  const cli = (...argv: string[]) => {
+    try {
+      const out = execFileSync(
+        process.execPath,
+        [
+          "--conditions=intentset-source",
+          "--import",
+          join(REPO, "packages", "cli", "test", "no-typescript.mjs"),
+          join(REPO, "packages", "cli", "src", "intentset.ts"),
+          ...argv,
+        ],
+        { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      );
+      return { code: 0, out, err: "" };
+    } catch (error) {
+      const failed = error as { status: number | null; stdout: string; stderr: string };
+      return { code: failed.status ?? -1, out: failed.stdout, err: failed.stderr };
+    }
+  };
+  const init = cli("init", "--example", "--repository", "example/lantern");
+  assert.equal(init.code, 0, init.err);
+  const l1 = cli("validate");
+  assert.equal(l1.code, 0, l1.err);
+  assert.match(l1.out, /artifacts, 0 errors/);
+  // The scanner is first needed for a file a slice claims; the example plans its paths, so one is written.
+  write(dir, { "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n" });
+  for (const argv of [
+    ["architecture", "check"],
+    ["validate", "--level", "L2"],
+  ]) {
+    const result = cli(...argv);
+    assert.equal(result.code, 2, `${argv.join(" ")}: ${result.err}`);
+    assert.doesNotMatch(
+      result.err,
+      /ERR_MODULE_NOT_FOUND|at ModuleJob/,
+      "no module error or stack trace reaches the person",
+    );
+    assert.match(
+      result.err,
+      /^intentset: the architecture check needs TypeScript 7, and no `typescript` resolves from @intentset\/architecture\. Run the toolchain without installing it, as `pnpm dlx --package=@intentset\/cli --package=typescript@7 intentset /,
+    );
+    assert.match(result.err, new RegExp(`intentset ${argv.join(" ")}\``));
+  }
 });

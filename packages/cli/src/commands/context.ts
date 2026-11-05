@@ -21,13 +21,30 @@ import {
   type ContextRole,
   compareStrings,
   contextFor,
+  type Diagnostic,
   type Graph,
+  ID_PATTERN,
   type LinkKind,
 } from "@intentset/core";
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import type { Session } from "../session.ts";
 import { claimingSlices } from "../slices.ts";
 import { unresolved, validationLine, validationSummary } from "./shared.ts";
+
+/** A file no slice claims has no context to load; VSA009 is the claims rule the architecture check reports it under. */
+function unclaimed(path: string, session: Session): Diagnostic {
+  const slices = [...session.result.graph.artifacts.values()].filter((a) => a.meta.type === "slice").length;
+  return {
+    code: "VSA009",
+    severity: "error",
+    origin: "architecture",
+    artifact: null,
+    path,
+    message: `No slice claims ${path}, so there is no context to load for it (${count(slices, "slice")} in this graph).`,
+    remediation:
+      "Give the ID of the record whose context to load, or add the file to the claims of the slice that owns it (VSA §2).",
+  };
+}
 
 /**
  * The artifact a `context` argument names: itself when it is an ID, else the
@@ -81,9 +98,12 @@ export function contextCommand(
   }
   const via = "id" in target ? target.path : null;
   const id = "id" in target ? target.id : argument;
-  const bundle = contextFor(graph, id, { includeRestricted });
+  const bundle = "slices" in target && !ID_PATTERN.test(argument) ? null : contextFor(graph, id, { includeRestricted });
   if (bundle === null) {
-    const diagnostic = unresolved(id, session);
+    // An argument that is not an ID was a file path, and no slice claims it: say that, rather than reading the
+    // path as a malformed ID, since the agent gave the file it is about to edit and wants to know what owns it.
+    const diagnostic =
+      "slices" in target && !ID_PATTERN.test(argument) ? unclaimed(target.path, session) : unresolved(id, session);
     if (asJson) {
       io.stdout(
         json({

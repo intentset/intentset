@@ -11,7 +11,7 @@
  * two version values of each record's frontmatter and nothing else.
  */
 import { parseArgs } from "node:util";
-import type { Mode } from "@intentset/architecture";
+import { type Mode, TypeScriptMissingError } from "@intentset/architecture";
 import { EVIDENCE_BINDINGS, type EvidenceBinding, LEVELS, type Level } from "@intentset/core";
 import type { RunScope } from "@intentset/verification";
 import { architectureCommand } from "./commands/architecture.ts";
@@ -29,6 +29,7 @@ import { reviewCommand } from "./commands/review.ts";
 import { serveCommand } from "./commands/serve.ts";
 import { validateCommand } from "./commands/validate.ts";
 import { type Io, TOOL } from "./output.ts";
+import { typescriptMissing } from "./commands/shared.ts";
 import { type CarrierName, CARRIERS, findRoot } from "./repository.ts";
 import { EVIDENCE_DIR, evidenceFiles, openSession, type SessionOptions } from "./session.ts";
 
@@ -223,6 +224,21 @@ const POSITIONALS: Record<string, { subs?: Record<string, number>; count: number
 };
 
 export async function main(argv: string[], io: Io): Promise<number> {
+  try {
+    return await dispatch(argv, io);
+  } catch (error) {
+    // The one failure a command raises rather than reports: the scanner's TypeScript is not there. It arrives from
+    // the first check that needs it (architecture check, validate at L2 and above, review, a subject-bound
+    // evidence read), and every other command has already run without it.
+    if (error instanceof TypeScriptMissingError) {
+      io.stderr(`${typescriptMissing(error, argv)}\n`);
+      return 2;
+    }
+    throw error;
+  }
+}
+
+async function dispatch(argv: string[], io: Io): Promise<number> {
   let parsed: ReturnType<typeof parse>;
   try {
     parsed = parse(argv);

@@ -5,6 +5,7 @@
  * whole check; the rest is exported for reports, tools and tests.
  */
 export { AREA_REVIEW_REQUIRED, areaOf, backendAreaOf, checkAreas, isAreaSchema } from "./areas.ts";
+export { TypeScriptMissingError, typescriptVersion } from "./typescript.ts";
 export {
   applyBaseline,
   type BaselineComparison,

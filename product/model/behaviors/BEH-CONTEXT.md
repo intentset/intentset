@@ -6,11 +6,11 @@ intentset:
   id: BEH-CONTEXT
   type: behavior
   title: Context gives an agent what the code it will change promises
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS]
@@ -34,7 +34,7 @@ Given a file, a slice claims it.
 
 ## Outcomes
 
-Success: the bounded context, restricted artifacts withheld unless asked for. Failure: an ID not in the model, or a file no slice claims, is reported.
+Success: the bounded context, restricted artifacts withheld unless asked for. Failure: an ID not in the model is reported as unresolved; a file no slice claims is reported as that, naming the file and what would give it a context (a record's ID, or a slice's claim), never as a malformed ID.
 
 ## Sources
 

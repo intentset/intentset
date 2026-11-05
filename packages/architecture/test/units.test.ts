@@ -37,6 +37,7 @@ import {
   writeBaseline,
 } from "../src/index.ts";
 import { finding } from "../src/finding.ts";
+import { TypeScriptMissingError, typescriptVersion } from "../src/typescript.ts";
 
 describe("patterns (VSA §3)", () => {
   test("validatePattern names each forbidden form", () => {
@@ -1485,5 +1486,25 @@ describe("JSX is not lexed as code (found on Streamlane: a slash in JSX text rea
   test("an element left open is no worse than before: the code after it is still read", () => {
     const text = 'const v = <p>never closed;\nimport "./after";\n';
     assert.deepEqual(read("x.tsx", text).specifiers, ["./after"]);
+  });
+});
+
+describe("BEH-ARCH-CHECK: the scanner's TypeScript is loaded when a check first needs it", () => {
+  test("typescriptVersion names the TypeScript the package resolves, which is 7 here", () => {
+    assert.match(typescriptVersion() ?? "none", /^7\./);
+  });
+  test("TypeScriptMissingError names the version found, or that none resolves, and keeps its cause", () => {
+    const older = new TypeScriptMissingError("5.9.3", new Error("Cannot find module"));
+    assert.equal(older.name, "TypeScriptMissingError");
+    assert.equal(older.found, "5.9.3");
+    assert.match(
+      older.message,
+      /needs TypeScript 7, and the `typescript` that resolves from @intentset\/architecture is 5\.9\.3\./,
+    );
+    assert.equal((older.cause as Error).message, "Cannot find module");
+    assert.match(
+      new TypeScriptMissingError(null, null).message,
+      /no `typescript` resolves from @intentset\/architecture/,
+    );
   });
 });

@@ -134,8 +134,10 @@ level-one heading repeats its title. Plain Markdown is valid Markset. For the re
 callouts, tables and other constructs a record may use and the codes \`validate\` reports for them, read Markset's
 guide at ${MARKSET_GUIDE_URL}, or print it with \`${markset}\`.
 
-An existing record of the same type in this repository is the best template; a new behavior looks like this, one
-recognizable promise including how it fails:
+An existing record of the same type in this repository is the best template; in a repository with none yet,
+\`${run} init --example --root <an empty directory>\` writes one record of each type there to read. A capability sits
+under an outcome, an outcome under an intent, and an intent under the product, so the first capability brings those
+three with it. A new behavior looks like this, one recognizable promise including how it fails:
 
 \`\`\`markdown
 ---
@@ -171,6 +173,40 @@ What must be true first.
 
 ## Outcomes
 Success: what happens. Failure: what is rejected, and what is left unchanged.
+\`\`\`
+
+A verification record binds a check to what it verifies. An automated one names the test file and a selector the
+test's title holds as whole words (a \`describe\`'s name binds all of its tests), which is how \`evidence import\`
+matches a run to it:
+
+\`\`\`markdown
+---
+markset: 0
+intentset:
+  spec: '0.2'
+  profile: intentset/verification/0.2
+  id: TEST-AREA-NAME
+  type: verification
+  title: What the check proves, such as Unit test of scheduling an assessment
+  status: draft
+  owner: <an owner from the registry>
+  visibility: internal
+  audiences: [engineering]
+  links:
+    verifies: [BEH-AREA-NAME, RULE-AREA-LIMIT]
+  verification:
+    method: automated
+    locator: src/area/name.test.ts
+    selector: the test's title, or the describe's name
+---
+
+# What the check proves, such as Unit test of scheduling an assessment
+
+## Procedure
+The runner and the file, and the cases it covers, the failure cases included.
+
+## Expected result
+What a pass shows.
 \`\`\`
 
 A knowledge record explains behaviors, rules or capabilities to one audience, in that audience's words rather than

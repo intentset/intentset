@@ -3,9 +3,29 @@
  * the graph validated, and the CORE003-style refusal for an ID the graph does
  * not hold.
  */
+import type { TypeScriptMissingError } from "@intentset/architecture";
 import { type Diagnostic, ID_PATTERN } from "@intentset/core";
 import { count } from "../output.ts";
 import type { Session } from "../session.ts";
+
+/**
+ * What the CLI says when a check needed TypeScript 7's scanner and the `typescript` the repository gave
+ * @intentset/architecture is older or absent: the version found and the command that runs the toolchain with its
+ * own TypeScript, for the arguments that were given, with pnpm (which resolves the peer to the repository's own
+ * copy) and with npm (which installs the peer beside the CLI, so it rarely gets here).
+ */
+export function typescriptMissing(error: TypeScriptMissingError, argv: readonly string[]): string {
+  const args = argv.length === 0 ? "" : ` ${argv.join(" ")}`;
+  const found =
+    error.found === null
+      ? "no `typescript` resolves from @intentset/architecture"
+      : `the \`typescript\` this repository gives @intentset/architecture is ${error.found}`;
+  return (
+    `intentset: the architecture check needs TypeScript 7, and ${found}. Run the toolchain without installing it, ` +
+    `as \`pnpm dlx --package=@intentset/cli --package=typescript@7 intentset${args}\`, or with npm as ` +
+    `\`npx -p @intentset/cli -p typescript@7 intentset${args}\`; or give the repository TypeScript 7.`
+  );
+}
 
 /** The validation state a query ran over, so a reader knows whether the graph was whole. */
 export function validationSummary(session: Session, level: string) {

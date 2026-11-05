@@ -33,8 +33,19 @@
  * the file the names the file exports itself, so a name taken through an
  * entrypoint or a barrel can be followed to the file that defines it (VSA006).
  */
-import { LanguageVariant, SyntaxKind } from "typescript/unstable/ast";
-import { computeLineStarts, createScanner, tokenIsIdentifierOrKeyword } from "typescript/unstable/ast/scanner";
+import { typescript } from "./typescript.ts";
+
+type Ast = typeof import("typescript/unstable/ast");
+type Scanner = typeof import("typescript/unstable/ast/scanner");
+type SyntaxKind = import("typescript/unstable/ast").SyntaxKind;
+
+// The scanner's exports, taken from TypeScript by `load()` on the first tokenize rather than at import, so this
+// module loads where TypeScript 7 is absent and the first check that needs it fails with TypeScriptMissingError.
+let SyntaxKind: Ast["SyntaxKind"];
+let LanguageVariant: Ast["LanguageVariant"];
+let createScanner: Scanner["createScanner"];
+let computeLineStarts: Scanner["computeLineStarts"];
+let tokenIsIdentifierOrKeyword: Scanner["tokenIsIdentifierOrKeyword"];
 
 export interface RawImport {
   specifier: string;
@@ -122,23 +133,36 @@ const REGEX_AFTER_WORD = new Set([
   "await",
 ]);
 
-const VALUE_ENDING = new Set<SyntaxKind>([
-  SyntaxKind.NumericLiteral,
-  SyntaxKind.BigIntLiteral,
-  SyntaxKind.StringLiteral,
-  SyntaxKind.RegularExpressionLiteral,
-  SyntaxKind.NoSubstitutionTemplateLiteral,
-  SyntaxKind.TemplateTail,
-  SyntaxKind.CloseParenToken,
-  SyntaxKind.CloseBracketToken,
-  SyntaxKind.CloseBraceToken,
-  SyntaxKind.PlusPlusToken,
-  SyntaxKind.MinusMinusToken,
-]);
+/** Tokens after which `/` is a division, not a regular expression; filled by `load()`. */
+let VALUE_ENDING: Set<SyntaxKind> | undefined;
+
+/** Takes the scanner from TypeScript once; throws TypeScriptMissingError where TypeScript 7 does not resolve. */
+function load(): Set<SyntaxKind> {
+  if (VALUE_ENDING !== undefined) return VALUE_ENDING;
+  const { ast, scanner } = typescript();
+  ({ SyntaxKind, LanguageVariant } = ast);
+  ({ createScanner, computeLineStarts, tokenIsIdentifierOrKeyword } = scanner);
+  VALUE_ENDING = new Set<SyntaxKind>([
+    SyntaxKind.NumericLiteral,
+    SyntaxKind.BigIntLiteral,
+    SyntaxKind.StringLiteral,
+    SyntaxKind.RegularExpressionLiteral,
+    SyntaxKind.NoSubstitutionTemplateLiteral,
+    SyntaxKind.TemplateTail,
+    SyntaxKind.CloseParenToken,
+    SyntaxKind.CloseBracketToken,
+    SyntaxKind.CloseBraceToken,
+    SyntaxKind.PlusPlusToken,
+    SyntaxKind.MinusMinusToken,
+  ]);
+  OPENERS = new Set<SyntaxKind>([SyntaxKind.OpenBraceToken, SyntaxKind.OpenParenToken, SyntaxKind.OpenBracketToken]);
+  CLOSERS = new Set<SyntaxKind>([SyntaxKind.CloseBraceToken, SyntaxKind.CloseParenToken, SyntaxKind.CloseBracketToken]);
+  return VALUE_ENDING;
+}
 
 function regexAllowed(previous: Token | undefined): boolean {
   if (previous === undefined) return true;
-  if (VALUE_ENDING.has(previous.kind)) return false;
+  if (load().has(previous.kind)) return false;
   if (tokenIsIdentifierOrKeyword(previous.kind)) return REGEX_AFTER_WORD.has(previous.text);
   return true;
 }
@@ -148,6 +172,7 @@ function isJsx(path: string): boolean {
 }
 
 function tokenize(path: string, text: string): { tokens: Token[]; problems: ExtractProblem[] } {
+  load();
   const jsx = isJsx(path);
   const scanner = createScanner(true, jsx ? LanguageVariant.JSX : LanguageVariant.Standard, text);
   const starts = computeLineStarts(text);
@@ -680,16 +705,9 @@ export interface SchemaExtraction {
 }
 
 const REFERENCE_CALLS = new Set(["belongsTo", "hasMany", "hasOne", "ref"]);
-const OPENERS = new Set<SyntaxKind>([
-  SyntaxKind.OpenBraceToken,
-  SyntaxKind.OpenParenToken,
-  SyntaxKind.OpenBracketToken,
-]);
-const CLOSERS = new Set<SyntaxKind>([
-  SyntaxKind.CloseBraceToken,
-  SyntaxKind.CloseParenToken,
-  SyntaxKind.CloseBracketToken,
-]);
+/** Brackets that open and close a nesting level; filled by `load()` with VALUE_ENDING, since they name the scanner's kinds. */
+let OPENERS: Set<SyntaxKind>;
+let CLOSERS: Set<SyntaxKind>;
 
 /**
  * The top-level names an Amplify Gen 2 schema file declares, and the names its

@@ -48,11 +48,10 @@ import {
 import { insideRoot } from "./outputs.ts";
 import { formatDiagnostic, type Io, type Snapshot } from "./output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository, type Repository } from "./repository.ts";
-import { bindingFor, subjectsOf } from "./subject.ts";
+import { bindingFor, EVIDENCE_DIR, subjectsOf } from "./subject.ts";
 import { readTree, type Tree } from "./tree.ts";
 
-/** Where run records are read from when no --evidence is given. Local output: not to be committed. */
-export const EVIDENCE_DIR = ".intentset/evidence";
+export { EVIDENCE_DIR } from "./subject.ts";
 
 export interface SessionOptions {
   root?: string;

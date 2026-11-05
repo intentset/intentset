@@ -23,7 +23,7 @@ pnpm exec intentset validate
 ```
 :::
 
-The architecture check needs TypeScript 7. In a repository on an earlier TypeScript, run the toolchain without installing it: `npx -p @intentset/cli -p typescript@7 intentset`, or `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`.
+The checks that read source (`architecture check`, `validate` at L2 and above, `review`) need TypeScript 7, the CLI's peer dependency; the rest of the toolchain does not. npm installs the peer beside the CLI; pnpm gives the CLI the TypeScript your repository has, and on one earlier than 7 those checks stop and name the version found. There, run the toolchain without installing it: `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`, or `npx -p @intentset/cli -p typescript@7 intentset`.
 
 ## In a repository
 
