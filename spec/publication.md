@@ -70,24 +70,45 @@ NOT contain a `:::` directive outside Markset's vocabulary. Retrieval chunks of 
 
 ## 3. Review record and needs-review
 
-A review is `reviewedBy` and `reviewedAt` on the knowledge plus this extension, which pins the source hash each
-source had when the knowledge was reviewed:
+A review is `reviewedBy` and `reviewedAt` on the knowledge plus this extension, which pins a hash of each source as it
+was when the knowledge was reviewed:
 
 ```yaml
 extensions:
   intentset.org/review:
+    hash: content-v1                   # what the pins hash; absent means the whole file
     sources:
-      BEH-ASMT-SCHEDULE: 2f533532d2e5...   # SHA-256 of the source file, ADR 0005
-      RULE-ASMT-FUTURE: e39f8756c878...
+      BEH-ASMT-SCHEDULE: 6d6d30d8dc13...
+      RULE-ASMT-FUTURE: daea07d3681b...
     snapshot: <commit or graph hash at review>   # optional, informative
 ```
 
-The sources a review MUST pin are those the knowledge `explains` and the rules in `governedBy` of each explained
-behavior. The knowledge is `needs-review`, and MUST NOT be published, when any such source's current hash differs from
-its pin or the source is gone, when a pin is missing, or when `reviewedBy` or `reviewedAt` is absent.
+`hash` names what every pin in the record holds (ADR 0018):
 
-In conformance fixtures only, a pin of the literal `@current` stands for the source's hash in the case's own tree and
-is bound before projection. Unbound, it equals no hash and so reads as changed.
+- **`content-v1`, the content hash.** SHA-256 over the canonical JSON (ADR 0005) of an object with three members:
+  - `frontmatter`, the source's whole parsed frontmatter without, under `intentset`, `status`, `delivery`,
+    `reviewedBy`, `reviewedAt` and the `intentset.org/review` extension, and without `extensions` when nothing else is
+    in it;
+  - `body`, everything after the frontmatter, as written;
+  - `ending`, the status when it is `deprecated` or `retired`, and absent otherwise.
+
+  Approving, implementing or releasing a source, setting its `delivery` or recording its own review leaves the
+  knowledge current. Every other edit to the source makes it `needs-review`: its title, body, links, availability and
+  any other frontmatter, and a status that says it is going away. A change in key order, quoting or indentation does
+  not, because the frontmatter is hashed as parsed. A review SHOULD pin this kind.
+- **Absent: the whole file.** Each pin is the SHA-256 of the source file's bytes, its `sourceHash` (ADR 0005), so any
+  edit to the source, its status included, makes the knowledge `needs-review`. A review record written before
+  `content-v1` existed has no `hash` and is read this way, unchanged.
+- **Any other value** is a kind the implementation does not read: no pin matches, so the knowledge is `needs-review`.
+
+The sources a review MUST pin are those the knowledge `explains` and the rules in `governedBy` of each explained
+behavior. The knowledge is `needs-review`, and MUST NOT be published, when any such source's current hash, of the
+record's kind, differs from its pin or the source is gone, when a pin is missing, or when `reviewedBy` or `reviewedAt`
+is absent.
+
+In conformance fixtures only, a pin of the literal `@current` stands for the source's hash, of the record's kind, in
+the case's own tree and is bound before projection. Unbound, it equals no hash and so reads as changed. A literal pin
+in a fixture is the hash of the baseline's source, so a case can edit the source after review.
 
 ## 4. References and diagnostics
 

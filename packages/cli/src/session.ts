@@ -289,7 +289,9 @@ export function publicationReadiness(graph: Graph): { checked: string[]; diagnos
     const review = reviewStatus(graph, artifact);
     if (review.status === "current") continue;
     const reasons: string[] = [];
-    if (review.changed.length > 0) reasons.push(`${review.changed.join(", ")} changed since review`);
+    if (review.unknownHash !== null) {
+      reasons.push(`its review pins hashes of kind ${review.unknownHash}, which this version does not read`);
+    } else if (review.changed.length > 0) reasons.push(`${review.changed.join(", ")} changed since review`);
     if (review.missing.length > 0) reasons.push(`no review pin for ${review.missing.join(", ")}`);
     if (review.reviewer === null) reasons.push("it names no reviewer");
     if (review.reviewedAt === null) reasons.push("it gives no review date");

@@ -5,6 +5,22 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## 0.13.0 — 2026-11-12
+
+**A knowledge review can pin what a record promises instead of its whole file, so approving, implementing or marking delivery on a source no longer sends every guide that explains it back to review; and `intentset list --count-by delivery`.** Minor: a new pin kind in publication §3, new API in `@intentset/core` (`contentHashOf`, `Artifact.contentHash`, `CONTENT_HASH_OMITS`, `ENDING_STATUSES`) and `@intentset/publisher` (`pinHash`, `PIN_KINDS`, `ReviewStatus.unknownHash`), `contentHash` in `intentset context --json` and the MCP server's context tools, and one removal (below). The specifications move no version: publication §3, Core §9 and list §4 gain text, no existing conformance case changed its `valid` or `diagnostics`, so `intentset.spec` stays `0.2`, the export stays `0.5` and the list result `intentset/list/0.1`. The suite gains 12 cases.
+
+**Why (ADR 0018).** Each review pin was the SHA-256 of the whole source file, so a status change, a `delivery` (0.12.0) or a source's own review fields made every guide explaining it read `needs-review` although nothing it explains changed. An adopter that moves records through the lifecycle in bulk sent every reviewed guide back to review each time, and re-signing out of habit empties the signal.
+
+**Two pin kinds (publication §3).** A review record with `hash: content-v1` pins each source's content hash: SHA-256 over the canonical JSON of its parsed frontmatter without `status`, `delivery`, `reviewedBy`, `reviewedAt` and the `intentset.org/review` extension, its body, and `ending` when its status is `deprecated` or `retired`. Key order, quoting and indentation do not count; the title, body, links, availability and every other field do, and so does a source going away. A review record without `hash` pins whole files and is read exactly as before, so no existing review needs re-signing: it moves to `content-v1` the next time someone signs it off. Any other `hash` matches nothing, so the knowledge needs review. Publication, `validate`, the export's knowledge report and the Atlas all judge by the record's kind. `sourceHash`, the graph hash, evidence subjects and drift review are unchanged.
+
+**Writing pins.** Every record carries `contentHash` beside `sourceHash`: in `@intentset/core`, in `intentset context --json` and in the MCP server's context tools. The example's knowledge record now pins `content-v1`, so its bytes, the export case's graph hash and the consumer fixtures moved.
+
+**`--count-by delivery` (list §4).** Groups the matched records by their effective delivery, `built`, `planned` or `unstated` by name, never null, so each group's count is what `--delivery` with that value lists. A row still carries no delivery.
+
+**Removed.** The CLI's re-exports of `describingRecords`, `claimingSlices`, `activeSlices` and `isSliceCode`, deprecated in 0.11.0 and kept through 0.12.0. Import them from `@intentset/core`. `matchGlob` and `matchAny` stay on the CLI's surface.
+
+**Conformance.** Nine P04 cases in `tests/publication.json` pin literal content hashes of the example's sources and then approve, mark built, review, edit the body, a link, availability or a rule's title, deprecate, or name an unknown kind; two more read whole-file pins. An L11 case counts by delivery. The case schema's `countBy` takes `delivery`.
+
 ## 0.12.0 — 2026-11-12
 
 **A record says whether its work is built, apart from whether it is approved: an optional `delivery: planned | built`, read by `validate`, `list`, the export, the Atlas and publication.** Minor: a new optional field, new API in `@intentset/core` (`deliveryOf`, `DELIVERIES`, `DELIVERY_TYPES`, `BUILT_STATUSES`) and `@intentset/publisher` (`plannedSources`), and **the export moves to `intentset/export/0.5`**, so every reader of an export upgrades. The specifications changed (Core, VSA, publication, list and export, revision 2026-11-12) without invalidating any case's `valid` or `diagnostics`, so `intentset.spec` stays `0.2` and the list result stays `intentset/list/0.1`. The suite gained 21 cases, one catalog ID (L12) and the consumer fixture `unsupported-contract-0.4.json`.

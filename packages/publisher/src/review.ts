@@ -18,20 +18,34 @@
  * rules that govern each explained behavior: a rule changing under a behavior
  * changes what the behavior promises, which is catalog case P04.
  *
+ * A pin is one of two kinds, named by the record's `hash` (publication §3,
+ * ADR 0018). Without `hash`, a pin is the source's `sourceHash`, the bytes of
+ * the whole file, which every review made before 0.13.0 holds. With
+ * `hash: content-v1`, it is the source's `contentHash`, which leaves out the
+ * lifecycle and review fields, so approving or implementing a source, or
+ * marking its delivery, leaves the knowledge current. Any other `hash` is a
+ * kind this version does not know: every pin reads as changed.
+ *
  * A pin of the literal `@current` is a fixture placeholder: `bindReviewPins`
- * replaces it with the source's hash in the snapshot being checked, so a
- * case can say "reviewed against what is there now" without computing a
- * hash. Unbound, it never equals a hash, so it reads as changed.
+ * replaces it with the source's hash of the record's kind in the snapshot
+ * being checked, so a case can say "reviewed against what is there now"
+ * without computing a hash. Unbound, it never equals a hash, so it reads as
+ * changed.
  */
 import { type Artifact, type Graph, graphHash, type KnowledgeReportSection } from "@intentset/core";
 import { compareStrings, sortedUnique } from "./diagnostic.ts";
 
 export const REVIEW_EXTENSION = "intentset.org/review";
 export const CURRENT_PIN = "@current";
+/** The pin kinds a review record can name in `hash` (publication §3). Absent means `source`, the whole file. */
+export const PIN_KINDS = ["content-v1"] as const;
+export type PinKind = (typeof PIN_KINDS)[number];
 
 export interface ReviewRecord {
   /** Source ID -> the source hash it was reviewed against. Entries that are not strings are dropped. */
   sources: Record<string, string>;
+  /** What the pins hash: absent for the whole file, `content-v1` for the content hash, anything else unknown. */
+  hash?: string;
   snapshot?: string;
 }
 
@@ -41,6 +55,8 @@ export interface ReviewStatus {
   changed: string[];
   /** Sources the review record does not pin. */
   missing: string[];
+  /** The record's `hash` when this version does not know it, so no pin can match; null otherwise. */
+  unknownHash: string | null;
   /** `reviewedBy`, or null when the knowledge names no reviewer. */
   reviewer: string | null;
   /** `reviewedAt`, or null when absent. */
@@ -68,6 +84,7 @@ export function readReviewRecord(artifact: Artifact): ReviewRecord | null {
     if (typeof pin === "string") sources[id] = pin;
   }
   const record: ReviewRecord = { sources };
+  if (value.hash !== undefined) record.hash = typeof value.hash === "string" ? value.hash : JSON.stringify(value.hash);
   if (typeof value.snapshot === "string") record.snapshot = value.snapshot;
   return record;
 }
@@ -75,17 +92,27 @@ export function readReviewRecord(artifact: Artifact): ReviewRecord | null {
 /** Core §9: whether the knowledge is current against the sources it was reviewed against. */
 export function reviewStatus(graph: Graph, artifact: Artifact): ReviewStatus {
   const record = readReviewRecord(artifact);
+  const hashOf = pinHash(record?.hash);
+  const unknownHash = record?.hash !== undefined && hashOf === null ? record.hash : null;
   const changed: string[] = [];
   const missing: string[] = [];
   for (const id of reviewSources(graph, artifact)) {
     const pin = record?.sources[id];
+    const source = graph.artifacts.get(id);
     if (pin === undefined) missing.push(id);
-    else if (graph.artifacts.get(id)?.sourceHash !== pin) changed.push(id);
+    else if (source === undefined || hashOf === null || hashOf(source) !== pin) changed.push(id);
   }
   const reviewer = nonEmpty(artifact.meta.reviewedBy);
   const reviewedAt = nonEmpty(artifact.meta.reviewedAt);
   const current = changed.length === 0 && missing.length === 0 && reviewer !== null && reviewedAt !== null;
-  return { status: current ? "current" : "needs-review", changed, missing, reviewer, reviewedAt };
+  return { status: current ? "current" : "needs-review", changed, missing, unknownHash, reviewer, reviewedAt };
+}
+
+/** The hash a pin of this kind holds for a source, or null for a kind this version does not know. */
+export function pinHash(kind: string | undefined): ((source: Artifact) => string) | null {
+  if (kind === undefined) return (source) => source.sourceHash;
+  if (kind === "content-v1") return (source) => source.contentHash;
+  return null;
 }
 
 /**
@@ -102,9 +129,11 @@ export function bindReviewPins(graph: Graph): Graph {
       artifacts.set(id, artifact);
       continue;
     }
+    const hashOf = pinHash(typeof value.hash === "string" || value.hash === undefined ? value.hash : "");
     const sources: Record<string, unknown> = {};
     for (const [source, pin] of Object.entries(value.sources)) {
-      sources[source] = pin === CURRENT_PIN ? (graph.artifacts.get(source)?.sourceHash ?? pin) : pin;
+      const found = graph.artifacts.get(source);
+      sources[source] = pin === CURRENT_PIN && found !== undefined && hashOf !== null ? hashOf(found) : pin;
     }
     const extensions = { ...artifact.meta.extensions, [REVIEW_EXTENSION]: { ...value, sources } };
     artifacts.set(id, { ...artifact, meta: { ...artifact.meta, extensions } });

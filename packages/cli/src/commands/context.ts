@@ -28,7 +28,7 @@ import {
 } from "@intentset/core";
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import type { Session } from "../session.ts";
-import { claimingSlices } from "../slices.ts";
+import { claimingSlices } from "@intentset/core";
 import { unresolved, validationLine, validationSummary } from "./shared.ts";
 
 /** A file no slice claims has no context to load; VSA009 is the claims rule the architecture check reports it under. */
@@ -136,6 +136,7 @@ export function contextCommand(
         artifacts: bundle.artifacts.map((a) => ({
           ...a,
           sourceHash: full(a).sourceHash,
+          contentHash: full(a).contentHash,
           links: links(graph, full(a), visible),
           body: full(a).body,
         })),

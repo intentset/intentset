@@ -7,6 +7,7 @@ export * from "./diagnostics.ts";
 export * from "./export.ts";
 export * from "./glob.ts";
 export * from "./graph.ts";
+export * from "./content-hash.ts";
 export * from "./hash.ts";
 export * from "./impact.ts";
 export * from "./read-export.ts";

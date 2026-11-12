@@ -18,6 +18,7 @@
 import { closingFenceIndex } from "./carrier.ts";
 import type { Diagnostic, Location } from "./diagnostics.ts";
 import { sha256Hex } from "./hash.ts";
+import { contentHashOf } from "./content-hash.ts";
 import { type Locate, NO_LOCATION, aType, capitalize, compareStrings, isRecord, makeDiagnostic } from "./report.ts";
 import {
   ARTIFACT_TYPES,
@@ -210,6 +211,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
       meta,
       path: input.path,
       sourceHash: sha256Hex(input.source),
+      contentHash: contentHashOf(root, bodyOf(input.source)),
       body: bodyOf(input.source),
       headings: input.headings,
       foreign,

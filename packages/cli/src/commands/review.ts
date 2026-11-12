@@ -42,7 +42,7 @@ import {
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import { levelJson, levelSections } from "../reports.ts";
 import type { Session } from "../session.ts";
-import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "../slices.ts";
+import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "@intentset/core";
 import { pathText, REACHABILITY_NOTE } from "./impact.ts";
 
 export interface Attribution {

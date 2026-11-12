@@ -158,7 +158,19 @@
         "description": "List cases (spec/list.md): the selector, as data. It is any JSON value, because a case may hold one spec/list.md §1 rejects."
       },
       "countBy": {
-        "enum": ["type", "status", "owner", "visibility", "audience", "product", "release", "role", "edition", "flag"],
+        "enum": [
+          "type",
+          "status",
+          "delivery",
+          "owner",
+          "visibility",
+          "audience",
+          "product",
+          "release",
+          "role",
+          "edition",
+          "flag"
+        ],
         "description": "List cases: the field the matched records are counted by (spec/list.md §4)."
       },
       "valid": {

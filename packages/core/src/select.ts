@@ -345,6 +345,8 @@ export interface Selection {
   undetermined: string[];
   /** What a reader should know about the answer, in a fixed order. */
   notes: string[];
+  /** Each matched record's effective delivery (Core §7), `unstated` when it states none: what `--count-by delivery` groups by. Not part of a row. */
+  deliveries: Map<string, DeliveryValue>;
 }
 
 export interface SelectOptions {
@@ -456,6 +458,7 @@ export function select(source: Graph | ExportEnvelope, selector: Selector, optio
   );
 
   const rows: ListRow[] = [];
+  const deliveries = new Map<string, DeliveryValue>();
   const undetermined: string[] = [];
   for (const id of [...src.views.keys()].sort(compareStrings)) {
     const view = src.views.get(id) as ExportArtifact;
@@ -467,8 +470,10 @@ export function select(source: Graph | ExportEnvelope, selector: Selector, optio
         : any(describingSets.map((sets) => (sets.exact.has(id) ? true : sets.loose.has(id) ? null : false))),
       normalized.claims === undefined ? true : claims(view, normalized.claims),
     ]);
-    if (answer === true) rows.push(toRow(view, src));
-    else if (answer === null) undetermined.push(id);
+    if (answer === true) {
+      rows.push(toRow(view, src));
+      deliveries.set(id, deliveryOf(view) ?? "unstated");
+    } else if (answer === null) undetermined.push(id);
   }
   return {
     selector: normalized,
@@ -481,6 +486,7 @@ export function select(source: Graph | ExportEnvelope, selector: Selector, optio
     rows,
     undetermined,
     notes: notesFor(normalized, src),
+    deliveries,
   };
 }
 
@@ -634,10 +640,11 @@ function notesFor(selector: Selector, source: Source): string[] {
   return notes;
 }
 
-/** The fields `--count-by` groups by: a record's own, and each availability dimension. */
+/** The fields `--count-by` groups by: a record's own, its effective delivery, and each availability dimension. */
 export const COUNT_FIELDS = [
   "type",
   "status",
+  "delivery",
   "owner",
   "visibility",
   "audience",
@@ -672,7 +679,8 @@ export function countBy(selection: Selection, field: CountField): CountBy {
   const bump = (value: string | null) => counts.set(value, (counts.get(value) ?? 0) + 1);
   const multi = MULTI_VALUED[field];
   for (const row of selection.rows) {
-    if (multi === undefined) bump(row[field as "type" | "status" | "owner" | "visibility"]);
+    if (field === "delivery") bump(selection.deliveries.get(row.id) ?? "unstated");
+    else if (multi === undefined) bump(row[field as "type" | "status" | "owner" | "visibility"]);
     else {
       const values = [...new Set(multi(row))];
       if (values.length === 0) bump(null);

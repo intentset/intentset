@@ -81,6 +81,29 @@ test("BEH-LIST, BEH-DELIVERY: --delivery selects the effective delivery, and an 
   assert.match(bad.err, /--delivery: implemented is not one of planned, built, unstated/);
 });
 
+test("BEH-LIST, BEH-DELIVERY: --count-by delivery counts what the three --delivery runs list", async (t) => {
+  const dir = await example(t);
+  edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "status: draft\n  delivery: built");
+  edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: implemented");
+  edit(dir, "RULE-ASMT-FUTURE", "status: draft", "status: draft\n  delivery: planned");
+  const counted = await run(dir, "list", "--count-by", "delivery", "--json");
+  assert.equal(counted.code, 0, counted.err);
+  const { countBy } = JSON.parse(counted.out);
+  assert.equal(countBy.field, "delivery");
+  assert.equal(countBy.multiValued, false);
+  for (const group of countBy.groups as Array<{ value: string; count: number }>) {
+    const listed = await run(dir, "list", "--delivery", group.value, "--format", "ids");
+    assert.equal(listed.out.split("\n").filter(Boolean).length, group.count, group.value);
+  }
+  assert.deepEqual(
+    countBy.groups.map((g: { value: string }) => g.value),
+    ["built", "planned", "unstated"],
+    "unstated by name, never null",
+  );
+  const table = await run(dir, "list", "--count-by", "delivery");
+  assert.match(table.out, /delivery +count\n/);
+});
+
 test("BEH-LIST: --from reads an export alone and gives the tree's answer, with review fields not supplied", async (t) => {
   const dir = await example(t);
   const out = join(temp(t), "graph.json");

@@ -44,10 +44,14 @@ const kb = await readFile(join(example, "KB-ASMT-SCHEDULE.md"), "utf8");
 
 /**
  * The example's knowledge record, made public, with the given id, status and review pins. The record is approved and
- * reviewed as it stands; each pin is rewritten to the hash given for it.
+ * reviewed as it stands; each pin is rewritten to the hash given for it. The example pins content hashes
+ * (`hash: content-v1`, ADR 0018), which only core computes and the site does not import, so the fixture drops `hash`
+ * and pins whole files, which publication reads as well.
  */
 function knowledge(id: string, status: string, sources: Record<string, string>): string {
+  assert.match(kb, /^ {6}hash: content-v1\n/m, "the example pins content hashes");
   let text = kb
+    .replace(/^ {6}hash: content-v1\n/m, "")
     .replace("id: KB-ASMT-SCHEDULE", `id: ${id}`)
     .replace("status: approved", `status: ${status}`)
     .replace("visibility: customer", "visibility: public");
