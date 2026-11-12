@@ -5,7 +5,7 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.11.0 — 2026-11-11
 
 **`intentset list` answers which records match a selector, from the repository or from an export, with `select` in `@intentset/core` underneath it.** Minor: a new command, new API in `@intentset/core`, and the slice helpers moved from the CLI to core. A new specification, the list contract (`spec/list.md`, `intentset/list/0.1`), and a clarification of Core §1 that names it; no existing conformance case changed, so `intentset.spec` stays `0.2`. The suite gained a sixth section, `list`, with 43 cases and three optional case fields (`selector`, `countBy`, `list`); the export did not move.
 
