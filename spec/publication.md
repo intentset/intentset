@@ -3,7 +3,7 @@ title: Intentset Publication Profile v0.2
 id: intentset/publication/0.2
 status: draft
 revision: 2026-11-12
-implementation: 0.11.0
+implementation: 0.12.0
 ---
 
 # Intentset Publication Profile v0.2

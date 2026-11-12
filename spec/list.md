@@ -3,7 +3,7 @@ title: Intentset List Contract v0.1
 id: intentset/list/0.1
 status: draft
 revision: 2026-11-12
-implementation: 0.11.0
+implementation: 0.12.0
 ---
 
 # Intentset List Contract v0.1

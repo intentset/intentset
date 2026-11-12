@@ -100,7 +100,7 @@ select(graph | checkedExport, selector, { includeRestricted?, registries? }): Se
 listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
 deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017: the field, else built for implemented/released/deprecated
 activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
-// Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016); the CLI re-exports them until 0.12
+// Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016); the CLI re-exports them until 0.13
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
 exportGraph(result: ValidationResult, registries, meta): ExportEnvelope   // meta.reports, meta.includeRestricted (spec/export.md)
 readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, envelope, supplied } | { ok: false, category, problems }

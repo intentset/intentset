@@ -5,7 +5,7 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.12.0 — 2026-11-12
 
 **A record says whether its work is built, apart from whether it is approved: an optional `delivery: planned | built`, read by `validate`, `list`, the export, the Atlas and publication.** Minor: a new optional field, new API in `@intentset/core` (`deliveryOf`, `DELIVERIES`, `DELIVERY_TYPES`, `BUILT_STATUSES`) and `@intentset/publisher` (`plannedSources`), and **the export moves to `intentset/export/0.5`**, so every reader of an export upgrades. The specifications changed (Core, VSA, publication, list and export, revision 2026-11-12) without invalidating any case's `valid` or `diagnostics`, so `intentset.spec` stays `0.2` and the list result stays `intentset/list/0.1`. The suite gained 21 cases, one catalog ID (L12) and the consumer fixture `unsupported-contract-0.4.json`.
 
@@ -16,6 +16,8 @@ case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` t
 **What validate reports.** CORE005, an error, for `delivery: planned` on an implemented, released or deprecated record, and for a built behavior whose implementing slice says planned. At L2, CORE006 and VSA001 warn about a draft behavior that says built and that no product slice implements. A draft slice that says built, or implements a behavior that does, has no planned paths: its missing claim (VSA009) or entrypoint (VSA002) is an error, not the draft's warning. Release labels are opaque, so a planned record naming a shipped release is not judged.
 
 **Everywhere else.** `intentset list --delivery planned|built|unstated` (the selector field `deliveries`) matches the effective delivery, from the tree or an export. The export carries each artifact's `delivery` as written, or null; `readExport` accepts 0.5 only. The Atlas shows delivery beside the status on the overview, its behavior tables and every record's card, and counts the behaviors whose work is built and planned. Publication excludes knowledge that explains a record whose `delivery` is `planned`, with the new reason `planned`. The agent guide that `init` writes tells an agent to write `built` on a record written from existing code and `planned` on a proposal, and the adoption guide says the same.
+
+**Kept one more release.** The CLI's re-exports of `describingRecords`, `claimingSlices`, `activeSlices` and `isSliceCode`, deprecated in 0.11.0 and due to go in 0.12, stay until 0.13, so a consumer that moves its pin for the export's 0.5 does not have to change its imports in the same step.
 
 ## 0.11.0 — 2026-11-11
 
