@@ -65,6 +65,20 @@ export interface SuiteCase {
     }[];
   };
   request?: PublicationRequest;
+  /** For a list case (spec/list.md): the selector as data, which may be one the specification rejects. */
+  selector?: unknown;
+  /** For a list case: the field the matched records are counted by (spec/list.md §4). */
+  countBy?:
+    | "type"
+    | "status"
+    | "owner"
+    | "visibility"
+    | "audience"
+    | "product"
+    | "release"
+    | "role"
+    | "edition"
+    | "flag";
   /** True when no diagnostic is an error. */
   valid: boolean;
   /** Every diagnostic code the case must produce, errors and warnings, as a multiset. Absent means none. */
@@ -75,6 +89,8 @@ export interface SuiteCase {
   export?: Record<string, unknown>;
   /** Knowledge IDs that must be published, text that must appear in the output, and text that must not. */
   published?: { ids?: string[]; mustContain?: string[]; mustNotContain?: string[] };
+  /** For a list case: fields of the intentset/list/0.1 result that must match, as a deep partial, or `{ problems }` for a rejected selector. */
+  list?: Record<string, unknown>;
   notes?: string;
 }
 

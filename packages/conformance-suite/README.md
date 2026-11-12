@@ -10,7 +10,7 @@ implementation.
 
 | Path | What |
 |---|---|
-| `cases/*.json` | One file per section: `core`, `export`, `vsa`, `evidence`, `publication`. Each file is an array of cases. |
+| `cases/*.json` | One file per section: `core`, `export`, `vsa`, `evidence`, `publication`, `list`. Each file is an array of cases. |
 | `schemas/conformance.schema.json` | The normative schema every case file satisfies. |
 | `schemas/frontmatter.schema.json` | The structural schema of a document's frontmatter (Core §3, §4). |
 | `schemas/export.schema.json` | The schema of the `intentset/export/0.4` envelope. |
@@ -32,7 +32,7 @@ import { loadSuite, schemaPaths, suitePath } from "@intentset/conformance-suite"
 for (const [section, cases] of Object.entries(loadSuite())) {
   for (const c of cases) {
     const result = yourImplementation(c.files, { level: c.level });
-    // compare against c.valid, c.diagnostics, c.artifacts, c.export, c.published
+    // compare against c.valid, c.diagnostics, c.artifacts, c.export, c.published, c.list
   }
 }
 ```
@@ -68,6 +68,8 @@ need no patch logic:
   origin `syntax` and Markset's own codes (`COLUMNS_SINGLE`, not AREA###). Absent means `plain`: frontmatter and headings
   only, and no diagnostic of the reader's own.
 - `evidence` carries run records (Core §8) and `request` a publication request, for the sections that need them.
+- `selector` and `countBy`, for a list case, are the selector as data and the field to count by (spec/list.md). A
+  selector may be one the specification rejects.
 - `architecture`, for a VSA case, is how the architecture check runs: `mode` (`migration` when absent, or `strict`)
   and `baseline`, the entries of a baseline of known violations (VSA §9). An entry's fingerprint is your
   implementation's own, so a case's entries match no diagnostic: in migration mode each is stale, VSA014.
@@ -85,6 +87,9 @@ need no patch logic:
   list of `{ id, type, sourceHash, links }`.
 - `published`, when present: the knowledge IDs that must be published, and text that must not appear anywhere in
   the output. The second half is Core §9's rule that an excluded source's title and path never leak.
+- `list`, when present: a deep partial match against your `intentset/list/0.1` result (spec/list.md §5), or, for a
+  selector you must reject, `{ "problems": [...] }` with the JSON pointer of each problem. A list from the tree and
+  from the tree's export must give the same answer (§2), which a driver should check on every case.
 
 An aspect a case does not state is not judged. A section your implementation does not yet cover should be reported
 as skipped, not passed: a closed vocabulary of checks is only worth having when a report says which ones ran.

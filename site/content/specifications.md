@@ -37,9 +37,9 @@ Intentset separates product meaning from implementation architecture and platfor
   :::
 ::::
 
-## Publishing and export
+## Publishing, export and lists
 
-::::grid{cols=2}
+::::grid{cols=3}
 - :::card
   ### {{spec.publication.title}}
 
@@ -58,6 +58,15 @@ Intentset separates product meaning from implementation architecture and platfor
 
   [[Read the export contract](export/)]{.button}
   :::
+- :::card
+  ### {{spec.list.title}}
+
+  {{spec.list.meta}}
+
+  How a tool answers which records match: a closed selector of fields combined with AND and values with OR, a link looked at one hop away, records a withheld link leaves undetermined rather than guessed, and the result `intentset list` writes, the same from a repository or from its export.
+
+  [[Read the list contract](list/)]{.button}
+  :::
 ::::
 
 ## What conformance means
@@ -67,4 +76,4 @@ A conformance report names its scope, snapshot, specification version, checks, a
 The cases every check is held to are published as data, for implementations that are not this one. [See the conformance suite](../conformance/).
 
 > [!NOTE]
-> All five documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at {{version}} on npm.
+> All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at {{version}} on npm.

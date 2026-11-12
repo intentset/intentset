@@ -41,11 +41,17 @@ export interface ConformanceCase {
   /** VSA cases: the architecture check's mode and baseline (VSA §9). */
   architecture?: ArchitectureRun;
   request?: PublicationRequest;
+  /** List cases (spec/list.md): the selector as data, which may be one §1 rejects. */
+  selector?: unknown;
+  /** List cases: the field the matched records are counted by. */
+  countBy?: string;
   valid: boolean;
   diagnostics?: string[];
   artifacts?: string[];
   export?: Record<string, unknown>;
   published?: { ids?: string[]; mustContain?: string[]; mustNotContain?: string[] };
+  /** List cases: a deep partial of the intentset/list/0.1 result, or `{ problems }` for a rejected selector. */
+  list?: Record<string, unknown>;
   notes?: string;
 }
 
@@ -99,13 +105,15 @@ export interface Actual {
   export?: unknown;
   /** Publication output: the knowledge IDs published and every byte of text written. */
   published?: { ids: string[]; text: string };
+  /** The list result, or `{ problems }` when the selector was rejected. */
+  list?: unknown;
   /** Driver-level failures that are not tied to an expected field. */
   problems?: string[];
 }
 
 export type Driver = (expanded: ExpandedCase, testCase: ConformanceCase) => Actual | Promise<Actual>;
 
-export type Aspect = "valid" | "diagnostics" | "artifacts" | "export" | "published" | "driver" | "fixture";
+export type Aspect = "valid" | "diagnostics" | "artifacts" | "export" | "published" | "list" | "driver" | "fixture";
 export type Status = "pass" | "fail" | "skip";
 
 export interface AspectResult {

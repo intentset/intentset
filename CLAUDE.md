@@ -6,7 +6,8 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.2.md`, `vsa-0.2.md`, `profile-typescript-amplify-gen2-0.2.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.4`), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
+`export.md` (the export contract other tools pin, `intentset/export/0.4`), `list.md` (the result `intentset list`
+writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
 `docs/requirements/` is the kickoff handoff as delivered and is not updated (`markset/` in it is the half delivered to
@@ -38,8 +39,8 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
    origin) are never mixed into one list without the origin field.
 6. **Checks report what they could not check.** `unresolved` is never `pass`. A waiver produces "with exceptions",
    never unqualified conformance. Every count names its snapshot, denominator and whether it measures links or evidence.
-7. **No code execution, no network, no mutation** in `validate`, `graph`, `architecture check`, `evidence stale`, `impact`, `review`.
-   Publication and serving are separate explicit commands.
+7. **No code execution, no network, no mutation** in `validate`, `graph`, `architecture check`, `evidence stale`, `impact`,
+   `list`, `review`. Publication and serving are separate explicit commands.
 8. **`@intentset/core` has no dependencies.** Everything Markset is in `@intentset/markset-adapter` and nowhere else.
    `@intentset/conformance-suite` has no dependencies either: it is what another implementation is checked against.
 
@@ -49,7 +50,7 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
   (commits, releasing and the first-publish trap, CHANGELOG, ADRs, README, this file's shape, tooling tests, the site
   baseline). Departures: none yet; one is written here with its reason.
 - **Fixtures before code.** A check ships with its cases in `tests/<section>.json`: one passing case, one failing case
-  per condition in the spec's sentence, one boundary case. Catalog IDs (C01, V02, E03, P04) prefix the case name.
+  per condition in the spec's sentence, one boundary case. Catalog IDs (C01, V02, E03, P04, L05) prefix the case name.
 - **Spec, fixtures and implementation change in the same commit.**
 - Diagnostics are specified behavior: code, severity, origin, artifact, path, location when known, field as a JSON
   pointer, message, remediation. Sorted by `compareDiagnostics`. Every code is defined in a spec, and one no check
@@ -94,6 +95,11 @@ readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] 
 readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[], resources: "exercised"|"used", dependencies: "files"|"entrypoint" } }
 validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline
 impact(graph: Graph, id: string): ImpactReport
+readSelector(value): { ok, selector } | { ok: false, problems }   // spec/list.md §1: closed, AND across fields, OR within
+select(graph | checkedExport, selector, { includeRestricted?, registries? }): Selection   // throws on a rejected selector
+listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
+activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
+// Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016); the CLI re-exports them until 0.12
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
 exportGraph(result: ValidationResult, registries, meta): ExportEnvelope   // meta.reports, meta.includeRestricted (spec/export.md)
 readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, envelope, supplied } | { ok: false, category, problems }
@@ -157,7 +163,7 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 
 ```
 spec/                 normative documents and schemas
-tests/                conformance fixtures, one JSON file per section (core, export, vsa, evidence, publication)
+tests/                conformance fixtures, one JSON file per section (core, export, vsa, evidence, publication, list)
 tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `pnpm run fixtures:consumer`
                       from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
 examples/scheduling/  the worked example, the fixtures' baseline and the site's example
@@ -165,7 +171,7 @@ product/model/        Intentset's own model: the product, intent, outcomes and t
                       rules, verifications, one decision, and one slice per package under slices/<package>/slice.md
 .intentset/           its configuration, registries, architecture.yaml and agents.md; evidence/ is local run output
 packages/
-  core/               carrier reader, types, graph, validator, impact, export. No dependencies.
+  core/               carrier reader, types, graph, validator, impact, export, select. No dependencies.
   markset-adapter/    the one Markset import
   architecture/       M2: claims, import graph, layers, resources, exceptions, baseline
   verification/       M3: run records, freshness, reporter adapters, what needs a run (evidence stale)

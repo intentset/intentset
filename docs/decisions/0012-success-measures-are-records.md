@@ -60,4 +60,5 @@ into an analytics system.
 - An agent writing an outcome now writes its measure in the same change; the guide `init` writes says so, and says that
   a passing check is not the outcome achieved.
 - What Intentset still does not do, on purpose: collect telemetry, run a query, compute a metric or draw a dashboard.
-  The registry names the systems that do.
+  The registry names the systems that do. (Narrowed by ADR 0016, 2026-11-11: "run a query" means a query over the
+  product's telemetry. Selecting records of the model, as `intentset list` does, is not that.)

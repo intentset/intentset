@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-CONFORMANCE
   availability:
     products: [PRD-INTENTSET]
@@ -32,8 +32,9 @@ None: the package has no dependencies.
 
 ## Outcomes
 
-Success: every case names its section, its inputs and the diagnostics expected. Failure: none to handle; a case the package lacks is a defect in the release.
+Success: every case names its section, its inputs and the diagnostics expected; a list case also names its selector and the fields of the result that must match, or the problems a rejected selector must report (spec/list.md §7). Failure: none to handle; a case the package lacks is a defect in the release.
 
 ## Sources
 
 - The CLI's usage, `intentset --help`, and `CLAUDE.md`, the Core API.
+- `spec/list.md` §7, for the list section (ADR 0016).

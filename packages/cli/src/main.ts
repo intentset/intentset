@@ -4,8 +4,9 @@
  * exiting, so tests run it in-process with captured io.
  *
  * Exit codes (Core §11, ADR 0004): 0 no errors, 1 validation errors, 2
- * invocation or tool failure. validate, graph, architecture check, impact,
- * context, review, evidence stale, serve, mcp and guide never write; graph --out, architecture
+ * invocation or tool failure (list exits 0 whenever it answered, and 1 only
+ * with --check). validate, graph, architecture check, impact, context, list,
+ * review, evidence stale, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
  * --out write only what they name; init only creates; migrate rewrites the
  * two version values of each record's frontmatter and nothing else.
@@ -22,6 +23,13 @@ import { graphCommand, graphUsageProblem, parseRelease } from "./commands/graph.
 import { guideCommand } from "./commands/guide.ts";
 import { impactCommand } from "./commands/impact.ts";
 import { initCommand } from "./commands/init.ts";
+import {
+  listCommand,
+  listFromExportCommand,
+  type ListOptions,
+  listUsageProblem,
+  SELECTOR_OPTIONS,
+} from "./commands/list.ts";
 import { migrateCommand, migrateUsageProblem } from "./commands/migrate.ts";
 import { mcpCommand, mcpUsageProblem } from "./commands/mcp.ts";
 import { publishCommand, publishUsageProblem } from "./commands/publish.ts";
@@ -70,6 +78,19 @@ commands
                             exits 1 when any needs a run
   impact <ID>               what depends on an artifact: direct, candidates, review context,
                             ancestors
+  list [--id <ID|prefix*>] [--type <t>] [--status <s>] [--owner <o>] [--audience <a>]
+        [--visibility <v>] [--under <ID>] [--product <ID>] [--release <label>]
+        [--not-release <label>] [--role <r>] [--edition <e>] [--flag <f>]
+        [--has-extension <key>] [--has [some:|none:|all:]<out|in>:<kind>[=<status>,...]]
+        [--describing <slice>] [--claims <path>] [--where <file.json>] [--from <export.json>]
+        [--include-restricted] [--count-by <field>] [--check] [--format table|json|ids]
+                            the records that match: fields combine with AND, the values of one
+                            field (comma-separated or repeated) with OR, and matching is exact
+                            (a trailing * on an ID is a prefix). --where gives the selector as
+                            JSON instead; --from reads an export, not the tree. A record whose
+                            answer depends on a withheld link is undetermined, listed apart.
+                            Never writes; exits 0 whenever it answered, and with --check 1 when
+                            any record matched or is undetermined (spec/list.md)
   context <ID|path> [--include-restricted]
                             the bounded engineering context of an artifact, with paths and
                             bodies; given a file a slice claims, the context of that slice
@@ -127,7 +148,8 @@ options
 
 exit codes: 0 no errors, 1 validation errors (or, with review --fail-on-drift,
             unacknowledged drift; with --fail-on-baseline-growth, a baseline
-            entry the base did not hold), 2 invocation or tool failure`;
+            entry the base did not hold; with list --check, a record matched or
+            undetermined), 2 invocation or tool failure`;
 
 const COMMANDS = [
   "init",
@@ -138,6 +160,7 @@ const COMMANDS = [
   "evidence",
   "impact",
   "context",
+  "list",
   "review",
   "publish",
   "serve",
@@ -183,6 +206,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
   ],
   impact: LEVEL_OPTIONS,
   context: ["include-restricted", ...LEVEL_OPTIONS],
+  list: [...SELECTOR_OPTIONS, "where", "from", "count-by", "check", "format", "include-restricted"],
   review: ["base", "fail-on-drift", "fail-on-baseline-growth", ...LEVEL_OPTIONS],
   serve: ["port", "host", "out", ...LEVEL_OPTIONS],
   mcp: [
@@ -352,7 +376,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
 
   // Evidence scope: --product with --release, or graph's --release <product>:<label>.
   let scope: RunScope | null = null;
-  if ((command !== "evidence" || sub === "stale") && command !== "publish" && command !== "mcp") {
+  if ((command !== "evidence" || sub === "stale") && command !== "publish" && command !== "mcp" && command !== "list") {
     if (command === "graph" || command === "evidence") {
       const release = values.release === undefined ? null : parseRelease(values.release);
       scope = release === null ? null : { product: release.product, release: release.label };
@@ -440,6 +464,32 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
     case "impact": {
       const session = openSession(command, sessionOptions(levelGiven ?? "L1"), io);
       return typeof session === "number" ? session : impactCommand(session, args[0], values.json, io);
+    }
+    case "list": {
+      const options: ListOptions = {
+        given: tokens.flatMap((token) =>
+          token.kind === "option" && SELECTOR_OPTIONS.includes(token.name)
+            ? [{ name: token.name, value: token.value ?? "" }]
+            : [],
+        ),
+        where: values.where,
+        from: values.from,
+        countBy: values["count-by"],
+        format: values.format,
+        json: values.json,
+        check: values.check,
+        includeRestricted: values["include-restricted"],
+      };
+      const checked = listUsageProblem(options, io);
+      if ("problem" in checked) return usage(checked.problem);
+      if (options.from !== undefined) {
+        const tree = (["root", "carrier", "level"] as const).find((name) => values[name] !== undefined);
+        if (tree !== undefined)
+          return usage(`--${tree} reads the tree; --from reads the records from the export alone`);
+        return listFromExportCommand(checked, { ...options, from: options.from }, io);
+      }
+      const session = openSession(command, sessionOptions(levelGiven ?? "L1"), io);
+      return typeof session === "number" ? session : listCommand(session, checked, options, io);
     }
     case "context": {
       const session = openSession(command, sessionOptions(levelGiven ?? "L1"), io);
@@ -583,6 +633,18 @@ function parse(argv: string[]) {
       host: { type: "string" },
       to: { type: "string" },
       "allow-dirty": { type: "boolean", default: false },
+      id: { type: "string", multiple: true },
+      type: { type: "string", multiple: true },
+      status: { type: "string", multiple: true },
+      owner: { type: "string", multiple: true },
+      under: { type: "string", multiple: true },
+      "not-release": { type: "string", multiple: true },
+      has: { type: "string", multiple: true },
+      "has-extension": { type: "string", multiple: true },
+      describing: { type: "string", multiple: true },
+      claims: { type: "string", multiple: true },
+      where: { type: "string" },
+      "count-by": { type: "string" },
     },
   });
 }

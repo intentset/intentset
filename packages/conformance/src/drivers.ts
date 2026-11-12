@@ -4,6 +4,8 @@
  * specified but not yet implemented.
  */
 import {
+  canonicalJson,
+  type CountField,
   type DocumentInput,
   EMPTY_REGISTRIES,
   type Config,
@@ -16,6 +18,12 @@ import {
   graphHash,
   hasErrors,
   LEVELS,
+  type ListOutput,
+  listOutput,
+  readExport,
+  readSelector,
+  type Selector,
+  select,
   sortDiagnostics,
   plainCarrier,
   readConfig,
@@ -56,7 +64,7 @@ interface Validated {
   evidence: Config["evidence"];
 }
 
-function validateTree(expanded: ExpandedCase): Validated {
+function validateTree(expanded: ExpandedCase, reverse = false): Validated {
   // A case names the Markset carrier when it is about what Markset reports; the
   // rest read plainly, so their diagnostics are Intentset's alone.
   const carrier = expanded.carrier === "markset" ? marksetCarrier : plainCarrier;
@@ -64,6 +72,7 @@ function validateTree(expanded: ExpandedCase): Validated {
   for (const [path, source] of expanded.files) {
     if (path.endsWith(".md")) inputs.push(carrier(path, source));
   }
+  if (reverse) inputs.reverse();
 
   const extra: Diagnostic[] = [];
   let evidence: Config["evidence"] = {
@@ -243,10 +252,79 @@ export const vsaDriver: Driver = (expanded) => {
   } satisfies Actual;
 };
 
+/** The list a case's tree gives (spec/list.md §5), with the fixture's snapshot. */
+function treeList(
+  validated: Validated,
+  expanded: ExpandedCase,
+  selector: Selector,
+  countBy: CountField | null,
+): ListOutput {
+  const { result, registries, diagnostics } = validated;
+  const errors = diagnostics.filter((d) => d.severity === "error").length;
+  return listOutput(
+    select(result.graph, selector, { registries }),
+    {
+      source: "tree",
+      snapshot: {
+        repository: FIXTURE_META.repository,
+        commit: null,
+        commitUnavailable: FIXTURE_META.commitUnavailable,
+        uncommitted: false,
+        graphHash: graphHash(result.graph),
+      },
+      validation: {
+        level: expanded.level,
+        status: errors > 0 ? "fail" : "pass",
+        errors,
+        warnings: diagnostics.length - errors,
+      },
+    },
+    countBy,
+  );
+}
+
+/**
+ * A list over the case's tree (spec/list.md): the selector read and normalized, or its problems, and the result. For
+ * every case the driver also checks §2 and §5: reading the documents in reverse order gives the same bytes, and the
+ * list from the tree's export (restricted artifacts withheld, as from the tree) gives the same answer.
+ */
+export const listDriver: Driver = (expanded, testCase) => {
+  const validated = validateTree(expanded);
+  const { result, registries, diagnostics } = validated;
+  const base = {
+    valid: !diagnostics.some((d) => d.severity === "error"),
+    diagnostics,
+    artifacts: [...result.graph.artifacts.keys()].sort(),
+  };
+  const read = readSelector(testCase.selector ?? {});
+  if (!read.ok) return { ...base, list: { problems: read.problems } } satisfies Actual;
+  const countBy = (testCase.countBy ?? null) as CountField | null;
+
+  const problems: string[] = [];
+  const list = treeList(validated, expanded, read.selector, countBy);
+  const reversed = treeList(validateTree(expanded, true), expanded, read.selector, countBy);
+  if (canonicalJson(list) !== canonicalJson(reversed)) {
+    problems.push("the documents read in reverse order gave other bytes (spec/list.md §5)");
+  }
+  const exported = readExport(JSON.parse(JSON.stringify(exportGraph(result, registries, FIXTURE_META))));
+  if (!exported.ok) {
+    problems.push(`the tree's export could not be read: ${exported.category}`);
+  } else {
+    const fromExport = select(exported.envelope, read.selector);
+    const answer = (s: { counts: unknown; rows: { id: string }[]; undetermined: string[] }) =>
+      canonicalJson({ counts: s.counts, ids: s.rows.map((row) => row.id), undetermined: s.undetermined });
+    if (answer(fromExport) !== answer(list)) {
+      problems.push(`the tree's export gave another answer (spec/list.md §2): ${answer(fromExport)}`);
+    }
+  }
+  return { ...base, list, problems } satisfies Actual;
+};
+
 export const drivers: Record<string, Driver> = {
   core: coreDriver,
   evidence: evidenceDriver,
   export: exportDriver,
+  list: listDriver,
   publication: publicationDriver,
   vsa: vsaDriver,
 };

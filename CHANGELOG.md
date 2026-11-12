@@ -5,6 +5,18 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## 0.11.0 — 2026-11-11
+
+**`intentset list` answers which records match a selector, from the repository or from an export, with `select` in `@intentset/core` underneath it.** Minor: a new command, new API in `@intentset/core`, and the slice helpers moved from the CLI to core. A new specification, the list contract (`spec/list.md`, `intentset/list/0.1`), and a clarification of Core §1 that names it; no existing conformance case changed, so `intentset.spec` stays `0.2`. The suite gained a sixth section, `list`, with 43 cases and three optional case fields (`selector`, `countBy`, `list`); the export did not move.
+
+**A closed selector, as data (ADR 0016, spec/list.md §1).** Fields combine with AND and the values within one field with OR: `ids` (a trailing `*` is a prefix), `types`, `statuses`, `owners`, `audiences`, `visibilities`, `under` (an ancestor on the navigation chain), `availability` (`products`, `releases`, `roles`, `editions`, `flags`, and `notReleases`, all matched exactly), `hasExtension`, `links` (a direction, a kind, `some`, `none` or `all`, and a `match` on the far end, one hop), `describing` (Core §10's records that describe a slice) and `claims` (the slices claiming a path). An unknown key, an empty list or a value outside a closed set is rejected, with a JSON pointer per problem. There is no query language, regex, comparison operator, sort order or percentage, and no dependency.
+
+**The command.** `intentset list` takes a flag per field, repeatable or comma-separated, `--has [some:|none:|all:]<out|in>:<kind>[=<status>,...]` for a link, or `--where <file.json>` for the whole selector; `--from <export.json>` reads an export through `readExport` with no repository I/O; `--count-by <field>` counts the matches; `--format table|json|ids`. It never writes. It exits 0 whenever it answered, a failed validation included (the result says so), 1 with `--check` when a record matched or is undetermined, and 2 for an invocation error. `list` joins design invariant 7 and RULE-READ-ONLY-CHECKS, which now also names `evidence stale`.
+
+**The tree and its export give one answer.** A graph is read through the export's projection, so restricted records are withheld unless `--include-restricted`, exactly as `graph` withholds them. Where the answer for a record depends on a link to a withheld record, the record is undetermined: counted and listed apart, never a match or a miss. Every list names its snapshot, the validation's status and totals, the normalized selector, and the counts considered, withheld, matched and undetermined; a field the source lacks, such as `reviewedBy` from an export, is `not-supplied`.
+
+**Moved to core.** `describingRecords`, `claimingSlices`, `activeSlices`, `isSliceCode`, `matchGlob` and `matchAny` are exported by `@intentset/core`. The CLI still exports `matchGlob` and `matchAny`, and re-exports the four slice helpers until 0.12, so a consumer that copied `describingRecords` can call Intentset's instead.
+
 ## 0.10.0 — 2026-11-03
 
 **Every record in the Atlas has a page that opens with what the record says, and the Atlas stays readable on a model of thousands of records.** Minor: new pages and a new `source` option in `@intentset/atlas`, and one moved address in `intentset serve`'s output (below). No specification version, conformance case, export version or `intentset.spec` moved.

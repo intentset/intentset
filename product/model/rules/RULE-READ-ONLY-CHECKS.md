@@ -10,15 +10,16 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
 ---
 
 # Checks run no code, use no network and change nothing
 
 ## Constraint
 
-`validate`, `graph`, `architecture check`, `impact` and `review` execute no code from the repository, open no network connection and write no file other than one the command was explicitly asked to write. Publication and serving are separate, explicit commands.
+`validate`, `graph`, `architecture check`, `evidence stale`, `impact`, `list` and `review` execute no code from the repository, open no network connection and write no file other than one the command was explicitly asked to write. Publication and serving are separate, explicit commands.
 
 ## Sources
 
 - CLAUDE.md, design invariant 7.
+- ADR 0016, which adds `list`.
