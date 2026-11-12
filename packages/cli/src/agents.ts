@@ -85,6 +85,10 @@ Update the records in the same change as the code.
   slice is a draft, the paths it plans may not exist yet.
 - A changed check: a verification record names the test that checks a claim. Change the test and its record
   together, and add one for a behavior or rule that has none.
+- Whether the work is built: a capability, behavior, rule, scenario, slice or contract says so in \`delivery\`.
+  Write \`delivery: built\` on a record you wrote from code that exists, \`delivery: planned\` on one that proposes
+  work, and change \`planned\` to \`built\` in the change that builds it. It states a fact about the code, not an
+  approval, so you may set it; a draft that says \`built\` is still a draft until a person approves it.
 
 Write each link once, on the record that points: a behavior is \`governedBy\` its rules, a scenario \`illustrates\`
 a behavior, a slice \`implements\` behaviors, a verification \`verifies\` what it checks. Never write the reverse.
@@ -149,6 +153,7 @@ intentset:
   type: behavior
   title: The promise in a few words, such as Schedule a student assessment
   status: draft
+  delivery: planned
   owner: <an owner from the registry>
   visibility: internal
   audiences: [engineering, product]

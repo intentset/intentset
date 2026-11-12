@@ -1,12 +1,12 @@
 ---
-title: Intentset Export Contract v0.4
-id: intentset/export/0.4
+title: Intentset Export Contract v0.5
+id: intentset/export/0.5
 status: draft
-revision: 2026-10-14
+revision: 2026-11-12
 implementation: 0.11.0
 ---
 
-# Intentset Export Contract v0.4
+# Intentset Export Contract v0.5
 
 **Extends:** [Core §12](core-0.2.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
@@ -27,7 +27,7 @@ hit's `path` from the start. The same validation with the same `generatedAt` is 
 
 | Field | Meaning |
 |---|---|
-| `contract` | `intentset/export/0.4`. A consumer MUST reject any other value (§5). |
+| `contract` | `intentset/export/0.5`. A consumer MUST reject any other value (§5). |
 | `spec` | The Core version the model is written against: `0.2`. |
 | `generatedAt` | ISO 8601 time of generation. Outside every hash; two exports of one snapshot differ only here. |
 | `repository` | The stable repository identity from `.intentset/config.yaml`. |
@@ -52,7 +52,7 @@ second import of it as the same snapshot rather than a new one.
 
 ## 2. Artifacts
 
-Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`, `status`, `owner`, `visibility`,
+Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`, `status`, `delivery`, `owner`, `visibility`,
 `audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `extensions`), its source `path` and
 `sourceHash`, its `parent`, its authored `links` by kind, and `derived`: the inverse edges by the authored kind, so
 `derived.governedBy` on a rule lists the behaviors that name it. Derived edges are never authored (Core §5).
@@ -60,6 +60,11 @@ Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`
 verification's metadata carries `exercises`, the slice and resource IDs it declares it drives beyond its behaviors' slices
 (Core §8): as authored and sorted, an empty list when it declares none, less the IDs of withheld artifacts, which
 `withheldLinks` counts.
+
+`delivery` is the record's field as authored, `planned` or `built`, and null when the record states none or its type
+never carries one (Core §7). It is not the effective delivery: a consumer that wants "is this built" computes it as
+Core §7 does, `built` for a null `delivery` whose `status` is `implemented`, `released` or `deprecated`, as
+`deliveryOf` in `@intentset/core` does.
 
 `body`, the document text after the frontmatter, is present only when the export was asked for bodies. Bodies,
 `extensions` and `availability` are exported as authored: what they name is the author's responsibility at the
@@ -213,7 +218,7 @@ versions it supports and rejects the rest (§5). 0.2 was the first version a con
 report slots and exported restricted artifacts by default, and no consumer was built against it (ADR 0008). 0.3 added
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
-unannounced. 0.4 carries the evidence binding (ADR 0014), below.
+unannounced. 0.4 carries the evidence binding (ADR 0014), and 0.5 each artifact's `delivery` (ADR 0017), below.
 
 Keying the code's shape on the origin (§1, 2026-10-05) was a defect fix inside 0.3, not a new version. A 0.3 producer
 already wrote Markset's codes under origin `syntax`, since the adapter passes them through unchanged, while the schema
@@ -232,6 +237,12 @@ per binding (§4.1, §5). A 0.4 reader rejects a 0.3 envelope as `unsupported-co
 the message: it cannot tell a 0.3 report classified by commit from a 0.4 one, and guessing would show a verdict the
 repository did not reach. `spec` in the envelope moves to `0.2` with Core's (Core §1), which is the specifications'
 move and is recorded there.
+
+0.5 (2026-11-12, ADR 0017) carries whether the work a record describes exists, apart from its approval. Core §7 added
+an optional `delivery` to records, and an artifact's members are closed, so a 0.4 reader would reject an artifact that
+carried it: 0.5 adds `delivery` to every artifact, the authored value or null (§2), and nothing else. A 0.5 reader
+rejects a 0.4 envelope as `unsupported-contract`, as each earlier move did, because a 0.4 envelope cannot say whether a
+null means "not stated" or "not exported". `spec` stays `0.2`: the field is optional, and no conformance case changed.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

@@ -17,11 +17,14 @@
 import { projectArtifacts } from "./export.ts";
 import { matchGlob } from "./glob.ts";
 import { compareStrings, isRecord } from "./report.ts";
+import { deliveryOf } from "./delivery.ts";
 import { describing, type LinkIndex, linkPossible } from "./slices.ts";
 import {
   ARTIFACT_TYPES,
   type ArtifactType,
   type Availability,
+  DELIVERIES,
+  type Delivery,
   type ExportArtifact,
   type ExportEnvelope,
   type Graph,
@@ -39,6 +42,10 @@ import {
 /** The result's contract (spec/list.md §5). A reader rejects any other value. */
 export const LIST_CONTRACT = "intentset/list/0.1";
 
+/** What `deliveries` matches: a record's effective delivery, or `unstated` when it has none (ADR 0017). */
+export const DELIVERY_VALUES = [...DELIVERIES, "unstated"] as const;
+export type DeliveryValue = Delivery | "unstated";
+
 /** The availability dimensions a selector matches, `notReleases` the one negative. */
 export const AVAILABILITY_SELECTORS = ["products", "releases", "notReleases", "roles", "editions", "flags"] as const;
 export type AvailabilitySelectorName = (typeof AVAILABILITY_SELECTORS)[number];
@@ -49,6 +56,7 @@ export const END_FIELDS = [
   "ids",
   "types",
   "statuses",
+  "deliveries",
   "owners",
   "audiences",
   "visibilities",
@@ -70,6 +78,8 @@ export interface EndSelector {
   ids?: string[];
   types?: ArtifactType[];
   statuses?: Status[];
+  /** The effective delivery (Core §7, ADR 0017), `unstated` for a record that states none. */
+  deliveries?: DeliveryValue[];
   owners?: string[];
   audiences?: string[];
   visibilities?: Visibility[];
@@ -102,6 +112,7 @@ export type ReadSelectorResult = { ok: true; selector: Selector } | { ok: false;
 const CLOSED_VALUES: Partial<Record<SelectorField, readonly string[]>> = {
   types: ARTIFACT_TYPES,
   statuses: STATUSES,
+  deliveries: DELIVERY_VALUES,
   visibilities: VISIBILITIES,
 };
 
@@ -493,6 +504,7 @@ function matchEnd(view: ExportArtifact, selector: EndSelector, source: Source): 
   const has = <T>(list: readonly T[] | undefined, value: T) => list === undefined || list.includes(value);
   if (selector.ids !== undefined && !selector.ids.some((pattern) => idMatches(pattern, view.id))) return false;
   if (!has(selector.types, view.type) || !has(selector.statuses, view.status)) return false;
+  if (!has(selector.deliveries, deliveryOf(view) ?? "unstated")) return false;
   if (!has(selector.owners, view.owner) || !has(selector.visibilities, view.visibility)) return false;
   if (selector.audiences !== undefined && !view.audiences.some((a) => selector.audiences?.includes(a))) return false;
   if (selector.hasExtension !== undefined) {

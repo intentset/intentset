@@ -28,6 +28,9 @@ import {
   BASELINE_UNKNOWN,
   CLAIM_KINDS,
   type Claim,
+  DELIVERIES,
+  DELIVERY_TYPES,
+  type Delivery,
   type DocumentInput,
   ID_PATTERN,
   LINK_KINDS,
@@ -79,6 +82,7 @@ const OPTIONAL_COMMON = [
   "revision",
   "reviewedAt",
   "reviewedBy",
+  "delivery",
   "extensions",
   "tips",
   "slice",
@@ -383,6 +387,24 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
     if (typeof s.reviewedBy === "string") reviewedBy = s.reviewedBy;
     else problem(`${base}/reviewedBy`, "`reviewedBy` must be a string.", "Name the reviewer or review record.");
   }
+  let delivery: Delivery | undefined;
+  if (Object.hasOwn(s, "delivery") && s.delivery !== null) {
+    if (type !== null && !(DELIVERY_TYPES as readonly string[]).includes(type)) {
+      problem(
+        `${base}/delivery`,
+        `\`delivery\` is written on ${aType(type)}; only ${DELIVERY_TYPES.slice(0, -1).join(", ")} and ${DELIVERY_TYPES[DELIVERY_TYPES.length - 1]} records say whether their work is built.`,
+        "Remove `delivery`; it states whether the code a record describes exists (Core §7).",
+      );
+    } else if (typeof s.delivery === "string" && (DELIVERIES as readonly string[]).includes(s.delivery)) {
+      delivery = s.delivery as Delivery;
+    } else {
+      problem(
+        `${base}/delivery`,
+        "`delivery` must be planned or built.",
+        "Write `delivery: built` when the code the record describes exists, `delivery: planned` when it does not yet, or leave it out (Core §7).",
+      );
+    }
+  }
   let extensions: Record<string, unknown> | undefined;
   if (Object.hasOwn(s, "extensions") && s.extensions !== null) {
     if (!isRecord(s.extensions)) {
@@ -462,6 +484,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
   if (revision !== undefined) meta.revision = revision;
   if (reviewedAt !== undefined) meta.reviewedAt = reviewedAt;
   if (reviewedBy !== undefined) meta.reviewedBy = reviewedBy;
+  if (delivery !== undefined) meta.delivery = delivery;
   if (extensions !== undefined) meta.extensions = extensions;
   if (tips !== undefined) meta.tips = tips;
   if (slice !== undefined) meta.slice = slice;

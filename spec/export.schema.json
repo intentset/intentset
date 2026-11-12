@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://intentset.org/spec/export.schema.json",
-  "title": "Intentset export envelope, intentset/export/0.4",
+  "title": "Intentset export envelope, intentset/export/0.5",
   "description": "The export contract of spec/export.md: the normalized JSON graph of Core §12 and the minimum graph exchange of the integration contract. Artifacts are sorted by id and every list inside the envelope is sorted, so the same validation with the same generatedAt is the same bytes. Restricted artifacts are withheld unless asked for, and every omission is counted. Optional report sections are absent when not supplied, which means not supplied, never zero or pass. Some requirements are beyond a schema and are checked by a consumer's reader (spec/export.md §5): identity, snapshot agreement between the reports and the envelope, withholding, and consistency.",
   "type": "object",
   "additionalProperties": false,
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "contract": {
-      "const": "intentset/export/0.4",
+      "const": "intentset/export/0.5",
       "description": "A consumer rejects any other value (spec/export.md §5)."
     },
     "spec": {
@@ -564,6 +564,7 @@
         "type",
         "title",
         "status",
+        "delivery",
         "owner",
         "visibility",
         "audiences",
@@ -609,6 +610,10 @@
         },
         "status": {
           "enum": ["draft", "approved", "implemented", "released", "deprecated", "retired"]
+        },
+        "delivery": {
+          "enum": ["planned", "built", null],
+          "description": "The record's delivery as authored (Core \u00a77, ADR 0017), null when it states none. The effective delivery is this value, or built when the status is implemented, released or deprecated."
         },
         "owner": {
           "type": "string",
@@ -916,6 +921,22 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "delivery": {
+                "enum": ["planned", "built"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": ["capability", "behavior", "rule", "scenario", "slice", "contract"]
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {

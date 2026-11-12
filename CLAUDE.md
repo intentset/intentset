@@ -6,7 +6,7 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.2.md`, `vsa-0.2.md`, `profile-typescript-amplify-gen2-0.2.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.4`), `list.md` (the result `intentset list`
+`export.md` (the export contract other tools pin, `intentset/export/0.5`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
@@ -98,6 +98,7 @@ impact(graph: Graph, id: string): ImpactReport
 readSelector(value): { ok, selector } | { ok: false, problems }   // spec/list.md §1: closed, AND across fields, OR within
 select(graph | checkedExport, selector, { includeRestricted?, registries? }): Selection   // throws on a rejected selector
 listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
+deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017: the field, else built for implemented/released/deprecated
 activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
 // Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016); the CLI re-exports them until 0.12
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
@@ -470,10 +471,15 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - `site/content` is the site copy's source of truth. The IA document in `docs/requirements/` stays frozen as the
   handoff, and the site's words need not match it.
 - The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
-- The export is 0.4 (2026-10-14, ADR 0014: it carries the evidence binding) and the specifications are 0.2. Before 1.0 a
-  changed export envelope is a minor bump of the packages; Streamlane and Driftline read exports and move their pins when
-  they update. A 0.4 reader rejects 0.3, and a 0.2 reader rejects a record that declares `0.1`: `intentset migrate --to
-  0.2` rewrites `spec` and `profile` in a repository's records.
+- The export is 0.5 (2026-11-12, ADR 0017: each artifact carries its `delivery`; 0.4, 2026-10-14, ADR 0014, added the
+  evidence binding) and the specifications are 0.2. Before 1.0 a changed export envelope is a minor bump of the packages;
+  Streamlane and Driftline read exports and move their pins when they update. A 0.5 reader rejects 0.4, and a 0.2 reader
+  rejects a record that declares `0.1`: `intentset migrate --to 0.2` rewrites `spec` and `profile` in a repository's
+  records.
+- **Delivery** (Core §7, ADR 0017, 2026-11-12): an optional `delivery: planned | built` on a capability, behavior, rule,
+  scenario, slice or contract says whether the work exists, apart from its approval. The effective delivery
+  (`deliveryOf`) is the field, else `built` for implemented, released or deprecated, else not stated; `approved` is never
+  read as built. An agent may write it, since it states a fact about the code; it never approves.
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
   inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.

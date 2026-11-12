@@ -2,7 +2,7 @@
 title: Intentset Traceable Vertical Slice Architecture Specification v0.2
 id: intentset/vsa/0.2
 status: draft
-revision: 2026-10-21
+revision: 2026-11-12
 implementation: 0.11.0
 ---
 
@@ -22,7 +22,7 @@ The architecture regions are composition, product slices, shared neutral abstrac
 
 | ID | Requirement | Evidence/check |
 |---|---|---|
-| VSA001 | Every adopted non-draft behavior MUST have exactly one accountable product slice | Unique incoming `implements` |
+| VSA001 | Every adopted non-draft behavior MUST have exactly one accountable product slice; a draft one that says `delivery: built` and has none is a warning (§3) | Unique incoming `implements` |
 | VSA002 | Every slice MUST expose one declared public contract surface in each package it spans; a surface MAY be empty for a leaf | Contract record and entrypoints |
 | VSA003 | Consumers MUST NOT import another slice's private implementation | Resolved dependency graph |
 | VSA004 | All cross-slice dependencies MUST be declared; each consumed contract MUST have one exposing owner | Observed vs declared edges |
@@ -71,6 +71,8 @@ slice:
 A claim has `kind` (`source`, `backend`, `contract`, `verification`, `documentation`) and `path`. Paths are repository-relative POSIX paths. v0.2 patterns allow literal segments, `*` within one segment, and `**` across zero or more segments. Absolute paths, `..`, traversal through symlinks outside the repository, brace expansion, and negation are forbidden. Include/exclude precedence is therefore unnecessary. Source enumeration MUST use a versioned ignore list to exclude generated/build/vendor output. A nonempty claim matching no file is an error.
 
 While a slice is `draft`, an entrypoint that is not yet a file (VSA002) and a claim that matches no file (VSA009) are warnings: the slice is planned, not yet owned, and the warning names what it still promises. Once the slice leaves draft both are errors. Every other VSA002 and VSA009 condition, such as two entrypoints in one package, an entrypoint outside the slice's claims, two owners for one file, or a registry resource matching nothing, is an error whatever the status, because it is a mistake in what was written rather than code not yet written. (Decided 2026-10-03 for model-first adoption: a product built from its first commit with Intentset writes its slices before their code, and its CI runs at L2 from the start. It mirrors the draft rule for CORE007.)
+
+A draft slice whose effective delivery is `built` (Core §7), or that implements a behavior whose effective delivery is `built`, describes code that exists, so none of its paths is planned: its missing entrypoint (VSA002) and its claim that matches no file (VSA009) are errors, and the message says which record made them so. A draft behavior that says `delivery: built` and that no product slice implements is a VSA001 warning, the architecture's statement of Core's CORE006 warning. (Decided 2026-11-12, ADR 0017: an adoption writes records from existing code as drafts, and a draft's paths are otherwise allowed to be planned.)
 
 Two slices MUST NOT own the same resolved file. When ownership differs inside a file, extract a contract/module or assign the file to a technical resource owner; v0.2 does not infer symbol ownership from line ranges. A backend registry MAY declare one technical owner for a shared resource and list consuming slices. `usesResources` references those resource IDs and does not transfer ownership. This registry is a deployment inventory, not a second product graph.
 

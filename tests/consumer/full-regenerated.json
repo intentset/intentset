@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.4",
+  "contract": "intentset/export/0.5",
   "spec": "0.2",
   "generatedAt": "2026-10-03T18:05:00Z",
   "repository": "example/scheduling",
@@ -73,6 +73,7 @@
       "type": "decision",
       "title": "Keep backend access behind the slice seam",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -103,6 +104,7 @@
       "type": "behavior",
       "title": "Schedule a student assessment",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -160,6 +162,7 @@
       "type": "capability",
       "title": "Student assessment assignment",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -190,6 +193,7 @@
       "type": "contract",
       "title": "ScheduleAssessment contract",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -220,6 +224,7 @@
       "type": "intent",
       "title": "Prepare learning in advance",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -250,6 +255,7 @@
       "type": "knowledge",
       "title": "Prepare a scheduled student assessment",
       "status": "approved",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "customer",
       "audiences": [
@@ -305,6 +311,7 @@
       "type": "measure",
       "title": "Assignments scheduled a day or more ahead",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -338,6 +345,7 @@
       "type": "measure",
       "title": "Teacher minutes spent preparing an assignment",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -371,6 +379,7 @@
       "type": "outcome",
       "title": "Reduce assignment preparation friction",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -403,6 +412,7 @@
       "type": "product",
       "title": "Lantern example",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -433,6 +443,7 @@
       "type": "rule",
       "title": "Require a future release time",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -469,6 +480,7 @@
       "type": "scenario",
       "title": "Accept an eligible schedule",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -503,6 +515,7 @@
       "type": "slice",
       "title": "Student assessment scheduling slice",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -575,6 +588,7 @@
       "type": "verification",
       "title": "Review student assessment scheduling behavior",
       "status": "draft",
+      "delivery": null,
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [

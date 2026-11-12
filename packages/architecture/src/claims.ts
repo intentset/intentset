@@ -2,7 +2,8 @@
  * Path and resource ownership (VSA §3, §7; VSA009; profile AMP004).
  *
  * - A nonempty claim that matches no file is VSA009: a warning while the
- *   slice is draft (planned, not yet owned), an error once it is not.
+ *   slice is draft (planned, not yet owned), an error once it is not, or once
+ *   it or a behavior it implements says its work is built (ADR 0017).
  * - Two slices resolving one file is VSA009, once per pair of claims, naming
  *   both slices, both claims and the files.
  * - A file claimed by a slice and recorded as a registry resource has two
@@ -19,6 +20,7 @@
  * neither is repeated here.
  */
 import { type Graph, patternProblem } from "@intentset/core";
+import { pathsMayBePlanned } from "./delivery.ts";
 import { type Finding, finding, listSome, plural } from "./finding.ts";
 import { isCode } from "./paths.ts";
 import { compareStrings, validatePattern } from "./patterns.ts";
@@ -47,7 +49,7 @@ export function checkClaims(model: Model, graph: Graph, registriesPath: string):
         return;
       }
       if (slice.claimFiles[i].length === 0) {
-        const planned = slice.artifact.meta.status === "draft";
+        const { planned, built } = pathsMayBePlanned(slice.artifact, graph);
         findings.push(
           finding({
             code: "VSA009",
@@ -57,7 +59,9 @@ export function checkClaims(model: Model, graph: Graph, registriesPath: string):
             field,
             message: planned
               ? `The ${claim.kind} claim ${claim.path} of draft slice ${slice.id} matches no file yet; it is planned, and an error once the slice leaves draft.`
-              : `The ${claim.kind} claim ${claim.path} of ${slice.id} matches no file in the repository.`,
+              : built !== null
+                ? `The ${claim.kind} claim ${claim.path} of draft slice ${slice.id} matches no file, and ${built}, so the claim cannot be planned.`
+                : `The ${claim.kind} claim ${claim.path} of ${slice.id} matches no file in the repository.`,
             remediation:
               "Correct the path, add the files it promises, or remove the claim; an empty claim is not ownership (VSA §3).",
           }),

@@ -10,9 +10,9 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   links:
-    implements: [BEH-VALIDATE-REPORTS, BEH-IMPACT, BEH-EXPORT, BEH-READ-EXPORT, BEH-LIST]
+    implements: [BEH-VALIDATE-REPORTS, BEH-IMPACT, BEH-EXPORT, BEH-READ-EXPORT, BEH-LIST, BEH-DELIVERY]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
@@ -33,7 +33,7 @@ intentset:
 
 ## Responsibility
 
-The carrier reader, the types, the graph, the validator, impact and the export, `readExport` for consumers, and `select`, the closed selector `intentset list` and consumers read records with (spec/list.md), with the slice definitions it shares with `review` and `context`. It has no dependencies (design invariant 8), which `dependsOn` being empty states and the architecture check holds.
+The carrier reader, the types, the graph, the validator, impact and the export, `readExport` for consumers, and `select`, the closed selector `intentset list` and consumers read records with (spec/list.md), with the slice definitions it shares with `review` and `context`, and `deliveryOf`, a record's effective delivery (Core §7). It has no dependencies (design invariant 8), which `dependsOn` being empty states and the architecture check holds.
 
 The slice is the package `@intentset/core`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 

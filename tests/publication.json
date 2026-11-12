@@ -343,6 +343,148 @@
   },
   {
     "section": "publication",
+    "name": "P01 knowledge explaining planned work selected for publication",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "Publication §1, ADR 0017: planned work is not current publication, however the knowledge was reviewed."
+  },
+  {
+    "section": "publication",
+    "name": "P01 knowledge explaining planned work is excluded when not requested",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "Boundary: deny by default needs no diagnostic to keep it out."
+  },
+  {
+    "section": "publication",
+    "name": "P01 boundary: knowledge explaining built work is published",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    }
+  },
+  {
+    "section": "publication",
     "name": "P02 public knowledge links an internal decision",
     "baseline": "scheduling",
     "patch": {

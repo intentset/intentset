@@ -8,6 +8,7 @@
  *   not-requested         the request names ids and this is not one of them
  *   not-knowledge         only knowledge is ever published as a document
  *   draft, retired        Core §7: neither is current publication
+ *   planned               it explains a record whose delivery is planned: work that does not exist yet (ADR 0017)
  *   visibility            outside what the projection admits
  *   audience              the request's audience is not one the knowledge is written for
  *   availability-missing  no availability block: fails closed (Core §4, §7)
@@ -31,6 +32,7 @@ export const EXCLUSION_REASONS = [
   "not-knowledge",
   "draft",
   "retired",
+  "planned",
   "visibility",
   "audience",
   "availability-missing",
@@ -113,7 +115,8 @@ export function project(
   const reasons = new Map<string, ExclusionReason>();
   for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
     const artifact = graph.artifacts.get(id) as Artifact;
-    const reason = requested !== null && !requested.has(id) ? "not-requested" : exclusionReason(artifact, req, review);
+    const reason =
+      requested !== null && !requested.has(id) ? "not-requested" : exclusionReason(artifact, req, review, graph);
     if (reason === null) eligible.push(artifact);
     else {
       excluded.push({ id, reason });
@@ -125,22 +128,29 @@ export function project(
     const reason = reasons.get(id);
     const artifact = graph.artifacts.get(id);
     if (artifact !== undefined && reason === undefined) continue;
-    diagnostics.push(refusal(id, artifact, reason ?? null, req, artifact === undefined ? null : review(artifact)));
+    diagnostics.push(
+      refusal(id, artifact, reason ?? null, req, artifact === undefined ? null : review(artifact), graph),
+    );
   }
   return { eligible, excluded, diagnostics, request: req };
 }
 
-/** The first check an artifact fails for this request, or null when it is eligible. Requested-ness is the caller's. */
+/**
+ * The first check an artifact fails for this request, or null when it is eligible. Requested-ness is the caller's.
+ * Without the graph, the explained records cannot be read, so `planned` is not checked.
+ */
 export function exclusionReason(
   artifact: Artifact,
   request: PublicationRequest,
   review: (artifact: Artifact) => ReviewStatus,
+  graph?: Graph,
 ): Exclude<ExclusionReason, "not-requested"> | null {
   const { meta } = artifact;
   if (meta.type !== "knowledge") return "not-knowledge";
   if (meta.status === "draft") return "draft";
   if (meta.status === "retired") return "retired";
   if (!PUBLISHABLE_STATUSES.has(meta.status)) return "draft";
+  if (graph !== undefined && plannedSources(graph, artifact).length > 0) return "planned";
   if (!admits(request, meta.visibility)) return "visibility";
   if (!meta.audiences.includes(request.audience)) return "audience";
   const availability = meta.availability;
@@ -154,6 +164,13 @@ export function exclusionReason(
   return null;
 }
 
+/** The records a knowledge record explains whose delivery is planned (ADR 0017), sorted. */
+export function plannedSources(graph: Graph, artifact: Artifact): string[] {
+  return (artifact.meta.links.explains ?? [])
+    .filter((id) => graph.artifacts.get(id)?.meta.delivery === "planned")
+    .sort(compareStrings);
+}
+
 /** CORE008 for one requested ID. */
 function refusal(
   id: string,
@@ -161,6 +178,7 @@ function refusal(
   reason: ExclusionReason | null,
   request: PublicationRequest,
   review: ReviewStatus | null,
+  graph: Graph,
 ): Diagnostic {
   if (artifact === undefined || !admits(request, artifact.meta.visibility)) {
     return publicationDiagnostic({
@@ -201,6 +219,14 @@ function refusal(
         "it is retired, which is excluded from current publication",
         "Publish the successor named in replacedBy instead (Core §7).",
       );
+    case "planned": {
+      const planned = plannedSources(graph, artifact);
+      return refuse(
+        "/intentset/links/explains",
+        `it explains ${planned.join(", ")}, whose work is planned, and planned work is not current publication`,
+        "Publish it once the work exists and the records say `delivery: built`, reviewing the knowledge against them again (Core §7, ADR 0017).",
+      );
+    }
     case "audience":
       return refuse(
         "/intentset/audiences",

@@ -2,7 +2,7 @@
 title: Intentset Core Specification v0.2
 id: intentset/core/0.2
 status: draft
-revision: 2026-11-11
+revision: 2026-11-12
 implementation: 0.11.0
 ---
 
@@ -94,7 +94,7 @@ Required common fields are `spec`, `profile`, `id`, `type`, `title`, `status`, `
 
 `owner` is one accountable team/role identifier from the repository's owner registry. `audiences` is a nonempty array from its audience registry. These are documentation audiences, not runtime authorization. `visibility` is `public`, `customer`, `internal`, or `restricted`. Missing access information MUST fail closed for publication.
 
-Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.
+Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `delivery` (§7), `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.
 
 Moving a file or correcting wording does not change identity. Splitting a behavior creates new IDs and preserves the old artifact as retired with `replacedBy` links. Merging works similarly. Historical release snapshots keep the earlier meaning.
 
@@ -153,6 +153,10 @@ Verification (§8) and measurement answer different questions and neither stands
 `status` is `draft`, `approved`, `implemented`, `released`, `deprecated`, or `retired`. Default progression follows that order. Drafts may be retired without release. Returning to draft requires a review note and MUST NOT rewrite immutable release snapshots. Released artifacts are changed through a new snapshot; their ID remains stable only when meaning remains recognizably continuous.
 
 Status is an editorial claim, not a test result. `approved` records intent; `implemented` records an implementation claim; `released` requires inclusion in a reviewed release snapshot. `deprecated` remains available until the stated removal; `retired` is excluded from current publication and retained for history.
+
+**Delivery** states whether the work a record describes exists, apart from its approval (ADR 0017). `delivery` is `planned`, the work does not exist yet, or `built`, the code the record describes exists. It is optional, and is written only on a capability, behavior, rule, scenario, slice or contract; on any other type it is CORE001. A record's **effective delivery** is its `delivery` when present; otherwise `built` when its status is `implemented`, `released` or `deprecated`, since each claims an implementation; otherwise not stated. `approved` claims nothing about the code, so an approved record without the field is not stated. Delivery is a statement of fact, not a review: whoever writes a record sets it when it is true, an agent included, as `built` on a record written from existing code and `planned` on a proposal, and the change that builds planned work changes it to `built`. A draft that says `built` is still a draft, and nothing in delivery approves, implements or publishes a record.
+
+Delivery and status contradict each other, CORE005, when a record says `delivery: planned` while its status is `implemented`, `released` or `deprecated`, and when a behavior whose effective delivery is `built` is implemented by a slice that says `delivery: planned`. At L2, a draft behavior that says `built` and that no product slice implements is a CORE006 warning, so built code without an owner shows before anyone approves the record, and a draft slice that says `built`, or implements a behavior whose effective delivery is `built`, has no planned paths (VSA §3). Release labels are opaque, so a validator cannot tell whether a planned record's release has shipped. Knowledge that explains a record whose `delivery` is `planned` is not published as current ([publication profile](publication.md) §4).
 
 A release snapshot records product ID, exact release label, source commit, graph hash, specification/profile versions, and build time. Release labels are opaque strings: v0.2 performs exact matching, not inferred SemVer ordering. `availability`, required on behaviors and knowledge, contains nonempty `products`, `releases`, `roles`, and `editions` arrays plus a `flags` array. All named flags are required; empty means no flags. No implicit wildcard is allowed. Applicability is AND across dimensions and OR within an array. The repository registries define valid dimension values.
 
@@ -245,8 +249,8 @@ A partial adoption MUST name included capabilities/IDs and show out-of-scope cou
 | CORE002 | Duplicate/reused ID | Error |
 | CORE003 | Unresolved, wrong-type or missing required relationship | Error |
 | CORE004 | Invalid/cyclic decomposition or replacement | Error |
-| CORE005 | Lifecycle/release claim inconsistent | Error |
-| CORE006 | Missing applicable ownership (L2+) | Error |
+| CORE005 | Lifecycle/release claim inconsistent, delivery and status included (§7) | Error |
+| CORE006 | Missing applicable ownership (L2+) | Error; a warning for a draft behavior that says `delivery: built` (§7) |
 | CORE007 | Missing/failing/stale required evidence (L3+) | Error; a warning for a draft behavior, rule or scenario that no verification definition names |
 | CORE008 | Unauthorized/stale publication (L4+) | Error |
 | CORE009 | Draft unattached artifact, or draft outcome with no measure | Warning |

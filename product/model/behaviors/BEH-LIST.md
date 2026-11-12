@@ -7,10 +7,11 @@ intentset:
   type: behavior
   title: List gives the records that match a selector, and says what it could not decide
   status: draft
+  delivery: built
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC, RULE-UNRESOLVED-NOT-PASS]
@@ -26,7 +27,7 @@ intentset:
 
 ## Behavior
 
-Someone, or an agent, runs `intentset list` with options that name fields (type, status, owner, audience, visibility, an ancestor, availability, an extension, a link with a quantifier, the slice a record describes, a path a slice claims), or gives the same selector as JSON with `--where`, and gets the records that match, from the repository's tree or from an export with `--from`. The fields combine with AND and the values of one field with OR, matching is exact, and a link predicate looks one hop (spec/list.md §1). `describing` and `claims` use the definitions `review` and `context` use, which core now holds, so a consumer that calls `select` no longer copies them. The result is a table, the `intentset/list/0.1` JSON, or the matched IDs, and names its snapshot, the validation's status and totals, the normalized selector, and the counts considered, withheld, matched and undetermined, with `--count-by` counting the matches by one field. The command never writes.
+Someone, or an agent, runs `intentset list` with options that name fields (type, status, delivery, owner, audience, visibility, an ancestor, availability, an extension, a link with a quantifier, the slice a record describes, a path a slice claims), or gives the same selector as JSON with `--where`, and gets the records that match, from the repository's tree or from an export with `--from`. The fields combine with AND and the values of one field with OR, matching is exact, and a link predicate looks one hop (spec/list.md §1). `describing` and `claims` use the definitions `review` and `context` use, which core now holds, so a consumer that calls `select` no longer copies them. The result is a table, the `intentset/list/0.1` JSON, or the matched IDs, and names its snapshot, the validation's status and totals, the normalized selector, and the counts considered, withheld, matched and undetermined, with `--count-by` counting the matches by one field. The command never writes.
 
 ## Preconditions
 
@@ -38,5 +39,5 @@ Success: the matched records, sorted by ID, the same bytes for the same input; a
 
 ## Sources
 
-- `spec/list.md`, and ADR 0016.
+- `spec/list.md`, ADR 0016, and ADR 0017 for `--delivery`.
 - The CLI's usage, `intentset --help`.

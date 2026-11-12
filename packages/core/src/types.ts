@@ -29,6 +29,17 @@ export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 export const STATUSES = ["draft", "approved", "implemented", "released", "deprecated", "retired"] as const;
 export type Status = (typeof STATUSES)[number];
 
+/**
+ * Core §7, ADR 0017: whether the work a record describes exists, apart from its approval. `planned`: it does not
+ * yet; `built`: the code it describes exists. Written only on the types in `DELIVERY_TYPES`; absent, it is not stated.
+ */
+export const DELIVERIES = ["planned", "built"] as const;
+export type Delivery = (typeof DELIVERIES)[number];
+/** The types that describe work code delivers, and so may carry `delivery`. */
+export const DELIVERY_TYPES = ["capability", "behavior", "rule", "scenario", "slice", "contract"] as const;
+/** The statuses that claim an implementation, and so make delivery `built` when the field is absent (Core §7). */
+export const BUILT_STATUSES = ["implemented", "released", "deprecated"] as const;
+
 export const VISIBILITIES = ["public", "customer", "internal", "restricted"] as const;
 export type Visibility = (typeof VISIBILITIES)[number];
 
@@ -182,6 +193,8 @@ export interface ArtifactMeta {
   revision?: number;
   reviewedAt?: string;
   reviewedBy?: string;
+  /** Core §7, ADR 0017: whether the work exists, on the types in `DELIVERY_TYPES` only. */
+  delivery?: Delivery;
   /** Namespaced extensions, preserved and never interpreted. */
   extensions?: Record<string, unknown>;
   /** Knowledge only (Core §9): one sentence per explained ID, keys sorted. */
@@ -383,7 +396,7 @@ export interface ImpactReport {
  * subject it was judged at, each record's binding and subject hash, and a
  * verification's `exercises` (ADR 0014).
  */
-export const EXPORT_CONTRACT = "intentset/export/0.4";
+export const EXPORT_CONTRACT = "intentset/export/0.5";
 
 /** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
 export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];
@@ -397,6 +410,8 @@ export interface ExportArtifact {
   type: ArtifactType;
   title: string;
   status: Status;
+  /** The record's `delivery` as authored, null when it states none (Core §7, ADR 0017); `deliveryOf` gives the effective value. */
+  delivery: Delivery | null;
   owner: string;
   visibility: Visibility;
   audiences: string[];

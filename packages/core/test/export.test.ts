@@ -84,11 +84,11 @@ test("the schema rejects what a consumer must reject", () => {
     "the earlier contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.3")),
+    bad((e) => (e.contract = "intentset/export/0.4")),
     "the previous contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.5")),
+    bad((e) => (e.contract = "intentset/export/0.6")),
     "a later contract version",
   );
   assert.ok(

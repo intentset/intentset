@@ -2,7 +2,7 @@
 title: Intentset List Contract v0.1
 id: intentset/list/0.1
 status: draft
-revision: 2026-11-11
+revision: 2026-11-12
 implementation: 0.11.0
 ---
 
@@ -31,6 +31,7 @@ matches every record.
 | `ids` | IDs | its ID equals one of them. A value ending in `*` matches every ID that starts with what is before the `*`; a `*` anywhere else is an error. |
 | `types` | artifact types (Core §2) | its `type` is one of them |
 | `statuses` | statuses (Core §7) | its `status` is one of them |
+| `deliveries` | `planned`, `built`, `unstated` | its effective delivery (Core §7) is one of them, `unstated` when it has none |
 | `owners` | owner identifiers | its `owner` is one of them |
 | `audiences` | audience identifiers | one of its `audiences` is one of them |
 | `visibilities` | visibilities (Core §4) | its `visibility` is one of them |
@@ -42,7 +43,7 @@ matches every record.
 | `claims` | repository-relative paths | it is a slice, not retired, with a claim matching one of the paths (VSA §3) |
 
 Every list holds at least one value, each a nonempty string; types, statuses and visibilities are the closed sets of
-Core. A key that is not a field above is an error, as is a value outside a closed set, an empty list, or a field of
+Core, and deliveries the closed set above. A key that is not a field above is an error, as is a value outside a closed set, an empty list, or a field of
 the wrong shape. A tool MUST reject such a selector whole, saying where each problem is as a JSON pointer, and MUST NOT
 ignore a key it does not know. A reader writes the selector back **normalized**: each list sorted by code point with
 duplicates removed, and each link predicate's `quantifier` written out.
@@ -62,6 +63,12 @@ and every `notReleases`.
 
 Status and availability are authored claims. A result whose selector names `availability` says that it is not a
 reviewed release snapshot (§5).
+
+`deliveries` matches the effective delivery, not only the field as written: a record that says `delivery: built`, and
+one whose status is `implemented`, `released` or `deprecated` without the field, are both `built`, so
+`deliveries: ["built"]` answers "which records describe code that exists". A record of a type that never carries
+delivery is `unstated`. An export carries the field as written (export §2), and the effective value is computed from it
+and the status, so the tree and its export give the same answer.
 
 ### 1.2 Under
 
@@ -86,7 +93,7 @@ record with no such links. `all` requires `match`. Without `match` every end mat
 has such a link and `none` whether it has none. An end that names an ID the source does not hold matches no `match`.
 
 **A predicate looks one hop.** `match` holds only the fields a record answers by itself (`ids`, `types`, `statuses`,
-`owners`, `audiences`, `visibilities`, `under`, `availability`, `hasExtension`); `links`, `describing` and `claims`
+`deliveries`, `owners`, `audiences`, `visibilities`, `under`, `availability`, `hasExtension`); `links`, `describing` and `claims`
 inside it are errors. The predicates in `links` are separate conditions, combined with AND.
 
 ### 1.4 Describing and claims
@@ -109,7 +116,7 @@ A list is made over one snapshot, read from the repository's tree or from an exp
 
 The two MUST give the same answer for the same snapshot and the same withholding: the same counts, the same matched
 IDs and the same undetermined IDs. A field the source does not carry is `not-supplied` in a row (§5), never null or
-empty: export 0.4 does not carry Core §4's `reviewedBy` and `reviewedAt`.
+empty: export 0.5 does not carry Core §4's `reviewedBy` and `reviewedAt`.
 
 A list is made whether or not the validation passed. A failed validation may leave records out of the graph, so the
 result names the validation's status and totals beside the answer.
@@ -172,7 +179,7 @@ of the snapshot.
 
 | Option | Selector |
 |---|---|
-| `--id`, `--type`, `--status`, `--owner`, `--audience`, `--visibility`, `--under` | `ids`, `types`, `statuses`, `owners`, `audiences`, `visibilities`, `under` |
+| `--id`, `--type`, `--status`, `--delivery`, `--owner`, `--audience`, `--visibility`, `--under` | `ids`, `types`, `statuses`, `deliveries`, `owners`, `audiences`, `visibilities`, `under` |
 | `--product`, `--release`, `--not-release`, `--role`, `--edition`, `--flag` | the dimensions of `availability` |
 | `--has-extension <key>` | `hasExtension` |
 | `--has [some:\|none:\|all:]<out\|in>:<kind>[=<status>,…]` | one link predicate; `=` gives the far end's statuses as `match` |
@@ -208,6 +215,7 @@ of the result that must match (a deep partial, as an export case's `export` is).
 | L09 | An unknown key is rejected, at any depth |
 | L10 | The same input gives the same bytes |
 | L11 | Counting by a field |
+| L12 | `deliveries` matches the effective delivery: as written, from a status that claims an implementation, or `unstated` |
 
 A conforming driver also checks, for every case, that the list from the tree and the list from the tree's export
 agree (§2), and that reading the documents in reverse order gives the same bytes.

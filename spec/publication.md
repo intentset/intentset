@@ -2,7 +2,7 @@
 title: Intentset Publication Profile v0.2
 id: intentset/publication/0.2
 status: draft
-revision: 2026-10-14
+revision: 2026-11-12
 implementation: 0.11.0
 ---
 
@@ -32,7 +32,9 @@ label, MUST refuse the request rather than match nothing.
 | `restricted` | all four | explicit internal and restricted authorization |
 
 A knowledge artifact is eligible only when all hold: type `knowledge`; status `approved`, `implemented`, `released`
-or `deprecated`; visibility admitted; the request's audience in `audiences`; `availability` present; the request's
+or `deprecated`; no artifact it `explains` says `delivery: planned` (Core §7: planned work is not current, and
+prospective documentation belongs only in a separately labeled roadmap projection, which v0.2 does not define);
+visibility admitted; the request's audience in `audiences`; `availability` present; the request's
 product, release, role and edition each in the corresponding list; every flag in `availability.flags` named by the
 request; and its review current (§3). Everything else is excluded. An excluded artifact the request named in `ids` is
 CORE008. When the artifact's visibility is outside the projection, or no artifact has the ID, the diagnostic MUST be
@@ -105,7 +107,7 @@ artifact the projection does not admit; it names such an artifact by ID only.
 | PUB004 | The generated document uses a `:::` directive outside Markset's vocabulary |
 
 Every publication diagnostic has origin `publication` and severity error. An exclusion is reported, for counting, as
-one of `not-requested`, `not-knowledge`, `draft`, `retired`, `visibility`, `audience`, `availability-missing`,
+one of `not-requested`, `not-knowledge`, `draft`, `retired`, `planned`, `visibility`, `audience`, `availability-missing`,
 `product`, `release`, `role`, `edition`, `flag`, `needs-review` (the first that applies, in that order), or, for an
 eligible document refused later, `reference`, `title`, `directive`, `markset`. The index counts an exclusion only when the projection admits the excluded artifact's visibility, so a public
 or customer index never reveals how many internal or restricted records exist; a refused request counts nothing.

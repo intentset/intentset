@@ -1461,5 +1461,235 @@
         ]
       }
     }
+  },
+  {
+    "section": "list",
+    "name": "L12 built matches the field as written and a status that claims an implementation",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "selector": {
+      "deliveries": [
+        "built"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 2,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        }
+      ]
+    },
+    "notes": "RULE-ASMT-AUTH says no delivery, and implemented claims one (Core §7)."
+  },
+  {
+    "section": "list",
+    "name": "L12 planned matches only the field as written",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "selector": {
+      "deliveries": [
+        "planned"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "RULE-ASMT-FUTURE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L12 unstated is every record that states none, a type that never carries one included",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "selector": {
+      "deliveries": [
+        "unstated"
+      ],
+      "types": [
+        "capability",
+        "behavior",
+        "rule",
+        "knowledge"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 2,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L12 an approved record without the field is unstated, not built",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "selector": {
+      "deliveries": [
+        "built"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": []
+    },
+    "notes": "Approval claims nothing about the code (Core §7)."
+  },
+  {
+    "section": "list",
+    "name": "L12 deliveries matches a link's far end",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "in",
+          "kind": "implements",
+          "match": {
+            "deliveries": [
+              "built"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L12 a value outside planned, built and unstated is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "deliveries": [
+        "implemented"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/deliveries/0"
+        }
+      ]
+    }
   }
 ]

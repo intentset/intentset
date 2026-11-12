@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-EXPORT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.4` envelope: the artifacts, the edges, the diagnostics and the snapshot.
+Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.5` envelope: the artifacts, each with its `delivery` as written (ADR 0017), the edges, the diagnostics and the snapshot.
 
 ## Preconditions
 

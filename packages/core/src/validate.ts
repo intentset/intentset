@@ -11,6 +11,7 @@
  * are reported as CORE002; neither is merged with the other.
  */
 import { type ReadDocument, readDocument } from "./artifact.ts";
+import { deliveryOf } from "./delivery.ts";
 import { type Diagnostic, hasErrors, sortDiagnostics } from "./diagnostics.ts";
 import { buildGraph, incomingEdges, outgoing } from "./graph.ts";
 import { type Locate, aType, capitalize, compareStrings, describeTypes, makeDiagnostic } from "./report.ts";
@@ -449,6 +450,27 @@ function checkLifecycle(context: Context): void {
         });
       }
     });
+    if (meta.delivery === "planned" && deliveryOf({ status: meta.status }) === "built") {
+      reportOn(context, artifact, {
+        code: "CORE005",
+        field: "/intentset/delivery",
+        message: `${meta.id} says its work is planned while its status, ${meta.status}, claims an implementation.`,
+        remediation:
+          "Write `delivery: built`, or remove `delivery`, when the code exists; return the record to an earlier status, with a review note, when it does not (Core §7).",
+      });
+    }
+    if (meta.type === "behavior" && deliveryOf(meta) === "built") {
+      for (const edge of incomingEdges(graph, meta.id, "implements")) {
+        const slice = graph.artifacts.get(edge.from);
+        if (slice?.meta.delivery !== "planned") continue;
+        reportOn(context, artifact, {
+          code: "CORE005",
+          field: meta.delivery === undefined ? "/intentset/status" : "/intentset/delivery",
+          message: `${meta.id}'s work is built, but ${slice.meta.id}, which implements it, says its work is planned.`,
+          remediation: `Write \`delivery: built\` on ${slice.meta.id} once the code it claims exists, or correct ${meta.id}'s delivery (Core §7).`,
+        });
+      }
+    }
     if (meta.status === "retired" && (meta.links.replacedBy ?? []).length === 0) {
       reportOn(context, artifact, {
         code: "CORE005",
@@ -701,13 +723,29 @@ function checkOwnership(context: Context): void {
   const { graph } = context;
   for (const artifact of sortedArtifacts(graph)) {
     const { meta } = artifact;
-    if (meta.type !== "behavior" || !OWNED_STATUSES.has(meta.status)) continue;
+    if (meta.type !== "behavior") continue;
+    // ADR 0017: a behavior that is not yet owned by status but says its work is built is held to having an owner,
+    // as a warning, so built code nobody owns shows before anyone approves it.
+    const builtDraft = !OWNED_STATUSES.has(meta.status) && meta.status !== "retired" && deliveryOf(meta) === "built";
+    if (!OWNED_STATUSES.has(meta.status) && !builtDraft) continue;
     const owners = incomingEdges(graph, meta.id, "implements")
       .map((edge) => graph.artifacts.get(edge.from))
       .filter((slice): slice is Artifact => slice?.meta.slice?.kind === "product")
       .map((slice) => slice.meta.id)
       .sort(compareStrings);
     if (owners.length === 1) continue;
+    if (builtDraft) {
+      if (owners.length > 0) continue;
+      reportOn(context, artifact, {
+        code: "CORE006",
+        severity: "warning",
+        field: "/intentset/delivery",
+        message: `${capitalize(meta.status)} behavior ${meta.id} says its work is built, and no product slice implements it.`,
+        remediation:
+          "Add the behavior to the implements of the product slice whose code delivers it, so the built code has an owner before the behavior is approved (Core §5, §7).",
+      });
+      continue;
+    }
     reportOn(context, artifact, {
       code: "CORE006",
       message:

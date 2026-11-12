@@ -59,7 +59,7 @@ commands
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
-                            print the intentset/export/0.4 envelope, or write it to --out;
+                            print the intentset/export/0.5 envelope, or write it to --out;
                             each --report adds a section (ownership needs L2, evidence L3; all
                             is every one the level reads). Restricted artifacts are withheld
                             and counted unless --include-restricted
@@ -78,8 +78,8 @@ commands
                             exits 1 when any needs a run
   impact <ID>               what depends on an artifact: direct, candidates, review context,
                             ancestors
-  list [--id <ID|prefix*>] [--type <t>] [--status <s>] [--owner <o>] [--audience <a>]
-        [--visibility <v>] [--under <ID>] [--product <ID>] [--release <label>]
+  list [--id <ID|prefix*>] [--type <t>] [--status <s>] [--delivery <d>] [--owner <o>]
+        [--audience <a>] [--visibility <v>] [--under <ID>] [--product <ID>] [--release <label>]
         [--not-release <label>] [--role <r>] [--edition <e>] [--flag <f>]
         [--has-extension <key>] [--has [some:|none:|all:]<out|in>:<kind>[=<status>,...]]
         [--describing <slice>] [--claims <path>] [--where <file.json>] [--from <export.json>]
@@ -636,6 +636,7 @@ function parse(argv: string[]) {
       id: { type: "string", multiple: true },
       type: { type: "string", multiple: true },
       status: { type: "string", multiple: true },
+      delivery: { type: "string", multiple: true },
       owner: { type: "string", multiple: true },
       under: { type: "string", multiple: true },
       "not-release": { type: "string", multiple: true },

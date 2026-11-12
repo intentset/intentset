@@ -2,7 +2,9 @@
  * Behavior ownership and contract surfaces (VSA001, VSA002; Core §5).
  *
  * VSA001 at L2 and above: an approved, implemented, released or deprecated
- * behavior has exactly one incoming `implements` from a product slice. Core
+ * behavior has exactly one incoming `implements` from a product slice. A
+ * draft behavior that says its work is built and that no product slice
+ * implements is a warning (ADR 0017). Core
  * reports the same condition as CORE006 from the graph alone; VSA001 is the
  * architecture's own statement of it, so a VSA report stands by itself.
  *
@@ -12,7 +14,8 @@
  * repository root): a slice has one public surface per package it spans. An
  * empty entrypoint module is allowed for a leaf. While the slice is draft, an
  * entrypoint that is not a file yet is a warning: planned, not yet owned
- * (VSA §3).
+ * (VSA §3), unless the slice or a behavior it implements says its work is
+ * built (ADR 0017).
  *
  * VSA012 (deleting or splitting a slice dispositions its behavior, paths and
  * contracts) is a diff between two snapshots. This check sees one snapshot,
@@ -21,7 +24,8 @@
  * orphaned files.
  */
 import type { Artifact, Graph, Level } from "@intentset/core";
-import { LEVELS } from "@intentset/core";
+import { deliveryOf, LEVELS } from "@intentset/core";
+import { pathsMayBePlanned } from "./delivery.ts";
 import { type Finding, finding } from "./finding.ts";
 import { compareStrings, matchPattern, validatePattern } from "./patterns.ts";
 import { describePackage, type Model } from "./regions.ts";
@@ -32,8 +36,14 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
   const findings: Finding[] = [];
 
   if (LEVELS.indexOf(level) >= LEVELS.indexOf("L2")) {
+    // ADR 0017: a draft behavior that says its work is built and that no product slice implements is a warning.
+    const builtDraft = (artifact: Artifact) =>
+      artifact.meta.status === "draft" && deliveryOf(artifact.meta) === "built";
     const behaviors = [...graph.artifacts.values()]
-      .filter((artifact) => artifact.meta.type === "behavior" && OWNED_STATUSES.has(artifact.meta.status))
+      .filter(
+        (artifact) =>
+          artifact.meta.type === "behavior" && (OWNED_STATUSES.has(artifact.meta.status) || builtDraft(artifact)),
+      )
       .sort((a, b) => compareStrings(a.meta.id, b.meta.id));
     for (const behavior of behaviors) {
       const id = behavior.meta.id;
@@ -45,6 +55,22 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
         .sort(compareStrings);
       const unique = [...new Set(owners)];
       if (unique.length === 1) continue;
+      if (builtDraft(behavior)) {
+        if (unique.length > 0) continue;
+        findings.push(
+          finding({
+            code: "VSA001",
+            severity: "warning",
+            artifact: id,
+            path: behavior.path,
+            field: "/intentset/delivery",
+            message: `Draft behavior ${id} says its work is built, and no product slice implements it.`,
+            remediation:
+              "Add it to the implements of the product slice whose code delivers it, so the built code has an owner before the behavior is approved (VSA001, ADR 0017).",
+          }),
+        );
+        continue;
+      }
       findings.push(
         finding({
           code: "VSA001",
@@ -100,7 +126,7 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
         );
       } else byPackage.set(pkg, entrypoint);
       if (!model.files.has(entrypoint)) {
-        const planned = slice.artifact.meta.status === "draft";
+        const { planned, built } = pathsMayBePlanned(slice.artifact, graph);
         findings.push(
           finding({
             code: "VSA002",
@@ -110,7 +136,9 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
             field,
             message: planned
               ? `The entrypoint ${entrypoint} of draft slice ${slice.id} is not a file yet; it is planned, and an error once the slice leaves draft.`
-              : `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
+              : built !== null
+                ? `The entrypoint ${entrypoint} of draft slice ${slice.id} is not a file, and ${built}, so the entrypoint cannot be planned.`
+                : `The entrypoint ${entrypoint} of ${slice.id} is not a file in the repository.`,
             remediation: "Create the entrypoint, empty if the slice exposes nothing yet, or correct the path (VSA002).",
             paths: [entrypoint],
           }),
