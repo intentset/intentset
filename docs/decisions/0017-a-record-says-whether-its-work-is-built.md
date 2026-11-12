@@ -50,7 +50,8 @@ On any other type it is CORE001, as `measure` and `tips` are. When it is absent,
   `delivery` is `planned` is excluded, with the reason `planned`. Core §7 already allows prospective documentation only
   in a separately labeled roadmap projection, which v0.2 does not define.
 - **`intentset list` selects it.** The new selector field `deliveries` takes `planned`, `built` and `unstated`, and it
-  matches the effective delivery. `--delivery` compiles to it, and `--count-by delivery` counts by it.
+  matches the effective delivery, and `--delivery` compiles to it. The list result stays `intentset/list/0.1`: a row
+  does not carry delivery, and `--count-by` does not group by it.
 - **The export carries it, so the export moves to 0.5** (export §7). The export's artifact is closed, so a 0.4 reader
   would reject an artifact that carries `delivery`. Each artifact carries the authored value, or null. A 0.5 reader
   rejects 0.4, as each earlier move did.
