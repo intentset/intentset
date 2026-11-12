@@ -123,6 +123,7 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
             reviewedAt: meta.reviewedAt ?? null,
             path: artifact.path,
             sourceHash: artifact.sourceHash,
+            contentHash: artifact.contentHash,
             body: artifact.body,
           },
           withheld,
@@ -149,7 +150,7 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
       if (bundle === null) return unavailable("intentset_context");
       const artifacts = bundle.artifacts.map((member) => {
         const artifact = graph.artifacts.get(member.id) as Artifact;
-        return { ...member, sourceHash: artifact.sourceHash, body: artifact.body };
+        return { ...member, sourceHash: artifact.sourceHash, contentHash: artifact.contentHash, body: artifact.body };
       });
       return result(
         envelope(

@@ -11,7 +11,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC, RULE-UNRESOLVED-NOT-PASS]
@@ -27,7 +27,7 @@ intentset:
 
 ## Behavior
 
-Someone, or an agent, runs `intentset list` with options that name fields (type, status, delivery, owner, audience, visibility, an ancestor, availability, an extension, a link with a quantifier, the slice a record describes, a path a slice claims), or gives the same selector as JSON with `--where`, and gets the records that match, from the repository's tree or from an export with `--from`. The fields combine with AND and the values of one field with OR, matching is exact, and a link predicate looks one hop (spec/list.md §1). `describing` and `claims` use the definitions `review` and `context` use, which core now holds, so a consumer that calls `select` no longer copies them. The result is a table, the `intentset/list/0.1` JSON, or the matched IDs, and names its snapshot, the validation's status and totals, the normalized selector, and the counts considered, withheld, matched and undetermined, with `--count-by` counting the matches by one field. The command never writes.
+Someone, or an agent, runs `intentset list` with options that name fields (type, status, delivery, owner, audience, visibility, an ancestor, availability, an extension, a link with a quantifier, the slice a record describes, a path a slice claims), or gives the same selector as JSON with `--where`, and gets the records that match, from the repository's tree or from an export with `--from`. The fields combine with AND and the values of one field with OR, matching is exact, and a link predicate looks one hop (spec/list.md §1). `describing` and `claims` use the definitions `review` and `context` use, which core now holds, so a consumer that calls `select` no longer copies them. The result is a table, the `intentset/list/0.1` JSON, or the matched IDs, and names its snapshot, the validation's status and totals, the normalized selector, and the counts considered, withheld, matched and undetermined, with `--count-by` counting the matches by one field. `--count-by delivery` groups by the effective delivery, `unstated` by name, so each group's count is what `--delivery` with that value lists (ADR 0017). The command never writes.
 
 ## Preconditions
 

@@ -28,6 +28,7 @@ function stubGraph(nodes: Record<string, Node>): Graph {
       meta: { id, type: node.type, links: node.links ?? {}, verification: node.verification, slice: node.slice },
       path: `${id}.md`,
       sourceHash: `src:${id}:${node.version ?? "1"}`,
+      contentHash: `content:${id}:${node.version ?? "1"}`,
       body: "",
       headings: [],
       foreign: {},

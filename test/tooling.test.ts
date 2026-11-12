@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
+import { plainCarrier, readArtifact } from "@intentset/core";
 
 const root = resolve(import.meta.dirname, "..");
 
@@ -367,15 +367,17 @@ test("the worked example's knowledge is reviewed against its sources as they are
     ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"],
     "a pin on each explained source and each rule governing the explained behavior (publication §3)",
   );
+  // The pins are content hashes (ADR 0018), so approving or implementing a source leaves the knowledge current.
+  assert.match(knowledge, /^ {6}hash: content-v1$/mu, "the example pins content-v1, as publication §3 recommends");
   for (const [, id, pinned] of pins) {
-    const current = createHash("sha256")
-      .update(await readFile(join(dir, `${id}.md`)))
-      .digest("hex");
+    const { artifact } = readArtifact(plainCarrier(`${id}.md`, await readFile(join(dir, `${id}.md`), "utf8")));
+    const current = artifact?.contentHash;
     assert.equal(
       pinned,
       current,
-      `KB-ASMT-SCHEDULE pins ${id} at ${pinned}, and ${id}.md now hashes to ${current}: review the knowledge against ` +
-        `it, then set the pin to that hash (shasum -a 256 examples/scheduling/${id}.md) and update reviewedAt`,
+      `KB-ASMT-SCHEDULE pins ${id} at ${pinned}, and ${id}.md's content hash is now ${current}: review the knowledge ` +
+        `against it, then set the pin to that hash (\`intentset context ${id} --json\` prints it as contentHash) and ` +
+        "update reviewedAt",
     );
   }
 });

@@ -32,6 +32,7 @@ test("current when every pin matches and a reviewer and date are named", () => {
     status: "current",
     changed: [],
     missing: [],
+    unknownHash: null,
     reviewer: "team-assessment",
     reviewedAt: "2026-09-30",
   });

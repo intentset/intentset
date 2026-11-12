@@ -34,10 +34,11 @@ intentset:
     RULE-ASMT-FUTURE: The release time must be in the future.
   extensions:
     intentset.org/review:
+      hash: content-v1
       sources:
-        BEH-ASMT-SCHEDULE: '881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873'
-        RULE-ASMT-AUTH: '63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094'
-        RULE-ASMT-FUTURE: '9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e'
+        BEH-ASMT-SCHEDULE: '6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7'
+        RULE-ASMT-AUTH: '949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb'
+        RULE-ASMT-FUTURE: daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed
 ---
 
 # Prepare a scheduled student assessment

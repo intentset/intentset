@@ -236,6 +236,8 @@ export interface Artifact {
   path: string;
   /** SHA-256 of the file bytes, lowercase hex. */
   sourceHash: string;
+  /** What a `content-v1` review pins: the record without its lifecycle and review fields (publication §3, ADR 0018). */
+  contentHash: string;
   /** The document body: everything after the frontmatter. */
   body: string;
   headings: Heading[];

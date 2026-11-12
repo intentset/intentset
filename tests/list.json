@@ -1464,6 +1464,59 @@
   },
   {
     "section": "list",
+    "name": "L11 count by delivery groups by the effective delivery, and names unstated",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "selector": {},
+    "countBy": "delivery",
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 15,
+        "undetermined": 0
+      },
+      "countBy": {
+        "field": "delivery",
+        "multiValued": false,
+        "groups": [
+          {
+            "value": "built",
+            "count": 2
+          },
+          {
+            "value": "planned",
+            "count": 1
+          },
+          {
+            "value": "unstated",
+            "count": 12
+          }
+        ]
+      }
+    },
+    "notes": "The groups agree with the L12 deliveries cases over the same tree: RULE-ASMT-AUTH is built because implemented claims an implementation (Core §7), and a record that states none, a type that never carries delivery included, is the group unstated, never null."
+  },
+  {
+    "section": "list",
     "name": "L12 built matches the field as written and a status that claims an implementation",
     "baseline": "scheduling",
     "patch": {

@@ -10,7 +10,7 @@
     "commit": null,
     "commitUnavailable": "The fixture describes no commit."
   },
-  "graphHash": "a7e7495f3a9cd0a2f8c7a66916bc20095ef5c6545227ce9be4195df6c1321e37",
+  "graphHash": "22dcf6eab59e8f1f03c64413c7dbc6e88aa34478b87e6ddd2d4d09415ac0c97b",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -232,7 +232,7 @@
       "profile": "intentset/knowledge/0.2",
       "revision": 1,
       "path": "KB-ASMT-SCHEDULE.md",
-      "sourceHash": "dbe2aa382421e2a3b8f8615c937441a8869f855d474ceee06e31fdfd5c830021",
+      "sourceHash": "8b56db9e7810bd2d0fea8cca87a43463188775945831d313a4ee01b68720182e",
       "parent": null,
       "links": {
         "explains": [
@@ -260,10 +260,11 @@
       "verification": null,
       "extensions": {
         "intentset.org/review": {
+          "hash": "content-v1",
           "sources": {
-            "BEH-ASMT-SCHEDULE": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
-            "RULE-ASMT-AUTH": "63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094",
-            "RULE-ASMT-FUTURE": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e"
+            "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
+            "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
+            "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
           }
         }
       }

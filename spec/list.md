@@ -3,7 +3,7 @@ title: Intentset List Contract v0.1
 id: intentset/list/0.1
 status: draft
 revision: 2026-11-12
-implementation: 0.12.0
+implementation: 0.13.0
 ---
 
 # Intentset List Contract v0.1
@@ -146,8 +146,10 @@ that is seen is seen whole.
 
 ## 4. Counting by a field
 
-A tool MAY count the matched records by one field: `type`, `status`, `owner`, `visibility`, `audience`, `product`,
-`release`, `role`, `edition` or `flag`, the last five from availability. A field a record can hold several values of
+A tool MAY count the matched records by one field: `type`, `status`, `delivery`, `owner`, `visibility`, `audience`,
+`product`, `release`, `role`, `edition` or `flag`, the last five from availability. `delivery` groups by the effective
+delivery that `deliveries` matches (§1), with the group `unstated`, never null, for a record that states none, so each
+group's count is what `--delivery` with that value lists. A row does not carry delivery. A field a record can hold several values of
 (`audience` and the availability dimensions) counts the record once under each value it holds and under null when it
 holds none, so the counts can sum to more than the records matched, and the result says the field is multi-valued.
 Groups are sorted by value, null last. A count is a number of records: a list never writes a percentage.

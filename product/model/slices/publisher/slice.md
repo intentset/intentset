@@ -10,9 +10,9 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
-    implements: [BEH-PUBLISH]
+    implements: [BEH-PUBLISH, BEH-REVIEW-PINS]
     dependsOn: [SLICE-CORE, SLICE-MARKSET-ADAPTER]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
@@ -44,4 +44,4 @@ The exports of `packages/publisher/src/index.ts`, reached by other packages as `
 
 ## Verification
 
-The package's tests under `packages/publisher/test/`. TEST-PUBLISH verifies the behavior it implements, BEH-PUBLISH, naming the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/publisher/test/`. TEST-PUBLISH verifies BEH-PUBLISH and TEST-REVIEW-PINS verifies BEH-REVIEW-PINS, each naming the tests whose titles carry its behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

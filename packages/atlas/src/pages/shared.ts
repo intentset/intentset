@@ -40,7 +40,9 @@ export function reviewCell(review: ReviewStatus): string {
   if (review.status === "current")
     return `${badge("review current", "success")} reviewed by ${text(review.reviewer ?? "")}`;
   const reasons: string[] = [];
-  if (review.changed.length > 0) reasons.push(`changed since review: ${review.changed.map(code).join(", ")}`);
+  if (review.unknownHash !== null)
+    reasons.push(`pins of a kind this version does not read: ${code(review.unknownHash)}`);
+  else if (review.changed.length > 0) reasons.push(`changed since review: ${review.changed.map(code).join(", ")}`);
   if (review.missing.length > 0) reasons.push(`not pinned: ${review.missing.map(code).join(", ")}`);
   if (review.reviewer === null) reasons.push("no reviewer");
   if (review.reviewedAt === null) reasons.push("no review date");

@@ -16,7 +16,14 @@ import {
 } from "../src/index.ts";
 import { customer, example, reviewed, snapshotOf } from "./harness.ts";
 
-const CURRENT: ReviewStatus = { status: "current", changed: [], missing: [], reviewer: "r", reviewedAt: "2026-09-30" };
+const CURRENT: ReviewStatus = {
+  status: "current",
+  changed: [],
+  missing: [],
+  unknownHash: null,
+  reviewer: "r",
+  reviewedAt: "2026-09-30",
+};
 
 function knowledge(availability: Availability | undefined, extra: Partial<Artifact["meta"]> = {}): Artifact {
   return {
@@ -36,6 +43,7 @@ function knowledge(availability: Availability | undefined, extra: Partial<Artifa
     },
     path: "KB-X.md",
     sourceHash: "0".repeat(64),
+    contentHash: "0".repeat(64),
     body: "\n# Knowledge\n",
     headings: [],
     foreign: {},

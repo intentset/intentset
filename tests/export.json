@@ -84,7 +84,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "graphHash": "6914e830beab0ab9fe5564eb18a9e93bbdadaa242379e9e79275b82aaf795bb5"
+      "graphHash": "3b31c362b352b3e85903c3ae7e4c317ebe73c974db79425ffc1c4ffc92b2cd47"
     },
     "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
   },

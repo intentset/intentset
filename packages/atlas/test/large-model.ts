@@ -33,6 +33,7 @@ export function largeModel(capabilities: number, perCapability: number): LargeMo
       },
       path: `product/${id}.md`,
       sourceHash: "0".repeat(64),
+      contentHash: "0".repeat(64),
       headings: [],
       foreign: {},
       body: `# ${id}\n\nA generated record.\n`,

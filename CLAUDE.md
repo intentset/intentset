@@ -100,13 +100,14 @@ select(graph | checkedExport, selector, { includeRestricted?, registries? }): Se
 listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
 deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017: the field, else built for implemented/released/deprecated
 activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
-// Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016); the CLI re-exports them until 0.13
+// Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016)
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
 exportGraph(result: ValidationResult, registries, meta): ExportEnvelope   // meta.reports, meta.includeRestricted (spec/export.md)
 readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, envelope, supplied } | { ok: false, category, problems }
 // the consumer's checks of spec/export.md §5; shape checks mirror export.schema.json (a mutant test holds them equal)
 // report builders live with their checks: evidenceReport (verification), knowledgeReport (publisher), ownershipReport (architecture)
 graphHash(graph): string; canonicalJson(value): string; sha256Hex(input): string
+contentHashOf(frontmatter, body): string   // publication §3, ADR 0018: what a content-v1 pin holds; every Artifact carries contentHash
 sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
 ```
 
@@ -125,6 +126,7 @@ subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?
 // @intentset/publisher
 publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, diagnostics, ok }
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
+reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null
 
 // @intentset/help  (no dependencies; a browser runtime)
 readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
@@ -480,6 +482,10 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   scenario, slice or contract says whether the work exists, apart from its approval. The effective delivery
   (`deliveryOf`) is the field, else `built` for implemented, released or deprecated, else not stated; `approved` is never
   read as built. An agent may write it, since it states a fact about the code; it never approves.
+- **Review pins** (publication §3, ADR 0018, 2026-11-12): a knowledge review's `intentset.org/review` names its pin
+  kind in `hash`. `content-v1` pins each source's `contentHash`, which leaves out `status`, `delivery`, `reviewedBy`,
+  `reviewedAt` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
+  (`sourceHash`), as every earlier review does; any other kind matches nothing. `sourceHash` itself is unchanged.
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
   inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.

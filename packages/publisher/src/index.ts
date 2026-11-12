@@ -69,11 +69,14 @@ export {
 } from "./request.ts";
 export {
   CURRENT_PIN,
+  PIN_KINDS,
+  type PinKind,
   REVIEW_EXTENSION,
   type ReviewRecord,
   type ReviewStatus,
   bindReviewPins,
   knowledgeReport,
+  pinHash,
   readReviewRecord,
   reviewSources,
   reviewStatus,
