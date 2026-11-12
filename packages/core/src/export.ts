@@ -20,6 +20,7 @@ import {
   type ExportEnvelope,
   type ExportImpactHit,
   type ExportReports,
+  type Graph,
   LINK_KINDS,
   type Level,
   type LinkKind,
@@ -60,7 +61,7 @@ export interface ExportMeta {
 /** spec/export.md: the `intentset/export/0.3` envelope over a validation result. */
 export function exportGraph(result: ValidationResult, registries: Registries, meta: ExportMeta): ExportEnvelope {
   const { graph } = result;
-  const withheld = withheldIds(result, meta.includeRestricted === true);
+  const withheld = withheldIds(graph, meta.includeRestricted === true);
   const ids = [...graph.artifacts.keys()].filter((id) => !withheld.ids.has(id)).sort(compareStrings);
   const errors = result.diagnostics.filter((d) => d.severity === "error").length;
   const warnings = result.diagnostics.length - errors;
@@ -95,9 +96,22 @@ export function exportGraph(result: ValidationResult, registries: Registries, me
       diagnostics: result.diagnostics.length - diagnostics.length,
     },
     registries: exportRegistries(registries, withheld.ids),
-    artifacts: ids.map((id) => exportArtifact(result, id, meta.includeBodies === true, withheld.ids)),
+    artifacts: ids.map((id) => exportArtifact(graph, id, meta.includeBodies === true, withheld.ids)),
     reports: withholdReports(meta.reports ?? {}, withheld),
   };
+}
+
+/**
+ * The artifacts an export of `graph` would carry, without bodies, and how many it would withhold: the projection
+ * `select` reads a graph through (spec/list.md §2), so a list from the tree and a list from its export agree.
+ */
+export function projectArtifacts(
+  graph: Graph,
+  includeRestricted: boolean,
+): { artifacts: ExportArtifact[]; withheld: number } {
+  const withheld = withheldIds(graph, includeRestricted);
+  const ids = [...graph.artifacts.keys()].filter((id) => !withheld.ids.has(id)).sort(compareStrings);
+  return { artifacts: ids.map((id) => exportArtifact(graph, id, false, withheld.ids)), withheld: withheld.ids.size };
 }
 
 interface Withheld {
@@ -110,11 +124,11 @@ interface Withheld {
 
 const WITHHELD_VISIBILITIES: readonly Visibility[] = ["restricted"];
 
-function withheldIds(result: ValidationResult, includeRestricted: boolean): Withheld {
+function withheldIds(graph: Graph, includeRestricted: boolean): Withheld {
   const ids = new Set<string>();
   const paths = new Set<string>();
   if (!includeRestricted) {
-    for (const [id, artifact] of result.graph.artifacts) {
+    for (const [id, artifact] of graph.artifacts) {
       if (WITHHELD_VISIBILITIES.includes(artifact.meta.visibility)) {
         ids.add(id);
         paths.add(artifact.path);
@@ -158,13 +172,7 @@ function withholdDiagnostics(diagnostics: readonly Diagnostic[], withheld: Withh
   return out;
 }
 
-function exportArtifact(
-  result: ValidationResult,
-  id: string,
-  includeBody: boolean,
-  withheld: ReadonlySet<string>,
-): ExportArtifact {
-  const { graph } = result;
+function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld: ReadonlySet<string>): ExportArtifact {
   const artifact = graph.artifacts.get(id);
   if (artifact === undefined) throw new Error(`graph has no artifact ${id}`);
   const { meta } = artifact;

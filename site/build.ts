@@ -208,6 +208,7 @@ export const RAILS: Rail[] = [
       ["TypeScript + Amplify Gen 2", "specifications/profile-typescript-amplify-gen2/index.html"],
       ["Publication profile", "specifications/publication/index.html"],
       ["Export contract", "specifications/export/index.html"],
+      ["List contract", "specifications/list/index.html"],
       ["Markset", "markset/index.html"],
       ["Conformance", "conformance/index.html"],
     ],
@@ -282,6 +283,7 @@ export const SPECS: Array<{ slug: string; file: string }> = [
   { slug: "profile-typescript-amplify-gen2", file: "profile-typescript-amplify-gen2-0.2.md" },
   { slug: "publication", file: "publication.md" },
   { slug: "export", file: "export.md" },
+  { slug: "list", file: "list.md" },
 ];
 
 /**
@@ -688,7 +690,7 @@ interface Case {
 }
 
 /** The order the conformance page lists the sections in: the specifications' order. */
-const SUITE_SECTIONS = ["core", "vsa", "evidence", "export", "publication"];
+const SUITE_SECTIONS = ["core", "vsa", "evidence", "export", "publication", "list"];
 
 /**
  * The conformance page, generated from tests/ so it cannot drift from the suite:

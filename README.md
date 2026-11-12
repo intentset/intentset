@@ -85,8 +85,8 @@ Ten packages are published under the `@intentset` scope: `core`, `markset-adapte
 
 - Specifications: [`spec/core-0.2.md`](spec/core-0.2.md), [`spec/vsa-0.2.md`](spec/vsa-0.2.md),
   [`spec/profile-typescript-amplify-gen2-0.2.md`](spec/profile-typescript-amplify-gen2-0.2.md),
-  [`spec/publication.md`](spec/publication.md), and the export contract other tools read,
-  [`spec/export.md`](spec/export.md)
+  [`spec/publication.md`](spec/publication.md), the export contract other tools read,
+  [`spec/export.md`](spec/export.md), and the list contract `intentset list` writes, [`spec/list.md`](spec/list.md)
 - Worked example: [`examples/scheduling/`](examples/scheduling/), an invented product
 - Conformance suite: [`tests/`](tests/), one JSON file per area, schema in
   [`spec/conformance.schema.json`](spec/conformance.schema.json); export consumer fixtures in

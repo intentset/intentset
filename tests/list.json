@@ -1,0 +1,1465 @@
+[
+  {
+    "section": "list",
+    "name": "L01 fields combine with AND",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "rule"
+      ],
+      "statuses": [
+        "draft"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "RULE-ASMT-FUTURE"
+        }
+      ]
+    },
+    "notes": "Both rules are rules; only one is still a draft, so only it matches both fields."
+  },
+  {
+    "section": "list",
+    "name": "L01 a record that fails one field is not matched",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "rule"
+      ],
+      "owners": [
+        "team-platform"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": []
+    },
+    "notes": "Every rule is owned by team-assessment."
+  },
+  {
+    "section": "list",
+    "name": "L01 the empty selector matches every record",
+    "baseline": "scheduling",
+    "selector": {},
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 15,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ],
+      "selector": {}
+    }
+  },
+  {
+    "section": "list",
+    "name": "L02 values within a field combine with OR",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "scenario",
+        "rule"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 3,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L02 a value no record has adds nothing",
+    "baseline": "scheduling",
+    "selector": {
+      "statuses": [
+        "approved",
+        "retired"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L02 an empty list is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "types": []
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/types"
+        }
+      ]
+    },
+    "notes": "An empty OR matches nothing, which is never what a selector means: spec/list.md §1."
+  },
+  {
+    "section": "list",
+    "name": "L02 a value outside a closed set is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "statuses": [
+        "done"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/statuses/0"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L03 a trailing * matches by prefix",
+    "baseline": "scheduling",
+    "selector": {
+      "ids": [
+        "RULE-*",
+        "SCN-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 3,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L03 an ID without * matches only itself",
+    "baseline": "scheduling",
+    "selector": {
+      "ids": [
+        "RULE-ASMT"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": []
+    }
+  },
+  {
+    "section": "list",
+    "name": "L03 a * that is not trailing is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "ids": [
+        "RULE-*-AUTH"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/ids/0"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L04 under follows parent toward the product",
+    "baseline": "scheduling",
+    "selector": {
+      "under": [
+        "OUT-PREPARE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 4,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L04 a record is not under itself",
+    "baseline": "scheduling",
+    "selector": {
+      "under": [
+        "CAP-ASMT-ASSIGN"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L04 under the product reaches the whole chain",
+    "baseline": "scheduling",
+    "selector": {
+      "under": [
+        "PRD-LANTERN"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 6,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L05 availability matches exactly in each dimension it names",
+    "baseline": "scheduling",
+    "selector": {
+      "availability": {
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ]
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 2,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        }
+      ],
+      "notes": [
+        "Status and availability are authored claims, not a reviewed release snapshot (Core §7)."
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L05 a release no registry holds matches no record, and says so",
+    "baseline": "scheduling",
+    "selector": {
+      "availability": {
+        "releases": [
+          "pilot-2"
+        ]
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": [],
+      "notes": [
+        "Status and availability are authored claims, not a reviewed release snapshot (Core §7).",
+        "availability.releases: pilot-2 is not in the releases registry, so it matches no record."
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L05 notReleases matches every record with no availability",
+    "baseline": "scheduling",
+    "selector": {
+      "availability": {
+        "notReleases": [
+          "pilot-1"
+        ]
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 13,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ],
+      "notes": [
+        "Status and availability are authored claims, not a reviewed release snapshot (Core §7)."
+      ]
+    },
+    "notes": "A record with no availability has no release, so it names none of those listed: spec/list.md §1.1."
+  },
+  {
+    "section": "list",
+    "name": "L05 releases and notReleases together select what is new in a release",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "availability": {
+        "releases": [
+          "pilot-1"
+        ],
+        "notReleases": [
+          "pilot-1"
+        ]
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": [],
+      "notes": [
+        "Status and availability are authored claims, not a reviewed release snapshot (Core §7)."
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L06 some: a behavior governed by a draft rule",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "match": {
+            "statuses": [
+              "draft"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        }
+      ],
+      "selector": {
+        "types": [
+          "behavior"
+        ],
+        "links": [
+          {
+            "direction": "out",
+            "kind": "governedBy",
+            "quantifier": "some",
+            "match": {
+              "statuses": [
+                "draft"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "section": "list",
+    "name": "L06 none: the claims no verification verifies",
+    "baseline": "scheduling",
+    "patch": {
+      "TEST-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.verifies": [
+            "BEH-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "rule",
+        "scenario"
+      ],
+      "links": [
+        {
+          "direction": "in",
+          "kind": "verifies",
+          "quantifier": "none"
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 3,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L06 none fails where one end exists",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "in",
+          "kind": "verifies",
+          "quantifier": "none"
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": []
+    }
+  },
+  {
+    "section": "list",
+    "name": "L06 all: every end must match",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "quantifier": "all",
+          "match": {
+            "statuses": [
+              "approved"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": []
+    },
+    "notes": "One of the behavior's two rules is approved, the other still a draft."
+  },
+  {
+    "section": "list",
+    "name": "L06 all holds for a record with no such links",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "rule"
+      ],
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "quantifier": "all",
+          "match": {
+            "statuses": [
+              "approved"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 2,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        }
+      ]
+    },
+    "notes": "A rule authors no governedBy, so every one of its none matches: spec/list.md §1.3."
+  },
+  {
+    "section": "list",
+    "name": "L06 in: parent finds the records with children of a type",
+    "baseline": "scheduling",
+    "selector": {
+      "links": [
+        {
+          "direction": "in",
+          "kind": "parent",
+          "match": {
+            "types": [
+              "measure"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "OUT-PREPARE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L06 all needs a match",
+    "baseline": "scheduling",
+    "selector": {
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "quantifier": "all"
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/links/0/match"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L06 a link predicate looks one hop",
+    "baseline": "scheduling",
+    "selector": {
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "match": {
+            "links": [
+              {
+                "direction": "in",
+                "kind": "verifies"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/links/0/match/links"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L07 a withheld end leaves all undetermined",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "quantifier": "all",
+          "match": {
+            "statuses": [
+              "draft"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 14,
+        "withheld": 1,
+        "matched": 0,
+        "undetermined": 1
+      },
+      "rows": [],
+      "undetermined": [
+        "BEH-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "The visible rule is a draft; the withheld one might not be, so whether all are drafts cannot be said."
+  },
+  {
+    "section": "list",
+    "name": "L07 visible ends that decide are not undetermined",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "match": {
+            "statuses": [
+              "draft"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 14,
+        "withheld": 1,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        }
+      ],
+      "undetermined": []
+    }
+  },
+  {
+    "section": "list",
+    "name": "L07 a withheld end of a kind the record cannot have changes nothing",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "selector": {
+      "types": [
+        "behavior"
+      ],
+      "links": [
+        {
+          "direction": "out",
+          "kind": "verifies",
+          "quantifier": "none"
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 14,
+        "withheld": 1,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        }
+      ],
+      "undetermined": []
+    },
+    "notes": "The behavior's withheld end is a governedBy; a behavior authors no verifies (Core §5)."
+  },
+  {
+    "section": "list",
+    "name": "L07 under is undetermined where the parent is withheld",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "selector": {
+      "under": [
+        "OUT-PREPARE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 14,
+        "withheld": 1,
+        "matched": 2,
+        "undetermined": 1
+      },
+      "rows": [
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        }
+      ],
+      "undetermined": [
+        "BEH-ASMT-SCHEDULE"
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L07 what reaches a slice through a withheld behavior is undetermined",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "selector": {
+      "describing": [
+        "SLICE-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 14,
+        "withheld": 1,
+        "matched": 3,
+        "undetermined": 4
+      },
+      "rows": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        }
+      ],
+      "undetermined": [
+        "RULE-ASMT-AUTH",
+        "RULE-ASMT-FUTURE",
+        "SCN-ASMT-SCHEDULE",
+        "TEST-ASMT-SCHEDULE"
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L08 describing is Core §10's set",
+    "baseline": "scheduling",
+    "selector": {
+      "describing": [
+        "SLICE-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 8,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "The knowledge that explains the behavior is not among them: Core §10."
+  },
+  {
+    "section": "list",
+    "name": "L08 describing a record that is not a slice matches nothing",
+    "baseline": "scheduling",
+    "selector": {
+      "describing": [
+        "BEH-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": [],
+      "notes": [
+        "describing: BEH-ASMT-SCHEDULE is a behavior, not a slice."
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L08 describing a slice the source does not hold matches nothing",
+    "baseline": "scheduling",
+    "selector": {
+      "describing": [
+        "SLICE-ASMT-NONE"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": [],
+      "notes": [
+        "describing: SLICE-ASMT-NONE is not a slice in this source, so nothing describes it."
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L08 claims finds the slice that claims a path",
+    "baseline": "scheduling",
+    "selector": {
+      "claims": [
+        "src/features/assessment/schedule/form.ts"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L08 a path no claim matches",
+    "baseline": "scheduling",
+    "selector": {
+      "claims": [
+        "src/features/assessment/other.ts"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 0,
+        "undetermined": 0
+      },
+      "rows": []
+    }
+  },
+  {
+    "section": "list",
+    "name": "L09 an unknown key is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "rule"
+      ],
+      "colour": [
+        "red"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/colour"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L09 an unknown availability field is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "availability": {
+        "release": [
+          "pilot-1"
+        ]
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/availability/release"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L09 an unknown key in a link predicate is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "quantity": "some"
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/links/0/quantity"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L09 an unknown key in a match is rejected",
+    "baseline": "scheduling",
+    "selector": {
+      "links": [
+        {
+          "direction": "out",
+          "kind": "governedBy",
+          "match": {
+            "state": [
+              "draft"
+            ]
+          }
+        }
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/links/0/match/state"
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L09 a selector that is not an object is rejected",
+    "baseline": "scheduling",
+    "selector": [
+      "types"
+    ],
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": ""
+        }
+      ]
+    }
+  },
+  {
+    "section": "list",
+    "name": "L10 the same input gives the same bytes",
+    "baseline": "scheduling",
+    "selector": {
+      "ids": [
+        "SCN-ASMT-SCHEDULE"
+      ],
+      "types": [
+        "scenario",
+        "rule",
+        "scenario"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "contract": "intentset/list/0.1",
+      "source": "tree",
+      "snapshot": {
+        "repository": "example/scheduling",
+        "commit": null,
+        "commitUnavailable": "fixture",
+        "uncommitted": false
+      },
+      "validation": {
+        "level": "L1",
+        "status": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "selector": {
+        "ids": [
+          "SCN-ASMT-SCHEDULE"
+        ],
+        "types": [
+          "rule",
+          "scenario"
+        ]
+      },
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 1,
+        "undetermined": 0
+      },
+      "rows": [
+        {
+          "id": "SCN-ASMT-SCHEDULE",
+          "type": "scenario",
+          "title": "Accept an eligible schedule",
+          "status": "draft",
+          "owner": "team-assessment",
+          "visibility": "internal",
+          "audiences": [
+            "engineering",
+            "product"
+          ],
+          "path": "SCN-ASMT-SCHEDULE.md",
+          "parent": null,
+          "availability": null,
+          "reviewedBy": null,
+          "reviewedAt": null
+        }
+      ],
+      "undetermined": [],
+      "countBy": null,
+      "notes": []
+    },
+    "notes": "The driver also reads every case's documents in reverse order and compares the bytes, and compares the list from the tree with the list from its export: spec/list.md §7."
+  },
+  {
+    "section": "list",
+    "name": "L11 count by owner",
+    "baseline": "scheduling",
+    "patch": {
+      "CONTRACT-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.owner": "team-platform"
+        }
+      },
+      "ADR-ASMT-SEAM.md": {
+        "frontmatter": {
+          "intentset.owner": "team-platform"
+        }
+      }
+    },
+    "selector": {},
+    "countBy": "owner",
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 15,
+        "undetermined": 0
+      },
+      "countBy": {
+        "field": "owner",
+        "multiValued": false,
+        "groups": [
+          {
+            "value": "team-assessment",
+            "count": 13
+          },
+          {
+            "value": "team-platform",
+            "count": 2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "section": "list",
+    "name": "L11 a multi-valued field counts each value, and a record with none under null",
+    "baseline": "scheduling",
+    "selector": {
+      "types": [
+        "behavior",
+        "knowledge",
+        "rule"
+      ]
+    },
+    "countBy": "release",
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "counts": {
+        "considered": 15,
+        "withheld": 0,
+        "matched": 4,
+        "undetermined": 0
+      },
+      "countBy": {
+        "field": "release",
+        "multiValued": true,
+        "groups": [
+          {
+            "value": "pilot-1",
+            "count": 2
+          },
+          {
+            "value": null,
+            "count": 2
+          }
+        ]
+      }
+    }
+  }
+]

@@ -252,7 +252,9 @@ Streamlane's integration (its increments 1 to 5) and Driftline (errors and usage
   keeps L2 green. Driftline is the first.
 
 What stays with the consumers: their read models, authorization per reader, atomic promotion, idempotent re-import
-and the screens, in their own repositories and under their own rules.
+and the screens, in their own repositories and under their own rules. (Narrowed by ADR 0016, 2026-11-11: a consumer
+keeps its screens, but selects records with `@intentset/core`'s `select` or `intentset list` rather than re-deriving
+the definitions of Core §5 and §10, such as the records that describe a slice.)
 
 ### After 0.4: help in the product (2026-10-04)
 

@@ -7,7 +7,8 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { test } from "node:test";
-import { SPEC_DIR, codes, expandCase, firstMismatch, loadSection, readJson, runCase } from "./cases.ts";
+import { type CountField, graphHash, listOutput, readSelector, select } from "../src/index.ts";
+import { FIXTURE_META, SPEC_DIR, codes, expandCase, firstMismatch, loadSection, readJson, runCase } from "./cases.ts";
 import { type Schema, validateSchema } from "./schema.ts";
 
 const conformanceSchema = readJson(join(SPEC_DIR, "conformance.schema.json")) as Schema;
@@ -49,6 +50,60 @@ test("the catalog's C01 to C09 each prefix at least one core case", () => {
   const names = loadSection("core").map((c) => c.name);
   for (let i = 1; i <= 9; i++) {
     const id = `C0${i}`;
+    assert.ok(
+      names.some((n) => n.startsWith(`${id} `)),
+      `no case for ${id}`,
+    );
+  }
+});
+
+// tests/list.json through core's own select (spec/list.md): the selector read, the list over the case's tree.
+const listCases = loadSection("list");
+
+test("tests/list.json is a valid conformance file", () => {
+  assert.deepEqual(validateSchema(conformanceSchema, listCases), []);
+  assert.ok(listCases.every((c) => c.section === "list"));
+  assert.equal(new Set(listCases.map((c) => c.name)).size, listCases.length, "case names are unique");
+});
+
+for (const testCase of listCases) {
+  test(`list: ${testCase.name}`, () => {
+    const run = runCase(expandCase(testCase));
+    assert.deepEqual(codes(run.diagnostics), [...(testCase.diagnostics ?? [])].sort());
+    const read = readSelector(testCase.selector ?? {});
+    let actual: unknown;
+    if (!read.ok) actual = { problems: read.problems };
+    else {
+      const errors = run.diagnostics.filter((d) => d.severity === "error").length;
+      actual = listOutput(
+        select(run.result.graph, read.selector, { registries: run.registries }),
+        {
+          source: "tree",
+          snapshot: {
+            repository: FIXTURE_META.repository,
+            commit: null,
+            commitUnavailable: FIXTURE_META.commitUnavailable,
+            uncommitted: false,
+            graphHash: graphHash(run.result.graph),
+          },
+          validation: {
+            level: "L1",
+            status: errors > 0 ? "fail" : "pass",
+            errors,
+            warnings: run.diagnostics.length - errors,
+          },
+        },
+        (testCase.countBy ?? null) as CountField | null,
+      );
+    }
+    assert.equal(firstMismatch(testCase.list, JSON.parse(JSON.stringify(actual))), null);
+  });
+}
+
+test("the catalog's L01 to L11 each prefix at least one list case", () => {
+  const names = listCases.map((c) => c.name);
+  for (let i = 1; i <= 11; i++) {
+    const id = `L${String(i).padStart(2, "0")}`;
     assert.ok(
       names.some((n) => n.startsWith(`${id} `)),
       `no case for ${id}`,

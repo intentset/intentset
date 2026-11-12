@@ -203,6 +203,15 @@ export function compareCase(expected: ConformanceCase, actual: Actual): AspectRe
     }
   }
 
+  if (expected.list !== undefined) {
+    if (actual.list === undefined) {
+      aspects.push({ aspect: "list", status: "skip", detail: "driver produced no list" });
+    } else {
+      const diff = firstMismatch(expected.list, actual.list);
+      aspects.push(diff ? { aspect: "list", status: "fail", detail: diff } : { aspect: "list", status: "pass" });
+    }
+  }
+
   return aspects;
 }
 

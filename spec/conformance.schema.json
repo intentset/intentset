@@ -154,6 +154,13 @@
           }
         }
       },
+      "selector": {
+        "description": "List cases (spec/list.md): the selector, as data. It is any JSON value, because a case may hold one spec/list.md §1 rejects."
+      },
+      "countBy": {
+        "enum": ["type", "status", "owner", "visibility", "audience", "product", "release", "role", "edition", "flag"],
+        "description": "List cases: the field the matched records are counted by (spec/list.md §4)."
+      },
       "valid": {
         "type": "boolean",
         "description": "True when no diagnostic is an error."
@@ -201,6 +208,10 @@
             }
           }
         }
+      },
+      "list": {
+        "type": "object",
+        "description": "Optional, list cases: fields of the intentset/list/0.1 result that must match (deep partial, as `export` is). A rejected selector is expected as {\"problems\": [...]}, each entry naming its JSON `pointer`."
       },
       "notes": {
         "type": "string"

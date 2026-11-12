@@ -34,11 +34,14 @@ const STAGED_KEYS = [
   "changedSince",
   "architecture",
   "request",
+  "selector",
+  "countBy",
   "valid",
   "diagnostics",
   "artifacts",
   "export",
   "published",
+  "list",
   "notes",
 ] as const;
 
@@ -128,11 +131,14 @@ export function expand(testCase: ConformanceCase, options: { examplesDir: string
     changedSince: testCase.changedSince,
     architecture: testCase.architecture,
     request: testCase.request,
+    selector: testCase.selector,
+    countBy: testCase.countBy,
     valid: testCase.valid,
     diagnostics: testCase.diagnostics,
     artifacts: testCase.artifacts,
     export: testCase.export,
     published: testCase.published,
+    list: testCase.list,
     notes: testCase.notes,
   };
   const staged: Record<string, unknown> = {};

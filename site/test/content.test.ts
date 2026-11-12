@@ -64,7 +64,7 @@ test("the status notes are on their pages, as callouts, and none still says the 
     ],
     [
       "specifications/index.html",
-      `All five documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
+      `All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
     ],
     [
       "markset/index.html",
