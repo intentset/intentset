@@ -64,6 +64,23 @@ test("BEH-LIST: --has compiles to a link predicate with its quantifier, and --co
   assert.doesNotMatch(counted.out, /%/);
 });
 
+test("BEH-LIST, BEH-DELIVERY: --delivery selects the effective delivery, and an approved record is not built", async (t) => {
+  const dir = await example(t);
+  edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "status: draft\n  delivery: built");
+  edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: implemented");
+  edit(dir, "RULE-ASMT-FUTURE", "status: draft", "status: approved");
+  const built = await run(dir, "list", "--delivery", "built", "--format", "ids");
+  assert.equal(built.code, 0, built.err);
+  assert.equal(built.out, "BEH-ASMT-SCHEDULE\nRULE-ASMT-AUTH\n");
+  const table = await run(dir, "list", "--status", "draft", "--delivery", "built");
+  assert.match(table.out, /Selector: status draft, and delivery built\n/);
+  const unstated = await run(dir, "list", "--type", "rule", "--delivery", "unstated", "--format", "ids");
+  assert.equal(unstated.out, "RULE-ASMT-FUTURE\n");
+  const bad = await run(dir, "list", "--delivery", "implemented");
+  assert.equal(bad.code, 2);
+  assert.match(bad.err, /--delivery: implemented is not one of planned, built, unstated/);
+});
+
 test("BEH-LIST: --from reads an export alone and gives the tree's answer, with review fields not supplied", async (t) => {
   const dir = await example(t);
   const out = join(temp(t), "graph.json");

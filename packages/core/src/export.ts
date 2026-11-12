@@ -219,6 +219,7 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
     type: meta.type,
     title: meta.title,
     status: meta.status,
+    delivery: meta.delivery ?? null,
     owner: meta.owner,
     visibility: meta.visibility,
     audiences: [...meta.audiences].sort(compareStrings),

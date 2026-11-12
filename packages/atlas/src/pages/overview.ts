@@ -1,7 +1,7 @@
 /**
  * index.html: the product and capability overview (Core §10). The navigation
  * spine from each product down to its capabilities, then each capability's
- * behaviors with their status, owning slice, and claim counts: link counts
+ * behaviors with their status, delivery (built, planned or not stated, ADR 0017), owning slice, and claim counts: link counts
  * from the graph, current-pass counts only from supplied evidence. Every
  * count names its denominator and what it measures.
  */
@@ -11,6 +11,7 @@ import type { Model } from "../model.ts";
 import type { PageSource } from "../page.ts";
 import { recordPath } from "../record-text.ts";
 import { badge, code, idLink, link, ofTotal, plural, table, text } from "../text.ts";
+import { deliveryWord } from "./shared.ts";
 
 const SPINE: readonly ArtifactType[] = ["product", "intent", "outcome", "measure", "capability"];
 
@@ -39,6 +40,16 @@ export function overviewPage(model: Model): PageSource {
         ["Capabilities", `${capabilities.length} of ${total}`, "of all artifacts in the snapshot"],
         ["Behaviors with an owning slice", `${owned} of ${behaviors.length}`, "of behaviors; links (implements)"],
         ["Behaviors named by a verification", `${linked} of ${behaviors.length}`, "of behaviors; links (verifies)"],
+        [
+          "Behaviors whose work is built",
+          `${behaviors.filter((b) => deliveryWord(b.meta)?.word === "built").length} of ${behaviors.length}`,
+          "of behaviors; delivery as written, or a status that claims an implementation",
+        ],
+        [
+          "Behaviors whose work is planned",
+          `${behaviors.filter((b) => deliveryWord(b.meta)?.word === "planned").length} of ${behaviors.length}`,
+          "of behaviors; delivery as written",
+        ],
         model.hasEvidence
           ? [
               "Behaviors with current passing evidence",
@@ -76,7 +87,14 @@ export function overviewPage(model: Model): PageSource {
     body.push(...spine(model, roots, new Set()), "");
   }
 
-  body.push("## Capabilities", "");
+  body.push(
+    "## Capabilities",
+    "",
+    "Each capability and behavior shows its status and its delivery apart. Status says what a person approved; " +
+      "delivery says whether the code exists: built, planned, or not stated. A draft can be built: an adoption " +
+      "writes records from existing code as drafts with `delivery: built`, and a proposal says `delivery: planned`.",
+    "",
+  );
   if (capabilities.length === 0) body.push("No capability records are in this snapshot.", "");
   else body.push(...capabilityCards(model, capabilities), ...coverageChart(model, capabilities));
   for (const capability of capabilities) body.push(...capabilitySection(model, capability));
@@ -109,7 +127,7 @@ function capabilityCards(model: Model, capabilities: Artifact[]): string[] {
       `  ${link(text(capability.meta.title), `#${id}`)}`,
       "",
       `  {.small}`,
-      `  ${capability.meta.status} · ${plural(behaviors.length, "behavior")} · ${ofTotal(linked, behaviors.length, "behavior")} named by a verification (links) · ${verified}`,
+      `  ${capability.meta.status} · ${deliveryWord(capability.meta)?.word} · ${plural(behaviors.length, "behavior")} · ${ofTotal(linked, behaviors.length, "behavior")} named by a verification (links) · ${verified}`,
       "  :::",
     ].join("\n");
   });
@@ -177,6 +195,7 @@ function capabilitySection(model: Model, capability: Artifact): string[] {
   const facts = [
     "capability",
     `status ${capability.meta.status}`,
+    `delivery ${deliveryWord(capability.meta)?.word}`,
     `owner ${text(capability.meta.owner)}`,
     parent === undefined
       ? "no parent"
@@ -226,10 +245,14 @@ function behaviorTable(model: Model, behaviors: Artifact[]): string[] {
     return [
       `${idLink(id, recordPath(id))} ${text(behavior.meta.title)}`,
       behavior.meta.status,
+      deliveryWord(behavior.meta)?.word ?? "",
       owners.length === 0 ? badge("no owner", "warn") : owners.map((o) => idLink(o, recordPath(o))).join(", "),
       ofTotal(linked, claims.length, "claim"),
       verified,
     ];
   });
-  return table(["Behavior", "Status", "Owning slice", "Claims linked (links)", "Claims verified (evidence)"], rows);
+  return table(
+    ["Behavior", "Status", "Delivery", "Owning slice", "Claims linked (links)", "Claims verified (evidence)"],
+    rows,
+  );
 }

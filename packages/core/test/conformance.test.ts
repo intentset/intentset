@@ -100,9 +100,9 @@ for (const testCase of listCases) {
   });
 }
 
-test("the catalog's L01 to L11 each prefix at least one list case", () => {
+test("the catalog's L01 to L12 each prefix at least one list case", () => {
   const names = listCases.map((c) => c.name);
-  for (let i = 1; i <= 11; i++) {
+  for (let i = 1; i <= 12; i++) {
     const id = `L${String(i).padStart(2, "0")}`;
     assert.ok(
       names.some((n) => n.startsWith(`${id} `)),

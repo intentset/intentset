@@ -6,7 +6,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "contract": "intentset/export/0.4",
+      "contract": "intentset/export/0.5",
       "spec": "0.2",
       "generatedAt": "2026-01-01T00:00:00Z",
       "repository": "example/scheduling",
@@ -280,6 +280,58 @@
       ]
     },
     "notes": "Every artifact carries slice, verification, measure and tips, null where the type has none; a measure's direction is null when the author set none."
+  },
+  {
+    "section": "export",
+    "name": "export delivery as authored, null where a record states none",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {},
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "delivery": "built"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN",
+          "delivery": null
+        },
+        {},
+        {},
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "delivery": null
+        },
+        {},
+        {},
+        {},
+        {},
+        {
+          "id": "RULE-ASMT-AUTH",
+          "status": "implemented",
+          "delivery": null
+        },
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "notes": "The export carries the field as written; an implemented record without it stays null, and a consumer computes the effective delivery (export §2)."
   },
   {
     "section": "export",

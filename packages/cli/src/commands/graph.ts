@@ -1,6 +1,6 @@
 /**
  * `intentset graph --format json` (spec/export.md, Core §12): the
- * `intentset/export/0.4` envelope over the validated repository, with the
+ * `intentset/export/0.5` envelope over the validated repository, with the
  * report sections `--report` asks for. Printed to stdout, or written to the
  * one file `--out` names, which may not be any file the repository reads.
  * A failing validation still exports, with `validation.status: "fail"`, and

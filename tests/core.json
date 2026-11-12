@@ -2711,6 +2711,93 @@
   },
   {
     "section": "core",
+    "name": "CORE005 a record says its work is planned while its status claims an implementation",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "implemented",
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ],
+    "notes": "Core §7: implemented, released and deprecated each claim an implementation."
+  },
+  {
+    "section": "core",
+    "name": "CORE005 a built behavior is implemented by a slice that says its work is planned",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: an implemented behavior without the field is built, and its planned slice contradicts it",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE005"
+    ],
+    "notes": "The effective delivery of an implemented record is built (Core §7)."
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: an approved record that says planned, and a draft that says built, are consistent",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "planned"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Approval is about intent and delivery about the code: either can come first (ADR 0017)."
+  },
+  {
+    "section": "core",
     "name": "CORE006 an approved behavior no product slice implements, at L2",
     "baseline": "scheduling",
     "patch": {
@@ -2804,6 +2891,52 @@
     "diagnostics": [
       "CORE001",
       "CORE006"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE006 a draft behavior that says its work is built and that no product slice implements is a warning, at L2",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "level": "L2",
+    "valid": true,
+    "diagnostics": [
+      "CORE006",
+      "CORE009"
+    ],
+    "notes": "Built code without an owner shows before anyone approves the behavior (Core §7). The slice that lost its implements is an unattached draft."
+  },
+  {
+    "section": "core",
+    "name": "CORE006 boundary: a draft behavior that says planned needs no owner, at L2",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.implements": null
+        }
+      }
+    },
+    "level": "L2",
+    "valid": true,
+    "diagnostics": [
+      "CORE009"
     ]
   },
   {
@@ -3354,6 +3487,39 @@
       "CORE001"
     ],
     "notes": "Only knowledge carries tips; a behavior's prose is for another audience (Core §9)."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 delivery on a measure",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-ADOPTION.md": {
+        "frontmatter": {
+          "intentset.delivery": "built"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Core §7: delivery is written only on a capability, behavior, rule, scenario, slice or contract."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 delivery is neither planned nor built",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "done"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
   },
   {
     "section": "core",

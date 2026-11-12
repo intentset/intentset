@@ -27,7 +27,7 @@ import { type PageLink, recordPath, recordText } from "../record-text.ts";
 import type { SourceUrl } from "../types.ts";
 import { badge, code, fenced, idLink, link, ofTotal, plural, series, table, text } from "../text.ts";
 import { TYPE_HEADINGS } from "./records.ts";
-import { evidenceCell, latestRun, reviewCell } from "./shared.ts";
+import { deliveryWord, evidenceCell, latestRun, reviewCell } from "./shared.ts";
 
 const ROLE_HEADINGS: Record<Exclude<ContextRole, "start">, string> = {
   owner: "Owning slice",
@@ -280,6 +280,16 @@ function fields(model: Model, artifact: Artifact): string[] {
   add("title", "Title", text(meta.title));
   add("type", "Type", meta.type);
   add("status", "Status", meta.status);
+  const delivery = deliveryWord(meta);
+  add(
+    "delivery",
+    "Delivery",
+    delivery === null
+      ? undefined
+      : delivery.derived
+        ? `${delivery.word}, because its status claims an implementation`
+        : delivery.word,
+  );
   add("owner", "Owner", text(meta.owner));
   add("visibility", "Visibility", meta.visibility);
   add("audiences", "Audiences", value(meta.audiences));

@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.4",
+  "contract": "intentset/export/0.5",
   "cases": [
     {
       "name": "full: every report, one restricted artifact withheld",
@@ -259,7 +259,7 @@
       "notes": "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A reader of a later version rejects it rather than guess what an outcome's measures were."
     },
     {
-      "name": "the previous contract version",
+      "name": "the contract before the evidence binding",
       "file": "unsupported-contract-0.3.json",
       "connection": {
         "repository": "example/scheduling",
@@ -270,6 +270,19 @@
         "category": "unsupported-contract"
       },
       "notes": "0.3 judged every record by commit and carried no binding, subject or exercises. A 0.4 reader rejects it, with the version it supports in the message, and keeps the prior snapshot, rather than read a stale status the repository's own check may not have reached; the consumer upgrades its pin and its reader together."
+    },
+    {
+      "name": "the previous contract version",
+      "file": "unsupported-contract-0.4.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": false,
+        "category": "unsupported-contract"
+      },
+      "notes": "0.4 carried no delivery, so it cannot say whether a record's work is built. A 0.5 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
     },
     {
       "name": "a later contract version",

@@ -768,3 +768,22 @@ test("deterministic: two builds, and a build from the files in another order, ar
   assert.deepEqual([...second], [...first]);
   assert.deepEqual([...reordered], [...first]);
 });
+
+test("BEH-ATLAS, BEH-DELIVERY: the overview and a record's page show delivery beside the status, and count it", () => {
+  const atlas = buildAtlas(
+    example({
+      edit: (name, source) =>
+        name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: draft\n  delivery: built") : source,
+    }),
+  );
+  const overview = textOf(atlas.get("index.html") ?? "");
+  assert.match(overview, /Behaviors whose work is built 1 of 1/);
+  assert.match(overview, /Behaviors whose work is planned 0 of 1/);
+  assert.match(overview, /Status says what a person approved; delivery says whether the code exists/);
+  assert.match(overview, /status draft · delivery not stated/, "the capability states none");
+  assert.match(overview, /Schedule a student assessment draft built/);
+  const record = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "");
+  assert.match(record, /Status draft Delivery built/);
+  const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
+  assert.doesNotMatch(knowledge, /Delivery/, "knowledge does not carry delivery");
+});

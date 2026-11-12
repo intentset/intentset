@@ -230,6 +230,10 @@
         "reviewedBy": {
           "type": "string"
         },
+        "delivery": {
+          "enum": ["planned", "built"],
+          "description": "Core \u00a77, ADR 0017: whether the work the record describes exists, apart from its approval. Capability, behavior, rule, scenario, slice and contract only; absent means not stated."
+        },
         "extensions": {
           "type": "object",
           "propertyNames": {
@@ -684,6 +688,18 @@
           },
           "then": {
             "required": ["parent"]
+          }
+        },
+        {
+          "if": {
+            "required": ["delivery"]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": ["capability", "behavior", "rule", "scenario", "slice", "contract"]
+              }
+            }
           }
         },
         {

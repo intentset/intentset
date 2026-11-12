@@ -81,9 +81,20 @@ authorization.
 | Its own model, written before its code | VSA §3: draft slices plan their paths as warnings, so L2 holds from the first commit |
 
 Driftline's usage-evidence specification, keyed to Intentset IDs, is planned as an Intentset extension and is not
-part of 0.4; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
+part of 0.5; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
 time, URI, target met). Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
 authored.
+
+## Moving a pin: export 0.5 (ADR 0017)
+
+0.12.0 adds `delivery` to every artifact: `planned`, `built` or null, as the record wrote it. Nothing else in the
+envelope changed, and the specifications stay 0.2.
+
+| Where | What changes |
+|---|---|
+| The repository that produces the export | Move `@intentset/cli` to 0.12.0. No record needs rewriting: `delivery` is optional. |
+| A reader of the export | Support `intentset/export/0.5` and drop 0.4, which a 0.5 reader rejects as `unsupported-contract`. Accept `delivery` on each artifact. To show whether work is built, read the effective delivery (Core §7): `delivery` when it is not null, otherwise `built` for a status of `implemented`, `released` or `deprecated`, otherwise not stated; `deliveryOf` in `@intentset/core` computes it. Never read `approved` as built. |
+| A consumer's own tests | Run the importer over the fixtures again: every envelope names 0.5, and `unsupported-contract-0.4.json` is new. |
 
 ## Moving a pin: export 0.4 and specifications 0.2 (ADR 0014)
 

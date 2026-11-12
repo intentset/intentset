@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-PUBLISH
   links:
     governedBy: [RULE-FAIL-CLOSED, RULE-DETERMINISTIC]
@@ -30,7 +30,7 @@ Someone publishes for a request naming an audience and availability, and gets th
 
 ## Preconditions
 
-Knowledge records that are reviewed and not draft or retired.
+Knowledge records that are reviewed and not draft or retired, and that explain no record whose work is planned (ADR 0017).
 
 ## Outcomes
 

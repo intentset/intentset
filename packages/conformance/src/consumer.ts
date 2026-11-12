@@ -417,6 +417,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     const measures = new Set(e.artifacts.filter((a: Json) => a.type === "measure").map((a: Json) => a.id));
     e.artifacts = e.artifacts.filter((a: Json) => !measures.has(a.id));
     for (const artifact of e.artifacts) {
+      delete artifact.delivery;
       delete artifact.measure;
       delete artifact.tips;
       for (const kind of Object.keys(artifact.derived)) {
@@ -453,8 +454,13 @@ export function buildConsumerFixtures(): Map<string, string> {
     "unsupported-contract",
     "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A reader of a later version rejects it rather than guess what an outcome's measures were.",
   );
+  /** What 0.5 added (ADR 0017), taken back out so an earlier envelope is what its reader would have written. */
+  const before05 = (e: Json) => {
+    for (const artifact of e.artifacts) delete artifact.delivery;
+  };
   /** What 0.4 added (ADR 0014), taken back out so an earlier envelope is what its reader would have written. */
   const before04 = (e: Json) => {
+    before05(e);
     for (const artifact of e.artifacts) delete artifact.verification?.exercises;
     const evidence = e.reports?.evidence;
     if (evidence === undefined) return;
@@ -477,10 +483,23 @@ export function buildConsumerFixtures(): Map<string, string> {
     }),
   );
   reject(
-    "the previous contract version",
+    "the contract before the evidence binding",
     "unsupported-contract-0.3.json",
     "unsupported-contract",
     "0.3 judged every record by commit and carried no binding, subject or exercises. A 0.4 reader rejects it, with the version it supports in the message, and keeps the prior snapshot, rather than read a stale status the repository's own check may not have reached; the consumer upgrades its pin and its reader together.",
+  );
+  files.set(
+    "unsupported-contract-0.4.json",
+    mutate(full, (e) => {
+      e.contract = "intentset/export/0.4";
+      before05(e);
+    }),
+  );
+  reject(
+    "the previous contract version",
+    "unsupported-contract-0.4.json",
+    "unsupported-contract",
+    "0.4 carried no delivery, so it cannot say whether a record's work is built. A 0.5 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
   );
   files.set(
     "unsupported-contract-future.json",

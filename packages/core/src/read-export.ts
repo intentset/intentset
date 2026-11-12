@@ -23,6 +23,8 @@ import {
   EVIDENCE_BINDINGS,
   EXPORT_EVIDENCE_STATUSES,
   EXPORT_REPORTS,
+  DELIVERIES,
+  DELIVERY_TYPES,
   type ExportEnvelope,
   type ExportReportName,
   ID_PATTERN,
@@ -414,6 +416,7 @@ class Shape {
         "type",
         "title",
         "status",
+        "delivery",
         "owner",
         "visibility",
         "audiences",
@@ -439,6 +442,12 @@ class Shape {
     this.oneOf(a.type, `${at}/type`, ARTIFACT_TYPES);
     this.string(a.title, `${at}/title`);
     this.oneOf(a.status, `${at}/status`, STATUSES);
+    this.nullable(a.delivery, `${at}/delivery`, (d, p) => {
+      this.oneOf(d, p, DELIVERIES);
+      if (typeof a.type === "string" && !(DELIVERY_TYPES as readonly string[]).includes(a.type)) {
+        this.fail(p, `Expected null: ${a.type} records do not carry delivery.`);
+      }
+    });
     this.string(a.owner, `${at}/owner`);
     this.oneOf(a.visibility, `${at}/visibility`, VISIBILITIES);
     this.strings(a.audiences, `${at}/audiences`, { minItems: 1 });

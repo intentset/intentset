@@ -3,6 +3,7 @@
  * status, its latest run, and a knowledge artifact's review status. Each
  * status is a word, with a badge tone that repeats it and never replaces it.
  */
+import { type ArtifactMeta, DELIVERY_TYPES, deliveryOf } from "@intentset/core";
 import type { ReviewStatus } from "@intentset/publisher";
 import { type Model, STATUS_WORDS } from "../model.ts";
 import { badge, code, text } from "../text.ts";
@@ -44,4 +45,15 @@ export function reviewCell(review: ReviewStatus): string {
   if (review.reviewer === null) reasons.push("no reviewer");
   if (review.reviewedAt === null) reasons.push("no review date");
   return `${badge("needs review", "warn")} ${reasons.join("; ")}`;
+}
+
+/**
+ * Whether a record's work exists (Core §7, ADR 0017), in words beside its status, never in place of it: `built`,
+ * `planned`, or `not stated`; null for a type that does not carry delivery. `derived` says when the word comes from
+ * a status that claims an implementation rather than from the record's own `delivery`.
+ */
+export function deliveryWord(meta: ArtifactMeta): { word: string; derived: boolean } | null {
+  if (!(DELIVERY_TYPES as readonly string[]).includes(meta.type)) return null;
+  const effective = deliveryOf(meta);
+  return { word: effective ?? "not stated", derived: meta.delivery === undefined && effective !== null };
 }

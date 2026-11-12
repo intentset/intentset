@@ -35,6 +35,7 @@ export {
   type Projection,
   type Snapshot,
   exclusionReason,
+  plannedSources,
   project,
 } from "./project.ts";
 export {

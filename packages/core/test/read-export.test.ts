@@ -156,8 +156,9 @@ test("BEH-READ-EXPORT: a missing or unknown contract is unsupported-contract bef
     "intentset/export/0.1",
     "intentset/export/0.2",
     "intentset/export/0.3",
-    "intentset/export/0.5",
-    "other/export/0.4",
+    "intentset/export/0.4",
+    "intentset/export/0.6",
+    "other/export/0.5",
   ]) {
     const value = { ...full, contract };
     const read = readExport(value);

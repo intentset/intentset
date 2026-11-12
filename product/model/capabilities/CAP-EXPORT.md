@@ -18,7 +18,7 @@ intentset:
 
 ## Overview
 
-Export the graph as the `intentset/export/0.4` envelope, with reports, and read one back with the consumer's checks (spec/export.md).
+Export the graph as the `intentset/export/0.5` envelope, with reports, and read one back with the consumer's checks (spec/export.md).
 
 ## Sources
 

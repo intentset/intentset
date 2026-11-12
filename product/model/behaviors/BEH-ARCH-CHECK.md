@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   parent: CAP-ARCHITECTURE
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC, RULE-UNRESOLVED-NOT-PASS]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset architecture check`. Every in-scope file is resolved to the slice that claims it, every import is resolved, and ownership, entrypoints, cross-slice imports, declared dependencies, cycles, layers and regions are checked (VSA §2 to §5, the profile's TS and AMP rules).
+Someone runs `intentset architecture check`. Every in-scope file is resolved to the slice that claims it, every import is resolved, and ownership, entrypoints, cross-slice imports, declared dependencies, cycles, layers and regions are checked (VSA §2 to §5, the profile's TS and AMP rules). A draft slice may plan paths that do not exist yet, unless it or a behavior it implements says its work is built (ADR 0017): then a missing claim or entrypoint is an error, and a draft behavior that says built and that no product slice implements is a warning.
 
 ## Preconditions
 
