@@ -82,6 +82,8 @@ Keeping the model in files is a deliberate choice, and it has consequences worth
 - The repository is the source of truth. The graph, the reports, the Atlas and the published pages are views rebuilt from these files, and no tool ever rewrites them.
 - There is no database and no hosted service to run.
 
+A record's status says where it stands with people: a draft until a person approves it, then implemented, released, and in time deprecated or retired. An optional `delivery` says something else, whether the work it describes exists: `planned` on a record that proposes work, `built` on one written from code that is already there. An agent may write it, because it states a fact about the code; only a person approves.
+
 ## A typed model, centered on behavior
 
 There are thirteen record types. They fall into five groups, each answering a different kind of question:
@@ -167,6 +169,10 @@ Keep run records in CI or another store you control, never in the commit they as
 
 `intentset review --base main` gathers the same picture for a branch: the checks, the coverage, and the impact of everything that changed.
 
+## Ask the model a question
+
+`intentset list` answers which records match: by type, status, delivery, owner, audience, availability, or a link to another record. Fields combine with AND and the values of one field with OR, and there is no query language to learn. `intentset list --status draft --delivery built` lists the drafts that describe code that exists, and `--count-by` counts the matches by one field. It reads the repository or an export and gives the same answer from either, and where a match depends on a record that is withheld, it says the answer is undetermined rather than guess. [Read the list contract](../specifications/list/).
+
 ## Hand the model to other tools
 
 `intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
@@ -181,7 +187,7 @@ An agent about to change code should know what that code promises, and nothing i
 
 Knowledge records are explanations written for an audience, such as teachers. Each carries a visibility (public, customer, internal or restricted) and the products, releases, roles, editions and feature flags it applies to.
 
-`intentset publish` builds what one audience may see for one release. It denies by default, intersects every availability dimension, leaves out drafts and retired records, and never reveals the title or path of anything it excluded. The output is a set of Markset documents that carry their provenance: the source IDs and revisions, the snapshot and the reviewer. When a source changes, the explanations that depend on it are marked for review before they can be published again. Customer-facing tools read only this publication, never the engineering graph.
+`intentset publish` builds what one audience may see for one release. It denies by default, intersects every availability dimension, leaves out drafts and retired records, and never reveals the title or path of anything it excluded. The output is a set of Markset documents that carry their provenance: the source IDs and revisions, the snapshot and the reviewer. When what a source promises changes, the explanations that depend on it are marked for review before they can be published again. A review can pin each source's content rather than its whole file, so approving a source or marking it built leaves the explanation current, while editing what it promises, or deprecating or retiring it, does not. Customer-facing tools read only this publication, never the engineering graph.
 
 A knowledge record can also carry tips: one sentence per behavior it explains, for the product to show beside the control that delivers it. They are reviewed and published with the record, so a tooltip cannot outlive the behavior it describes. Each publication writes them to a `help.json` the product reads with `@intentset/help`, which binds every tip to the element naming its behavior and reports the behaviors that have no tip yet.
 
