@@ -9,7 +9,7 @@ One command does the work in a repository. The rest are what it is built from, a
 
 ## The intentset command
 
-`@intentset/cli` validates the model, checks the architecture, binds test results to a commit, reports what a change reaches, publishes reviewed knowledge and serves the Atlas. It is the one package a repository installs, and the one its agents run.
+`@intentset/cli` validates the model, checks the architecture, binds test results to a commit, reports what a change reaches, answers which records match, publishes reviewed knowledge and serves the Atlas. It is the one package a repository installs, and the one its agents run.
 
 :::tabs
 ### npm
@@ -45,7 +45,7 @@ pnpm exec intentset init
 
 The command is built from libraries a tool of your own can use directly:
 
-- `@intentset/core` reads records, validates them, traverses impact and writes the export. It has no dependencies, and its `readExport` is the consumer's check of an export another repository produced.
+- `@intentset/core` reads records, validates them, traverses impact, selects the records that match a selector and writes the export. It has no dependencies, and its `readExport` is the consumer's check of an export another repository produced.
 - `@intentset/markset-adapter` is the one place Markset is read: it turns a Markset document into what core validates, with Markset's own diagnostics kept apart.
 - `@intentset/architecture` checks slices, claims, imports, layers and resources.
 - `@intentset/verification` reads test reports into run records and decides whether each one still counts.

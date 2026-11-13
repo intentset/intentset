@@ -5,7 +5,7 @@ markset: 0
 # The intentset command
 
 {.lead}
-`intentset` reads the records in a repository and reports on them. `validate`, `graph`, `architecture check`, `impact` and `review` execute nothing, reach no network and never change a record; publishing and serving are separate commands you run on purpose.
+`intentset` reads the records in a repository and reports on them. `validate`, `graph`, `architecture check`, `evidence stale`, `impact`, `context`, `list` and `review` execute nothing, reach no network and never change a record; publishing and serving are separate commands you run on purpose.
 
 ## Install
 
@@ -35,6 +35,14 @@ intentset review --base origin/main --fail-on-drift
 ```
 
 `validate` runs every check the level asks for. Each level includes those below it: L1 is the model, L2 adds the architecture, L3 the evidence and L4 publication readiness. `review` adds the impact of what changed, and lists each slice whose code changed while its records did not.
+
+To ask the model a question, `list` names the records that match. Fields combine with AND and the values of one field with OR, so this lists the draft behaviors that describe code that exists, which is where an owner starts approving:
+
+```sh
+intentset list --type behavior --status draft --delivery built
+```
+
+`--count-by` counts the matches by one field instead, and `--from` reads an export rather than the repository, with the same answer.
 
 ## Every command
 

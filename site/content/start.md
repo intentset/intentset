@@ -121,7 +121,7 @@ After the tests, import their report as in step 5 and validate at L3, so each ru
 
 ## Starting a new product?
 
-Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved.
+Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists, each with `delivery: planned`. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved, and the change that builds a record's work marks it `delivery: built`.
 
 [[Read the adoption log](../pilot/)]{.button .primary} [[Open Lantern, a worked example](../example/atlas/map/)]{.button}
 
