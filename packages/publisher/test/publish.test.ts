@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { type Artifact, canonicalJson, parseYaml } from "@intentset/core";
 import { BLOCK_DIRECTIVE_NAMES, parseDocument } from "@markset-lang/parser";
-import { PUBLICATION_KEY, PUBLICATION_PROFILE, emitYaml, markerLine, publish } from "../src/index.ts";
+import { PUBLICATION_KEY, PUBLICATION_PROFILE, emitYaml, markerLine, publish, toChunks } from "../src/index.ts";
 import { PUBLISHED_AT, customer, example, readCases, reviewed, run, snapshotOf } from "./harness.ts";
 
 const passing = () => example({ kb: reviewed() });
@@ -69,13 +69,44 @@ test("the publication block carries provenance and names only what the projectio
     source: { id: "KB-ASMT-SCHEDULE", revision: 1, sourceHash: kb.sourceHash },
     sources: [],
     withheldSources: 3,
-    snapshot: snapshotOf(graph),
     audience: "teacher",
     availability: { product: "PRD-LANTERN", release: "pilot-1", role: "teacher", edition: "standard", flags: [] },
     reviewer: "team-assessment",
     reviewedAt: "2026-09-30",
     publishedAt: PUBLISHED_AT,
   });
+});
+
+test("BEH-PUBLISH: a document carries no snapshot: a change elsewhere in the model moves the help file and the index, not the document", () => {
+  // SCN-ASMT-SCHEDULE is neither the knowledge nor a source it pins, so editing it leaves the review current and
+  // moves only the graph hash (publication §2, §5; ADR 0019).
+  const publishFrom = (patch: Record<string, { body: string }> = {}) => {
+    const { graph, registries } = example({ kb: reviewed(), patch });
+    return publish(graph, registries, customer(), {
+      snapshot: { commit: "c0ffee", graphHash: snapshotOf(graph).graphHash },
+      publishedAt: PUBLISHED_AT,
+      renderHtml: true,
+    });
+  };
+  const before = publishFrom();
+  const after = publishFrom({
+    "SCN-ASMT-SCHEDULE.md": {
+      body: "\n# Accept an eligible schedule\n\n## Given\n\nA teacher.\n\n## When\n\nThey schedule.\n\n## Then\n\nIt is recorded.\n",
+    },
+  });
+  assert.equal(before.ok && after.ok, true);
+  assert.notEqual(before.index.snapshot.graphHash, after.index.snapshot.graphHash);
+  const [a] = before.documents;
+  const [b] = after.documents;
+  assert.equal(Object.hasOwn(a.publication, "snapshot"), false);
+  assert.ok(!a.markset.includes("snapshot") && !a.markset.includes("graphHash") && !a.markset.includes("c0ffee"));
+  assert.ok(!(a.html ?? "").includes("graphHash"));
+  assert.equal(b.markset, a.markset);
+  assert.equal(b.html, a.html);
+  assert.deepEqual(toChunks(after.documents), toChunks(before.documents));
+  assert.deepEqual(before.help?.snapshot, before.index.snapshot);
+  assert.deepEqual(after.help?.snapshot, after.index.snapshot);
+  assert.notDeepEqual(after.help?.snapshot, before.help?.snapshot);
 });
 
 test("an authorized internal projection names internal sources and the knowledge's path", () => {

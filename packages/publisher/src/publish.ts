@@ -13,7 +13,9 @@
  * here is refused in turn; this repeats until nothing more is refused.
  *
  * The help file (help.ts) carries every published document's tips, keyed by
- * the ID each explains, for a product's runtime.
+ * the ID each explains, for a product's runtime, and names the snapshot. The
+ * documents do not (ADR 0019): it is the same for all of them and moves with
+ * any record, so a document's bytes would change on every record change.
  *
  * The index is what a customer-facing tool may read (Core §10): the snapshot,
  * the request without its authorization flags, the published IDs, and the

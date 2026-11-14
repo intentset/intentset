@@ -2,8 +2,8 @@
 title: Intentset Publication Profile v0.2
 id: intentset/publication/0.2
 status: draft
-revision: 2026-11-12
-implementation: 0.13.0
+revision: 2026-11-14
+implementation: 0.14.0
 ---
 
 # Intentset Publication Profile v0.2
@@ -56,11 +56,15 @@ knowledge body unchanged, preceded by one blank line when it does not begin with
 | `source` | `id`, `revision` (null when undeclared), `sourceHash` of the knowledge; `path` only when the projection admits internal |
 | `sources` | `{ id, revision, sourceHash }` for each explained artifact the projection admits, sorted by ID |
 | `withheldSources` | the number of explained artifacts outside the projection; they are counted, never named |
-| `snapshot` | `commit` (null when unavailable) and `graphHash` of the graph published from |
 | `audience` | the request's audience |
 | `availability` | `product`, `release`, `role`, `edition` from the request, and `flags`: those the knowledge requires |
 | `reviewer`, `reviewedAt` | the knowledge's `reviewedBy` and `reviewedAt` |
 | `publishedAt` | the publication timestamp, an input to the publisher |
+
+A generated document MUST NOT carry the snapshot it was published from. The snapshot is the same for every document
+in a run, and the graph hash moves with every record in the model, so a document that carried it would change
+whenever any record did. The run names its snapshot once, in the help file (§5). What a document was made from is
+pinned by the `sourceHash` of its knowledge and of each source it names (ADR 0019).
 
 Fields appear in this order. Strings are plain only when they cannot be read as another type, and are otherwise
 single-quoted; sequences are indented under their key. An HTML rendering SHOULD carry the same block, as canonical
@@ -138,14 +142,15 @@ or customer index never reveals how many internal or restricted records exist; a
 Beside the documents, a publication writes `help.json`: every tip (Core §9) of every document published in the run,
 keyed by the ID it explains, for a product's runtime to show beside the control that delivers that behavior. It is
 one UTF-8 JSON object with its keys sorted, written whenever the request is accepted, so a runtime can rely on it
-being there, and the same bytes for the same inputs.
+being there, and the same bytes for the same inputs. It is where a publication names its snapshot: the documents
+beside it do not (§2).
 
 | Field | Value |
 |---|---|
 | `profile` | `intentset/help/0.2` |
 | `derived` | `true` |
 | `projection` | the request's visibility |
-| `snapshot` | `commit` and `graphHash`, as in §2 |
+| `snapshot` | `commit` (null when unavailable) and `graphHash` of the graph published from |
 | `audience` | the request's audience |
 | `availability` | `product`, `release`, `role`, `edition` and `flags` from the request |
 | `publishedAt` | the publication timestamp |

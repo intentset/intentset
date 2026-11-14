@@ -5,6 +5,20 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## 0.14.0 — 2026-11-14
+
+**A published document no longer carries the snapshot it was published from, so a change to one record no longer changes every published file: the publication names its snapshot once, in `help.json` and the index.** Minor: `PublicationMeta` in `@intentset/publisher` loses `snapshot`, and generated documents, their HTML and their chunks lose it with it. The specifications move no version: publication §2 and §5 and Core §1 and §9 change text, no existing conformance case changed its `valid` or `diagnostics`, so `intentset.spec` stays `0.2`, the publication profile stays `intentset/publication/0.2`, the help file `intentset/help/0.2`, the export `0.5` and the list result `intentset/list/0.1`. The suite gains 1 case.
+
+**Why (ADR 0019).** Every document's `intentset-publication` block carried `snapshot`, the commit and graph hash it was published from. The graph hash moves with any record in the model, so every published file changed whenever any record did. An adopter that commits its published help, about 850 files, saw two pull requests that each changed a record conflict on all of them, and resolved it by publishing again, three times on one pull request in one day.
+
+**What a document carries (publication §2).** The block keeps `source` with the knowledge's `sourceHash`, `sources` with each admitted source's `id`, `revision` and `sourceHash`, `withheldSources`, `audience`, `availability`, `reviewer`, `reviewedAt` and `publishedAt`, in that order, and MUST NOT carry the snapshot. The HTML `<meta name="intentset-publication">` and each retrieval chunk carry the block unchanged, so they drop it too. A document's bytes now change only when its knowledge, a source it names, the request or `publishedAt` does.
+
+**Where the snapshot is (publication §5).** `help.json` names it, `commit` (null when unavailable) and `graphHash`, as it already did, and the index keeps it. A reader that took the snapshot from a document reads it from either. A request whose snapshot's graph hash is not the graph's is still PUB001.
+
+**The MCP server.** Customer mode cites the index's snapshot for every passage and document, so its results keep the same shape. It no longer checks each document's snapshot against the index, because documents have none.
+
+**Conformance.** A publication case asserts that the document, its HTML and its chunks carry no snapshot and that `help.json` names it.
+
 ## 0.13.0 — 2026-11-12
 
 **A knowledge review can pin what a record promises instead of its whole file, so approving, implementing or marking delivery on a source no longer sends every guide that explains it back to review; and `intentset list --count-by delivery`.** Minor: a new pin kind in publication §3, new API in `@intentset/core` (`contentHashOf`, `Artifact.contentHash`, `CONTENT_HASH_OMITS`, `ENDING_STATUSES`) and `@intentset/publisher` (`pinHash`, `PIN_KINDS`, `ReviewStatus.unknownHash`), `contentHash` in `intentset context --json` and the MCP server's context tools, and one removal (below). The specifications move no version: publication §3, Core §9 and list §4 gain text, no existing conformance case changed its `valid` or `diagnostics`, so `intentset.spec` stays `0.2`, the export stays `0.5` and the list result `intentset/list/0.1`. The suite gains 12 cases.
