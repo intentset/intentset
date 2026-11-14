@@ -2437,6 +2437,59 @@
   },
   {
     "section": "publication",
+    "name": "a published document carries no snapshot: the help file names it once for the run",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "  withheldSources: 3\n  audience: teacher\n",
+        "\"projection\":\"customer\",\"snapshot\":{\"commit\":null,\"graphHash\":\""
+      ],
+      "mustNotContain": [
+        "  snapshot:",
+        "  graphHash:",
+        "&quot;snapshot&quot;",
+        "&quot;graphHash&quot;"
+      ]
+    },
+    "notes": "Publication §2, §5 (ADR 0019): a generated document's intentset-publication block, and so its HTML meta and its retrieval chunks, carries no snapshot, because the graph hash moves with every record in the model and would change every document whenever any record did. withheldSources is followed directly by audience. The help file names the snapshot, commit and graph hash, once for the run."
+  },
+  {
+    "section": "publication",
     "name": "the help file is written with no tips when nothing is published",
     "baseline": "scheduling",
     "patch": {

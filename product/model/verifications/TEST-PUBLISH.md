@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-PUBLISH]
   verification:
@@ -28,9 +28,10 @@ intentset:
 - `packages/cli/test/checks.test.ts`: the test "publish from the example with its knowledge demoted to a draft publishes nothing and says why"
 - `packages/cli/test/checks.test.ts`: the test "publish writes reviewed knowledge with provenance, HTML, an index, a help file and chunks, naming no internal source"
 - `packages/cli/test/checks.test.ts`: the test "publish refuses a graph that does not validate, and a request missing a dimension"
+- `packages/publisher/test/publish.test.ts`: the test "a document carries no snapshot: a change elsewhere in the model moves the help file and the index, not the document"
 - `packages/publisher/test/project.test.ts`: the test "deny by default: type, lifecycle, visibility, audience and missing availability each exclude"
 - `packages/publisher/test/references.test.ts`: the test "no reference diagnostic carries the referenced title or path"
 
 ## Expected result
 
-Every test whose title carries `BEH-PUBLISH` passes. Nothing is published from drafts, and the command says why; reviewed knowledge is written with provenance, HTML, an index, a help file and chunks, naming no internal source; a failing graph or an incomplete request is refused; type, lifecycle, visibility, audience and missing availability each exclude; no diagnostic carries an excluded source's title or path.
+Every test whose title carries `BEH-PUBLISH` passes. Nothing is published from drafts, and the command says why; reviewed knowledge is written with provenance, HTML, an index, a help file and chunks, naming no internal source; a document carries no snapshot, so editing an unrelated record changes the help file's and the index's snapshot and no document's bytes; a failing graph or an incomplete request is refused; type, lifecycle, visibility, audience and missing availability each exclude; no diagnostic carries an excluded source's title or path.

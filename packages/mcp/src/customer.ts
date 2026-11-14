@@ -11,7 +11,8 @@
  * public or customer projection, with that document's provenance unchanged;
  * and again before the response is assembled, over the hits themselves.
  * Results cite the source IDs the publication block names, never the ones it
- * withheld (it counts those), and the snapshot the publication was made from.
+ * withheld (it counts those), and the snapshot the publication was made from,
+ * which the index names once for every document (ADR 0019).
  */
 import { canonicalJson, compareStrings } from "@intentset/core";
 import {
@@ -19,6 +20,7 @@ import {
   type PublicationIndex,
   type PublicationMeta,
   type PublishedDocument,
+  type Snapshot,
   toChunks,
 } from "@intentset/publisher";
 import { READ_ONLY, result, stringArgument, type Tool, type ToolResult } from "./tool.ts";
@@ -48,9 +50,6 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
   for (const document of publication.documents) {
     if (!published.has(document.id) || document.publication.projection !== request.visibility) {
       throw new Error(`mcp: document ${document.id} is not in the publication index under its projection`);
-    }
-    if (canonicalJson(document.publication.snapshot) !== canonicalJson(index.snapshot)) {
-      throw new Error(`mcp: document ${document.id} was published from another snapshot than the index names`);
     }
     documents.set(document.id, document);
   }
@@ -122,7 +121,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
           title: chunk.title,
           heading: chunk.heading,
           text: chunk.text,
-          citation: citation(chunk.publication),
+          citation: citation(chunk.publication, index.snapshot),
         })),
         ...(hits.length === 0
           ? { note: "No published knowledge matches. There is nothing to answer from; do not answer from elsewhere." }
@@ -156,7 +155,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
         ...header(),
         id: document.id,
         path: document.path,
-        citation: citation(document.publication),
+        citation: citation(document.publication, index.snapshot),
         markset: document.markset,
       });
     },
@@ -165,8 +164,11 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
   return [get, search];
 }
 
-/** The provenance a customer may see: the sources the block names, the count it withheld, review and snapshot. */
-function citation(block: PublicationMeta) {
+/**
+ * The provenance a customer may see: the sources the block names, the count it withheld, review, and the snapshot,
+ * which the index names for the whole publication.
+ */
+function citation(block: PublicationMeta, snapshot: Snapshot) {
   return {
     source: { id: block.source.id, revision: block.source.revision, sourceHash: block.source.sourceHash },
     sources: block.sources.map((s) => ({ id: s.id, revision: s.revision, sourceHash: s.sourceHash })),
@@ -174,7 +176,7 @@ function citation(block: PublicationMeta) {
     reviewer: block.reviewer,
     reviewedAt: block.reviewedAt,
     publishedAt: block.publishedAt,
-    snapshot: { commit: block.snapshot.commit, graphHash: block.snapshot.graphHash },
+    snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash },
   };
 }
 

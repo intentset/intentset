@@ -25,7 +25,9 @@ installed. The command is always `@intentset/cli`'s: this package has no `intent
 for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
 From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the index, the help
-file and the diagnostics, and refuses the whole request when any field is missing or undeclared (PUB001).
+file and the diagnostics, and refuses the whole request when any field is missing or undeclared (PUB001). The
+snapshot, the commit and graph hash the run read, is named once, in the index and the help file; each document pins
+what it was made from by its sources' hashes, so its bytes change only when those sources do.
 `@intentset/help` reads the help file in the product.
 
 ## Learn more

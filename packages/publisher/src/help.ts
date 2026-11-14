@@ -10,6 +10,9 @@
  * binds a control to the ID has already written it where the same reader can
  * see it, and nothing else of that artifact is carried: never its title, path,
  * status or prose. Two documents tipping one ID: the lower knowledge ID wins.
+ *
+ * It is also where the run names its snapshot, the commit and graph hash it
+ * was published from; the documents beside it do not carry one (ADR 0019).
  */
 import type { Artifact, Graph, Visibility } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";

@@ -486,6 +486,9 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   kind in `hash`. `content-v1` pins each source's `contentHash`, which leaves out `status`, `delivery`, `reviewedBy`,
   `reviewedAt` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
   (`sourceHash`), as every earlier review does; any other kind matches nothing. `sourceHash` itself is unchanged.
+- **The snapshot is named once per publication** (publication §2, §5, ADR 0019, 2026-11-14): a generated document, its
+  HTML and its chunks carry no `snapshot`; `help.json` and the index name the commit and graph hash. A document's
+  bytes change only when its knowledge, a source it names, the request or `publishedAt` does.
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
   inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.
