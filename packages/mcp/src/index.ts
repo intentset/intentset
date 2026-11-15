@@ -31,7 +31,7 @@ export { NOT_IN_SNAPSHOT, SEARCH_LIMIT, type EngineeringSnapshot } from "./engin
 export type { Tool, ToolDefinition, ToolResult } from "./tool.ts";
 
 /** The package version, reported to clients as the server's version. A test holds it to package.json. */
-export const VERSION = "0.14.0";
+export const VERSION = "0.15.0";
 
 export interface EngineeringOptions {
   mode: "engineering";
@@ -74,7 +74,11 @@ export function createIntentsetServer(options: IntentsetServerOptions): Server {
   } else if (options.mode === "customer") {
     // Only the publication and its chunks are passed on: whatever else the options object carries stays here.
     tools = customerTools(
-      { documents: options.publication.documents, index: options.publication.index },
+      {
+        documents: options.publication.documents,
+        index: options.publication.index,
+        snapshot: options.publication.snapshot,
+      },
       options.chunks,
     );
     instructions =

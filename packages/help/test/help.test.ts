@@ -69,6 +69,15 @@ function helpFromPublisher(): Help {
   return read.help;
 }
 
+test("BEH-HELP-TIPS: a help file carries no snapshot, and one written before 0.15.0 with a snapshot still reads", () => {
+  const written = JSON.parse(JSON.stringify(publishExample().help)) as Record<string, unknown>;
+  assert.equal(Object.hasOwn(written, "snapshot"), false);
+  assert.ok(readHelp(written).ok);
+  assert.ok(readHelp({ ...written, snapshot: { commit: null, graphHash: "a".repeat(64) } }).ok);
+  const malformed = readHelp({ ...written, snapshot: { commit: 7 } });
+  assert.deepEqual(malformed.problems, ["snapshot, when present, must carry commit (a string or null) and graphHash"]);
+});
+
 test("BEH-HELP-TIPS: the file the publisher writes reads back, as text and as bytes, and carries the tips", () => {
   const help = helpFromPublisher();
   assert.equal(help.profile, HELP_PROFILE);

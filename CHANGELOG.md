@@ -5,6 +5,20 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## 0.15.0 — 2026-11-15
+
+**A publication names its snapshot in a file of its own, `snapshot.json`, and nowhere else, so publishing the same knowledge at two commits writes the same bytes in every other file, and published output can be committed without each commit rewriting it.** Minor: `help.json` and `index.json` lose `snapshot`, so `HelpFile`, `HelpOptions` and `PublicationIndex` in `@intentset/publisher` lose it, `PublishResult` gains `snapshot` (a `SnapshotFile`), `CustomerPublication` in `@intentset/mcp` requires `snapshot`, and `intentset publish` gains `--no-snapshot`. The specifications move no version: publication §2 and §5 change text and §6 is new, Core §1 and §9 change text, one publication case's `published` expectation moved and none changed its `valid` or `diagnostics`, so `intentset.spec` stays `0.2` and the profiles `intentset/publication/0.2` and `intentset/help/0.2` stay. The export contract did not move.
+
+**Why (ADR 0020, amending ADR 0019).** 0.14.0 took the snapshot out of the documents and left it in `help.json` and the index. The commit and the graph hash move with every commit that changes a record, so a repository that commits its published output still had both files of every projection rewritten by each publication, ten files for an adopter with five projections, and two branches that each published conflicted on all of them. The `commit` written was also the one checked out when the command ran, which can never be the commit that contains the output.
+
+**The snapshot file (publication §6).** `snapshot.json` holds `profile` (`intentset/snapshot/0.2`), `derived`, `commit` (null when unavailable) and `graphHash`, and nothing of the request, so every projection published from one snapshot writes the same bytes. No other file of a publication carries the commit or the graph hash. A request whose snapshot's graph hash is not the graph's is still PUB001.
+
+**When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control; do not commit it. Output that is deployed or handed to another system keeps it: it is the only record of which state of the model the documents were made from.
+
+**Readers.** A reader that took the snapshot from `help.json` or `index.json` reads it from `snapshot.json`. `readHelp` in `@intentset/help` accepts a help file with or without `snapshot`, so 0.15.0 reads what 0.14.0 wrote; **`@intentset/help` 0.14.0 and earlier refuse a help file written by 0.15.0**, so a product updates `@intentset/help` before, or with, the publisher. The MCP server's customer mode cites the snapshot it is handed with the publication, and its results keep their shape.
+
+**Conformance.** The publication case that asserted `help.json` names the snapshot now asserts that the snapshot file does, and that no document, index or help file carries one.
+
 ## 0.14.0 — 2026-11-14
 
 **A published document no longer carries the snapshot it was published from, so a change to one record no longer changes every published file: the publication names its snapshot once, in `help.json` and the index.** Minor: `PublicationMeta` in `@intentset/publisher` loses `snapshot`, and generated documents, their HTML and their chunks lose it with it. The specifications move no version: publication §2 and §5 and Core §1 and §9 change text, no existing conformance case changed its `valid` or `diagnostics`, so `intentset.spec` stays `0.2`, the publication profile stays `intentset/publication/0.2`, the help file `intentset/help/0.2`, the export `0.5` and the list result `intentset/list/0.1`. The suite gains 1 case.
