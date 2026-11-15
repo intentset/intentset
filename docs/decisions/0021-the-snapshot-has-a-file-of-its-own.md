@@ -1,4 +1,4 @@
-# ADR 0020: A publication's snapshot has a file of its own
+# ADR 0021: A publication's snapshot has a file of its own
 
 **Status:** accepted, 2026-11-15. Amends [ADR 0019](0019-a-publication-names-its-snapshot-once.md).
 

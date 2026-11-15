@@ -1,6 +1,6 @@
 # ADR 0019: A publication names its snapshot once, not in every document
 
-**Status:** accepted, 2026-11-14. Amended by [ADR 0020](0020-the-snapshot-has-a-file-of-its-own.md), 2026-11-15: the snapshot left `help.json` and the index for a file of its own.
+**Status:** accepted, 2026-11-14. Amended by [ADR 0021](0021-the-snapshot-has-a-file-of-its-own.md), 2026-11-15: the snapshot left `help.json` and the index for a file of its own.
 
 ## Context
 

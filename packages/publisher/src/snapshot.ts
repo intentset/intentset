@@ -2,7 +2,7 @@
  * The snapshot file (spec/publication.md §6): the commit and graph hash a
  * publication was made from, in a file of its own beside the documents.
  *
- * It is the one file of a publication that names the snapshot (ADR 0020).
+ * It is the one file of a publication that names the snapshot (ADR 0021).
  * Both values move with every commit that changes a record, so any other
  * file that carried them would be rewritten by every publication, whatever
  * it says; with them here, the documents, the index, the help file and the

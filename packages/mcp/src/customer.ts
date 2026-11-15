@@ -13,7 +13,7 @@
  * Results cite the source IDs the publication block names, never the ones it
  * withheld (it counts those), and the snapshot the publication was made from,
  * which the publication names once, apart from its documents and its index
- * (ADR 0019, ADR 0020).
+ * (ADR 0019, ADR 0021).
  */
 import { canonicalJson, compareStrings } from "@intentset/core";
 import {

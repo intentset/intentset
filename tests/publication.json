@@ -2488,7 +2488,7 @@
         "&quot;graphHash&quot;"
       ]
     },
-    "notes": "Publication §2, §5, §6 (ADR 0019, ADR 0020): a generated document's intentset-publication block, and so its HTML meta and its retrieval chunks, carries no snapshot, and neither does the index or the help file, because the commit and the graph hash move with every commit that changes a record and would change every file that carried them. withheldSources is followed directly by audience, and the help file's projection by its audience. The snapshot file alone names the commit and graph hash, once for the publication."
+    "notes": "Publication §2, §5, §6 (ADR 0019, ADR 0021): a generated document's intentset-publication block, and so its HTML meta and its retrieval chunks, carries no snapshot, and neither does the index or the help file, because the commit and the graph hash move with every commit that changes a record and would change every file that carried them. withheldSources is followed directly by audience, and the help file's projection by its audience. The snapshot file alone names the commit and graph hash, once for the publication."
   },
   {
     "section": "publication",

@@ -12,7 +12,7 @@
  * status or prose. Two documents tipping one ID: the lower knowledge ID wins.
  *
  * It carries no snapshot: the run names the commit and graph hash it was
- * published from in the snapshot file alone (snapshot.ts, ADR 0020), so this
+ * published from in the snapshot file alone (snapshot.ts, ADR 0021), so this
  * file's bytes change only when a tip, a published document or the request does.
  */
 import type { Artifact, Graph, Visibility } from "@intentset/core";

@@ -34,7 +34,7 @@ Knowledge records that are reviewed and not draft or retired, and that explain n
 
 ## Outcomes
 
-Success: the documents, each keeping its sources and their hashes, audience, reviewer and time, and the snapshot named once for the run, in the snapshot file and in no document, index or help file, so publishing the same knowledge at another commit, or after a change elsewhere in the model, writes the same bytes in every file but that one, which `--no-snapshot` leaves out (ADR 0019, ADR 0020). Failure: a refused request returns no documents and no help, and an excluded source's title or path appears nowhere.
+Success: the documents, each keeping its sources and their hashes, audience, reviewer and time, and the snapshot named once for the run, in the snapshot file and in no document, index or help file, so publishing the same knowledge at another commit, or after a change elsewhere in the model, writes the same bytes in every file but that one, which `--no-snapshot` leaves out (ADR 0019, ADR 0021). Failure: a refused request returns no documents and no help, and an excluded source's title or path appears nowhere.
 
 ## Sources
 

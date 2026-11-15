@@ -20,7 +20,7 @@
  * artifacts excluded for each reason. It names nothing that was not published.
  *
  * The snapshot file (snapshot.ts) is the one place a publication names the
- * commit and graph hash it was made from (ADR 0019, ADR 0020). Both move with
+ * commit and graph hash it was made from (ADR 0019, ADR 0021). Both move with
  * every commit that changes a record, so no document, chunk, index or help
  * file carries them: their bytes change only when what they say does.
  *

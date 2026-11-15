@@ -64,7 +64,7 @@ knowledge body unchanged, preceded by one blank line when it does not begin with
 A generated document MUST NOT carry the snapshot it was published from. The snapshot is the same for every document
 in a run, and the graph hash moves with every record in the model, so a document that carried it would change
 whenever any record did. The run names its snapshot once, in the snapshot file (§6). What a document was made from is
-pinned by the `sourceHash` of its knowledge and of each source it names (ADR 0019, ADR 0020).
+pinned by the `sourceHash` of its knowledge and of each source it names (ADR 0019, ADR 0021).
 
 Fields appear in this order. Strings are plain only when they cannot be read as another type, and are otherwise
 single-quoted; sequences are indented under their key. An HTML rendering SHOULD carry the same block, as canonical

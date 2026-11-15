@@ -4,7 +4,7 @@
  * with provenance, optional HTML, the index a customer tool may read, the
  * help file a product's runtime reads, retrieval chunks that carry the
  * same filters, and the snapshot file, the one output that names the commit
- * and graph hash (publication §6, ADR 0020); --no-snapshot leaves it out, so
+ * and graph hash (publication §6, ADR 0021); --no-snapshot leaves it out, so
  * that what is written is the same bytes at any commit. Refuses outright when the
  * graph does not validate. Review pins are read as written: a real pin is a
  * literal hash, and the fixtures' `@current` is never bound here, so an

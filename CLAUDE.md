@@ -126,7 +126,7 @@ subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?
 // @intentset/publisher
 publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
-// snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0020); snapshotFile(snapshot)
+// snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
 reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null
 
 // @intentset/help  (no dependencies; a browser runtime)
@@ -488,7 +488,7 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   `reviewedAt` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
   (`sourceHash`), as every earlier review does; any other kind matches nothing. `sourceHash` itself is unchanged.
 - **The snapshot is named once per publication, in `snapshot.json` alone** (publication §2, §5, §6; ADR 0019,
-  2026-11-14, amended by ADR 0020, 2026-11-15): a generated document, its HTML and its chunks, `help.json` and the
+  2026-11-14, amended by ADR 0021, 2026-11-15): a generated document, its HTML and its chunks, `help.json` and the
   index carry no `snapshot`; `snapshot.json` names the commit and graph hash, and `publish --no-snapshot` leaves it
   out, which is what a repository that commits its published output uses. The same knowledge, request and
   `publishedAt` at two commits give the same bytes in every other file, and a CLI test holds it.

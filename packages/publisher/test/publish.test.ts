@@ -79,7 +79,7 @@ test("the publication block carries provenance and names only what the projectio
 
 test("BEH-PUBLISH: only the snapshot file names the snapshot: a change elsewhere in the model, at another commit, moves it and nothing else", () => {
   // SCN-ASMT-SCHEDULE is neither the knowledge nor a source it pins, so editing it leaves the review current and
-  // moves only the graph hash (publication §2, §5, §6; ADR 0019, ADR 0020).
+  // moves only the graph hash (publication §2, §5, §6; ADR 0019, ADR 0021).
   const publishFrom = (commit: string, patch: Record<string, { body: string }> = {}) => {
     const { graph, registries } = example({ kb: reviewed(), patch });
     return publish(graph, registries, customer(), {
