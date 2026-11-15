@@ -77,25 +77,25 @@ test("the publication block carries provenance and names only what the projectio
   });
 });
 
-test("BEH-PUBLISH: a document carries no snapshot: a change elsewhere in the model moves the help file and the index, not the document", () => {
+test("BEH-PUBLISH: only the snapshot file names the snapshot: a change elsewhere in the model, at another commit, moves it and nothing else", () => {
   // SCN-ASMT-SCHEDULE is neither the knowledge nor a source it pins, so editing it leaves the review current and
-  // moves only the graph hash (publication §2, §5; ADR 0019).
-  const publishFrom = (patch: Record<string, { body: string }> = {}) => {
+  // moves only the graph hash (publication §2, §5, §6; ADR 0019, ADR 0021).
+  const publishFrom = (commit: string, patch: Record<string, { body: string }> = {}) => {
     const { graph, registries } = example({ kb: reviewed(), patch });
     return publish(graph, registries, customer(), {
-      snapshot: { commit: "c0ffee", graphHash: snapshotOf(graph).graphHash },
+      snapshot: { commit, graphHash: snapshotOf(graph).graphHash },
       publishedAt: PUBLISHED_AT,
       renderHtml: true,
     });
   };
-  const before = publishFrom();
-  const after = publishFrom({
+  const before = publishFrom("c0ffee");
+  const after = publishFrom("decade", {
     "SCN-ASMT-SCHEDULE.md": {
       body: "\n# Accept an eligible schedule\n\n## Given\n\nA teacher.\n\n## When\n\nThey schedule.\n\n## Then\n\nIt is recorded.\n",
     },
   });
   assert.equal(before.ok && after.ok, true);
-  assert.notEqual(before.index.snapshot.graphHash, after.index.snapshot.graphHash);
+  assert.notEqual(before.snapshot.graphHash, after.snapshot.graphHash);
   const [a] = before.documents;
   const [b] = after.documents;
   assert.equal(Object.hasOwn(a.publication, "snapshot"), false);
@@ -104,9 +104,29 @@ test("BEH-PUBLISH: a document carries no snapshot: a change elsewhere in the mod
   assert.equal(b.markset, a.markset);
   assert.equal(b.html, a.html);
   assert.deepEqual(toChunks(after.documents), toChunks(before.documents));
-  assert.deepEqual(before.help?.snapshot, before.index.snapshot);
-  assert.deepEqual(after.help?.snapshot, after.index.snapshot);
-  assert.notDeepEqual(after.help?.snapshot, before.help?.snapshot);
+  // The index and the help file are the same bytes too, and neither names the snapshot.
+  assert.equal(JSON.stringify(after.index), JSON.stringify(before.index));
+  assert.equal(JSON.stringify(after.help), JSON.stringify(before.help));
+  for (const written of [JSON.stringify(before.index), JSON.stringify(before.help)]) {
+    assert.ok(!written.includes("snapshot") && !written.includes("graphHash") && !written.includes("c0ffee"));
+  }
+  assert.deepEqual(Object.keys(before.snapshot), ["profile", "derived", "commit", "graphHash"]);
+  assert.deepEqual(before.snapshot, {
+    profile: "intentset/snapshot/0.2",
+    derived: true,
+    commit: "c0ffee",
+    graphHash: before.snapshot.graphHash,
+  });
+  assert.equal(after.snapshot.commit, "decade");
+});
+
+test("BEH-PUBLISH: a refused request still names the snapshot it was asked to publish from, and the file names no request", () => {
+  const { graph, registries } = example({ kb: reviewed() });
+  const options = { snapshot: { commit: null, graphHash: snapshotOf(graph).graphHash }, publishedAt: PUBLISHED_AT };
+  const refused = publish(graph, registries, customer({ release: "no-such-release" }), options);
+  assert.equal(refused.index.request, null);
+  // The same bytes for every projection of one run: nothing of the request is in it.
+  assert.deepEqual(refused.snapshot, publish(graph, registries, customer(), options).snapshot);
 });
 
 test("an authorized internal projection names internal sources and the knowledge's path", () => {
@@ -191,7 +211,7 @@ test("the HTML page carries the provenance after the charset and the stylesheet 
 
 test("the index names the request without authorization and counts exclusions", () => {
   const result = publishOnce(customer({ visibility: "internal", authorizedInternal: true }));
-  assert.deepEqual(Object.keys(result.index), ["snapshot", "request", "published", "excludedCounts"]);
+  assert.deepEqual(Object.keys(result.index), ["request", "published", "excludedCounts"]);
   assert.equal(Object.hasOwn(result.index.request ?? {}, "authorizedInternal"), false);
   assert.deepEqual(result.index.published, ["KB-ASMT-SCHEDULE"]);
   assert.deepEqual(result.index.excludedCounts, { "not-knowledge": 14 });

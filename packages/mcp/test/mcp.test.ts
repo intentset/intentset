@@ -261,7 +261,7 @@ test("customer search and get return published knowledge, citing named sources a
   const { publication } = customerPublication();
   const client = await connect(createIntentsetServer({ mode: "customer", publication }));
   const search = (await call(client, "knowledge_search", { query: "Release TIME" })).json;
-  assert.deepEqual(search.snapshot, publication.index.snapshot);
+  assert.deepEqual(search.snapshot, { commit: COMMIT, graphHash: publication.snapshot.graphHash });
   assert.equal(search.projection, "customer");
   const results = search.results as { passage: string; document: string; citation: Record<string, unknown> }[];
   assert.deepEqual(
@@ -273,7 +273,7 @@ test("customer search and get return published knowledge, citing named sources a
   // The three sources it explains are internal: counted, never named.
   assert.deepEqual(citation.sources, []);
   assert.equal(citation.withheldSources, 3);
-  assert.deepEqual(citation.snapshot, publication.index.snapshot);
+  assert.deepEqual(citation.snapshot, { commit: COMMIT, graphHash: publication.snapshot.graphHash });
 
   const nothing = (await call(client, "knowledge_search", { query: "quarterly invoices" })).json;
   assert.equal(nothing.matched, 0);

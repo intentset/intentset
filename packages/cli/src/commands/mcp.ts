@@ -120,7 +120,7 @@ export function buildMcpServer(options: McpOptions, sessionOptions: SessionOptio
     const documents = published.documents;
     const server = createIntentsetServer({
       mode: "customer",
-      publication: { documents, index: published.index },
+      publication: { documents, index: published.index, snapshot: published.snapshot },
       chunks: toChunks(documents),
     });
     const r = published.index.request;

@@ -124,8 +124,9 @@ subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?
 
 ```ts
 // @intentset/publisher
-publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, diagnostics, ok }
+publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
+// snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
 reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null
 
 // @intentset/help  (no dependencies; a browser runtime)
@@ -486,9 +487,11 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   kind in `hash`. `content-v1` pins each source's `contentHash`, which leaves out `status`, `delivery`, `reviewedBy`,
   `reviewedAt` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
   (`sourceHash`), as every earlier review does; any other kind matches nothing. `sourceHash` itself is unchanged.
-- **The snapshot is named once per publication** (publication §2, §5, ADR 0019, 2026-11-14): a generated document, its
-  HTML and its chunks carry no `snapshot`; `help.json` and the index name the commit and graph hash. A document's
-  bytes change only when its knowledge, a source it names, the request or `publishedAt` does.
+- **The snapshot is named once per publication, in `snapshot.json` alone** (publication §2, §5, §6; ADR 0019,
+  2026-11-14, amended by ADR 0021, 2026-11-15): a generated document, its HTML and its chunks, `help.json` and the
+  index carry no `snapshot`; `snapshot.json` names the commit and graph hash, and `publish --no-snapshot` leaves it
+  out, which is what a repository that commits its published output uses. The same knowledge, request and
+  `publishedAt` at two commits give the same bytes in every other file, and a CLI test holds it.
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
   inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.

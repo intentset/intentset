@@ -2437,7 +2437,7 @@
   },
   {
     "section": "publication",
-    "name": "a published document carries no snapshot: the help file names it once for the run",
+    "name": "only the snapshot file names the snapshot: no document, index or help file carries it",
     "baseline": "scheduling",
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -2477,16 +2477,18 @@
       ],
       "mustContain": [
         "  withheldSources: 3\n  audience: teacher\n",
-        "\"projection\":\"customer\",\"snapshot\":{\"commit\":null,\"graphHash\":\""
+        "\"derived\":true,\"projection\":\"customer\",\"audience\":\"teacher\"",
+        "{\"profile\":\"intentset/snapshot/0.2\",\"derived\":true,\"commit\":null,\"graphHash\":\""
       ],
       "mustNotContain": [
+        "\"snapshot\":",
         "  snapshot:",
         "  graphHash:",
         "&quot;snapshot&quot;",
         "&quot;graphHash&quot;"
       ]
     },
-    "notes": "Publication §2, §5 (ADR 0019): a generated document's intentset-publication block, and so its HTML meta and its retrieval chunks, carries no snapshot, because the graph hash moves with every record in the model and would change every document whenever any record did. withheldSources is followed directly by audience. The help file names the snapshot, commit and graph hash, once for the run."
+    "notes": "Publication §2, §5, §6 (ADR 0019, ADR 0021): a generated document's intentset-publication block, and so its HTML meta and its retrieval chunks, carries no snapshot, and neither does the index or the help file, because the commit and the graph hash move with every commit that changes a record and would change every file that carried them. withheldSources is followed directly by audience, and the help file's projection by its audience. The snapshot file alone names the commit and graph hash, once for the publication."
   },
   {
     "section": "publication",
