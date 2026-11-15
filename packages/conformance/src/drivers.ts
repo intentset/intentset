@@ -213,6 +213,7 @@ export const publicationDriver: Driver = (expanded) => {
     ...published.documents.flatMap((document) => [document.markset, document.html ?? ""]),
     JSON.stringify(published.index),
     JSON.stringify(published.help),
+    JSON.stringify(published.snapshot),
     JSON.stringify(published.diagnostics),
   ].join("\n");
   return {

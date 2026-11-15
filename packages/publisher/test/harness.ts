@@ -87,6 +87,7 @@ export function outputText(result: PublishResult): string {
     ...result.documents.flatMap((document) => [document.markset, document.html ?? ""]),
     JSON.stringify(result.index),
     JSON.stringify(result.help),
+    JSON.stringify(result.snapshot),
     JSON.stringify(result.diagnostics),
   ].join("\n");
 }

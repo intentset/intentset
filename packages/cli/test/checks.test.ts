@@ -706,7 +706,12 @@ test("BEH-PUBLISH: publish from the example with its knowledge demoted to a draf
   assert.match(published.out, /Excluded, among what this projection may see \(draft 1\)/);
   const index = JSON.parse(readFileSync(join(dir, "published", "index.json"), "utf8"));
   assert.deepEqual(index.published, []);
-  assert.deepEqual(readdirSync(join(dir, "published")).sort(), ["chunks.jsonl", "help.json", "index.json"]);
+  assert.deepEqual(readdirSync(join(dir, "published")).sort(), [
+    "chunks.jsonl",
+    "help.json",
+    "index.json",
+    "snapshot.json",
+  ]);
   const help = JSON.parse(readFileSync(join(dir, "published", "help.json"), "utf8"));
   assert.equal(help.profile, "intentset/help/0.2");
   assert.deepEqual(help.tips, {});
@@ -724,6 +729,7 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
     "chunks.jsonl",
     "help.json",
     "index.json",
+    "snapshot.json",
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");
   assert.match(markset, /intentset\/publication\/0\.2/);
@@ -748,6 +754,49 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
   assert.equal(inScope.code, 2);
   assert.match(inScope.err, /inside the documents' scope/);
   assert.equal(existsSync(join(dir, "product", "published")), false);
+});
+
+test("BEH-PUBLISH: publishing the same knowledge at two commits writes the same bytes, but for snapshot.json, which --no-snapshot leaves out", async (t) => {
+  const dir = await example(t);
+  write(dir, { ".gitignore": "first/\nsecond/\nbare/\n" });
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "example");
+  const first = await run(dir, "publish", ...REQUEST, "--html", "--out", "first");
+  assert.equal(first.code, 0, first.out + first.err);
+  const head = git(dir, "rev-parse", "HEAD");
+
+  // An outcome is not the knowledge or a source it pins: a new commit and a new graph hash, the same publication.
+  edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
+  git(dir, "commit", "-q", "-am", "reword an outcome");
+  assert.notEqual(git(dir, "rev-parse", "HEAD"), head);
+  const second = await run(dir, "publish", ...REQUEST, "--html", "--out", "second");
+  assert.equal(second.code, 0, second.out + second.err);
+
+  const files = readdirSync(join(dir, "first")).sort();
+  assert.deepEqual(readdirSync(join(dir, "second")).sort(), files);
+  const read = (out: string, file: string) => readFileSync(join(dir, out, file), "utf8");
+  for (const file of files.filter((name) => name !== "snapshot.json")) {
+    assert.equal(read("second", file), read("first", file), file);
+    assert.ok(!read("first", file).includes(head), `${file} names the commit`);
+    assert.doesNotMatch(read("first", file), /graphHash|"snapshot"/, `${file} names the snapshot`);
+  }
+  const before = JSON.parse(read("first", "snapshot.json"));
+  const after = JSON.parse(read("second", "snapshot.json"));
+  assert.deepEqual(Object.keys(before), ["profile", "derived", "commit", "graphHash"]);
+  assert.equal(before.profile, "intentset/snapshot/0.2");
+  assert.equal(before.commit, head);
+  assert.match(first.out, new RegExp(`^Snapshot: commit ${head}, graph ${before.graphHash}$`, "m"));
+  assert.notEqual(after.commit, before.commit);
+  assert.notEqual(after.graphHash, before.graphHash);
+
+  const bare = await run(dir, "publish", ...REQUEST, "--html", "--no-snapshot", "--out", "bare");
+  assert.equal(bare.code, 0, bare.out + bare.err);
+  assert.deepEqual(
+    readdirSync(join(dir, "bare")).sort(),
+    files.filter((name) => name !== "snapshot.json"),
+  );
+  assert.match(bare.out, /^Snapshot: commit /m, "the run still says what it read");
 });
 
 test("BEH-PUBLISH: publish refuses a graph that does not validate, and a request missing a dimension", async (t) => {

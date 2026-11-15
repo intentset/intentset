@@ -43,7 +43,8 @@ export interface Help {
   profile: typeof HELP_PROFILE;
   derived: true;
   projection: (typeof VISIBILITIES)[number];
-  snapshot: { commit: string | null; graphHash: string };
+  /** Only in a file written before 0.15.0: a publication names its snapshot in `snapshot.json` (publication §6). */
+  snapshot?: { commit: string | null; graphHash: string };
   audience: string;
   availability: { product: string; release: string; role: string; edition: string; flags: string[] };
   publishedAt: string;
@@ -90,8 +91,11 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
     problems.push("projection is not one of public, customer, internal, restricted");
   }
   const snapshot = value.snapshot;
-  if (!isRecord(snapshot) || !(snapshot.commit === null || str(snapshot.commit)) || !str(snapshot.graphHash)) {
-    problems.push("snapshot must carry commit (a string or null) and graphHash");
+  if (
+    snapshot !== undefined &&
+    (!isRecord(snapshot) || !(snapshot.commit === null || str(snapshot.commit)) || !str(snapshot.graphHash))
+  ) {
+    problems.push("snapshot, when present, must carry commit (a string or null) and graphHash");
   }
   if (!str(value.audience)) problems.push("audience must be a string");
   const availability = value.availability;

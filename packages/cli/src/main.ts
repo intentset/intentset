@@ -103,9 +103,12 @@ commands
                             --fail-on-baseline-growth exits 1 for any it did not hold
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
-        [--published-at <time>]
+        [--published-at <time>] [--no-snapshot]
                             reviewed knowledge for one audience and release, as Markset with
-                            provenance
+                            provenance, an index, a help file and chunks, whose bytes do not
+                            depend on the commit, and snapshot.json, the one file naming the
+                            commit and graph hash published from; --no-snapshot leaves that
+                            file out, for output that is committed
   serve [--port <n>] [--host <address>] [--out <dir>]
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
@@ -236,6 +239,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "out",
     "html",
     "published-at",
+    "no-snapshot",
   ],
 };
 
@@ -572,6 +576,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
         out: values.out,
         html: values.html,
         publishedAt: values["published-at"],
+        snapshot: !values["no-snapshot"],
       };
       const problem = publishUsageProblem(options);
       if (problem !== null) return usage(problem);
@@ -629,6 +634,7 @@ function parse(argv: string[]) {
       "authorized-restricted": { type: "boolean", default: false },
       html: { type: "boolean", default: false },
       "published-at": { type: "string" },
+      "no-snapshot": { type: "boolean", default: false },
       port: { type: "string" },
       host: { type: "string" },
       to: { type: "string" },
