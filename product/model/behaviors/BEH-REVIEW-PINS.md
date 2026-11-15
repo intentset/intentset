@@ -11,7 +11,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-PUBLISH
   links:
     governedBy: [RULE-FAIL-CLOSED, RULE-DETERMINISTIC]
@@ -27,7 +27,7 @@ intentset:
 
 ## Behavior
 
-Someone signs off a knowledge record and pins a hash of each source it was reviewed against (publication §3, ADR 0018). With `hash: content-v1` each pin is the source's content hash, which leaves out its `status`, `delivery`, `reviewedBy`, `reviewedAt` and its own review pins, and names it when it is deprecated or retired. Without `hash`, each pin is the source's whole-file hash, as every earlier review is. Publication, `validate`, the export's knowledge report and the Atlas judge the knowledge current while every pin matches. Each record's content hash is in core and in `intentset context --json`, so a script that writes pins can read it.
+Someone signs off a knowledge record and pins a hash of each source it was reviewed against (publication §3, ADR 0018). With `hash: content-v1` each pin is the source's content hash, which leaves out its `status`, `delivery`, `reviewedBy`, `reviewedAt`, its `approval`, its `formalizes` (ADR 0020) and its own review pins, and names it when it is deprecated or retired. Without `hash`, each pin is the source's whole-file hash, as every earlier review is. Publication, `validate`, the export's knowledge report and the Atlas judge the knowledge current while every pin matches. Each record's content hash is in core and in `intentset context --json`, so a script that writes pins can read it.
 
 ## Preconditions
 
@@ -35,4 +35,4 @@ Knowledge with `reviewedBy`, `reviewedAt` and a pin for every source it explains
 
 ## Outcomes
 
-Success: approving, implementing or releasing a source, or setting its delivery, leaves a `content-v1` review current, and a review without `hash` reads as it always did. Failure: an edit to what a source promises, its deprecation or retirement, a missing pin or a `hash` the implementation does not read makes the knowledge `needs-review`, and it is not published.
+Success: approving, implementing or releasing a source, setting its delivery, recording the basis of its approval or naming the outside requirement it formalizes leaves a `content-v1` review current, and a review without `hash` reads as it always did. Failure: an edit to what a source promises, its deprecation or retirement, a missing pin or a `hash` the implementation does not read makes the knowledge `needs-review`, and it is not published.

@@ -91,13 +91,14 @@ extensions:
 
 - **`content-v1`, the content hash.** SHA-256 over the canonical JSON (ADR 0005) of an object with three members:
   - `frontmatter`, the source's whole parsed frontmatter without, under `intentset`, `status`, `delivery`,
-    `reviewedBy`, `reviewedAt` and the `intentset.org/review` extension, and without `extensions` when nothing else is
-    in it;
+    `reviewedBy`, `reviewedAt`, `approval`, `formalizes` and the `intentset.org/review` extension, and without
+    `extensions` when nothing else is in it;
   - `body`, everything after the frontmatter, as written;
   - `ending`, the status when it is `deprecated` or `retired`, and absent otherwise.
 
-  Approving, implementing or releasing a source, setting its `delivery` or recording its own review leaves the
-  knowledge current. Every other edit to the source makes it `needs-review`: its title, body, links, availability and
+  Approving, implementing or releasing a source, setting its `delivery`, recording its own review, writing the basis
+  of its approval (`approval`, Core §7) or naming the outside requirement it formalizes (`formalizes`, Core §5) leaves
+  the knowledge current: none of them changes what the source promises (ADR 0018, ADR 0020). Every other edit to the source makes it `needs-review`: its title, body, links, availability and
   any other frontmatter, and a status that says it is going away. A change in key order, quoting or indentation does
   not, because the frontmatter is hashed as parsed. A review SHOULD pin this kind.
 - **Absent: the whole file.** Each pin is the SHA-256 of the source file's bytes, its `sourceHash` (ADR 0005), so any

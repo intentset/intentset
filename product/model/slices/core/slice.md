@@ -10,9 +10,9 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   links:
-    implements: [BEH-VALIDATE-REPORTS, BEH-IMPACT, BEH-EXPORT, BEH-READ-EXPORT, BEH-LIST, BEH-DELIVERY]
+    implements: [BEH-VALIDATE-REPORTS, BEH-IMPACT, BEH-EXPORT, BEH-READ-EXPORT, BEH-LIST, BEH-DELIVERY, BEH-APPROVAL-BASIS, BEH-FORMALIZES]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
@@ -33,7 +33,7 @@ intentset:
 
 ## Responsibility
 
-The carrier reader, the types, the graph, the validator, impact and the export, `readExport` for consumers, and `select`, the closed selector `intentset list` and consumers read records with (spec/list.md), with the slice definitions it shares with `review` and `context`, and `deliveryOf`, a record's effective delivery (Core §7). It has no dependencies (design invariant 8), which `dependsOn` being empty states and the architecture check holds.
+The carrier reader, the types, the graph, the validator, impact and the export, `readExport` for consumers, and `select`, the closed selector `intentset list` and consumers read records with (spec/list.md), with the slice definitions it shares with `review` and `context`, `deliveryOf`, a record's effective delivery (Core §7), and the readers of `approval`, the basis of a record's approval, and `formalizes`, the outside requirement it formalizes (Core §7, §5; ADR 0020). It has no dependencies (design invariant 8), which `dependsOn` being empty states and the architecture check holds.
 
 The slice is the package `@intentset/core`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
@@ -43,4 +43,4 @@ The exports of `packages/core/src/index.ts`, reached by other packages as `@inte
 
 ## Verification
 
-The package's tests under `packages/core/test/`. The verification records of the behaviors it implements are TEST-VALIDATE-REPORTS (BEH-VALIDATE-REPORTS), TEST-IMPACT (BEH-IMPACT), TEST-EXPORT (BEH-EXPORT), TEST-READ-EXPORT (BEH-READ-EXPORT) and TEST-LIST (BEH-LIST). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/core/test/`. The verification records of the behaviors it implements are TEST-VALIDATE-REPORTS (BEH-VALIDATE-REPORTS), TEST-IMPACT (BEH-IMPACT), TEST-EXPORT (BEH-EXPORT), TEST-READ-EXPORT (BEH-READ-EXPORT), TEST-LIST (BEH-LIST), TEST-DELIVERY (BEH-DELIVERY), TEST-APPROVAL-BASIS (BEH-APPROVAL-BASIS) and TEST-FORMALIZES (BEH-FORMALIZES). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

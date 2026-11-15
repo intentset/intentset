@@ -33,6 +33,7 @@ Revisions that changed what a reader who conformed earlier sees, recorded so tha
 | 2026-10-21 (`0.2`, no move, second) | **Policies, models and the client seam do not import UI frameworks or render JSX by default** (profile §3, TS007, TS008). The profile's sentence that policies and models MUST NOT import UI was enforced for the slice's own UI files and not for packages, and nothing kept UI out of the client seam. The new default `forbiddenPackages` names the UI frameworks for the `policy`, `model` and `external` layers, so a repository whose files in those layers import one, or render JSX, sees TS007 or TS008 errors it did not see before; setting `forbiddenPackages` replaces the default. No existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move. |
 | 2026-10-21 (`0.2`, no move, third) | **A baseline entry that matches nothing is an error** (VSA §9, VSA014). A stale entry was counted in the summary and failed nothing, so a violation that was fixed could come back under it. In migration mode each is now VSA014, an error until the baseline is written without it, which `--write-baseline` does. A repository whose baseline holds entries its code no longer has sees VSA014 errors it did not see before; strict mode ignores the baseline as before. The new cases carry their baseline in a new optional case field, `architecture`, and no existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move. |
 | 2026-11-14 (`0.2`, no move) | **A published document no longer carries the snapshot it was published from** (§9, [publication §2](publication.md#2-the-generated-document), ADR 0019). Every document's `intentset-publication` block, and so its HTML `<meta>` and its retrieval chunks, carried `snapshot`, whose graph hash moves with any record in the model, so every published file changed whenever any record did. The publication names its snapshot once, in its help file (publication §5). A reader that took the snapshot from a document reads it from the help file instead. No case checked the per-document snapshot, so none changed its `valid` or `diagnostics`, and neither `intentset.spec` nor the profile `intentset/publication/0.2` moves. |
+| 2026-11-14 (`0.2`, no move, second) | **A record can say on what basis it was approved, and which outside requirement it formalizes** (§5, §7, ADR 0020). `approval` and `formalizes` are new optional fields, and §8 says that a verification's status carries no approval meaning. Unknown keys under `intentset` are errors (§3), so a reader of an earlier revision rejects a record that carries either field: a repository moves its tools before it writes them. No existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move; the export moves to `intentset/export/0.6` ([export contract §7](export.md#7-versioning)). |
 
 ## 2. Semantic model and granularity
 
@@ -95,13 +96,13 @@ Required common fields are `spec`, `profile`, `id`, `type`, `title`, `status`, `
 
 `owner` is one accountable team/role identifier from the repository's owner registry. `audiences` is a nonempty array from its audience registry. These are documentation audiences, not runtime authorization. `visibility` is `public`, `customer`, `internal`, or `restricted`. Missing access information MUST fail closed for publication.
 
-Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `delivery` (§7), `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.
+Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `delivery` (§7), `approval` (§7), `formalizes` (§5, on a behavior, rule or scenario), `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.
 
 Moving a file or correcting wording does not change identity. Splitting a behavior creates new IDs and preserves the old artifact as retired with `replacedBy` links. Merging works similarly. Historical release snapshots keep the earlier meaning.
 
 ## 5. Relationships and cardinality
 
-Relationships are authored once, in the direction below. Reverse edges are derived and MUST NOT be separately maintained. References MUST resolve in the same graph snapshot. External issue/PR URLs belong in `extensions`, never as dangling internal IDs.
+Relationships are authored once, in the direction below. Reverse edges are derived and MUST NOT be separately maintained. References MUST resolve in the same graph snapshot. A requirement outside the model that a record formalizes is named in `formalizes`, below; other external issue/PR URLs belong in `extensions`; neither is ever written as a dangling internal ID.
 
 | Field / relationship | Source → target | Cardinality and meaning |
 |---|---|---|
@@ -122,6 +123,16 @@ Relationships are authored once, in the direction below. Reverse edges are deriv
 All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in `parent`, cycles in `replacedBy`, and cycles in `requires` are errors. Other cycles are evaluated by the relevant profile; `dependsOn` is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming `governedBy`; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. An active outcome MUST have at least one measure whose `parent` it is: an outcome past draft says how it will be judged, and the capabilities under it do not say that. Draft unattached artifacts, and a draft outcome with no measure, produce warnings.
 
 At VSA adoption, an approved, implemented, released, or deprecated behavior MUST have exactly one accountable product slice through `implements`. Other collaborating slices appear through slice dependencies and contracts. Exactly one owner keeps accountability unambiguous while still allowing multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.
+
+**Outside requirements.** Every relationship above points at another record. A behavior, rule or scenario MAY also name the requirements outside the model that it formalizes, such as a work tracker's item or one acceptance criterion of it, in `formalizes` (ADR 0020): a list of at least one entry, each with `source`, a URL or a tool's key for the item, and optionally `anchor`, which identifies the part of the source that is meant, such as `criterion-3`. Both are non-empty strings, an entry has no other key, and no two entries have the same `source` and `anchor`.
+
+```yaml
+  formalizes:
+    - source: https://tracker.example/LAN-12
+      anchor: criterion-3
+```
+
+`formalizes` is not a relationship: it makes no edge, it has no inverse, and nothing is derived from it. A validator checks that it is well formed, CORE001, as it is on any other type, and MUST NOT resolve it: it never fetches a source, and never judges whether the source exists or still says what it said (§11). It says where a promise came from, not what the promise is, so a record's content hash leaves it out ([publication §3](publication.md#3-review-record-and-needs-review)): adding the reference to a record, or a tool renumbering its criteria, does not send the knowledge that explains the record back to review.
 
 ## 6. Required narrative by artifact type
 
@@ -159,6 +170,29 @@ Status is an editorial claim, not a test result. `approved` records intent; `imp
 
 Delivery and status contradict each other, CORE005, when a record says `delivery: planned` while its status is `implemented`, `released` or `deprecated`, and when a behavior whose effective delivery is `built` is implemented by a slice that says `delivery: planned`. At L2, a draft behavior that says `built` and that no product slice implements is a CORE006 warning, so built code without an owner shows before anyone approves the record, and a draft slice that says `built`, or implements a behavior whose effective delivery is `built`, has no planned paths (VSA §3). Release labels are opaque, so a validator cannot tell whether a planned record's release has shipped. Knowledge that explains a record whose `delivery` is `planned` is not published as current ([publication profile](publication.md) §4).
 
+**Approval basis** states how a record came to be approved (ADR 0020). `status: approved` reads the same whether a person read the record or it was derived from something a person approved, so a record of any type MAY carry `approval`, with `at`, when it was approved, a date or a date and time written as a quoted string as `reviewedAt` is, and `basis`, one of:
+
+| `basis` | Meaning | `by` | `source` | `attestedBy` |
+|---|---|---|---|---|
+| `direct` | A person read this record and approved it | required: the person | not written | not written |
+| `derived` | The record is approved because a named source that a person approved covers it | required: the person who approved the source | required | optional: the agent that attested the record matches the source |
+| `attested` | An agent attested the record; no person approved it or a source of it | not written | not written | required: the agent |
+
+`by` always names a person and `attestedBy` always names an agent, each by a name or an identifier the repository chooses. `source` names what was approved: `ref`, a URL or a tool's key for the item, and at least one of `revision` and `digest` (such as `sha256:…`), which say which state of it. Every value is a non-empty string, and neither block has any other key.
+
+```yaml
+  approval:
+    by: ana.reyes
+    at: "2026-11-14"
+    basis: derived
+    source:
+      ref: https://tracker.example/LAN-12
+      revision: "7"
+    attestedBy: drafting-agent
+```
+
+A validator checks this shape, CORE001, and nothing else. It never resolves `ref`; it never decides who may approve, whether a basis is acceptable or whether a person is required, which are the adopting organization's workflow and not Intentset's; and it does not compare `approval` with `status`. `approval` is not required on an approved record, and a record without it says nothing about how it was approved. It concerns the record's own promise, which makes it a different statement from `reviewedBy`, `reviewedAt` and the `intentset.org/review` extension: those record that a knowledge article was reviewed against the sources it pins (§9). Like `status`, `approval` is left out of a record's content hash ([publication §3](publication.md#3-review-record-and-needs-review)), so writing or changing it never makes knowledge need review.
+
 A release snapshot records product ID, exact release label, source commit, graph hash, specification/profile versions, and build time. Release labels are opaque strings: v0.2 performs exact matching, not inferred SemVer ordering. `availability`, required on behaviors and knowledge, contains nonempty `products`, `releases`, `roles`, and `editions` arrays plus a `flags` array. All named flags are required; empty means no flags. No implicit wildcard is allowed. Applicability is AND across dimensions and OR within an array. The repository registries define valid dimension values.
 
 A release may include deprecated behavior; prospective documentation MAY describe future work only in a separately labeled roadmap projection. A status of “released” alone MUST NOT make a feature available to all customers.
@@ -168,6 +202,8 @@ A release may include deprecated behavior; prospective documentation MAY describ
 Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. `verification` metadata contains `method` (`automated` or `manual`), `locator` (repository-relative path), `selector` (stable test or review case identifier) and optionally `exercises`: unique IDs of slices or registry resources the check drives beyond what the slices implementing its behaviors reach, as an end-to-end test drives code its behavior's slices do not import. Each MUST name a slice in the graph or a resource in the registries (CORE003).
 
 A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. A record MAY carry `binding` (`subject` or `commit`) and `subjectHash`, a SHA-256 in lowercase hex; a record with `binding: subject` MUST carry `subjectHash`, and one without `binding` is a commit-binding record, so every record written before the field existed means what it meant. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
+
+A verification's `status` says where the definition stands in its own lifecycle, and nothing in this specification reads an approval from it (ADR 0020). The runs of a verification that is not retired count whatever its status, a draft's included; whether evidence is required follows the status of the claim, not of the verification (§11, CORE007); and the only checks that read a verification's status are the ones every type shares: a retired one is set aside, and one that verifies nothing is CORE003 once it is past draft and a CORE009 warning while it is a draft (§5). A tool MAY therefore treat a verification's standing as that of the behaviors, rules and scenarios it verifies, and need not ask for an approval of the verification itself. A validator derives no such standing: a verification of several claims whose statuses differ has no single one, and choosing among them would be a workflow rule.
 
 Only a `pass` whose binding holds counts as current passing evidence. There are two bindings:
 

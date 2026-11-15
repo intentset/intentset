@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-An agent runs `intentset context` with an ID or a file it is about to edit, and gets the owning slice, its behaviors, rules, scenarios, contracts, decisions and checks, with their paths. With `--json` each record also carries its `sourceHash` and its `contentHash`, which a script reads to write `content-v1` review pins (ADR 0018).
+An agent runs `intentset context` with an ID or a file it is about to edit, and gets the owning slice, its behaviors, rules, scenarios, contracts, decisions and checks, with their paths, and for each record that states them the basis of its approval and the outside requirements it formalizes (ADR 0020). With `--json` each record also carries its `sourceHash` and its `contentHash`, which a script reads to write `content-v1` review pins (ADR 0018).
 
 ## Preconditions
 

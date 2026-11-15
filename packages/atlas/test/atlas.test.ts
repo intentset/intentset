@@ -769,6 +769,31 @@ test("deterministic: two builds, and a build from the files in another order, ar
   assert.deepEqual([...reordered], [...first]);
 });
 
+test("BEH-ATLAS: a record's page shows the basis of its approval and the outside requirement it formalizes", () => {
+  const atlas = buildAtlas(
+    example({
+      edit: (name, source) =>
+        name === "BEH-ASMT-SCHEDULE.md"
+          ? source.replace(
+              "  status: draft\n",
+              "  status: draft\n  approval:\n    by: ana.reyes\n    at: '2026-11-14'\n    basis: derived\n    source:\n      ref: https://tracker.example/LAN-12\n      revision: '7'\n    attestedBy: drafting-agent\n  formalizes:\n    - source: https://tracker.example/LAN-12\n      anchor: criterion-3\n    - source: https://tracker.example/LAN-12\n",
+            )
+          : source,
+    }),
+  );
+  const record = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "");
+  assert.match(
+    record,
+    /Approval derived, from https:\/\/tracker\.example\/LAN-12 at revision 7, by ana\.reyes, attested by drafting-agent, at 2026-11-14/,
+  );
+  assert.match(
+    record,
+    /Formalizes https:\/\/tracker\.example\/LAN-12; https:\/\/tracker\.example\/LAN-12 \(criterion-3\)/,
+  );
+  const rule = textOf(atlas.get("records/RULE-ASMT-AUTH.html") ?? "");
+  assert.doesNotMatch(rule, /Approval|Formalizes/, "a record that states neither shows neither");
+});
+
 test("BEH-ATLAS, BEH-DELIVERY: the overview and a record's page show delivery beside the status, and count it", () => {
   const atlas = buildAtlas(
     example({

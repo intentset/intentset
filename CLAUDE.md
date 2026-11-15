@@ -6,7 +6,7 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.2.md`, `vsa-0.2.md`, `profile-typescript-amplify-gen2-0.2.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.5`), `list.md` (the result `intentset list`
+`export.md` (the export contract other tools pin, `intentset/export/0.6`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
@@ -108,6 +108,9 @@ readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, en
 // report builders live with their checks: evidenceReport (verification), knowledgeReport (publisher), ownershipReport (architecture)
 graphHash(graph): string; canonicalJson(value): string; sha256Hex(input): string
 contentHashOf(frontmatter, body): string   // publication §3, ADR 0018: what a content-v1 pin holds; every Artifact carries contentHash
+exportApproval(meta.approval): ExportApproval | null; exportFormalizes(meta.formalizes ?? []): ExportFormalized[]
+// Core §7 and §5, ADR 0020: the two fields as the export, `context --json` and the MCP tools carry them;
+// approvalSummary, formalizedSummary are the one-line text the CLI and the Atlas show
 sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
 ```
 
@@ -473,9 +476,9 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
 - `site/content` is the site copy's source of truth. The IA document in `docs/requirements/` stays frozen as the
   handoff, and the site's words need not match it.
 - The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
-- The export is 0.5 (2026-11-12, ADR 0017: each artifact carries its `delivery`; 0.4, 2026-10-14, ADR 0014, added the
-  evidence binding) and the specifications are 0.2. Before 1.0 a changed export envelope is a minor bump of the packages;
-  Streamlane and Driftline read exports and move their pins when they update. A 0.5 reader rejects 0.4, and a 0.2 reader
+- The export is 0.6 (2026-11-14, ADR 0020: each artifact carries its `approval` and `formalizes`; 0.5, 2026-11-12,
+  ADR 0017, added `delivery`; 0.4, 2026-10-14, ADR 0014, added the evidence binding) and the specifications are 0.2. Before 1.0 a changed export envelope is a minor bump of the packages;
+  Streamlane and Driftline read exports and move their pins when they update. A 0.6 reader rejects 0.5, and a 0.2 reader
   rejects a record that declares `0.1`: `intentset migrate --to 0.2` rewrites `spec` and `profile` in a repository's
   records.
 - **Delivery** (Core §7, ADR 0017, 2026-11-12): an optional `delivery: planned | built` on a capability, behavior, rule,
@@ -484,11 +487,18 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   read as built. An agent may write it, since it states a fact about the code; it never approves.
 - **Review pins** (publication §3, ADR 0018, 2026-11-12): a knowledge review's `intentset.org/review` names its pin
   kind in `hash`. `content-v1` pins each source's `contentHash`, which leaves out `status`, `delivery`, `reviewedBy`,
-  `reviewedAt` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
+  `reviewedAt`, `approval`, `formalizes` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
   (`sourceHash`), as every earlier review does; any other kind matches nothing. `sourceHash` itself is unchanged.
 - **The snapshot is named once per publication** (publication §2, §5, ADR 0019, 2026-11-14): a generated document, its
   HTML and its chunks carry no `snapshot`; `help.json` and the index name the commit and graph hash. A document's
   bytes change only when its knowledge, a source it names, the request or `publishedAt` does.
+- **Approval basis and outside requirements** (Core §7 and §5, ADR 0020, 2026-11-14): an optional `approval` on any
+  record says who approved it (`by`, a person), when (`at`) and on what `basis`: `direct`, `derived` (with `source`:
+  `ref` and a `revision` or `digest`, and optionally `attestedBy`, the agent) or `attested` (`attestedBy`, no `by`).
+  An optional `formalizes` on a behavior, rule or scenario lists outside requirements by `source` and optional
+  `anchor`. Both are shape-checked as CORE001 and never resolved; validation never decides who may approve and never
+  compares `approval` with `status`. Both are outside the content hash. Core §8 says a verification's status carries
+  no approval meaning, so a tool may take its standing from what it verifies; Core derives none.
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
   inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.

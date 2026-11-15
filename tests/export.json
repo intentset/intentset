@@ -6,7 +6,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "contract": "intentset/export/0.5",
+      "contract": "intentset/export/0.6",
       "spec": "0.2",
       "generatedAt": "2026-01-01T00:00:00Z",
       "repository": "example/scheduling",
@@ -332,6 +332,118 @@
       ]
     },
     "notes": "The export carries the field as written; an implemented record without it stays null, and a consumer computes the effective delivery (export §2)."
+  },
+  {
+    "section": "export",
+    "name": "export approval and formalizes as authored, null and empty where a record states none",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "LAN-12",
+              "anchor": "criterion-3"
+            },
+            {
+              "source": "LAN-12"
+            },
+            {
+              "source": "LAN-11"
+            }
+          ]
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7"
+            }
+          }
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "attested",
+            "attestedBy": "drafting-agent"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {},
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "approval": null,
+          "formalizes": [
+            {
+              "source": "LAN-11",
+              "anchor": null
+            },
+            {
+              "source": "LAN-12",
+              "anchor": null
+            },
+            {
+              "source": "LAN-12",
+              "anchor": "criterion-3"
+            }
+          ]
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN",
+          "approval": null,
+          "formalizes": []
+        },
+        {},
+        {},
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7",
+              "digest": null
+            },
+            "attestedBy": null
+          },
+          "formalizes": []
+        },
+        {},
+        {},
+        {},
+        {},
+        {
+          "id": "RULE-ASMT-AUTH",
+          "approval": {
+            "by": null,
+            "at": "2026-11-14",
+            "basis": "attested",
+            "source": null,
+            "attestedBy": "drafting-agent"
+          },
+          "formalizes": []
+        },
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "notes": "Export §2: approval is the authored block with null where the basis carries no member, and null when the record states none; formalizes is sorted by source and then anchor, a source alone first, and empty when the record names none."
   },
   {
     "section": "export",

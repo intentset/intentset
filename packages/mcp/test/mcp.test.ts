@@ -142,6 +142,51 @@ test("lookup gives metadata, path and body, after the snapshot and the source pa
   await client.close();
 });
 
+test("BEH-MCP-CONTEXT: lookup and context carry a record's approval and the outside requirement it formalizes", async () => {
+  const edited = graphOf((name, source) =>
+    name === "BEH-ASMT-SCHEDULE.md"
+      ? source.replace(
+          "  status: draft\n",
+          "  status: draft\n  approval:\n    by: ana.reyes\n    at: '2026-11-14'\n    basis: derived\n    source:\n      ref: https://tracker.example/LAN-12\n      revision: '7'\n    attestedBy: drafting-agent\n  formalizes:\n    - source: https://tracker.example/LAN-12\n      anchor: criterion-3\n    - source: https://tracker.example/LAN-12\n",
+        )
+      : source,
+  );
+  const client = await engineering({ graph: edited });
+  const approval = {
+    by: "ana.reyes",
+    at: "2026-11-14",
+    basis: "derived",
+    source: { ref: "https://tracker.example/LAN-12", revision: "7", digest: null },
+    attestedBy: "drafting-agent",
+  };
+  const formalizes = [
+    { source: "https://tracker.example/LAN-12", anchor: null },
+    { source: "https://tracker.example/LAN-12", anchor: "criterion-3" },
+  ];
+  const lookup = (await call(client, "intentset_lookup", { id: "BEH-ASMT-SCHEDULE" })).json.artifact as Record<
+    string,
+    unknown
+  >;
+  assert.deepEqual(lookup.approval, approval);
+  assert.deepEqual(lookup.formalizes, formalizes);
+  const context = (await call(client, "intentset_context", { id: "BEH-ASMT-SCHEDULE" })).json.artifacts as Record<
+    string,
+    unknown
+  >[];
+  assert.deepEqual(context[0].approval, approval);
+  assert.deepEqual(context[0].formalizes, formalizes);
+  for (const other of context.slice(1)) {
+    assert.equal(other.approval, null, `${other.id} states none`);
+    assert.deepEqual(other.formalizes, []);
+  }
+  assert.equal(
+    context[0].contentHash,
+    graph.artifacts.get("BEH-ASMT-SCHEDULE")?.contentHash,
+    "neither field is in the content hash",
+  );
+  await client.close();
+});
+
 test("context is core's contextFor bundle, each artifact with its path and body", async () => {
   const client = await engineering();
   const { json } = await call(client, "intentset_context", { id: "BEH-ASMT-SCHEDULE" });

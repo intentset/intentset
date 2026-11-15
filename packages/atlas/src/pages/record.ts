@@ -13,10 +13,13 @@
  */
 import {
   type Artifact,
+  approvalSummary,
   type ContextArtifact,
   type ContextRole,
   compareStrings,
   contextFor,
+  exportFormalizes,
+  formalizedSummary,
   LINK_KINDS,
   type LinkKind,
 } from "@intentset/core";
@@ -314,6 +317,17 @@ function fields(model: Model, artifact: Artifact): string[] {
   );
   add("reviewedBy", "Reviewed by", meta.reviewedBy === undefined ? undefined : text(meta.reviewedBy));
   add("reviewedAt", "Reviewed at", meta.reviewedAt === undefined ? undefined : text(meta.reviewedAt));
+  // Core §7, ADR 0020: what the record states about its approval, in its own words; absent, nothing is claimed.
+  add("approval", "Approval", meta.approval === undefined ? undefined : text(approvalSummary(meta.approval)));
+  add(
+    "formalizes",
+    "Formalizes",
+    meta.formalizes === undefined
+      ? undefined
+      : exportFormalizes(meta.formalizes)
+          .map((entry) => text(formalizedSummary(entry)))
+          .join("; "),
+  );
   shown.add("tips");
   for (const [target, tip] of Object.entries(meta.tips ?? {})) rows.push([`Tip for ${ref(target)}`, text(tip)]);
   shown.add("slice");

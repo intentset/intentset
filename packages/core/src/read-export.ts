@@ -18,6 +18,7 @@
  */
 import { compareStrings, isRecord } from "./report.ts";
 import {
+  APPROVAL_BASES,
   CLAIM_KINDS,
   EVIDENCE_BINDING_REASONS,
   EVIDENCE_BINDINGS,
@@ -25,6 +26,7 @@ import {
   EXPORT_REPORTS,
   DELIVERIES,
   DELIVERY_TYPES,
+  FORMALIZES_TYPES,
   type ExportEnvelope,
   type ExportReportName,
   ID_PATTERN,
@@ -417,6 +419,8 @@ class Shape {
         "title",
         "status",
         "delivery",
+        "approval",
+        "formalizes",
         "owner",
         "visibility",
         "audiences",
@@ -448,6 +452,22 @@ class Shape {
         this.fail(p, `Expected null: ${a.type} records do not carry delivery.`);
       }
     });
+    this.nullable(a.approval, `${at}/approval`, (x, p) => this.approval(x, p));
+    const formalizes = this.array(a.formalizes, `${at}/formalizes`, (x, p) => {
+      const f = this.object(x, p, ["source", "anchor"]);
+      if (f === null) return;
+      this.string(f.source, `${p}/source`);
+      this.nullable(f.anchor, `${p}/anchor`, (anchor, q) => this.string(anchor, q));
+    });
+    const named = formalizes.map((f) => (isRecord(f) ? JSON.stringify([f.source, f.anchor]) : JSON.stringify(f)));
+    if (new Set(named).size !== named.length) this.fail(`${at}/formalizes`, "Expected no repeated items.");
+    if (
+      formalizes.length > 0 &&
+      typeof a.type === "string" &&
+      !(FORMALIZES_TYPES as readonly string[]).includes(a.type)
+    ) {
+      this.fail(`${at}/formalizes`, `Expected an empty list: ${a.type} records do not carry formalizes.`);
+    }
     this.string(a.owner, `${at}/owner`);
     this.oneOf(a.visibility, `${at}/visibility`, VISIBILITIES);
     this.strings(a.audiences, `${at}/audiences`, { minItems: 1 });
@@ -506,6 +526,38 @@ class Shape {
     });
     this.nullable(a.extensions, `${at}/extensions`, (x, p) => this.extensions(x, p));
     if (Object.hasOwn(a, "body") && typeof a.body !== "string") this.fail(`${at}/body`, "Expected a string.");
+  }
+
+  /** Export §2, Core §7: an approval, with the members each basis carries and null for the rest. */
+  approval(value: unknown, at: string): void {
+    const v = this.object(value, at, ["by", "at", "basis", "source", "attestedBy"]);
+    if (v === null) return;
+    this.nullable(v.by, `${at}/by`, (x, p) => this.string(x, p));
+    this.string(v.at, `${at}/at`);
+    this.oneOf(v.basis, `${at}/basis`, APPROVAL_BASES);
+    this.nullable(v.source, `${at}/source`, (x, p) => {
+      const s = this.object(x, p, ["ref", "revision", "digest"]);
+      if (s === null) return;
+      this.string(s.ref, `${p}/ref`);
+      this.nullable(s.revision, `${p}/revision`, (r, q) => this.string(r, q));
+      this.nullable(s.digest, `${p}/digest`, (d, q) => this.string(d, q));
+      if (s.revision === null && s.digest === null) this.fail(p, "Expected a revision or a digest.");
+    });
+    this.nullable(v.attestedBy, `${at}/attestedBy`, (x, p) => this.string(x, p));
+    // The members a basis carries (Core §7). Only a member that is present is judged: a missing one is reported above.
+    const has = (key: string) => Object.hasOwn(v, key);
+    const person = v.basis === "direct" || v.basis === "derived";
+    if (person && has("by") && v.by === null) this.fail(`${at}/by`, `Expected the person: the basis is ${v.basis}.`);
+    if (v.basis === "attested" && has("by") && v.by !== null)
+      this.fail(`${at}/by`, "Expected null: an attested approval names no person.");
+    if (v.basis === "derived" && has("source") && v.source === null)
+      this.fail(`${at}/source`, "Expected the source: the basis is derived.");
+    if ((v.basis === "direct" || v.basis === "attested") && has("source") && v.source !== null)
+      this.fail(`${at}/source`, `Expected null: the basis is ${v.basis}.`);
+    if (v.basis === "direct" && has("attestedBy") && v.attestedBy !== null)
+      this.fail(`${at}/attestedBy`, "Expected null: the basis is direct.");
+    if (v.basis === "attested" && has("attestedBy") && v.attestedBy === null)
+      this.fail(`${at}/attestedBy`, "Expected the agent: the basis is attested.");
   }
 
   slice(value: unknown, at: string): void {
