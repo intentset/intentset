@@ -87,7 +87,7 @@ authored.
 
 ## Moving a pin: export 0.6 (ADR 0020)
 
-The release after 0.14.0 adds two members to every artifact: `approval`, the basis the record states for its approval
+0.16.0 adds two members to every artifact: `approval`, the basis the record states for its approval
 or null, and `formalizes`, the outside requirements it names or an empty list. Nothing else in the envelope changed,
 and the specifications stay 0.2.
 
