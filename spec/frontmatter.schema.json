@@ -234,6 +234,61 @@
           "enum": ["planned", "built"],
           "description": "Core \u00a77, ADR 0017: whether the work the record describes exists, apart from its approval. Capability, behavior, rule, scenario, slice and contract only; absent means not stated."
         },
+        "approval": {
+          "type": "object",
+          "description": "Core \u00a77, ADR 0020: how the record came to be approved. Any type; optional, also on an approved record. Shape only: who may approve is never checked.",
+          "additionalProperties": false,
+          "required": ["at", "basis"],
+          "properties": {
+            "by": { "type": "string", "minLength": 1 },
+            "at": { "type": "string", "minLength": 1 },
+            "basis": { "enum": ["direct", "derived", "attested"] },
+            "source": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ref"],
+              "properties": {
+                "ref": { "type": "string", "minLength": 1 },
+                "revision": { "type": "string", "minLength": 1 },
+                "digest": { "type": "string", "minLength": 1 }
+              },
+              "anyOf": [{ "required": ["revision"] }, { "required": ["digest"] }]
+            },
+            "attestedBy": { "type": "string", "minLength": 1 }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "basis": { "const": "direct" } } },
+              "then": {
+                "required": ["by"],
+                "not": { "anyOf": [{ "required": ["source"] }, { "required": ["attestedBy"] }] }
+              }
+            },
+            { "if": { "properties": { "basis": { "const": "derived" } } }, "then": { "required": ["by", "source"] } },
+            {
+              "if": { "properties": { "basis": { "const": "attested" } } },
+              "then": {
+                "required": ["attestedBy"],
+                "not": { "anyOf": [{ "required": ["by"] }, { "required": ["source"] }] }
+              }
+            }
+          ]
+        },
+        "formalizes": {
+          "type": "array",
+          "description": "Core \u00a75, ADR 0020: the requirements outside the model that a behavior, rule or scenario formalizes. Never resolved.",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source"],
+            "properties": {
+              "source": { "type": "string", "minLength": 1 },
+              "anchor": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
         "extensions": {
           "type": "object",
           "propertyNames": {
@@ -701,6 +756,10 @@
               }
             }
           }
+        },
+        {
+          "if": { "required": ["formalizes"] },
+          "then": { "properties": { "type": { "enum": ["behavior", "rule", "scenario"] } } }
         },
         {
           "if": {

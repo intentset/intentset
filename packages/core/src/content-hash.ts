@@ -9,9 +9,11 @@
  * `{ body, frontmatter, ending }`:
  *
  * - `frontmatter` is the whole parsed frontmatter, `markset` and unknown
- *   top-level keys included, without `status`, `delivery`, `reviewedBy` and
- *   `reviewedAt` under `intentset`, and without the `intentset.org/review`
- *   extension (and `extensions` itself when nothing else is in it);
+ *   top-level keys included, without `status`, `delivery`, `reviewedBy`,
+ *   `reviewedAt`, `approval` and `formalizes` under `intentset`, and without
+ *   the `intentset.org/review` extension (and `extensions` itself when
+ *   nothing else is in it). `approval` says how the record was approved and
+ *   `formalizes` where its promise came from (ADR 0020); neither is the promise;
  * - `body` is everything after the frontmatter, as written;
  * - `ending` is the status when it is `deprecated` or `retired`, and absent
  *   otherwise, so a record that is going away still moves the hash: what a
@@ -22,8 +24,8 @@
  */
 import { canonicalJson, sha256Hex } from "./hash.ts";
 
-/** The `intentset` fields a content hash leaves out: lifecycle and review, not promise. */
-export const CONTENT_HASH_OMITS = ["status", "delivery", "reviewedBy", "reviewedAt"] as const;
+/** The `intentset` fields a content hash leaves out: lifecycle, review, approval and provenance, not promise. */
+export const CONTENT_HASH_OMITS = ["status", "delivery", "reviewedBy", "reviewedAt", "approval", "formalizes"] as const;
 /** The extension a content hash leaves out: the review's own pins. */
 export const CONTENT_HASH_OMITS_EXTENSION = "intentset.org/review";
 /** The statuses a content hash names, because a record in them is going away. */

@@ -479,6 +479,48 @@ test("BEH-CONTEXT: context from a rule, a slice and a capability reaches the sam
   );
 });
 
+test("BEH-CONTEXT: context carries the basis of a record's approval and the outside requirement it formalizes", async (t) => {
+  const dir = await example(t);
+  const plain = JSON.parse((await run(dir, "context", "BEH-ASMT-SCHEDULE", "--json")).out);
+  for (const a of plain.artifacts) {
+    assert.equal(a.approval, null, `${a.id} states no approval`);
+    assert.deepEqual(a.formalizes, [], `${a.id} formalizes nothing`);
+  }
+  edit(
+    dir,
+    "BEH-ASMT-SCHEDULE",
+    "  status: draft\n",
+    "  status: draft\n  approval:\n    by: ana.reyes\n    at: '2026-11-14'\n    basis: derived\n    source:\n      ref: https://tracker.example/LAN-12\n      revision: '7'\n    attestedBy: drafting-agent\n  formalizes:\n    - source: https://tracker.example/LAN-12\n      anchor: criterion-3\n    - source: https://tracker.example/LAN-12\n",
+  );
+  const result = await run(dir, "context", "BEH-ASMT-SCHEDULE", "--json");
+  assert.equal(result.code, 0, result.err);
+  const start = JSON.parse(result.out).artifacts[0];
+  assert.deepEqual(start.approval, {
+    by: "ana.reyes",
+    at: "2026-11-14",
+    basis: "derived",
+    source: { ref: "https://tracker.example/LAN-12", revision: "7", digest: null },
+    attestedBy: "drafting-agent",
+  });
+  assert.deepEqual(start.formalizes, [
+    { source: "https://tracker.example/LAN-12", anchor: null },
+    { source: "https://tracker.example/LAN-12", anchor: "criterion-3" },
+  ]);
+  assert.equal(start.contentHash, plain.artifacts[0].contentHash, "neither field is in the content hash");
+  assert.notEqual(start.sourceHash, plain.artifacts[0].sourceHash);
+
+  const text = (await run(dir, "context", "BEH-ASMT-SCHEDULE")).out;
+  assert.match(
+    text,
+    /^- Approval: derived, from https:\/\/tracker\.example\/LAN-12 at revision 7, by ana\.reyes, attested by drafting-agent, at 2026-11-14$/m,
+  );
+  assert.match(
+    text,
+    /^- Formalizes: https:\/\/tracker\.example\/LAN-12; https:\/\/tracker\.example\/LAN-12 \(criterion-3\)$/m,
+  );
+  assert.equal(text.match(/^- Approval: /gm)?.length, 1, "a record that states none shows no line");
+});
+
 test("BEH-CONTEXT: context withholds restricted artifacts unless asked, and says how many", async (t) => {
   const dir = await example(t);
   edit(dir, "RULE-ASMT-AUTH", "visibility: internal", "visibility: restricted");

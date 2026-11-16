@@ -89,6 +89,10 @@ Update the records in the same change as the code.
   Write \`delivery: built\` on a record you wrote from code that exists, \`delivery: planned\` on one that proposes
   work, and change \`planned\` to \`built\` in the change that builds it. It states a fact about the code, not an
   approval, so you may set it; a draft that says \`built\` is still a draft until a person approves it.
+- Where a promise came from: a behavior, rule or scenario that formalizes a requirement outside the model, such
+  as a work item or one of its acceptance criteria, names it in \`formalizes\`, as a \`source\` (a URL or the
+  tool's key for the item) and an optional \`anchor\` for the part that is meant. Validation checks its form and
+  never opens it.
 
 Write each link once, on the record that points: a behavior is \`governedBy\` its rules, a scenario \`illustrates\`
 a behavior, a slice \`implements\` behaviors, a verification \`verifies\` what it checks. Never write the reverse.
@@ -110,6 +114,9 @@ of its own above them, it is not read.
 
 - Set a status to approved, implemented or released, or publish knowledge. People approve, and validation passing
   is not approval.
+- Write or change \`approval\`, the block that says who approved a record, when and on what basis, unless the
+  approval workflow you are running tells you to and gives you every value. It records an approval that happened;
+  writing it approves nothing, and one you made up is a false statement about a person.
 - Change an ID or reuse a retired one. Moving or renaming a file keeps its ID; splitting a behavior retires the old
   one with \`replacedBy\`.
 - Name an owner, audience, release, role, edition, flag or evidence source that is not in

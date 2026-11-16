@@ -40,6 +40,45 @@ export const DELIVERY_TYPES = ["capability", "behavior", "rule", "scenario", "sl
 /** The statuses that claim an implementation, and so make delivery `built` when the field is absent (Core §7). */
 export const BUILT_STATUSES = ["implemented", "released", "deprecated"] as const;
 
+/**
+ * Core §7, ADR 0020: on what basis a record was approved. `direct`: a person read the record; `derived`: a named
+ * source that a person approved covers it; `attested`: an agent attested it and no person approved it or a source.
+ */
+export const APPROVAL_BASES = ["direct", "derived", "attested"] as const;
+export type ApprovalBasis = (typeof APPROVAL_BASES)[number];
+
+/** What a derived approval rests on: the item that was approved and which state of it, by revision, digest or both. */
+export interface ApprovalSource {
+  /** A URL or a tool's key for the item. Never resolved. */
+  ref: string;
+  revision?: string;
+  digest?: string;
+}
+
+/**
+ * Core §7, ADR 0020: how a record came to be approved. `by` is the person, present for `direct` and `derived`;
+ * `attestedBy` is the agent, present for `attested` and optionally for `derived`; `source` is present for
+ * `derived` only. Shape is all a validator checks: who may approve is the repository's workflow.
+ */
+export interface Approval {
+  by?: string;
+  /** A date or a date and time, as written. */
+  at: string;
+  basis: ApprovalBasis;
+  source?: ApprovalSource;
+  attestedBy?: string;
+}
+
+/** Core §5, ADR 0020: one requirement outside the model that a record formalizes. Never resolved. */
+export interface Formalized {
+  /** A URL or a tool's key for the item. */
+  source: string;
+  /** The part of the source that is meant, such as one acceptance criterion. */
+  anchor?: string;
+}
+/** The types that state a requirement, and so may carry `formalizes`: the claims a verification verifies. */
+export const FORMALIZES_TYPES = ["behavior", "rule", "scenario"] as const;
+
 export const VISIBILITIES = ["public", "customer", "internal", "restricted"] as const;
 export type Visibility = (typeof VISIBILITIES)[number];
 
@@ -195,6 +234,10 @@ export interface ArtifactMeta {
   reviewedBy?: string;
   /** Core §7, ADR 0017: whether the work exists, on the types in `DELIVERY_TYPES` only. */
   delivery?: Delivery;
+  /** Core §7, ADR 0020: the basis of the record's approval, on any type. */
+  approval?: Approval;
+  /** Core §5, ADR 0020: the outside requirements the record formalizes, in the order written; `FORMALIZES_TYPES` only. */
+  formalizes?: Formalized[];
   /** Namespaced extensions, preserved and never interpreted. */
   extensions?: Record<string, unknown>;
   /** Knowledge only (Core §9): one sentence per explained ID, keys sorted. */
@@ -396,9 +439,10 @@ export interface ImpactReport {
  * `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012).
  * 0.4 carries the evidence binding: which binding judged each verification, the
  * subject it was judged at, each record's binding and subject hash, and a
- * verification's `exercises` (ADR 0014).
+ * verification's `exercises` (ADR 0014). 0.5 carries each artifact's `delivery`
+ * (ADR 0017), and 0.6 its `approval` and `formalizes` (ADR 0020).
  */
-export const EXPORT_CONTRACT = "intentset/export/0.5";
+export const EXPORT_CONTRACT = "intentset/export/0.6";
 
 /** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
 export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];
@@ -414,6 +458,10 @@ export interface ExportArtifact {
   status: Status;
   /** The record's `delivery` as authored, null when it states none (Core §7, ADR 0017); `deliveryOf` gives the effective value. */
   delivery: Delivery | null;
+  /** The record's `approval` as authored (Core §7, ADR 0020), null when it states none: not stated, never "not approved". */
+  approval: ExportApproval | null;
+  /** The record's `formalizes` (Core §5, ADR 0020), sorted by source then anchor; empty when it names none. */
+  formalizes: ExportFormalized[];
   owner: string;
   visibility: Visibility;
   audiences: string[];
@@ -439,6 +487,21 @@ export interface ExportArtifact {
   extensions: Record<string, unknown> | null;
   /** Present only when the export was asked to include bodies. */
   body?: string;
+}
+
+/** An approval as the export carries it: every member present, null where the basis does not carry it. */
+export interface ExportApproval {
+  by: string | null;
+  at: string;
+  basis: ApprovalBasis;
+  source: { ref: string; revision: string | null; digest: string | null } | null;
+  attestedBy: string | null;
+}
+
+/** A formalized requirement as the export carries it: `anchor` is null when the record names the source alone. */
+export interface ExportFormalized {
+  source: string;
+  anchor: string | null;
 }
 
 /** A run record as the evidence report carries it: spec/evidence.schema.json's record, unchanged, `binding` and `subjectHash` included. */

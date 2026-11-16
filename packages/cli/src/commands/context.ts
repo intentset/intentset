@@ -5,7 +5,9 @@
  * contracts, the decisions, the knowledge explaining it and its navigation
  * parents; for a rule, capability or slice the bundles of the behaviors it
  * reaches; for anything else its direct neighbours. Each artifact comes with
- * its source path and body, and the whole names its snapshot.
+ * its source path and body, the basis of its approval and the outside
+ * requirements it formalizes when it states them (Core §7, §5; ADR 0020),
+ * and the whole names its snapshot.
  *
  * `restricted` artifacts are withheld unless asked for, and the report says
  * how many, so a short context never reads as a complete one. Never writes.
@@ -17,11 +19,15 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import {
   type Artifact,
+  approvalSummary,
   type ContextArtifact,
   type ContextRole,
   compareStrings,
   contextFor,
   type Diagnostic,
+  exportApproval,
+  exportFormalizes,
+  formalizedSummary,
   type Graph,
   ID_PATTERN,
   type LinkKind,
@@ -137,6 +143,8 @@ export function contextCommand(
           ...a,
           sourceHash: full(a).sourceHash,
           contentHash: full(a).contentHash,
+          approval: exportApproval(full(a).meta.approval),
+          formalizes: exportFormalizes(full(a).meta.formalizes ?? []),
           links: links(graph, full(a), visible),
           body: full(a).body,
         })),
@@ -173,6 +181,11 @@ export function contextCommand(
     const linked = links(graph, full(a), visible);
     const kinds = (Object.keys(linked) as LinkKind[]).sort(compareStrings);
     if (kinds.length > 0) out.push(`- Links: ${kinds.map((k) => `${k} ${linked[k]?.join(", ")}`).join("; ")}`);
+    const { approval, formalizes } = full(a).meta;
+    if (approval !== undefined) out.push(`- Approval: ${approvalSummary(approval)}`);
+    if (formalizes !== undefined) {
+      out.push(`- Formalizes: ${exportFormalizes(formalizes).map(formalizedSummary).join("; ")}`);
+    }
     out.push("", ...fenced(full(a).body), "");
   }
   io.stdout(`${out.join("\n").trimEnd()}\n`);

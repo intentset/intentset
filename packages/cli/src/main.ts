@@ -59,7 +59,7 @@ commands
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
-                            print the intentset/export/0.5 envelope, or write it to --out;
+                            print the intentset/export/0.6 envelope, or write it to --out;
                             each --report adds a section (ownership needs L2, evidence L3; all
                             is every one the level reads). Restricted artifacts are withheld
                             and counted unless --include-restricted

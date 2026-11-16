@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.5",
+  "contract": "intentset/export/0.6",
   "spec": "0.2",
   "generatedAt": "2026-10-03T12:00:00Z",
   "repository": "example/scheduling",
@@ -11,7 +11,7 @@
     "uncommitted": false,
     "commitUnavailable": "The fixture describes no commit."
   },
-  "graphHash": "22dcf6eab59e8f1f03c64413c7dbc6e88aa34478b87e6ddd2d4d09415ac0c97b",
+  "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -75,6 +75,8 @@
       "title": "Keep backend access behind the slice seam",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -106,6 +108,17 @@
       "title": "Schedule a student assessment",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [
+        {
+          "source": "https://tracker.example/LAN-12",
+          "anchor": null
+        },
+        {
+          "source": "https://tracker.example/LAN-12",
+          "anchor": "criterion-3"
+        }
+      ],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -115,7 +128,7 @@
       "profile": "intentset/behavior/0.2",
       "revision": 1,
       "path": "BEH-ASMT-SCHEDULE.md",
-      "sourceHash": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
+      "sourceHash": "1a7e1fc3bccbc7969631194de771bd1f95bdec90a1df7079a4354b43d2b806f9",
       "parent": "CAP-ASMT-ASSIGN",
       "links": {
         "governedBy": [
@@ -164,6 +177,8 @@
       "title": "Student assessment assignment",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -195,6 +210,8 @@
       "title": "ScheduleAssessment contract",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -226,6 +243,8 @@
       "title": "Prepare learning in advance",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -257,6 +276,18 @@
       "title": "Prepare a scheduled student assessment",
       "status": "approved",
       "delivery": null,
+      "approval": {
+        "by": "ana.reyes",
+        "at": "2026-10-02",
+        "basis": "derived",
+        "source": {
+          "ref": "https://tracker.example/LAN-12",
+          "revision": "7",
+          "digest": null
+        },
+        "attestedBy": "drafting-agent"
+      },
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "customer",
       "audiences": [
@@ -265,7 +296,7 @@
       "profile": "intentset/knowledge/0.2",
       "revision": 1,
       "path": "KB-ASMT-SCHEDULE.md",
-      "sourceHash": "8b56db9e7810bd2d0fea8cca87a43463188775945831d313a4ee01b68720182e",
+      "sourceHash": "99fb27595e0b9249164cd36601f0b1a423fa90e005ab756c68d47ea6d4ec68e7",
       "parent": null,
       "links": {
         "explains": [
@@ -314,6 +345,8 @@
       "title": "Assignments scheduled a day or more ahead",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -348,6 +381,8 @@
       "title": "Teacher minutes spent preparing an assignment",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -382,6 +417,8 @@
       "title": "Reduce assignment preparation friction",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -415,6 +452,8 @@
       "title": "Lantern example",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -446,6 +485,8 @@
       "title": "Require a future release time",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -483,6 +524,8 @@
       "title": "Accept an eligible schedule",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -518,6 +561,8 @@
       "title": "Student assessment scheduling slice",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [
@@ -591,6 +636,8 @@
       "title": "Review student assessment scheduling behavior",
       "status": "draft",
       "delivery": null,
+      "approval": null,
+      "formalizes": [],
       "owner": "team-assessment",
       "visibility": "internal",
       "audiences": [

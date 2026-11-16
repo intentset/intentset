@@ -17,4 +17,5 @@ export * from "./slices.ts";
 export * from "./types.ts";
 export * from "./validate.ts";
 export * from "./yaml.ts";
+export { approvalSummary, formalizedSummary } from "./approval.ts";
 export { compareStrings } from "./report.ts";

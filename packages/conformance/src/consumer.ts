@@ -63,6 +63,20 @@ export const RELEASE = { product: "PRD-LANTERN", label: "pilot-1" } as const;
 const OTHER_COMMIT = "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b";
 const OTHER_GRAPH = sha256Hex("another snapshot of example/scheduling");
 
+/** The knowledge record's approval in every fixture: derived from a work tracker's item, with the agent that matched it. */
+const APPROVAL = {
+  by: "ana.reyes",
+  at: "2026-10-02",
+  basis: "derived",
+  source: { ref: "https://tracker.example/LAN-12", revision: "7" },
+  attestedBy: "drafting-agent",
+};
+/** What the behavior formalizes in every fixture: the item, and one criterion of it. */
+const FORMALIZES = [
+  { source: "https://tracker.example/LAN-12" },
+  { source: "https://tracker.example/LAN-12", anchor: "criterion-3" },
+];
+
 export interface ConsumerCase {
   name: string;
   /** The envelope's file in tests/consumer/. */
@@ -136,6 +150,9 @@ function build(options: BuildOptions): ExportEnvelope {
         "RULE-ASMT-AUTH.md": { frontmatter: { "intentset.visibility": "restricted" } },
         // The procedure is the record itself, which is in this tree at its own path.
         "TEST-ASMT-SCHEDULE.md": { frontmatter: { "intentset.verification.locator": "TEST-ASMT-SCHEDULE.md" } },
+        // What 0.6 added (ADR 0020), so every fixture carries one approval and one formalized requirement.
+        "KB-ASMT-SCHEDULE.md": { frontmatter: { "intentset.approval": APPROVAL } },
+        "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.formalizes": FORMALIZES } },
         ...options.patch,
       },
     },
@@ -418,6 +435,8 @@ export function buildConsumerFixtures(): Map<string, string> {
     e.artifacts = e.artifacts.filter((a: Json) => !measures.has(a.id));
     for (const artifact of e.artifacts) {
       delete artifact.delivery;
+      delete artifact.approval;
+      delete artifact.formalizes;
       delete artifact.measure;
       delete artifact.tips;
       for (const kind of Object.keys(artifact.derived)) {
@@ -454,8 +473,16 @@ export function buildConsumerFixtures(): Map<string, string> {
     "unsupported-contract",
     "0.2 had no measure type, no evidenceSources registry and no measure or tips on an artifact. A reader of a later version rejects it rather than guess what an outcome's measures were.",
   );
+  /** What 0.6 added (ADR 0020), taken back out so an earlier envelope is what its reader would have written. */
+  const before06 = (e: Json) => {
+    for (const artifact of e.artifacts) {
+      delete artifact.approval;
+      delete artifact.formalizes;
+    }
+  };
   /** What 0.5 added (ADR 0017), taken back out so an earlier envelope is what its reader would have written. */
   const before05 = (e: Json) => {
+    before06(e);
     for (const artifact of e.artifacts) delete artifact.delivery;
   };
   /** What 0.4 added (ADR 0014), taken back out so an earlier envelope is what its reader would have written. */
@@ -496,10 +523,23 @@ export function buildConsumerFixtures(): Map<string, string> {
     }),
   );
   reject(
-    "the previous contract version",
+    "the contract before delivery",
     "unsupported-contract-0.4.json",
     "unsupported-contract",
     "0.4 carried no delivery, so it cannot say whether a record's work is built. A 0.5 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
+  );
+  files.set(
+    "unsupported-contract-0.5.json",
+    mutate(full, (e) => {
+      e.contract = "intentset/export/0.5";
+      before06(e);
+    }),
+  );
+  reject(
+    "the previous contract version",
+    "unsupported-contract-0.5.json",
+    "unsupported-contract",
+    "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
   );
   files.set(
     "unsupported-contract-future.json",

@@ -16,6 +16,8 @@ import {
   type ArtifactType,
   compareStrings,
   contextFor,
+  exportApproval,
+  exportFormalizes,
   type Graph,
   type ImpactHit,
   impact,
@@ -121,6 +123,8 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
             tips: meta.tips ?? null,
             reviewedBy: meta.reviewedBy ?? null,
             reviewedAt: meta.reviewedAt ?? null,
+            approval: exportApproval(meta.approval),
+            formalizes: exportFormalizes(meta.formalizes ?? []),
             path: artifact.path,
             sourceHash: artifact.sourceHash,
             contentHash: artifact.contentHash,
@@ -150,7 +154,14 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
       if (bundle === null) return unavailable("intentset_context");
       const artifacts = bundle.artifacts.map((member) => {
         const artifact = graph.artifacts.get(member.id) as Artifact;
-        return { ...member, sourceHash: artifact.sourceHash, contentHash: artifact.contentHash, body: artifact.body };
+        return {
+          ...member,
+          sourceHash: artifact.sourceHash,
+          contentHash: artifact.contentHash,
+          approval: exportApproval(artifact.meta.approval),
+          formalizes: exportFormalizes(artifact.meta.formalizes ?? []),
+          body: artifact.body,
+        };
       });
       return result(
         envelope(
