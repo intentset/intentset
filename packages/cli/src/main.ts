@@ -9,12 +9,14 @@
  * review, evidence stale, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
  * --out write only what they name; init only creates; migrate rewrites the
- * two version values of each record's frontmatter and nothing else.
+ * two version values of each record's frontmatter and nothing else; approve
+ * rewrites the status, approval and review of the drafts it is given.
  */
 import { parseArgs } from "node:util";
 import { type Mode, TypeScriptMissingError } from "@intentset/architecture";
 import { EVIDENCE_BINDINGS, type EvidenceBinding, LEVELS, type Level } from "@intentset/core";
 import type { RunScope } from "@intentset/verification";
+import { approveCommand, approveUsageProblem } from "./commands/approve.ts";
 import { architectureCommand } from "./commands/architecture.ts";
 import { contextCommand } from "./commands/context.ts";
 import { evidenceImportCommand, evidenceUsageProblem } from "./commands/evidence.ts";
@@ -96,11 +98,22 @@ commands
                             bodies; given a file a slice claims, the context of that slice
   review [--base <ref>] [--fail-on-drift] [--baseline <file> [--fail-on-baseline-growth]]
                             the local review report: checks, coverage, the impact of what
-                            changed, and each slice whose code changed while its records did
-                            not; --fail-on-drift exits 1 for any such slice no commit
+                            changed, each record whose status or approval changed, and each
+                            slice whose code changed while its records did not;
+                            --fail-on-drift exits 1 for any such slice no commit
                             acknowledged with an Intentset-Unchanged trailer. With --baseline,
                             the entries the base's copy did not hold and those it retired;
                             --fail-on-baseline-growth exits 1 for any it did not hold
+  approve <ID>... --by <person> [--at <date>] [--dry-run] [--allow-dirty]
+        [list's selector options]
+                            write a person's approval into the drafts named or matched: status
+                            approved and an approval block (basis direct); a knowledge record
+                            also gets its review, reviewedBy, reviewedAt and content-v1 pins of
+                            its sources. Validates with the change applied first and writes
+                            nothing if it would add an error. Records that are not drafts are
+                            skipped. Refuses a tree with uncommitted changes unless
+                            --allow-dirty; --dry-run shows what it would do. Never commits, and
+                            cannot know who runs it: the diff is what a reviewer accepts
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
         [--published-at <time>] [--no-snapshot]
@@ -165,6 +178,7 @@ const COMMANDS = [
   "context",
   "list",
   "review",
+  "approve",
   "publish",
   "serve",
   "migrate",
@@ -211,6 +225,19 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
   context: ["include-restricted", ...LEVEL_OPTIONS],
   list: [...SELECTOR_OPTIONS, "where", "from", "count-by", "check", "format", "include-restricted"],
   review: ["base", "fail-on-drift", "fail-on-baseline-growth", ...LEVEL_OPTIONS],
+  // --product and --release are selector options here, as they are for list, not the evidence scope.
+  approve: [
+    ...SELECTOR_OPTIONS,
+    "where",
+    "by",
+    "at",
+    "dry-run",
+    "allow-dirty",
+    "evidence",
+    "mode",
+    "baseline",
+    "binding",
+  ],
   serve: ["port", "host", "out", ...LEVEL_OPTIONS],
   mcp: [
     "mode",
@@ -244,11 +271,12 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
 };
 
 /** Positional arguments after the command: a fixed subcommand, then how many more. */
-const POSITIONALS: Record<string, { subs?: Record<string, number>; count: number; what?: string }> = {
+const POSITIONALS: Record<string, { subs?: Record<string, number>; count: number; what?: string; any?: boolean }> = {
   architecture: { subs: { check: 0 }, count: 0 },
   evidence: { subs: { import: 1, stale: 0 }, count: 0, what: "a report file" },
   impact: { count: 1, what: "an artifact ID" },
   context: { count: 1, what: "an artifact ID or a file path" },
+  approve: { count: 0, any: true },
 };
 
 export async function main(argv: string[], io: Io): Promise<number> {
@@ -318,7 +346,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
     args = args.slice(1);
   }
   if (args.length < wanted) return usage(`${shape.what} is required`);
-  if (args.length > wanted) {
+  if (args.length > wanted && shape.any !== true) {
     const hint = wanted === 0 ? " (use --root <dir> to name the repository)" : "";
     return usage(`unexpected argument "${args[wanted]}"${hint}`);
   }
@@ -380,7 +408,13 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
 
   // Evidence scope: --product with --release, or graph's --release <product>:<label>.
   let scope: RunScope | null = null;
-  if ((command !== "evidence" || sub === "stale") && command !== "publish" && command !== "mcp" && command !== "list") {
+  if (
+    (command !== "evidence" || sub === "stale") &&
+    command !== "publish" &&
+    command !== "mcp" &&
+    command !== "list" &&
+    command !== "approve"
+  ) {
     if (command === "graph" || command === "evidence") {
       const release = values.release === undefined ? null : parseRelease(values.release);
       scope = release === null ? null : { product: release.product, release: release.label };
@@ -495,6 +529,44 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
       const session = openSession(command, sessionOptions(levelGiven ?? "L1"), io);
       return typeof session === "number" ? session : listCommand(session, checked, options, io);
     }
+    case "approve": {
+      // IDs given as arguments are --id values, so they combine with the other fields as list's do.
+      const given = [
+        ...args.map((value) => ({ name: "id", value })),
+        ...tokens.flatMap((token) =>
+          token.kind === "option" && SELECTOR_OPTIONS.includes(token.name)
+            ? [{ name: token.name, value: token.value ?? "" }]
+            : [],
+        ),
+      ];
+      const options = {
+        by: values.by,
+        at: values.at,
+        dryRun: values["dry-run"],
+        allowDirty: values["allow-dirty"],
+        json: values.json,
+        selected: given.length > 0 || values.where !== undefined,
+      };
+      const problem = approveUsageProblem(options);
+      if (problem !== null) return usage(problem);
+      const checked = listUsageProblem(
+        { given, where: values.where, json: false, check: false, includeRestricted: false },
+        io,
+      );
+      if ("problem" in checked) return usage(checked.problem);
+      // A name without a trailing * is one record, which must exist; a prefix may match none.
+      const named = given
+        .filter((item) => item.name === "id")
+        .flatMap((item) => item.value.split(",").map((part) => part.trim()))
+        .filter((id) => !id.endsWith("*"));
+      return approveCommand(
+        { ...options, by: values.by as string },
+        checked.selector,
+        named,
+        sessionOptions(levelGiven ?? "L1"),
+        io,
+      );
+    }
     case "context": {
       const session = openSession(command, sessionOptions(levelGiven ?? "L1"), io);
       if (typeof session === "number") return session;
@@ -526,6 +598,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
           levelReason: reason,
           failOnDrift: values["fail-on-drift"],
           failOnBaselineGrowth: values["fail-on-baseline-growth"],
+          carrier: carrier as CarrierName,
         },
         values.json,
         io,
@@ -639,6 +712,9 @@ function parse(argv: string[]) {
       host: { type: "string" },
       to: { type: "string" },
       "allow-dirty": { type: "boolean", default: false },
+      by: { type: "string" },
+      at: { type: "string" },
+      "dry-run": { type: "boolean", default: false },
       id: { type: "string", multiple: true },
       type: { type: "string", multiple: true },
       status: { type: "string", multiple: true },

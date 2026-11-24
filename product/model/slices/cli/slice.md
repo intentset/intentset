@@ -10,9 +10,9 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   links:
-    implements: [BEH-AGENT-GUIDE, BEH-CONTEXT, BEH-MIGRATE, BEH-REVIEW-DRIFT, BEH-REVIEW-BASELINE]
+    implements: [BEH-AGENT-GUIDE, BEH-CONTEXT, BEH-MIGRATE, BEH-APPROVE, BEH-REVIEW-DRIFT, BEH-REVIEW-BASELINE, BEH-REVIEW-APPROVALS]
     dependsOn: [SLICE-CORE, SLICE-MARKSET-ADAPTER, SLICE-ARCHITECTURE, SLICE-VERIFICATION, SLICE-PUBLISHER, SLICE-ATLAS, SLICE-MCP, SLICE-CONFORMANCE-SUITE]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
@@ -34,7 +34,7 @@ intentset:
 
 ## Responsibility
 
-The `intentset` command: it wires every package into a command, and owns what only the command does: `init` and the agent guide, `context` by file, `migrate` between specification versions, `review`'s drift, the `evidence stale` command's table, JSON and exit codes (what it selects and the runner arguments it prints are the verification package's, BEH-EVIDENCE-STALE), and the `list` command's options, table and exit codes (what a selector matches and the result it writes are core's, BEH-LIST).
+The `intentset` command: it wires every package into a command, and owns what only the command does: `init` and the agent guide, `context` by file, `migrate` between specification versions, `approve`, which writes a person's approval into drafts, `review`'s drift and its list of approvals and status changes, the `evidence stale` command's table, JSON and exit codes (what it selects and the runner arguments it prints are the verification package's, BEH-EVIDENCE-STALE), and the `list` command's options, table and exit codes (what a selector matches and the result it writes are core's, BEH-LIST).
 
 The slice is the package `@intentset/cli`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
@@ -44,4 +44,4 @@ The exports of `packages/cli/src/index.ts`, reached by other packages as `@inten
 
 ## Verification
 
-The package's tests under `packages/cli/test/`. The verification records of the behaviors it implements are TEST-AGENT-GUIDE (BEH-AGENT-GUIDE), TEST-CONTEXT (BEH-CONTEXT), TEST-MIGRATE (BEH-MIGRATE), TEST-REVIEW-DRIFT (BEH-REVIEW-DRIFT) and TEST-REVIEW-BASELINE (BEH-REVIEW-BASELINE). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/cli/test/`. The verification records of the behaviors it implements are TEST-AGENT-GUIDE (BEH-AGENT-GUIDE), TEST-CONTEXT (BEH-CONTEXT), TEST-MIGRATE (BEH-MIGRATE), TEST-APPROVE (BEH-APPROVE), TEST-REVIEW-DRIFT (BEH-REVIEW-DRIFT), TEST-REVIEW-BASELINE (BEH-REVIEW-BASELINE) and TEST-REVIEW-APPROVALS (BEH-REVIEW-APPROVALS). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

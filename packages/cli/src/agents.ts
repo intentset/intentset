@@ -112,8 +112,9 @@ of its own above them, it is not read.
 
 ## Never
 
-- Set a status to approved, implemented or released, or publish knowledge. People approve, and validation passing
-  is not approval.
+- Set a status to approved, implemented or released, run \`intentset approve\`, or publish knowledge. People
+  approve, and validation passing is not approval. \`intentset approve\` writes a person's approval for them: run it
+  only when that person tells you to in so many words, with the name they give for \`--by\`, never your own.
 - Write or change \`approval\`, the block that says who approved a record, when and on what basis, unless the
   approval workflow you are running tells you to and gives you every value. It records an approval that happened;
   writing it approves nothing, and one you made up is a false statement about a person.

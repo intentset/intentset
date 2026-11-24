@@ -20,6 +20,10 @@
  * cycles replaced by smaller ones, and entries written before 0.9 rewritten
  * in the current form. `--fail-on-baseline-growth` fails on any
  * entry the base did not hold; a deliberate addition is the caller's call.
+ *
+ * It lists every record whose status or approval differs from the base's copy
+ * (Core §10, ADR 0022), so a reviewer sees each approval a change makes
+ * without reading frontmatter. A report, never a failure.
  */
 import {
   type BaselineComparison,
@@ -28,7 +32,17 @@ import {
   describeEntry,
   parseBaseline,
 } from "@intentset/architecture";
-import { type Graph, impact, compareStrings } from "@intentset/core";
+import {
+  type Artifact,
+  approvalSummary,
+  canonicalJson,
+  compareStrings,
+  type ExportApproval,
+  exportApproval,
+  type Graph,
+  impact,
+  readArtifact,
+} from "@intentset/core";
 import {
   acknowledgedSlices,
   type Base,
@@ -41,6 +55,7 @@ import {
 } from "../git.ts";
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
 import { levelJson, levelSections } from "../reports.ts";
+import { type CarrierName, CARRIERS } from "../repository.ts";
 import type { Session } from "../session.ts";
 import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "@intentset/core";
 import { pathText, REACHABILITY_NOTE } from "./impact.ts";
@@ -164,9 +179,56 @@ export function reviewBaseline(
   };
 }
 
+export interface StatusChange {
+  id: string;
+  type: string;
+  path: string;
+  /** The status in the base's copy; null when the base holds no such record, or one that cannot be read. */
+  from: string | null;
+  to: string;
+  /** The approval the record states now (Core §7), null when it states none. */
+  approval: ExportApproval | null;
+  /** True when the approval differs from the base's copy, whether or not the status does. */
+  approvalChanged: boolean;
+}
+
+export const STATUS_NOTE =
+  "Records whose status or approval differs from the base's copy, and new records that arrive past draft or with an " +
+  "approval. A status is a claim a person makes (Core §7): check that each one here was made by whoever may make it.";
+
+/** Each changed record whose status or approval is not what the base's copy says, sorted by ID. */
+export function statusChanges(
+  graph: Graph,
+  changed: readonly string[],
+  atBase: (path: string) => string | null,
+  carrier: CarrierName,
+): StatusChange[] {
+  const touched = new Set(changed);
+  const out: StatusChange[] = [];
+  for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
+    const { path, meta } = graph.artifacts.get(id) as Artifact;
+    if (!touched.has(path)) continue;
+    const text = atBase(path);
+    const before = text === null ? null : readArtifact(CARRIERS[carrier](path, text)).artifact;
+    const from = before?.meta.status ?? null;
+    const approval = exportApproval(meta.approval);
+    const approvalChanged = canonicalJson(approval) !== canonicalJson(exportApproval(before?.meta.approval));
+    if (from === null ? meta.status === "draft" && approval === null : from === meta.status && !approvalChanged)
+      continue;
+    out.push({ id, type: meta.type, path, from, to: meta.status, approval, approvalChanged });
+  }
+  return out;
+}
+
 export function reviewCommand(
   session: Session,
-  options: { base?: string; levelReason: string; failOnDrift?: boolean; failOnBaselineGrowth?: boolean },
+  options: {
+    base?: string;
+    levelReason: string;
+    failOnDrift?: boolean;
+    failOnBaselineGrowth?: boolean;
+    carrier: CarrierName;
+  },
   asJson: boolean,
   io: Io,
 ): number {
@@ -184,6 +246,19 @@ export function reviewCommand(
   const { starts, unattributed } = attribute(graph, changed);
   const drifted = drift(graph, changed, new Set(acknowledgedSlices(repo.root, base)));
   const baseline = session.baseline === undefined ? null : reviewBaseline(repo.root, base, session.baseline);
+  // A record that moved is read at the base by the path it had there.
+  const movedFrom = new Map(
+    base === null ? [] : [...renamesSince(repo.root, base.commit)].map(([old, now]) => [now, old]),
+  );
+  const statuses =
+    base === null
+      ? []
+      : statusChanges(
+          graph,
+          changed,
+          (path) => fileAt(repo.root, base.commit, movedFrom.get(path) ?? path),
+          options.carrier,
+        );
   const failing =
     (options.failOnDrift === true && drifted.some((item) => !item.acknowledged)) ||
     (options.failOnBaselineGrowth === true && (baseline?.added?.length ?? 0) > 0);
@@ -217,6 +292,7 @@ export function reviewCommand(
         note: REACHABILITY_NOTE,
         impact: impacts,
         drift: drifted,
+        statusChanges: statuses,
         ...(baseline === null ? {} : { baseline }),
         unattributed,
       }),
@@ -269,6 +345,18 @@ export function reviewCommand(
     );
     out.push(...item.code.map((path) => `- Code changed: ${path}`));
     out.push(`- Records describing it, none changed: ${item.records.join(", ")}`);
+  }
+  out.push("", `## Approvals and status changes (${statuses.length})`, "", STATUS_NOTE, "");
+  if (base === null) out.push("There is no base, so nothing was compared.");
+  else if (statuses.length === 0) out.push("None.");
+  for (const item of statuses) {
+    const status =
+      item.from === null ? `new, ${item.to}` : item.from === item.to ? item.to : `${item.from} -> ${item.to}`;
+    const approval =
+      item.approval === null
+        ? "no approval stated"
+        : `approval${item.approvalChanged ? "" : " (unchanged)"}: ${approvalSummary(item.approval)}`;
+    out.push(`- ${item.id} (${item.type}): ${status}; ${approval}`);
   }
   if (baseline !== null) out.push("", ...baselineSection(baseline));
   out.push("", `## Changed files no artifact accounts for (${unattributed.length})`, "");

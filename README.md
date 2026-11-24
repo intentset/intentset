@@ -104,7 +104,7 @@ pnpm run intentset validate --root <dir>
 pnpm run intentset impact BEH-ASMT-SCHEDULE --root <dir>
 ```
 
-Commands: `init`, `validate` (levels L1 to L4), `graph`, `migrate` (records to the next specification version), `impact`, `context`, `architecture check`,
+Commands: `init`, `validate` (levels L1 to L4), `graph`, `migrate` (records to the next specification version), `approve` (write a person's approval into drafts), `impact`, `context`, `architecture check`,
 `evidence import`, `review`, `publish`, `serve` (the Atlas), `mcp` (a read-only context server), and `guide` (the
 agent guide, printed).
 
