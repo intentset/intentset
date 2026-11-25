@@ -239,14 +239,14 @@ function frames() {
   let next = 1;
   return {
     queue,
-    cancelled: [] as unknown[],
-    request(callback: () => void) {
+    cancelled: [] as number[],
+    request(callback: () => void): number {
       queue.set(next, callback);
       return next++;
     },
-    cancel(handle: unknown) {
+    cancel(handle: number) {
       this.cancelled.push(handle);
-      queue.delete(handle as number);
+      queue.delete(handle);
     },
     run() {
       const due = [...queue.values()];
@@ -262,7 +262,7 @@ function watchHost(elements: Fake[]) {
   const options = {
     MutationObserver: FakeObserver,
     requestFrame: (callback: () => void) => frame.request(callback),
-    cancelFrame: (handle: unknown) => frame.cancel(handle),
+    cancelFrame: (handle: number) => frame.cancel(handle),
   };
   return { host, frame, options };
 }
@@ -345,39 +345,138 @@ test("BEH-HELP-WATCH: dispose stops watching, cancels a pending pass and leaves 
   const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", title: "Schedule" });
   const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
   const untipped = new Fake({ [BEHAVIOR_ATTRIBUTE]: "CAP-ASMT-ASSIGN" });
-  const before = [schedule, rule, untipped].map((element) => element.snapshot());
-  const elements = [schedule, rule, untipped];
-  const { frame, host, options } = watchHost(elements);
+  const authored = new Fake({
+    [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE",
+    [TIP_ATTRIBUTE]: "an authored tip",
+    [KNOWLEDGE_ATTRIBUTE]: "KB-AUTHORED",
+  });
+  const all = [schedule, rule, untipped, authored];
+  const before = all.map((element) => element.snapshot());
+  const { frame, host, options } = watchHost([...all]);
   const watch = watchTips(host, help, options);
   const observer = FakeObserver.last as FakeObserver;
   assert.notDeepEqual(schedule.snapshot(), before[0]);
+  assert.equal(authored.getAttribute(TIP_ATTRIBUTE), RULE_TIP);
   observer.fire();
   const handle = [...frame.queue.keys()][0];
   watch.dispose();
   assert.equal(observer.disconnected, true);
   assert.deepEqual(frame.cancelled, [handle]);
   assert.deepEqual(
-    [schedule, rule, untipped].map((element) => element.snapshot()),
+    all.map((element) => element.snapshot()),
     before,
-    "the default attributes are removed and nothing else is touched",
+    "the default attributes are put back as they were, values set before the watch included, and nothing else is touched",
   );
   assert.deepEqual(watch.coverage(), { bound: [], missing: [] });
   watch.dispose();
   frame.run();
   assert.deepEqual(
-    [schedule, rule, untipped].map((element) => element.snapshot()),
+    all.map((element) => element.snapshot()),
     before,
   );
 });
 
-test("BEH-HELP-WATCH: watchTips without a MutationObserver or a frame scheduler says which it needs", () => {
+test("BEH-HELP-WATCH: a render of the product's own with no unrender is left in place, and the default attributes are not touched", () => {
   const help = helpFromPublisher();
-  const { host } = watchHost([]);
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", [TIP_ATTRIBUTE]: "authored" });
+  const { host, options } = watchHost([schedule]);
+  const watch = watchTips(host, help, {
+    ...options,
+    render: (element, tip) => element.setAttribute("aria-description", tip.text),
+  });
+  watch.dispose();
+  assert.equal(schedule.getAttribute("aria-description"), TIP);
+  assert.equal(schedule.getAttribute(TIP_ATTRIBUTE), "authored");
+});
+
+test("BEH-HELP-WATCH: a dispose from inside render stops the pass, and a first pass that throws undoes what it rendered", () => {
+  const help = helpFromPublisher();
+  const first = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const second = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
+  const elements = [first];
+  const { frame, host, options } = watchHost(elements);
+  const log: string[] = [];
+  let disposeNow: () => void = () => {};
+  const watch = watchTips(host, help, {
+    ...options,
+    render: (_element, tip) => {
+      log.push(`render ${tip.id}`);
+      if (tip.id === "RULE-ASMT-FUTURE") disposeNow();
+    },
+    unrender: (_element, tip) => log.push(`unrender ${tip.id}`),
+  });
+  disposeNow = () => watch.dispose();
+  elements.push(second, new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" }));
+  (FakeObserver.last as FakeObserver).fire();
+  frame.run();
+  assert.deepEqual(log, [
+    "render BEH-ASMT-SCHEDULE",
+    "render RULE-ASMT-FUTURE",
+    "unrender BEH-ASMT-SCHEDULE",
+    "unrender RULE-ASMT-FUTURE",
+  ]);
+
+  const a = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const b = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
+  const throwing = watchHost([a, b]);
+  const rendered: string[] = [];
+  assert.throws(
+    () =>
+      watchTips(throwing.host, help, {
+        ...throwing.options,
+        render: (element, tip) => {
+          if (tip.id === "RULE-ASMT-FUTURE") throw new Error("render failed");
+          rendered.push(tip.id);
+          element.setAttribute("aria-description", tip.text);
+        },
+        unrender: (element, tip) => {
+          rendered.push(`undone ${tip.id}`);
+          (element as Fake).removeAttribute("aria-description");
+        },
+      }),
+    /render failed/u,
+  );
+  assert.deepEqual(rendered, ["BEH-ASMT-SCHEDULE", "undone BEH-ASMT-SCHEDULE"]);
+  assert.equal(a.hasAttribute("aria-description"), false);
+  assert.equal((FakeObserver.last as FakeObserver).observed, null, "nothing is observed after a failed first pass");
+});
+
+test("BEH-HELP-WATCH: a custom requestFrame never gets the default cancelAnimationFrame", () => {
+  const help = helpFromPublisher();
+  const scope = globalThis as { cancelAnimationFrame?: (handle: number) => void };
+  const saved = scope.cancelAnimationFrame;
+  const cancelled: number[] = [];
+  scope.cancelAnimationFrame = (handle) => cancelled.push(handle);
+  try {
+    const { frame, host } = watchHost([new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" })]);
+    const watch = watchTips(host, help, {
+      MutationObserver: FakeObserver,
+      requestFrame: (callback) => frame.request(callback),
+    });
+    (FakeObserver.last as FakeObserver).fire();
+    watch.dispose();
+    assert.deepEqual(cancelled, []);
+    frame.run();
+    assert.deepEqual(watch.coverage(), { bound: [], missing: [] }, "the uncancelled pass does nothing");
+  } finally {
+    if (saved === undefined) delete scope.cancelAnimationFrame;
+    else scope.cancelAnimationFrame = saved;
+  }
+});
+
+test("BEH-HELP-WATCH: watchTips without a MutationObserver or a frame scheduler says which it needs, and binds nothing", () => {
+  const help = helpFromPublisher();
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const before = schedule.snapshot();
+  const { host } = watchHost([schedule]);
   assert.throws(() => watchTips(host, help, { requestFrame: () => 0 }), /needs a MutationObserver/u);
+  assert.deepEqual(schedule.snapshot(), before);
   assert.throws(
     () => watchTips(host, help, { MutationObserver: FakeObserver, requestFrame: undefined }),
     /needs requestAnimationFrame/u,
   );
+  assert.deepEqual(schedule.snapshot(), before);
+  assert.deepEqual(host.selectors, [], "the root was not even queried");
 });
 
 test("bindTips takes another attribute and another renderer", () => {

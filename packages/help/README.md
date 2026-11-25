@@ -33,15 +33,16 @@ bindTips(document, read.help, {
 ```
 
 `bindTips` binds once. `watchTips` binds, then binds again whenever the DOM under its root changes, once per animation
-frame, and undoes everything it did when disposed, so help mounted into another application's page binds only under
-its own root and leaves that page as it found it:
+frame, and unrenders every element it bound when disposed, so help mounted into another application's page binds only under
+its own root and leaves that page as it found it. With the default render, `dispose` puts `data-help-tip` and
+`data-help-knowledge` back as they were; with your own `render`, pass the `unrender` that undoes it:
 
 ```ts
 import { watchTips } from "@intentset/help";
 
 const watch = watchTips(container, read.help, {
   render: (element, tip) => myTooltip.attach(element, tip.text),
-  unrender: (element) => myTooltip.detach(element), // without it, dispose removes the default attributes
+  unrender: (element) => myTooltip.detach(element), // with your own render and no unrender, nothing is undone
 });
 watch.coverage(); // { bound, missing } as of the last pass
 watch.dispose(); // stop observing and unrender every element it bound

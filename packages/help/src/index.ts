@@ -279,30 +279,43 @@ export interface WatchRoot {
   querySelectorAll(selectors: string): Iterable<WatchElement> | ArrayLike<WatchElement>;
 }
 
-/** The part of a `MutationObserver` `watchTips` uses. */
-export interface TipObserver {
+/**
+ * The part of a `MutationObserver` `watchTips` uses. `R` is the root it
+ * observes, so the DOM's own constructor, whose `observe` takes a `Node`, is
+ * accepted for a root that is an element, a document or a shadow root.
+ */
+export interface TipObserver<R = WatchRoot> {
   observe(
-    target: WatchRoot,
+    target: R,
     options: { subtree: boolean; childList: boolean; attributes: boolean; attributeFilter: string[] },
   ): void;
   disconnect(): void;
 }
 
-export interface WatchOptions extends BindOptions {
+export interface WatchOptions<R = WatchRoot, H = unknown> extends BindOptions {
   /**
    * Undoes `render` for one element: when the element stops naming that
-   * behavior, leaves `root`, or the watch is disposed. Without it, the default
-   * attributes, `data-help-tip` and `data-help-knowledge`, are removed.
+   * behavior, leaves `root`, or the watch is disposed. With the default
+   * render and no `unrender`, `data-help-tip` and `data-help-knowledge` are
+   * put back as they were before the watch set them. With a `render` of the
+   * product's own and no `unrender`, nothing is undone: removing this
+   * package's attributes cannot undo what another render did, so a product
+   * that needs its page left as it found it passes both.
    */
   unrender?: (element: TipElement, tip: Tip) => void;
   /** What watches `root`; `globalThis.MutationObserver` by default. */
   MutationObserver?: new (
     callback: () => void,
-  ) => TipObserver;
+  ) => TipObserver<R>;
   /** Schedules the next pass; `globalThis.requestAnimationFrame` by default, so changes batch to one pass per frame. */
-  requestFrame?: (callback: () => void) => unknown;
-  /** Cancels a scheduled pass on dispose; `globalThis.cancelAnimationFrame` by default, when there is one. */
-  cancelFrame?: (handle: unknown) => void;
+  requestFrame?: (callback: () => void) => H;
+  /**
+   * Cancels a scheduled pass on dispose, given what `requestFrame` returned.
+   * `globalThis.cancelAnimationFrame` by default only when `requestFrame` is
+   * the default too; otherwise a pass that cannot be cancelled runs and does
+   * nothing once the watch is disposed.
+   */
+  cancelFrame?: (handle: H) => void;
 }
 
 export interface TipWatch {
@@ -312,39 +325,70 @@ export interface TipWatch {
   dispose(): void;
 }
 
-function defaultUnrender(element: TipElement): void {
-  (element as WatchElement).removeAttribute(TIP_ATTRIBUTE);
-  (element as WatchElement).removeAttribute(KNOWLEDGE_ATTRIBUTE);
+function restore(element: WatchElement, name: string, value: string | null): void {
+  if (value === null) element.removeAttribute(name);
+  else element.setAttribute(name, value);
 }
 
 /**
  * Bind once, then again whenever the DOM under `root` changes, batched to one
  * pass per animation frame, until `dispose`. It binds only under `root`, so it
- * can be mounted into another application's page, and `dispose` leaves that
- * page's DOM as it found it: every element it bound is unrendered. An element
- * already bound to the same tip is not rendered again; one whose behavior
- * changed, or that left `root`, is unrendered first.
+ * can be mounted into another application's page. `dispose` unrenders every
+ * element it bound, which leaves that page's DOM as it found it when the
+ * render is the default, or when the product's `unrender` undoes its
+ * `render`. An element already bound to the same tip is not rendered again;
+ * one whose behavior changed, or that left `root`, is unrendered first.
  */
-export function watchTips(root: WatchRoot, help: Help, options: WatchOptions = {}): TipWatch {
+export function watchTips<R extends WatchRoot, H = unknown>(
+  root: R,
+  help: Help,
+  options: WatchOptions<NoInfer<R>, H> = {},
+): TipWatch {
   const attribute = options.attribute ?? BEHAVIOR_ATTRIBUTE;
-  const render = options.render ?? defaultRender;
-  const unrender = options.unrender ?? defaultUnrender;
+  const prior = new Map<TipElement, [string | null, string | null]>();
+  let render: (element: TipElement, tip: Tip) => void;
+  let unrender: (element: TipElement, tip: Tip) => void;
+  if (options.render !== undefined) {
+    render = options.render;
+    unrender = options.unrender ?? (() => {});
+  } else if (options.unrender !== undefined) {
+    render = defaultRender;
+    unrender = options.unrender;
+  } else {
+    // The default pair puts back what the element carried before, so neither an authored value nor another watch's is lost.
+    render = (element, tip) => {
+      if (!prior.has(element))
+        prior.set(element, [element.getAttribute(TIP_ATTRIBUTE), element.getAttribute(KNOWLEDGE_ATTRIBUTE)]);
+      defaultRender(element, tip);
+    };
+    unrender = (element) => {
+      const [text, knowledge] = prior.get(element) ?? [null, null];
+      prior.delete(element);
+      restore(element as WatchElement, TIP_ATTRIBUTE, text);
+      restore(element as WatchElement, KNOWLEDGE_ATTRIBUTE, knowledge);
+    };
+  }
   const scope = globalThis as unknown as {
-    MutationObserver?: new (callback: () => void) => TipObserver;
-    requestAnimationFrame?: (callback: () => void) => unknown;
-    cancelAnimationFrame?: (handle: unknown) => void;
+    MutationObserver?: new (callback: () => void) => TipObserver<R>;
+    requestAnimationFrame?: (callback: () => void) => H;
+    cancelAnimationFrame?: (handle: H) => void;
   };
   const Observer = options.MutationObserver ?? scope.MutationObserver;
-  const requestFrame = options.requestFrame ?? scope.requestAnimationFrame?.bind(globalThis);
-  const cancelFrame = options.cancelFrame ?? scope.cancelAnimationFrame?.bind(globalThis);
+  let requestFrame = options.requestFrame;
+  let cancelFrame = options.cancelFrame;
+  if (requestFrame === undefined && scope.requestAnimationFrame !== undefined) {
+    requestFrame = scope.requestAnimationFrame.bind(globalThis);
+    cancelFrame ??= scope.cancelAnimationFrame?.bind(globalThis);
+  }
   if (Observer === undefined) throw new TypeError("watchTips needs a MutationObserver: pass options.MutationObserver");
   if (requestFrame === undefined)
     throw new TypeError("watchTips needs requestAnimationFrame: pass options.requestFrame");
+  const schedule = requestFrame;
 
   const bound = new Map<WatchElement, Tip>();
   let coverage: Binding = { bound: [], missing: [] };
   let pending = false;
-  let handle: unknown;
+  let handle: H | undefined;
   let disposed = false;
 
   const pass = () => {
@@ -354,24 +398,43 @@ export function watchTips(root: WatchRoot, help: Help, options: WatchOptions = {
     const current = new Map<WatchElement, Tip>();
     for (const { element, tip } of found) if (tip !== null && !current.has(element)) current.set(element, tip);
     for (const [element, tip] of bound) {
+      if (disposed) return;
       if (current.get(element)?.id === tip.id) continue;
-      unrender(element, tip);
       bound.delete(element);
+      unrender(element, tip);
     }
     for (const [element, tip] of current) {
+      if (disposed) return;
       if (bound.has(element)) continue;
       render(element, tip);
+      // A render that disposed the watch: dispose did not see this element, so undo it here.
+      if (disposed) {
+        unrender(element, tip);
+        return;
+      }
       bound.set(element, tip);
     }
     coverage = binding;
   };
 
+  const unbindAll = () => {
+    const all = [...bound];
+    bound.clear();
+    for (const [element, tip] of all) unrender(element, tip);
+  };
+
   const observer = new Observer(() => {
     if (disposed || pending) return;
     pending = true;
-    handle = requestFrame(pass);
+    handle = schedule(pass);
   });
-  pass();
+  try {
+    pass();
+  } catch (error) {
+    disposed = true;
+    unbindAll();
+    throw error;
+  }
   observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: [attribute] });
 
   return {
@@ -380,10 +443,9 @@ export function watchTips(root: WatchRoot, help: Help, options: WatchOptions = {
       if (disposed) return;
       disposed = true;
       observer.disconnect();
-      if (pending && cancelFrame !== undefined) cancelFrame(handle);
+      if (pending && cancelFrame !== undefined) cancelFrame(handle as H);
       pending = false;
-      for (const [element, tip] of bound) unrender(element, tip);
-      bound.clear();
+      unbindAll();
       coverage = { bound: [], missing: [] };
     },
   };
