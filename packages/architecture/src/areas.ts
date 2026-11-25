@@ -23,7 +23,7 @@ import type { Model } from "./regions.ts";
 
 export const AREA_REVIEW_REQUIRED = [
   "AMP012 backend code reaches another area's data through published resource names and the AWS SDK, and deploy-time dependencies between areas are acyclic: deployment wiring, not source",
-  "AMP013 one authorizer on the Merged API decides every request to every area and denies what it does not list: an authorizer's policy, not source",
+  "AMP013 one authorizer on the Merged API decides every request a person makes to every area and denies what it does not list, and any further mode it carries is one no person can present: an authorizer's policy, not source",
 ];
 
 export interface AreaCheck {

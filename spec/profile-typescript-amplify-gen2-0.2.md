@@ -2,7 +2,7 @@
 title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.2
 id: intentset/typescript-amplify-gen2/0.2
 status: draft
-revision: 2026-10-21
+revision: 2026-11-24
 implementation: 0.17.0
 ---
 
@@ -154,7 +154,7 @@ Acceptance requires a clean sample repository, deliberate failing fixtures, one 
 
 ## 9. Areas: more than one backend
 
-Amplify Gen 2 deploys a backend as one CloudFormation root stack with nested stacks. CloudFormation caps each stack at 500 resources and each deployment at 2,500 resources across the whole nested hierarchy, and neither limit can be raised. Gen 2 generates a pipeline resolver and a function configuration for every model operation, about 16 resources per model with subscriptions, plus one per global secondary index, and each Lambda function costs about 5. Gen 2 offers no supported way to choose the nested stack a model's or function's resources land in. A large product therefore reaches a limit with one backend whatever its slices look like. (Added 2026-10-04 from a production application that split into four areas at about 2,500 resources, and Streamlane, whose single backend reached 510 resources in one nested stack at 85 custom operations.)
+Amplify Gen 2 deploys a backend as one CloudFormation root stack with nested stacks. CloudFormation caps each stack at 500 resources and each deployment at 2,500 resources across the whole nested hierarchy, and neither limit can be raised. Gen 2 generates a pipeline resolver and a function configuration for every model operation, about 16 resources per model with subscriptions, plus one per global secondary index, and each Lambda function costs about 5. Gen 2 offers no supported way to choose the nested stack a model's or function's resources land in. A large product therefore reaches a limit with one backend whatever its slices look like.
 
 A repository MAY split its backend into **areas**. An area is one Amplify backend, with its own `backend.ts`, its own `data/resource.ts` and its own CloudFormation deployment and source AppSync API, together with the frontend slices whose behavior it serves. One AppSync Merged API joins the areas' source APIs (`AUTO_MERGE`, at most 10 per Merged API), and the frontend talks only to it. A repository with one backend is not affected by this section. Once a repository declares areas, every rule below is normative for it.
 
@@ -195,9 +195,9 @@ A slice's `domain` names its area. An area's backend counts as backend for AMP00
 | AMP010 | Schema relationships (`belongsTo`, `hasMany`, `hasOne`) and references (`ref`) MUST NOT name another area's type. A cross-area link is an ID field, resolved by a function of the area that needs it |
 | AMP011 | The frontend MUST reach every area through one client on the Merged API: only the declared schema bridge MAY import an area's schema, type-only, and only it MAY call `generateClient` |
 | AMP012 | Backend code MUST reach another area's data through that area's published resource names and the AWS SDK, never through GraphQL or a copy of its schema, and deploy-time dependencies between areas MUST form an acyclic order |
-| AMP013 | One authorizer, configured on the Merged API, MUST decide every request to every area, and MUST deny a model or operation it does not list |
+| AMP013 | One authorizer, configured on the Merged API, MUST decide every request a person makes to every area, and MUST deny a model or operation it does not list. Any further authorization mode the Merged API carries MUST be one no person can present, and a field reached through it MUST still check the caller's access before it reads or writes |
 
-AMP007 to AMP011 are checked from source. AMP012 and AMP013 are review assertions: one is a property of deployment wiring and the other of an authorizer's policy, neither of which an import graph shows.
+AMP007 to AMP011 are checked from source. AMP012 and AMP013 are review assertions: one is a property of deployment wiring and the other of an authorizer's policy, neither of which an import graph shows. AMP013 speaks of further modes because a Merged API cannot always have one: a merge copies each source API's authorization directives onto the merged schema and refuses a source whose modes the Merged API does not hold, and Amplify Gen 2 adds `AWS_IAM` to every API it creates, so a Merged API over Gen 2 sources declares at least that mode beside its authorizer. What such a mode admits is a caller holding the account's own credentials, not a person, which is why the rule is about who can present it and not about how many modes there are.
 
 **Budget.** Ownership follows data access, not headroom: a model belongs to the area whose functions read and write it, never to a smaller backend because it has room. An area SHOULD be split, or a new area added, before its deployment passes about 1,500 resources or any nested stack about 300, rather than after a deploy fails. Spreading one area's resources over more nested stacks buys headroom without changing ownership, but it meets other walls (a stack's 200 parameters, a template's 1 MB) and is a stopgap, not a substitute for an area.
 
