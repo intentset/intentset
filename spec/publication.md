@@ -2,7 +2,7 @@
 title: Intentset Publication Profile v0.2
 id: intentset/publication/0.2
 status: draft
-revision: 2026-11-15
+revision: 2026-11-25
 implementation: 0.17.1
 ---
 
@@ -71,6 +71,16 @@ single-quoted; sequences are indented under their key. An HTML rendering SHOULD 
 JSON, in `<meta name="intentset-publication">`. The document MUST parse as Markset version 0 without errors and MUST
 NOT contain a `:::` directive outside Markset's vocabulary. Retrieval chunks of a document MUST carry its
 `intentset-publication` block unchanged.
+
+A publisher MAY also render a document as an HTML fragment, for a product that shows it inside its own interface. A
+fragment is what the page holds as the document's content, rendered the same way and so sanitized the same way: raw
+HTML in the source MUST NOT pass through into either. It MUST NOT contain a stylesheet, an `<html>`, `<head>` or
+`<body>` element, or the `intentset-publication` block, which travels with the document rather than in its HTML. It
+MUST leave out the document's title heading, the first level-one heading at the top level of the body, and keep every
+other heading, a later level-one heading included; each heading keeps the id it has in the page. The reference
+implementation writes a fragment as `<ID>.fragment.html`, under `intentset publish --html=fragment`, and a page as
+`<ID>.html` under `--html`. A fragment is held to the same exclusions as every other output: no excluded source's title
+or path, and no snapshot (§6).
 
 ## 3. Review record and needs-review
 

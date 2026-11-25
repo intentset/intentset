@@ -5,6 +5,12 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## Unreleased
+
+**A published document can be rendered as an HTML fragment, for a product that shows it inside its own interface.** Minor: a widened option and an optional field in `@intentset/publisher`, and a value for the CLI's `--html`. The publication profile changed text only (§2, revision 2026-11-25), adding a MAY: no check and no case changed, so `intentset.spec` stays `0.2`, and the suite and the export contract did not move.
+
+- **`renderHtml: "page" | "fragment"`, with `true` meaning `"page"` byte for byte (#146).** A fragment, `PublishedDocument.htmlFragment`, is what the page holds inside `<main>`, rendered by the same `@markset-lang/render-html` call and so sanitized the same way, without the title heading and with no stylesheet, `<html>`, `<head>`, `<body>` or provenance, which is on `publication`. `intentset publish --html=fragment` writes `<ID>.fragment.html`; `--html` and `--html=page` write pages as before. `renderFragment(markset)` is exported. The conformance driver now offers each case's fragments to its `mustNotContain` as well as its pages. BEH-PUBLISH-FRAGMENT and TEST-PUBLISH-FRAGMENT, drafts, on the publisher slice.
+
 ## 0.17.1 — 2026-11-25
 
 **The specifications say what the rule is and leave its history to this file and the ADRs.** Text only (Core, VSA and the reference profile, revision 2026-11-24): no check and no case changed, so `intentset.spec` stays `0.2`, and the suite and the export contract did not move.

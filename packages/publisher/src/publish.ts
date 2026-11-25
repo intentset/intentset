@@ -39,7 +39,7 @@ import {
   sortDiagnostics,
 } from "@intentset/core";
 import { parseDocument } from "@markset-lang/parser";
-import { defaultStylesheetPath, renderPage } from "@markset-lang/render-html";
+import { addHeadingIds, defaultStylesheetPath, renderHtml, renderPage } from "@markset-lang/render-html";
 import { compareStrings } from "./diagnostic.ts";
 import { type GeneratedDocument, type PublicationMeta, generateDocument } from "./generate.ts";
 import { type HelpFile, helpFile } from "./help.ts";
@@ -57,13 +57,23 @@ export interface PublishOptions {
   snapshot: Snapshot;
   /** The publication timestamp written into every document; an input, so output is reproducible. */
   publishedAt: string;
-  /** Also render each document as a complete HTML page with Markset's default stylesheet inlined. */
-  renderHtml?: boolean;
+  /**
+   * Also render each document as HTML (publication §2): `"page"`, or `true`, a complete page with Markset's default
+   * stylesheet inlined, in `html`; `"fragment"` the page's content alone, without its title heading, in
+   * `htmlFragment`. Absent or `false` renders nothing.
+   */
+  renderHtml?: HtmlRendering;
   reviews?: ReadonlyMap<string, ReviewStatus>;
 }
 
+/** How a publication renders HTML: `true` is `"page"`. */
+export type HtmlRendering = boolean | "page" | "fragment";
+
 export interface PublishedDocument extends GeneratedDocument {
+  /** The complete page, when `renderHtml` is `"page"` or `true`. */
   html?: string;
+  /** The page's content without its title heading, when `renderHtml` is `"fragment"`. */
+  htmlFragment?: string;
 }
 
 export interface PublicationIndex {
@@ -105,6 +115,7 @@ export function publish(
     }
   }
 
+  const rendering = htmlRendering(options.renderHtml);
   const req = projection.request;
   const documents: PublishedDocument[] = [];
   if (req !== null) {
@@ -141,7 +152,8 @@ export function publish(
     for (const reason of refused.values()) count(reason);
     for (const id of [...published].sort(compareStrings)) {
       const document: PublishedDocument = { ...(generated.get(id) as GeneratedDocument) };
-      if (options.renderHtml === true) document.html = renderDocument(document.markset, document.publication);
+      if (rendering === "page") document.html = renderDocument(document.markset, document.publication);
+      else if (rendering === "fragment") document.htmlFragment = renderFragment(document.markset);
       documents.push(document);
     }
   }
@@ -192,6 +204,31 @@ export function renderDocument(markset: string, publication: PublicationMeta): s
   const at = page.indexOf(anchor);
   if (at === -1) throw new Error("render-html returned a page without a charset declaration");
   return page.slice(0, at + anchor.length) + meta + page.slice(at + anchor.length);
+}
+
+/**
+ * The page's content alone, for a product that shows the document inside its
+ * own interface (publication §2): what render-html puts inside the page's
+ * `<main>`, through the same renderer with the same options, so it is
+ * sanitized the same way (raw HTML in the source is dropped), with no
+ * stylesheet, no `<html>`, `<head>` or `<body>`, and no provenance, which is
+ * on `PublishedDocument.publication`. The first level-one heading at the top
+ * of the tree, the one the page takes its `<title>` from, is left out: the
+ * title is already on the document. Heading ids are assigned before it is
+ * removed, so every section keeps the id it has in the page.
+ */
+export function renderFragment(markset: string): string {
+  const tree = addHeadingIds(parseDocument(markset).ast);
+  const title = tree.children.findIndex((node) => node.type === "heading" && node.depth === 1);
+  const children = tree.children.filter((_, index) => index !== title);
+  return renderHtml({ ...tree, children }, { headingIds: false });
+}
+
+function htmlRendering(value: HtmlRendering | undefined): "page" | "fragment" | null {
+  if (value === undefined || value === false) return null;
+  if (value === true || value === "page") return "page";
+  if (value === "fragment") return "fragment";
+  throw new Error(`renderHtml ${JSON.stringify(value)}: give true, false, "page" or "fragment"`);
 }
 
 function escapeAttribute(value: string): string {

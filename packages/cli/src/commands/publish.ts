@@ -1,7 +1,8 @@
 /**
  * `intentset publish` (Core §9): the deny-by-default projection of reviewed
  * knowledge for one audience, release and entitlement, as generated Markset
- * with provenance, optional HTML, the index a customer tool may read, the
+ * with provenance, optional HTML (a page, or under --html=fragment the page's
+ * content without its title), the index a customer tool may read, the
  * help file a product's runtime reads, retrieval chunks that carry the
  * same filters, and the snapshot file, the one output that names the commit
  * and graph hash (publication §6, ADR 0021); --no-snapshot leaves it out, so
@@ -14,7 +15,14 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type Visibility, sortDiagnostics } from "@intentset/core";
-import { HELP_FILE, type PublicationRequest, SNAPSHOT_FILE, publish, toChunks } from "@intentset/publisher";
+import {
+  HELP_FILE,
+  type HtmlRendering,
+  type PublicationRequest,
+  SNAPSHOT_FILE,
+  publish,
+  toChunks,
+} from "@intentset/publisher";
 import { count, formatDiagnostic, type Io } from "../output.ts";
 import { outputDirProblem, outputProblem } from "../outputs.ts";
 import type { Session } from "../session.ts";
@@ -30,7 +38,8 @@ export interface PublishCliOptions {
   authorizedInternal: boolean;
   authorizedRestricted: boolean;
   out?: string;
-  html: boolean;
+  /** `page` under --html or --html=page, `fragment` under --html=fragment; absent writes no HTML. */
+  html?: string;
   publishedAt?: string;
   /** Write `snapshot.json`; false under --no-snapshot. */
   snapshot: boolean;
@@ -40,6 +49,9 @@ const ISO_8601 = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-
 
 export function publishUsageProblem(options: PublishCliOptions): string | null {
   if (options.out === undefined || options.out === "") return "--out <dir> is required";
+  if (options.html !== undefined && options.html !== "page" && options.html !== "fragment") {
+    return `--html takes page or fragment, or no value for a page; not "${options.html}"`;
+  }
   if (options.publishedAt !== undefined && !ISO_8601.test(options.publishedAt)) {
     return `--published-at ${options.publishedAt}: give an ISO 8601 time such as 2026-10-02T12:00:00Z`;
   }
@@ -81,7 +93,7 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
   const published = publish(result.graph, repo.registries, request, {
     snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash },
     publishedAt: options.publishedAt ?? new Date().toISOString(),
-    renderHtml: options.html,
+    renderHtml: (options.html ?? false) as HtmlRendering,
   });
 
   const outputs = new Map<string, string>();
@@ -89,6 +101,7 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
     for (const document of published.documents) {
       outputs.set(`${document.id}.md`, document.markset);
       if (document.html !== undefined) outputs.set(`${document.id}.html`, document.html);
+      if (document.htmlFragment !== undefined) outputs.set(`${document.id}.fragment.html`, document.htmlFragment);
     }
     outputs.set("index.json", `${JSON.stringify(published.index, null, 2)}\n`);
     outputs.set(HELP_FILE, `${JSON.stringify(published.help, null, 2)}\n`);

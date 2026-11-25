@@ -31,6 +31,11 @@ file, the snapshot file and the diagnostics, and refuses the whole request when 
 document pins what it was made from by its sources' hashes. So publishing the same knowledge at two commits writes
 the same bytes in every file but that one.
 
+`renderHtml: "page"` (or `true`) adds each document's complete HTML page, stylesheet inlined, as `html`;
+`renderHtml: "fragment"` adds `htmlFragment` instead, the page's content without its title heading, for a product that
+shows the article inside its own interface. The fragment is sanitized as the page is and carries no provenance: that
+is on the document's `publication`.
+
 **When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control. The
 commit it names is the one checked out when the command ran, which is never the commit that will contain the output,
 and it differs on every branch that changed a record, so branches would conflict on it. Git already records where
