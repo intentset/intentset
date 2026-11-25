@@ -17,8 +17,8 @@ intentset:
 
 ## Constraint
 
-No command merges duplicate records or edits a file it did not create; `init` never overwrites a file. The one exception is `migrate`, which rewrites two values in a record's frontmatter, `spec` and `profile`, at the author's request and on a tree with no uncommitted changes to tracked files unless told otherwise, and changes nothing else.
+No command merges duplicate records or edits a file it did not create; `init` never overwrites a file. There are two exceptions, each at the author's request and on a tree with no uncommitted changes to tracked files unless told otherwise. `migrate` rewrites two values in a record's frontmatter, `spec` and `profile`. `approve` rewrites `status` and `approval` in the drafts it is given, and in a knowledge record among them `reviewedBy`, `reviewedAt` and the review extension. Neither changes anything else.
 
 ## Sources
 
-- CLAUDE.md, design invariant 1; the CLI's usage.
+- CLAUDE.md, design invariant 1; the CLI's usage; ADR 0022.

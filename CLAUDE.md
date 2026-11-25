@@ -17,10 +17,11 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
 ## Design invariants
 
 1. **One carrier, one record per artifact.** Markdown with YAML frontmatter under `intentset:`. Tools never merge
-   duplicate records and never rewrite files, with one exception: `intentset migrate --to 0.2` rewrites `spec` and
-   `profile` in each record's frontmatter, only when asked, and refuses a tree with uncommitted changes to tracked
-   files unless `--allow-dirty` says otherwise. Unknown keys inside `intentset` are errors except under `extensions`;
-   unknown top-level keys are preserved and never interpreted.
+   duplicate records and never rewrite files, with two exceptions, each only when asked and each refusing a tree with
+   uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate --to 0.2` rewrites
+   `spec` and `profile` in each record's frontmatter, and `intentset approve` (ADR 0022) rewrites `status` and
+   `approval` in the drafts it is given, and the review of a knowledge record among them. Unknown keys inside
+   `intentset` are errors except under `extensions`; unknown top-level keys are preserved and never interpreted.
 2. **Authored forward edges only.** Relationships are written once in the Core §5 direction; every inverse is
    derived and marked derived. A reverse edge in a file is a mistake, not a convenience.
 3. **Definitions are not evidence.** A verification record says how a claim is checked. Only a `pass` whose binding
@@ -502,6 +503,13 @@ Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; miles
   `anchor`. Both are shape-checked as CORE001 and never resolved; validation never decides who may approve and never
   compares `approval` with `status`. Both are outside the content hash. Core §8 says a verification's status carries
   no approval meaning, so a tool may take its standing from what it verifies; Core derives none.
+- **Approving** (Core §7 and §10, ADR 0022, 2026-11-24): an approval is a reviewed change to a record, and nothing
+  holds one outside the files. `intentset approve <ID>... --by <person>` writes `status: approved` and a `direct`
+  `approval` into the drafts named or matched by `list`'s selector, and for knowledge the review too (`reviewedBy`,
+  `reviewedAt`, `content-v1` pins); it validates with the change applied (`SessionOptions.overlay`) and writes nothing
+  if that adds an error, never commits, and cannot know who runs it. `intentset review` lists every record whose
+  status or approval differs from the base ("Approvals and status changes", `statusChanges` in the JSON), which is
+  what shows a reviewer an approval nobody was entitled to make. **An agent never runs `approve` on its own account.**
 - A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
   inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
   installed packages also run under micromark's development build.

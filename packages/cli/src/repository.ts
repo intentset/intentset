@@ -67,8 +67,11 @@ export function findRoot(cwd: string, explicit: string | undefined): string | nu
   }
 }
 
-/** Core §11: read the configuration, the documents in its scope with the chosen carrier, the registries and the commit. */
-export function loadRepository(root: string, carrier: CarrierName): Repository {
+/**
+ * Core §11: read the configuration, the documents in its scope with the chosen carrier, the registries and the commit.
+ * `overlay` gives the text to read for a path in place of the file's, so a rewrite is checked before it is made.
+ */
+export function loadRepository(root: string, carrier: CarrierName, overlay?: ReadonlyMap<string, string>): Repository {
   const read = readConfig(readFileSync(join(root, CONFIG_PATH), "utf8"), CONFIG_PATH);
   const config = read.config;
   const diagnostics = [...read.diagnostics];
@@ -79,7 +82,7 @@ export function loadRepository(root: string, carrier: CarrierName): Repository {
   if (configOk) {
     const parse = CARRIERS[carrier];
     for (const path of enumerate(root, config)) {
-      inputs.push(parse(path, readFileSync(join(root, path), "utf8")));
+      inputs.push(parse(path, overlay?.get(path) ?? readFileSync(join(root, path), "utf8")));
     }
     if (config.registries !== null) {
       const file = join(root, config.registries);
