@@ -7,11 +7,19 @@ case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` t
 
 ## Unreleased
 
+**`@intentset/help` shows a tip only through the product's own render, and `watchTips` keeps tips bound while the interface changes and undoes them on dispose.** Minor: a behavior change in `bindTips`'s default render and one new function. The specifications, the suite and the export contract did not move.
+
+- **`bindTips`'s default render no longer sets `title`** (#145). It sets `data-help-tip` to the tip's text beside `data-help-knowledge`, and nothing a browser displays: a `title` shows only on mouse hover, never to keyboard or touch users, and screen readers announce it inconsistently. A product that relied on the default `title` now shows nothing until it passes a `render` that puts the tip in a visible tooltip and an accessible description. An authored `title` was kept before and is still left alone.
+- **`watchTips(root, help, { render, unrender, attribute })`** binds once, binds again on DOM changes under `root`, batched to one pass per animation frame, and returns `coverage()` and `dispose()`. `dispose` stops observing and calls `unrender` on every element it bound; with the default render and no `unrender` it puts `data-help-tip` and `data-help-knowledge` back as they were, so help mounted into another application's page leaves it as it found it, and with a product's own `render` and no `unrender` it undoes nothing. The observer and the frame scheduler can be passed in, typed so the browser's own and `setTimeout`/`clearTimeout` are accepted, which is how it is tested without a DOM; `cancelAnimationFrame` is the default only when `requestAnimationFrame` is. BEH-HELP-WATCH and TEST-HELP-WATCH are drafts in Intentset's own model.
+
+## 0.17.1 — 2026-11-25
+
 **The specifications say what the rule is and leave its history to this file and the ADRs.** Text only (Core, VSA and the reference profile, revision 2026-11-24): no check and no case changed, so `intentset.spec` stays `0.2`, and the suite and the export contract did not move.
 
 - **Core §1's table of revisions names each change and no longer retells it.** Each row keeps its date, its sentence, its sections and its ADR; what the revision replaced and what a repository does about it is in this file under that date, where it already was.
 - **The specifications no longer name an adopter or quote its measurements** (Core §1 and §8, VSA §3 and §9, profile §9). The two VSA rules keep their reason as a sentence of their own. The example product is Lantern, and the adoption log is where a real product is named.
 - **AMP013 says what it requires of the modes a merge forces onto a Merged API** (profile §9, #19). One authorizer decides every request a person makes; a further mode, such as the `AWS_IAM` that Amplify Gen 2 adds to every source, must be one no person can present, with each field behind it still checking access. It is a review assertion and no case names it, and a Merged API that met the old sentence meets this one, so nothing that conformed stops conforming.
+- **The agent guide states when an agent may run `intentset approve` as a rule of its own.** 0.17.0 put the command in the same "Never" bullet as setting a status, then gave the exception, which read as a contradiction. It is now its own bullet: never run it unless the person approving says so in so many words, and `--by` is their name. Guide text only.
 
 ## 0.17.0 — 2026-11-24
 

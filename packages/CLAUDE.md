@@ -54,7 +54,8 @@ reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(un
 // @intentset/help  (no dependencies; a browser runtime)
 readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
 tipFor(help, id); helpForPage(help, ids)                    // one control, or one page: tips, their articles, what has no tip
-bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-behavior="BEH-..." by default; title + data-help-knowledge
+bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-behavior="BEH-..." by default; data-help-tip + data-help-knowledge, no title
+watchTips(root, help, { render?, unrender?, attribute?, MutationObserver?, requestFrame?, cancelFrame? }): { coverage(), dispose() }   // rebinds once per frame; dispose undoes it
 ```
 
 ```ts
