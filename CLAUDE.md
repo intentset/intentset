@@ -16,6 +16,8 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
 
 ## Design invariants
 
+These are non-negotiable. If a proposed change conflicts with one, the change loses.
+
 1. **One carrier, one record per artifact.** Markdown with YAML frontmatter under `intentset:`. Tools never merge
    duplicate records and never rewrite files, with two exceptions, each only when asked and each refusing a tree with
    uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate --to 0.2` rewrites
@@ -85,66 +87,12 @@ Markset, moved here from Markset's `docs/expansion-requirements/` 2026-10-05); `
   record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
   may be quoted, with operation names replaced by `<operation>`.
 
-## Core API (the contract every package builds against)
+## Where the rest is
 
-```ts
-// @intentset/core
-parseYaml(text): { value: Record<string, unknown>; error: null } | { value: null; error: { message; line } }  // strict, ADR 0001
-plainCarrier(path, source): DocumentInput                     // plain-Markdown fallback, ADR 0003
-readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE001, origin "profile"
-readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] }
-readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[], resources: "exercised"|"used", dependencies: "files"|"entrypoint" } }
-validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline
-impact(graph: Graph, id: string): ImpactReport
-readSelector(value): { ok, selector } | { ok: false, problems }   // spec/list.md §1: closed, AND across fields, OR within
-select(graph | checkedExport, selector, { includeRestricted?, registries? }): Selection   // throws on a rejected selector
-listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
-deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017: the field, else built for implemented/released/deprecated
-activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
-// Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016)
-impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
-exportGraph(result: ValidationResult, registries, meta): ExportEnvelope   // meta.reports, meta.includeRestricted (spec/export.md)
-readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, envelope, supplied } | { ok: false, category, problems }
-// the consumer's checks of spec/export.md §5; shape checks mirror export.schema.json (a mutant test holds them equal)
-// report builders live with their checks: evidenceReport (verification), knowledgeReport (publisher), ownershipReport (architecture)
-graphHash(graph): string; canonicalJson(value): string; sha256Hex(input): string
-contentHashOf(frontmatter, body): string   // publication §3, ADR 0018: what a content-v1 pin holds; every Artifact carries contentHash
-exportApproval(meta.approval): ExportApproval | null; exportFormalizes(meta.formalizes ?? []): ExportFormalized[]
-// Core §7 and §5, ADR 0020: the two fields as the export, `context --json` and the MCP tools carry them;
-// approvalSummary, formalizedSummary are the one-line text the CLI and the Atlas show
-sortDiagnostics, compareDiagnostics, hasErrors, and every type in types.ts
-```
-
-```ts
-// @intentset/verification  (evidence is judged under a binding, Core §8, ADR 0013)
-readRunRecords(json, path); classifyEvidence(graph, records, snapshot); checkEvidence(graph, records, snapshot, options)
-// snapshot = { commit, graphHash, scope?, binding?, bindingReason?, subjects?, changedSince?, covers? }: commit binding unless it says subject
-resolveBinding(configured, hasSlices): { binding, reason }; hasSliceClaims(graph); subjectsFor(graph, source)
-staleReport(graph, classification): { needRun, manual, counts }; runnerArguments(format, entries)   // `intentset evidence stale`: what needs a run
-computeSubject(input): { hash, parts, unexercised, dependencyInternals }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
-// @intentset/architecture
-subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?, readFile })   // claimed files, resources, resourceMode, dependencyMode, a test's local imports, covers(path)
-```
-
-```ts
-// @intentset/publisher
-publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
-// help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
-// snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
-reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null
-
-// @intentset/help  (no dependencies; a browser runtime)
-readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
-tipFor(help, id); helpForPage(help, ids)                    // one control, or one page: tips, their articles, what has no tip
-bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-behavior="BEH-..." by default; title + data-help-knowledge
-```
-
-```ts
-// @intentset/markset-adapter
-MARKSET_VERSION = "0.4.1"
-MARKSET_GUIDE_URL = "https://markset.org/guide.md"   // the agent guide and every syntax remediation point at it
-marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; a test asserts they agree on every example
-```
+Each of these loads when an agent works in its directory, so read it before changing anything there:
+`packages/CLAUDE.md` (the Core API every package builds against), `site/CLAUDE.md` (intentset.org: the bar, the rails,
+the worked example, the Atlas, colours, the chat panel and its corpus) and `amplify/CLAUDE.md` (the chat's backend,
+learning from questions, and the AWS rules).
 
 ## Conventions
 
@@ -156,6 +104,9 @@ marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; 
 - A release bumps every manifest, each spec's `implementation`, and adds its `CHANGELOG.md` entry: one bold sentence,
   then whether the specs, the suite or the export moved (tests hold all three). A spec's `revision` is the date its
   text last changed.
+- Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline read exports and move
+  their pins when they update. A reader rejects an older export, and a record that declares an older `spec`:
+  `intentset migrate --to <spec>` rewrites `spec` and `profile` in a repository's records.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
 - Site output uses Markset's `ms-` classes and `site/site.css` layered over `markset.css`. No script inside `<main>`:
@@ -229,100 +180,6 @@ CHANGELOG.md          every release, newest first; README.md, SECURITY.md, LICEN
   test runs its consumer a second time with `--conditions=development`. Vite, Vitest and Next resolve that asserting
   build by default, and Markset 0.3.3 passed every production run and threw on any link under it.
 
-## The site
-
-- **Copy can be written and changed without approval** (Gary, 2026-10-06). It never invents a fact: no domain, link,
-  contact address, price, legal or privacy claim, or claim that is not true today, such as a tool not yet released.
-- **The bar is five sections by what a reader came to do** (2026-10-05, after markset.org's): Start, Tools,
-  Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
-  each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
-  agent guide), Tools (all
-  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
-  of the section, 2026-10-20: "Lantern, a worked example", a group holding the map, the walkthrough and "Review pages",
-  a group of the Atlas's five other pages; then the adoption log). A rail entry is a page or a group whose label is not
-  a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the map
-  (`/example/atlas/map/`); the walkthrough kept `/example/`. No URL moved when the bar or the rail changed. `site/test/rail.test.ts` requires every page to be named by the bar,
-  a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
-  rail.
-- `{{version}}` in a content page is the root `package.json` version; a test fails on a typed `at 0.x` or
-  `version 0.x`. `{{usage}}` is the CLI's `USAGE`, so the command page cannot drift from `--help`.
-- Beside the pages: `/guide.md` is `agentGuide()` from `@intentset/cli` with a placeholder scope (also rendered at
-  `/guide/`), `/llms.txt` points agents at it and at markset.org/guide.md, every `spec/*.schema.json` is copied to
-  `/spec/` where its `$id` points, and `sitemap.xml`, `robots.txt` and `404.html` come from the page list.
-  `/conformance/` is generated from `tests/`.
-- **Colours.** The accent is coralreefventures.com's Intentset token (`--crv-intentset-text`,
-  `light-dark(#2c6a54, #7cc3a8)`), so the product reads in the same green on both sites. The neutrals are
-  Intentset's own green-tinted ground and ink, **deliberately**: each family site's ground carries its own mark's
-  color, decided 2026-10-05 and amended 2026-10-07, when markset.org left its cool white for a violet-tinted ground
-  and coralreefventures.com's dark ground became warm. Do not "fix" them to one neutral. This site's light ground
-  moved the same day for the same reason: it was a yellow-green (hue 69) under a tile at hue 168, and the scheme
-  walked across the wheel as it darkened (ground 69, surface 100, border 132, accent 159, tile 168). All three light
-  values are the tile's hue now, at the lightness they already had, so the contrast is unchanged to a hundredth. The
-  dark ground was already the mark's hue and did not move.
-- **The worked example is a walkthrough** (`EXAMPLE_ACTS` in `site/build.ts`, 2026-10-07): five acts of the model's
-  chain, each with its own prose, and every record open on the page in a folding callout (Markset §4.1, a `<details>`
-  with no script) rather than a link to a page a reader has to leave for. A new record goes in an act; the build
-  throws when one is in none. Each record keeps its own page, and each fold links to it. **The knowledge is the one
-  approved record** (2026-10-11, #48): reviewed against its three sources with their real hashes pinned, and carrying
-  two tips, so the last act ends with what `intentset publish` writes for it, published at build time from a copy of
-  the example (`site/example-publication.ts`). Editing `BEH-ASMT-SCHEDULE`, `RULE-ASMT-AUTH` or `RULE-ASMT-FUTURE`
-  changes a pinned hash: review the knowledge against the change, re-pin it (`shasum -a 256`) and update `reviewedAt`,
-  or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
-  record used to be patches `status: draft` itself.
-- **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
-  drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the
-  Examples rail. Each record's page is the Atlas's (2026-11-02): served at `/example/<ID>/`, the address the
-  walkthrough's folds always linked, it holds the record in one card (its file, linked on GitHub at main, every
-  frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records,
-  a review page that lists every one; the site's own record page and the Atlas's behavior page at `/example/atlas/behaviors/<ID>/` gave
-  way to it, so each record has one page, inside the navigation. The map is Lantern's landing page (2026-10-20): its h1 is "Lantern, a worked example", it links the
-  walkthrough and the review pages under the picture, and every way into the example (the bar, the home page, Start,
-  Tools, How it works, the roadmap) leads to it. It has no run evidence and no commit, because the example's check has not been executed and the
-  pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
-  has no public Atlas, and a public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml`
-  draws, with links at the site's addresses, placed in the page's map slot (`placeHtml`), and the map's stylesheet and
-  script are written beside the pages.
-- **The Atlas's map** (ADR 0015, `packages/atlas/src/map.ts` and `map-script.ts`) is the one place the Atlas runs a
-  script, and the picture works without it. Its layout is computed at build time and must stay deterministic: no
-  `Math.random`, no trigonometry or `Math.exp` (their results differ between engines), iteration in ID order, and
-  coordinates rounded. The map comes first on its page, the legend and instructions below it, and where IDs show no
-  ID may overlap another record (a separation pass after the forces, tested on a crowded graph). The script writes text, never markup (a test refuses `innerHTML`, `eval`, `fetch` and
-  storage), and adds no dependency.
-- **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
-  label, not a sentence. The h2s below it are written as sentences and keep theirs.
-- **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose
-  wants the shorter measure and a command, which cannot wrap, does not.
-- **The line saying where a rendered document comes from sits under the h1**, never above it (`underHeading` in
-  `site/build.ts`): the agent guide and every specification page.
-- **The social card is drawn by hand and committed** (2026-10-07): `pnpm run social-card` writes
-  `site/social-card.png` from `site/social-card.ts`, the build copies it, and every page but the 404 names it as
-  `og:image` with `twitter:card` at `summary_large_image`. It is drawn rather than generated at build time because
-  CI and the deploy should not need a browser; redraw it when the mark, the tagline or the tokens change.
-  `site/test/build.test.ts` holds the committed file to the size the pages claim.
-- **The chat panel** (`site/chat/`, SLICE-ASK, 2026-10-09) is plain JavaScript and CSS, copied into the build only
-  when `ASK_URL` is set. It builds its own markup (a launcher and a non-modal dialog), so a reader without scripting
-  sees the documentation as it was; it renders answers as DOM nodes, never HTML; and it keeps the conversation in the
-  tab's sessionStorage, so it follows the reader between pages. `site/test/chat.test.ts` drives it in Chromium against
-  a stub of `POST /ask`, at 390 and 1440 pixels in both schemes.
-- **The chat's corpus is the site** (2026-10-09): `site/corpus.ts` builds what the chat on intentset.org answers from
-  out of `siteInputs()`, the same sources, tokens and addresses the pages are built from: every content page but the
-  404, the specifications, the agent guide, the example's records and published knowledge, each with its canonical
-  URL. **Published knowledge** (2026-10-10) is every knowledge record in this repository's own model that
-  `intentset publish` releases: `site/knowledge.ts` runs the CLI's own `publish` for a public projection, once per
-  product record and per audience, release, role and edition the registries declare, with no flags, and takes the
-  union; it decides nothing itself, so a draft, retired, non-public or unreviewed record, or one whose sources changed
-  since its review, never reaches the site or the chat (RULE-ASK-PUBLISHED-ONLY). Each released record gets a page at
-  `/knowledge/<ID>/`, rendered as an example record is, and `/knowledge/` lists them in the Reference rail; with none
-  released (the case until a maintainer approves one), neither exists. A model that does not validate fails the
-  build. `site/test/knowledge.test.ts` holds it against a fixture model with an approved, a draft and a stale record. It is written to
-  `amplify/functions/ask/corpus.json` by `pnpm run corpus` and never committed; the backend's deploy builds it from
-  the commit it deploys. The whole corpus is sent, cached, with every question, so `site/test/corpus.test.ts` holds it
-  under `TOKEN_BUDGET` (about 46k of 100k estimated tokens at first). A new page joins it by joining the site.
-- **The footer is the family's** (2026-10-06, the same on markset.org): the row (the bar and About), then one line,
-  `Intentset · Keep control of what your agents build. · Source on GitHub · A Coral Reef Ventures project · Sibling
-  project: Markset`, then the family's mark. It links the sibling site, markset.org, once, as markset.org's links this
-  one. `site/test/build.test.ts` holds the shape.
-
 ## Intentset's own model
 
 This repository keeps its own Intentset model (decided 2026-10-09), checked by the CLI built from this checkout, so a
@@ -382,221 +239,15 @@ from source (the installed bin points at `dist/`, which only the build writes).
   refuses an approved outcome nothing measures), and the nine rules have no verification (CORE007 refuses an approved
   rule at L3 without one). A new record is a draft until a maintainer approves it; an agent never approves one.
 
-## The chat's backend
-
-`amplify/` is the chat's backend (SLICE-ASK), Amplify Gen 2 in us-east-2 in Coral Reef's environment accounts (below),
-with the same rules as coral-reef-site: every Regional resource in us-east-2, no Lambda@Edge, and us-east-1 only where a service requires it, such as a CloudFront certificate (allowed since 2026-10-12). It is a
-pnpm workspace member of its own (`@intentset/chat-backend`) with its own `tsconfig.json`, so nothing it depends on
-reaches a published package.
-
-- **The shape.** One function, `intentset-ask` (`amplify/functions/ask/`), with reserved concurrency (`limits.ts`,
-  the project's Lambda quota is 1000); an API Gateway REST API, `POST /ask`, streaming (`ResponseTransferMode.STREAM`),
-  CORS for intentset.org and `http://localhost:3004` on the branch, so `pnpm run site:watch` can try the real backend, and the local server only in a sandbox (`settings.ts`), no CloudWatch role; a
-  regional WAF with a rate rule per IP on the stage; two tables with TTL, `intentset-ask-limits` (the switch, the
-  day's spend, the day's salt, each visitor's count) and `intentset-ask-questions` (scrubbed, 90 days). The function
-  has no URL of its own.
-- **The model.** Claude Sonnet 4.6 through `us.anthropic.claude-sonnet-4-6`, effort `low`, no fallback, until
-  Anthropic approves the account's use case for Opus 5.5 on Bedrock (submitted 2026-10-09; until then Bedrock answers
-  Opus 4.7 and later with "not available for this account"). The function calls Bedrock in us-east-1 (`model.region`,
-  2026-10-20): us-east-2's endpoint answered prod and dev with ServiceUnavailable after the Marketplace agreement was
-  renewed, while us-east-1's answered; the profile already routes inference there. Then `limits.ts` names Opus 5.5 with the SDK's
-  refusal-fallback middleware to Opus 4.8, and Opus 5.5's prices; the corpus goes as cited document blocks, the last one cached for an hour,
-  after a system prompt with no date in it. The profile routes to us-east-1, us-east-2 and us-west-2; the SCP
-  `p-mlfzkjk2` opens us-west-2 to Bedrock only through an inference profile, and the function's grants name the two
-  profiles and their foundation models in those three Regions only.
-- **Limits and retention** are constants in `amplify/functions/ask/limits.ts`: question length, turns, the visitor's
-  daily count, the daily budget (estimated from token counts at Anthropic's published rates), retention. A changed
-  retention period changes the privacy page in the same commit.
-- **Alarms** go to the SNS topic `intentset-ask-notices`, which on the branch emails hello@coralreefventures.com (as
-  coral-reef-site's do; a sandbox's topic has no subscriber): function errors or throttles, the day's estimated spend
-  (the `CostMicros` metric, `Intentset/Chat`) past 80% of the budget, any refusal for the budget (`BudgetRefused`),
-  and the firewall blocking 50 requests in five minutes. AWS asks the inbox to confirm the subscription once.
-- **The switch.** Put `{"key": "switch", "state": "off"}` in the limits table and the chat refuses every question
-  until the item is removed; no deploy.
-- **Logs** carry an event kind, ids, a status and token counts (`log.ts`); `amplify/test/ask.test.ts` runs the whole
-  flow and fails if a question, an answer or an address reaches the console.
-- **The corpus** is `amplify/functions/ask/corpus.json`, built by `pnpm run corpus` and never committed; `pnpm run
-  typecheck` builds it first, and the synth test builds it when it is missing.
-- **Tests**: `amplify/test/*.test.ts` run with `pnpm test`, the synth test synthesizing the backend twice, as a
-  sandbox and as the branch, reading no account.
-- **The eval** (`amplify/eval/`, 2026-10-10): `questions.json` is about twenty fixed questions, each with the sources
-  a right answer cites (any of them) or the outcome it records, covering the concepts, the command, the
-  specifications, the VSA check, the drift gate, an off-topic question, a contact request, a question the documents
-  do not answer and a prompt injection. `pnpm run chat:eval` builds the corpus and runs every question through `ask()`
-  and `bedrockModel()` against Bedrock with the `crv-sandbox` profile and an in-memory store (nothing is written to
-  DynamoDB, nothing counts against the day's budget), prints a pass/fail table and the estimated cost (about $0.90 a
-  run on Sonnet 4.6 when the prompt changed and the cache is written; about $0.50 when it is warm), and exits 1 on any
-  failure. **Run it before any change to the prompt, the model or `limits.ts`'s model, and put its table and cost in
-  the pull request.** Change an expectation only when the expectation was wrong, never to pass a wrong answer.
-  `amplify/test/eval.test.ts` holds the file's shape, its coverage, and that every expected source is in the corpus.
-- **An agent's sandbox**: `pnpm run sandbox` deploys `intentset-agent` with the `crv-sandbox` profile (the agents' account); exercise it, then
-  delete it with `pnpm exec ampx sandbox delete --identifier intentset-agent --profile crv-sandbox --yes`, check that no
-  `/aws/lambda/amplify-intentset*` log group, `intentset-ask-*` table or `intentset-ask-*` web ACL is left, and move
-  `.amplify/artifacts` out of the way (CDK's hotswap cache remembers the deleted stacks).
-- **The environments** (2026-10-14, Streamlane ADR 0087): an Amplify app with no repository connected in each of
-  Coral Reef's dev, staging and prod accounts (`amplify/environments.json`), deployed by
-  `.github/workflows/chat-backend.yml` with `ampx pipeline-deploy --branch main` in the GitHub environment of the same
-  name, through its `AWS_ROLE_ARN` (`github-deploy-intentset`, which only that environment may assume): dev on a push
-  to main that touches the backend or the corpus's sources, staging nightly from what dev last shipped, and **prod only
-  when the product owner starts it by hand; an agent never does**. Each moves the tag `deployed/chat/<environment>`.
-  Dev and staging set `INTENTSET_ALARM_EMAIL` empty, so their alarms reach no inbox (`settings.ts`). intentset.org's
-  `ASK_URL` names prod's. The old project's app (`d20jjgxbjnk8kx` in 865000063691) served it until the move; that account was closed on
-  2026-10-16.
-- **The launch** was one change: `ASK_URL` in `site/build.ts` set to prod's `POST /ask`. It builds the panel and
-  the privacy page (`CHAT_PAGES`, `site/content/privacy.md`, approved 2026-10-09, linked from the footer's row) into
-  the site. `amplify/test/retention.test.ts` holds the page to the periods in `limits.ts` and the logs' month.
-
-## Learning from questions
-
-The chat keeps each question 90 days, scrubbed (CAP-LEARN-FROM-QUESTIONS). `pnpm run questions:report` reads them,
-read-only, with the `crv-prod` profile (where prod keeps them) unless `AWS_PROFILE` or keys say otherwise (`amplify/questions/`,
-BEH-QUESTIONS-REPORT; `--help` lists the options). The questions are visitor data and this repository is public: the
-report goes to standard output, an `--out` inside the repository is warned about, and no report, brief or question is
-ever committed. The checks' own conversations are left out by their id prefixes (`--exclude-prefix`); a new check
-names its conversations with one of them, or adds its prefix to `defaultExcludePrefixes` in `report.ts`.
-
-- **The measure.** The report's Measure line is MEAS-QUESTIONS-ANSWERED: `answered` over `answered` plus `uncited`,
-  contact requests, refusals and failures left out. Read it monthly with `--days 30`; the first 30 days after the
-  launch (2026-10-09) are the baseline, and the target is set then, in the measure record.
-- **Drafting knowledge from gaps.** `pnpm run questions:report --gaps` writes a brief: the questions the
-  documentation did not answer, grouped, and what to do with them. An agent given it sets aside the off-topic
-  questions, looks for each answer in `spec/`, `site/content/` and `product/model/`, and either names the page that
-  already answers it (a findability gap) or drafts a knowledge record under `product/model/knowledge/` (`type:
-  knowledge`, `status: draft`, `links.explains`, a `## Sources` section naming what it draws on). It writes only what
-  those sources say, never a fact they do not, and describes each subject in its own words, never quoting a visitor.
-  Records stay drafts: a person reviews them, and publication refuses a draft. No model runs here; the agent is
-  whoever runs the procedure.
-
 ## Status
 
-Release history is in `CHANGELOG.md` and the reasons in `docs/decisions/`; milestones are
-`docs/implementation-plan.md` §5. What an agent needs to know of what exists:
+Open work only. What shipped is in `CHANGELOG.md`, why in `docs/decisions/`, and the milestones (M0 to M5, all done)
+in `docs/implementation-plan.md` §5.
 
-- M0 to M5 are done: specs, core, architecture, verification, publisher, help, Atlas, the MCP server and the CLI with
-  every command. Ten packages are on npm, released from CI on a `v*` tag; a new package's first publish is by hand
-  (family conventions). intentset.org deploys from GitHub Actions.
-- `site/content` is the site copy's source of truth. The IA document in `docs/requirements/` stays frozen as the
-  handoff, and the site's words need not match it.
-- The Streamlane pilot's specification questions are decided (`docs/pilot-findings.md`).
-- The export is 0.6 (2026-11-14, ADR 0020: each artifact carries its `approval` and `formalizes`; 0.5, 2026-11-12,
-  ADR 0017, added `delivery`; 0.4, 2026-10-14, ADR 0014, added the evidence binding) and the specifications are 0.2. Before 1.0 a changed export envelope is a minor bump of the packages;
-  Streamlane and Driftline read exports and move their pins when they update. A 0.6 reader rejects 0.5, and a 0.2 reader
-  rejects a record that declares `0.1`: `intentset migrate --to 0.2` rewrites `spec` and `profile` in a repository's
-  records.
-- **Delivery** (Core §7, ADR 0017, 2026-11-12): an optional `delivery: planned | built` on a capability, behavior, rule,
-  scenario, slice or contract says whether the work exists, apart from its approval. The effective delivery
-  (`deliveryOf`) is the field, else `built` for implemented, released or deprecated, else not stated; `approved` is never
-  read as built. An agent may write it, since it states a fact about the code; it never approves.
-- **Review pins** (publication §3, ADR 0018, 2026-11-12): a knowledge review's `intentset.org/review` names its pin
-  kind in `hash`. `content-v1` pins each source's `contentHash`, which leaves out `status`, `delivery`, `reviewedBy`,
-  `reviewedAt`, `approval`, `formalizes` and the review extension and names `deprecated` or `retired`; no `hash` pins the whole file
-  (`sourceHash`), as every earlier review does; any other kind matches nothing. `sourceHash` itself is unchanged.
-- **The snapshot is named once per publication, in `snapshot.json` alone** (publication §2, §5, §6; ADR 0019,
-  2026-11-14, amended by ADR 0021, 2026-11-15): a generated document, its HTML and its chunks, `help.json` and the
-  index carry no `snapshot`; `snapshot.json` names the commit and graph hash, and `publish --no-snapshot` leaves it
-  out, which is what a repository that commits its published output uses. The same knowledge, request and
-  `publishedAt` at two commits give the same bytes in every other file, and a CLI test holds it.
-- **Approval basis and outside requirements** (Core §7 and §5, ADR 0020, 2026-11-14): an optional `approval` on any
-  record says who approved it (`by`, a person), when (`at`) and on what `basis`: `direct`, `derived` (with `source`:
-  `ref` and a `revision` or `digest`, and optionally `attestedBy`, the agent) or `attested` (`attestedBy`, no `by`).
-  An optional `formalizes` on a behavior, rule or scenario lists outside requirements by `source` and optional
-  `anchor`. Both are shape-checked as CORE001 and never resolved; validation never decides who may approve and never
-  compares `approval` with `status`. Both are outside the content hash. Core §8 says a verification's status carries
-  no approval meaning, so a tool may take its standing from what it verifies; Core derives none.
-- **Approving** (Core §7 and §10, ADR 0022, 2026-11-24): an approval is a reviewed change to a record, and nothing
-  holds one outside the files. `intentset approve <ID>... --by <person>` writes `status: approved` and a `direct`
-  `approval` into the drafts named or matched by `list`'s selector, and for knowledge the review too (`reviewedBy`,
-  `reviewedAt`, `content-v1` pins); it validates with the change applied (`SessionOptions.overlay`) and writes nothing
-  if that adds an error, never commits, and cannot know who runs it. `intentset review` lists every record whose
-  status or approval differs from the base ("Approvals and status changes", `statusChanges` in the JSON), which is
-  what shows a reviewer an approval nobody was entitled to make. **An agent never runs `approve` on its own account.**
-- A Markset diagnostic in an export is carried under origin `syntax` with Markset's own code (0.6.1, a defect fix
-  inside export 0.3, before 0.4); cases about what Markset reports carry `carrier: "markset"`. The tests, the suite and the
-  installed packages also run under micromark's development build.
-- Two breaking revisions were made inside Core 0.1 (2026-10-04, CORE003 for an active outcome with no measure;
-  2026-10-14, evidence judged by subject by default), and the second moved `intentset.spec` to `0.2` (ADR 0014); the
-  next such change, to any spec, moves it to `0.3`.
-- The site is organized by task, as markset.org is (2026-10-05): see "The site" above.
-- Intentset's own model is complete as drafts (2026-10-10): no architecture baseline, a verification record for every
-  behavior, a measure for each of the toolchain's outcomes, and ADR-PACKAGE-LAYERS for the VSA006 warnings. What is left is a
-  maintainer's: promoting records out of draft, confirming the measures' targets, and taking their first readings.
-
-Run evidence is never committed: a pass counts only at the commit and graph hash it ran against, so a committed record
-is stale on arrival. Keep `.intentset/evidence/` out of git (CI artifacts, or an external store).
-
-<!-- BEGIN AWS Agent Toolkit rules -->
-# AWS Guidance for the new AWS experience
-
-This user has signed up for the new AWS experience. This experience lets you sign into AWS using a social provider and requires the following additional context.
-
-Where this guidance conflicts with the project's own instructions, the project's instructions take precedence.
-
-## Context
-
-### Terminology:
-
-- Say "project" instead of "account" — a project contains an AWS account and settings for sharing with other collaborators
-- Say "team member" instead of "IAM user" — users are invited by email, not created or federated in IAM
-- Say "AWS Settings" when referring to management tasks at [settings.aws.com](https://settings.aws.com/) (project management, billing, team members, spend limits). Users view their actual AWS resources in the AWS Management Console.
-- Say "selected Region" when referring to the user's Region — not "home Region"
-- The user has a managed IAM experience. This includes a managed service control policies (SCP) and resource control policies (RCP) that govern the use of AWS. They will still need to use IAM to create policies to let services work with each other. If there are questions about the SCPs or RCPs, go to the documentation at https://docs.aws.amazon.com/accounts/latest/reference/scps-and-rcps-for-projects.html
-
-### Constraints:
-
-- All projects share a single AWS Region determined by the user's contact address. Resources cannot be created in other Regions
-- When developing:
-  - MUST create all Regional resources in the project's assigned Region
-  - You CAN create AWS WAF and Cloudwatch Logs resources in us-east-1 when there are global resources (like a global WAF instance) that require a connection to dependencies in us-east-1. You should not use these for any other reason, because resources in the selected Region will provide lower cost (due to no cross-Region traffic), increased availability (due to no cross-Region traffic), and easier manageability (due to not needing to look in another Region). When you need to do an inventory of resources, you need to look in both the selected Region and us-east-1 for Cloudwatch Logs or WAF resources.
-  - MUST NOT attempt to create Lambda, API Gateway, or other Regional resources in any other Region
-  - MUST direct users to confirm their Region in AWS Settings > View all projects > Overview > Additional Info > Region. If the user cannot confirm their Region, check in ~/.aws/config
-  - MUST NOT use Lambda@Edge — excluded from both Lambda and CloudFront
-  - MUST NOT use CloudFormation StackSets — no multi-account or multi-Region deployments
-  - MUST NOT attempt cross-Region actions — no cross-Region replication for DynamoDB/S3/RDS, no multi-Region KMS keys
-  - MUST NOT use Route 53 cross-Region routing — geolocation, latency-based, and failover routing policies are not available
-  - CloudFront is a global service and its actions ARE allowed in `us-east-1`. A user can create a CloudFront distribution pointing to their project-region Lambda function URL or API Gateway. However, Lambda and API Gateway themselves MUST NOT be created in `us-east-1` — they must be in the project Region.
-  - Reduced availability in `eu-north-1` specifically: Amazon Rekognition, Amazon Textract, Amazon Personalize, AWS App Runner are not available in that Region.
-- IAM permissions for human access are managed by AWS. Don't assign roles to team members unless absolutely necessary
-- The user may have a spend limit if they are on the paid plan. The limit that pauses their project if it's exceeded. If resources suddenly become inaccessible, ask if they have a spend limit configured. Only project owners can modify a spend limit.
-- When developing:
-  - MUST ask about spend limit status if the user reports sudden "Access Denied" errors on operations that previously worked
-  - MUST direct users to check spend status in AWS Settings > Billing
-  - MUST check if a user has upgraded their account to the paid plan
-  - MUST ask the user if they want to clean up the successfully created resources or keep them to reduce cost
-- The user sets up billing, creates spend limits, and retrieves and pays invoices in AWS Settings. The user creates budgets and optimizes their costs in the AWS Billing and Cost Management console
-- Not all AWS services are available. If a service isn't working, do the following:
-  1. Run the command `aws freetier get-account-plan-state`
-  2. If accountPlanType": "FREE", check the [Free Tier supported services list](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html#supported-services-free-tier) next,
-  3. If accountPlanType": "PAID", check the [Paid Tier supported services list](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html#supported-services-paid-plan).
-  4. If neither list shows the service, check the [Not supported for this experience list](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html#unsupported-services). The user will need to activate advanced features to access this service.
-- Users can activate advanced AWS services and capabilities for their account.
-- Before starting a task, check whether a relevant AWS skill is available. Load the skill with retrieve_skill and prefer its guidance over general knowledge.
-
-### Help level
-
-- help_level (required): LOW, MEDIUM, or HIGH. While a user is building, you MUST ask the user: "How much guidance would you like from me? Low (I only flag security risks), medium (I ask a couple of clarifying questions if something seems off), or high (I explain what I'm doing, suggest alternatives, and flag best practices)."
-
-You CAN update this rule file to save a user's help_level.
-
-Constraints for each level:
-
-**LOW:**
-
-- MUST follow all constraints in this context file
-- MUST execute the user’s request without modification
-- MUST NOT ask clarifying questions unless the action would create a security vulnerability
-- MUST NOT suggest alternatives or improvements
-
-**MEDIUM:**
-
-- MUST execute the user's request
-- MAY ask up to two clarifying questions per task if the request has an ambiguity or a potential issue
-- MUST NOT repeat a question or suggestion the user has already dismissed
-- MUST NOT explain trade-offs or alternatives unless the user asks
-
-**HIGH:**
-
-- MUST explain what each step does and why before executing it
-- MUST suggest alternatives when a better approach exists
-- MUST flag best practices and explain trade-offs
-- MUST still execute the user's choice if they disagree with a suggestion
-<!-- END AWS Agent Toolkit rules -->
+- The specifications are 0.2 and the export is 0.6. The next breaking change to any spec moves `intentset.spec` to
+  `0.3`, and the changes waiting for that one move are issues #126, #127, #129 and #130 (with #49).
+- Ten records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure and the nine rules for verifications
+  ("Intentset's own model"). The measures' targets and first readings are a maintainer's.
+- The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
+  weeks.
+- The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).
