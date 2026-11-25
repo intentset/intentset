@@ -73,11 +73,14 @@ NOT contain a `:::` directive outside Markset's vocabulary. Retrieval chunks of 
 `intentset-publication` block unchanged.
 
 An HTML rendering of a document, a page or a fragment, is rendered from the document's Markset and MUST NOT let raw
-HTML in the source pass through. It MUST NOT carry a link or image URL whose scheme is not `http`, `https` or
-`mailto`; a URL with no scheme, a relative path or a `#` fragment, is allowed. The scheme is read as a browser reads
-it: case-insensitively, with ASCII tab, line feed and carriage return removed wherever they are, and control
-characters and spaces before it skipped. A link whose URL is refused keeps its text, and an image its alternative
-text. The Markset document itself keeps the knowledge body unchanged; only its HTML is held to this.
+HTML in the source pass through. A link or image URL taken from the source MUST have the scheme `http`, `https` or
+`mailto`, or none: a relative path, a protocol-relative `//host/path` or a `#` fragment is allowed. The scheme is read
+as a browser reads it: case-insensitively, with ASCII tab, line feed and carriage return removed wherever they are,
+and control characters and spaces before it skipped. A link whose URL is refused keeps its text, and an image its
+alternative text. A diagram or chart the renderer draws MAY be embedded as a `data:image/svg+xml` image that the
+renderer builds, with the source's text escaped in it, so a host whose Content Security Policy restricts `img-src`
+must allow `data:` for those images. The Markset document itself keeps the knowledge body unchanged; only its HTML is
+held to this.
 
 A publisher MAY also render a document as an HTML fragment, for a product that shows it inside its own interface. A
 fragment is what the page holds as the document's content, rendered the same way and so sanitized the same way. It

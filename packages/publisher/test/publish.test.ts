@@ -343,6 +343,7 @@ test("BEH-PUBLISH-FRAGMENT: a page and a fragment carry only http, https, mailto
     "https://lantern.example/a",
     "HTTP://x",
     "mailto:a@lantern.example",
+    "//lantern.example/protocol-relative",
     "/help",
     "#guidance",
     "a/b:c",
@@ -377,6 +378,21 @@ test("BEH-PUBLISH-FRAGMENT: a page and a fragment carry only http, https, mailto
   }
   assert.ok(mainOf(page).endsWith(fragment));
   assert.equal(rendered(true).html, publishOnce().documents[0].html, "a document with no such URL is unchanged");
+});
+
+test("BEH-PUBLISH-FRAGMENT: a diagram the renderer draws stays a data:image/svg+xml image, its text escaped, in page and fragment", () => {
+  // The URL rule is for URLs taken from the source; the renderer's own diagram image is kept on purpose.
+  const body = guidance(
+    ":::figure[The schedule]\n```ascii\n+--------------+\n| <script>     |\n+--------------+\n```\n:::",
+  );
+  const page = rendered(true, body).html ?? "";
+  const fragment = rendered("fragment", body).htmlFragment ?? "";
+  for (const html of [page, fragment]) {
+    assert.match(html, /<img class="ms-diagram" data-diagram="ascii" src="data:image\/svg\+xml,%3Csvg/, html);
+    assert.ok(html.includes("The schedule"), "the caption is the text alternative");
+    assert.ok(!html.includes("<script"), "the fence's text is escaped inside the image");
+  }
+  assert.ok(mainOf(page).endsWith(fragment));
 });
 
 test("the index names the request without authorization and counts exclusions", () => {
