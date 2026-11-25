@@ -22,6 +22,31 @@ if (read.ok) {
 }
 ```
 
+By default a bound control gets `data-help-tip` (the tip's text) and `data-help-knowledge` (the knowledge ID it came
+from) and nothing a browser displays. A `title` shows only on mouse hover, never to keyboard or touch users, so the
+product shows the tip, as a visible tooltip and an accessible description, through `render`:
+
+```ts
+bindTips(document, read.help, {
+  render: (element, tip) => myTooltip.attach(element, tip.text), // your tooltip component, reachable by keyboard and touch
+});
+```
+
+`bindTips` binds once. `watchTips` binds, then binds again whenever the DOM under its root changes, once per animation
+frame, and undoes everything it did when disposed, so help mounted into another application's page binds only under
+its own root and leaves that page as it found it:
+
+```ts
+import { watchTips } from "@intentset/help";
+
+const watch = watchTips(container, read.help, {
+  render: (element, tip) => myTooltip.attach(element, tip.text),
+  unrender: (element) => myTooltip.detach(element), // without it, dispose removes the default attributes
+});
+watch.coverage(); // { bound, missing } as of the last pass
+watch.dispose(); // stop observing and unrender every element it bound
+```
+
 The file was published for one audience, release, role, edition and set of flags, so a product serves each person
 the one published for their entitlement.
 

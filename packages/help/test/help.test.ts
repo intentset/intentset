@@ -14,11 +14,14 @@ import {
   HELP_PROFILE,
   type Help,
   KNOWLEDGE_ATTRIBUTE,
-  type TipElement,
+  TIP_ATTRIBUTE,
+  type TipObserver,
+  type WatchElement,
   bindTips,
   helpForPage,
   readHelp,
   tipFor,
+  watchTips,
 } from "../src/index.ts";
 
 const example = resolve(import.meta.dirname, "..", "..", "..", "examples", "scheduling");
@@ -149,7 +152,7 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
 });
 
 /** A test double for the part of a DOM element the binder touches. */
-class Fake implements TipElement {
+class Fake implements WatchElement {
   readonly attributes = new Map<string, string>();
   constructor(attributes: Record<string, string>) {
     for (const [name, value] of Object.entries(attributes)) this.attributes.set(name, value);
@@ -163,6 +166,12 @@ class Fake implements TipElement {
   hasAttribute(name: string): boolean {
     return this.attributes.has(name);
   }
+  removeAttribute(name: string): void {
+    this.attributes.delete(name);
+  }
+  snapshot(): Record<string, string> {
+    return Object.fromEntries([...this.attributes].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  }
 }
 
 function root(elements: Fake[], attribute = BEHAVIOR_ATTRIBUTE) {
@@ -175,7 +184,7 @@ function root(elements: Fake[], attribute = BEHAVIOR_ATTRIBUTE) {
   };
 }
 
-test("BEH-HELP-TIPS: bindTips puts each tip on its control, keeps an existing title, and reports the IDs with no tip", () => {
+test("BEH-HELP-TIPS: bindTips puts each tip on its control as data, sets no title, and reports the IDs with no tip", () => {
   const help = helpFromPublisher();
   const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
   const titled = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", title: "Schedule" });
@@ -187,16 +196,188 @@ test("BEH-HELP-TIPS: bindTips puts each tip on its control, keeps an existing ti
   const binding = bindTips(host, help);
   assert.deepEqual(host.selectors, ["[data-behavior]"]);
   assert.deepEqual(binding, { bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"], missing: ["CAP-ASMT-ASSIGN"] });
-  assert.equal(schedule.getAttribute("title"), TIP);
-  assert.equal(schedule.getAttribute(KNOWLEDGE_ATTRIBUTE), "KB-ASMT-SCHEDULE");
-  assert.equal(titled.getAttribute("title"), "Schedule", "an authored title is not overwritten");
-  assert.equal(titled.getAttribute(KNOWLEDGE_ATTRIBUTE), "KB-ASMT-SCHEDULE");
-  assert.equal(rule.getAttribute("title"), RULE_TIP);
-  assert.equal(untipped.hasAttribute("title"), false);
+  assert.deepEqual(schedule.snapshot(), {
+    [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE",
+    [KNOWLEDGE_ATTRIBUTE]: "KB-ASMT-SCHEDULE",
+    [TIP_ATTRIBUTE]: TIP,
+  });
+  assert.equal(schedule.hasAttribute("title"), false, "the default render sets nothing a browser displays");
+  assert.equal(titled.getAttribute("title"), "Schedule", "an authored title is left alone");
+  assert.equal(titled.getAttribute(TIP_ATTRIBUTE), TIP);
+  assert.equal(rule.getAttribute(TIP_ATTRIBUTE), RULE_TIP);
+  assert.equal(untipped.attributes.size, 1);
   assert.equal(plain.attributes.size, 1);
   // Binding again changes nothing.
   assert.deepEqual(bindTips(host, help), binding);
-  assert.equal(schedule.getAttribute("title"), TIP);
+  assert.equal(schedule.attributes.size, 3);
+});
+
+/** A test double for a MutationObserver: the test fires it by hand, as the DOM would on a change. */
+class FakeObserver implements TipObserver {
+  static last: FakeObserver | null = null;
+  observed: { target: unknown; options: unknown } | null = null;
+  disconnected = false;
+  readonly callback: () => void;
+  constructor(callback: () => void) {
+    this.callback = callback;
+    FakeObserver.last = this;
+  }
+  observe(target: unknown, options: unknown): void {
+    this.observed = { target, options };
+  }
+  disconnect(): void {
+    this.disconnected = true;
+  }
+  fire(): void {
+    if (!this.disconnected) this.callback();
+  }
+}
+
+/** A frame scheduler the test advances by hand. */
+function frames() {
+  const queue = new Map<number, () => void>();
+  let next = 1;
+  return {
+    queue,
+    cancelled: [] as unknown[],
+    request(callback: () => void) {
+      queue.set(next, callback);
+      return next++;
+    },
+    cancel(handle: unknown) {
+      this.cancelled.push(handle);
+      queue.delete(handle as number);
+    },
+    run() {
+      const due = [...queue.values()];
+      queue.clear();
+      for (const callback of due) callback();
+    },
+  };
+}
+
+function watchHost(elements: Fake[]) {
+  const host = root(elements);
+  const frame = frames();
+  const options = {
+    MutationObserver: FakeObserver,
+    requestFrame: (callback: () => void) => frame.request(callback),
+    cancelFrame: (handle: unknown) => frame.cancel(handle),
+  };
+  return { host, frame, options };
+}
+
+test("BEH-HELP-WATCH: watchTips binds at once, observes only its root, and rebinds once per frame however many changes", () => {
+  const help = helpFromPublisher();
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const elements = [schedule];
+  const { host, frame, options } = watchHost(elements);
+  const watch = watchTips(host, help, options);
+  const observer = FakeObserver.last as FakeObserver;
+  assert.deepEqual(observer.observed, {
+    target: host,
+    options: { subtree: true, childList: true, attributes: true, attributeFilter: [BEHAVIOR_ATTRIBUTE] },
+  });
+  assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE"], missing: [] });
+  assert.equal(schedule.getAttribute(TIP_ATTRIBUTE), TIP);
+
+  const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
+  const untipped = new Fake({ [BEHAVIOR_ATTRIBUTE]: "CAP-ASMT-ASSIGN" });
+  elements.push(rule, untipped);
+  observer.fire();
+  observer.fire();
+  observer.fire();
+  assert.equal(frame.queue.size, 1, "three changes, one pass scheduled");
+  assert.equal(rule.hasAttribute(TIP_ATTRIBUTE), false, "nothing binds before the frame");
+  frame.run();
+  assert.equal(rule.getAttribute(TIP_ATTRIBUTE), RULE_TIP);
+  assert.deepEqual(watch.coverage(), {
+    bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+    missing: ["CAP-ASMT-ASSIGN"],
+  });
+  assert.equal(host.selectors.length, 2, "one query to bind, one per frame");
+  observer.fire();
+  assert.equal(frame.queue.size, 1, "a change after the frame schedules the next one");
+  watch.dispose();
+});
+
+test("BEH-HELP-WATCH: watchTips renders each element once, unrenders one that changes behavior or leaves the root", () => {
+  const help = helpFromPublisher();
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const leaving = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
+  const elements = [schedule, leaving];
+  const { frame, host, options } = watchHost(elements);
+  const log: string[] = [];
+  const watch = watchTips(host, help, {
+    ...options,
+    render: (element, tip) => {
+      log.push(`render ${tip.id}`);
+      element.setAttribute("aria-description", tip.text);
+    },
+    unrender: (element, tip) => {
+      log.push(`unrender ${tip.id}`);
+      (element as Fake).removeAttribute("aria-description");
+    },
+  });
+  const observer = FakeObserver.last as FakeObserver;
+  assert.deepEqual(log, ["render BEH-ASMT-SCHEDULE", "render RULE-ASMT-FUTURE"]);
+  elements.splice(1, 1);
+  schedule.setAttribute(BEHAVIOR_ATTRIBUTE, "RULE-ASMT-FUTURE");
+  observer.fire();
+  frame.run();
+  assert.deepEqual(log.slice(2), [
+    "unrender BEH-ASMT-SCHEDULE",
+    "unrender RULE-ASMT-FUTURE",
+    "render RULE-ASMT-FUTURE",
+  ]);
+  assert.equal(leaving.hasAttribute("aria-description"), false);
+  assert.equal(schedule.getAttribute("aria-description"), RULE_TIP);
+  observer.fire();
+  frame.run();
+  assert.equal(log.length, 5, "a pass that finds nothing new renders nothing");
+  watch.dispose();
+  assert.deepEqual(log.slice(5), ["unrender RULE-ASMT-FUTURE"]);
+  assert.equal(schedule.hasAttribute("aria-description"), false);
+});
+
+test("BEH-HELP-WATCH: dispose stops watching, cancels a pending pass and leaves the DOM as it found it", () => {
+  const help = helpFromPublisher();
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", title: "Schedule" });
+  const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
+  const untipped = new Fake({ [BEHAVIOR_ATTRIBUTE]: "CAP-ASMT-ASSIGN" });
+  const before = [schedule, rule, untipped].map((element) => element.snapshot());
+  const elements = [schedule, rule, untipped];
+  const { frame, host, options } = watchHost(elements);
+  const watch = watchTips(host, help, options);
+  const observer = FakeObserver.last as FakeObserver;
+  assert.notDeepEqual(schedule.snapshot(), before[0]);
+  observer.fire();
+  const handle = [...frame.queue.keys()][0];
+  watch.dispose();
+  assert.equal(observer.disconnected, true);
+  assert.deepEqual(frame.cancelled, [handle]);
+  assert.deepEqual(
+    [schedule, rule, untipped].map((element) => element.snapshot()),
+    before,
+    "the default attributes are removed and nothing else is touched",
+  );
+  assert.deepEqual(watch.coverage(), { bound: [], missing: [] });
+  watch.dispose();
+  frame.run();
+  assert.deepEqual(
+    [schedule, rule, untipped].map((element) => element.snapshot()),
+    before,
+  );
+});
+
+test("BEH-HELP-WATCH: watchTips without a MutationObserver or a frame scheduler says which it needs", () => {
+  const help = helpFromPublisher();
+  const { host } = watchHost([]);
+  assert.throws(() => watchTips(host, help, { requestFrame: () => 0 }), /needs a MutationObserver/u);
+  assert.throws(
+    () => watchTips(host, help, { MutationObserver: FakeObserver, requestFrame: undefined }),
+    /needs requestAnimationFrame/u,
+  );
 });
 
 test("bindTips takes another attribute and another renderer", () => {
