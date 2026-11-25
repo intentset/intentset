@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/scenario/0.2
+  spec: '0.3'
+  profile: intentset/scenario/0.3
   id: SCN-ASMT-SCHEDULE
   type: scenario
   title: Accept an eligible schedule

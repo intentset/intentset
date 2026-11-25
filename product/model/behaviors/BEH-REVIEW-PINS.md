@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-REVIEW-PINS
   type: behavior
   title: A knowledge review stays current while what it explains is unchanged

@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-VALIDATE-REPORTS
   type: verification
   title: Validate reports every problem as a sorted diagnostic

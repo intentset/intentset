@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.6",
+  "contract": "intentset/export/0.7",
   "cases": [
     {
       "name": "full: every report, one restricted artifact withheld",
@@ -12,7 +12,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [
@@ -39,7 +39,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [
@@ -66,7 +66,7 @@
         "accept": true,
         "snapshot": {
           "commit": null,
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [],
@@ -85,7 +85,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [
@@ -109,7 +109,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [
@@ -133,7 +133,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [
@@ -157,7 +157,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "8a0d7283d5d43c7d9757a9cde13a7bdc4dc414fc6793ac26cb23d5ef47ceeb2c"
+          "graphHash": "ff7ba7b6240827bf6d2c17cf3bd8d92a2bdb3a53005c5b8e0027ccc21b03bf04"
         },
         "validation": "fail",
         "supplied": [
@@ -181,7 +181,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "ba0ad4db2cbbd813f0df622baa39681989ecf863e8bfe298bffbd307c8b5aac5"
+          "graphHash": "bd881874cf33586fbd8b873fe5f9bac38175c6a18ccb63104a6520c68e90a4d4"
         },
         "validation": "fail",
         "supplied": [
@@ -203,7 +203,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a"
+          "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25"
         },
         "validation": "pass",
         "supplied": [
@@ -224,7 +224,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "13f01a3287654c0fa9213f4591e275e49df09d049eea5d11c07ba63aa6a9e637"
+          "graphHash": "86af9541726cee7cba5f5da3fe335e1b03fda4911b63723a93e86c30da8410e1"
         },
         "validation": "pass",
         "supplied": [],
@@ -285,7 +285,7 @@
       "notes": "0.4 carried no delivery, so it cannot say whether a record's work is built. A 0.5 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
     },
     {
-      "name": "the previous contract version",
+      "name": "the contract before approval",
       "file": "unsupported-contract-0.5.json",
       "connection": {
         "repository": "example/scheduling",
@@ -296,6 +296,19 @@
         "category": "unsupported-contract"
       },
       "notes": "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
+    },
+    {
+      "name": "the previous contract version",
+      "file": "unsupported-contract-0.6.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": false,
+        "category": "unsupported-contract"
+      },
+      "notes": "0.6 carried a model written against the specifications' 0.2, and a 0.7 reader reads one written against 0.3. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
     },
     {
       "name": "a later contract version",

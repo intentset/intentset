@@ -19,7 +19,7 @@ import type { Artifact, Graph, Visibility } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
 import type { PublicationRequest } from "./request.ts";
 
-export const HELP_PROFILE = "intentset/help/0.2";
+export const HELP_PROFILE = "intentset/help/0.3";
 /** The file's name beside the published documents. */
 export const HELP_FILE = "help.json";
 

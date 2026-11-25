@@ -940,8 +940,8 @@ function slice(id: string, root: string, extra = ""): string {
   return `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: ${id}
   type: slice
   title: ${id}
@@ -1221,8 +1221,8 @@ describe("a slice with an entrypoint in each package it spans (VSA §3)", () => 
   const record = `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-M
   type: slice
   title: SLICE-M
@@ -1342,8 +1342,8 @@ test("a verification claim resolves against test files, and a source claim does 
   const slice = `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-X
   type: slice
   title: X slice

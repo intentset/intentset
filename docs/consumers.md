@@ -81,9 +81,22 @@ authorization.
 | Its own model, written before its code | VSA §3: draft slices plan their paths as warnings, so L2 holds from the first commit |
 
 Driftline's usage-evidence specification, keyed to Intentset IDs, is planned as an Intentset extension and is not
-part of 0.6; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
+part of 0.7; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
 time, URI, target met). Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
 authored.
+
+## Moving a pin: export 0.7 and specifications 0.3 (in progress)
+
+The next release moves `intentset.spec` from `0.2` to `0.3` and the export from 0.6 to 0.7. So far the move changes
+the version and nothing else: `spec` in the envelope is `0.3`, and each artifact's `profile` is
+`intentset/<type>/0.3`. The changes that make it breaking (ADR 0023 to ADR 0026) are listed in the CHANGELOG as they
+land, and this table grows with them.
+
+| Where | What changes |
+|---|---|
+| The repository that produces the export | Move `@intentset/cli` to that release, then run `intentset migrate --to 0.3` on a clean tree and commit the result: it rewrites `spec` and `profile` in every record, from `0.2` or `0.1`. A 0.3 reader rejects a record still at an earlier version and names the command. |
+| A reader of the export | Support `intentset/export/0.7` and drop 0.6, which a 0.7 reader rejects as `unsupported-contract`. Expect `spec` `0.3` and profiles ending in `/0.3`. |
+| A consumer's own tests | Run the importer over the fixtures again: every envelope names 0.7 and spec `0.3`, and `unsupported-contract-0.6.json` is new. |
 
 ## Moving a pin: export 0.6 (ADR 0020)
 

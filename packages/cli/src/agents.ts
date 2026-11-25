@@ -156,8 +156,8 @@ three with it. A new behavior looks like this, one recognizable promise includin
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-AREA-NAME
   type: behavior
   title: The promise in a few words, such as Schedule a student assessment
@@ -197,8 +197,8 @@ matches a run to it:
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-AREA-NAME
   type: verification
   title: What the check proves, such as Unit test of scheduling an assessment

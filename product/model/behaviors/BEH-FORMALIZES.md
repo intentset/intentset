@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-FORMALIZES
   type: behavior
   title: A behavior, rule or scenario names the outside requirement it formalizes
@@ -39,4 +39,4 @@ Success: a record states which outside requirement it formalizes, in a place eve
 
 ## Sources
 
-- `spec/core-0.2.md` §5, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.
+- `spec/core-0.3.md` §5, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.

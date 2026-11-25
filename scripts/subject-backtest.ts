@@ -81,7 +81,7 @@ import {
 import { type Graph, validate } from "@intentset/core";
 import { computeSubject, includedSlices, movedParts, type Subject, verifiedBehaviors } from "@intentset/verification";
 import { marksetCarrier } from "@intentset/markset-adapter";
-import { migrateText } from "../packages/cli/src/commands/migrate.ts";
+import { migrateRecord } from "../packages/cli/src/commands/migrate.ts";
 import { loadRepository } from "../packages/cli/src/repository.ts";
 import { subjectsOf } from "../packages/cli/src/subject.ts";
 import { readTree } from "../packages/cli/src/tree.ts";
@@ -247,15 +247,15 @@ function lsFiles(root: string): Map<string, string> {
 }
 
 /**
- * A commit written for `intentset.spec` 0.1 read with the current reader: the
- * records' `spec` and `profile` moved to 0.2 in memory, as `intentset migrate
- * --to 0.2` would, since a 0.2 reader rejects a 0.1 record and the replay of a
- * history that spans the move would otherwise see an empty model before it.
+ * A commit written for an earlier `intentset.spec` read with the current reader:
+ * the records moved to the current version in memory, as `intentset migrate`
+ * would, since a reader rejects a record at an earlier version and the replay of
+ * a history that spans a move would otherwise see an empty model before it.
  */
 function migrated(inputs: ReturnType<typeof loadRepository>["inputs"]) {
   return inputs.map((input) => {
     if (input.frontmatter === null) return input;
-    const text = migrateText(input.source, input.frontmatter, "0.1", "0.2");
+    const text = migrateRecord(input.source, input.frontmatter);
     return text === null ? input : marksetCarrier(input.path, text);
   });
 }

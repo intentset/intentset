@@ -61,7 +61,7 @@ commands
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
-                            print the intentset/export/0.6 envelope, or write it to --out;
+                            print the intentset/export/0.7 envelope, or write it to --out;
                             each --report adds a section (ownership needs L2, evidence L3; all
                             is every one the level reads). Restricted artifacts are withheld
                             and counted unless --include-restricted
@@ -126,11 +126,12 @@ commands
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
                             L3 with run records
-  migrate --to 0.2 [--allow-dirty]
-                            move the records the model reads from specifications 0.1 to 0.2:
-                            rewrites intentset.spec and intentset.profile in each record's
-                            frontmatter and nothing else, and says how many. Refuses a tree
-                            with uncommitted changes to tracked files unless --allow-dirty
+  migrate --to 0.3 [--allow-dirty]
+                            move the records the model reads to specifications 0.3, from
+                            0.2 or 0.1: rewrites intentset.spec and intentset.profile in
+                            each record's frontmatter and nothing else, and says how many.
+                            Refuses a tree with uncommitted changes to tracked files unless
+                            --allow-dirty
   mcp --mode engineering [--include-restricted]
   mcp --mode customer --visibility <public|customer> --audience <a> --product <ID>
         --release <r> --role <r> --edition <e> [--flag <f>]...

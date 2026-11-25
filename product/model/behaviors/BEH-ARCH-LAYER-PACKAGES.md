@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-ARCH-LAYER-PACKAGES
   type: behavior
   title: A layer imports only the packages its policy allows, and only presentation renders
@@ -38,4 +38,4 @@ Success: a package the layer's policy does not name, and JSX in the presentation
 
 ## Sources
 
-- `spec/profile-typescript-amplify-gen2-0.2.md` §3.
+- `spec/profile-typescript-amplify-gen2-0.3.md` §3.

@@ -1,14 +1,14 @@
 ---
-title: Intentset Publication Profile v0.2
-id: intentset/publication/0.2
+title: Intentset Publication Profile v0.3
+id: intentset/publication/0.3
 status: draft
-revision: 2026-11-15
+revision: 2026-11-25
 implementation: 0.17.1
 ---
 
-# Intentset Publication Profile v0.2
+# Intentset Publication Profile v0.3
 
-**Extends:** [Core §9](core-0.2.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
+**Extends:** [Core §9](core-0.3.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
 
 Publication turns reviewed knowledge, the explanations a product's readers are given, into documentation and in-app
 help for one audience and release, and leaves out everything that audience may not see. It is not deployment: nothing
@@ -33,7 +33,7 @@ label, MUST refuse the request rather than match nothing.
 
 A knowledge artifact is eligible only when all hold: type `knowledge`; status `approved`, `implemented`, `released`
 or `deprecated`; no artifact it `explains` says `delivery: planned` (Core §7: planned work is not current, and
-prospective documentation belongs only in a separately labeled roadmap projection, which v0.2 does not define);
+prospective documentation belongs only in a separately labeled roadmap projection, which v0.3 does not define);
 visibility admitted; the request's audience in `audiences`; `availability` present; the request's
 product, release, role and edition each in the corresponding list; every flag in `availability.flags` named by the
 request; and its review current (§3). Everything else is excluded. An excluded artifact the request named in `ids` is
@@ -50,7 +50,7 @@ knowledge body unchanged, preceded by one blank line when it does not begin with
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/publication/0.2` |
+| `profile` | `intentset/publication/0.3` |
 | `derived` | `true` |
 | `projection` | the request's visibility; the document is as restricted as its projection |
 | `source` | `id`, `revision` (null when undeclared), `sourceHash` of the knowledge; `path` only when the projection admits internal |
@@ -82,8 +82,8 @@ extensions:
   intentset.org/review:
     hash: content-v1                   # what the pins hash; absent means the whole file
     sources:
-      BEH-ASMT-SCHEDULE: 6d6d30d8dc13...
-      RULE-ASMT-FUTURE: daea07d3681b...
+      BEH-ASMT-SCHEDULE: 4fede99f81c7...
+      RULE-ASMT-FUTURE: a89cf09ddc01...
     snapshot: <commit or graph hash at review>   # optional, informative
 ```
 
@@ -148,7 +148,7 @@ its bytes change only when a tip, a published document, the request or `publishe
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/help/0.2` |
+| `profile` | `intentset/help/0.3` |
 | `derived` | `true` |
 | `projection` | the request's visibility |
 | `audience` | the request's audience |
@@ -174,7 +174,7 @@ UTF-8 JSON object, written whenever the request is accepted.
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/snapshot/0.2` |
+| `profile` | `intentset/snapshot/0.3` |
 | `derived` | `true` |
 | `commit` | the commit published from, or null when unavailable |
 | `graphHash` | the hash of the graph published from |

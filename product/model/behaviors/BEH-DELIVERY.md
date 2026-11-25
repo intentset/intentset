@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-DELIVERY
   type: behavior
   title: A record says whether its work is built, apart from its approval
@@ -39,4 +39,4 @@ Success: a draft written from existing code is told apart from a proposal, in th
 
 ## Sources
 
-- `spec/core-0.2.md` §7, VSA §3, `spec/publication.md` §1, `spec/list.md` §1 and `spec/export.md` §2, and ADR 0017.
+- `spec/core-0.3.md` §7, VSA §3, `spec/publication.md` §1, `spec/list.md` §1 and `spec/export.md` §2, and ADR 0017.

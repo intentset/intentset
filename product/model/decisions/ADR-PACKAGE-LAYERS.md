@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/decision/0.2
+  spec: '0.3'
+  profile: intentset/decision/0.3
   id: ADR-PACKAGE-LAYERS
   type: decision
   title: A package slice declares no layers, and its VSA006 warning stays

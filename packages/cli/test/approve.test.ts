@@ -82,7 +82,7 @@ test("BEH-APPROVE: approve gives a knowledge record its review, pinning each sou
   const reviewed = read(dir, "KB-ASMT-SCHEDULE");
   // A draft whose review names another reviewer and a pin that no longer holds.
   edit(dir, "KB-ASMT-SCHEDULE", "status: approved", "status: draft");
-  edit(dir, "KB-ASMT-SCHEDULE", "'6d6d30d8", "'00000000");
+  edit(dir, "KB-ASMT-SCHEDULE", "'4fede99f", "'00000000");
   git(dir, "commit", "-q", "-am", "the knowledge as a draft");
 
   const approved = await run(dir, "approve", "KB-ASMT-SCHEDULE", ...BY);

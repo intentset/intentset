@@ -92,7 +92,7 @@ const CODE = /^[A-Z]+[0-9]{3}$/;
 /** Markset's own codes, which a diagnostic with origin syntax carries unchanged (§1): a host never renames them. */
 const MARKSET_CODE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
 const POINTER = /^(?:\/.*)?$/;
-const PROFILE = /^intentset\/[a-z]+\/0\.2$/;
+const PROFILE = /^intentset\/[a-z]+\/0\.3$/;
 const EXTENSION_KEY = /^[^/]+\/.+$/;
 const TOKEN = /^\S+$/;
 const TEXT = /\S/;
@@ -284,7 +284,7 @@ class Shape {
       "reports",
     ]);
     if (v === null) return;
-    if (v.spec !== "0.2") this.fail("/spec", "Expected 0.2.");
+    if (v.spec !== "0.3") this.fail("/spec", "Expected 0.3.");
     this.string(v.generatedAt, "/generatedAt", GENERATED_AT, "an ISO 8601 time");
     this.string(v.repository, "/repository");
     this.array(v.products, "/products", (p, at) => this.id(p, at), { sortedBy: String });
@@ -471,7 +471,7 @@ class Shape {
     this.string(a.owner, `${at}/owner`);
     this.oneOf(a.visibility, `${at}/visibility`, VISIBILITIES);
     this.strings(a.audiences, `${at}/audiences`, { minItems: 1 });
-    this.string(a.profile, `${at}/profile`, PROFILE, "a profile such as intentset/behavior/0.2");
+    this.string(a.profile, `${at}/profile`, PROFILE, "a profile such as intentset/behavior/0.3");
     this.nullable(a.revision, `${at}/revision`, (r, p) => this.integer(r, p, 1));
     this.string(a.path, `${at}/path`);
     this.string(a.sourceHash, `${at}/sourceHash`, SHA256, "a SHA-256 in lowercase hex");

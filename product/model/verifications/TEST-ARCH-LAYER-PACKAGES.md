@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-ARCH-LAYER-PACKAGES
   type: verification
   title: A layer imports only the packages its policy allows, and only presentation renders

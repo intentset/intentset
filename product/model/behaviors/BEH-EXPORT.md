@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-EXPORT
   type: behavior
   title: Graph prints the model as the export envelope
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.6` envelope: the artifacts, each with its `delivery` as written (ADR 0017), the basis of its approval and the outside requirements it formalizes (ADR 0020), the edges, the diagnostics and the snapshot.
+Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.7` envelope: the artifacts, each with its `delivery` as written (ADR 0017), the basis of its approval and the outside requirements it formalizes (ADR 0020), the edges, the diagnostics and the snapshot.
 
 ## Preconditions
 

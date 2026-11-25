@@ -713,7 +713,7 @@ test("BEH-PUBLISH: publish from the example with its knowledge demoted to a draf
     "snapshot.json",
   ]);
   const help = JSON.parse(readFileSync(join(dir, "published", "help.json"), "utf8"));
-  assert.equal(help.profile, "intentset/help/0.2");
+  assert.equal(help.profile, "intentset/help/0.3");
   assert.deepEqual(help.tips, {});
 });
 
@@ -732,7 +732,7 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
     "snapshot.json",
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");
-  assert.match(markset, /intentset\/publication\/0\.2/);
+  assert.match(markset, /intentset\/publication\/0\.3/);
   for (const internal of ["Schedule a student assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
     for (const file of readdirSync(out))
       assert.ok(!readFileSync(join(out, file), "utf8").includes(internal), `${file}: ${internal}`);
@@ -784,7 +784,7 @@ test("BEH-PUBLISH: publishing the same knowledge at two commits writes the same 
   const before = JSON.parse(read("first", "snapshot.json"));
   const after = JSON.parse(read("second", "snapshot.json"));
   assert.deepEqual(Object.keys(before), ["profile", "derived", "commit", "graphHash"]);
-  assert.equal(before.profile, "intentset/snapshot/0.2");
+  assert.equal(before.profile, "intentset/snapshot/0.3");
   assert.equal(before.commit, head);
   assert.match(first.out, new RegExp(`^Snapshot: commit ${head}, graph ${before.graphHash}$`, "m"));
   assert.notEqual(after.commit, before.commit);

@@ -34,7 +34,7 @@ Product truth for agentic development
 What Intentset is, why it exists, and how it works: in plain words first, then under the hood.
 
 {.small}
-intentset.org · specifications v0.2 draft
+intentset.org · specifications v0.3 draft
 
 ::::
 
@@ -856,7 +856,7 @@ npx intentset impact BEH-ASMT-SCHEDULE
 {.cta}
 [intentset.org/start](../start/)
 
-Specifications v0.2 in review. Toolchain on npm under @intentset. MIT licensed.
+Specifications v0.3 in review. Toolchain on npm under @intentset. MIT licensed.
 
 ::::
 

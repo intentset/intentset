@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/outcome/0.2
+  spec: '0.3'
+  profile: intentset/outcome/0.3
   id: OUT-OPEN-STANDARD
   type: outcome
   title: Another implementation can be built and checked against the specifications

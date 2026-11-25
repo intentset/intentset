@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-APPROVAL-BASIS
   type: behavior
   title: A record says who approved it, when, and on what basis
@@ -39,4 +39,4 @@ Success: a reader of the records, the export or the context can tell a record a 
 
 ## Sources
 
-- `spec/core-0.2.md` §7, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.
+- `spec/core-0.3.md` §7, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.

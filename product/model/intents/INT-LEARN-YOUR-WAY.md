@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/intent/0.2
+  spec: '0.3'
+  profile: intentset/intent/0.3
   id: INT-LEARN-YOUR-WAY
   type: intent
   title: Visitors learn Intentset the way they learn best

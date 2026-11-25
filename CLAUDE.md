@@ -2,11 +2,11 @@
 
 Intentset keeps product intent, observable behavior, implementation ownership, verification and published knowledge
 connected, as readable Markdown files with YAML frontmatter in a repository. The graph, reports, Atlas and published
-knowledge are derived views; the files are authoritative. This repository is the v0.2 specifications, the conformance
+knowledge are derived views; the files are authoritative. This repository is the v0.3 specifications, the conformance
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
-**`spec/` is the source of truth**: `core-0.2.md`, `vsa-0.2.md`, `profile-typescript-amplify-gen2-0.2.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.6`), `list.md` (the result `intentset list`
+**`spec/` is the source of truth**: `core-0.3.md`, `vsa-0.3.md`, `profile-typescript-amplify-gen2-0.3.md`,
+`export.md` (the export contract other tools pin, `intentset/export/0.7`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
@@ -20,7 +20,7 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 
 1. **One carrier, one record per artifact.** Markdown with YAML frontmatter under `intentset:`. Tools never merge
    duplicate records and never rewrite files, with two exceptions, each only when asked and each refusing a tree with
-   uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate --to 0.2` rewrites
+   uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate --to 0.3` rewrites
    `spec` and `profile` in each record's frontmatter, and `intentset approve` (ADR 0022) rewrites `status` and
    `approval` in the drafts it is given, and the review of a knowledge record among them. Unknown keys inside
    `intentset` are errors except under `extensions`; unknown top-level keys are preserved and never interpreted.
@@ -246,8 +246,10 @@ from source (the installed bin points at `dist/`, which only the build writes).
 Open work only. What shipped is in `CHANGELOG.md`, why in `docs/decisions/`, and the milestones (M0 to M5, all done)
 in `docs/implementation-plan.md` §5.
 
-- The specifications are 0.2 and the export is 0.6. The next breaking change to any spec moves `intentset.spec` to
-  `0.3`, and the changes waiting for that one move are issues #126, #127, #129 and #130 (with #49).
+- The specifications are moving to 0.3 and the export to 0.7 (branch `spec-0.3`): the versions, records, fixtures
+  and `migrate --to 0.3` have moved, and the four changes that make it breaking (ADRs 0023 to 0026; issues #126,
+  #127, #129 and #130, with #49) land after it. A migration step's per-record rewrites go in `MIGRATIONS` in
+  `packages/cli/src/commands/migrate.ts`.
 - Ten records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure and the nine rules for verifications
   ("Intentset's own model"). The measures' targets and first readings are a maintainer's.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive

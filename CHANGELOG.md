@@ -3,7 +3,14 @@
 Every release of the `@intentset/*` packages, newest first. Each entry says whether the specifications, the
 conformance suite or the export contract moved, because those are what another tool pins. Core §1 says what kind of
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
-case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
+case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14, and is moving from `0.2` to `0.3`).
+
+## Unreleased
+
+**The specifications move to `0.3` and the export to `0.7`.** Breaking: every record's `spec` and `profile` move, `intentset migrate --to 0.3` rewrites them (from `0.2`, or from `0.1`), and a reader rejects a record at `0.2` (CORE001) and a 0.6 export (`unsupported-contract`); the suite and the export moved with them. The four changes that make the move breaking are listed below as they land (ADR 0023, ADR 0024, ADR 0025, ADR 0026).
+
+- **The versions move, and nothing else yet.** Core, VSA and the reference profile are renamed `core-0.3.md`, `vsa-0.3.md` and `profile-typescript-amplify-gen2-0.3.md`; every specification that names a version says `0.3` (revision 2026-11-25), and the export contract says 0.7. Every record, example and conformance case declares `spec: '0.3'` and `profile: intentset/<type>/0.3`, and the generated profiles are `intentset/atlas/0.3`, `intentset/publication/0.3`, `intentset/help/0.3` and `intentset/snapshot/0.3`. A record at `0.2` or `0.1` is a CORE001 error whose remediation names `intentset migrate --to 0.3`. The consumer fixtures are rebuilt: each names 0.7, each earlier envelope carries the `spec` and profiles its writer wrote, and `unsupported-contract-0.6.json` is new.
+- **`intentset migrate --to 0.3` moves a record through one step per version**, `0.1` to `0.2` to `0.3`, each rewriting `spec` and `profile` and then applying that version's own rewrites, of which there are none yet. `--to 0.3` is the only target.
 
 ## 0.17.1 — 2026-11-25
 

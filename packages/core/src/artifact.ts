@@ -48,7 +48,7 @@ import {
   type MeasureMeta,
   PARENT_TARGETS,
   REQUIRED_SECTIONS,
-  PREVIOUS_SPEC_VERSION,
+  EARLIER_SPEC_VERSIONS,
   SPEC_VERSION,
   STATUSES,
   TIP_MAX_LENGTH,
@@ -263,7 +263,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
     problem(
       `${base}/spec`,
       `\`spec\` must be the string "${SPEC_VERSION}".${hint}`,
-      s.spec === PREVIOUS_SPEC_VERSION
+      typeof s.spec === "string" && EARLIER_SPEC_VERSIONS.includes(s.spec)
         ? `Write \`spec: '${SPEC_VERSION}'\` and \`profile: intentset/<type>/${SPEC_VERSION}\`, or run \`intentset migrate --to ${SPEC_VERSION}\` to rewrite every record.`
         : `Write \`spec: '${SPEC_VERSION}'\`.`,
     );

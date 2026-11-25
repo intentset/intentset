@@ -1,14 +1,14 @@
 ---
-title: Intentset Export Contract v0.6
-id: intentset/export/0.6
+title: Intentset Export Contract v0.7
+id: intentset/export/0.7
 status: draft
-revision: 2026-11-14
+revision: 2026-11-25
 implementation: 0.17.1
 ---
 
-# Intentset Export Contract v0.6
+# Intentset Export Contract v0.7
 
-**Extends:** [Core §12](core-0.2.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
+**Extends:** [Core §12](core-0.3.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
 behaviors, a usage product attributing errors to slices, a second implementation comparing graphs. This document fixes
@@ -27,8 +27,8 @@ hit's `path` from the start. The same validation with the same `generatedAt` is 
 
 | Field | Meaning |
 |---|---|
-| `contract` | `intentset/export/0.6`. A consumer MUST reject any other value (§5). |
-| `spec` | The Core version the model is written against: `0.2`. |
+| `contract` | `intentset/export/0.7`. A consumer MUST reject any other value (§5). |
+| `spec` | The Core version the model is written against: `0.3`. |
 | `generatedAt` | ISO 8601 time of generation. Outside every hash; two exports of one snapshot differ only here. |
 | `repository` | The stable repository identity from `.intentset/config.yaml`. |
 | `products` | The exported product artifact IDs. |
@@ -229,8 +229,8 @@ versions it supports and rejects the rest (§5). 0.2 was the first version a con
 report slots and exported restricted artifacts by default, and no consumer was built against it (ADR 0008). 0.3 added
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
-unannounced. 0.4 carries the evidence binding (ADR 0014), 0.5 each artifact's `delivery` (ADR 0017), and 0.6 its
-`approval` and `formalizes` (ADR 0020), below.
+unannounced. 0.4 carries the evidence binding (ADR 0014), 0.5 each artifact's `delivery` (ADR 0017), 0.6 its `approval` and
+`formalizes` (ADR 0020), and 0.7 the specifications' `0.3`, below.
 
 Keying the code's shape on the origin (§1, 2026-10-05) was a defect fix inside 0.3, not a new version. A 0.3 producer
 already wrote Markset's codes under origin `syntax`, since the adapter passes them through unchanged, while the schema
@@ -263,6 +263,11 @@ so a 0.5 reader would reject an artifact that carried either: 0.6 adds `approval
 0.5 envelope as `unsupported-contract`, as each earlier move did, because a 0.5 envelope cannot say whether an absent
 basis means "not stated" or "not exported". `spec` stays `0.2`: both fields are optional, and no conformance case
 changed.
+
+0.7 (2026-11-25) carries the specifications' second move. `spec` in the envelope moves from `0.2` to `0.3` with Core's
+(Core §1, ADR 0023 to ADR 0026), and each artifact's `profile` with it, so a 0.6 reader would reject every 0.7 envelope
+on its `spec` alone. A 0.7 reader rejects a 0.6 envelope as `unsupported-contract`, as each earlier move did, with the
+version it supports in the message, because it cannot read a 0.2 model as one written against 0.3.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

@@ -77,14 +77,14 @@ then `pnpm exec intentset` wherever `npx intentset` appears; the architecture ch
 at the end of [the Start page](https://intentset.org/start/) says when that needs a different command. To see one
 record of each type first, `npx intentset init --example --root <an empty directory>` writes the worked example there.
 
-**Status: v0.2 draft.** The specifications are ready for review, and the reference implementation is on npm as
+**Status: v0.3 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
 release changed, and whether the specifications, the conformance suite or the export contract moved.
 
 Ten packages are published under the `@intentset` scope: `core`, `markset-adapter`, `architecture`, `verification`, `publisher`, `help`, `atlas`, `mcp`, `conformance-suite` and `cli`.
 
-- Specifications: [`spec/core-0.2.md`](spec/core-0.2.md), [`spec/vsa-0.2.md`](spec/vsa-0.2.md),
-  [`spec/profile-typescript-amplify-gen2-0.2.md`](spec/profile-typescript-amplify-gen2-0.2.md),
+- Specifications: [`spec/core-0.3.md`](spec/core-0.3.md), [`spec/vsa-0.3.md`](spec/vsa-0.3.md),
+  [`spec/profile-typescript-amplify-gen2-0.3.md`](spec/profile-typescript-amplify-gen2-0.3.md),
   [`spec/publication.md`](spec/publication.md), the export contract other tools read,
   [`spec/export.md`](spec/export.md), and the list contract `intentset list` writes, [`spec/list.md`](spec/list.md)
 - Worked example: [`examples/scheduling/`](examples/scheduling/), an invented product

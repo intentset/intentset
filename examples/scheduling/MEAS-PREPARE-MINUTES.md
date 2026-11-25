@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/measure/0.2
+  spec: '0.3'
+  profile: intentset/measure/0.3
   id: MEAS-PREPARE-MINUTES
   type: measure
   title: Teacher minutes spent preparing an assignment

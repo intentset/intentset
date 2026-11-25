@@ -581,8 +581,8 @@ test("in a git repository the commit is read, and an empty repository says why t
   assert.deepEqual(snapshot(dir), before, "reading the commit writes nothing, inside .git included");
 });
 
-/** The scheduling example as a git repository whose records declare 0.1, and the same records at 0.2. */
-async function atZeroPointOne(t: Parameters<typeof example>[0]) {
+/** The scheduling example as a git repository whose records declare an earlier version, and the same records at 0.3. */
+async function atEarlier(t: Parameters<typeof example>[0], version = "0.2") {
   const dir = await example(t);
   const files = readdirSync(join(dir, "product", "scheduling")).filter((name) => name.endsWith(".md"));
   const current = new Map<string, string>();
@@ -592,84 +592,88 @@ async function atZeroPointOne(t: Parameters<typeof example>[0]) {
     current.set(name, text);
     writeFileSync(
       path,
-      text.replace("spec: '0.2'", "spec: '0.1'").replace(/(profile: intentset\/[a-z]+\/)0\.2/, "$10.1"),
+      text.replace("spec: '0.3'", `spec: '${version}'`).replace(/(profile: intentset\/[a-z]+\/)0\.3/, `$1${version}`),
     );
   }
   git(dir, "init", "-q");
   git(dir, "add", "-A");
-  git(dir, "commit", "-q", "-m", "records at 0.1");
+  git(dir, "commit", "-q", "-m", `records at ${version}`);
   return { dir, files, current };
 }
 
-test("BEH-MIGRATE: migrate --to 0.2 rewrites spec and profile in every record and nothing else, and says how many", async (t) => {
-  const { dir, files, current } = await atZeroPointOne(t);
-  const before = await run(dir, "validate");
-  assert.equal(before.code, 1, "a reader of 0.2 rejects the records");
-  assert.match(before.out, /migrate --to 0\.2/, "and says how to move them");
+for (const version of ["0.2", "0.1"]) {
+  test(`BEH-MIGRATE: migrate --to 0.3 rewrites spec and profile from ${version} in every record and nothing else, and says how many`, async (t) => {
+    const { dir, files, current } = await atEarlier(t, version);
+    const before = await run(dir, "validate");
+    assert.equal(before.code, 1, `a reader of 0.3 rejects the records at ${version}`);
+    assert.match(before.out, /migrate --to 0\.3/, "and says how to move them");
 
-  const moved = await run(dir, "migrate", "--to", "0.2");
-  assert.equal(moved.code, 0, moved.err);
-  assert.match(moved.out, new RegExp(`moved ${files.length} records from 0\\.1 to 0\\.2`));
-  for (const name of files) {
-    assert.equal(readFileSync(join(dir, "product", "scheduling", name), "utf8"), current.get(name), name);
-  }
-  assert.equal(git(dir, "diff", "--numstat").split("\n").length, files.length);
-  assert.ok(
-    git(dir, "diff", "--numstat")
-      .split("\n")
-      .every((line) => line.startsWith("2\t2\t")),
-    "each record changed by exactly two lines",
-  );
-  assert.equal((await run(dir, "validate")).code, 0);
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 0, moved.err);
+    assert.match(moved.out, new RegExp(`moved ${files.length} records to 0\\.3`));
+    for (const name of files) {
+      assert.equal(readFileSync(join(dir, "product", "scheduling", name), "utf8"), current.get(name), name);
+    }
+    assert.equal(git(dir, "diff", "--numstat").split("\n").length, files.length);
+    assert.ok(
+      git(dir, "diff", "--numstat")
+        .split("\n")
+        .every((line) => line.startsWith("2\t2\t")),
+      "each record changed by exactly two lines",
+    );
+    assert.equal((await run(dir, "validate")).code, 0);
 
-  git(dir, "commit", "-q", "-am", "migrated");
-  const again = await run(dir, "migrate", "--to", "0.2");
-  assert.equal(again.code, 0);
-  assert.match(again.out, new RegExp(`moved 0 records from 0\\.1 to 0\\.2; ${files.length} already 0\\.2`));
-});
+    git(dir, "commit", "-q", "-am", "migrated");
+    const again = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(again.code, 0);
+    assert.match(again.out, new RegExp(`moved 0 records to 0\\.3; ${files.length} already 0\\.3`));
+  });
+}
 
 test("BEH-MIGRATE: migrate keeps comments, quoting and line endings, and leaves a record at another version alone", async (t) => {
-  const { dir } = await atZeroPointOne(t);
+  const { dir } = await atEarlier(t);
   const path = join(dir, "product", "scheduling", "OUT-PREPARE.md");
-  const text = readFileSync(path, "utf8").replace("spec: '0.1'", 'spec: "0.1" # the version').replace(/\n/g, "\r\n");
+  const text = readFileSync(path, "utf8").replace("spec: '0.2'", 'spec: "0.2" # the version').replace(/\n/g, "\r\n");
   writeFileSync(path, text);
   const other = join(dir, "product", "scheduling", "INT-PREPARE.md");
-  writeFileSync(other, readFileSync(other, "utf8").replace("spec: '0.1'", "spec: '0.9'"));
+  writeFileSync(other, readFileSync(other, "utf8").replace("spec: '0.2'", "spec: '0.9'"));
   git(dir, "commit", "-q", "-am", "one with a comment and CRLF, one at 0.9");
-  const moved = await run(dir, "migrate", "--to", "0.2");
+  const moved = await run(dir, "migrate", "--to", "0.3");
   assert.equal(moved.code, 0, moved.err);
   assert.match(moved.out, /1 declare neither/);
   const after = readFileSync(path, "utf8");
-  assert.match(after, /spec: "0\.2" # the version\r\n/);
-  assert.match(after, /profile: intentset\/outcome\/0\.2\r\n/);
-  assert.equal(after.replace("0.2", "0.1").replace("outcome/0.2", "outcome/0.1"), text);
+  assert.match(after, /spec: "0\.3" # the version\r\n/);
+  assert.match(after, /profile: intentset\/outcome\/0\.3\r\n/);
+  assert.equal(after.replace("0.3", "0.2").replace("outcome/0.3", "outcome/0.2"), text);
   assert.match(readFileSync(other, "utf8"), /spec: '0\.9'/);
 });
 
 test("BEH-MIGRATE: migrate refuses a tree with uncommitted changes, and a target it does not know, and writes nothing", async (t) => {
-  const { dir } = await atZeroPointOne(t);
+  const { dir } = await atEarlier(t);
   edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
   const wrote = snapshot(dir);
-  const dirty = await run(dir, "migrate", "--to", "0.2");
+  const dirty = await run(dir, "migrate", "--to", "0.3");
   assert.equal(dirty.code, 2);
   assert.match(dirty.err, /uncommitted changes/);
   assert.match(dirty.err, /--allow-dirty/);
   assert.deepEqual(snapshot(dir), wrote);
 
-  const wrong = await run(dir, "migrate", "--to", "0.3", "--allow-dirty");
-  assert.equal(wrong.code, 2);
-  assert.match(wrong.err, /the only target is 0\.2/);
+  for (const target of ["0.2", "0.4"]) {
+    const wrong = await run(dir, "migrate", "--to", target, "--allow-dirty");
+    assert.equal(wrong.code, 2);
+    assert.match(wrong.err, /the only target is 0\.3, which moves records written for 0\.1 or 0\.2/);
+  }
   const missing = await run(dir, "migrate");
   assert.equal(missing.code, 2);
   assert.match(missing.err, /--to is required/);
   assert.deepEqual(snapshot(dir), wrote);
 
-  const allowed = await run(dir, "migrate", "--to", "0.2", "--allow-dirty");
+  const allowed = await run(dir, "migrate", "--to", "0.3", "--allow-dirty");
   assert.equal(allowed.code, 0, allowed.err);
   assert.match(readFileSync(RECORD(dir, "OUT-PREPARE"), "utf8"), /teachers spend much less time/, "the edit is kept");
 
   const bare = await example(t);
-  const notGit = await run(bare, "migrate", "--to", "0.2");
+  const notGit = await run(bare, "migrate", "--to", "0.3");
   assert.equal(notGit.code, 2);
   assert.match(notGit.err, /not a git work tree/);
 });
@@ -701,7 +705,7 @@ test("BEH-AGENT-GUIDE: init's registries say what each list holds, and the guide
     /^# one release, one role and one edition, so fill each of those before the first record\.$/m,
   );
   const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
-  assert.match(guide, /^ {2}profile: intentset\/verification\/0\.2$/m);
+  assert.match(guide, /^ {2}profile: intentset\/verification\/0\.3$/m);
   assert.match(guide, /^ {4}selector: the test's title, or the describe's name$/m);
   assert.match(guide, /`npx intentset init --example --root <an empty directory>` writes one record of each type/);
   assert.match(

@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-REVIEW-BASELINE
   type: behavior
   title: Review lists the baseline entries the base did not hold
@@ -38,4 +38,4 @@ Success: the review lists the comparison and exits 0. Failure: with `--fail-on-b
 
 ## Sources
 
-- `spec/vsa-0.2.md` §9.
+- `spec/vsa-0.3.md` §9.

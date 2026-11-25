@@ -1,13 +1,16 @@
 /**
- * The vocabulary of Core v0.2 (spec/core-0.2.md §2, §4, §5, §7) and the shapes
+ * The vocabulary of Core v0.3 (spec/core-0.3.md §2, §4, §5, §7) and the shapes
  * the packages exchange. This file is the contract; it carries no logic.
  */
 import type { Diagnostic } from "./diagnostics.ts";
 
-export const SPEC_VERSION = "0.2";
+export const SPEC_VERSION = "0.3";
 
 /** The version `SPEC_VERSION` followed (Core §1), named so the error for a record still at it can point to `intentset migrate`. */
-export const PREVIOUS_SPEC_VERSION = "0.1";
+export const PREVIOUS_SPEC_VERSION = "0.2";
+
+/** Every version before `SPEC_VERSION`, oldest first; a record at any of them is one `intentset migrate` can move. */
+export const EARLIER_SPEC_VERSIONS: readonly string[] = ["0.1", PREVIOUS_SPEC_VERSION];
 
 export const ARTIFACT_TYPES = [
   "product",
@@ -440,9 +443,10 @@ export interface ImpactReport {
  * 0.4 carries the evidence binding: which binding judged each verification, the
  * subject it was judged at, each record's binding and subject hash, and a
  * verification's `exercises` (ADR 0014). 0.5 carries each artifact's `delivery`
- * (ADR 0017), and 0.6 its `approval` and `formalizes` (ADR 0020).
+ * (ADR 0017), 0.6 its `approval` and `formalizes` (ADR 0020), and 0.7 the
+ * specifications' 0.3 (Core §1, ADR 0023 to ADR 0026).
  */
-export const EXPORT_CONTRACT = "intentset/export/0.6";
+export const EXPORT_CONTRACT = "intentset/export/0.7";
 
 /** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
 export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];

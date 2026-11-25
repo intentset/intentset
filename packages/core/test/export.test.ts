@@ -84,11 +84,11 @@ test("the schema rejects what a consumer must reject", () => {
     "the earlier contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.5")),
+    bad((e) => (e.contract = "intentset/export/0.6")),
     "the previous contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.7")),
+    bad((e) => (e.contract = "intentset/export/0.8")),
     "a later contract version",
   );
   assert.ok(
@@ -108,7 +108,7 @@ test("the schema rejects what a consumer must reject", () => {
     "invalid artifact ID",
   );
   assert.ok(
-    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.2")),
+    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.3")),
     "profile mismatching type",
   );
   assert.ok(

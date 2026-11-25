@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-EVIDENCE-STALE
   type: verification
   title: Evidence stale selects what has no current pass and escapes it for each runner

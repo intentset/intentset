@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/capability/0.2
+  spec: '0.3'
+  profile: intentset/capability/0.3
   id: CAP-AGENT-CONTEXT
   type: capability
   title: Give agents what to load and say what they did not update

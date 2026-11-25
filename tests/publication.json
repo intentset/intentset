@@ -625,7 +625,7 @@
     "name": "P02 a link to an internal file whose path carries no ID",
     "baseline": "scheduling",
     "files": {
-      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -981,9 +981,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1030,9 +1030,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1079,9 +1079,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1129,9 +1129,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1180,9 +1180,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1236,9 +1236,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1328,9 +1328,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1382,9 +1382,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1435,9 +1435,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1493,9 +1493,9 @@
             "intentset.org/review": {
               "hash": "content-v1",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -1546,9 +1546,9 @@
           "intentset.extensions": {
             "intentset.org/review": {
               "sources": {
-                "BEH-ASMT-SCHEDULE": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
-                "RULE-ASMT-AUTH": "63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094",
-                "RULE-ASMT-FUTURE": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e"
+                "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+                "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+                "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
               }
             }
           },
@@ -1598,9 +1598,9 @@
           "intentset.extensions": {
             "intentset.org/review": {
               "sources": {
-                "BEH-ASMT-SCHEDULE": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
-                "RULE-ASMT-AUTH": "63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094",
-                "RULE-ASMT-FUTURE": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e"
+                "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+                "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+                "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
               }
             }
           },
@@ -1654,9 +1654,9 @@
           "intentset.extensions": {
             "intentset.org/review": {
               "sources": {
-                "BEH-ASMT-SCHEDULE": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
-                "RULE-ASMT-AUTH": "63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094",
-                "RULE-ASMT-FUTURE": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e"
+                "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+                "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+                "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
               }
             }
           },
@@ -1698,9 +1698,9 @@
             "intentset.org/review": {
               "hash": "content-v9",
               "sources": {
-                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
               }
             }
           },
@@ -2589,7 +2589,7 @@
         "KB-ASMT-SCHEDULE"
       ],
       "mustContain": [
-        "\"profile\":\"intentset/help/0.2\"",
+        "\"profile\":\"intentset/help/0.3\"",
         "\"knowledge\":[{\"id\":\"KB-ASMT-SCHEDULE\",\"title\":\"Prepare a scheduled student assessment\",\"path\":\"KB-ASMT-SCHEDULE.md\"}]",
         "\"tips\":{\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"},\"RULE-ASMT-FUTURE\":{\"text\":\"The release time must be in the future.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}}"
       ],
@@ -2646,7 +2646,7 @@
       "mustContain": [
         "  withheldSources: 3\n  audience: teacher\n",
         "\"derived\":true,\"projection\":\"customer\",\"audience\":\"teacher\"",
-        "{\"profile\":\"intentset/snapshot/0.2\",\"derived\":true,\"commit\":null,\"graphHash\":\""
+        "{\"profile\":\"intentset/snapshot/0.3\",\"derived\":true,\"commit\":null,\"graphHash\":\""
       ],
       "mustNotContain": [
         "\"snapshot\":",
@@ -2744,7 +2744,7 @@
     "name": "two published documents tip one ID: the lower knowledge ID wins",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/knowledge/0.2\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {

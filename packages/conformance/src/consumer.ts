@@ -429,6 +429,11 @@ export function buildConsumerFixtures(): Map<string, string> {
   );
 
   /** What 0.3 added (ADR 0012), taken back out so an earlier envelope is what its reader would have written. */
+  /** The specifications' version an earlier envelope was written against: `spec`, and each artifact's `profile` with it. */
+  const atSpec = (e: Json, version: string) => {
+    e.spec = version;
+    for (const artifact of e.artifacts) artifact.profile = artifact.profile.replace(/\/[^/]+$/, `/${version}`);
+  };
   const before03 = (e: Json) => {
     delete e.registries.evidenceSources;
     const measures = new Set(e.artifacts.filter((a: Json) => a.type === "measure").map((a: Json) => a.id));
@@ -448,6 +453,7 @@ export function buildConsumerFixtures(): Map<string, string> {
   const v01 = mutate(minimal, (e) => {
     e.contract = "intentset/export/0.1";
     before03(e);
+    atSpec(e, "0.1");
     delete e.withholding;
     delete e.reports;
     delete e.source.uncommitted;
@@ -465,6 +471,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(minimal, (e) => {
       e.contract = "intentset/export/0.2";
       before03(e);
+      atSpec(e, "0.1");
     }),
   );
   reject(
@@ -507,6 +514,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(full, (e) => {
       e.contract = "intentset/export/0.3";
       before04(e);
+      atSpec(e, "0.1");
     }),
   );
   reject(
@@ -520,6 +528,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(full, (e) => {
       e.contract = "intentset/export/0.4";
       before05(e);
+      atSpec(e, "0.2");
     }),
   );
   reject(
@@ -533,13 +542,27 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(full, (e) => {
       e.contract = "intentset/export/0.5";
       before06(e);
+      atSpec(e, "0.2");
+    }),
+  );
+  reject(
+    "the contract before approval",
+    "unsupported-contract-0.5.json",
+    "unsupported-contract",
+    "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
+  );
+  files.set(
+    "unsupported-contract-0.6.json",
+    mutate(full, (e) => {
+      e.contract = "intentset/export/0.6";
+      atSpec(e, "0.2");
     }),
   );
   reject(
     "the previous contract version",
-    "unsupported-contract-0.5.json",
+    "unsupported-contract-0.6.json",
     "unsupported-contract",
-    "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
+    "0.6 carried a model written against the specifications' 0.2, and a 0.7 reader reads one written against 0.3. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
   );
   files.set(
     "unsupported-contract-future.json",

@@ -1,22 +1,53 @@
 /**
- * `intentset migrate --to 0.2` (Core §1): moves the records the model reads from the specifications' `0.1` to `0.2`
- * by rewriting two values in each record's frontmatter, `intentset.spec` and `intentset.profile`, which Core §4
- * requires to agree with it. It reads the same records every other command reads (the files the configured scope
- * matches), changes those two lines and nothing else, byte for byte, and keeps the quoting each line used. A tree
- * with uncommitted changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a
- * diff of its own that git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not
- * records and are left to their author.
+ * `intentset migrate --to 0.3` (Core §1): moves the records the model reads to the specifications' current version,
+ * `0.3`, from `0.2` or from `0.1`. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
+ * values in the record's frontmatter, `intentset.spec` and `intentset.profile`, which Core §4 requires to agree with
+ * it, and then applies the per-record transforms that version lists, in order. No step lists a transform yet, so
+ * today the move changes those two lines and nothing else, byte for byte, and keeps the quoting each line used. It
+ * reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
+ * changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a diff of its own that
+ * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
+ * their author.
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { sortDiagnostics } from "@intentset/core";
+import { SPEC_VERSION, sortDiagnostics } from "@intentset/core";
 import { trackedChanges } from "../git.ts";
 import { formatDiagnostic, type Io } from "../output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository } from "../repository.ts";
 
-/** The specification versions this command moves between. */
-export const MIGRATE_FROM = "0.1";
-export const MIGRATE_TO = "0.2";
+/** Where a record's frontmatter is: its first line (1-based) and its text between the fences. */
+export interface FrontmatterSpan {
+  line: number;
+  text: string;
+}
+
+/**
+ * One rewrite a step applies to a record after moving its `spec` and `profile`: the record's whole text in, the
+ * whole text out. It changes only what its version requires and returns the text unchanged when there is nothing to
+ * do, so a step is safe to run on any record at its `from` version.
+ */
+export type RecordTransform = (source: string, frontmatter: FrontmatterSpan) => string;
+
+/** One version's move: the records at `from` become records at `to`. */
+export interface MigrationStep {
+  from: string;
+  to: string;
+  /** Applied in order after `spec` and `profile` are rewritten. */
+  transforms: readonly RecordTransform[];
+}
+
+/** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
+export const MIGRATIONS: readonly MigrationStep[] = [
+  { from: "0.1", to: "0.2", transforms: [] },
+  { from: "0.2", to: "0.3", transforms: [] },
+];
+
+/** The one target: the version this reader reads. */
+export const MIGRATE_TO = SPEC_VERSION;
+
+/** The versions a record can be moved from, oldest first. */
+export const MIGRATE_FROM: readonly string[] = MIGRATIONS.map((step) => step.from);
 
 export interface MigrateOptions {
   root?: string;
@@ -27,9 +58,10 @@ export interface MigrateOptions {
 
 /** A message when the options cannot be run, before anything is read; null when they can. */
 export function migrateUsageProblem(options: Pick<MigrateOptions, "to">): string | null {
-  if (options.to === undefined) return `--to is required: the only target is ${MIGRATE_TO}, from ${MIGRATE_FROM}`;
+  const from = MIGRATE_FROM.join(" or ");
+  if (options.to === undefined) return `--to is required: the only target is ${MIGRATE_TO}, from ${from}`;
   if (options.to !== MIGRATE_TO) {
-    return `--to ${options.to}: the only target is ${MIGRATE_TO}, which moves records written for ${MIGRATE_FROM}`;
+    return `--to ${options.to}: the only target is ${MIGRATE_TO}, which moves records written for ${from}`;
   }
   return null;
 }
@@ -41,12 +73,7 @@ const PROFILE_LINE = /^(\s+profile:\s*)(['"]?)intentset\/([a-z0-9-]+)\/(\d+\.\d+
  * The record's text moved from `from` to `to`, or null when it declares another value. Only lines inside the
  * `intentset:` mapping of the frontmatter, and only `spec` and `profile`, are rewritten; line endings are kept.
  */
-export function migrateText(
-  source: string,
-  frontmatter: { line: number; text: string },
-  from: string,
-  to: string,
-): string | null {
+export function migrateText(source: string, frontmatter: FrontmatterSpan, from: string, to: string): string | null {
   const lines = source.split("\n");
   const first = frontmatter.line - 1;
   const last = first + frontmatter.text.split("\n").length;
@@ -84,6 +111,43 @@ export function migrateText(
   return lines.join("\n");
 }
 
+/** The `intentset.spec` a record declares, as the line holds it, or null when it declares none in the frontmatter. */
+function declaredSpec(frontmatter: FrontmatterSpan): string | null {
+  return /^\s+spec:\s*(['"]?)(\d+\.\d+)\1\s*(?:#.*)?$/m.exec(frontmatter.text)?.[2] ?? null;
+}
+
+/** The frontmatter of `source` that starts at `line`, read again after a step may have changed it. */
+function frontmatterAt(source: string, line: number): FrontmatterSpan {
+  const lines = source.split("\n").map((l) => (l.endsWith("\r") ? l.slice(0, -1) : l));
+  let close = line - 1;
+  while (close < lines.length && lines[close].trimEnd() !== "---") close++;
+  return { line, text: lines.slice(line - 1, close).join("\n") };
+}
+
+/**
+ * The record moved to `to` through every step from the version it declares, or null when it declares a version no
+ * chain of steps leads from (the current one included).
+ */
+export function migrateRecord(source: string, frontmatter: FrontmatterSpan, to: string = MIGRATE_TO): string | null {
+  let version = declaredSpec(frontmatter);
+  let text = source;
+  let span = frontmatter;
+  if (version === to) return null;
+  while (version !== to) {
+    const step = MIGRATIONS.find((s) => s.from === version);
+    if (step === undefined) return null;
+    const moved = migrateText(text, span, step.from, step.to);
+    if (moved === null) return null;
+    text = moved;
+    for (const transform of step.transforms) {
+      text = transform(text, span);
+      span = frontmatterAt(text, span.line);
+    }
+    version = step.to;
+  }
+  return text;
+}
+
 export function migrateCommand(options: MigrateOptions, io: Io): number {
   const root = findRoot(io.cwd, options.root);
   if (root === null) {
@@ -118,9 +182,9 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   let other = 0;
   for (const input of repo.inputs) {
     if (input.frontmatter === null) continue;
-    const text = migrateText(input.source, input.frontmatter, MIGRATE_FROM, MIGRATE_TO);
+    const text = migrateRecord(input.source, input.frontmatter);
     if (text === null) {
-      if (/^\s+spec:\s*['"]?0\.2['"]?\s*(#.*)?$/m.test(input.frontmatter.text)) current++;
+      if (declaredSpec(input.frontmatter) === MIGRATE_TO) current++;
       else other++;
       continue;
     }
@@ -129,7 +193,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     moved++;
   }
   io.stdout(
-    `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} from ${MIGRATE_FROM} to ${MIGRATE_TO}` +
+    `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} to ${MIGRATE_TO}` +
       `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}.\n`,
   );
   return 0;

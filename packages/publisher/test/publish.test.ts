@@ -112,7 +112,7 @@ test("BEH-PUBLISH: only the snapshot file names the snapshot: a change elsewhere
   }
   assert.deepEqual(Object.keys(before.snapshot), ["profile", "derived", "commit", "graphHash"]);
   assert.deepEqual(before.snapshot, {
-    profile: "intentset/snapshot/0.2",
+    profile: "intentset/snapshot/0.3",
     derived: true,
     commit: "c0ffee",
     graphHash: before.snapshot.graphHash,
