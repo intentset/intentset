@@ -9,7 +9,7 @@ One command does the work in a repository. The rest are what it is built from, a
 
 ## The intentset command
 
-`@intentset/cli` validates the model, checks the architecture, binds test results to a commit, reports what a change reaches, answers which records match, publishes reviewed knowledge and serves the Atlas. It is the one package a repository installs, and the one its agents run.
+`@intentset/cli` validates the model, checks the architecture, binds test results to a commit, reports what a change reaches, answers which records match, writes a person's approval into the records they name, publishes reviewed knowledge and serves the Atlas. It is the one package a repository installs, and the one its agents run.
 
 :::tabs
 ### npm

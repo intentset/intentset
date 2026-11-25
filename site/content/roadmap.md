@@ -30,6 +30,10 @@ Nothing is announced beyond the current release. What comes next is decided by w
 
 Recent releases, with the reasons for each in the changelog:
 
+- **0.17.0** added `intentset approve`, which writes a person's approval into the drafts they name and checks the model still validates with it, and made `intentset review` list every record whose status or approval changed, so an approval is read by the pull request's reviewer like any other change.
+- **0.16.0** lets a record say who approved it, when and on what basis: a person read it, it was derived from something a person approved, or an agent attested it. A behavior, rule or scenario can also name the outside requirement it formalizes.
+- **0.15.0** gave a publication's snapshot a file of its own, so every other published file changes only when the knowledge does.
+- **0.14.0** took the snapshot out of each published document, so published output can be committed without every commit rewriting it.
 - **0.13.0** lets a reviewed explanation pin what each record it explains promises, rather than the record's whole file. Approving a record, or marking its work built, no longer sends every explanation of it back to review; changing what it promises, or deprecating or retiring it, still does.
 - **0.12.0** lets a record say whether its work is built, apart from whether a person has approved it, so a draft written from existing code no longer looks like a proposal nobody has started.
 - **0.11.0** added `intentset list`, which answers which records match a set of fields, from a repository or from its export, and counts them by any one field.

@@ -35,7 +35,7 @@ The records are meant to be written by the coding agents that change the code, i
 - say so in the commit when behavior does not change, with an `Intentset-Unchanged` trailer naming the slice;
 - never approve, publish, or invent an owner, audience or release.
 
-`intentset review` lists every slice whose code changed while none of its records did. A refactor answers with the trailer, where the reviewer reads it; with `--fail-on-drift`, anything left unanswered fails CI. Approval stays with people: only a person moves a record from draft to approved, and validation passing never counts as approval.
+`intentset review` lists every slice whose code changed while none of its records did. A refactor answers with the trailer, where the reviewer reads it; with `--fail-on-drift`, anything left unanswered fails CI. Approval stays with people: only a person moves a record from draft to approved, and validation passing never counts as approval. `intentset approve` writes that person's approval into the drafts they name, checks that the model still validates with it, and commits nothing: the approval is a change to the record, and `review` lists every record whose status or approval changed, for the pull request's reviewer to read like any other change.
 
 ## Open files. Explicit meaning
 
@@ -83,6 +83,8 @@ Keeping the model in files is a deliberate choice, and it has consequences worth
 - There is no database and no hosted service to run.
 
 A record's status says where it stands with people: a draft until a person approves it, then implemented, released, and in time deprecated or retired. An optional `delivery` says something else, whether the work it describes exists: `planned` on a record that proposes work, `built` on one written from code that is already there. An agent may write it, because it states a fact about the code; only a person approves.
+
+A record can also say how it came to be approved. An optional `approval` names who approved it, when, and on what basis: a person read this record, or it was derived from something a person approved, such as a work item in another tool, or an agent attested it and no person has. A behavior, rule or scenario can name the outside requirement it `formalizes`. Intentset checks the form of both and holds no policy on either: it never decides who may approve, and it never opens what a record points at.
 
 ## A typed model, centered on behavior
 
