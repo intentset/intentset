@@ -100,3 +100,23 @@ export function git(cwd: string, ...args: string[]): string {
     { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
   ).trim();
 }
+
+/** The scheduling example as a git repository whose records declare an earlier version, and the same records at 0.3. */
+export async function atEarlier(t: Context, version = "0.2") {
+  const dir = await example(t);
+  const files = readdirSync(join(dir, "product", "scheduling")).filter((name) => name.endsWith(".md"));
+  const current = new Map<string, string>();
+  for (const name of files) {
+    const path = join(dir, "product", "scheduling", name);
+    const text = readFileSync(path, "utf8");
+    current.set(name, text);
+    writeFileSync(
+      path,
+      text.replace("spec: '0.3'", `spec: '${version}'`).replace(/(profile: intentset\/[a-z]+\/)0\.3/, `$1${version}`),
+    );
+  }
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", `records at ${version}`);
+  return { dir, files, current };
+}

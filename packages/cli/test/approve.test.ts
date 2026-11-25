@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, rmSync } from "node:fs";
 import { test } from "node:test";
-import { edit, example, git, RECORD, run, snapshot } from "./helpers.ts";
+import { atEarlier, edit, example, git, RECORD, run, snapshot } from "./helpers.ts";
 
 type Context = Parameters<typeof example>[0];
 
@@ -172,3 +172,27 @@ test("BEH-REVIEW-APPROVALS: review lists each record whose status or approval di
     ],
   );
 });
+
+for (const version of ["0.2", "0.1"]) {
+  test(`BEH-REVIEW-APPROVALS: review reads a base at ${version} as migrated, so a record the move changed in no other way is not listed`, async (t) => {
+    const { dir, files } = await atEarlier(t, version);
+    assert.equal((await run(dir, "migrate", "--to", "0.3")).code, 0);
+    // In the same change as the move, one status moved and one other edit.
+    edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: approved");
+    edit(dir, "BEH-ASMT-SCHEDULE", "revision: 1", "revision: 2");
+    git(dir, "commit", "-q", "-am", "migrated, with one status moved");
+
+    const review = await run(dir, "review", "--base", "HEAD~1");
+    assert.match(review.out, new RegExp(`^- Changed: ${files.length} files`, "m"), "every record changed");
+    const section = review.out.slice(review.out.indexOf("## Approvals and status changes"));
+    assert.match(section, /^## Approvals and status changes \(1\)$/m);
+    assert.match(section, /^- RULE-ASMT-AUTH \(rule\): draft -> approved; no approval stated$/m);
+    assert.doesNotMatch(section, /new, /, "no record reads as new because the base was at an earlier version");
+
+    const json = JSON.parse((await run(dir, "review", "--base", "HEAD~1", "--json")).out);
+    assert.deepEqual(
+      json.statusChanges.map((item: { id: string; from: string; to: string }) => [item.id, item.from, item.to]),
+      [["RULE-ASMT-AUTH", "draft", "approved"]],
+    );
+  });
+}

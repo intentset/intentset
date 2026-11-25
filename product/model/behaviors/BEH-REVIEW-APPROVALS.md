@@ -15,7 +15,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS]
@@ -31,7 +31,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset review --base <ref>`. Under "Approvals and status changes" the report lists every changed record whose `status` or `approval` differs from the base's copy, and every new record that arrives past draft or with an approval: its ID and type, the status at the base and now, and the approval it now states. A record that moved is compared with the file it was at the base. The JSON output carries the same rows as `statusChanges`.
+Someone runs `intentset review --base <ref>`. Under "Approvals and status changes" the report lists every changed record whose `status` or `approval` differs from the base's copy, and every new record that arrives past draft or with an approval: its ID and type, the status at the base and now, and the approval it now states. A record that moved is compared with the file it was at the base, and a base copy that declares an earlier `spec` is compared as `intentset migrate` would move it, in memory, so a change that migrates records lists only those whose status or approval it also changed. The JSON output carries the same rows as `statusChanges`.
 
 ## Preconditions
 

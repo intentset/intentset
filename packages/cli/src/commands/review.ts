@@ -23,7 +23,9 @@
  *
  * It lists every record whose status or approval differs from the base's copy
  * (Core §10, ADR 0022), so a reviewer sees each approval a change makes
- * without reading frontmatter. A report, never a failure.
+ * without reading frontmatter. A report, never a failure. A base copy that
+ * declares an earlier version is read as `intentset migrate` would move it, in
+ * memory, so a change that only migrates records lists none of them.
  */
 import {
   type BaselineComparison,
@@ -59,6 +61,7 @@ import { type CarrierName, CARRIERS } from "../repository.ts";
 import type { Session } from "../session.ts";
 import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "@intentset/core";
 import { pathText, REACHABILITY_NOTE } from "./impact.ts";
+import { migrateRecord } from "./migrate.ts";
 
 export interface Attribution {
   /** The artifact impact starts from. */
@@ -196,6 +199,17 @@ export const STATUS_NOTE =
   "Records whose status or approval differs from the base's copy, and new records that arrive past draft or with an " +
   "approval. A status is a claim a person makes (Core §7): check that each one here was made by whoever may make it.";
 
+/**
+ * The base's copy of a record as this reader reads it: moved to the current version through `migrateRecord` when it
+ * declares an earlier one (Core §10), so the comparison sees what the change did and not what the migration did.
+ * Nothing is written; a copy at the current version, or at one no step leads from, is read as it is.
+ */
+export function readBaseCopy(path: string, text: string, carrier: CarrierName): Artifact | null {
+  const input = CARRIERS[carrier](path, text);
+  const moved = input.frontmatter === null ? null : migrateRecord(text, input.frontmatter);
+  return readArtifact(moved === null ? input : CARRIERS[carrier](path, moved)).artifact;
+}
+
 /** Each changed record whose status or approval is not what the base's copy says, sorted by ID. */
 export function statusChanges(
   graph: Graph,
@@ -209,7 +223,7 @@ export function statusChanges(
     const { path, meta } = graph.artifacts.get(id) as Artifact;
     if (!touched.has(path)) continue;
     const text = atBase(path);
-    const before = text === null ? null : readArtifact(CARRIERS[carrier](path, text)).artifact;
+    const before = text === null ? null : readBaseCopy(path, text, carrier);
     const from = before?.meta.status ?? null;
     const approval = exportApproval(meta.approval);
     const approvalChanged = canonicalJson(approval) !== canonicalJson(exportApproval(before?.meta.approval));

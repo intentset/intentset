@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { TypeScriptMissingError } from "@intentset/architecture";
 import { validateSchema } from "../../conformance/src/harness.ts";
 import { typescriptMissing } from "../src/commands/shared.ts";
-import { edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
+import { atEarlier, edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
 
 test("BEH-AGENT-GUIDE: init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
   const dir = temp(t);
@@ -580,26 +580,6 @@ test("in a git repository the commit is read, and an empty repository says why t
   );
   assert.deepEqual(snapshot(dir), before, "reading the commit writes nothing, inside .git included");
 });
-
-/** The scheduling example as a git repository whose records declare an earlier version, and the same records at 0.3. */
-async function atEarlier(t: Parameters<typeof example>[0], version = "0.2") {
-  const dir = await example(t);
-  const files = readdirSync(join(dir, "product", "scheduling")).filter((name) => name.endsWith(".md"));
-  const current = new Map<string, string>();
-  for (const name of files) {
-    const path = join(dir, "product", "scheduling", name);
-    const text = readFileSync(path, "utf8");
-    current.set(name, text);
-    writeFileSync(
-      path,
-      text.replace("spec: '0.3'", `spec: '${version}'`).replace(/(profile: intentset\/[a-z]+\/)0\.3/, `$1${version}`),
-    );
-  }
-  git(dir, "init", "-q");
-  git(dir, "add", "-A");
-  git(dir, "commit", "-q", "-m", `records at ${version}`);
-  return { dir, files, current };
-}
 
 for (const version of ["0.2", "0.1"]) {
   test(`BEH-MIGRATE: migrate --to 0.3 rewrites spec and profile from ${version} in every record and nothing else, and says how many`, async (t) => {
