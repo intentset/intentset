@@ -5,6 +5,13 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
+## Unreleased
+
+**`@intentset/help` shows a tip only through the product's own render, and `watchTips` keeps tips bound while the interface changes and undoes them on dispose.** Minor: a behavior change in `bindTips`'s default render and one new function. The specifications, the suite and the export contract did not move.
+
+- **`bindTips`'s default render no longer sets `title`** (#145). It sets `data-help-tip` to the tip's text beside `data-help-knowledge`, and nothing a browser displays: a `title` shows only on mouse hover, never to keyboard or touch users, and screen readers announce it inconsistently. A product that relied on the default `title` now shows nothing until it passes a `render` that puts the tip in a visible tooltip and an accessible description. An authored `title` was kept before and is still left alone.
+- **`watchTips(root, help, { render, unrender, attribute })`** binds once, binds again on DOM changes under `root`, batched to one pass per animation frame, and returns `coverage()` and `dispose()`. `dispose` stops observing and calls `unrender` on every element it bound; with the default render and no `unrender` it puts `data-help-tip` and `data-help-knowledge` back as they were, so help mounted into another application's page leaves it as it found it, and with a product's own `render` and no `unrender` it undoes nothing. The observer and the frame scheduler can be passed in, typed so the browser's own and `setTimeout`/`clearTimeout` are accepted, which is how it is tested without a DOM; `cancelAnimationFrame` is the default only when `requestAnimationFrame` is. BEH-HELP-WATCH and TEST-HELP-WATCH are drafts in Intentset's own model.
+
 ## 0.17.1 — 2026-11-25
 
 **The specifications say what the rule is and leave its history to this file and the ADRs.** Text only (Core, VSA and the reference profile, revision 2026-11-24): no check and no case changed, so `intentset.spec` stays `0.2`, and the suite and the export contract did not move.

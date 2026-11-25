@@ -20,7 +20,7 @@ import {
 } from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { createIntentsetServer } from "@intentset/mcp";
-import { bindTips, readHelp } from "@intentset/help";
+import { bindTips, readHelp, watchTips } from "@intentset/help";
 import { knowledgeReport, publish } from "@intentset/publisher";
 import { checkEvidence, evidenceReport, readRunRecords } from "@intentset/verification";
 
@@ -83,6 +83,7 @@ const control = (behavior) => {
     getAttribute: (name) => attributes.get(name) ?? null,
     setAttribute: (name, value) => attributes.set(name, value),
     hasAttribute: (name) => attributes.has(name),
+    removeAttribute: (name) => attributes.delete(name),
   };
 };
 const schedule = control("BEH-ASMT-SCHEDULE");
@@ -91,8 +92,44 @@ assert.deepEqual(bindTips({ querySelectorAll: () => [schedule, assign] }, help.h
   bound: ["BEH-ASMT-SCHEDULE"],
   missing: ["CAP-ASMT-ASSIGN"],
 });
-assert.equal(schedule.getAttribute("title"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
-assert.equal(assign.hasAttribute("title"), false);
+assert.equal(schedule.getAttribute("data-help-tip"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
+assert.equal(schedule.getAttribute("data-help-knowledge"), "KB-ASMT-SCHEDULE");
+assert.equal(schedule.hasAttribute("title"), false);
+assert.equal(assign.hasAttribute("data-help-tip"), false);
+// watchTips, with a stub observer and frame scheduler: binds at once, rebinds on the frame after a change, and dispose
+// puts every attribute back as it was.
+let observed = null;
+let fire = null;
+const queued = [];
+const watched = control("BEH-ASMT-SCHEDULE");
+const later = control("RULE-ASMT-FUTURE");
+const controls = [watched];
+const watch = watchTips({ querySelectorAll: () => controls }, help.help, {
+  MutationObserver: class {
+    constructor(callback) {
+      fire = callback;
+    }
+    observe(_target, options) {
+      observed = options;
+    }
+    disconnect() {
+      fire = null;
+    }
+  },
+  requestFrame: (callback) => queued.push(callback),
+});
+assert.deepEqual(observed.attributeFilter, ["data-behavior"]);
+assert.equal(watched.getAttribute("data-help-tip"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
+controls.push(later);
+fire();
+for (const callback of queued.splice(0)) callback();
+assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"], missing: [] });
+watch.dispose();
+assert.equal(fire, null);
+for (const element of [watched, later]) {
+  assert.equal(element.hasAttribute("data-help-tip"), false);
+  assert.equal(element.hasAttribute("data-help-knowledge"), false);
+}
 
 // atlas renders, with no script but the map's one, which only the map page loads (ADR 0015).
 const atlas = buildAtlas({
