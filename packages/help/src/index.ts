@@ -12,7 +12,8 @@
  * package reads a file, checks its shape, and binds. No dependencies, no
  * network, no DOM of its own: the binder takes any root with `querySelectorAll`
  * and elements with `getAttribute`/`setAttribute`, which is a document, a
- * shadow root or a test double alike.
+ * shadow root or a test double alike. `watchTips` also observes the root, with
+ * a `MutationObserver` and a frame scheduler it can be given.
  */
 
 export const HELP_PROFILE = "intentset/help/0.2";
@@ -20,6 +21,8 @@ export const HELP_PROFILE = "intentset/help/0.2";
 export const BEHAVIOR_ATTRIBUTE = "data-behavior";
 /** Set on a bound control: the ID of the knowledge the tip came from, for a "learn more" link. */
 export const KNOWLEDGE_ATTRIBUTE = "data-help-knowledge";
+/** Set on a bound control by the default render: the tip's text, for a product's own tooltip to read. */
+export const TIP_ATTRIBUTE = "data-help-tip";
 
 const ID_PATTERN = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/;
 const VISIBILITIES = ["public", "customer", "internal", "restricted"] as const;
@@ -203,9 +206,13 @@ export interface BindOptions {
   /** The attribute naming each control's behavior; `data-behavior` by default. */
   attribute?: string;
   /**
-   * How a tip is put on its control. The default sets `title` to the tip's
-   * text, unless the control already has one, and `data-help-knowledge` to the
-   * knowledge ID. A product with its own tooltip component passes its own.
+   * How a tip is put on its control. The default sets `data-help-tip` to the
+   * tip's text and `data-help-knowledge` to the knowledge ID, and nothing a
+   * browser displays: a `title` shows only on mouse hover, never to keyboard or
+   * touch users, and screen readers announce it inconsistently. A product
+   * supplies the visible tooltip and the accessible description through
+   * `render`, with its own tooltip component or an `aria-describedby` pointing
+   * at an element that holds the text.
    */
   render?: (element: TipElement, tip: Tip) => void;
 }
@@ -218,32 +225,228 @@ export interface Binding {
 }
 
 function defaultRender(element: TipElement, tip: Tip): void {
-  if (!element.hasAttribute("title")) element.setAttribute("title", tip.text);
+  element.setAttribute(TIP_ATTRIBUTE, tip.text);
   element.setAttribute(KNOWLEDGE_ATTRIBUTE, tip.knowledge);
 }
 
-/**
- * Put each tip on every control under `root` that names its behavior. Run it
- * after the interface renders, and again after it changes; binding is
- * idempotent. The result says what was bound and what has no tip yet, which is
- * the coverage a product reports.
- */
-export function bindTips(root: TipRoot, help: Help, options: BindOptions = {}): Binding {
-  const attribute = options.attribute ?? BEHAVIOR_ATTRIBUTE;
-  const render = options.render ?? defaultRender;
+interface Found<E> {
+  element: E;
+  tip: Tip | null;
+}
+
+/** One pass over `root`: each control that names a behavior, with its tip or null, in document order. */
+function scan<E extends TipElement>(
+  root: { querySelectorAll(selectors: string): Iterable<E> | ArrayLike<E> },
+  help: Help,
+  attribute: string,
+): { found: Found<E>[]; binding: Binding } {
+  const found: Found<E>[] = [];
   const bound: string[] = [];
   const missing: string[] = [];
-  const elements = root.querySelectorAll(`[${attribute}]`);
-  for (const element of Array.from(elements as ArrayLike<TipElement>)) {
+  for (const element of Array.from(root.querySelectorAll(`[${attribute}]`) as ArrayLike<E>)) {
     const id = element.getAttribute(attribute);
     if (id === null || id === "") continue;
     const tip = tipFor(help, id);
+    found.push({ element, tip });
     if (tip === null) {
       if (!missing.includes(id)) missing.push(id);
-      continue;
-    }
-    render(element, tip);
-    if (!bound.includes(id)) bound.push(id);
+    } else if (!bound.includes(id)) bound.push(id);
   }
-  return { bound, missing };
+  return { found, binding: { bound, missing } };
+}
+
+/**
+ * Put each tip on every control under `root` that names its behavior, once.
+ * Run it after the interface renders, and again after it changes; binding is
+ * idempotent. The result says what was bound and what has no tip yet, which is
+ * the coverage a product reports. `watchTips` rebinds for a product that does
+ * not drive binding itself.
+ */
+export function bindTips(root: TipRoot, help: Help, options: BindOptions = {}): Binding {
+  const render = options.render ?? defaultRender;
+  const { found, binding } = scan(root, help, options.attribute ?? BEHAVIOR_ATTRIBUTE);
+  for (const { element, tip } of found) if (tip !== null) render(element, tip);
+  return binding;
+}
+
+/** The part of an element `watchTips` uses: what `bindTips` uses, and `removeAttribute` to undo the default render. */
+export interface WatchElement extends TipElement {
+  removeAttribute(name: string): void;
+}
+
+/** The part of a document, shadow root or container element `watchTips` uses; it is also what is observed. */
+export interface WatchRoot {
+  querySelectorAll(selectors: string): Iterable<WatchElement> | ArrayLike<WatchElement>;
+}
+
+/**
+ * The part of a `MutationObserver` `watchTips` uses. `R` is the root it
+ * observes, so the DOM's own constructor, whose `observe` takes a `Node`, is
+ * accepted for a root that is an element, a document or a shadow root.
+ */
+export interface TipObserver<R = WatchRoot> {
+  observe(
+    target: R,
+    options: { subtree: boolean; childList: boolean; attributes: boolean; attributeFilter: string[] },
+  ): void;
+  disconnect(): void;
+}
+
+export interface WatchOptions<R = WatchRoot, H = unknown> extends BindOptions {
+  /**
+   * Undoes `render` for one element: when the element stops naming that
+   * behavior, leaves `root`, or the watch is disposed. With the default
+   * render and no `unrender`, `data-help-tip` and `data-help-knowledge` are
+   * put back as they were before the watch set them. With a `render` of the
+   * product's own and no `unrender`, nothing is undone: removing this
+   * package's attributes cannot undo what another render did, so a product
+   * that needs its page left as it found it passes both.
+   */
+  unrender?: (element: TipElement, tip: Tip) => void;
+  /** What watches `root`; `globalThis.MutationObserver` by default. */
+  MutationObserver?: new (
+    callback: () => void,
+  ) => TipObserver<R>;
+  /** Schedules the next pass; `globalThis.requestAnimationFrame` by default, so changes batch to one pass per frame. */
+  requestFrame?: (callback: () => void) => H;
+  /**
+   * Cancels a scheduled pass on dispose, given what `requestFrame` returned.
+   * `globalThis.cancelAnimationFrame` by default only when `requestFrame` is
+   * the default too; otherwise a pass that cannot be cancelled runs and does
+   * nothing once the watch is disposed.
+   */
+  cancelFrame?: (handle: H) => void;
+}
+
+export interface TipWatch {
+  /** What the last pass bound and found no tip for, as `bindTips` reports it; empty after `dispose`. */
+  coverage(): Binding;
+  /** Stops watching, cancels a pending pass and unrenders every element it bound. Calling it again does nothing. */
+  dispose(): void;
+}
+
+function restore(element: WatchElement, name: string, value: string | null): void {
+  if (value === null) element.removeAttribute(name);
+  else element.setAttribute(name, value);
+}
+
+/**
+ * Bind once, then again whenever the DOM under `root` changes, batched to one
+ * pass per animation frame, until `dispose`. It binds only under `root`, so it
+ * can be mounted into another application's page. `dispose` unrenders every
+ * element it bound, which leaves that page's DOM as it found it when the
+ * render is the default, or when the product's `unrender` undoes its
+ * `render`. An element already bound to the same tip is not rendered again;
+ * one whose behavior changed, or that left `root`, is unrendered first.
+ */
+export function watchTips<R extends WatchRoot, H = unknown>(
+  root: R,
+  help: Help,
+  options: WatchOptions<NoInfer<R>, H> = {},
+): TipWatch {
+  const attribute = options.attribute ?? BEHAVIOR_ATTRIBUTE;
+  const prior = new Map<TipElement, [string | null, string | null]>();
+  let render: (element: TipElement, tip: Tip) => void;
+  let unrender: (element: TipElement, tip: Tip) => void;
+  if (options.render !== undefined) {
+    render = options.render;
+    unrender = options.unrender ?? (() => {});
+  } else if (options.unrender !== undefined) {
+    render = defaultRender;
+    unrender = options.unrender;
+  } else {
+    // The default pair puts back what the element carried before, so neither an authored value nor another watch's is lost.
+    render = (element, tip) => {
+      if (!prior.has(element))
+        prior.set(element, [element.getAttribute(TIP_ATTRIBUTE), element.getAttribute(KNOWLEDGE_ATTRIBUTE)]);
+      defaultRender(element, tip);
+    };
+    unrender = (element) => {
+      const [text, knowledge] = prior.get(element) ?? [null, null];
+      prior.delete(element);
+      restore(element as WatchElement, TIP_ATTRIBUTE, text);
+      restore(element as WatchElement, KNOWLEDGE_ATTRIBUTE, knowledge);
+    };
+  }
+  const scope = globalThis as unknown as {
+    MutationObserver?: new (callback: () => void) => TipObserver<R>;
+    requestAnimationFrame?: (callback: () => void) => H;
+    cancelAnimationFrame?: (handle: H) => void;
+  };
+  const Observer = options.MutationObserver ?? scope.MutationObserver;
+  let requestFrame = options.requestFrame;
+  let cancelFrame = options.cancelFrame;
+  if (requestFrame === undefined && scope.requestAnimationFrame !== undefined) {
+    requestFrame = scope.requestAnimationFrame.bind(globalThis);
+    cancelFrame ??= scope.cancelAnimationFrame?.bind(globalThis);
+  }
+  if (Observer === undefined) throw new TypeError("watchTips needs a MutationObserver: pass options.MutationObserver");
+  if (requestFrame === undefined)
+    throw new TypeError("watchTips needs requestAnimationFrame: pass options.requestFrame");
+  const schedule = requestFrame;
+
+  const bound = new Map<WatchElement, Tip>();
+  let coverage: Binding = { bound: [], missing: [] };
+  let pending = false;
+  let handle: H | undefined;
+  let disposed = false;
+
+  const pass = () => {
+    pending = false;
+    if (disposed) return;
+    const { found, binding } = scan(root, help, attribute);
+    const current = new Map<WatchElement, Tip>();
+    for (const { element, tip } of found) if (tip !== null && !current.has(element)) current.set(element, tip);
+    for (const [element, tip] of bound) {
+      if (disposed) return;
+      if (current.get(element)?.id === tip.id) continue;
+      bound.delete(element);
+      unrender(element, tip);
+    }
+    for (const [element, tip] of current) {
+      if (disposed) return;
+      if (bound.has(element)) continue;
+      render(element, tip);
+      // A render that disposed the watch: dispose did not see this element, so undo it here.
+      if (disposed) {
+        unrender(element, tip);
+        return;
+      }
+      bound.set(element, tip);
+    }
+    coverage = binding;
+  };
+
+  const unbindAll = () => {
+    const all = [...bound];
+    bound.clear();
+    for (const [element, tip] of all) unrender(element, tip);
+  };
+
+  const observer = new Observer(() => {
+    if (disposed || pending) return;
+    pending = true;
+    handle = schedule(pass);
+  });
+  try {
+    pass();
+  } catch (error) {
+    disposed = true;
+    unbindAll();
+    throw error;
+  }
+  observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: [attribute] });
+
+  return {
+    coverage: () => ({ bound: [...coverage.bound], missing: [...coverage.missing] }),
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      observer.disconnect();
+      if (pending && cancelFrame !== undefined) cancelFrame(handle as H);
+      pending = false;
+      unbindAll();
+      coverage = { bound: [], missing: [] };
+    },
+  };
 }

@@ -3,6 +3,11 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import { plainCarrier, readArtifact } from "@intentset/core";
+import { prepareRelease, releasePaths } from "../scripts/release-prepare.ts";
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
 
 const root = resolve(import.meta.dirname, "..");
 
@@ -256,6 +261,82 @@ test("the release publishes every published package once, each after everything 
       assert.ok(j !== -1 && j < i, `${dir} depends on ${dep}, which must be published first`);
     }
   }
+});
+
+test("every specification and the agent guide name the root version", async () => {
+  // The manifests, the MCP server's VERSION, the lockfile and the changelog are
+  // held elsewhere; these two had nothing, so a bump could miss them silently.
+  const { version } = await manifest("package.json");
+  const specs = (await readdir(join(root, "spec"))).filter((f) => f.endsWith(".md")).sort();
+  assert.ok(specs.length >= 6, "every specification is read");
+  for (const file of specs) {
+    const text = await readFile(join(root, "spec", file), "utf8");
+    const frontmatter = /^---\n([\s\S]*?)\n---\n/u.exec(text)?.[1] ?? "";
+    assert.match(frontmatter, new RegExp(`^implementation: ${escapeRegExp(version)}$`, "mu"), `spec/${file}`);
+  }
+  const guide = await readFile(join(root, ".intentset/agents.md"), "utf8");
+  assert.ok(guide.includes(`(intentset ${version})`), ".intentset/agents.md names another version");
+});
+
+test("release:prepare writes the new version into every carrier, and refuses drift", () => {
+  const files: Record<string, string> = {
+    "package.json":
+      '{\n  "name": "intentset",\n  "version": "1.2.3",\n  "scripts": { "release": "--filter @intentset/core" },\n  "devDependencies": { "@intentset/core": "workspace:*" }\n}\n',
+    "packages/core/package.json": '{\n  "name": "@intentset/core",\n  "version": "1.2.3"\n}\n',
+    "packages/cli/package.json":
+      '{\n  "name": "@intentset/cli",\n  "version": "1.2.3",\n  "dependencies": {\n    "@intentset/core": "^1.2.3",\n    "other": "^1.2.3"\n  }\n}\n',
+    "pnpm-lock.yaml":
+      "  .:\n    devDependencies:\n      '@intentset/core':\n        specifier: workspace:*\n        version: link:packages/core\n\n  packages/cli:\n    dependencies:\n      '@intentset/core':\n        specifier: ^1.2.3\n        version: link:../core\n      other:\n        specifier: ^1.2.3\n",
+    "packages/mcp/src/index.ts": 'export const VERSION = "1.2.3";\n',
+    ".intentset/agents.md": "Written by `intentset init` (intentset 1.2.3). To refresh it\n",
+    "spec/core.md": "---\ntitle: Core\nimplementation: 1.2.3\n---\n\nimplementation: 1.2.3 stays in the body\n",
+    "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n**A change.**\n\n## 1.2.3 — 2026-01-01\n",
+  };
+  const paths = Object.keys(files).sort();
+  const read = (p: string) => files[p]!;
+  const out = prepareRelease(read, paths, { to: "1.2.4", date: "2026-02-02" });
+
+  assert.equal(out.from, "1.2.3");
+  assert.deepEqual([...out.files.keys()], paths);
+  assert.match(
+    out.files.get("packages/cli/package.json")!,
+    /"@intentset\/core": "\^1\.2\.4",\n {4}"other": "\^1\.2\.3"/u,
+  );
+  assert.match(out.files.get("package.json")!, /"version": "1\.2\.4"/u);
+  assert.match(out.files.get("pnpm-lock.yaml")!, /specifier: \^1\.2\.4\n.*\n.*\n {8}specifier: \^1\.2\.3\n$/u);
+  assert.equal(out.files.get("packages/mcp/src/index.ts"), 'export const VERSION = "1.2.4";\n');
+  assert.ok(out.files.get(".intentset/agents.md")!.includes("(intentset 1.2.4)"));
+  assert.equal(
+    out.files.get("spec/core.md"),
+    "---\ntitle: Core\nimplementation: 1.2.4\n---\n\nimplementation: 1.2.3 stays in the body\n",
+  );
+  assert.match(out.files.get("CHANGELOG.md")!, /^## 1\.2\.4 — 2026-02-02\n\n\*\*A change\.\*\*\n\n## 1\.2\.3/mu);
+
+  const run = (override: Record<string, string>, to = "1.2.4") =>
+    prepareRelease((p) => override[p] ?? files[p]!, paths, { to, date: "2026-02-02" });
+  assert.throws(() => run({}, "1.2.3"), /not after the current version/u);
+  assert.throws(() => run({}, "1.2"), /not a version/u);
+  assert.throws(() => run({ "spec/core.md": "---\nimplementation: 1.2.2\n---\n" }), /spec\/core\.md: implementation/u);
+  assert.throws(() => run({ "packages/core/package.json": '{\n  "version": "1.2.2"\n}\n' }), /packages\/core/u);
+  assert.throws(
+    () => run({ "packages/cli/package.json": files["packages/cli/package.json"]!.replace('"^1.2.3",', '"^1.2.2",') }),
+    /"@intentset\/core": "\^1\.2\.2" is not on 1\.2\.3/u,
+  );
+  assert.throws(() => run({ "CHANGELOG.md": "# Changelog\n\n## 1.2.3 — 2026-01-01\n" }), /## Unreleased not found/u);
+  assert.throws(
+    () => run({ "CHANGELOG.md": "## Unreleased\n\n## 1.2.3 — 2026-01-01\n" }),
+    /Unreleased entry is empty/u,
+  );
+});
+
+test("release:prepare reads every carrier the repository has", () => {
+  const paths = releasePaths(root);
+  for (const p of ["package.json", "site/package.json", "pnpm-lock.yaml", "CHANGELOG.md", ".intentset/agents.md"]) {
+    assert.ok(paths.includes(p), p);
+  }
+  assert.ok(paths.includes("packages/mcp/src/index.ts"));
+  assert.ok(paths.filter((p) => p.startsWith("spec/")).length >= 6);
+  assert.deepEqual(paths, [...paths].sort());
 });
 
 test("the changelog has an entry for the version in package.json, and every entry says what moved", async () => {

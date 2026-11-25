@@ -18,7 +18,7 @@ This page walks through it in the order you would meet it: the files, the model 
 1. **Write records.** Each behavior, rule, slice and check is a Markdown file with YAML frontmatter, written by the agent that changes the code and reviewed in the same pull request.
 2. **Link them once.** A record names what it points at. Intentset works out the reverse, so every behavior knows its rules, its owner, its checks and its explanations.
 3. **Give each behavior one owner.** A slice of your code is accountable for it, and an architecture check keeps other code out of that slice's internals.
-4. **Attach evidence.** Test runs from CI are tied to a commit, and only a pass on the commit under review counts.
+4. **Attach evidence.** Test runs from CI are tied to a commit. A pass counts while what it checked is unchanged, and a gate can ask for a pass on the commit under review.
 5. **Review the impact.** Before a change merges, see every behavior, owner, check and explanation it could reach.
 6. **Publish safely.** Reviewed explanations go out for one audience and one release, and nothing internal leaks through.
 7. **Hand it on.** Other tools read the model through one versioned export, with restricted records left out.
@@ -191,7 +191,7 @@ Knowledge records are explanations written for an audience, such as teachers. Ea
 
 `intentset publish` builds what one audience may see for one release. It denies by default, intersects every availability dimension, leaves out drafts and retired records, and never reveals the title or path of anything it excluded. The output is a set of Markset documents that carry their provenance, the source IDs, revisions and hashes and the reviewer, beside a help file of their tips and one small file that names the snapshot for the whole publication, so every other file changes only when what it was made from changes, and published output can be committed without each commit rewriting it. When what a source promises changes, the explanations that depend on it are marked for review before they can be published again. A review can pin each source's content rather than its whole file, so approving a source or marking it built leaves the explanation current, while editing what it promises, or deprecating or retiring it, does not. Customer-facing tools read only this publication, never the engineering graph.
 
-A knowledge record can also carry tips: one sentence per behavior it explains, for the product to show beside the control that delivers it. They are reviewed and published with the record, so a tooltip cannot outlive the behavior it describes. Each publication writes them to a `help.json` the product reads with `@intentset/help`, which binds every tip to the element naming its behavior and reports the behaviors that have no tip yet.
+A knowledge record can also carry tips: one sentence per behavior it explains, for the product to show beside the control that delivers it. They are reviewed and published with the record, so a tooltip cannot outlive the behavior it describes. Each publication writes them to a `help.json` the product reads with `@intentset/help`, which binds every tip to the element naming its behavior, once or for as long as it watches the page, and reports the behaviors that have no tip yet. The product chooses how a tip is shown, so it can reach keyboard, touch and screen-reader users as well as a mouse.
 
 Markset provides the document format, and Intentset adds metadata and meaning to it without adding any syntax. [See how Markset fits](../markset/).
 

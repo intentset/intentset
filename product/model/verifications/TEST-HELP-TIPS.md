@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-HELP-TIPS]
   verification:
@@ -27,8 +27,8 @@ intentset:
 
 - `packages/help/test/help.test.ts`: the test "the file the publisher writes reads back, as text and as bytes, and carries the tips"
 - `packages/help/test/help.test.ts`: the test "a file with any problem is refused whole, and every problem is named"
-- `packages/help/test/help.test.ts`: the test "bindTips puts each tip on its control, keeps an existing title, and reports the IDs with no tip"
+- `packages/help/test/help.test.ts`: the test "bindTips puts each tip on its control as data, sets no title, and reports the IDs with no tip"
 
 ## Expected result
 
-Every test whose title carries `BEH-HELP-TIPS` passes. The file reads back as text and as bytes with its tips; a file with any problem is refused whole, each problem named; each tip is bound to the controls marked with its behavior ID, an existing title is kept, and the IDs with no tip are reported.
+Every test whose title carries `BEH-HELP-TIPS` passes. The file reads back as text and as bytes with its tips; a file with any problem is refused whole, each problem named; each tip is bound to the controls marked with its behavior ID as `data-help-tip` and `data-help-knowledge`, no `title` is set and an existing one is left alone, and the IDs with no tip are reported.

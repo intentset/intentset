@@ -113,7 +113,9 @@ learning from questions, and the AWS rules).
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
 - A release bumps every manifest, each spec's `implementation`, and adds its `CHANGELOG.md` entry: one bold sentence,
-  then whether the specs, the suite or the export moved (tests hold all three). A spec's `revision` is the date its
+  then whether the specs, the suite or the export moved (tests hold all three). `pnpm run release:prepare <version>`
+  writes every carrier and dates the Unreleased entry, and refuses one that has drifted; the `v<version>` tag on main
+  publishes. A spec's `revision` is the date its
   text last changed.
 - Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline read exports and move
   their pins when they update. A reader rejects an older export, and a record that declares an older `spec`:
