@@ -5,7 +5,7 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14).
 
-## Unreleased
+## 0.17.1 — 2026-11-25
 
 **The specifications say what the rule is and leave its history to this file and the ADRs.** Text only (Core, VSA and the reference profile, revision 2026-11-24): no check and no case changed, so `intentset.spec` stays `0.2`, and the suite and the export contract did not move.
 
