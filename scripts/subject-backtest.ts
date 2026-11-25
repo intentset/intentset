@@ -98,12 +98,15 @@ type LegacySubject = Subject & { dependencyInternals: { id: string; files: strin
  * The two rules ADR 0026 removed from `computeSubject`, kept here so that the sections they were measured in can be
  * generated again (ADR 0013's amendments of 2026-10-15; ADR 0026, "Reopening"). Applied to a subject computed by the one
  * rule, each gives the hash the removed option gave: `used` adds every resource an included slice lists and the subject
- * left out (its `unexercised`), and `entrypoint` counts a slice reached only through `dependsOn` by the files of its
+ * left out (its `unexercised`), and adds `usesResources` to the `why` of a resource the subject hashes for `exercises`
+ * that an included slice also lists; `entrypoint` counts a slice reached only through `dependsOn` by the files of its
  * `entrypoints`, the records of the contracts it exposes or consumes and the decisions those are informed by, and lists
- * its other claimed files as `dependencyInternals`.
+ * its other claimed files as `dependencyInternals`. Checked against 948c42d's `computeSubject` on its unit tests'
+ * graph, a resource both exercised and listed included.
  */
 function legacySubject(
   graph: Graph,
+  verificationId: string,
   subject: Subject,
   rule: "used" | "entrypoint",
   resources: ReadonlyMap<string, { record: unknown; files: readonly string[] }>,
@@ -113,6 +116,20 @@ function legacySubject(
   let parts = [...subject.parts];
   const internal = new Map<string, string[]>();
   if (rule === "used") {
+    // Under `used` every resource an included slice lists was added for `usesResources`, so one the subject already
+    // hashes for `exercises` alone carried both reasons: give it the second, or its part hashes differently.
+    const listed = new Set<string>();
+    for (const [id] of includedSlices(graph, verificationId)) {
+      for (const resource of graph.artifacts.get(id)?.meta.slice?.usesResources ?? []) {
+        if (resources.has(resource)) listed.add(resource);
+      }
+    }
+    parts = parts.map((part) => {
+      if (part.kind !== "resource" || !listed.has(part.id)) return part;
+      const why = new Set((part.why ?? "").split(",").filter((reason) => reason !== ""));
+      why.add("usesResources");
+      return { ...part, why: [...why].sort(cmp).join(",") };
+    });
     for (const left of subject.unexercised) {
       const resource = resources.get(left.id);
       if (resource === undefined) continue;
@@ -416,8 +433,8 @@ function build(root: string, sha: string): State {
       resources: registry,
       globalInputs: lean,
     });
-    const used = legacySubject(graph, exercised, "used", registry, fileHash);
-    const entrypoint = legacySubject(graph, exercised, "entrypoint", registry, fileHash);
+    const used = legacySubject(graph, id, exercised, "used", registry, fileHash);
+    const entrypoint = legacySubject(graph, id, exercised, "entrypoint", registry, fileHash);
     hashes.exercised.set(id, exercised.hash);
     hashes.used.set(id, used.hash);
     hashes.entrypoint.set(id, entrypoint.hash);
@@ -1181,7 +1198,7 @@ function subjectsAt(root: string): Hashes {
         : new Map(
             [...computed].map(([id, subject]) => [
               id,
-              legacySubject(graph, subject, "used", source.resources ?? new Map(), sourceFileHash(source.readFile)),
+              legacySubject(graph, id, subject, "used", source.resources ?? new Map(), sourceFileHash(source.readFile)),
             ]),
           );
     const hash = new Map<string, string>();
@@ -1519,7 +1536,14 @@ function subjectsAtDeps(root: string): DepsHashes {
         id,
         mode === "files"
           ? { ...subject, dependencyInternals: [] }
-          : legacySubject(graph, subject, "entrypoint", source.resources ?? new Map(), sourceFileHash(source.readFile)),
+          : legacySubject(
+              graph,
+              id,
+              subject,
+              "entrypoint",
+              source.resources ?? new Map(),
+              sourceFileHash(source.readFile),
+            ),
       ]),
     );
     const entry: DepsHashes["files"] = { hash: new Map(), parts: new Map(), sizes: new Map(), internals: new Map() };
