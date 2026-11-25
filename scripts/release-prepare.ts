@@ -15,8 +15,8 @@
  *   - `implementation` in the frontmatter of every specification in `spec/`;
  *   - `## Unreleased` in `CHANGELOG.md`, which becomes `## <version> — <date>`.
  *
- * It never commits, tags or publishes. A release is the v<version> tag pushed
- * after this change is reviewed and merged; `.github/workflows/release.yml`
+ * It never commits, tags or publishes. A release is the v<version> tag, with
+ * the message <version>, pushed after this change is reviewed and merged; `.github/workflows/release.yml`
  * publishes from the tag. Prose that names a version, such as the site's
  * roadmap, is written by hand.
  */
@@ -207,8 +207,10 @@ function main(argv: string[]): number {
       ...[...prepared.files.keys()].map((p) => `  ${p}`),
       "",
       "Next: read the changelog entry, write any prose that names the version (site/content/roadmap.md),",
-      "run pnpm test and pnpm run conformance, and open the release pull request. After it merges:",
-      `  git tag v${prepared.to} && git push origin v${prepared.to}`,
+      "run pnpm test and pnpm run conformance, and open the release pull request. After it merges, tag the",
+      "merged main. The tag carries a message, as every earlier one does, because a signed tag",
+      "(tag.gpgsign) needs one and git stops without it:",
+      `  git checkout main && git pull && git tag -m ${prepared.to} v${prepared.to} && git push origin v${prepared.to}`,
       "",
     ].join("\n"),
   );
