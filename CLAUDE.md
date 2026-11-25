@@ -71,8 +71,8 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 - No Streamlane record or code enters this repository; the adoption log describes them. Its records live in the
   Streamlane repository.
 - The example product is Lantern, invented: the fixtures, the worked example and the site's walkthrough use it and
-  nothing else. Nothing in this repository names another real product, except the adoption log, and the one real
-  product it models is Intentset itself.
+  nothing else. Nothing in this repository names another real product, except as the next rules allow, and the one
+  real product it models is Intentset itself.
 - **Intentset's own model** (`product/model/`, decided 2026-10-09) describes this repository's packages: what each
   promises, which package delivers it, and the design invariants as rules. It is not an example: no fixture, test or
   site page reads it, and the example's records never link into it. The one exception is published knowledge
@@ -86,6 +86,17 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
   and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
   record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
   may be quoted, with operation names replaced by `<operation>`.
+- A narrative page of the site (Home, How it works, Start, Run the adoption, Prove the work, About, Roadmap, the
+  introduction) may name Streamlane and Driftline once each, in one block, with the family label beside the name:
+  Streamlane `Product · In development`, Driftline `Product · In planning` (reef `docs/conventions.md`, Status labels;
+  reef `docs/family.md` for the loop). The readers page (`/tools/readers/`) lists both with the path each reads.
+  Outside the adoption log the site says nothing of their insides: no screens, no planned capability by name, no
+  price, no roadmap detail, and never a link to either product's site or repository. Every other page the site writes
+  itself (the reference pages and the Lantern walkthrough) names neither. The normative documents under `spec/`, and
+  the conformance cases under `tests/`, are not narrative pages: where they record the origin of a dated decision they
+  are outside this rule and its test, which skips a page by how it is made (`generatedFrom` in `site/build.ts`), not
+  by its address. Gary's decision of 2026-11-25, which widens where they are named and keeps the 2026-10-06 limit on
+  what is said. `site/test/family.test.ts` holds it.
 
 ## Where the rest is
 
