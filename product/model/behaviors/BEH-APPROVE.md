@@ -6,7 +6,11 @@ intentset:
   id: BEH-APPROVE
   type: behavior
   title: Approve writes a person's approval into drafts
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-25"
+    basis: direct
+    by: "Gary Clarke"
   delivery: built
   owner: maintainers
   visibility: public

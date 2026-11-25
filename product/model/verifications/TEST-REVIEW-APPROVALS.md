@@ -6,7 +6,11 @@ intentset:
   id: TEST-REVIEW-APPROVALS
   type: verification
   title: Review lists a status or approval that differs from the base
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-25"
+    basis: direct
+    by: "Gary Clarke"
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

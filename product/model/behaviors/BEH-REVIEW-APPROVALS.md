@@ -6,7 +6,11 @@ intentset:
   id: BEH-REVIEW-APPROVALS
   type: behavior
   title: Review lists records whose status or approval changed
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-25"
+    basis: direct
+    by: "Gary Clarke"
   delivery: built
   owner: maintainers
   visibility: public
