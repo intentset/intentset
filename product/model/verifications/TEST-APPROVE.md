@@ -6,7 +6,11 @@ intentset:
   id: TEST-APPROVE
   type: verification
   title: Approve rewrites only the approval, checks first and refuses what it must
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-25"
+    basis: direct
+    by: "Gary Clarke"
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
