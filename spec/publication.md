@@ -72,9 +72,16 @@ JSON, in `<meta name="intentset-publication">`. The document MUST parse as Marks
 NOT contain a `:::` directive outside Markset's vocabulary. Retrieval chunks of a document MUST carry its
 `intentset-publication` block unchanged.
 
+An HTML rendering of a document, a page or a fragment, is rendered from the document's Markset and MUST NOT let raw
+HTML in the source pass through. It MUST NOT carry a link or image URL whose scheme is not `http`, `https` or
+`mailto`; a URL with no scheme, a relative path or a `#` fragment, is allowed. The scheme is read as a browser reads
+it: case-insensitively, with ASCII tab, line feed and carriage return removed wherever they are, and control
+characters and spaces before it skipped. A link whose URL is refused keeps its text, and an image its alternative
+text. The Markset document itself keeps the knowledge body unchanged; only its HTML is held to this.
+
 A publisher MAY also render a document as an HTML fragment, for a product that shows it inside its own interface. A
-fragment is what the page holds as the document's content, rendered the same way and so sanitized the same way: raw
-HTML in the source MUST NOT pass through into either. It MUST NOT contain a stylesheet, an `<html>`, `<head>` or
+fragment is what the page holds as the document's content, rendered the same way and so sanitized the same way. It
+MUST NOT contain a stylesheet, an `<html>`, `<head>` or
 `<body>` element, or the `intentset-publication` block, which travels with the document rather than in its HTML. It
 MUST leave out the document's title heading, the first level-one heading at the top level of the body, and keep every
 other heading, a later level-one heading included; each heading keeps the id it has in the page. The reference

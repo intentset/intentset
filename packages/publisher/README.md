@@ -34,7 +34,8 @@ the same bytes in every file but that one.
 `renderHtml: "page"` (or `true`) adds each document's complete HTML page, stylesheet inlined, as `html`;
 `renderHtml: "fragment"` adds `htmlFragment` instead, the page's content without its title heading, for a product that
 shows the article inside its own interface. The fragment is sanitized as the page is and carries no provenance: that
-is on the document's `publication`.
+is on the document's `publication`. Neither passes raw HTML through, and a link or image keeps its URL only when the
+scheme is `http`, `https` or `mailto`, or there is none.
 
 **When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control. The
 commit it names is the one checked out when the command ran, which is never the commit that will contain the output,

@@ -15,8 +15,10 @@ import {
   emitYaml,
   markerLine,
   publish,
+  type PublicationRequest,
   toChunks,
 } from "../src/index.ts";
+import { safeUrl } from "../src/urls.ts";
 import { PUBLISHED_AT, customer, example, guidance, readCases, reviewed, run, snapshotOf } from "./harness.ts";
 
 const passing = () => example({ kb: reviewed() });
@@ -303,6 +305,78 @@ test("BEH-PUBLISH-FRAGMENT: an unknown rendering is refused rather than read as 
       }),
     /renderHtml "body"/,
   );
+});
+
+test("BEH-PUBLISH-FRAGMENT: fails closed: a refused request has no fragment, and no fragment names an excluded source", () => {
+  const publishFragments = (request: PublicationRequest, body?: string) => {
+    const { graph, registries } = example({ kb: reviewed(), ...(body !== undefined ? { body } : {}) });
+    return publish(graph, registries, request, {
+      snapshot: snapshotOf(graph),
+      publishedAt: PUBLISHED_AT,
+      renderHtml: "fragment",
+    });
+  };
+  const refused = publishFragments(customer({ visibility: "internal" }));
+  assert.equal(refused.index.request, null);
+  assert.deepEqual(refused.documents, []);
+  assert.equal(refused.help, null);
+
+  // The customer projection withholds the internal behavior and rules the knowledge explains.
+  const excluded = ["Schedule a student assessment", "Require a future release time", "Require assignment permission"];
+  const paths = ["BEH-ASMT-SCHEDULE.md", "RULE-ASMT-FUTURE.md", "RULE-ASMT-AUTH.md"];
+  const published = publishFragments(customer());
+  assert.equal(published.documents.length, 1);
+  for (const document of published.documents) {
+    assert.equal(typeof document.htmlFragment, "string");
+    for (const hidden of [...excluded, ...paths]) {
+      assert.ok(!(document.htmlFragment ?? "").includes(hidden), `the fragment names ${hidden}`);
+    }
+  }
+  // A body that links to an internal source is refused whole, so no fragment of it exists.
+  const linking = publishFragments(customer(), guidance("See [the behavior](BEH-ASMT-SCHEDULE.md)."));
+  assert.deepEqual(linking.documents, []);
+  assert.ok(linking.diagnostics.some((d) => d.severity === "error"));
+});
+
+test("BEH-PUBLISH-FRAGMENT: a page and a fragment carry only http, https, mailto and scheme-less URLs", () => {
+  for (const url of [
+    "https://lantern.example/a",
+    "HTTP://x",
+    "mailto:a@lantern.example",
+    "/help",
+    "#guidance",
+    "a/b:c",
+    "",
+  ]) {
+    assert.equal(safeUrl(url), true, url);
+  }
+  for (const url of [
+    "javascript:alert(1)",
+    " JaVaScript:alert(1)",
+    "java\tscript:alert(1)",
+    "\u0001javascript:x",
+    "java\nscript:x",
+    "vbscript:x",
+    "data:text/html,x",
+    "file:///etc/passwd",
+    "tel:123",
+  ]) {
+    assert.equal(safeUrl(url), false, JSON.stringify(url));
+  }
+  const body = guidance(
+    "[Open](javascript:alert(1)) ![logo](<java\tscript:x>) [ref][r] ![img][i] [ok](https://lantern.example/) [here](#guidance)\n\n" +
+      "> [quoted](vbscript:x)\n\n[r]: JAVASCRIPT:x\n[i]: data:image/png,x",
+  );
+  const page = rendered(true, body).html ?? "";
+  const fragment = rendered("fragment", body).htmlFragment ?? "";
+  for (const html of [page, fragment]) {
+    assert.doesNotMatch(html, /(href|src)="\s*(java|vbscript|data)/i, html);
+    assert.ok(html.includes("<p>Open logo ref img "), html);
+    assert.ok(html.includes('<a href="https://lantern.example/">ok</a> <a href="#guidance">here</a>'));
+    assert.ok(html.includes("<p>quoted</p>"));
+  }
+  assert.ok(mainOf(page).endsWith(fragment));
+  assert.equal(rendered(true).html, publishOnce().documents[0].html, "a document with no such URL is unchanged");
 });
 
 test("the index names the request without authorization and counts exclusions", () => {

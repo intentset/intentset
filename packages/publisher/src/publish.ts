@@ -48,6 +48,7 @@ import { checkReferences, checkTitles } from "./references.ts";
 import { type IndexedRequest, type PublicationRequest, admits, indexedRequest } from "./request.ts";
 import type { ReviewStatus } from "./review.ts";
 import { type SnapshotFile, snapshotFile } from "./snapshot.ts";
+import { withSafeUrls } from "./urls.ts";
 
 /** Why a document that passed the projection was still not published. */
 export const REFUSAL_REASONS = ["reference", "title", "directive", "markset"] as const;
@@ -198,7 +199,7 @@ function defaultStylesheet(): string {
  * Markset source keeps.
  */
 export function renderDocument(markset: string, publication: PublicationMeta): string {
-  const page = renderPage(parseDocument(markset).ast, { stylesheet: { inline: defaultStylesheet() } });
+  const page = renderPage(withSafeUrls(parseDocument(markset).ast), { stylesheet: { inline: defaultStylesheet() } });
   const meta = `<meta name="intentset-publication" content="${escapeAttribute(canonicalJson(publication))}">\n`;
   const anchor = '<meta charset="utf-8">\n';
   const at = page.indexOf(anchor);
@@ -218,7 +219,7 @@ export function renderDocument(markset: string, publication: PublicationMeta): s
  * removed, so every section keeps the id it has in the page.
  */
 export function renderFragment(markset: string): string {
-  const tree = addHeadingIds(parseDocument(markset).ast);
+  const tree = addHeadingIds(withSafeUrls(parseDocument(markset).ast));
   const title = tree.children.findIndex((node) => node.type === "heading" && node.depth === 1);
   const children = tree.children.filter((_, index) => index !== title);
   return renderHtml({ ...tree, children }, { headingIds: false });
