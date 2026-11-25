@@ -31,8 +31,6 @@ function run(testCase: ConformanceCase) {
           { files },
           {
             globalInputs: validated.evidence.globalInputs,
-            resources: validated.evidence.resources,
-            dependencies: validated.evidence.dependencies,
             readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
           },
         )
@@ -84,7 +82,8 @@ const REVIEW_STATUS: Record<string, EvidenceStatus> = {
   "S02 a change to a locally imported helper makes a subject record stale": "stale",
   "S02 a change to an exercised slice's file makes a subject record stale": "stale",
   "S02 a change to an exercised resource's file makes a subject record stale": "stale",
-  "S02 a change to a used resource's file makes a subject record stale": "stale",
+  "CFG001 evidence.resources is an unknown key, so used no longer widens a subject to every resource a slice lists":
+    "current-pass",
   "S02 a change to an unclaimed file of a resource the implementing slice claims into makes a subject record stale":
     "stale",
   "S02 a change to a global input makes a subject record stale": "stale",
@@ -95,29 +94,13 @@ const REVIEW_STATUS: Record<string, EvidenceStatus> = {
   "S04 a repository with no slice claims is judged by commit binding, and says so": "current-pass",
   "S04 choosing commit binding where no slice claims files is not reported": "current-pass",
   "S05 a file no slice claims and no check names, changed since the record's commit, is reported": "current-pass",
-  "S05 files that only claimed, used or declared inputs cover are not reported": "current-pass",
   "S05 files that only claimed, exercised or declared inputs cover are not reported": "current-pass",
   "S06 a resource a slice lists and no check exercises changed since the record's commit: the record stays current and the report says what the binding could not see":
     "current-pass",
-  "D01 a change to a dependency slice's internal file keeps a subject record current under dependencies: entrypoint":
-    "current-pass",
-  "D01 the same change moves the subject under dependencies: files": "stale",
-  "D02 a change to a dependency slice's entrypoint file makes a subject record stale under dependencies: entrypoint":
+  "D01 a change to a dependency slice's file outside its entrypoints makes a subject record stale": "stale",
+  "D01 boundary: with git's history, a dependency's changed internal file makes the record stale and nothing is reported as unseen":
     "stale",
-  "D02 a change to a dependency slice's contract record makes a subject record stale under dependencies: entrypoint":
-    "stale",
-  "D02 a change to a decision a dependency slice's contract names makes a subject record stale under dependencies: entrypoint":
-    "stale",
-  "D02 a change to a dependency slice's dependsOn makes a subject record stale under dependencies: entrypoint": "stale",
-  "D02 a change to a dependency slice's binding fields makes a subject record stale under dependencies: entrypoint":
-    "stale",
-  "D03 a change to the implementing slice's own internal file makes a subject record stale under dependencies: entrypoint":
-    "stale",
-  "D03 a change to an exercised slice's internal file makes a subject record stale under dependencies: entrypoint":
-    "stale",
-  "D04 a dependency slice's internal change that the subject could not see is reported: the record stays current and EVID007 names the slice, the file and the verification":
-    "current-pass",
-  "D04 under dependencies: files nothing is left unseen, so a dependency's changed file makes the record stale and EVID007 stays silent":
+  "CFG001 evidence.dependencies is an unknown key, so entrypoint no longer narrows what a dependency contributes":
     "stale",
   "S05 a record's commit that is not an ancestor of the snapshot cannot be listed, and the report says so without failing":
     "current-pass",

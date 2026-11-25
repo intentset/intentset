@@ -13,31 +13,24 @@
  *   of their `dependsOn`, and those the verification names in
  *   `verification.exercises`: each by the hash of its **binding fields**
  *   (`implements`, `dependsOn`, `claims`, `usesResources`, `entrypoints`;
- *   never its prose) and the content of every file its claims resolve to;
- *   A slice reached only through `dependsOn` is a **dependency**: under
- *   `dependencies: "entrypoint"` (`evidence.dependencies`) it contributes its
- *   binding fields, the files of its `entrypoints` and the records of the
- *   contracts it exposes or consumes and the decisions those name (a
- *   `contract` and a `decision` part), not its other claimed files; the
- *   files left out are `dependencyInternals`, so a report can say what the
- *   subject could not see (EVID007). An implementing slice and an exercised
- *   slice always contribute every file. `dependencies: "files"` is the rule
- *   of Core §8 up to 0.7.0 (ADR 0013, amended 2026-10-15, second);
+ *   never its prose) and the content of every file its claims resolve to,
+ *   a slice reached only through `dependsOn` as much as an implementing or an
+ *   exercised one;
  * - the resources the verification exercises: each by its registry entry and
  *   the content of the files its path matches. A resource counts where
  *   `verification.exercises` names it, or where a slice that implements a
  *   verified behavior lists it in `usesResources` and also claims a file it
  *   matches (the slice's own resource). A resource a slice merely lists is not
  *   hashed, so a change to a backend a web slice talks to does not move every
- *   check of that slice; `resourceMode: "used"` (`evidence.resources: used`)
- *   hashes the files of every resource an included slice lists, as Core §8
- *   did from 0.7.0 to 0.7.1 (ADR 0013, amended 2026-10-15). What a subject
- *   leaves out is `unexercised`, so a report can say what it could not see
- *   (EVID006);
+ *   check of that slice. What a subject leaves out is `unexercised`, so a
+ *   report can say what it could not see (EVID006);
  * - the test file (`locator`) and the local files it imports, transitively,
  *   which the caller resolves (`localImports`) with the architecture
  *   package's resolver and stops at a package boundary;
  * - the repository's global inputs, which the caller has expanded to paths.
+ *
+ * This is the one rule: no configuration widens or narrows it (ADR 0026,
+ * which removed `evidence.resources` and `evidence.dependencies`).
  *
  * The slices' and resources' files are resolved by the architecture package
  * and passed in, so this package does not depend on it. The hash is the
@@ -46,22 +39,13 @@
  * `absent`, so a deleted file moves the subject. `parts` carries each entry,
  * so a report can say which part moved (`movedParts`).
  */
-import {
-  canonicalJson,
-  DEFAULT_EVIDENCE_DEPENDENCIES,
-  type EvidenceDependencies,
-  type EvidenceResources,
-  type Graph,
-  sha256Hex,
-} from "@intentset/core";
+import { canonicalJson, type Graph, sha256Hex } from "@intentset/core";
 
 export const SUBJECT_PART_KINDS = [
   "verification",
   "verified",
   "slice",
   "slice-file",
-  "contract",
-  "decision",
   "resource",
   "resource-file",
   "test",
@@ -89,20 +73,12 @@ export interface UnexercisedResource {
   files: string[];
 }
 
-/** A dependency slice whose claimed files the subject does not hash (`dependencies: "entrypoint"`), with those files. */
-export interface DependencyInternals {
-  id: string;
-  files: string[];
-}
-
 export interface Subject {
   hash: string;
   /** Sorted by kind, then ID. */
   parts: SubjectPart[];
-  /** The resources the included slices list that this subject leaves out, sorted by ID; always empty under `resourceMode: "used"`. Not part of the hash. */
+  /** The resources the included slices list that this subject leaves out, sorted by ID. Not part of the hash. */
   unexercised: UnexercisedResource[];
-  /** The dependency slices whose internal files this subject leaves out, sorted by ID; always empty under `dependencies: "files"`. Not part of the hash. */
-  dependencyInternals: DependencyInternals[];
 }
 
 /** A registry resource as the subject sees it: its record, and the files its path matches. */
@@ -122,10 +98,6 @@ export interface SubjectInput {
   sliceFiles: ReadonlyMap<string, readonly string[]> | Readonly<Record<string, readonly string[]>>;
   /** Registry resource ID to its record and files; absent means the repository declares none. */
   resources?: ReadonlyMap<string, SubjectResource>;
-  /** Which resource files count (`evidence.resources`): `exercised`, the default, or `used`. */
-  resourceMode?: EvidenceResources;
-  /** What a dependency slice contributes (`evidence.dependencies`): `DEFAULT_EVIDENCE_DEPENDENCIES` when absent. */
-  dependencyMode?: EvidenceDependencies;
   /** The local files a file imports, transitively and without the file itself, stopping at a package boundary. */
   localImports?: (path: string) => readonly string[];
   /** Files whose change affects every check and that belong to no slice (`evidence.globalInputs`), as paths. */
@@ -189,20 +161,6 @@ export function includedSlices(graph: Graph, verificationId: string): Map<string
   return new Map([...why].sort(([a], [b]) => cmp(a, b)).map(([id, set]) => [id, [...set].sort(cmp).join(",")]));
 }
 
-/** The contracts a slice exposes or consumes: its public contract records, whose change a dependent sees. */
-export function contractsOf(graph: Graph, id: string): string[] {
-  const out = new Set<string>();
-  for (const edge of graph.out.get(id) ?? []) {
-    if (
-      (edge.kind === "exposes" || edge.kind === "consumes") &&
-      graph.artifacts.get(edge.to)?.meta.type === "contract"
-    ) {
-      out.add(edge.to);
-    }
-  }
-  return [...out].sort(cmp);
-}
-
 /** The binding fields of a slice record, canonical: what the subject hashes of it instead of the whole record. */
 export function sliceBinding(graph: Graph, id: string): unknown {
   const artifact = graph.artifacts.get(id);
@@ -259,10 +217,6 @@ export function computeSubject(input: SubjectInput): Subject {
   }
   for (const id of targets) parts.push(recordPart("verified", id));
 
-  const mode = input.resourceMode ?? "exercised";
-  const dependencyMode = input.dependencyMode ?? DEFAULT_EVIDENCE_DEPENDENCIES;
-  const internal = new Map<string, string[]>();
-  const contractIds = new Set<string>();
   const resourceWhy = new Map<string, Set<string>>();
   const useResource = (id: string, reason: string) => {
     if (input.resources?.has(id) !== true) return;
@@ -282,33 +236,17 @@ export function computeSubject(input: SubjectInput): Subject {
       why,
       ...(artifact === undefined ? {} : { path: artifact.path }),
     });
-    const dependency = why === "dependsOn";
-    if (dependency && dependencyMode === "entrypoint") {
-      const surface = new Set(artifact?.meta.slice?.entrypoints ?? []);
-      for (const path of [...surface].sort(cmp)) {
-        parts.push({ kind: "slice-file", id: path, hash: fileHash(path), owner: id, path });
-      }
-      internal.set(id, [...new Set(claimed(id))].filter((path) => !surface.has(path)).sort(cmp));
-      for (const contract of contractsOf(graph, id)) contractIds.add(contract);
-    } else {
-      for (const path of [...new Set(claimed(id))].sort(cmp)) {
-        parts.push({ kind: "slice-file", id: path, hash: fileHash(path), owner: id, path });
-      }
+    for (const path of [...new Set(claimed(id))].sort(cmp)) {
+      parts.push({ kind: "slice-file", id: path, hash: fileHash(path), owner: id, path });
     }
     const implementing = why.split(",").includes("implements");
     for (const resource of artifact?.meta.slice?.usesResources ?? []) {
       if (input.resources?.has(resource) !== true) continue;
-      if (mode === "used" || (implementing && ownsResource(claimed(id), input.resources.get(resource)?.files ?? []))) {
+      if (implementing && ownsResource(claimed(id), input.resources.get(resource)?.files ?? [])) {
         useResource(resource, "usesResources");
       } else listed.add(resource);
     }
   }
-  const decisionIds = new Set<string>();
-  for (const id of [...contractIds].sort(cmp)) {
-    parts.push(recordPart("contract", id));
-    for (const edge of graph.out.get(id) ?? []) if (edge.kind === "informedBy") decisionIds.add(edge.to);
-  }
-  for (const id of [...decisionIds].sort(cmp)) parts.push(recordPart("decision", id));
   const unexercised: UnexercisedResource[] = [...listed]
     .filter((id) => !resourceWhy.has(id))
     .sort(cmp)
@@ -338,16 +276,9 @@ export function computeSubject(input: SubjectInput): Subject {
     parts.push({ kind: "global-input", id: path, hash: fileHash(path), path });
   }
 
-  // A claimed file of a dependency that another part hashes (an entrypoint of another slice, the test, a global input) is seen.
-  const hashed = new Set(parts.filter((p) => p.path !== undefined).map((p) => p.path));
-  const dependencyInternals: DependencyInternals[] = [...internal]
-    .map(([id, files]) => ({ id, files: files.filter((path) => !hashed.has(path)) }))
-    .filter((entry) => entry.files.length > 0)
-    .sort((a, b) => cmp(a.id, b.id));
-
   parts.sort((a, b) => cmp(a.kind, b.kind) || cmp(a.id, b.id) || cmp(a.owner ?? "", b.owner ?? ""));
   const entries = parts.map(({ kind, id, hash, why, owner }) => ({ kind, id, hash, why, owner }));
-  return { hash: sha256Hex(canonicalJson(entries)), parts, unexercised, dependencyInternals };
+  return { hash: sha256Hex(canonicalJson(entries)), parts, unexercised };
 }
 
 /** True when a slice claims a file a resource's path matches: the resource is the slice's own, not only one it talks to. */

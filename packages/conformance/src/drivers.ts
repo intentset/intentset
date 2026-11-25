@@ -9,7 +9,6 @@ import {
   type DocumentInput,
   EMPTY_REGISTRIES,
   type Config,
-  DEFAULT_EVIDENCE_DEPENDENCIES,
   type Diagnostic,
   type Registries,
   type ValidationResult,
@@ -75,12 +74,7 @@ function validateTree(expanded: ExpandedCase, reverse = false): Validated {
   if (reverse) inputs.reverse();
 
   const extra: Diagnostic[] = [];
-  let evidence: Config["evidence"] = {
-    binding: null,
-    globalInputs: [],
-    resources: "exercised",
-    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
-  };
+  let evidence: Config["evidence"] = { binding: null, globalInputs: [] };
   let registries: Registries = EMPTY_REGISTRIES;
   if (expanded.registriesText !== null) {
     const read = readRegistries(expanded.registriesText, REGISTRIES_PATH);
@@ -124,8 +118,6 @@ function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvide
           { files },
           {
             globalInputs: evidence.globalInputs,
-            resources: evidence.resources,
-            dependencies: evidence.dependencies,
             readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
           },
         )

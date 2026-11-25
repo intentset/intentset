@@ -1061,12 +1061,13 @@ test("BEH-EVIDENCE-CURRENT: a resource a slice lists is not in the subject unles
   );
   assert.doesNotMatch(unexercised.out, /EVID005/, "EVID006 already lists the file");
 
-  // evidence.resources: used hashes every resource a slice lists, so the same change makes the record stale, and says which file.
+  // ADR 0026: no key widens the subject to every resource a slice lists; `evidence.resources` is an unknown key.
   const config = join(dir, ".intentset", "config.yaml");
   const before = readFileSync(config, "utf8");
   writeFileSync(config, `${before}evidence:\n  resources: used\n`);
   const used = await run(dir, "validate", "--level", "L3", ...IMPORT);
-  assert.match(verificationLine(used.out), /stale {2}\[subject\]/, "the record was made under the default");
+  assert.notEqual(used.code, 0);
+  assert.match(`${used.out}${used.err}`, /CFG001 .*Unknown evidence key `resources`/);
   writeFileSync(config, before);
 
   // Exercising the resource puts its files in the subject: a change then makes the record stale, and names the file.

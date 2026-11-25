@@ -48,17 +48,22 @@
  *
  * Two more variants answer ADR 0013's amendment of 2026-10-15 (a resource's
  * files count where a verification exercises it): **exercised** (+lean, with
- * the registry's resources passed and `resourceMode: "exercised"`, the new
- * default) and **used** (the same with `resourceMode: "used"`, the rule of
- * release 0.7.0). `--resources-section` appends a dated section comparing them
- * to the report instead of regenerating it (see `renderResources`).
+ * the registry's resources passed, the rule since) and **used** (the rule of
+ * release 0.7.0, which hashed every resource an included slice lists).
+ * `--resources-section` appends a dated section comparing them to the report
+ * instead of regenerating it (see `renderResources`).
  *
  * `--dependencies-section` appends the section of ADR 0013's second amendment
- * of 2026-10-15 (`evidence.dependencies: entrypoint | files`) instead:
+ * of 2026-10-15 (the option `evidence.dependencies: entrypoint | files`) instead:
  * `files` against `entrypoint` over the same commits and, with `--records
  * <playwright.json>` (and `--records-ref` for the commit to judge them at), a
  * store of run records, with the false-green replay and the decision rule
  * applied to the figures. Use `--ref` to pin the window's last commit.
+ *
+ * ADR 0026 removed both options (`evidence.resources`, `evidence.dependencies`)
+ * from Core §8; `used` and `entrypoint` are computed here by `legacySubject`
+ * from the subject of the one rule, so that a narrower rule can be measured
+ * again on an adopter's history before it comes back as the rule.
  *
  * File content is represented by git's blob id: a blob id is the content's
  * hash, so it moves exactly when the bytes move, and it costs one `git
@@ -78,13 +83,89 @@ import {
   readArchitectureConfig,
   resolveConfig,
 } from "@intentset/architecture";
-import { type Graph, validate } from "@intentset/core";
+import { canonicalJson, type Graph, sha256Hex, validate } from "@intentset/core";
 import { computeSubject, includedSlices, movedParts, type Subject, verifiedBehaviors } from "@intentset/verification";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { migrateRecord } from "../packages/cli/src/commands/migrate.ts";
 import { loadRepository } from "../packages/cli/src/repository.ts";
 import { subjectsOf } from "../packages/cli/src/subject.ts";
 import { readTree } from "../packages/cli/src/tree.ts";
+
+/** A subject under one of the two rules ADR 0026 removed, with what `entrypoint` left out of it. */
+type LegacySubject = Subject & { dependencyInternals: { id: string; files: string[] }[] };
+
+/**
+ * The two rules ADR 0026 removed from `computeSubject`, kept here so that the sections they were measured in can be
+ * generated again (ADR 0013's amendments of 2026-10-15; ADR 0026, "Reopening"). Applied to a subject computed by the one
+ * rule, each gives the hash the removed option gave: `used` adds every resource an included slice lists and the subject
+ * left out (its `unexercised`), and `entrypoint` counts a slice reached only through `dependsOn` by the files of its
+ * `entrypoints`, the records of the contracts it exposes or consumes and the decisions those are informed by, and lists
+ * its other claimed files as `dependencyInternals`.
+ */
+function legacySubject(
+  graph: Graph,
+  subject: Subject,
+  rule: "used" | "entrypoint",
+  resources: ReadonlyMap<string, { record: unknown; files: readonly string[] }>,
+  fileHash: (path: string) => string,
+): LegacySubject {
+  const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+  let parts = [...subject.parts];
+  const internal = new Map<string, string[]>();
+  if (rule === "used") {
+    for (const left of subject.unexercised) {
+      const resource = resources.get(left.id);
+      if (resource === undefined) continue;
+      parts.push({
+        kind: "resource",
+        id: left.id,
+        hash: sha256Hex(canonicalJson(resource.record)),
+        why: "usesResources",
+      });
+      for (const path of [...new Set(resource.files)].sort(cmp)) {
+        parts.push({ kind: "resource-file", id: path, hash: fileHash(path), owner: left.id, path });
+      }
+    }
+  } else {
+    const contracts = new Set<string>();
+    for (const slice of subject.parts.filter((part) => part.kind === "slice" && part.why === "dependsOn")) {
+      const claimed = parts.filter((part) => part.kind === "slice-file" && part.owner === slice.id).map((p) => p.id);
+      parts = parts.filter((part) => !(part.kind === "slice-file" && part.owner === slice.id));
+      const surface = new Set(graph.artifacts.get(slice.id)?.meta.slice?.entrypoints ?? []);
+      for (const path of [...surface].sort(cmp)) {
+        parts.push({ kind: "slice-file", id: path, hash: fileHash(path), owner: slice.id, path });
+      }
+      internal.set(slice.id, claimed.filter((path) => !surface.has(path)).sort(cmp));
+      for (const edge of graph.out.get(slice.id) ?? []) {
+        const isContract = graph.artifacts.get(edge.to)?.meta.type === "contract";
+        if ((edge.kind === "exposes" || edge.kind === "consumes") && isContract) contracts.add(edge.to);
+      }
+    }
+    const record = (kind: "contract" | "decision", id: string) => {
+      const artifact = graph.artifacts.get(id);
+      return {
+        kind: kind as Subject["parts"][number]["kind"],
+        id,
+        hash: artifact === undefined ? "absent" : artifact.sourceHash,
+        ...(artifact === undefined ? {} : { path: artifact.path }),
+      };
+    };
+    const decisions = new Set<string>();
+    for (const id of [...contracts].sort(cmp)) {
+      parts.push(record("contract", id));
+      for (const edge of graph.out.get(id) ?? []) if (edge.kind === "informedBy") decisions.add(edge.to);
+    }
+    for (const id of [...decisions].sort(cmp)) parts.push(record("decision", id));
+  }
+  const hashed = new Set(parts.filter((p) => p.path !== undefined).map((p) => p.path));
+  const dependencyInternals = [...internal]
+    .map(([id, files]) => ({ id, files: files.filter((path) => !hashed.has(path)) }))
+    .filter((entry) => entry.files.length > 0)
+    .sort((a, b) => cmp(a.id, b.id));
+  parts.sort((a, b) => cmp(a.kind, b.kind) || cmp(a.id, b.id) || cmp(a.owner ?? "", b.owner ?? ""));
+  const entries = parts.map(({ kind, id, hash, why, owner }) => ({ kind, id, hash, why, owner }));
+  return { hash: sha256Hex(canonicalJson(entries)), parts, unexercised: [], dependencyInternals };
+}
 
 /** Files, present at the root or in the workflows and claimed by no slice, mixed into every subject in the +globals variants. */
 const GLOBAL_CANDIDATES = [
@@ -129,7 +210,7 @@ interface State {
   subjectsExercised: Map<string, Subject>;
   subjectsUsed: Map<string, Subject>;
   /** `exercised` resources with `dependencies: entrypoint` (ADR 0013, amended 2026-10-15, second); `exercised` is the same with `dependencies: files`. */
-  subjectsEntrypoint: Map<string, Subject>;
+  subjectsEntrypoint: Map<string, LegacySubject>;
   oids: Map<string, string>;
   sliceFiles: Map<string, string[]>;
   sliceFilesRes: Map<string, string[]>;
@@ -321,22 +402,28 @@ function build(root: string, sha: string): State {
   const subjectsRes = new Map<string, Subject>();
   const subjectsExercised = new Map<string, Subject>();
   const subjectsUsed = new Map<string, Subject>();
-  const subjectsEntrypoint = new Map<string, Subject>();
+  const subjectsEntrypoint = new Map<string, LegacySubject>();
+  const fileHash = (path: string) => {
+    const bytes = readFile(path);
+    return bytes === undefined ? "absent" : sha256Hex(bytes);
+  };
   for (const id of verifs.keys()) {
-    for (const mode of ["exercised", "used", "entrypoint"] as const) {
-      const subject = computeSubject({
-        graph,
-        verificationId: id,
-        readFile,
-        sliceFiles,
-        resources: registry,
-        resourceMode: mode === "used" ? "used" : "exercised",
-        dependencyMode: mode === "entrypoint" ? "entrypoint" : "files",
-        globalInputs: lean,
-      });
-      hashes[mode].set(id, subject.hash);
-      (mode === "exercised" ? subjectsExercised : mode === "used" ? subjectsUsed : subjectsEntrypoint).set(id, subject);
-    }
+    const exercised = computeSubject({
+      graph,
+      verificationId: id,
+      readFile,
+      sliceFiles,
+      resources: registry,
+      globalInputs: lean,
+    });
+    const used = legacySubject(graph, exercised, "used", registry, fileHash);
+    const entrypoint = legacySubject(graph, exercised, "entrypoint", registry, fileHash);
+    hashes.exercised.set(id, exercised.hash);
+    hashes.used.set(id, used.hash);
+    hashes.entrypoint.set(id, entrypoint.hash);
+    subjectsExercised.set(id, exercised);
+    subjectsUsed.set(id, used);
+    subjectsEntrypoint.set(id, entrypoint);
     hashes.claims.set(id, computeSubject({ graph, verificationId: id, readFile, sliceFiles, globalInputs: [] }).hash);
     hashes["+globals"].set(
       id,
@@ -1073,14 +1160,30 @@ interface RecordsReplay {
 type PartHashes = Map<string, Map<string, string>>;
 type Hashes = Record<"exercised" | "used", { hash: Map<string, string>; parts: PartHashes }>;
 
+/** A file's content hash as `computeSubject` takes it, from a subject source's reader. */
+function sourceFileHash(readFile: (path: string) => Uint8Array | undefined): (path: string) => string {
+  return (path) => {
+    const bytes = readFile(path);
+    return bytes === undefined ? "absent" : sha256Hex(bytes);
+  };
+}
+
 /** Every verification's subject at a checked-out tree under both resource rules, as the CLI computes it (the repository's own configuration). */
 function subjectsAt(root: string): Hashes {
   const out = {} as Hashes;
+  const repo = loadRepository(root, "markset");
+  const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
+  const { subjects: computed, source } = subjectsOf(repo, graph, readTree(root, repo.config));
   for (const mode of ["exercised", "used"] as const) {
-    const repo = loadRepository(root, "markset");
-    repo.config.evidence.resources = mode;
-    const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
-    const { subjects } = subjectsOf(repo, graph, readTree(root, repo.config));
+    const subjects =
+      mode === "exercised"
+        ? computed
+        : new Map(
+            [...computed].map(([id, subject]) => [
+              id,
+              legacySubject(graph, subject, "used", source.resources ?? new Map(), sourceFileHash(source.readFile)),
+            ]),
+          );
     const hash = new Map<string, string>();
     const parts: PartHashes = new Map();
     for (const [id, subject] of subjects) {
@@ -1407,11 +1510,18 @@ type DepsHashes = Record<
 /** Every verification's subject at a checked-out tree under both dependency rules, as the CLI computes it (the repository's own configuration). */
 function subjectsAtDeps(root: string): DepsHashes {
   const out = {} as DepsHashes;
+  const repo = loadRepository(root, "markset");
+  const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
+  const { subjects: computed, source } = subjectsOf(repo, graph, readTree(root, repo.config));
   for (const mode of ["files", "entrypoint"] as const) {
-    const repo = loadRepository(root, "markset");
-    repo.config.evidence.dependencies = mode;
-    const graph = validate(repo.inputs, repo.registries, { level: "L2" }).graph;
-    const { subjects } = subjectsOf(repo, graph, readTree(root, repo.config));
+    const subjects = new Map<string, LegacySubject>(
+      [...computed].map(([id, subject]) => [
+        id,
+        mode === "files"
+          ? { ...subject, dependencyInternals: [] }
+          : legacySubject(graph, subject, "entrypoint", source.resources ?? new Map(), sourceFileHash(source.readFile)),
+      ]),
+    );
     const entry: DepsHashes["files"] = { hash: new Map(), parts: new Map(), sizes: new Map(), internals: new Map() };
     for (const [id, subject] of subjects) {
       entry.hash.set(id, subject.hash);

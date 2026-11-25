@@ -3262,32 +3262,55 @@
   },
   {
     "section": "core",
-    "name": "CFG001 evidence dependencies is neither entrypoint nor files",
+    "name": "CFG001 evidence dependencies is an unknown key",
     "baseline": "scheduling",
     "config": {
       "repository": "example/scheduling",
       "evidence": {
-        "dependencies": "everything"
+        "dependencies": "entrypoint"
       }
     },
     "valid": false,
     "diagnostics": [
       "CFG001"
-    ]
+    ],
+    "notes": "evidence.dependencies was removed in 0.3 (ADR 0026): a subject is computed one way, and the key is CFG001 as any unknown key is."
   },
   {
     "section": "core",
-    "name": "CFG001 boundary: config with evidence dependencies and resources",
+    "name": "CFG001 evidence resources is an unknown key",
     "baseline": "scheduling",
     "config": {
       "repository": "example/scheduling",
       "evidence": {
-        "dependencies": "entrypoint",
         "resources": "used"
       }
     },
-    "valid": true,
-    "diagnostics": []
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ],
+    "notes": "evidence.resources was removed in 0.3 (ADR 0026): a subject is computed one way, and the key is CFG001 as any unknown key is."
+  },
+  {
+    "section": "core",
+    "name": "CFG001 boundary: evidence dependencies is unknown even at the value that was the default",
+    "baseline": "scheduling",
+    "config": {
+      "repository": "example/scheduling",
+      "evidence": {
+        "binding": "subject",
+        "globalInputs": [
+          "pnpm-lock.yaml"
+        ],
+        "dependencies": "files"
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ],
+    "notes": "`files` named the rule that is now the only one, and the key is still unknown: binding and globalInputs parse beside it, and the one diagnostic is the unknown key's."
   },
   {
     "section": "core",

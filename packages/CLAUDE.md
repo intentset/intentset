@@ -11,7 +11,7 @@ parseYaml(text): { value: Record<string, unknown>; error: null } | { value: null
 plainCarrier(path, source): DocumentInput                     // plain-Markdown fallback, ADR 0003
 readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE001, origin "profile"
 readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] }
-readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[], resources: "exercised"|"used", dependencies: "files"|"entrypoint" } }
+readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[] } }
 validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline
 impact(graph: Graph, id: string): ImpactReport
 readSelector(value): { ok, selector } | { ok: false, problems }   // spec/list.md §1: closed, AND across fields, OR within
@@ -39,9 +39,9 @@ readRunRecords(json, path); classifyEvidence(graph, records, snapshot); checkEvi
 // snapshot = { commit, graphHash, scope?, binding?, bindingReason?, subjects?, changedSince?, covers? }: commit binding unless it says subject
 resolveBinding(configured, hasSlices): { binding, reason }; hasSliceClaims(graph); subjectsFor(graph, source)
 staleReport(graph, classification): { needRun, manual, counts }; runnerArguments(format, entries)   // `intentset evidence stale`: what needs a run
-computeSubject(input): { hash, parts, unexercised, dependencyInternals }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
+computeSubject(input): { hash, parts, unexercised }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
 // @intentset/architecture
-subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?, readFile })   // claimed files, resources, resourceMode, dependencyMode, a test's local imports, covers(path)
+subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed files, resources, a test's local imports, covers(path); a subject is computed one way (ADR 0026)
 ```
 
 ```ts

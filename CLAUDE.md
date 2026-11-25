@@ -29,10 +29,8 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 3. **Definitions are not evidence.** A verification record says how a claim is checked. Only a `pass` whose binding
    holds is current: under subject binding (the default wherever slices claim files, ADR 0013) while the subject its
    check is about is unchanged (a resource's files are in the subject only where the verification exercises the
-   resource or an implementing slice owns it; `evidence.resources: used` hashes every resource a slice lists; a slice reached
-   only through `dependsOn` contributes every claimed file unless `evidence.dependencies: entrypoint` limits it to its binding
-   fields, entrypoint files and contract records, an opt-in because the measured gain on Streamlane's store was under the bar;
-   ADR 0013, amended 2026-10-15 twice), under commit binding (`evidence.binding: commit`, or `--binding commit`) at the assessed
+   resource or an implementing slice owns it, and a slice reached only through `dependsOn` contributes every claimed file;
+   ADR 0013, amended 2026-10-15 twice, and ADR 0026, which made that the one rule), under commit binding (`evidence.binding: commit`, or `--binding commit`) at the assessed
    commit and graph hash. Stale, skip, error, fail and missing never count as pass, and link coverage and current-pass
    coverage are always reported separately.
 4. **Publication fails closed.** Deny by default, intersect every availability dimension, exclude draft and retired,
@@ -96,7 +94,7 @@ learning from questions, and the AWS rules).
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID007` (Core §11; an outcome with no
+- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11; an outcome with no
   measure is CORE009 draft, CORE003 active), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
   `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
