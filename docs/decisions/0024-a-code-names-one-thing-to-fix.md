@@ -1,6 +1,6 @@
 # ADR 0024: A diagnostic code names one kind of thing to fix
 
-**Status:** proposed, 2026-11-24 (issue #129). Not accepted: the decision is the product owner's. Part of the move to
+**Status:** accepted, 2026-11-25 (issue #129). Proposed 2026-11-24. Part of the move to
 `0.3`, with ADR 0023, ADR 0025 and ADR 0026.
 
 ## Context

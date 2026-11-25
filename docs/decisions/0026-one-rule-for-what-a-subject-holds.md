@@ -1,6 +1,6 @@
 # ADR 0026: One rule for what a subject holds
 
-**Status:** proposed, 2026-11-24 (issue #127). Not accepted: the decision is the product owner's. Part of the move to
+**Status:** accepted, 2026-11-25 (issue #127). Proposed 2026-11-24. Part of the move to
 `0.3`, with ADR 0023, ADR 0024 and ADR 0025. Amends
 [ADR 0013](0013-evidence-is-current-for-what-it-checks.md).
 

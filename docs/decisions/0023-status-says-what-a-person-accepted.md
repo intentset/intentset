@@ -1,6 +1,6 @@
 # ADR 0023: Status says what a person accepted, and delivery says what exists
 
-**Status:** proposed, 2026-11-24 (issue #126). Not accepted: the decision is the product owner's. Part of the move to
+**Status:** accepted, 2026-11-25 (issue #126). Proposed 2026-11-24. Part of the move to
 `0.3`, with ADR 0024, ADR 0025 and ADR 0026.
 
 ## Context
@@ -37,6 +37,7 @@ reads the difference except the delivery inference.
 - Effective delivery is the field, else `built` for `deprecated`, else not stated. A deprecated record describes
   something that existed; the inference stays for that one status so that deprecating a record does not require a
   second edit.
+  Settled on acceptance: the inference stays, and `migrate` writes no `delivery` on a deprecated record.
 - CORE005 keeps its two remaining conditions: `delivery: planned` on a `deprecated` record, and a behavior whose
   effective delivery is `built` implemented by a slice that says `planned`.
 - Whether a release has shipped stays where it is: `availability.releases` names labels from the registry, and what a
@@ -61,7 +62,3 @@ reads the difference except the delivery inference.
 - The agent guide's "Never" list shortens: an agent sets no status past `draft`, and `delivery` is the fact it may
   write.
 - Not counted: how many records in adopting repositories use either status. `migrate` rewrites them.
-
-## For the owner to settle
-
-Whether `deprecated` keeps implying `built`, or `migrate` writes the field there too and the inference goes entirely.

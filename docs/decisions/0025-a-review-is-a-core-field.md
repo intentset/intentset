@@ -1,6 +1,6 @@
 # ADR 0025: A knowledge review is a core field, pins content by default, and is withheld with its source
 
-**Status:** proposed, 2026-11-24 (issues #130 and #49). Not accepted: the decision is the product owner's. Part of the
+**Status:** accepted, 2026-11-25 (issues #130 and #49). Proposed 2026-11-24. Part of the
 move to `0.3`, with ADR 0023, ADR 0024 and ADR 0026. Amends [ADR 0018](0018-a-review-pins-what-a-record-promises.md).
 
 ## Context
