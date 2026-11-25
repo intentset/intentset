@@ -2,7 +2,7 @@
 title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.2
 id: intentset/typescript-amplify-gen2/0.2
 status: draft
-revision: 2026-10-21
+revision: 2026-11-24
 implementation: 0.17.0
 ---
 
@@ -154,7 +154,7 @@ Acceptance requires a clean sample repository, deliberate failing fixtures, one 
 
 ## 9. Areas: more than one backend
 
-Amplify Gen 2 deploys a backend as one CloudFormation root stack with nested stacks. CloudFormation caps each stack at 500 resources and each deployment at 2,500 resources across the whole nested hierarchy, and neither limit can be raised. Gen 2 generates a pipeline resolver and a function configuration for every model operation, about 16 resources per model with subscriptions, plus one per global secondary index, and each Lambda function costs about 5. Gen 2 offers no supported way to choose the nested stack a model's or function's resources land in. A large product therefore reaches a limit with one backend whatever its slices look like. (Added 2026-10-04 from a production application that split into four areas at about 2,500 resources, and Streamlane, whose single backend reached 510 resources in one nested stack at 85 custom operations.)
+Amplify Gen 2 deploys a backend as one CloudFormation root stack with nested stacks. CloudFormation caps each stack at 500 resources and each deployment at 2,500 resources across the whole nested hierarchy, and neither limit can be raised. Gen 2 generates a pipeline resolver and a function configuration for every model operation, about 16 resources per model with subscriptions, plus one per global secondary index, and each Lambda function costs about 5. Gen 2 offers no supported way to choose the nested stack a model's or function's resources land in. A large product therefore reaches a limit with one backend whatever its slices look like.
 
 A repository MAY split its backend into **areas**. An area is one Amplify backend, with its own `backend.ts`, its own `data/resource.ts` and its own CloudFormation deployment and source AppSync API, together with the frontend slices whose behavior it serves. One AppSync Merged API joins the areas' source APIs (`AUTO_MERGE`, at most 10 per Merged API), and the frontend talks only to it. A repository with one backend is not affected by this section. Once a repository declares areas, every rule below is normative for it.
 
