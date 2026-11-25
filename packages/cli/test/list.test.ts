@@ -67,7 +67,7 @@ test("BEH-LIST: --has compiles to a link predicate with its quantifier, and --co
 test("BEH-LIST, BEH-DELIVERY: --delivery selects the effective delivery, and an approved record is not built", async (t) => {
   const dir = await example(t);
   edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "status: draft\n  delivery: built");
-  edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: implemented");
+  edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: deprecated");
   edit(dir, "RULE-ASMT-FUTURE", "status: draft", "status: approved");
   const built = await run(dir, "list", "--delivery", "built", "--format", "ids");
   assert.equal(built.code, 0, built.err);
@@ -84,7 +84,7 @@ test("BEH-LIST, BEH-DELIVERY: --delivery selects the effective delivery, and an 
 test("BEH-LIST, BEH-DELIVERY: --count-by delivery counts what the three --delivery runs list", async (t) => {
   const dir = await example(t);
   edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "status: draft\n  delivery: built");
-  edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: implemented");
+  edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: deprecated");
   edit(dir, "RULE-ASMT-FUTURE", "status: draft", "status: draft\n  delivery: planned");
   const counted = await run(dir, "list", "--count-by", "delivery", "--json");
   assert.equal(counted.code, 0, counted.err);

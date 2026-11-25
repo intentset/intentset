@@ -1,7 +1,7 @@
 /**
- * Core §7, ADR 0017: a record's effective delivery. Its `delivery` when it states one; otherwise `built` when its
- * status claims an implementation (`implemented`, `released`, `deprecated`); otherwise null, not stated. `approved`
- * claims nothing about the code, so an approved record without the field is not stated.
+ * Core §7, ADR 0017, ADR 0023: a record's effective delivery. Its `delivery` when it states one; otherwise `built`
+ * when its status is `deprecated`, since a deprecated record describes something that existed; otherwise null, not
+ * stated. `approved` claims nothing about the code, so an approved record without the field is not stated.
  */
 import { BUILT_STATUSES, type Delivery, type Status } from "./types.ts";
 

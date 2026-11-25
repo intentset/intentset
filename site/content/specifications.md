@@ -13,7 +13,7 @@ Intentset separates product meaning from implementation architecture and platfor
 
   {{spec.core.meta}}
 
-  The product model: what a repository records about a product, from its purpose and outcomes down to each behavior and rule, how those records link to verification, evidence and the explanations readers are given, and how each moves from draft to released.
+  The product model: what a repository records about a product, from its purpose and outcomes down to each behavior and rule, how those records link to verification, evidence and the explanations readers are given, and how each moves from draft to approved.
 
   [[Read Core](core/)]{.button}
   :::

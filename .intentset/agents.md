@@ -60,8 +60,8 @@ of its own above them, it is not read.
 
 ## Never
 
-- Set a status to approved, implemented or released, or publish knowledge. People approve, and validation passing
-  is not approval.
+- Set a status past `draft`, or publish knowledge. People approve, and validation passing is not approval;
+  `delivery` is the fact you may write.
 - Run `intentset approve` unless the person approving tells you to in so many words. It writes their approval for
   them, so `--by` is the name they give, never your own.
 - Write or change `approval`, the block that says who approved a record, when and on what basis, unless the

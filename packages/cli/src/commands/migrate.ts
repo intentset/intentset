@@ -2,16 +2,17 @@
  * `intentset migrate --to 0.3` (Core §1): moves the records the model reads to the specifications' current version,
  * `0.3`, from `0.2` or from `0.1`. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
  * values in the record's frontmatter, `intentset.spec` and `intentset.profile`, which Core §4 requires to agree with
- * it, and then applies the per-record transforms that version lists, in order. No step lists a transform yet, so
- * today the move changes those two lines and nothing else, byte for byte, and keeps the quoting each line used. It
- * reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
+ * it, and then applies the per-record transforms that version lists, in order. The step to `0.3` has one
+ * (`statusToReviewLifecycle`, ADR 0023): a `status` of `implemented` or `released` becomes `approved`, and a record of
+ * a type that carries `delivery` and states none gets `delivery: built`, which is what the status claimed. Every
+ * other line is left byte for byte, and each rewritten line keeps its quoting, comment and line ending. It reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
  * changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a diff of its own that
  * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
  * their author.
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { SPEC_VERSION, sortDiagnostics } from "@intentset/core";
+import { DELIVERY_TYPES, SPEC_VERSION, sortDiagnostics } from "@intentset/core";
 import { trackedChanges } from "../git.ts";
 import { formatDiagnostic, type Io } from "../output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository } from "../repository.ts";
@@ -37,10 +38,64 @@ export interface MigrationStep {
   transforms: readonly RecordTransform[];
 }
 
+const STATUS_LINE = /^(\s+status:\s*)(['"]?)(implemented|released)\2(\s*(?:#.*)?)$/;
+const TYPE_LINE = /^\s+type:\s*(['"]?)([a-z]+)\1\s*(?:#.*)?$/;
+const DELIVERY_LINE = /^\s+delivery:/;
+
+/**
+ * Core §7 at `0.3` (ADR 0023): `status` is the review lifecycle only. A record whose status is `implemented` or
+ * `released` becomes `approved`; when its type carries `delivery` and it states none, `delivery: built` is written on
+ * the line after its status, at the same indent, since that is what the status claimed. A record that states
+ * `delivery` keeps the value it states, a type that never carries one gets nothing more, and every other status,
+ * `deprecated` included, is left as it is (its effective delivery is still `built`).
+ */
+export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) => {
+  const lines = source.split("\n");
+  const first = frontmatter.line - 1;
+  const last = first + frontmatter.text.split("\n").length;
+  let inIntentset = false;
+  let childIndent: number | null = null;
+  let statusAt: number | null = null;
+  let statusText = "";
+  let type: string | null = null;
+  let deliveryStated = false;
+  let eol = "";
+  let statusIndent = "";
+  for (let i = first; i < last && i < lines.length; i++) {
+    const raw = lines[i];
+    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    if (/^\S/.test(line)) {
+      inIntentset = /^intentset:\s*(#.*)?$/.test(line);
+      childIndent = null;
+      continue;
+    }
+    if (!inIntentset || line.trim() === "") continue;
+    const indent = line.length - line.trimStart().length;
+    childIndent ??= indent;
+    if (indent !== childIndent) continue;
+    const status = STATUS_LINE.exec(line);
+    if (status !== null) {
+      statusAt = i;
+      statusIndent = " ".repeat(indent);
+      eol = raw.endsWith("\r") ? "\r" : "";
+      statusText = `${status[1]}${status[2]}approved${status[2]}${status[4]}`;
+      continue;
+    }
+    type = TYPE_LINE.exec(line)?.[2] ?? type;
+    if (DELIVERY_LINE.test(line)) deliveryStated = true;
+  }
+  if (statusAt === null) return source;
+  lines[statusAt] = `${statusText}${eol}`;
+  if (!deliveryStated && type !== null && (DELIVERY_TYPES as readonly string[]).includes(type)) {
+    lines.splice(statusAt + 1, 0, `${statusIndent}delivery: built${eol}`);
+  }
+  return lines.join("\n");
+};
+
 /** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
 export const MIGRATIONS: readonly MigrationStep[] = [
   { from: "0.1", to: "0.2", transforms: [] },
-  { from: "0.2", to: "0.3", transforms: [] },
+  { from: "0.2", to: "0.3", transforms: [statusToReviewLifecycle] },
 ];
 
 /** The one target: the version this reader reads. */
@@ -139,6 +194,7 @@ export function migrateRecord(source: string, frontmatter: FrontmatterSpan, to: 
     const moved = migrateText(text, span, step.from, step.to);
     if (moved === null) return null;
     text = moved;
+    span = frontmatterAt(text, span.line);
     for (const transform of step.transforms) {
       text = transform(text, span);
       span = frontmatterAt(text, span.line);

@@ -11,7 +11,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-VALIDATE
   links:
     governedBy: [RULE-FAIL-CLOSED, RULE-UNRESOLVED-NOT-PASS]
@@ -27,7 +27,7 @@ intentset:
 
 ## Behavior
 
-Someone, or an agent, writes `delivery: built` on a capability, behavior, rule, scenario, slice or contract that describes code that exists, or `delivery: planned` on one that proposes work (Core §7, ADR 0017). Validation reads it beside the status: a record's effective delivery is the field, or `built` when its status claims an implementation, or not stated. `validate` reports a record that says planned while its status claims an implementation, and a built behavior whose slice says planned; at L2 it warns about a draft behavior that says built and that no product slice owns, and the architecture check holds a built slice's paths to what exists. `intentset list --delivery` selects by the effective delivery, the export carries the field as written, the Atlas shows it beside the status, and publication leaves out knowledge that explains planned work.
+Someone, or an agent, writes `delivery: built` on a capability, behavior, rule, scenario, slice or contract that describes code that exists, or `delivery: planned` on one that proposes work (Core §7, ADR 0017). It is the one field that says whether the work exists: `status` is the review lifecycle, `draft`, `approved`, `deprecated` or `retired`, and `implemented` and `released` are CORE001 (ADR 0023). A record's effective delivery is the field, or `built` when it is deprecated, since a deprecated record describes something that existed, or not stated. `validate` reports a deprecated record that says planned, and a built behavior whose slice says planned; at L2 it warns about a draft behavior that says built and that no product slice owns, and the architecture check holds a built slice's paths to what exists. `intentset list --delivery` selects by the effective delivery, the export carries the field as written, the Atlas shows it beside the status, and publication leaves out knowledge that explains planned work.
 
 ## Preconditions
 
@@ -35,8 +35,8 @@ A record of a type that carries delivery. `delivery` on any other type is CORE00
 
 ## Outcomes
 
-Success: a draft written from existing code is told apart from a proposal, in the records, in `list`, in the export and in the Atlas, without anyone approving it. Failure: a contradiction is CORE005; a built slice's missing claim or entrypoint is VSA009 or VSA002, an error though the slice is draft; and knowledge that explains planned work is excluded from publication with the reason `planned`. A record that states no delivery is never read as built unless its status claims an implementation.
+Success: a draft written from existing code is told apart from a proposal, in the records, in `list`, in the export and in the Atlas, without anyone approving it. Failure: a contradiction is CORE005; a built slice's missing claim or entrypoint is VSA009 or VSA002, an error though the slice is draft; and knowledge that explains planned work is excluded from publication with the reason `planned`. A record that states no delivery is never read as built unless it is deprecated; an approved one is not stated.
 
 ## Sources
 
-- `spec/core-0.3.md` §7, VSA §3, `spec/publication.md` §1, `spec/list.md` §1 and `spec/export.md` §2, and ADR 0017.
+- `spec/core-0.3.md` §7, VSA §3, `spec/publication.md` §1, `spec/list.md` §1 and `spec/export.md` §2, ADR 0017 and ADR 0023.

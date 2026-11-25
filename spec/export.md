@@ -63,7 +63,7 @@ verification's metadata carries `exercises`, the slice and resource IDs it decla
 
 `delivery` is the record's field as authored, `planned` or `built`, and null when the record states none or its type
 never carries one (Core §7). It is not the effective delivery: a consumer that wants "is this built" computes it as
-Core §7 does, `built` for a null `delivery` whose `status` is `implemented`, `released` or `deprecated`, as
+Core §7 does, `built` for a null `delivery` whose `status` is `deprecated`, as
 `deliveryOf` in `@intentset/core` does.
 
 `approval` is the basis the record states for its approval (Core §7), and null when it states none: `at`, `basis`

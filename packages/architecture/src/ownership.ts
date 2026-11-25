@@ -1,12 +1,11 @@
 /**
  * Behavior ownership and contract surfaces (VSA001, VSA002; Core §5).
  *
- * VSA001 at L2 and above: an approved, implemented, released or deprecated
- * behavior has exactly one incoming `implements` from a product slice. A
- * draft behavior that says its work is built and that no product slice
- * implements is a warning (ADR 0017). Core
- * reports the same condition as CORE006 from the graph alone; VSA001 is the
- * architecture's own statement of it, so a VSA report stands by itself.
+ * VSA001 at L2 and above: an approved or deprecated behavior has exactly one
+ * incoming `implements` from a product slice. A draft behavior that says its
+ * work is built and that no product slice implements is a warning (ADR 0017).
+ * Core reports the same condition as CORE006 from the graph alone; VSA001 is
+ * the architecture's own statement of it, so a VSA report stands by itself.
  *
  * VSA002: each of a slice's entrypoints is a file in the repository and lies
  * inside one of the slice's own source claims, and no two lie in the same
@@ -30,7 +29,7 @@ import { type Finding, finding } from "./finding.ts";
 import { compareStrings, matchPattern, validatePattern } from "./patterns.ts";
 import { describePackage, type Model } from "./regions.ts";
 
-const OWNED_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+const OWNED_STATUSES = new Set(["approved", "deprecated"]);
 
 export function checkOwnership(model: Model, graph: Graph, level: Level): Finding[] {
   const findings: Finding[] = [];

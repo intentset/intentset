@@ -628,6 +628,73 @@ test("BEH-MIGRATE: migrate keeps comments, quoting and line endings, and leaves 
   assert.match(readFileSync(other, "utf8"), /spec: '0\.9'/);
 });
 
+for (const version of ["0.2", "0.1"]) {
+  test(`BEH-MIGRATE: migrate --to 0.3 from ${version} rewrites implemented and released to approved, with delivery built where the type carries it and states none`, async (t) => {
+    const { dir } = await atEarlier(t, version);
+    const set = (id: string, status: string) => edit(dir, id, "status: draft", `status: ${status}`);
+    // Types that carry delivery: a capability, a behavior and a slice that state none, and a rule that states one.
+    set("CAP-ASMT-ASSIGN", "implemented");
+    set("BEH-ASMT-SCHEDULE", "released");
+    set("SLICE-ASMT-SCHEDULE", "'implemented' # shipped");
+    edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: released\n  delivery: planned");
+    // Types that never carry delivery, and a deprecated record, which keeps its inference.
+    set("OUT-PREPARE", "released");
+    set("INT-PREPARE", "implemented");
+    set("ADR-ASMT-SEAM", "implemented");
+    set("RULE-ASMT-FUTURE", "deprecated");
+    git(dir, "commit", "-q", "-am", "statuses an earlier version listed");
+    const before = new Map(
+      [
+        "CAP-ASMT-ASSIGN",
+        "BEH-ASMT-SCHEDULE",
+        "SLICE-ASMT-SCHEDULE",
+        "RULE-ASMT-AUTH",
+        "OUT-PREPARE",
+        "RULE-ASMT-FUTURE",
+      ].map((id) => [id, readFileSync(RECORD(dir, id), "utf8")]),
+    );
+
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 0, moved.err);
+    const after = (id: string) => readFileSync(RECORD(dir, id), "utf8");
+    const moveOnly = (text: string) =>
+      text.replace(`spec: '${version}'`, "spec: '0.3'").replace(/(profile: intentset\/[a-z]+\/)\d\.\d/, "$10.3");
+    for (const id of ["CAP-ASMT-ASSIGN", "BEH-ASMT-SCHEDULE"]) {
+      const status = before.get(id)?.match(/status: (\w+)/)?.[1] ?? "";
+      assert.equal(
+        after(id),
+        moveOnly(before.get(id) ?? "").replace(`status: ${status}`, "status: approved\n  delivery: built"),
+        `${id}: approved, and built on the line after`,
+      );
+    }
+    assert.match(after("SLICE-ASMT-SCHEDULE"), /\n {2}status: 'approved' # shipped\n {2}delivery: built\n/);
+    assert.equal(
+      after("RULE-ASMT-AUTH"),
+      moveOnly(before.get("RULE-ASMT-AUTH") ?? "").replace("status: released", "status: approved"),
+      "a stated delivery is kept as it is",
+    );
+    assert.equal(
+      after("OUT-PREPARE"),
+      moveOnly(before.get("OUT-PREPARE") ?? "").replace("status: released", "status: approved"),
+    );
+    for (const id of ["INT-PREPARE", "ADR-ASMT-SEAM"]) {
+      assert.match(after(id), /\n {2}status: approved\n/, id);
+      assert.doesNotMatch(after(id), /delivery:/, `${id}'s type never carries delivery`);
+    }
+    assert.equal(
+      after("RULE-ASMT-FUTURE"),
+      moveOnly(before.get("RULE-ASMT-FUTURE") ?? ""),
+      "deprecated is left as it is",
+    );
+    const report = JSON.parse((await run(dir, "validate", "--json")).out);
+    assert.deepEqual(
+      report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+      [],
+      "every migrated status is one 0.3 lists",
+    );
+  });
+}
+
 test("BEH-MIGRATE: migrate refuses a tree with uncommitted changes, and a target it does not know, and writes nothing", async (t) => {
   const { dir } = await atEarlier(t);
   edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");

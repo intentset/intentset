@@ -29,7 +29,11 @@ export const ARTIFACT_TYPES = [
 ] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 
-export const STATUSES = ["draft", "approved", "implemented", "released", "deprecated", "retired"] as const;
+/**
+ * Core §7, ADR 0023: the review lifecycle, what a person has accepted. Whether the work exists is `delivery`, and
+ * nothing here says it.
+ */
+export const STATUSES = ["draft", "approved", "deprecated", "retired"] as const;
 export type Status = (typeof STATUSES)[number];
 
 /**
@@ -40,8 +44,11 @@ export const DELIVERIES = ["planned", "built"] as const;
 export type Delivery = (typeof DELIVERIES)[number];
 /** The types that describe work code delivers, and so may carry `delivery`. */
 export const DELIVERY_TYPES = ["capability", "behavior", "rule", "scenario", "slice", "contract"] as const;
-/** The statuses that claim an implementation, and so make delivery `built` when the field is absent (Core §7). */
-export const BUILT_STATUSES = ["implemented", "released", "deprecated"] as const;
+/**
+ * The statuses that make delivery `built` when the field is absent (Core §7, ADR 0023): a deprecated record describes
+ * something that existed, so deprecating it needs no second edit.
+ */
+export const BUILT_STATUSES = ["deprecated"] as const;
 
 /**
  * Core §7, ADR 0020: on what basis a record was approved. `direct`: a person read the record; `derived`: a named

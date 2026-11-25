@@ -293,7 +293,7 @@
       },
       "RULE-ASMT-AUTH.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       }
     },
@@ -322,7 +322,7 @@
         {},
         {
           "id": "RULE-ASMT-AUTH",
-          "status": "implemented",
+          "status": "deprecated",
           "delivery": null
         },
         {},
@@ -331,7 +331,7 @@
         {}
       ]
     },
-    "notes": "The export carries the field as written; an implemented record without it stays null, and a consumer computes the effective delivery (export §2)."
+    "notes": "The export carries the field as written; a deprecated record without it stays null, and a consumer computes the effective delivery (export §2)."
   },
   {
     "section": "export",

@@ -31,8 +31,8 @@ label, MUST refuse the request rather than match nothing.
 | `internal` | public, customer, internal | explicit internal authorization |
 | `restricted` | all four | explicit internal and restricted authorization |
 
-A knowledge artifact is eligible only when all hold: type `knowledge`; status `approved`, `implemented`, `released`
-or `deprecated`; no artifact it `explains` says `delivery: planned` (Core §7: planned work is not current, and
+A knowledge artifact is eligible only when all hold: type `knowledge`; status `approved` or `deprecated`;
+no artifact it `explains` says `delivery: planned` (Core §7: planned work is not current, and
 prospective documentation belongs only in a separately labeled roadmap projection, which v0.3 does not define);
 visibility admitted; the request's audience in `audiences`; `availability` present; the request's
 product, release, role and edition each in the corresponding list; every flag in `availability.flags` named by the

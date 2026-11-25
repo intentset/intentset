@@ -72,7 +72,7 @@ export interface Projection {
   request: PublicationRequest | null;
 }
 
-const PUBLISHABLE_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+const PUBLISHABLE_STATUSES = new Set(["approved", "deprecated"]);
 
 /** Core §9: select what this request may publish, before any text is sent to a renderer. */
 export function project(

@@ -454,9 +454,9 @@ function checkLifecycle(context: Context): void {
       reportOn(context, artifact, {
         code: "CORE005",
         field: "/intentset/delivery",
-        message: `${meta.id} says its work is planned while its status, ${meta.status}, claims an implementation.`,
+        message: `${meta.id} says its work is planned while it is deprecated, which says the work existed.`,
         remediation:
-          "Write `delivery: built`, or remove `delivery`, when the code exists; return the record to an earlier status, with a review note, when it does not (Core §7).",
+          "Write `delivery: built`, or remove `delivery`, when the code existed; return the record to an earlier status, with a review note, when it never did (Core §7).",
       });
     }
     if (meta.type === "behavior" && deliveryOf(meta) === "built") {
@@ -716,7 +716,7 @@ function checkSlices(context: Context): void {
   }
 }
 
-const OWNED_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+const OWNED_STATUSES = new Set(["approved", "deprecated"]);
 
 /** Core §5 at L2 and above: an active behavior has exactly one accountable product slice through `implements`. */
 function checkOwnership(context: Context): void {

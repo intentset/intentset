@@ -82,7 +82,7 @@ Keeping the model in files is a deliberate choice, and it has consequences worth
 - The repository is the source of truth. The graph, the reports, the Atlas and the published pages are views rebuilt from these files, and no tool ever rewrites them.
 - There is no database and no hosted service to run.
 
-A record's status says where it stands with people: a draft until a person approves it, then implemented, released, and in time deprecated or retired. An optional `delivery` says something else, whether the work it describes exists: `planned` on a record that proposes work, `built` on one written from code that is already there. An agent may write it, because it states a fact about the code; only a person approves.
+A record's status says where it stands with people, and only that: a draft until a person approves it, then approved, and in time deprecated or retired. Whether the work it describes exists is `delivery`, and nothing else says it: `planned` on a record that proposes work, `built` on one written from code that is already there. An agent may write it, because it states a fact about the code; only a person approves.
 
 A record can also say how it came to be approved. An optional `approval` names who approved it, when, and on what basis: a person read this record, or it was derived from something a person approved, such as a work item in another tool, or an agent attested it and no person has. A behavior, rule or scenario can name the outside requirement it `formalizes`. Intentset checks the form of both and holds no policy on either: it never decides who may approve, and it never opens what a record points at.
 

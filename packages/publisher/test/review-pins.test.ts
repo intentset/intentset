@@ -44,7 +44,7 @@ test("BEH-REVIEW-PINS: the content hash ignores lifecycle, review fields, key or
     ["status", "delivery", "reviewedBy", "reviewedAt", "approval", "formalizes"],
   );
 
-  const lifecycle = RECORD.replace("status: draft", "status: implemented\n  delivery: built").replace(
+  const lifecycle = RECORD.replace("status: draft", "status: approved\n  delivery: built").replace(
     "audiences: [engineering]",
     "audiences: [engineering]\n  reviewedBy: maintainers\n  reviewedAt: '2026-11-12'",
   );

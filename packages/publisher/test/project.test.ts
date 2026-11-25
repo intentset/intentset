@@ -105,7 +105,7 @@ test("BEH-PUBLISH: deny by default: type, lifecycle, visibility, audience and mi
   assert.equal(reason(knowledge(AVAILABLE, { type: "behavior" })), "not-knowledge");
   assert.equal(reason(knowledge(AVAILABLE, { status: "draft" })), "draft");
   assert.equal(reason(knowledge(AVAILABLE, { status: "retired" })), "retired");
-  for (const status of ["approved", "implemented", "released", "deprecated"] as const) {
+  for (const status of ["approved", "deprecated"] as const) {
     assert.equal(reason(knowledge(AVAILABLE, { status })), null, status);
   }
   assert.equal(reason(knowledge(AVAILABLE, { visibility: "internal" })), "visibility");

@@ -221,6 +221,31 @@
   },
   {
     "section": "list",
+    "name": "L02 implemented and released are outside the statuses",
+    "baseline": "scheduling",
+    "selector": {
+      "statuses": [
+        "approved",
+        "implemented",
+        "released"
+      ]
+    },
+    "valid": true,
+    "diagnostics": [],
+    "list": {
+      "problems": [
+        {
+          "pointer": "/statuses/1"
+        },
+        {
+          "pointer": "/statuses/2"
+        }
+      ]
+    },
+    "notes": "Core §7 at 0.3 (ADR 0023): the statuses are draft, approved, deprecated and retired."
+  },
+  {
+    "section": "list",
     "name": "L03 a trailing * matches by prefix",
     "baseline": "scheduling",
     "selector": {
@@ -1474,7 +1499,7 @@
       },
       "RULE-ASMT-AUTH.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       },
       "RULE-ASMT-FUTURE.md": {
@@ -1513,11 +1538,11 @@
         ]
       }
     },
-    "notes": "The groups agree with the L12 deliveries cases over the same tree: RULE-ASMT-AUTH is built because implemented claims an implementation (Core §7), and a record that states none, a type that never carries delivery included, is the group unstated, never null."
+    "notes": "The groups agree with the L12 deliveries cases over the same tree: RULE-ASMT-AUTH is built because a deprecated record describes something that existed (Core §7), and a record that states none, a type that never carries delivery included, is the group unstated, never null."
   },
   {
     "section": "list",
-    "name": "L12 built matches the field as written and a status that claims an implementation",
+    "name": "L12 built matches the field as written and a deprecated record without it",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -1527,7 +1552,7 @@
       },
       "RULE-ASMT-AUTH.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       },
       "RULE-ASMT-FUTURE.md": {
@@ -1559,7 +1584,7 @@
         }
       ]
     },
-    "notes": "RULE-ASMT-AUTH says no delivery, and implemented claims one (Core §7)."
+    "notes": "RULE-ASMT-AUTH says no delivery, and a deprecated record's effective delivery is built (Core §7)."
   },
   {
     "section": "list",
@@ -1573,7 +1598,7 @@
       },
       "RULE-ASMT-AUTH.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       },
       "RULE-ASMT-FUTURE.md": {
@@ -1615,7 +1640,7 @@
       },
       "RULE-ASMT-AUTH.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       },
       "RULE-ASMT-FUTURE.md": {

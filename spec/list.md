@@ -65,7 +65,7 @@ Status and availability are authored claims. A result whose selector names `avai
 reviewed release snapshot (§5).
 
 `deliveries` matches the effective delivery, not only the field as written: a record that says `delivery: built`, and
-one whose status is `implemented`, `released` or `deprecated` without the field, are both `built`, so
+one whose status is `deprecated` without the field, are both `built`, so
 `deliveries: ["built"]` answers "which records describe code that exists". A record of a type that never carries
 delivery is `unstated`. An export carries the field as written (export §2), and the effective value is computed from it
 and the status, so the tree and its export give the same answer.
@@ -217,7 +217,7 @@ of the result that must match (a deep partial, as an export case's `export` is).
 | L09 | An unknown key is rejected, at any depth |
 | L10 | The same input gives the same bytes |
 | L11 | Counting by a field |
-| L12 | `deliveries` matches the effective delivery: as written, from a status that claims an implementation, or `unstated` |
+| L12 | `deliveries` matches the effective delivery: as written, `built` for a deprecated record without the field, or `unstated` |
 
 A conforming driver also checks, for every case, that the list from the tree and the list from the tree's export
 agree (§2), and that reading the documents in reverse order gives the same bytes.

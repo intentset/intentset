@@ -88,15 +88,17 @@ authored.
 ## Moving a pin: export 0.7 and specifications 0.3 (in progress)
 
 The next release moves `intentset.spec` from `0.2` to `0.3` and the export from 0.6 to 0.7: `spec` in the envelope is
-`0.3`, and each artifact's `profile` is `intentset/<type>/0.3`. One rule has changed so far: ADR 0026 computes a
+`0.3`, and each artifact's `profile` is `intentset/<type>/0.3`. Two rules have changed so far. ADR 0026 computes a
 subject one way, so `evidence.resources` and `evidence.dependencies` are gone from the configuration and either key is
-CFG001. The export's shape is unchanged by it. The other changes that make the move breaking (ADR 0023 to ADR 0025)
-are listed in the CHANGELOG as they land, and this table grows with them.
+CFG001; the export's shape is unchanged by it. ADR 0023 makes `status` the review lifecycle only, `draft`, `approved`,
+`deprecated` or `retired`: `implemented` and `released` are CORE001, the export's status enum loses them, and the
+effective delivery is the field, else `built` for `deprecated`, else not stated. The other changes that make the move
+breaking (ADR 0024 and ADR 0025) are listed in the CHANGELOG as they land, and this table grows with them.
 
 | Where | What changes |
 |---|---|
-| The repository that produces the export | First delete `evidence.resources` and `evidence.dependencies` from `.intentset/config.yaml` if it sets either: while either key is present, at any value, the old defaults `exercised` and `files` included, `intentset migrate` and every other command stop with CFG001 and rewrite nothing. Then move `@intentset/cli` to that release, run `intentset migrate --to 0.3` on a clean tree and commit the result: it rewrites `spec` and `profile` in every record, from `0.2` or `0.1`. A 0.3 reader rejects a record still at an earlier version and names the command. A repository that kept the defaults keeps every subject hash, so a current pass stays current. One that set `resources: used` or `dependencies: entrypoint` now gets the one rule (ADR 0026), so a subject can gain or lose files, and a record can turn current or stale until its check runs again. |
-| A reader of the export | Support `intentset/export/0.7` and drop 0.6, which a 0.7 reader rejects as `unsupported-contract`. Expect `spec` `0.3` and profiles ending in `/0.3`. |
+| The repository that produces the export | First delete `evidence.resources` and `evidence.dependencies` from `.intentset/config.yaml` if it sets either: while either key is present, at any value, the old defaults `exercised` and `files` included, `intentset migrate` and every other command stop with CFG001 and rewrite nothing. Then move `@intentset/cli` to that release, run `intentset migrate --to 0.3` on a clean tree and commit the result: it rewrites `spec` and `profile` in every record, from `0.2` or `0.1`, and a `status` of `implemented` or `released` to `approved`, writing `delivery: built` beside it on a capability, behavior, rule, scenario, slice or contract that states no `delivery`. A 0.3 reader rejects a record still at an earlier version and names the command. A repository that kept the defaults keeps every subject hash, so a current pass stays current. One that set `resources: used` or `dependencies: entrypoint` now gets the one rule (ADR 0026), so a subject can gain or lose files, and a record can turn current or stale until its check runs again. |
+| A reader of the export | Support `intentset/export/0.7` and drop 0.6, which a 0.7 reader rejects as `unsupported-contract`. Expect `spec` `0.3` and profiles ending in `/0.3`. A `status` is `draft`, `approved`, `deprecated` or `retired`; compute the effective delivery as `delivery` when it is not null, otherwise `built` for `deprecated`, otherwise not stated (`deliveryOf` does), and never read `approved` as built. |
 | A consumer's own tests | Run the importer over the fixtures again: every envelope names 0.7 and spec `0.3`, and `unsupported-contract-0.6.json` is new. |
 
 ## Moving a pin: export 0.6 (ADR 0020)

@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-DELIVERY]
   verification:
@@ -23,11 +23,11 @@ intentset:
 
 ## Procedure
 
-`pnpm test` runs these tests with node:test. The core units read `delivery` from a record, compute the effective delivery from the field and the status, report each contradiction, and carry the field through the export and `readExport`. What validation, the architecture check, publication and `list` do with it is held by the cases in `tests/core.json`, `tests/vsa.json`, `tests/publication.json`, `tests/list.json` and `tests/export.json`, which `pnpm run conformance` and core's own conformance test run. The selector is the behavior's ID, which each test's title carries; `pnpm run model:evidence` reruns the tests with the TAP reporter and turns the result into run records for every selector a title carries.
+`pnpm test` runs these tests with node:test. The core units read `delivery` from a record, reject `implemented` and `released` as statuses, compute the effective delivery from the field and the status, report each contradiction, and carry the field through the export and `readExport`. What validation, the architecture check, publication and `list` do with it is held by the cases in `tests/core.json`, `tests/vsa.json`, `tests/publication.json`, `tests/list.json` and `tests/export.json`, which `pnpm run conformance` and core's own conformance test run. The selector is the behavior's ID, which each test's title carries; `pnpm run model:evidence` reruns the tests with the TAP reporter and turns the result into run records for every selector a title carries.
 
 - `packages/core/test/delivery.test.ts`: every test, each titled "BEH-DELIVERY: …"
 - `packages/cli/test/list.test.ts`: the test titled "BEH-LIST, BEH-DELIVERY: …", for `--delivery`
 
 ## Expected result
 
-Every test whose title carries `BEH-DELIVERY` passes. `delivery` on a type that does not carry it, or with another value, is CORE001; an implemented record with no field is built and an approved one is not stated; planned with an implementing status is CORE005, as is a built behavior with a planned slice; a draft built behavior with no slice is a CORE006 warning at L2; and the export carries the field as written, which `readExport` refuses on a type that does not carry it.
+Every test whose title carries `BEH-DELIVERY` passes. `delivery` on a type that does not carry it, or with another value, is CORE001; `implemented` and `released` are CORE001; a deprecated record with no field is built and an approved one is not stated; planned on a deprecated record is CORE005, as is a built behavior with a planned slice; a draft built behavior with no slice is a CORE006 warning at L2; and the export carries the field as written, which `readExport` refuses on a type that does not carry it.

@@ -660,11 +660,11 @@
           "minLength": 1
         },
         "status": {
-          "enum": ["draft", "approved", "implemented", "released", "deprecated", "retired"]
+          "enum": ["draft", "approved", "deprecated", "retired"]
         },
         "delivery": {
           "enum": ["planned", "built", null],
-          "description": "The record's delivery as authored (Core \u00a77, ADR 0017), null when it states none. The effective delivery is this value, or built when the status is implemented, released or deprecated."
+          "description": "The record's delivery as authored (Core \u00a77, ADR 0017), null when it states none. The effective delivery is this value, or built when the status is deprecated."
         },
         "approval": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/approval" }] },
         "formalizes": {
@@ -1422,7 +1422,7 @@
       "uniqueItems": true
     },
     "lifecycle": {
-      "enum": ["draft", "approved", "implemented", "released", "deprecated", "retired"]
+      "enum": ["draft", "approved", "deprecated", "retired"]
     },
     "evidenceReport": {
       "type": "object",

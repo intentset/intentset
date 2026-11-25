@@ -615,6 +615,40 @@
   },
   {
     "section": "core",
+    "name": "CORE001 status implemented is no longer a lifecycle status",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.status": "implemented"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Core §7 at 0.3 (ADR 0023): status is draft, approved, deprecated or retired, and whether the work exists is delivery. `intentset migrate --to 0.3` rewrites implemented to approved."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 status released is no longer a lifecycle status",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-ADOPTION.md": {
+        "frontmatter": {
+          "intentset.status": "released"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Core §7 at 0.3 (ADR 0023): status is draft, approved, deprecated or retired, and whether the work exists is delivery. `intentset migrate --to 0.3` rewrites released to approved."
+  },
+  {
+    "section": "core",
     "name": "CORE001 visibility is not one of the four",
     "baseline": "scheduling",
     "patch": {
@@ -2711,12 +2745,12 @@
   },
   {
     "section": "core",
-    "name": "CORE005 a record says its work is planned while its status claims an implementation",
+    "name": "CORE005 a deprecated record says its work is planned",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.status": "implemented",
+          "intentset.status": "deprecated",
           "intentset.delivery": "planned"
         }
       }
@@ -2725,7 +2759,7 @@
     "diagnostics": [
       "CORE005"
     ],
-    "notes": "Core §7: implemented, released and deprecated each claim an implementation."
+    "notes": "Core §7: a deprecated record describes something that existed, so planned contradicts it."
   },
   {
     "section": "core",
@@ -2750,12 +2784,12 @@
   },
   {
     "section": "core",
-    "name": "CORE005 boundary: an implemented behavior without the field is built, and its planned slice contradicts it",
+    "name": "CORE005 boundary: a deprecated behavior without the field is built, and its planned slice contradicts it",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       },
       "SLICE-ASMT-SCHEDULE.md": {
@@ -2768,7 +2802,27 @@
     "diagnostics": [
       "CORE005"
     ],
-    "notes": "The effective delivery of an implemented record is built (Core §7)."
+    "notes": "The effective delivery of a deprecated record without the field is built (Core §7)."
+  },
+  {
+    "section": "core",
+    "name": "CORE005 boundary: a deprecated record without delivery is consistent",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "deprecated"
+        }
+      },
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.status": "deprecated"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Deprecating a record needs no second edit: its effective delivery is built, and the slice states none (Core §7, ADR 0023)."
   },
   {
     "section": "core",
@@ -2798,6 +2852,26 @@
   },
   {
     "section": "core",
+    "name": "CORE005 boundary: an approved behavior without delivery is not built, so a planned slice is consistent",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.delivery": "planned"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Approval claims nothing about the code, so the behavior's effective delivery is not stated and nothing contradicts the slice (Core §7)."
+  },
+  {
+    "section": "core",
     "name": "CORE006 an approved behavior no product slice implements, at L2",
     "baseline": "scheduling",
     "patch": {
@@ -2822,7 +2896,7 @@
   },
   {
     "section": "core",
-    "name": "CORE006 two product slices implement one released behavior, at L2",
+    "name": "CORE006 two product slices implement one approved behavior, at L2",
     "baseline": "scheduling",
     "files": {
       "SLICE-ASMT-REMIND.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-REMIND\n  type: slice\n  title: Assessment reminder slice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n  links:\n    implements: [BEH-ASMT-SCHEDULE]\n  slice:\n    kind: product\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/remind/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/remind/**\n    usesResources: []\n---\n\n# Assessment reminder slice\n\n## Responsibility\n\nSends reminders before a scheduled release.\n\n## Public contract\n\nNone yet.\n\n## Verification\n\nNone yet.\n"
@@ -2830,7 +2904,7 @@
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.status": "released"
+          "intentset.status": "approved"
         }
       }
     },
@@ -2851,7 +2925,7 @@
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.status": "released"
+          "intentset.status": "approved"
         }
       }
     },
@@ -2876,7 +2950,7 @@
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
         "frontmatter": {
-          "intentset.status": "implemented"
+          "intentset.status": "deprecated"
         }
       },
       "SLICE-ASMT-SCHEDULE.md": {

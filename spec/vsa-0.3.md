@@ -29,7 +29,7 @@ The architecture regions are composition, product slices, shared neutral abstrac
 | VSA005 | Slice compile-time dependencies MUST be acyclic | Strongly connected components |
 | VSA006 | Dependencies inside a slice MUST obey its declared layer policy, judged by the layer that defines what is imported (§5) | Layer import graph, with each name followed to its definition |
 | VSA007 | Business behavior MUST NOT be owned by shared, infrastructure, or composition | Architecture review + claimed ownership |
-| VSA008 | Each implemented behavior MUST identify verification definitions, including negative/authorization cases where applicable | Core verification links + review |
+| VSA008 | Each built behavior (Core §7) MUST identify verification definitions, including negative/authorization cases where applicable | Core verification links + review |
 | VSA009 | Source, backend, and contract artifacts MUST have explicit accountable ownership | Path/resource claim resolution |
 | VSA010 | Backend access MUST pass through the slice's declared external-access seam | SDK/network access analysis + review |
 | VSA011 | Public contract changes MUST include compatibility assessment and consumer verification | Contract diff + review record |

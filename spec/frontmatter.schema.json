@@ -45,7 +45,7 @@
           "minLength": 1
         },
         "status": {
-          "enum": ["draft", "approved", "implemented", "released", "deprecated", "retired"]
+          "enum": ["draft", "approved", "deprecated", "retired"]
         },
         "owner": {
           "type": "string",
