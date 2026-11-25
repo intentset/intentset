@@ -11,6 +11,7 @@ case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` t
 
 - **Core §1's table of revisions names each change and no longer retells it.** Each row keeps its date, its sentence, its sections and its ADR; what the revision replaced and what a repository does about it is in this file under that date, where it already was.
 - **The specifications no longer name an adopter or quote its measurements** (Core §1 and §8, VSA §3 and §9, profile §9). The two VSA rules keep their reason as a sentence of their own. The example product is Lantern, and the adoption log is where a real product is named.
+- **AMP013 says what it requires of the modes a merge forces onto a Merged API** (profile §9, #19). One authorizer decides every request a person makes; a further mode, such as the `AWS_IAM` that Amplify Gen 2 adds to every source, must be one no person can present, with each field behind it still checking access. It is a review assertion and no case names it, and a Merged API that met the old sentence meets this one, so nothing that conformed stops conforming.
 
 ## 0.17.0 — 2026-11-24
 
