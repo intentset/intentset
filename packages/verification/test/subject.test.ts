@@ -165,7 +165,11 @@ describe("BEH-EVIDENCE-CURRENT: a dependency contributes every file it claims (A
     const base = hashOf(DEPENDENCY);
     assert.notEqual(hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "b/internal.ts": "private!" } }), base);
     assert.notEqual(hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "b/index.ts": "public!" } }), base);
-    assert.notEqual(hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "c/c.ts": "c!" } }), base, "a dependency of a dependency");
+    assert.notEqual(
+      hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "c/c.ts": "c!" } }),
+      base,
+      "a dependency of a dependency",
+    );
   });
 
   test("its files are parts it owns, and no contract or decision record is a part", () => {

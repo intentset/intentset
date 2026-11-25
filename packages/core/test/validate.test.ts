@@ -183,7 +183,12 @@ test("BEH-EVIDENCE-CURRENT: evidence in the configuration names the binding and 
   const bad = (evidence: string) => read(evidence).diagnostics.map((d) => [d.code, d.field]);
   assert.deepEqual(bad("  binding: graph\n"), [["CFG001", "/evidence/binding"]]);
   // ADR 0026: the two keys that changed what a subject holds are unknown keys, at every value they took.
-  for (const removed of ["resources: used", "resources: exercised", "dependencies: entrypoint", "dependencies: files"]) {
+  for (const removed of [
+    "resources: used",
+    "resources: exercised",
+    "dependencies: entrypoint",
+    "dependencies: files",
+  ]) {
     const key = removed.split(":")[0];
     const found = read(`  ${removed}\n`);
     assert.deepEqual(
