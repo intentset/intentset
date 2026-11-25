@@ -148,11 +148,17 @@ A knowledge record may carry `tips`, one sentence per behavior it explains. `int
 import { bindTips, readHelp } from "@intentset/help";
 
 const read = readHelp(await (await fetch("/help/help.json")).text());
-if (read.ok) bindTips(document, read.help); // every element with data-behavior="BEH-..." gets its tip as a title
+if (read.ok) {
+  // every element with data-behavior="BEH-..." gets its tip, shown by your own tooltip component
+  bindTips(document, read.help, { render: (element, tip) => myTooltip.attach(element, tip.text) });
+}
 ```
 
-The file was published for one audience, release, role, edition and set of flags, so a product serves each person
-the one published for their entitlement. `bindTips` reports the behaviors on the page that have no tip yet.
+Without `render`, a bound control gets `data-help-tip` and `data-help-knowledge` and nothing a browser displays: a
+`title` shows only on mouse hover, never to keyboard or touch users. `bindTips` binds once and reports the behaviors on
+the page that have no tip yet; `watchTips` binds again as the page changes and undoes its binding when disposed. The
+file was published for one audience, release, role, edition and set of flags, so a product serves each person the one
+published for their entitlement.
 
 ## Develop
 
