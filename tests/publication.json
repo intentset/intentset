@@ -1423,6 +1423,118 @@
   },
   {
     "section": "publication",
+    "name": "P04 content-v1 pins stay current when an explained behavior records the basis of its approval",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "hash": "content-v1",
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
+                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
+                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+              }
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "The pins are literal content hashes of the baseline's sources. The content hash leaves approval out as it leaves status out (ADR 0020), so recording how the behavior was approved does not send its guide back to review."
+  },
+  {
+    "section": "publication",
+    "name": "P04 content-v1 pins stay current when an explained behavior names the requirement it formalizes",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "hash": "content-v1",
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
+                "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
+                "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
+              }
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": "criterion-3"
+            }
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "formalizes says where a promise came from, not what it is, so the content hash leaves it out (ADR 0020): naming the outside requirement, or a tool renumbering its criteria, leaves the review current."
+  },
+  {
+    "section": "publication",
     "name": "P04 whole-file pins need review when an explained behavior is approved",
     "baseline": "scheduling",
     "patch": {
@@ -1469,6 +1581,62 @@
       ]
     },
     "notes": "A review record without hash pins each source's whole file, as every review before 0.13.0 does, and is read as it always was: any edit to the source, its status included, needs review.",
+    "diagnostics": [
+      "CORE008"
+    ]
+  },
+  {
+    "section": "publication",
+    "name": "P04 whole-file pins need review when an explained behavior records the basis of its approval",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "881ee15087db5799a213a190aaaccb4aeb730086c0784b46e75fe0420ac3f873",
+                "RULE-ASMT-AUTH": "63236d9939055a4d5e9eca1d8133ed5645eed2c00098cbbfcc4192916cedf094",
+                "RULE-ASMT-FUTURE": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e"
+              }
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "direct"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "A review record without hash pins the whole file, whose hash is unchanged in meaning: every byte counts, approval included.",
     "diagnostics": [
       "CORE008"
     ]
@@ -2434,6 +2602,61 @@
       ]
     },
     "notes": "Publication §5: a tip's key is the explained artifact's ID whatever its visibility, and nothing else of that artifact is carried: not its title, not its path."
+  },
+  {
+    "section": "publication",
+    "name": "only the snapshot file names the snapshot: no document, index or help file carries it",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "@current",
+                "RULE-ASMT-AUTH": "@current",
+                "RULE-ASMT-FUTURE": "@current"
+              }
+            }
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "  withheldSources: 3\n  audience: teacher\n",
+        "\"derived\":true,\"projection\":\"customer\",\"audience\":\"teacher\"",
+        "{\"profile\":\"intentset/snapshot/0.2\",\"derived\":true,\"commit\":null,\"graphHash\":\""
+      ],
+      "mustNotContain": [
+        "\"snapshot\":",
+        "  snapshot:",
+        "  graphHash:",
+        "&quot;snapshot&quot;",
+        "&quot;graphHash&quot;"
+      ]
+    },
+    "notes": "Publication §2, §5, §6 (ADR 0019, ADR 0021): a generated document's intentset-publication block, and so its HTML meta and its retrieval chunks, carries no snapshot, and neither does the index or the help file, because the commit and the graph hash move with every commit that changes a record and would change every file that carried them. withheldSources is followed directly by audience, and the help file's projection by its audience. The snapshot file alone names the commit and graph hash, once for the publication."
   },
   {
     "section": "publication",

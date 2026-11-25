@@ -81,4 +81,5 @@ export {
   reviewSources,
   reviewStatus,
 } from "./review.ts";
+export { SNAPSHOT_FILE, SNAPSHOT_PROFILE, type SnapshotFile, snapshotFile } from "./snapshot.ts";
 export { YamlEmitError, type YamlValue, emitYaml } from "./yaml.ts";

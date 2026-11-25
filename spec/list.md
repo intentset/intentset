@@ -2,8 +2,8 @@
 title: Intentset List Contract v0.1
 id: intentset/list/0.1
 status: draft
-revision: 2026-11-12
-implementation: 0.13.0
+revision: 2026-11-14
+implementation: 0.17.0
 ---
 
 # Intentset List Contract v0.1
@@ -116,7 +116,7 @@ A list is made over one snapshot, read from the repository's tree or from an exp
 
 The two MUST give the same answer for the same snapshot and the same withholding: the same counts, the same matched
 IDs and the same undetermined IDs. A field the source does not carry is `not-supplied` in a row (§5), never null or
-empty: export 0.5 does not carry Core §4's `reviewedBy` and `reviewedAt`.
+empty: export 0.6 does not carry Core §4's `reviewedBy` and `reviewedAt`.
 
 A list is made whether or not the validation passed. A failed validation may leave records out of the graph, so the
 result names the validation's status and totals beside the answer.

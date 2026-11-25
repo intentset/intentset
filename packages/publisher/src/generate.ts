@@ -13,7 +13,11 @@
  * path appears only in a projection that admits internal records; sources
  * outside the projection are counted, not named; availability is the
  * request's own values, so a document does not list the other editions,
- * roles or releases its knowledge also serves.
+ * roles or releases its knowledge also serves. The block carries no snapshot:
+ * that is the same for every document in a run and moves with any record in
+ * the model, so the run names it once, in the help file and the index
+ * (publication §2, §5; ADR 0019), and a document's bytes change only when what
+ * it was made from does.
  *
  * The result is checked as Markset before it is emitted: a Markset error is
  * PUB003, and a `:::` directive outside Markset's vocabulary is PUB004
@@ -24,7 +28,6 @@ import { marksetCarrier } from "@intentset/markset-adapter";
 import { BLOCK_DIRECTIVE_NAMES, parseDocument } from "@markset-lang/parser";
 import { bodyLineOffset } from "./body.ts";
 import { publicationDiagnostic, sortedUnique } from "./diagnostic.ts";
-import type { Snapshot } from "./project.ts";
 import { type PublicationRequest, admits } from "./request.ts";
 import { type YamlValue, emitYaml } from "./yaml.ts";
 
@@ -51,7 +54,6 @@ export interface PublicationMeta {
   sources: SourceStamp[];
   /** How many explained artifacts are outside the projection and so not named. */
   withheldSources: number;
-  snapshot: Snapshot;
   audience: string;
   /** The request's values, and the flags the knowledge requires (every one of them named by the request). */
   availability: { product: string; release: string; role: string; edition: string; flags: string[] };
@@ -61,7 +63,6 @@ export interface PublicationMeta {
 }
 
 export interface GenerateOptions {
-  snapshot: Snapshot;
   publishedAt: string;
 }
 
@@ -109,7 +110,6 @@ export function publicationMeta(
     source,
     sources,
     withheldSources,
-    snapshot: { commit: options.snapshot.commit, graphHash: options.snapshot.graphHash },
     audience: request.audience,
     availability: {
       product: request.product,

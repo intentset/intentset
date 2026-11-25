@@ -39,7 +39,10 @@ function read(source: string): Artifact {
 
 test("BEH-REVIEW-PINS: the content hash ignores lifecycle, review fields, key order and quoting", () => {
   const base = read(RECORD).contentHash;
-  assert.deepEqual([...CONTENT_HASH_OMITS], ["status", "delivery", "reviewedBy", "reviewedAt"]);
+  assert.deepEqual(
+    [...CONTENT_HASH_OMITS],
+    ["status", "delivery", "reviewedBy", "reviewedAt", "approval", "formalizes"],
+  );
 
   const lifecycle = RECORD.replace("status: draft", "status: implemented\n  delivery: built").replace(
     "audiences: [engineering]",
@@ -47,6 +50,25 @@ test("BEH-REVIEW-PINS: the content hash ignores lifecycle, review fields, key or
   );
   assert.equal(read(lifecycle).contentHash, base, "status, delivery and the review fields");
   assert.notEqual(read(lifecycle).sourceHash, read(RECORD).sourceHash, "the whole-file hash still moves");
+
+  // ADR 0020: how the record was approved, and where its promise came from, are not the promise.
+  const approved = RECORD.replace(
+    "status: draft",
+    "status: approved\n  approval:\n    by: ana.reyes\n    at: '2026-11-14'\n    basis: direct",
+  );
+  assert.equal(read(approved).contentHash, base, "the basis of its approval");
+  const rebased = approved.replace(
+    "basis: direct",
+    "basis: derived\n    source:\n      ref: LAN-12\n      revision: '7'",
+  );
+  assert.equal(read(rebased).contentHash, base, "a changed approval");
+  assert.notEqual(read(rebased).sourceHash, read(approved).sourceHash, "the whole-file hash still moves");
+  const formalizing = RECORD.replace(
+    "audiences: [engineering]",
+    "audiences: [engineering]\n  formalizes:\n    - source: LAN-12\n      anchor: criterion-3",
+  );
+  assert.equal(read(formalizing).contentHash, base, "the outside requirement it formalizes");
+  assert.equal(read(formalizing.replace("criterion-3", "criterion-4")).contentHash, base, "a renumbered criterion");
 
   const reordered = RECORD.replace(
     "  title: Keep it short\n  status: draft\n",
@@ -119,6 +141,47 @@ test("BEH-REVIEW-PINS: a review names its pin kind in `hash`, and an unknown kin
   const pinned = readReviewRecord(kb)?.sources["BEH-ASMT-SCHEDULE"];
   assert.equal(pinned, content.artifacts.get("BEH-ASMT-SCHEDULE")?.contentHash, "@current binds the record's kind");
   assert.equal(reviewStatus(content, kb).status, "current");
+
+  // ADR 0020: a pin taken before a source records its approval, or names what it formalizes, stays current after.
+  const before = content.artifacts.get("BEH-ASMT-SCHEDULE")?.contentHash;
+  const later = build({
+    section: "publication",
+    name: "pins after an approval is written",
+    baseline: "scheduling",
+    patch: {
+      "KB-ASMT-SCHEDULE.md": {
+        frontmatter: {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.extensions": {
+            "intentset.org/review": { hash: "content-v1", sources: { ...all, "BEH-ASMT-SCHEDULE": before } },
+          },
+        },
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        frontmatter: {
+          "intentset.status": "approved",
+          "intentset.approval": {
+            by: "ana.reyes",
+            at: "2026-11-14",
+            basis: "derived",
+            source: { ref: "https://tracker.example/LAN-12", digest: "sha256:9f2c41d0" },
+          },
+          "intentset.formalizes": [{ source: "https://tracker.example/LAN-12", anchor: "criterion-3" }],
+        },
+      },
+    },
+    valid: true,
+  }).graph;
+  const laterStatus = reviewStatus(later, later.artifacts.get("KB-ASMT-SCHEDULE") as Artifact);
+  assert.equal(laterStatus.status, "current", "writing approval and formalizes moved no pin");
+  assert.deepEqual(laterStatus.changed, []);
+  assert.notEqual(
+    later.artifacts.get("BEH-ASMT-SCHEDULE")?.sourceHash,
+    content.artifacts.get("BEH-ASMT-SCHEDULE")?.sourceHash,
+    "the file did change",
+  );
 
   const unknown = reviewed({ hash: "content-v9", sources: all });
   const status = reviewStatus(unknown, unknown.artifacts.get("KB-ASMT-SCHEDULE") as Artifact);

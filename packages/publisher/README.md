@@ -2,7 +2,8 @@
 
 Publishes reviewed knowledge for one audience and release (`spec/publication.md`): it projects the graph deny by
 default, checks that no excluded record's title or path leaks, and writes Markset documents with their provenance,
-an index, retrieval chunks, and `help.json`, the tips a product shows beside its controls.
+an index, retrieval chunks, `help.json`, the tips a product shows beside its controls, and `snapshot.json`, the one
+file that names the commit and graph hash it was published from.
 
 ## Install
 
@@ -25,7 +26,16 @@ installed. The command is always `@intentset/cli`'s: this package has no `intent
 for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
 From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the index, the help
-file and the diagnostics, and refuses the whole request when any field is missing or undeclared (PUB001).
+file, the snapshot file and the diagnostics, and refuses the whole request when any field is missing or undeclared
+(PUB001). The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
+document pins what it was made from by its sources' hashes. So publishing the same knowledge at two commits writes
+the same bytes in every file but that one.
+
+**When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control. The
+commit it names is the one checked out when the command ran, which is never the commit that will contain the output,
+and it differs on every branch that changed a record, so branches would conflict on it. Git already records where
+committed output came from. Keep the file when the output is deployed or handed to another system: nothing else says
+which state of the model the documents were made from.
 `@intentset/help` reads the help file in the product.
 
 ## Learn more

@@ -6,7 +6,7 @@ say why the product is changing, what the change should produce and how that wil
 promises, which code delivers it and how it is checked. You keep them true as part of every change, in the same commit as the
 code, so that people can review what the product does without reading every line of what changed.
 
-Written by `intentset init` (intentset 0.13.0). To refresh it, delete it and run
+Written by `intentset init` (intentset 0.17.0). To refresh it, delete it and run
 `pnpm exec intentset init --agents`; `pnpm exec intentset guide` prints it without writing a file.
 
 ## Before you change code
@@ -37,6 +37,10 @@ Update the records in the same change as the code.
   Write `delivery: built` on a record you wrote from code that exists, `delivery: planned` on one that proposes
   work, and change `planned` to `built` in the change that builds it. It states a fact about the code, not an
   approval, so you may set it; a draft that says `built` is still a draft until a person approves it.
+- Where a promise came from: a behavior, rule or scenario that formalizes a requirement outside the model, such
+  as a work item or one of its acceptance criteria, names it in `formalizes`, as a `source` (a URL or the
+  tool's key for the item) and an optional `anchor` for the part that is meant. Validation checks its form and
+  never opens it.
 
 Write each link once, on the record that points: a behavior is `governedBy` its rules, a scenario `illustrates`
 a behavior, a slice `implements` behaviors, a verification `verifies` what it checks. Never write the reverse.
@@ -56,8 +60,12 @@ of its own above them, it is not read.
 
 ## Never
 
-- Set a status to approved, implemented or released, or publish knowledge. People approve, and validation passing
-  is not approval.
+- Set a status to approved, implemented or released, run `intentset approve`, or publish knowledge. People
+  approve, and validation passing is not approval. `intentset approve` writes a person's approval for them: run it
+  only when that person tells you to in so many words, with the name they give for `--by`, never your own.
+- Write or change `approval`, the block that says who approved a record, when and on what basis, unless the
+  approval workflow you are running tells you to and gives you every value. It records an approval that happened;
+  writing it approves nothing, and one you made up is a false statement about a person.
 - Change an ID or reuse a retired one. Moving or renaming a file keeps its ID; splitting a behavior retires the old
   one with `replacedBy`.
 - Name an owner, audience, release, role, edition, flag or evidence source that is not in

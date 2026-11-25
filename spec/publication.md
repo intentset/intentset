@@ -2,8 +2,8 @@
 title: Intentset Publication Profile v0.2
 id: intentset/publication/0.2
 status: draft
-revision: 2026-11-12
-implementation: 0.13.0
+revision: 2026-11-15
+implementation: 0.17.0
 ---
 
 # Intentset Publication Profile v0.2
@@ -56,11 +56,15 @@ knowledge body unchanged, preceded by one blank line when it does not begin with
 | `source` | `id`, `revision` (null when undeclared), `sourceHash` of the knowledge; `path` only when the projection admits internal |
 | `sources` | `{ id, revision, sourceHash }` for each explained artifact the projection admits, sorted by ID |
 | `withheldSources` | the number of explained artifacts outside the projection; they are counted, never named |
-| `snapshot` | `commit` (null when unavailable) and `graphHash` of the graph published from |
 | `audience` | the request's audience |
 | `availability` | `product`, `release`, `role`, `edition` from the request, and `flags`: those the knowledge requires |
 | `reviewer`, `reviewedAt` | the knowledge's `reviewedBy` and `reviewedAt` |
 | `publishedAt` | the publication timestamp, an input to the publisher |
+
+A generated document MUST NOT carry the snapshot it was published from. The snapshot is the same for every document
+in a run, and the graph hash moves with every record in the model, so a document that carried it would change
+whenever any record did. The run names its snapshot once, in the snapshot file (§6). What a document was made from is
+pinned by the `sourceHash` of its knowledge and of each source it names (ADR 0019, ADR 0021).
 
 Fields appear in this order. Strings are plain only when they cannot be read as another type, and are otherwise
 single-quoted; sequences are indented under their key. An HTML rendering SHOULD carry the same block, as canonical
@@ -87,13 +91,14 @@ extensions:
 
 - **`content-v1`, the content hash.** SHA-256 over the canonical JSON (ADR 0005) of an object with three members:
   - `frontmatter`, the source's whole parsed frontmatter without, under `intentset`, `status`, `delivery`,
-    `reviewedBy`, `reviewedAt` and the `intentset.org/review` extension, and without `extensions` when nothing else is
-    in it;
+    `reviewedBy`, `reviewedAt`, `approval`, `formalizes` and the `intentset.org/review` extension, and without
+    `extensions` when nothing else is in it;
   - `body`, everything after the frontmatter, as written;
   - `ending`, the status when it is `deprecated` or `retired`, and absent otherwise.
 
-  Approving, implementing or releasing a source, setting its `delivery` or recording its own review leaves the
-  knowledge current. Every other edit to the source makes it `needs-review`: its title, body, links, availability and
+  Approving, implementing or releasing a source, setting its `delivery`, recording its own review, writing the basis
+  of its approval (`approval`, Core §7) or naming the outside requirement it formalizes (`formalizes`, Core §5) leaves
+  the knowledge current: none of them changes what the source promises (ADR 0018, ADR 0020). Every other edit to the source makes it `needs-review`: its title, body, links, availability and
   any other frontmatter, and a status that says it is going away. A change in key order, quoting or indentation does
   not, because the frontmatter is hashed as parsed. A review SHOULD pin this kind.
 - **Absent: the whole file.** Each pin is the SHA-256 of the source file's bytes, its `sourceHash` (ADR 0005), so any
@@ -138,14 +143,14 @@ or customer index never reveals how many internal or restricted records exist; a
 Beside the documents, a publication writes `help.json`: every tip (Core §9) of every document published in the run,
 keyed by the ID it explains, for a product's runtime to show beside the control that delivers that behavior. It is
 one UTF-8 JSON object with its keys sorted, written whenever the request is accepted, so a runtime can rely on it
-being there, and the same bytes for the same inputs.
+being there, and the same bytes for the same inputs. It MUST NOT carry the snapshot it was published from (§6), so
+its bytes change only when a tip, a published document, the request or `publishedAt` does.
 
 | Field | Value |
 |---|---|
 | `profile` | `intentset/help/0.2` |
 | `derived` | `true` |
 | `projection` | the request's visibility |
-| `snapshot` | `commit` and `graphHash`, as in §2 |
 | `audience` | the request's audience |
 | `availability` | `product`, `release`, `role`, `edition` and `flags` from the request |
 | `publishedAt` | the publication timestamp |
@@ -158,3 +163,36 @@ artifact's visibility, because a product that binds a control to the ID has alre
 can see it, and the file carries nothing else of that artifact: never its title, path, status or prose. When two
 published documents tip the same ID, the tip from the knowledge with the lower ID is written. A retrieval system MUST
 NOT index the help file as knowledge; its text is already in the documents it points at.
+
+A help file written before revision 2026-11-15 carries a `snapshot` member, `commit` and `graphHash`, between
+`projection` and `audience`. A reader MUST accept a help file with or without it, and SHOULD NOT rely on it.
+
+## 6. The snapshot file
+
+A publication names the snapshot it was made from in one place: `snapshot.json`, beside the documents. It is one
+UTF-8 JSON object, written whenever the request is accepted.
+
+| Field | Value |
+|---|---|
+| `profile` | `intentset/snapshot/0.2` |
+| `derived` | `true` |
+| `commit` | the commit published from, or null when unavailable |
+| `graphHash` | the hash of the graph published from |
+
+Fields appear in this order. No other file of a publication may carry the commit or the graph hash: not a document,
+its HTML or its chunks (§2), not the help file (§5), and not the index a publisher writes for customer tools
+(Core §10). Both values move with every commit that changes a record, whatever that record is. With them in this file
+alone, publishing the same knowledge for the same request and `publishedAt` at two commits writes the same bytes in
+every other file.
+
+The file carries nothing of the request, so every projection published from one snapshot writes the same bytes. A
+request whose snapshot's graph hash is not the graph's is still refused (PUB001, §4), so the snapshot a publication
+names is exact.
+
+A publisher MUST offer a way to leave the file out, and the publication is then complete without it. A publication
+that is committed to the repository it was published from SHOULD be written without it, or with the file ignored by
+version control: the `commit` it names is the one checked out when it ran, which can never be the commit that
+contains the output, and the file differs on every branch that changed a record, so two branches that each publish
+conflict on it. A publication that is deployed or handed to another system SHOULD keep it; it is the only record of
+which state of the model the documents were made from. A retrieval system MUST NOT index the snapshot file as
+knowledge.

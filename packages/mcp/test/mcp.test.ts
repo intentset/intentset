@@ -142,6 +142,51 @@ test("lookup gives metadata, path and body, after the snapshot and the source pa
   await client.close();
 });
 
+test("BEH-MCP-CONTEXT: lookup and context carry a record's approval and the outside requirement it formalizes", async () => {
+  const edited = graphOf((name, source) =>
+    name === "BEH-ASMT-SCHEDULE.md"
+      ? source.replace(
+          "  status: draft\n",
+          "  status: draft\n  approval:\n    by: ana.reyes\n    at: '2026-11-14'\n    basis: derived\n    source:\n      ref: https://tracker.example/LAN-12\n      revision: '7'\n    attestedBy: drafting-agent\n  formalizes:\n    - source: https://tracker.example/LAN-12\n      anchor: criterion-3\n    - source: https://tracker.example/LAN-12\n",
+        )
+      : source,
+  );
+  const client = await engineering({ graph: edited });
+  const approval = {
+    by: "ana.reyes",
+    at: "2026-11-14",
+    basis: "derived",
+    source: { ref: "https://tracker.example/LAN-12", revision: "7", digest: null },
+    attestedBy: "drafting-agent",
+  };
+  const formalizes = [
+    { source: "https://tracker.example/LAN-12", anchor: null },
+    { source: "https://tracker.example/LAN-12", anchor: "criterion-3" },
+  ];
+  const lookup = (await call(client, "intentset_lookup", { id: "BEH-ASMT-SCHEDULE" })).json.artifact as Record<
+    string,
+    unknown
+  >;
+  assert.deepEqual(lookup.approval, approval);
+  assert.deepEqual(lookup.formalizes, formalizes);
+  const context = (await call(client, "intentset_context", { id: "BEH-ASMT-SCHEDULE" })).json.artifacts as Record<
+    string,
+    unknown
+  >[];
+  assert.deepEqual(context[0].approval, approval);
+  assert.deepEqual(context[0].formalizes, formalizes);
+  for (const other of context.slice(1)) {
+    assert.equal(other.approval, null, `${other.id} states none`);
+    assert.deepEqual(other.formalizes, []);
+  }
+  assert.equal(
+    context[0].contentHash,
+    graph.artifacts.get("BEH-ASMT-SCHEDULE")?.contentHash,
+    "neither field is in the content hash",
+  );
+  await client.close();
+});
+
 test("context is core's contextFor bundle, each artifact with its path and body", async () => {
   const client = await engineering();
   const { json } = await call(client, "intentset_context", { id: "BEH-ASMT-SCHEDULE" });
@@ -261,7 +306,7 @@ test("customer search and get return published knowledge, citing named sources a
   const { publication } = customerPublication();
   const client = await connect(createIntentsetServer({ mode: "customer", publication }));
   const search = (await call(client, "knowledge_search", { query: "Release TIME" })).json;
-  assert.deepEqual(search.snapshot, publication.index.snapshot);
+  assert.deepEqual(search.snapshot, { commit: COMMIT, graphHash: publication.snapshot.graphHash });
   assert.equal(search.projection, "customer");
   const results = search.results as { passage: string; document: string; citation: Record<string, unknown> }[];
   assert.deepEqual(
@@ -273,7 +318,7 @@ test("customer search and get return published knowledge, citing named sources a
   // The three sources it explains are internal: counted, never named.
   assert.deepEqual(citation.sources, []);
   assert.equal(citation.withheldSources, 3);
-  assert.deepEqual(citation.snapshot, publication.index.snapshot);
+  assert.deepEqual(citation.snapshot, { commit: COMMIT, graphHash: publication.snapshot.graphHash });
 
   const nothing = (await call(client, "knowledge_search", { query: "quarterly invoices" })).json;
   assert.equal(nothing.matched, 0);

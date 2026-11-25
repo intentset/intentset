@@ -68,6 +68,8 @@ export interface SessionOptions {
   today?: string;
   /** L3 and above: the evidence binding asked for on the command line, overriding the configuration. */
   binding?: EvidenceBinding;
+  /** Text to read for a record's path in place of its file, so `approve` checks a rewrite before making it. */
+  overlay?: ReadonlyMap<string, string>;
 }
 
 export interface EvidenceRun {
@@ -113,7 +115,7 @@ export function openSession(command: string, options: SessionOptions, io: Io): S
     );
     return 2;
   }
-  const repo = loadRepository(root, options.carrier);
+  const repo = loadRepository(root, options.carrier, options.overlay);
   if (!repo.configOk) {
     io.stderr(`intentset ${command}: the configuration has errors, so the scope is unknown.\n`);
     for (const d of sortDiagnostics(repo.diagnostics)) io.stderr(formatDiagnostic(d));

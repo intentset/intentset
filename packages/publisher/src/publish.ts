@@ -15,13 +15,18 @@
  * The help file (help.ts) carries every published document's tips, keyed by
  * the ID each explains, for a product's runtime.
  *
- * The index is what a customer-facing tool may read (Core §10): the snapshot,
- * the request without its authorization flags, the published IDs, and the
- * number of artifacts excluded for each reason. It names nothing that was not
- * published.
+ * The index is what a customer-facing tool may read (Core §10): the request
+ * without its authorization flags, the published IDs, and the number of
+ * artifacts excluded for each reason. It names nothing that was not published.
  *
- * Deterministic: the same graph, request, snapshot and `publishedAt` give the
- * same bytes.
+ * The snapshot file (snapshot.ts) is the one place a publication names the
+ * commit and graph hash it was made from (ADR 0019, ADR 0021). Both move with
+ * every commit that changes a record, so no document, chunk, index or help
+ * file carries them: their bytes change only when what they say does.
+ *
+ * Deterministic: the same graph, request and `publishedAt` give the same
+ * documents, index and help file, whatever the commit; the snapshot file is
+ * the same bytes for the same snapshot.
  */
 import { readFileSync } from "node:fs";
 import {
@@ -42,6 +47,7 @@ import { type ExclusionReason, type Snapshot, project } from "./project.ts";
 import { checkReferences, checkTitles } from "./references.ts";
 import { type IndexedRequest, type PublicationRequest, admits, indexedRequest } from "./request.ts";
 import type { ReviewStatus } from "./review.ts";
+import { type SnapshotFile, snapshotFile } from "./snapshot.ts";
 
 /** Why a document that passed the projection was still not published. */
 export const REFUSAL_REASONS = ["reference", "title", "directive", "markset"] as const;
@@ -61,7 +67,6 @@ export interface PublishedDocument extends GeneratedDocument {
 }
 
 export interface PublicationIndex {
-  snapshot: Snapshot;
   /** The request without authorization flags, or null when it was refused. */
   request: IndexedRequest | null;
   published: string[];
@@ -74,6 +79,8 @@ export interface PublishResult {
   index: PublicationIndex;
   /** The help file (spec/publication.md §5), or null when the request was refused. */
   help: HelpFile | null;
+  /** The snapshot file (spec/publication.md §6): the only part of the result that names the snapshot. */
+  snapshot: SnapshotFile;
   diagnostics: Diagnostic[];
   ok: boolean;
 }
@@ -153,8 +160,8 @@ export function publish(
             req,
             options,
           ),
+    snapshot: snapshotFile(options.snapshot),
     index: {
-      snapshot: { commit: options.snapshot.commit, graphHash: options.snapshot.graphHash },
       request: req === null ? null : indexedRequest(req),
       published: documents.map((document) => document.id),
       excludedCounts,

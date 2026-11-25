@@ -1,6 +1,6 @@
 /**
  * Customer tools (Core §9, §10): published knowledge only. This module is
- * handed a publication (the publisher's documents and index) and its
+ * handed a publication (the publisher's documents, index and snapshot) and its
  * retrieval chunks, and nothing else: it never receives the engineering
  * graph, so no tool, argument or bug in it can reach an internal record. An
  * ID that is not in the publication index gets the same answer whether or not
@@ -11,7 +11,9 @@
  * public or customer projection, with that document's provenance unchanged;
  * and again before the response is assembled, over the hits themselves.
  * Results cite the source IDs the publication block names, never the ones it
- * withheld (it counts those), and the snapshot the publication was made from.
+ * withheld (it counts those), and the snapshot the publication was made from,
+ * which the publication names once, apart from its documents and its index
+ * (ADR 0019, ADR 0021).
  */
 import { canonicalJson, compareStrings } from "@intentset/core";
 import {
@@ -19,14 +21,17 @@ import {
   type PublicationIndex,
   type PublicationMeta,
   type PublishedDocument,
+  type Snapshot,
   toChunks,
 } from "@intentset/publisher";
 import { READ_ONLY, result, stringArgument, type Tool, type ToolResult } from "./tool.ts";
 
-/** What customer mode is given: a publisher PublishResult's documents and index. */
+/** What customer mode is given: a publisher PublishResult's documents, index and snapshot. */
 export interface CustomerPublication {
   documents: readonly PublishedDocument[];
   index: PublicationIndex;
+  /** The snapshot the publication was made from (publication §6): what every result cites. */
+  snapshot: Snapshot;
 }
 
 export const CUSTOMER_PROJECTIONS: readonly string[] = ["public", "customer"];
@@ -35,7 +40,7 @@ export const RESULT_LIMIT = 10;
 export const NOT_AVAILABLE = "No published knowledge with that ID is available.";
 
 export function customerTools(publication: CustomerPublication, suppliedChunks?: readonly Chunk[]): Tool[] {
-  const { index } = publication;
+  const { index, snapshot } = publication;
   const request = index.request;
   if (request === null) throw new Error("mcp: customer mode needs a publication whose request was not refused");
   if (!CUSTOMER_PROJECTIONS.includes(request.visibility)) {
@@ -48,9 +53,6 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
   for (const document of publication.documents) {
     if (!published.has(document.id) || document.publication.projection !== request.visibility) {
       throw new Error(`mcp: document ${document.id} is not in the publication index under its projection`);
-    }
-    if (canonicalJson(document.publication.snapshot) !== canonicalJson(index.snapshot)) {
-      throw new Error(`mcp: document ${document.id} was published from another snapshot than the index names`);
     }
     documents.set(document.id, document);
   }
@@ -70,7 +72,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
   }
 
   const header = () => ({
-    snapshot: { commit: index.snapshot.commit, graphHash: index.snapshot.graphHash },
+    snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash },
     projection: request.visibility,
     audience: request.audience,
     availability: {
@@ -122,7 +124,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
           title: chunk.title,
           heading: chunk.heading,
           text: chunk.text,
-          citation: citation(chunk.publication),
+          citation: citation(chunk.publication, snapshot),
         })),
         ...(hits.length === 0
           ? { note: "No published knowledge matches. There is nothing to answer from; do not answer from elsewhere." }
@@ -156,7 +158,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
         ...header(),
         id: document.id,
         path: document.path,
-        citation: citation(document.publication),
+        citation: citation(document.publication, snapshot),
         markset: document.markset,
       });
     },
@@ -165,8 +167,11 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
   return [get, search];
 }
 
-/** The provenance a customer may see: the sources the block names, the count it withheld, review and snapshot. */
-function citation(block: PublicationMeta) {
+/**
+ * The provenance a customer may see: the sources the block names, the count it withheld, review, and the snapshot,
+ * which is named once for the whole publication.
+ */
+function citation(block: PublicationMeta, snapshot: Snapshot) {
   return {
     source: { id: block.source.id, revision: block.source.revision, sourceHash: block.source.sourceHash },
     sources: block.sources.map((s) => ({ id: s.id, revision: s.revision, sourceHash: s.sourceHash })),
@@ -174,7 +179,7 @@ function citation(block: PublicationMeta) {
     reviewer: block.reviewer,
     reviewedAt: block.reviewedAt,
     publishedAt: block.publishedAt,
-    snapshot: { commit: block.snapshot.commit, graphHash: block.snapshot.graphHash },
+    snapshot: { commit: snapshot.commit, graphHash: snapshot.graphHash },
   };
 }
 

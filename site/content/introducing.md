@@ -765,7 +765,7 @@ Published to `help.json`, then bound by `@intentset/help` to the control that de
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Customer-facing tools read only this publication, never the engineering graph. Every published document carries its provenance: the source IDs and revisions, the snapshot and the reviewer. The documents are written in Markset, which Intentset adds meaning to without adding any syntax.
+> Customer-facing tools read only this publication, never the engineering graph. Every published document carries its provenance: the source IDs and revisions and the reviewer. The publication names its snapshot once. The documents are written in Markset, which Intentset adds meaning to without adding any syntax.
 
 ::::card{#levels .slide}
 

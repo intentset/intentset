@@ -14,9 +14,13 @@
 import { graphHash, sortKeysDeep } from "./hash.ts";
 import { compareStrings } from "./report.ts";
 import {
+  type Approval,
   type Availability,
   EXPORT_CONTRACT,
+  type ExportApproval,
   type ExportArtifact,
+  type ExportFormalized,
+  type Formalized,
   type ExportEnvelope,
   type ExportImpactHit,
   type ExportReports,
@@ -220,6 +224,8 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
     title: meta.title,
     status: meta.status,
     delivery: meta.delivery ?? null,
+    approval: exportApproval(meta.approval),
+    formalizes: exportFormalizes(meta.formalizes ?? []),
     owner: meta.owner,
     visibility: meta.visibility,
     audiences: [...meta.audiences].sort(compareStrings),
@@ -258,6 +264,36 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
   };
   if (includeBody) exported.body = artifact.body;
   return exported;
+}
+
+/** Export §2: an approval with every member present, null where the basis does not carry it; null when the record states none. */
+export function exportApproval(approval: Approval | undefined): ExportApproval | null {
+  if (approval === undefined) return null;
+  return {
+    by: approval.by ?? null,
+    at: approval.at,
+    basis: approval.basis,
+    source:
+      approval.source === undefined
+        ? null
+        : {
+            ref: approval.source.ref,
+            revision: approval.source.revision ?? null,
+            digest: approval.source.digest ?? null,
+          },
+    attestedBy: approval.attestedBy ?? null,
+  };
+}
+
+/** Export §2: the formalized requirements sorted by source, then anchor, a source alone first. */
+export function exportFormalizes(formalizes: readonly Formalized[]): ExportFormalized[] {
+  return formalizes
+    .map((entry) => ({ source: entry.source, anchor: entry.anchor ?? null }))
+    .sort(
+      (a, b) =>
+        compareStrings(a.source, b.source) ||
+        (a.anchor === null ? (b.anchor === null ? 0 : -1) : b.anchor === null ? 1 : compareStrings(a.anchor, b.anchor)),
+    );
 }
 
 /**

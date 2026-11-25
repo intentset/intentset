@@ -10,10 +10,13 @@
  * binds a control to the ID has already written it where the same reader can
  * see it, and nothing else of that artifact is carried: never its title, path,
  * status or prose. Two documents tipping one ID: the lower knowledge ID wins.
+ *
+ * It carries no snapshot: the run names the commit and graph hash it was
+ * published from in the snapshot file alone (snapshot.ts, ADR 0021), so this
+ * file's bytes change only when a tip, a published document or the request does.
  */
 import type { Artifact, Graph, Visibility } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
-import type { Snapshot } from "./project.ts";
 import type { PublicationRequest } from "./request.ts";
 
 export const HELP_PROFILE = "intentset/help/0.2";
@@ -39,7 +42,6 @@ export interface HelpFile {
   profile: typeof HELP_PROFILE;
   derived: true;
   projection: Visibility;
-  snapshot: Snapshot;
   audience: string;
   availability: { product: string; release: string; role: string; edition: string; flags: string[] };
   publishedAt: string;
@@ -50,7 +52,6 @@ export interface HelpFile {
 }
 
 export interface HelpOptions {
-  snapshot: Snapshot;
   publishedAt: string;
 }
 
@@ -79,7 +80,6 @@ export function helpFile(
     profile: HELP_PROFILE,
     derived: true,
     projection: request.visibility,
-    snapshot: { commit: options.snapshot.commit, graphHash: options.snapshot.graphHash },
     audience: request.audience,
     availability: {
       product: request.product,

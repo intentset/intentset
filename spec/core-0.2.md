@@ -2,8 +2,8 @@
 title: Intentset Core Specification v0.2
 id: intentset/core/0.2
 status: draft
-revision: 2026-11-12
-implementation: 0.13.0
+revision: 2026-11-24
+implementation: 0.17.0
 ---
 
 # Intentset Core Specification v0.2
@@ -32,6 +32,10 @@ Revisions that changed what a reader who conformed earlier sees, recorded so tha
 | 2026-10-21 (`0.2`, no move) | **VSA006 judges a name by the layer of the file that defines it** (VSA §5, profile §3). A name an import takes through an entrypoint, a barrel or another slice's contract was judged by the file the import named, and an entrypoint is in no layer, so a hook could take a client function through one and pass. A repository whose layers took names that way sees VSA006 errors it did not see before. No existing case changed its `valid` or `diagnostics` (the cases for the bypass are new), so `intentset.spec` does not move. |
 | 2026-10-21 (`0.2`, no move, second) | **Policies, models and the client seam do not import UI frameworks or render JSX by default** (profile §3, TS007, TS008). The profile's sentence that policies and models MUST NOT import UI was enforced for the slice's own UI files and not for packages, and nothing kept UI out of the client seam. The new default `forbiddenPackages` names the UI frameworks for the `policy`, `model` and `external` layers, so a repository whose files in those layers import one, or render JSX, sees TS007 or TS008 errors it did not see before; setting `forbiddenPackages` replaces the default. No existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move. |
 | 2026-10-21 (`0.2`, no move, third) | **A baseline entry that matches nothing is an error** (VSA §9, VSA014). A stale entry was counted in the summary and failed nothing, so a violation that was fixed could come back under it. In migration mode each is now VSA014, an error until the baseline is written without it, which `--write-baseline` does. A repository whose baseline holds entries its code no longer has sees VSA014 errors it did not see before; strict mode ignores the baseline as before. The new cases carry their baseline in a new optional case field, `architecture`, and no existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move. |
+| 2026-11-14 (`0.2`, no move) | **A published document no longer carries the snapshot it was published from** (§9, [publication §2](publication.md#2-the-generated-document), ADR 0019). Every document's `intentset-publication` block, and so its HTML `<meta>` and its retrieval chunks, carried `snapshot`, whose graph hash moves with any record in the model, so every published file changed whenever any record did. The publication names its snapshot once, in its help file (publication §5). A reader that took the snapshot from a document reads it from the help file instead. No case checked the per-document snapshot, so none changed its `valid` or `diagnostics`, and neither `intentset.spec` nor the profile `intentset/publication/0.2` moves. |
+| 2026-11-14 (`0.2`, no move, second) | **A record can say on what basis it was approved, and which outside requirement it formalizes** (§5, §7, ADR 0020). `approval` and `formalizes` are new optional fields, and §8 says that a verification's status carries no approval meaning. Unknown keys under `intentset` are errors (§3), so a reader of an earlier revision rejects a record that carries either field: a repository moves its tools before it writes them. No existing case changed its `valid` or `diagnostics`, so `intentset.spec` does not move; the export moves to `intentset/export/0.6` ([export contract §7](export.md#7-versioning)). |
+| 2026-11-15 (`0.2`, no move) | **A publication names its snapshot in a file of its own, and nowhere else** (§9, [publication §5, §6](publication.md#6-the-snapshot-file), ADR 0021, amending ADR 0019). The help file and the publisher's index carried `snapshot`, the commit and graph hash, which move with every commit that changes a record, so a repository that commits its published output had both files of every projection rewritten by each publication, and two branches that each published conflicted on all of them. `snapshot.json` now names the commit and graph hash, and the help file and the index do not, so publishing the same knowledge at two commits writes the same bytes in every other file. A reader that took the snapshot from the help file or the index reads it from `snapshot.json`; a reader of the help file accepts one with or without `snapshot`. One publication case's `published` expectation moved with it, from the help file naming the snapshot to the snapshot file naming it; no case changed its `valid` or `diagnostics`, so neither `intentset.spec` nor the profiles `intentset/publication/0.2` and `intentset/help/0.2` move. |
+| 2026-11-24 (`0.2`, no move) | **Approval is a reviewed change to a record, and a review lists it** (§7, §10, ADR 0022). §7 says what an approval is: a change to the record's `status`, accepted by the repository's own review, with `approval` saying who and on what basis. §10 asks a review of a change to list each record whose status or approval differs from the base. Neither changes what validates: no case moved, and no tool is required to write an approval. |
 
 ## 2. Semantic model and granularity
 
@@ -94,13 +98,13 @@ Required common fields are `spec`, `profile`, `id`, `type`, `title`, `status`, `
 
 `owner` is one accountable team/role identifier from the repository's owner registry. `audiences` is a nonempty array from its audience registry. These are documentation audiences, not runtime authorization. `visibility` is `public`, `customer`, `internal`, or `restricted`. Missing access information MUST fail closed for publication.
 
-Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `delivery` (§7), `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.
+Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `delivery` (§7), `approval` (§7), `formalizes` (§5, on a behavior, rule or scenario), `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields. Source hashes and commit IDs are computed externally, not manually maintained in every document.
 
 Moving a file or correcting wording does not change identity. Splitting a behavior creates new IDs and preserves the old artifact as retired with `replacedBy` links. Merging works similarly. Historical release snapshots keep the earlier meaning.
 
 ## 5. Relationships and cardinality
 
-Relationships are authored once, in the direction below. Reverse edges are derived and MUST NOT be separately maintained. References MUST resolve in the same graph snapshot. External issue/PR URLs belong in `extensions`, never as dangling internal IDs.
+Relationships are authored once, in the direction below. Reverse edges are derived and MUST NOT be separately maintained. References MUST resolve in the same graph snapshot. A requirement outside the model that a record formalizes is named in `formalizes`, below; other external issue/PR URLs belong in `extensions`; neither is ever written as a dangling internal ID.
 
 | Field / relationship | Source → target | Cardinality and meaning |
 |---|---|---|
@@ -121,6 +125,16 @@ Relationships are authored once, in the direction below. Reverse edges are deriv
 All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in `parent`, cycles in `replacedBy`, and cycles in `requires` are errors. Other cycles are evaluated by the relevant profile; `dependsOn` is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming `governedBy`; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. An active outcome MUST have at least one measure whose `parent` it is: an outcome past draft says how it will be judged, and the capabilities under it do not say that. Draft unattached artifacts, and a draft outcome with no measure, produce warnings.
 
 At VSA adoption, an approved, implemented, released, or deprecated behavior MUST have exactly one accountable product slice through `implements`. Other collaborating slices appear through slice dependencies and contracts. Exactly one owner keeps accountability unambiguous while still allowing multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.
+
+**Outside requirements.** Every relationship above points at another record. A behavior, rule or scenario MAY also name the requirements outside the model that it formalizes, such as a work tracker's item or one acceptance criterion of it, in `formalizes` (ADR 0020): a list of at least one entry, each with `source`, a URL or a tool's key for the item, and optionally `anchor`, which identifies the part of the source that is meant, such as `criterion-3`. Both are non-empty strings, an entry has no other key, and no two entries have the same `source` and `anchor`.
+
+```yaml
+  formalizes:
+    - source: https://tracker.example/LAN-12
+      anchor: criterion-3
+```
+
+`formalizes` is not a relationship: it makes no edge, it has no inverse, and nothing is derived from it. A validator checks that it is well formed, CORE001, as it is on any other type, and MUST NOT resolve it: it never fetches a source, and never judges whether the source exists or still says what it said (§11). It says where a promise came from, not what the promise is, so a record's content hash leaves it out ([publication §3](publication.md#3-review-record-and-needs-review)): adding the reference to a record, or a tool renumbering its criteria, does not send the knowledge that explains the record back to review.
 
 ## 6. Required narrative by artifact type
 
@@ -158,6 +172,31 @@ Status is an editorial claim, not a test result. `approved` records intent; `imp
 
 Delivery and status contradict each other, CORE005, when a record says `delivery: planned` while its status is `implemented`, `released` or `deprecated`, and when a behavior whose effective delivery is `built` is implemented by a slice that says `delivery: planned`. At L2, a draft behavior that says `built` and that no product slice implements is a CORE006 warning, so built code without an owner shows before anyone approves the record, and a draft slice that says `built`, or implements a behavior whose effective delivery is `built`, has no planned paths (VSA §3). Release labels are opaque, so a validator cannot tell whether a planned record's release has shipped. Knowledge that explains a record whose `delivery` is `planned` is not published as current ([publication profile](publication.md) §4).
 
+**Approval basis** states how a record came to be approved (ADR 0020). `status: approved` reads the same whether a person read the record or it was derived from something a person approved, so a record of any type MAY carry `approval`, with `at`, when it was approved, a date or a date and time written as a quoted string as `reviewedAt` is, and `basis`, one of:
+
+| `basis` | Meaning | `by` | `source` | `attestedBy` |
+|---|---|---|---|---|
+| `direct` | A person read this record and approved it | required: the person | not written | not written |
+| `derived` | The record is approved because a named source that a person approved covers it | required: the person who approved the source | required | optional: the agent that attested the record matches the source |
+| `attested` | An agent attested the record; no person approved it or a source of it | not written | not written | required: the agent |
+
+`by` always names a person and `attestedBy` always names an agent, each by a name or an identifier the repository chooses. `source` names what was approved: `ref`, a URL or a tool's key for the item, and at least one of `revision` and `digest` (such as `sha256:…`), which say which state of it. Every value is a non-empty string, and neither block has any other key.
+
+```yaml
+  approval:
+    by: ana.reyes
+    at: "2026-11-14"
+    basis: derived
+    source:
+      ref: https://tracker.example/LAN-12
+      revision: "7"
+    attestedBy: drafting-agent
+```
+
+A validator checks this shape, CORE001, and nothing else. It never resolves `ref`; it never decides who may approve, whether a basis is acceptable or whether a person is required, which are the adopting organization's workflow and not Intentset's; and it does not compare `approval` with `status`. `approval` is not required on an approved record, and a record without it says nothing about how it was approved. It concerns the record's own promise, which makes it a different statement from `reviewedBy`, `reviewedAt` and the `intentset.org/review` extension: those record that a knowledge article was reviewed against the sources it pins (§9). Like `status`, `approval` is left out of a record's content hash ([publication §3](publication.md#3-review-record-and-needs-review)), so writing or changing it never makes knowledge need review.
+
+An approval is made by changing the record: its `status`, and `approval` where the repository records the basis. No approval exists outside the files, so the record of who accepted it is the repository's own history and review of that change. A tool MAY write an approval on a person's instruction, as it would write any other edit; it MUST NOT infer who that person is, MUST NOT write one that would make a valid tree invalid, and writing one authenticates nobody (ADR 0022). When the record approved is knowledge, the approval is not its review: the tool that writes one SHOULD write the other (§9), since approved knowledge with no current review cannot be published.
+
 A release snapshot records product ID, exact release label, source commit, graph hash, specification/profile versions, and build time. Release labels are opaque strings: v0.2 performs exact matching, not inferred SemVer ordering. `availability`, required on behaviors and knowledge, contains nonempty `products`, `releases`, `roles`, and `editions` arrays plus a `flags` array. All named flags are required; empty means no flags. No implicit wildcard is allowed. Applicability is AND across dimensions and OR within an array. The repository registries define valid dimension values.
 
 A release may include deprecated behavior; prospective documentation MAY describe future work only in a separately labeled roadmap projection. A status of “released” alone MUST NOT make a feature available to all customers.
@@ -167,6 +206,8 @@ A release may include deprecated behavior; prospective documentation MAY describ
 Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. `verification` metadata contains `method` (`automated` or `manual`), `locator` (repository-relative path), `selector` (stable test or review case identifier) and optionally `exercises`: unique IDs of slices or registry resources the check drives beyond what the slices implementing its behaviors reach, as an end-to-end test drives code its behavior's slices do not import. Each MUST name a slice in the graph or a resource in the registries (CORE003).
 
 A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. A record MAY carry `binding` (`subject` or `commit`) and `subjectHash`, a SHA-256 in lowercase hex; a record with `binding: subject` MUST carry `subjectHash`, and one without `binding` is a commit-binding record, so every record written before the field existed means what it meant. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
+
+A verification's `status` says where the definition stands in its own lifecycle, and nothing in this specification reads an approval from it (ADR 0020). The runs of a verification that is not retired count whatever its status, a draft's included; whether evidence is required follows the status of the claim, not of the verification (§11, CORE007); and the only checks that read a verification's status are the ones every type shares: a retired one is set aside, and one that verifies nothing is CORE003 once it is past draft and a CORE009 warning while it is a draft (§5). A tool MAY therefore treat a verification's standing as that of the behaviors, rules and scenarios it verifies, and need not ask for an approval of the verification itself. A validator derives no such standing: a verification of several claims whose statuses differ has no single one, and choosing among them would be a workflow rule.
 
 Only a `pass` whose binding holds counts as current passing evidence. There are two bindings:
 
@@ -215,7 +256,7 @@ A publisher MUST select authorized artifacts before sending text to a renderer o
 
 A knowledge record MAY carry `tips`: a mapping from an ID in its `links.explains` to one sentence of plain text, on one line and at most 160 characters, for a product to show beside the control that delivers that behavior or enforces that rule. A tip is the knowledge at its shortest, so it is written on the knowledge record and reviewed, projected and published with it; it is never copied from the explained record, whose prose is written for another audience. A key that is not in `links.explains` is CORE003. A tip that is not a string, is empty, begins or ends with whitespace, breaks a line or exceeds the limit is CORE001, as is `tips` on any other type. The [publication profile](publication.md) says how tips reach a product.
 
-Each published knowledge document MUST retain source IDs, source revisions/hashes, snapshot ID, audience, availability, reviewer, and publication timestamp. If a source changes, dependent knowledge becomes `needs-review` and MUST NOT be republished as current until reviewed. What counts as a change is what the review pinned ([publication §3](publication.md#3-review-record-and-needs-review)): a review that pins content hashes is not disturbed by a source's approval, implementation or delivery, and is by any edit to what the source promises and by its deprecation or retirement. Generated files MUST be marked derived and MUST NOT be edited as canonical truth. A reference to an excluded source MUST fail publication or be replaced with an explicitly reviewed safe explanation; it MUST NOT leak the source title or internal path.
+Each published knowledge document MUST retain source IDs, source revisions/hashes, audience, availability, reviewer, and publication timestamp. The snapshot ID is the same for every document in a publication, so the publication names it once, in a file of its own beside its documents, and neither a document nor any other file of the publication carries it ([publication §2, §6](publication.md#6-the-snapshot-file); ADR 0019, ADR 0021). A publication committed to the repository it was published from may leave that file out. If a source changes, dependent knowledge becomes `needs-review` and MUST NOT be republished as current until reviewed. What counts as a change is what the review pinned ([publication §3](publication.md#3-review-record-and-needs-review)): a review that pins content hashes is not disturbed by a source's approval, implementation or delivery, and is by any edit to what the source promises and by its deprecation or retirement. Generated files MUST be marked derived and MUST NOT be edited as canonical truth. A reference to an excluded source MUST fail publication or be replaced with an explicitly reviewed safe explanation; it MUST NOT leak the source title or internal path.
 
 Retrieval chunks MUST inherit the same access filters and provenance. Authorization must occur before retrieval and again before response assembly; filtering only the final answer is insufficient. Answers MUST cite eligible knowledge, disclose unavailable evidence, and abstain when the requested version is unknown. Documentation metadata MUST NOT be used to grant runtime product access. Generated prose needs review; graph connectivity alone cannot establish that it is accurate.
 
@@ -228,6 +269,8 @@ Impact reports MUST show direct changes separately from candidate downstream eff
 Before an agent edits implementation it SHOULD load the owning slice, behaviors, rules, scenarios, contracts, and decisions. Afterward it SHOULD update affected semantics and checks in the same review. Agents MUST NOT self-approve release/publication simply because validation passes. MCP and CLI context results MUST identify snapshot and source paths; customer tools MUST use the restricted publication index, never raw engineering context.
 
 A review of a change SHOULD list each slice whose implementation changed while none of the records describing it did. A slice's implementation is what its `source`, `backend`, and `contract` claims match, record files excepted. The records describing it are the slice, the behaviors it implements, the rules governing them, the scenarios illustrating them, the verifications of any of those, the contracts it exposes, and the decisions informing the slice, its behaviors, or its contracts. The list is a prompt for review, not a failure: a change that alters no behavior MAY say so for named slices where its reviewer reads it, such as a commit trailer, and a tool MAY then treat those slices as acknowledged, but MUST still list them.
+
+A review of a change SHOULD also list each record whose `status` or `approval` differs from the base's copy, and each new record that arrives past draft or carrying an approval, with the approval it now states (ADR 0022). An approval is a claim made by editing a file, and a reviewer who is not shown it has to find it in a diff. The list is a report, not a failure: who may approve is the repository's workflow (§7).
 
 ## 11. Conformance and diagnostics
 

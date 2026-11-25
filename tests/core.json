@@ -3536,5 +3536,764 @@
       "COLUMNS_SINGLE"
     ],
     "notes": "Read with the Markset carrier, a columns block with one column is Markset's COLUMNS_SINGLE warning. It keeps Markset's code, which is not AREA###, and origin syntax; Intentset neither renames it nor adds a code of its own, and a warning does not fail validation (Core §11)."
+  },
+  {
+    "section": "core",
+    "name": "C01 approval with a direct basis names the person and the time",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "direct"
+          },
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Core §7: a person read the record. The record is approved in the same patch, though nothing compares approval with status."
+  },
+  {
+    "section": "core",
+    "name": "C01 approval with a derived basis names its source and the revision that was approved",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7"
+            }
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Boundary: one of revision and digest is enough. The source is a URL the validator never resolves."
+  },
+  {
+    "section": "core",
+    "name": "C01 approval with a derived basis may name a digest and the agent that attested the match",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "LAN-12",
+              "digest": "sha256:9f2c41d0"
+            },
+            "attestedBy": "drafting-agent"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "The ref is a tool's item key rather than a URL, and the digest stands in for the revision."
+  },
+  {
+    "section": "core",
+    "name": "C01 approval with an attested basis names the agent and no person",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "attested",
+            "attestedBy": "drafting-agent"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "C01 approval is accepted on any type and is not compared with status",
+    "baseline": "scheduling",
+    "patch": {
+      "MEAS-PREPARE-ADOPTION.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "direct"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Boundary: the measure is a draft. Validation checks the shape of approval only; whether a draft may carry one is the repository's workflow (Core §7)."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval is a string rather than a mapping",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": "ana.reyes"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval has an unknown key",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "direct",
+            "role": "product-owner"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval names no time",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "basis": "direct"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval names no basis",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval basis is not direct, derived or attested",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "delegated"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval names an empty person",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "",
+            "at": "2026-11-14",
+            "basis": "direct"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval time is not a string",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": 20261114,
+            "basis": "direct"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Core §3: quote dates. An unquoted number is not a date or a date and time."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with a direct basis names no person",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "direct"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with a direct basis names a source",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "direct",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with a direct basis names an attesting agent",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "direct",
+            "attestedBy": "drafting-agent"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "A person read the record, so no agent attested a match with a source."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with a derived basis names no source",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14",
+            "basis": "derived"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with a derived basis names no person",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "A derived approval rests on a person's approval of the source; one with no person is attested."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval source names neither a revision nor a digest",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Without one of them the record does not say which state of the source was approved."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval source names no ref",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "revision": "7"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval source has an empty digest",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7",
+              "digest": ""
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval source has an unknown key",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "by": "ana.reyes",
+            "at": "2026-11-14T09:30:00Z",
+            "basis": "derived",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7",
+              "title": "Schedule an assessment"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with an attested basis names a person",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "attested",
+            "attestedBy": "drafting-agent",
+            "by": "ana.reyes"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with an attested basis names no agent",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "attested"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 approval with an attested basis names a source",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.approval": {
+            "at": "2026-11-14",
+            "basis": "attested",
+            "attestedBy": "drafting-agent",
+            "source": {
+              "ref": "https://tracker.example/LAN-12",
+              "revision": "7"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "C01 formalizes on a behavior names an outside requirement by source and anchor",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": "criterion-3"
+            }
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Core §5: the source is never resolved, so validation passes with no network and whether or not the address exists."
+  },
+  {
+    "section": "core",
+    "name": "C01 formalizes on a rule may name a source alone, and one source under two anchors",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "LAN-12"
+            },
+            {
+              "source": "LAN-12",
+              "anchor": "criterion-1"
+            },
+            {
+              "source": "LAN-12",
+              "anchor": "criterion-2"
+            }
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Boundary: entries are the same only when source and anchor are both the same; a source with no anchor is the whole item."
+  },
+  {
+    "section": "core",
+    "name": "C01 formalizes on a scenario is accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "SCN-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": "criterion-3"
+            }
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": []
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes on a capability",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": "criterion-3"
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Core §5: only a behavior, rule or scenario names the outside requirement it formalizes."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes is a mapping rather than a list",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": {
+            "source": "https://tracker.example/LAN-12",
+            "anchor": "criterion-3"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes is an empty list",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": []
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes entry is a string rather than a mapping",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            "https://tracker.example/LAN-12"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes entry names no source",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "anchor": "criterion-3"
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes entry has an empty source",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": ""
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes entry has an empty anchor",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": ""
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes entry has an unknown key",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": "criterion-3",
+              "title": "Schedule"
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 formalizes names the same source and anchor twice",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.formalizes": [
+            {
+              "source": "https://tracker.example/LAN-12",
+              "anchor": "criterion-3"
+            },
+            {
+              "anchor": "criterion-3",
+              "source": "https://tracker.example/LAN-12"
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
   }
 ]

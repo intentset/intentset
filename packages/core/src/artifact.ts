@@ -21,6 +21,10 @@ import { sha256Hex } from "./hash.ts";
 import { contentHashOf } from "./content-hash.ts";
 import { type Locate, NO_LOCATION, aType, capitalize, compareStrings, isRecord, makeDiagnostic } from "./report.ts";
 import {
+  APPROVAL_BASES,
+  type Approval,
+  type ApprovalBasis,
+  type ApprovalSource,
   ARTIFACT_TYPES,
   type Artifact,
   type ArtifactMeta,
@@ -33,6 +37,8 @@ import {
   DELIVERY_TYPES,
   type Delivery,
   type DocumentInput,
+  FORMALIZES_TYPES,
+  type Formalized,
   ID_PATTERN,
   LINK_KINDS,
   type LinkKind,
@@ -84,6 +90,8 @@ const OPTIONAL_COMMON = [
   "reviewedAt",
   "reviewedBy",
   "delivery",
+  "approval",
+  "formalizes",
   "extensions",
   "tips",
   "slice",
@@ -407,6 +415,22 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       );
     }
   }
+  let approval: Approval | undefined;
+  if (Object.hasOwn(s, "approval") && s.approval !== null) {
+    approval = readApproval(s.approval, `${base}/approval`, problem) ?? undefined;
+  }
+  let formalizes: Formalized[] | undefined;
+  if (Object.hasOwn(s, "formalizes") && s.formalizes !== null) {
+    if (type !== null && !(FORMALIZES_TYPES as readonly string[]).includes(type)) {
+      problem(
+        `${base}/formalizes`,
+        `\`formalizes\` is written on ${aType(type)}; only behavior, rule and scenario records name the outside requirement they formalize.`,
+        "Move it to the behavior, rule or scenario that states the requirement (Core §5).",
+      );
+    } else {
+      formalizes = readFormalizes(s.formalizes, `${base}/formalizes`, problem) ?? undefined;
+    }
+  }
   let extensions: Record<string, unknown> | undefined;
   if (Object.hasOwn(s, "extensions") && s.extensions !== null) {
     if (!isRecord(s.extensions)) {
@@ -487,6 +511,8 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
   if (reviewedAt !== undefined) meta.reviewedAt = reviewedAt;
   if (reviewedBy !== undefined) meta.reviewedBy = reviewedBy;
   if (delivery !== undefined) meta.delivery = delivery;
+  if (approval !== undefined) meta.approval = approval;
+  if (formalizes !== undefined) meta.formalizes = formalizes;
   if (extensions !== undefined) meta.extensions = extensions;
   if (tips !== undefined) meta.tips = tips;
   if (slice !== undefined) meta.slice = slice;
@@ -693,6 +719,250 @@ function readTips(value: unknown, field: string, problem: Problem): Record<strin
     tips[key] = text;
   }
   return tips;
+}
+
+const APPROVAL_KEYS = ["by", "at", "basis", "source", "attestedBy"] as const;
+const APPROVAL_SOURCE_KEYS = ["ref", "revision", "digest"] as const;
+
+/**
+ * Core §7, ADR 0020: `approval`, the basis of a record's approval. Shape only: the keys, their types and which of
+ * them each basis carries. Nothing here resolves `source.ref`, compares the block with `status` or asks who may
+ * approve. Null when anything is wrong, so a half-read approval is never carried into the graph or an export.
+ */
+function readApproval(value: unknown, field: string, problem: Problem): Approval | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`approval` must be a mapping with at and basis.",
+      "Write `at`, `basis` and the keys the basis carries under `approval:` (Core §7).",
+    );
+    return null;
+  }
+  let ok = true;
+  const fail = (at: string, message: string, remediation: string) => {
+    problem(at, message, remediation);
+    ok = false;
+  };
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    if (!(APPROVAL_KEYS as readonly string[]).includes(key)) {
+      fail(
+        `${field}/${pointerToken(key)}`,
+        `Unknown approval key \`${key}\`.`,
+        `The keys are ${APPROVAL_KEYS.join(", ")} (Core §7).`,
+      );
+    }
+  }
+  /** A key's value when it is a non-empty string; undefined when the key is absent or its value was reported. */
+  const text = (from: Record<string, unknown>, key: string, at: string, name: string, remediation: string) => {
+    if (!Object.hasOwn(from, key)) return undefined;
+    if (typeof from[key] === "string" && from[key] !== "") return from[key];
+    fail(`${at}/${key}`, `\`${name}\` must be a non-empty string.`, remediation);
+    return undefined;
+  };
+  const by = text(value, "by", field, "approval.by", "Name the person who approved, by a name or an identifier.");
+  const at = text(
+    value,
+    "at",
+    field,
+    "approval.at",
+    "Quote the date or the date and time of the approval, for example '2026-11-14'.",
+  );
+  if (!Object.hasOwn(value, "at")) {
+    fail(`${field}/at`, "`approval.at` is missing.", "Say when the record was approved, as a quoted date.");
+  }
+  const attestedBy = text(
+    value,
+    "attestedBy",
+    field,
+    "approval.attestedBy",
+    "Name the agent that attested the record, by a name or an identifier.",
+  );
+  let basis: ApprovalBasis | null = null;
+  if (typeof value.basis === "string" && (APPROVAL_BASES as readonly string[]).includes(value.basis)) {
+    basis = value.basis as ApprovalBasis;
+  } else {
+    fail(
+      `${field}/basis`,
+      `\`approval.basis\` must be one of ${APPROVAL_BASES.join(", ")}.`,
+      "Write direct when a person read this record, derived when a source a person approved covers it, attested when an agent attested it and no person approved it (Core §7).",
+    );
+  }
+  let source: ApprovalSource | undefined;
+  if (Object.hasOwn(value, "source")) {
+    const at = `${field}/source`;
+    if (!isRecord(value.source)) {
+      fail(
+        at,
+        "`approval.source` must be a mapping with ref and a revision or digest.",
+        "Write `ref` and `revision` or `digest` under `source:`.",
+      );
+    } else {
+      const s = value.source;
+      for (const key of Object.keys(s).sort(compareStrings)) {
+        if (!(APPROVAL_SOURCE_KEYS as readonly string[]).includes(key)) {
+          fail(
+            `${at}/${pointerToken(key)}`,
+            `Unknown approval source key \`${key}\`.`,
+            `The keys are ${APPROVAL_SOURCE_KEYS.join(", ")} (Core §7).`,
+          );
+        }
+      }
+      const ref = text(
+        s,
+        "ref",
+        at,
+        "approval.source.ref",
+        "Give the URL or the tool's key of the item that was approved.",
+      );
+      if (!Object.hasOwn(s, "ref")) {
+        fail(
+          `${at}/ref`,
+          "`approval.source.ref` is missing.",
+          "Give the URL or the tool's key of the item that was approved.",
+        );
+      }
+      const which = "Say which state of the source was approved; quote it if it reads as a number.";
+      const revision = text(s, "revision", at, "approval.source.revision", which);
+      const digest = text(s, "digest", at, "approval.source.digest", which);
+      if (!Object.hasOwn(s, "revision") && !Object.hasOwn(s, "digest")) {
+        fail(
+          at,
+          "`approval.source` names neither a revision nor a digest, so it does not say which state of the source was approved.",
+          "Add `revision` or `digest`, such as `digest: sha256:...`.",
+        );
+      }
+      if (ref !== undefined) {
+        source = { ref };
+        if (revision !== undefined) source.revision = revision;
+        if (digest !== undefined) source.digest = digest;
+      }
+    }
+  }
+  if (basis !== null) {
+    const person = basis === "direct" || basis === "derived";
+    if (person && !Object.hasOwn(value, "by")) {
+      fail(
+        `${field}/by`,
+        `A ${basis} approval names no person in \`by\`.`,
+        basis === "direct"
+          ? "Name the person who read and approved the record."
+          : "Name the person who approved the source; with no person, the basis is attested.",
+      );
+    }
+    if (basis === "attested" && Object.hasOwn(value, "by")) {
+      fail(
+        `${field}/by`,
+        "An attested approval names a person in `by`, and attested means no person approved the record or a source.",
+        "Remove `by`, or write the basis the person's approval gives: direct or derived.",
+      );
+    }
+    if (basis === "derived" && !Object.hasOwn(value, "source")) {
+      fail(
+        `${field}/source`,
+        "A derived approval names no source.",
+        "Add `source:` with `ref` and the `revision` or `digest` that was approved.",
+      );
+    }
+    if (basis !== "derived" && Object.hasOwn(value, "source")) {
+      fail(
+        `${field}/source`,
+        `${capitalize(aBasis(basis))} approval names a source, and only a derived approval rests on one.`,
+        "Remove `source`, or write `basis: derived`.",
+      );
+    }
+    if (basis === "direct" && Object.hasOwn(value, "attestedBy")) {
+      fail(
+        `${field}/attestedBy`,
+        "A direct approval names an agent in `attestedBy`, and direct means a person read the record.",
+        "Remove `attestedBy`, or write `basis: derived` with the source the agent matched the record to.",
+      );
+    }
+    if (basis === "attested" && !Object.hasOwn(value, "attestedBy")) {
+      fail(`${field}/attestedBy`, "An attested approval names no agent.", "Name the agent in `attestedBy`.");
+    }
+  }
+  if (!ok || basis === null || at === undefined) return null;
+  const approval: Approval = { at, basis };
+  if (by !== undefined) approval.by = by;
+  if (source !== undefined) approval.source = source;
+  if (attestedBy !== undefined) approval.attestedBy = attestedBy;
+  return approval;
+}
+
+function aBasis(basis: ApprovalBasis): string {
+  return basis === "attested" ? "an attested" : `a ${basis}`;
+}
+
+/**
+ * Core §5, ADR 0020: `formalizes`, the requirements outside the model that a behavior, rule or scenario formalizes.
+ * Well-formedness only: nothing here fetches a source or judges whether it exists. A bad or repeated entry is
+ * reported and left out, as a bad link is; null when the value is not a list or no good entry remains.
+ */
+function readFormalizes(value: unknown, field: string, problem: Problem): Formalized[] | null {
+  if (!Array.isArray(value)) {
+    problem(
+      field,
+      "`formalizes` must be a list of entries with source and, optionally, anchor.",
+      "Write each entry as `- source: <a URL or an item key>`, with `anchor:` for the part that is meant (Core §5).",
+    );
+    return null;
+  }
+  if (value.length === 0) {
+    problem(
+      field,
+      "`formalizes` must list at least one entry.",
+      "Name the outside requirement, or remove `formalizes`.",
+    );
+    return null;
+  }
+  const out: Formalized[] = [];
+  value.forEach((entry, i) => {
+    const at = `${field}/${i}`;
+    if (!isRecord(entry)) {
+      problem(at, `Entry ${i} of \`formalizes\` must be a mapping with source.`, "Write `- source: ...`.");
+      return;
+    }
+    let ok = true;
+    for (const key of Object.keys(entry).sort(compareStrings)) {
+      if (key !== "source" && key !== "anchor") {
+        problem(
+          `${at}/${pointerToken(key)}`,
+          `Unknown formalizes key \`${key}\`.`,
+          "An entry has source and anchor only.",
+        );
+        ok = false;
+      }
+    }
+    if (typeof entry.source !== "string" || entry.source === "") {
+      problem(
+        `${at}/source`,
+        "`formalizes.source` must be a non-empty string.",
+        "Give the URL or the tool's key of the outside requirement.",
+      );
+      ok = false;
+    }
+    if (Object.hasOwn(entry, "anchor") && (typeof entry.anchor !== "string" || entry.anchor === "")) {
+      problem(
+        `${at}/anchor`,
+        "`formalizes.anchor` must be a non-empty string.",
+        "Name the part of the source that is meant, such as criterion-3, or remove `anchor`.",
+      );
+      ok = false;
+    }
+    if (!ok) return;
+    const read: Formalized = { source: entry.source as string };
+    if (typeof entry.anchor === "string") read.anchor = entry.anchor;
+    if (out.some((other) => other.source === read.source && other.anchor === read.anchor)) {
+      problem(
+        at,
+        `Entry ${i} of \`formalizes\` repeats ${read.anchor === undefined ? read.source : `${read.source} at ${read.anchor}`}.`,
+        "Keep one entry per source and anchor.",
+      );
+      return;
+    }
+    out.push(read);
+  });
+  return out.length === 0 ? null : out;
 }
 
 function readSlice(value: unknown, field: string, problem: Problem): SliceMeta | null {

@@ -81,9 +81,22 @@ authorization.
 | Its own model, written before its code | VSA §3: draft slices plan their paths as warnings, so L2 holds from the first commit |
 
 Driftline's usage-evidence specification, keyed to Intentset IDs, is planned as an Intentset extension and is not
-part of 0.5; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
+part of 0.6; Core §8 names the shape an outcome evidence record will take (measure ID, window, observed value, source,
 time, URI, target met). Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
 authored.
+
+## Moving a pin: export 0.6 (ADR 0020)
+
+0.16.0 adds two members to every artifact: `approval`, the basis the record states for its approval
+or null, and `formalizes`, the outside requirements it names or an empty list. Nothing else in the envelope changed,
+and the specifications stay 0.2.
+
+| Where | What changes |
+|---|---|
+| The repository that produces the export | Move `@intentset/cli` to that release. No record needs rewriting: both fields are optional. Move the tools before any record carries either field, because an earlier release rejects both as unknown keys. |
+| A reader of the export | Support `intentset/export/0.6` and drop 0.5, which a 0.6 reader rejects as `unsupported-contract`. Accept `approval` and `formalizes` on each artifact (export §2). A null `approval` means the record does not say how it was approved, never that it is unapproved; `basis` is `direct`, `derived` or `attested`, and `by`, `source` and `attestedBy` are null where the basis does not carry them. Neither `approval.source.ref` nor a `formalizes` entry was resolved by the producer. Whether a basis is acceptable is the reader's workflow: the export states it and decides nothing. |
+| A tool that writes approvals | Write `approval` when it approves a record (Core §7): `basis: derived` with the approved item's `ref` and its `revision` or `digest`, `by` naming the person who approved the item, and `attestedBy` naming the agent that matched the record to it. The content hash leaves `approval` and `formalizes` out, so writing them moves no `content-v1` review pin; the file's `sourceHash` moves as for any edit, so the graph hash moves and a subject-bound run record of a verification of that record reads stale until it runs again, as it does when a status changes. |
+| A consumer's own tests | Run the importer over the fixtures again: every envelope names 0.6, each carries one derived approval and one formalized requirement, and `unsupported-contract-0.5.json` is new. |
 
 ## Moving a pin: export 0.5 (ADR 0017)
 
