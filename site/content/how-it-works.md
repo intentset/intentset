@@ -179,7 +179,7 @@ Keep run records in CI or another store you control, never in the commit they as
 
 `intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
 
-A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Driftline reads Streamlane's export to attribute the usage it sees to Streamlane's behaviors. [Read the export contract](../specifications/export/).
+A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. A usage tool can read a product's export to attribute the usage it sees to that product's behaviors. [Read the export contract](../specifications/export/).
 
 ## Context for agents, with limits
 
