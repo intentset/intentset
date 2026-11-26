@@ -3671,6 +3671,28 @@
   },
   {
     "section": "core",
+    "name": "C01 boundary: a review whose hash and snapshot are null is accepted, and pins content-v1",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": null,
+            "snapshot": null
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "Core §9: a hash or snapshot that is null is absent, so the review pins content-v1 and has no snapshot; null is not a non-empty string, but it is not CORE001."
+  },
+  {
+    "section": "core",
     "name": "C01 boundary: a review with no sources pinned is accepted",
     "baseline": "scheduling",
     "patch": {
