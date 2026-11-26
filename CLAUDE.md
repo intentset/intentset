@@ -71,7 +71,8 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 - No Streamlane record or code enters this repository; the adoption log describes them. Its records live in the
   Streamlane repository.
 - The example products are invented: Lantern for the fixtures, the conformance suite and `intentset init --example`
-  (`examples/scheduling/`), and an online shop for the site (`site/shop/`, 2026-11-26). Nothing in this repository names another real product, except as the next rules allow, and the one
+  (`examples/scheduling/`), and an online shop (`examples/shop/`, 2026-11-26), which the site shows and `intentset init
+  --example` writes. Nothing in this repository names another real product, except as the next rules allow, and the one
   real product it models is Intentset itself.
 - **Intentset's own model** (`product/model/`, decided 2026-10-09) describes this repository's packages: what each
   promises, which package delivers it, and the design invariants as rules. It is not an example: no fixture, test or
@@ -133,7 +134,8 @@ spec/                 normative documents and schemas
 tests/                conformance fixtures, one JSON file per section (core, export, vsa, evidence, publication, list)
 tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `pnpm run fixtures:consumer`
                       from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
-examples/scheduling/  the worked example (Lantern) and the fixtures' baseline; the site's example is site/shop/
+examples/scheduling/  Lantern, the fixtures' and the conformance suite's baseline, which no page shows
+examples/shop/        the invented online shop: the site's example and what `intentset init --example` writes
 product/model/        Intentset's own model: the product, intent, outcomes and their measures, capabilities, behaviors,
                       rules, verifications, one decision, and one slice per package under slices/<package>/slice.md
 .intentset/           its configuration, registries, architecture.yaml and agents.md; evidence/ is local run output

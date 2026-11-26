@@ -135,10 +135,10 @@ export const INTRODUCTION = {
 
 /**
  * The site's one example (2026-11-26, the user's decision): an invented online shop's accounts, whose password reset
- * rule Home, How it works and the deck tell. Its records are the site's own, not the CLI's: `intentset init --example`
- * and the conformance suite keep Lantern, under examples/scheduling/.
+ * rule Home, How it works and the deck tell, and the one `intentset init --example` writes (2026-11-26). The
+ * conformance suite keeps Lantern, under examples/scheduling/, as its baseline, which no page shows.
  */
-export const EXAMPLE_DIR = "site/shop";
+export const EXAMPLE_DIR = "examples/shop";
 
 /** The page that opens every record of the example, and its rail label. */
 export const EXAMPLE_TITLE = "The shop's model, record by record";
@@ -799,7 +799,7 @@ async function conformancePage(): Promise<Page> {
   };
   const accepted = manifest.cases.filter((c) => c.expect.accept).length;
   const source = `---
-markset: 0
+markset: true
 ---
 
 # The conformance suite.
@@ -1009,7 +1009,7 @@ function exampleIndex(records: ExampleRecord[], publication: ExamplePublication)
   const behaviors = records.filter((r) => r.type === "behavior").length;
   const approved = records.filter((r) => r.status === "approved").length;
   const source = `---
-markset: 0
+markset: true
 ---
 
 {.eyebrow}
@@ -1118,7 +1118,7 @@ export function knowledgePath(id: string): string {
 function knowledgeIndex(knowledge: PublishedKnowledge[]): Page {
   const items = knowledge.map(({ record }) => `- [${md(record.title)}](${record.id}/) · \`${record.id}\``);
   const source = `---
-markset: 0
+markset: true
 ---
 
 # Published knowledge
@@ -1135,7 +1135,7 @@ function knowledgePage(entry: PublishedKnowledge, knowledge: PublishedKnowledge[
   const ids = new Set(knowledge.map(({ record }) => record.id));
   const ref = (id: string) => (ids.has(id) ? `[${id}](../${id}/)` : `\`${id}\``);
   const source = `---
-markset: 0
+markset: true
 ---
 
 {.eyebrow}
