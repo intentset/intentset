@@ -297,6 +297,21 @@ test("BEH-HELP-READER: servedTo holds only for a reader cleared for the projecti
   assert.equal(servedTo(help, { ...reader, roles: ["teacher"] }), false, "one role missing");
   assert.equal(servedTo(help, { ...reader, audiences: ["teacher"] }), false, "one audience missing");
   assert.equal(servedTo(help, { ...reader, flags: [] }), false, "one flag missing");
+  assert.equal(
+    servedTo({ ...help, audience: [] }, { ...reader, audiences: [], roles: [] }),
+    false,
+    "an empty audience list is malformed and serves no one",
+  );
+  assert.equal(
+    servedTo({ ...help, availability: { ...help.availability, role: [] } }, { ...reader, audiences: [], roles: [] }),
+    false,
+    "an empty role list is malformed and serves no one",
+  );
+  assert.equal(
+    servedTo({ ...help, availability: { ...help.availability, flags: [] } }, { ...reader, flags: [] }),
+    true,
+    "an empty flag list names no flag to hold",
+  );
   assert.equal(servedTo(help, { ...reader, product: "PRD-OTHER" }), false, "another product");
   assert.equal(servedTo(help, { ...reader, release: "pilot-2" }), false, "another release");
   assert.equal(servedTo(help, { ...reader, edition: "district" }), false, "another edition");

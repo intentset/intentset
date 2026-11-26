@@ -220,7 +220,8 @@ record whose visibility the projection admits is counted once, in `published` or
 Beside the documents, a publication writes `help.json`: every tip (Core §9) of every document published in the run,
 keyed by the ID it explains, for a product's runtime to show beside the control that delivers that behavior. It is
 one UTF-8 JSON object whose members appear in the table's order, with `knowledge` sorted by `id` and every member
-keyed by ID sorted by key, written whenever the request is accepted, so a runtime can rely on it
+keyed by ID sorted by key. Every member in the table is always present, a collection as `[]` or `{}` when it is
+empty. The file is written whenever the request is accepted, so a runtime can rely on it
 being there, and the same bytes for the same inputs. It MUST NOT carry the snapshot it was published from (§6), so
 its bytes change only when a tip, a published document, the request or `publishedAt` does.
 

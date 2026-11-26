@@ -163,7 +163,7 @@ value named.**
   the publisher exports `PUBLICATION_INDEX_PROFILE`. `@intentset/help` adds `Reader`, `servedTo` and a shape check,
   and no dependency. `@intentset/mcp` refuses an index whose profile or members are not the spec's, and a document
   whose block names another entitlement than its index: `audience`, `product`, `release`, `role`, `edition` and
-  `flags` equal, since the block names the request's whole flags (the maintainer's decision, 2026-11-25). A root test holds the publisher's help-file types to
+  `flags` equal, since the block names the request's whole flags (the design's default, accepted with this ADR). A root test holds the publisher's help-file types to
   `@intentset/help`'s and checks that every published help file passes `readHelp`.
 - **The CLI.** A repeated `--role` or `--audience` used to keep the last value silently. It now publishes for the
   whole set. A wrapper that passes a default and then an override gets the union, so the CHANGELOG says so.

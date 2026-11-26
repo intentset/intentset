@@ -198,13 +198,19 @@ export interface Reader {
  */
 export function servedTo(file: Pick<Help, "projection" | "audience" | "availability">, reader: Reader): boolean {
   const { availability } = file;
-  const holds = (named: readonly string[], held: readonly string[]) => named.every((value) => held.includes(value));
+  const holds = (named: unknown, held: readonly string[]) =>
+    Array.isArray(named) && named.every((value) => held.includes(value));
+  // An empty audience or role list names nothing to hold, which every() would read as "anyone": fail closed instead
+  // (publication §1 forbids an empty one, and a block reaches here without readHelp's checks). Flags may be empty.
+  const nonEmpty = (named: unknown) => Array.isArray(named) && named.length > 0;
   return (
     reader.visibilities.includes(file.projection) &&
     availability.product === reader.product &&
     availability.release === reader.release &&
     availability.edition === reader.edition &&
+    nonEmpty(file.audience) &&
     holds(file.audience, reader.audiences) &&
+    nonEmpty(availability.role) &&
     holds(availability.role, reader.roles) &&
     holds(availability.flags, reader.flags)
   );
