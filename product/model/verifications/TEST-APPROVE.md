@@ -14,7 +14,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   links:
     verifies: [BEH-APPROVE]
   verification:
@@ -32,7 +32,7 @@ intentset:
 - `packages/cli/test/approve.test.ts`: a named draft gains `status: approved` and a direct approval and differs in no other line; a second run skips it.
 - The same file: a selector approves every match, an earlier approval is replaced, and `--dry-run` leaves the tree byte for byte.
 - The same file: a draft knowledge record gains its review, `review` with no `hash` and each source pinned at its content hash, and is current at L4; a review left under the retired extension is replaced, and `extensions` goes with it.
-- The same file: approving an outcome nothing measures is refused with CORE003 and nothing is written, the other record named with it included; an unknown ID is refused.
+- The same file: approving an outcome nothing measures is refused with CORE012 and nothing is written, the other record named with it included; an unknown ID is refused.
 - The same file: a bare run, a run without `--by` and a dirty tree are refused; `--allow-dirty` proceeds.
 
 ## Expected result

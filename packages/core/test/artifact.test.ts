@@ -26,16 +26,16 @@ function verdict(path: string, source: string): Verdict | null {
   const { diagnostics } = readArtifact(input);
   if (input.frontmatter === null) {
     assert.ok(
-      diagnostics.some((d) => d.code === "CORE001"),
-      `${path}: no frontmatter must be CORE001`,
+      diagnostics.some((d) => d.code === "CORE010"),
+      `${path}: no frontmatter must be CORE010`,
     );
     return null;
   }
   const parsed = parseYaml(input.frontmatter.text);
   if (parsed.error) {
     assert.ok(
-      diagnostics.some((d) => d.code === "CORE001"),
-      `${path}: a rejected YAML must be CORE001`,
+      diagnostics.some((d) => d.code === "CORE010"),
+      `${path}: a rejected YAML must be CORE010`,
     );
     return null;
   }

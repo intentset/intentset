@@ -9,7 +9,7 @@ repository-relative.
 // @intentset/core
 parseYaml(text): { value: Record<string, unknown>; error: null } | { value: null; error: { message; line } }  // strict, ADR 0001
 plainCarrier(path, source): DocumentInput                     // plain-Markdown fallback, ADR 0003
-readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE001, origin "profile"
+readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE010, CORE011, CORE001, origin "profile"
 readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] }
 readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[] } }
 validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline

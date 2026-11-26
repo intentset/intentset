@@ -2,7 +2,8 @@
  * Reading one document into an Artifact (Core §3, §4, §6, §7; ADR 0002).
  *
  * `readArtifact` checks, in typed code, every constraint of
- * spec/frontmatter.schema.json plus the required narrative sections. Each
+ * spec/frontmatter.schema.json plus the required narrative sections (CORE011);
+ * a document it cannot read at all is CORE010 (ADR 0024). Each
  * schema constraint is CORE001 with a JSON pointer, except two that the
  * schema also states and Core assigns elsewhere: a missing navigation parent
  * is CORE004 (Core §5, the chain does not reach a product) and a missing
@@ -108,7 +109,11 @@ const EXTENSION_KEY = /^[^/]+\/.+$/;
 export const RETIRED_REVIEW_EXTENSION = "intentset.org/review";
 const REVIEW_KEYS = ["sources", "hash", "snapshot"] as const;
 
-/** Core §3, §4, §6 and §7 (ADR 0002): read one document into an Artifact, reporting CORE001 and its kin with origin "profile". */
+/**
+ * Core §3, §4, §6 and §7 (ADR 0002, ADR 0024): read one document into an Artifact, with origin "profile": CORE010 for a
+ * carrier that cannot be read, CORE011 for a missing heading or section, CORE001 for a field's shape, CORE003 for a
+ * repeated relationship entry.
+ */
 export function readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] } {
   const { artifact, diagnostics } = readDocument(input);
   return { artifact, diagnostics };
@@ -145,6 +150,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const bytes = Buffer.byteLength(input.source, "utf8");
   if (bytes > DOCUMENT_MAX_BYTES) {
     report({
+      code: "CORE010",
       artifact: null,
       message: `The document is ${bytes} bytes, more than the ${DOCUMENT_MAX_BYTES / 1024 / 1024} MiB a record may be.`,
       remediation: "Split the record, or move large material such as data or images out of the document and link it.",
@@ -155,6 +161,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const frontmatter = input.frontmatter;
   if (frontmatter === null) {
     report({
+      code: "CORE010",
       artifact: null,
       location: { line: 1 },
       message: "The document has no frontmatter block between `---` lines at the top of the file.",
@@ -166,6 +173,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const parsed = parseYamlDetailed(frontmatter.text);
   if (parsed.error) {
     report({
+      code: "CORE010",
       artifact: null,
       location: { line: frontmatter.line + parsed.error.line - 1 },
       message: `The frontmatter is not accepted: ${parsed.error.message}`,
@@ -1347,13 +1355,20 @@ function checkSections(
   input: DocumentInput,
   meta: ArtifactMeta,
   id: string | null,
-  report: (fields: { artifact: string | null; location?: Location; message: string; remediation: string }) => void,
+  report: (fields: {
+    code: string;
+    artifact: string | null;
+    location?: Location;
+    message: string;
+    remediation: string;
+  }) => void,
 ): void {
   const title = meta.title.replace(/\s+/g, " ").trim();
   const level1 = input.headings.filter((h) => h.depth === 1);
   if (!level1.some((h) => h.text === title)) {
     const first = level1[0];
     report({
+      code: "CORE011",
       artifact: id,
       location: first === undefined ? undefined : { line: first.line },
       message:
@@ -1367,6 +1382,7 @@ function checkSections(
   for (const section of REQUIRED_SECTIONS[meta.type]) {
     if (level2.has(section)) continue;
     report({
+      code: "CORE011",
       artifact: id,
       message: `Required section "${section}" is missing from ${aType(meta.type)} document.`,
       remediation: `Add a level-two heading \`## ${section}\` with substantive prose (Core §6).`,

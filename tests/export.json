@@ -698,7 +698,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ],
     "export": {
       "validation": {
@@ -706,7 +706,7 @@
         "errors": 1,
         "diagnostics": [
           {
-            "code": "CORE001",
+            "code": "CORE010",
             "artifact": null,
             "path": "TEST-ASMT-SCHEDULE.md",
             "location": {

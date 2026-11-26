@@ -95,8 +95,9 @@ learning from questions, and the AWS rules).
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11; an outcome with no
-  measure is CORE009 draft, CORE003 active), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
+- Diagnostic codes: `CORE001`–`CORE012`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
+  of thing to fix, ADR 0024: an unreadable carrier is CORE010, a missing section CORE011, a field CORE001; an outcome
+  with no measure is CORE009 draft, CORE012 past draft), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
   `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
@@ -236,7 +237,7 @@ from source (the installed bin points at `dist/`, which only the build writes).
   model:review` (`--fail-on-drift` against the base). There is no architecture baseline: the last one, 17 VSA003
   errors of tests reaching into the conformance harness's modules, was retired on 2026-10-10, so any new violation is
   an error. A refactor answers drift with an `Intentset-Unchanged: SLICE-…` trailer.
-- **Approved by a maintainer on 2026-10-15**, all but ten records: OUT-DOCS-IMPROVE waits for a measure (CORE003
+- **Approved by a maintainer on 2026-10-15**, all but ten records: OUT-DOCS-IMPROVE waits for a measure (CORE012
   refuses an approved outcome nothing measures), and the nine rules have no verification (CORE007 refuses an approved
   rule at L3 without one). A new record is a draft until a maintainer approves it; an agent never approves one.
 

@@ -113,7 +113,7 @@ test("BEH-APPROVE: approve writes nothing when the approval would add an error, 
   const refused = await run(dir, "approve", "OUT-PREPARE", "RULE-ASMT-FUTURE", ...BY);
   assert.equal(refused.code, 1);
   assert.match(refused.err, /approving 2 records would add 1 error at L1\. Nothing was written\./);
-  assert.match(refused.err, /CORE003/);
+  assert.match(refused.err, /CORE012/);
 
   const unknown = await run(dir, "approve", "RULE-ASMT-FUTURE", "RULE-ASMT-NONE", ...BY);
   assert.equal(unknown.code, 2);
@@ -219,7 +219,7 @@ test("BEH-APPROVE: approve replaces a review left under the extension 0.2 read, 
   assert.match(after, /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3}---/);
   const ready = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out);
   assert.deepEqual(
-    ready.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE008"),
+    ready.diagnostics.filter((d: { code: string }) => ["CORE001", "CORE008", "CORE010"].includes(d.code)),
     [],
     "well formed, and current against its sources",
   );

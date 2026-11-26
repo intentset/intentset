@@ -208,7 +208,7 @@ Verification nodes identify checks. Evidence is a separate run record, since run
 
 A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. A record MAY carry `binding` (`subject` or `commit`) and `subjectHash`, a SHA-256 in lowercase hex; a record with `binding: subject` MUST carry `subjectHash`, and one without `binding` is a commit-binding record, so every record written before the field existed means what it meant. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
 
-A verification's `status` says where the definition stands in its own lifecycle, and nothing in this specification reads an approval from it (ADR 0020). The runs of a verification that is not retired count whatever its status, a draft's included; whether evidence is required follows the status of the claim, not of the verification (§11, CORE007); and the only checks that read a verification's status are the ones every type shares: a retired one is set aside, and one that verifies nothing is CORE003 once it is past draft and a CORE009 warning while it is a draft (§5). A tool MAY therefore treat a verification's standing as that of the behaviors, rules and scenarios it verifies, and need not ask for an approval of the verification itself. A validator derives no such standing: a verification of several claims whose statuses differ has no single one, and choosing among them would be a workflow rule.
+A verification's `status` says where the definition stands in its own lifecycle, and nothing in this specification reads an approval from it (ADR 0020). The runs of a verification that is not retired count whatever its status, a draft's included; whether evidence is required follows the status of the claim, not of the verification (§11, CORE007); and the only checks that read a verification's status are the ones every type shares: a retired one is set aside, and one that verifies nothing is CORE012 once it is past draft and a CORE009 warning while it is a draft (§5). A tool MAY therefore treat a verification's standing as that of the behaviors, rules and scenarios it verifies, and need not ask for an approval of the verification itself. A validator derives no such standing: a verification of several claims whose statuses differ has no single one, and choosing among them would be a workflow rule.
 
 Only a `pass` whose binding holds counts as current passing evidence. There are two bindings:
 
@@ -286,19 +286,22 @@ Conformance is a claim about a declared repository scope and snapshot, not a uni
 | L4 Published knowledge | L3 + reviewed audience projections with availability and provenance checks |
 | L5 Continuous product truth | L4 + required CI checks, architecture enforcement, impact reports, release snapshot automation and versioned agent context |
 
-A partial adoption MUST name included capabilities/IDs and show out-of-scope counts; it MUST NOT advertise repository-wide L3 when only a pilot passed. A waiver does not erase a failed MUST: report “with exceptions,” not unqualified conformance. Recommended checks:
+A partial adoption MUST name included capabilities/IDs and show out-of-scope counts; it MUST NOT advertise repository-wide L3 when only a pilot passed. A waiver does not erase a failed MUST: report “with exceptions,” not unqualified conformance. Recommended checks, one code for each kind of thing an author has to fix; the `field` pointer says which field (ADR 0024):
 
 | Code | Condition | Default |
 |---|---|---|
-| CORE001 | Invalid carrier, schema, or required section | Error |
+| CORE001 | A field under `intentset`, or the `markset` key or `intentset` block it sits in, is missing, unknown or the wrong shape (§4, the frontmatter schema) | Error |
 | CORE002 | Duplicate/reused ID | Error |
-| CORE003 | Unresolved, wrong-type or missing required relationship | Error |
+| CORE003 | A link, or a key that must name a linked ID (§9 `tips`), names an ID that does not resolve, a target of the wrong type, the record itself, or the same ID twice (§5) | Error |
 | CORE004 | Invalid/cyclic decomposition or replacement | Error |
 | CORE005 | Lifecycle/release claim inconsistent, delivery and status included (§7) | Error |
 | CORE006 | Missing applicable ownership (L2+) | Error; a warning for a draft behavior that says `delivery: built` (§7) |
 | CORE007 | Missing/failing/stale required evidence (L3+) | Error; a warning for a draft behavior, rule or scenario that no verification definition names |
 | CORE008 | Unauthorized/stale publication (L4+) | Error |
 | CORE009 | Draft unattached artifact, or draft outcome with no measure | Warning |
+| CORE010 | The carrier cannot be read: the document has no frontmatter, its frontmatter does not parse in the strict subset (§3), it repeats a key, or it exceeds the size limit (§3) | Error |
+| CORE011 | A heading the record requires is missing: the level-one heading equal to its title, or a level-two section its type requires (§6) | Error |
+| CORE012 | A record past draft lacks a relationship it must have, the error form of CORE009: an outcome no measure judges, a rule nothing governs, a scenario that illustrates nothing, a verification that verifies nothing, knowledge that explains nothing, a product slice that implements nothing (§5, §6, VSA §3) | Error |
 
 Configuration and run records have codes of their own, reported before or beside the checks above. A configuration error stops the run it configures; a run record with a problem is never evidence.
 

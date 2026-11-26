@@ -6,7 +6,7 @@
  *
  * Two choices keep diagnostics at their cause. A record that could not be
  * read is remembered by the ID it declared, and references to that ID are not
- * reported as unresolved: the CORE001 on the record already says what to fix.
+ * reported as unresolved: the CORE010 or CORE001 on the record already says what to fix.
  * Of two records with one ID, the first by path stays in the graph and both
  * are reported as CORE002; neither is merged with the other.
  */
@@ -585,7 +585,8 @@ function requirement(artifact: Artifact): Requirement | null {
 
 /**
  * Core §5, §6 and VSA §3: active rules, scenarios, verifications, knowledge and
- * product slices are attached, and an active outcome has a measure (CORE003).
+ * product slices are attached, and an active outcome has a measure (CORE012,
+ * ADR 0024).
  * Their drafts, and draft contracts and decisions nothing refers to, are
  * unattached drafts (CORE009, warning).
  */
@@ -617,7 +618,7 @@ function checkAttachment(context: Context): void {
       });
     } else if (need.draftOnly !== true) {
       reportOn(context, artifact, {
-        code: "CORE003",
+        code: "CORE012",
         field,
         message: `${capitalize(artifact.meta.status)} ${artifact.meta.type} ${artifact.meta.id} is unattached: ${need.message}.`,
         remediation: need.remediation,

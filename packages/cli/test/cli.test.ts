@@ -693,7 +693,7 @@ for (const version of ["0.2", "0.1"]) {
     );
     const report = JSON.parse((await run(dir, "validate", "--json")).out);
     assert.deepEqual(
-      report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+      report.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE010"),
       [],
       "every migrated status is one 0.3 lists",
     );
@@ -722,7 +722,7 @@ test("BEH-MIGRATE: migrate reads past a comment line inside the intentset mappin
   assert.match(readFileSync(RECORD(dir, "OUT-PREPARE"), "utf8"), /\n# the version\n {2}spec: '0\.3'\n/);
   const report = JSON.parse((await run(dir, "validate", "--json")).out);
   assert.deepEqual(
-    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE010"),
     [],
   );
 });
@@ -745,7 +745,7 @@ test("BEH-MIGRATE: migrate counts a null or empty delivery as not stated and wri
   }
   const report = JSON.parse((await run(dir, "validate", "--json")).out);
   assert.deepEqual(
-    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE010"),
     [],
   );
 });
@@ -785,7 +785,7 @@ test("BEH-MIGRATE: migrate reads a quoted or spaced key as YAML does, keeping a 
   }
   const report = JSON.parse((await run(dir, "validate", "--json")).out);
   assert.deepEqual(
-    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE010"),
     [],
   );
 });
@@ -908,7 +908,7 @@ async function knowledgeAtEarlier(t: Parameters<typeof example>[0], version: str
 
 const currentAtL4 = async (dir: string) => {
   const report = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out);
-  return report.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE008");
+  return report.diagnostics.filter((d: { code: string }) => ["CORE001", "CORE008", "CORE010"].includes(d.code));
 };
 
 for (const version of ["0.2", "0.1"]) {

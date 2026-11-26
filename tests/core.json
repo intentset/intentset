@@ -234,7 +234,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ],
     "notes": "The record is not read, and the behavior's parent reference to it is not reported again as unresolved."
   },
@@ -247,7 +247,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001",
+      "CORE010",
       "CORE009",
       "CORE009"
     ],
@@ -262,7 +262,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -274,7 +274,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -286,7 +286,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -298,7 +298,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -310,7 +310,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -322,7 +322,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -334,7 +334,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -346,7 +346,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -358,7 +358,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -380,7 +380,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -402,7 +402,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -429,27 +429,27 @@
   },
   {
     "section": "core",
-    "name": "CORE001 a document without frontmatter",
+    "name": "CORE010 a document without frontmatter",
     "baseline": "scheduling",
     "files": {
       "TEST-ASMT-SCHEDULE.md": "\n# Review student assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ],
     "notes": "Nothing refers to a verification, so no reference is left dangling."
   },
   {
     "section": "core",
-    "name": "CORE001 an unclosed frontmatter fence is no frontmatter",
+    "name": "CORE010 an unclosed frontmatter fence is no frontmatter",
     "baseline": "scheduling",
     "files": {
       "TEST-ASMT-SCHEDULE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/verification/0.3\n  id: TEST-ASMT-SCHEDULE\n  type: verification\n  title: Review student assessment scheduling behavior\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  links:\n    verifies:\n    - BEH-ASMT-SCHEDULE\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n    - SCN-ASMT-SCHEDULE\n  verification:\n    method: manual\n    locator: examples/scheduling/TEST-ASMT-SCHEDULE.md\n    selector: schedule-review-v1\n\n# Review student assessment scheduling behavior\n\n## Procedure\n\nIn a pilot environment, run: authorized published/future request; past-time rejection; unauthorized-class rejection; unpublished rejection; student access before and after release. Record inputs, observed outputs, environment, commit, graph hash, and reviewer. This procedure has not been executed.\n\n## Expected result\n\nThe valid request is recorded, rejected requests create no schedule, and student access follows the reviewed release-time tolerance. The procedure cannot pass until that tolerance is defined.\n"
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE010"
     ]
   },
   {
@@ -498,7 +498,8 @@
     "valid": false,
     "diagnostics": [
       "CORE001"
-    ]
+    ],
+    "notes": "Boundary of CORE010: the frontmatter parses, so the carrier was read and the missing block is a field's problem (ADR 0024)."
   },
   {
     "section": "core",
@@ -1161,14 +1162,14 @@
   },
   {
     "section": "core",
-    "name": "CORE001 measure Method section missing",
+    "name": "CORE011 measure Method section missing",
     "baseline": "scheduling",
     "files": {
       "MEAS-PREPARE-MINUTES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/measure/0.3\n  id: MEAS-PREPARE-MINUTES\n  type: measure\n  title: Teacher minutes spent preparing an assignment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: OUT-PREPARE\n  measure:\n    metric: teacher_prep_minutes\n    baseline: unknown\n    target: '20% below the measured pilot baseline'\n    window: '90 days after pilot-1'\n    source: task-study\n    direction: decrease\n---\n\n# Teacher minutes spent preparing an assignment\n\nAn observed task study before and after the pilot.\n"
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE011"
     ]
   },
   {
@@ -1263,7 +1264,7 @@
   },
   {
     "section": "core",
-    "name": "CORE003 an approved outcome with no measure",
+    "name": "CORE012 an approved outcome with no measure",
     "baseline": "scheduling",
     "files": {
       "MEAS-PREPARE-ADOPTION.md": null,
@@ -1278,7 +1279,7 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE003"
+      "CORE012"
     ],
     "notes": "Core §6: an outcome past draft says how it will be judged, as a measure record. Verification of the behaviors below it does not stand in for one."
   },
@@ -1662,7 +1663,7 @@
   },
   {
     "section": "core",
-    "name": "CORE001 no level-one heading",
+    "name": "CORE011 no level-one heading",
     "baseline": "scheduling",
     "patch": {
       "CAP-ASMT-ASSIGN.md": {
@@ -1672,12 +1673,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE011"
     ]
   },
   {
     "section": "core",
-    "name": "CORE001 level-one heading differs from the title",
+    "name": "CORE011 level-one heading differs from the title",
     "baseline": "scheduling",
     "patch": {
       "CAP-ASMT-ASSIGN.md": {
@@ -1688,12 +1689,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE011"
     ]
   },
   {
     "section": "core",
-    "name": "CORE001 a required section is missing",
+    "name": "CORE011 a required section is missing",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -1703,12 +1704,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE011"
     ]
   },
   {
     "section": "core",
-    "name": "CORE001 boundary: a heading inside a code fence does not count",
+    "name": "CORE011 boundary: a heading inside a code fence does not count",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -1718,12 +1719,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE011"
     ]
   },
   {
     "section": "core",
-    "name": "CORE001 boundary: a level-three heading is not a section",
+    "name": "CORE011 boundary: a level-three heading is not a section",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -1733,12 +1734,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE001"
+      "CORE011"
     ]
   },
   {
     "section": "core",
-    "name": "CORE001 boundary: inline markup and closing hashes do not change a heading",
+    "name": "CORE011 boundary: inline markup and closing hashes do not change a heading",
     "baseline": "scheduling",
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -2084,7 +2085,7 @@
   },
   {
     "section": "core",
-    "name": "CORE003 an approved rule nothing governs",
+    "name": "CORE012 an approved rule nothing governs",
     "baseline": "scheduling",
     "patch": {
       "RULE-ASMT-AUTH.md": {
@@ -2100,12 +2101,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE003"
+      "CORE012"
     ]
   },
   {
     "section": "core",
-    "name": "CORE003 an approved scenario illustrates nothing",
+    "name": "CORE012 an approved scenario illustrates nothing",
     "baseline": "scheduling",
     "patch": {
       "SCN-ASMT-SCHEDULE.md": {
@@ -2117,12 +2118,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE003"
+      "CORE012"
     ]
   },
   {
     "section": "core",
-    "name": "CORE003 an approved verification verifies nothing",
+    "name": "CORE012 an approved verification verifies nothing",
     "baseline": "scheduling",
     "patch": {
       "TEST-ASMT-SCHEDULE.md": {
@@ -2134,12 +2135,12 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE003"
+      "CORE012"
     ]
   },
   {
     "section": "core",
-    "name": "CORE003 approved knowledge explains nothing",
+    "name": "CORE012 approved knowledge explains nothing",
     "baseline": "scheduling",
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -2152,13 +2153,13 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE003"
+      "CORE012"
     ],
     "notes": "The baseline's tips are dropped: a tip for an ID the knowledge no longer explains is CORE003 of its own, which the tip cases hold."
   },
   {
     "section": "core",
-    "name": "CORE003 an approved product slice implements nothing",
+    "name": "CORE012 an approved product slice implements nothing",
     "baseline": "scheduling",
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -2170,12 +2171,32 @@
     },
     "valid": false,
     "diagnostics": [
-      "CORE003"
+      "CORE012"
     ]
   },
   {
     "section": "core",
-    "name": "CORE003 boundary: a retired rule nothing governs is history, not an error",
+    "name": "CORE012 boundary: an approved contract nothing exposes or consumes is not an error",
+    "baseline": "scheduling",
+    "patch": {
+      "CONTRACT-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.exposes": null
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "A contract or decision nothing refers to is a CORE009 warning while it is a draft and nothing once it is past draft: neither is a relationship a record must have (ADR 0024), so CORE012 is not reported."
+  },
+  {
+    "section": "core",
+    "name": "CORE012 boundary: a retired rule nothing governs is history, not an error",
     "baseline": "scheduling",
     "patch": {
       "RULE-ASMT-AUTH.md": {

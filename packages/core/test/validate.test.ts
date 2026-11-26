@@ -72,6 +72,43 @@ test("BEH-VALIDATE-REPORTS: diagnostics are sorted and identical whatever order 
   assert.deepEqual(forward, sorted);
 });
 
+test("BEH-VALIDATE-REPORTS: a code names one kind of thing to fix (Core §11, ADR 0024)", () => {
+  const errorsWith = (edits: Record<string, (source: string) => string>) =>
+    validate(
+      baseline.map((input) => {
+        const edit = edits[input.path];
+        return edit === undefined ? input : plainCarrier(input.path, edit(input.source));
+      }),
+      registries,
+    )
+      .diagnostics.filter((d) => d.severity === "error")
+      .map((d) => d.code);
+  const behavior = (edit: (source: string) => string) => ({ "BEH-ASMT-SCHEDULE.md": edit });
+
+  // The carrier cannot be read: a repeated key, or no frontmatter at all.
+  assert.deepEqual(errorsWith({ "ADR-ASMT-SEAM.md": (s) => s.replace("  status: draft\n", "$&  status: draft\n") }), [
+    "CORE010",
+  ]);
+  // With no frontmatter no ID is declared either, so the slice's informedBy no longer resolves.
+  assert.deepEqual(errorsWith({ "ADR-ASMT-SEAM.md": (s) => s.replace(/^---\n/, "") }), ["CORE010", "CORE003"]);
+  // A heading the record requires is missing.
+  assert.deepEqual(errorsWith({ "RULE-ASMT-FUTURE.md": (s) => s.replace("## Constraint", "## Limit") }), ["CORE011"]);
+  // A field is unknown or the wrong shape.
+  assert.deepEqual(errorsWith(behavior((s) => s.replace("  revision: 1\n", "  revision: one\n"))), ["CORE001"]);
+  // A link names the wrong type.
+  assert.deepEqual(errorsWith(behavior((s) => s.replace("    - RULE-ASMT-AUTH\n", "    - CAP-ASMT-ASSIGN\n"))), [
+    "CORE003",
+  ]);
+  // A record past draft lacks a relationship it must have.
+  assert.deepEqual(
+    errorsWith({
+      ...behavior((s) => s.replace("    - RULE-ASMT-AUTH\n", "")),
+      "RULE-ASMT-AUTH.md": (s) => s.replace("  status: draft", "  status: approved"),
+    }),
+    ["CORE012"],
+  );
+});
+
 test("BEH-MARKSET-CARRIER: syntax diagnostics from the carrier pass through with their origin", () => {
   const syntax: Diagnostic = {
     code: "MARKSET001",
@@ -212,7 +249,7 @@ test("Core §3: a record over the size limit is refused before it is parsed", ()
   assert.equal(read.artifact, null);
   assert.deepEqual(
     read.diagnostics.map((d) => [d.code, d.origin]),
-    [["CORE001", "profile"]],
+    [["CORE010", "profile"]],
   );
   assert.match(read.diagnostics[0].message, /MiB/);
 });

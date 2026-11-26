@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   links:
     verifies: [BEH-MIGRATE]
   verification:
@@ -35,4 +35,4 @@ intentset:
 
 ## Expected result
 
-Every test whose title carries `BEH-MIGRATE` passes. A record whose status `0.3` still lists, and that holds no review, differs from before in exactly the `spec` and `profile` lines; a review moves to `review` with `file-v1` where it named no hash, is current after the move as before, and leaves `extensions` only where another key is in it; one at `implemented` or `released` is `approved`, with `delivery: built` on the next line only where its type carries delivery and it stated none (a null or empty `delivery` line is rewritten in place, so one key remains), and validates with no CORE001; a comment line inside the mapping changes none of that; the count printed is the number of records moved, a quoted or spaced key is read as the bare one is, a record still declaring a removed status or left without the delivery its status claimed, a record other than knowledge carrying the review extension, which keeps it, and a review holding what `0.3` rejects are named and not counted, a second run moves none, and a refused run leaves every file as it was.
+Every test whose title carries `BEH-MIGRATE` passes. A record whose status `0.3` still lists, and that holds no review, differs from before in exactly the `spec` and `profile` lines; a review moves to `review` with `file-v1` where it named no hash, is current after the move as before, and leaves `extensions` only where another key is in it; one at `implemented` or `released` is `approved`, with `delivery: built` on the next line only where its type carries delivery and it stated none (a null or empty `delivery` line is rewritten in place, so one key remains), and validates with no CORE001 or CORE010; a comment line inside the mapping changes none of that; the count printed is the number of records moved, a quoted or spaced key is read as the bare one is, a record still declaring a removed status or left without the delivery its status claimed, a record other than knowledge carrying the review extension, which keeps it, and a review holding what `0.3` rejects are named and not counted, a second run moves none, and a refused run leaves every file as it was.
