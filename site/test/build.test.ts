@@ -636,6 +636,30 @@ test("home: the hero, the loop, the role cards, the worked example and status ar
   assert.match(home, /<span class="ms-span button"><a href="specifications\/">Read the draft specification<\/a>/);
 });
 
+test("How it works carries the four-audience grid, each card's questions with the commands that answer them today", () => {
+  const page = main("how-it-works/index.html");
+  assert.match(page, /<h2 id="ask-the-records-a-question">/);
+  assert.match(page, /<div class="ms-grid" data-cols="2"/);
+  const cards = [
+    ...page.matchAll(
+      /<h3 class="ms-card-title">(For [^<]+)<\/h3>\s*<ul>([\s\S]*?)<\/ul>\s*<p class="small">([\s\S]*?)<\/p>/g,
+    ),
+  ];
+  assert.deepEqual(
+    cards.map((m) => m[1]),
+    ["For product managers", "For engineers", "For whoever writes the help", "For agents"],
+  );
+  for (const [, audience, list, answers] of cards) {
+    const questions = [...list.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
+    assert.equal(questions.length, 3, audience);
+    assert.ok(
+      questions.every((q) => q.endsWith("?")),
+      `${audience}: every item is a question the records can answer`,
+    );
+    assert.match(answers, /<code>[a-z]/, `${audience}: the commands that answer it today`);
+  }
+});
+
 test("the build leaves no placeholder behind", async () => {
   for (const [page, doc] of html) {
     assert.doesNotMatch(doc, /\{\{\w+\}\}/, page);

@@ -53,4 +53,4 @@ Recent releases, with the reasons for each in the changelog:
 
 The most useful feedback is a capability that is hard to model, a boundary that is hard to enforce, or an explanation that is hard to publish safely. Try the model against one capability and bring back what did not fit.
 
-[[Start with one capability](../start/)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}
+[[Try it on your code](../start/)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}

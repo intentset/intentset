@@ -996,7 +996,7 @@ The records above are what an agent writes and a person approves. [The map](atla
 
 Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in a real product](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
 
-[[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
+[[Try it on your code](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
 }

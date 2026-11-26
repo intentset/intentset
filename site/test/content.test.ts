@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { after, test } from "node:test";
+import { main } from "@intentset/cli";
 import { parseDocument } from "@markset-lang/parser";
 import { build, CHAT_PAGES, CONTENT_PAGES, VERSION } from "../build.ts";
 
@@ -105,5 +107,95 @@ test("the status notes are on their pages, as callouts, and none still says the 
   for (const page of RETIRED_PHRASE_PAGES) {
     const body = text(await readFile(join(dist, page), "utf8"));
     for (const phrase of retired) assert.ok(!body.includes(phrase), `${page} still says "${phrase}"`);
+  }
+});
+
+/** The text of a rendered code block: tags dropped and entities decoded, whitespace kept. */
+function codeText(fragment: string): string {
+  return fragment
+    .replace(/<[^>]+>/g, "")
+    .replace(/&#x3C;/gi, "<")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+/** Run this checkout's CLI in a directory, as the page's reader runs the published one. */
+async function intentset(cwd: string, ...argv: string[]): Promise<{ code: number; out: string }> {
+  let out = "";
+  const code = await main(argv, { stdout: (s) => (out += s), stderr: (s) => (out += s), cwd });
+  return { code, out };
+}
+
+test("How it works quotes review's drift failure as the CLI prints it, and both ways through pass as the page says", async () => {
+  const page = await readFile(join(dist, "how-it-works", "index.html"), "utf8");
+  const blocks = [...page.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
+  const quoted = blocks.map(([, lang, body]) => [lang, codeText(body)] as const);
+  const failure = quoted.find(([lang, body]) => lang === "text" && body.includes("Code changed, records unchanged"));
+  assert.ok(failure, "the page quotes the drift section of a review");
+  const diff = quoted.find(([lang]) => lang === "diff");
+  assert.ok(diff, "the page shows the one-line rule change");
+  const [removed, added] = ["-", "+"].map(
+    (sign) =>
+      diff[1]
+        .split("\n")
+        .find((line) => line.startsWith(sign))
+        ?.slice(1) ?? "",
+  );
+  assert.match(page, /<code>Intentset-Unchanged: SLICE-ASMT-SCHEDULE<\/code>/, "the page shows the trailer it ran");
+
+  // The scratch repository the caption describes: the example's records and its registry's data file on main, and one
+  // file of the slice's code added on a branch.
+  const repo = await mkdtemp(join(tmpdir(), "intentset-drift-"));
+  try {
+    const git = (...args: string[]) =>
+      execFileSync(
+        "git",
+        ["-c", "user.name=Demo", "-c", "user.email=demo@example.com", "-c", "commit.gpgsign=false", ...args],
+        { cwd: repo, stdio: ["ignore", "pipe", "pipe"] },
+      );
+    git("init", "-q", "-b", "main");
+    assert.equal((await intentset(repo, "init", "--example", "--root", repo)).code, 0);
+    await mkdir(join(repo, "amplify", "data"), { recursive: true });
+    await writeFile(join(repo, "amplify", "data", "resource.ts"), "export const data = {};\n");
+    git("add", "-A");
+    git("commit", "-qm", "Lantern's records");
+    git("update-ref", "refs/remotes/origin/main", "HEAD");
+    git("checkout", "-qb", "loosen-release-time");
+    const policies = join(repo, "src", "features", "assessment", "schedule", "domain", "policies");
+    await mkdir(policies, { recursive: true });
+    await writeFile(
+      join(policies, "release-time.ts"),
+      "export const GRACE_MS = 60 * 60 * 1000;\nexport const accepts = (requested: number, now: number) => requested > now - GRACE_MS;\n",
+    );
+    git("add", "-A");
+    git("commit", "-qm", "Accept a release time up to an hour in the past");
+    const review = ["review", "--base", "origin/main", "--fail-on-drift"];
+
+    const failed = await intentset(repo, ...review);
+    assert.equal(failed.code, 1, "the review fails, as the page says");
+    assert.ok(failed.out.includes(failure[1]), `the quoted output is not what review prints:\n${failed.out}`);
+
+    // The behavior changed: the rule's one line, as the page's diff has it.
+    git("checkout", "-qb", "way-rule");
+    const rule = join(repo, "product", "scheduling", "RULE-ASMT-FUTURE.md");
+    const text = await readFile(rule, "utf8");
+    assert.ok(text.includes(`\n${removed}\n`), "the diff's removed line is the rule's own sentence");
+    await writeFile(rule, text.replace(removed, added));
+    git("commit", "-qam", "Allow a release time up to an hour in the past");
+    assert.equal((await intentset(repo, ...review)).code, 0, "updating the rule passes");
+    const l4 = await intentset(repo, "validate", "--level", "L4");
+    assert.match(l4.out, /KB-ASMT-SCHEDULE needs review: RULE-ASMT-FUTURE changed since review/, "the guide is held");
+
+    // It did not: the trailer, on the branch that only changed code.
+    git("checkout", "-q", "loosen-release-time");
+    git("commit", "-q", "--allow-empty", "-m", "Refactor", "-m", "Intentset-Unchanged: SLICE-ASMT-SCHEDULE");
+    const acknowledged = await intentset(repo, ...review);
+    assert.equal(acknowledged.code, 0, "the trailer passes");
+    assert.ok(acknowledged.out.includes("- Acknowledged: a commit since the base says this changes no behavior"));
+  } finally {
+    await rm(repo, { recursive: true, force: true });
   }
 });
