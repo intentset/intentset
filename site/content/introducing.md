@@ -175,7 +175,7 @@ Real output, trimmed
 > [!NOTE]- Speaker notes
 > This is the change from the start of the deck. An agent can edit a record as easily as a test, and Intentset lets it. The difference is where the edit shows up: a changed test is one line in a long diff, while a changed rule is one sentence in a file the reviewer reads first, in product language. Either way, a person decides before it merges.
 
-::::card{#value .slide .key}
+::::card{#value .slide .key .dense}
 
 {.eyebrow}
 What a team gets
