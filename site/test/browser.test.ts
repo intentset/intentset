@@ -32,7 +32,6 @@ const PAGES = [
   "tools/cli/index.html",
   "specifications/index.html",
   "specifications/core/index.html",
-  "markset/index.html",
   "conformance/index.html",
   "glossary/index.html",
   "example/index.html",

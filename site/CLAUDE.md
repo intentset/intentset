@@ -13,8 +13,10 @@ repository-relative.
   Get started (Set up Intentset, then Add Intentset to your CI at `/start/ci/`, then a group "Once one capability
   works" holding Model the whole product with many agents and Make agents' work safe to accept, each label the page's
   h1); Reference (a Tools group with all tools, the command, the agent guide as "What your agents read" and a group
-  "What intentset serve shows" holding the map and the Atlas's six review pages, then a Specifications group, the
-  Markset page, conformance, the glossary). A record's page sits in Reference beneath Records. Examples left the bar
+  "What intentset serve shows" holding the map and the Atlas's six review pages, then a Specifications group,
+  conformance, the glossary). A record's page sits in Reference beneath Records. The Markset page left the site on
+  2026-11-26 (the user's decision; `/markset/` redirects to markset.org): the glossary's Record entry says records are
+  written in Markset and read as plain Markdown, which is all a visitor needs. Examples left the bar
   on 2026-11-26: it held one example, now told on How it works and drawn by the review pages. A rail entry is a page
   or a group whose label is not a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The adoption log, the roadmap and the readers page left the site on
   2026-11-26 (the user's decision): their old addresses are pages that send the reader to `docs/adoption/log.md`,

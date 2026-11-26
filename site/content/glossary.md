@@ -18,7 +18,7 @@ What the product should do and why, written before the code. An intent record sa
 
 ### Record
 
-One file of the model: Markdown, with YAML frontmatter under `intentset:` that the tools read, and text below it that people read. Each record has an ID, such as `RULE-ASMT-FUTURE`, and a type.
+One file of the model: Markdown, with YAML frontmatter under `intentset:` that the tools read, and text below it that people read. Each record has an ID, such as `RULE-RESET-LINK-EXPIRY`, and a type. Records are written in [Markset]({{markset}}), a form of Markdown, so they read as plain Markdown anywhere; the `markset:` line at the top of each one says so.
 
 ### Model
 

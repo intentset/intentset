@@ -240,7 +240,6 @@ export const RAILS: Rail[] = [
           ["List contract", "specifications/list/index.html"],
         ],
       },
-      ["Markset", "markset/index.html"],
       ["Conformance", "conformance/index.html"],
       ["Glossary", "glossary/index.html"],
     ],
@@ -281,12 +280,16 @@ export const FOOTER_LINKS: Array<[string, string]> = [
 /**
  * Pages that left the site (2026-11-26, the user's decision), each answered at its old address by a page that sends
  * the reader on, so a link from elsewhere still lands: the adoption log and the roadmap moved to the repository's
- * docs/, what reads a model is docs/consumers.md, and Lantern's record pages are its files. None is in the sitemap.
+ * docs/, what reads a model is docs/consumers.md, the Markset page is markset.org, and Lantern's record pages are
+ * its files. None is in the sitemap.
  */
 export const REDIRECTS: Array<[string, string]> = [
   ["pilot/index.html", `${REPO}/blob/main/docs/adoption/log.md`],
   ["roadmap/index.html", `${REPO}/blob/main/docs/roadmap.md`],
   ["tools/readers/index.html", `${REPO}/blob/main/docs/consumers.md`],
+  // The Markset page (until 2026-11-26): a visitor learning Intentset needs only that records are Markdown, which the
+  // glossary says; the format itself is Markset's own site.
+  ["markset/index.html", EXTERNAL.markset],
   // Lantern's record pages, until the site's example became the shop (2026-11-26): each record is still in the
   // repository, where `intentset init --example` and the conformance suite read it.
   ["example/ADR-ASMT-SEAM/index.html", `${REPO}/blob/main/examples/scheduling/ADR-ASMT-SEAM.md`],
@@ -400,7 +403,6 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["tools/index.html", "tools.md"],
   ["tools/cli/index.html", "cli.md"],
   ["specifications/index.html", "specifications.md"],
-  ["markset/index.html", "markset.md"],
   ["glossary/index.html", "glossary.md"],
   ["about/index.html", "about.md"],
   [NOT_FOUND, "404.md"],

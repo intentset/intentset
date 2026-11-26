@@ -44,13 +44,7 @@ test("every content page parses as Markset with no error diagnostics", async () 
 });
 
 /** The pages the retired phrases are checked on. */
-const RETIRED_PHRASE_PAGES = [
-  "index.html",
-  "start/index.html",
-  "specifications/index.html",
-  "markset/index.html",
-  "about/index.html",
-];
+const RETIRED_PHRASE_PAGES = ["index.html", "start/index.html", "specifications/index.html", "about/index.html"];
 
 test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
   const notes: Array<[string, string]> = [

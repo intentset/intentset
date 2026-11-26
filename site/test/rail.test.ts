@@ -98,7 +98,6 @@ test("every URL the site had before the bar changed still answers", () => {
     "specifications/profile-typescript-amplify-gen2/index.html",
     "specifications/publication/index.html",
     "specifications/export/index.html",
-    "markset/index.html",
     "about/index.html",
     "example/index.html",
   ]) {
@@ -188,7 +187,6 @@ test("Reference holds the tools and the specifications; Get started is one path 
     "tools/cli/index.html",
     "guide/index.html",
     "specifications/core/index.html",
-    "markset/index.html",
     "conformance/index.html",
     "glossary/index.html",
   ]) {

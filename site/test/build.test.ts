@@ -327,7 +327,7 @@ test("the only destinations outside the site are the repository, Markset, Coral 
       assert.ok(allowed.has(new URL(href).host), `${page}: unexpected destination ${href}`);
     }
   }
-  assert.match(html.get("markset/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
+  assert.match(html.get("glossary/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
   assert.match(html.get("about/index.html") ?? "", new RegExp(`href="${EXTERNAL.coralReef}"`));
 });
 
@@ -661,7 +661,10 @@ test("a page that left the site sends its reader on from its old address, and is
     assert.ok(doc.includes(`<meta http-equiv="refresh" content="0; url=${to}">`), path);
     assert.ok(doc.includes(`<a href="${to}">`), `${path}: a link for what does not follow a refresh`);
     assert.match(doc, /<meta name="robots" content="noindex">/, path);
-    assert.ok(to.startsWith(`${REPO}/blob/main/`), `${path} goes to the repository`);
+    assert.ok(
+      to.startsWith(`${REPO}/blob/main/`) || to === EXTERNAL.markset,
+      `${path} goes to the repository or Markset`,
+    );
     assert.ok(!sitemap.includes(path.replace(/index\.html$/, "")), `${path} is in the sitemap`);
     assert.ok(!html.has(path), `${path} is still a page`);
   }
