@@ -52,7 +52,7 @@
       "id": "core-markset",
       "topic": "core concepts",
       "question": "What is Markset and why do Intentset records use it?",
-      "expect": { "outcome": "answered", "sources": ["/markset/", "/specifications/core/", "/how-it-works/"] }
+      "expect": { "outcome": "answered", "sources": ["/glossary/", "/specifications/core/", "/how-it-works/"] }
     },
     {
       "id": "core-example-shop",
