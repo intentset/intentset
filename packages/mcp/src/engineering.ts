@@ -110,6 +110,14 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
                 Object.keys(surfaces).map((key) => [key, { knowledge: keep(surfaces[key].knowledge) }]),
               ),
             };
+      const verification =
+        meta.verification?.exercises === undefined
+          ? (meta.verification ?? null)
+          : { ...meta.verification, exercises: keep(meta.verification.exercises) };
+      const tips =
+        meta.tips === undefined
+          ? null
+          : Object.fromEntries(Object.entries(meta.tips).filter(([key]) => keep([key]).length === 1));
       return result(
         envelope([artifact.path], {
           tool: "intentset_lookup",
@@ -128,9 +136,9 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
             linkedFrom: derived,
             availability: meta.availability ?? null,
             slice,
-            verification: meta.verification ?? null,
+            verification,
             measure: meta.measure ?? null,
-            tips: meta.tips ?? null,
+            tips,
             reviewedBy: meta.reviewedBy ?? null,
             reviewedAt: meta.reviewedAt ?? null,
             approval: exportApproval(meta.approval),

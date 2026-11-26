@@ -302,6 +302,38 @@ test("restricted artifacts read as absent, are withheld from links and context, 
   await trusted.close();
 });
 
+test("a restricted ID in a knowledge record's tips or a verification's exercises is withheld and counted", async () => {
+  const restricted = graphOf((name, source) => {
+    if (name === "RULE-ASMT-FUTURE.md" || name === "SLICE-ASMT-SCHEDULE.md") {
+      return source.replace("visibility: internal", "visibility: restricted");
+    }
+    if (name === "TEST-ASMT-SCHEDULE.md") {
+      return source.replace(
+        "    selector: schedule-review-v1\n",
+        "    selector: schedule-review-v1\n    exercises:\n    - SLICE-ASMT-SCHEDULE\n",
+      );
+    }
+    return source;
+  });
+  const client = await engineering({ graph: restricted });
+  const knowledge = (await call(client, "intentset_lookup", { id: "KB-ASMT-SCHEDULE" })).json;
+  assert.deepEqual(Object.keys((knowledge.artifact as { tips: object }).tips), ["BEH-ASMT-SCHEDULE"]);
+  assert.equal(knowledge.withheld, 2);
+  const verification = (await call(client, "intentset_lookup", { id: "TEST-ASMT-SCHEDULE" })).json;
+  assert.deepEqual((verification.artifact as { verification: { exercises: string[] } }).verification.exercises, []);
+  for (const json of [knowledge, verification]) {
+    assert.ok(!JSON.stringify(json).includes("RULE-ASMT-FUTURE"));
+    assert.ok(!JSON.stringify(json).includes("SLICE-ASMT-SCHEDULE"));
+  }
+  await client.close();
+
+  const trusted = await engineering({ graph: restricted, includeRestricted: true });
+  const all = (await call(trusted, "intentset_lookup", { id: "KB-ASMT-SCHEDULE" })).json;
+  assert.deepEqual(Object.keys((all.artifact as { tips: object }).tips), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  assert.equal(all.withheld, 0);
+  await trusted.close();
+});
+
 const AVAILABILITY = [
   "  availability:",
   "    products:",
