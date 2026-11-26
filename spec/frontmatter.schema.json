@@ -324,12 +324,12 @@
               "minLength": 1
             },
             "self": {
-              "type": ["string", "null"],
+              "type": "string",
               "minLength": 1,
               "description": "The knowledge's own content hash when it was reviewed: its content-v1 hash without ending, whatever hash says (publication \u00a73, ADR 0027)."
             },
             "gates": {
-              "type": ["string", "null"],
+              "type": "string",
               "minLength": 1,
               "description": "The gate hash of the review's sources when it was reviewed: each source's audiences, visibility and availability (publication \u00a73, ADR 0027)."
             }

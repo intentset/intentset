@@ -17,8 +17,8 @@ import { bindTips, readHelp } from "@intentset/help";
 
 const read = readHelp(await (await fetch("/help/help.json")).text());
 if (read.ok) {
-  const { bound, missing } = bindTips(document, read.help); // every element with data-behavior="BEH-..." gets its tip
-  console.log(`${bound.length} tips bound; no tip yet for`, missing);
+  const { bound, missing, pendingReview } = bindTips(document, read.help); // every element with data-behavior="BEH-..." gets its tip
+  console.log(`${bound.length} tips bound; no tip yet for`, missing, "; help under review for", pendingReview);
 }
 ```
 
@@ -44,8 +44,31 @@ const watch = watchTips(container, read.help, {
   render: (element, tip) => myTooltip.attach(element, tip.text),
   unrender: (element) => myTooltip.detach(element), // with your own render and no unrender, nothing is undone
 });
-watch.coverage(); // { bound, missing } as of the last pass
+watch.coverage(); // { bound, missing, pendingReview } as of the last pass
 watch.dispose(); // stop observing and unrender every element it bound
+```
+
+**Help under review.** A publication may keep knowledge under review (publication §3, ADR 0027): published from the
+text its last review covered while what it explains has changed. Its entry in `knowledge`, and each tip it contributes,
+carries `underReview: true`; a tip keyed to a rule is held back instead and its ID listed in `withheldForReview`,
+because a rule's tip is the reason a product gives for a refusal. Every reader here leaves help under review out by
+default (`underReviewHelp: "exclude"`), since your renderer may not show that it is under review; pass
+`underReviewHelp: "include"` to `tipFor`, `helpForPage`, `articles`, `bindTips` or `watchTips` once it does, and show
+the mark wherever you show the item. Either way the ID goes to `pendingReview`, never to `missing`, and a bound element
+under review also gets `data-help-under-review`.
+
+`tipFor` returns null for no tip, a held-back rule tip and, under `exclude`, a tip
+under review alike, so it cannot measure coverage on its own. Count coverage from a `Binding` (`bound`, `missing`,
+`pendingReview`), from `helpForPage`, or from `reviewStateFor(help, id)`, which answers `current`, `under-review`,
+`held-back` or `none`; a coverage report counts `held-back` as written. `articles(help, options)` gives the file's
+articles honouring `underReviewHelp`, with the IDs under review in `pendingReview`:
+
+```ts
+import { articles, reviewStateFor, tipFor } from "@intentset/help";
+
+tipFor(read.help, "BEH-ASMT-SCHEDULE", { underReviewHelp: "include" }); // the tip, with tip.underReview when it is
+reviewStateFor(read.help, "RULE-ASMT-AUTH"); // "held-back" while its knowledge is under review
+const { knowledge, pendingReview } = articles(read.help); // current articles; under-review IDs in pendingReview
 ```
 
 The file was published for one reader: every audience, role and flag it names, on one product, release and edition.

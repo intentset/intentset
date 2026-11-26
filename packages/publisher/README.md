@@ -26,8 +26,8 @@ With pnpm, `pnpm dlx --package=@intentset/cli intentset …`, or `pnpm exec inte
 installed. The command is always `@intentset/cli`'s: this package has no `intentset` binary, and npx asked
 for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
-From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the index, the help
-file, the snapshot file and the diagnostics, and refuses the whole request when any field is missing or undeclared
+From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the documents kept
+under review (`keptUnderReview`), the index, the help file, the snapshot file and the diagnostics, and refuses the whole request when any field is missing or undeclared
 (PUB001). A request is for one reader: `audience` and `role` are each one value or a list of every one the reader holds
 (the CLI repeats `--audience` and `--role`), read as a set, while `product`, `release` and `edition` are one value
 each. Every file names the request's audiences, roles and flags as sorted lists, and they are held all-of: serve the
@@ -44,6 +44,18 @@ keeps its URL only when the scheme is `http`, `https` or `mailto`, or there is n
 (`//host/x`) has none, and resolves against the scheme of the page that shows it. A diagram drawn from a captioned
 figure is embedded as a `data:image/svg+xml` image that Markset's renderer builds, with the source's text escaped: a
 product whose Content Security Policy restricts `img-src` must allow `data:` to show it.
+
+**Knowledge kept under review.** Knowledge whose sources changed what they promise is needs-review and is not
+published as current. When the request sets `keepUnderReview` (the CLI's `--keep-under-review`; off by default),
+knowledge that is keepable is published anyway, from the text its last review covered, which the review's `self` pin
+proves, and only when no source changed who may see it, which its `gates` pin proves (publication §3, ADR 0027). Such
+a document is written at `under-review/<ID>.md`, apart from the current documents, listed in `keptUnderReview` and the
+index's `keptUnderReview`, never in `documents` or `index.published`, and never chunked for retrieval. It is marked:
+its `intentset-publication` block carries `underReview: true` and `changedSinceReview` (the admitted sources that
+changed, and a count of the others), its body carries the fixed note `UNDER_REVIEW_NOTE` right after its title, and its
+HTML page carries `noindex`. In the help file its entry and tips carry `underReview: true`, and a tip keyed to a rule is
+held back, listed in `withheldForReview`. Anything that shows such a document or tip must show that it is under review.
+Knowledge that is not keepable stays excluded, with a CORE008 that says which condition failed.
 
 **When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control. The
 commit it names is the one checked out when the command ran, which is never the commit that will contain the output,

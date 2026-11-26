@@ -221,8 +221,9 @@ its own version read: before `0.3` a review with no `hash` pinned the whole file
 was a kind no pin matched. A pin that did not match is left as written, and only the pins of a knowledge record the
 move rewrites, or of one already at the new `spec`, are re-pinned. A review's `self` is re-pinned the same way when
 it equals the knowledge's own content hash as written; `gates` is never re-pinned, because no move changes it. A
-review current before the move is so after it, with no step of its own, and a stale review stays A review is renewed by the person reviewing, as a change to the knowledge (Core §7): `reviewedBy`, `reviewedAt`, a
-pin of each source at its current hash, `self` and `gates`, with `status` and `approval` left as they are.
+review current before the move is so after it, with no step of its own, and a stale review stays stale. A review is
+renewed by the person reviewing, as a change to the knowledge (Core §7): `reviewedBy`, `reviewedAt`, a pin of each
+source at its current hash, `self` and `gates`, with `status` and `approval` left as they are.
 
 In conformance fixtures only, a pin of the literal `@current` stands for the source's hash, of the record's kind, in
 the case's own tree and is bound before projection. Unbound, it equals no hash and so reads as changed. A literal pin

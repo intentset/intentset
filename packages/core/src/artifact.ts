@@ -814,7 +814,8 @@ function readReview(value: unknown, field: string, problem: Problem): ReviewMeta
   }
   const review: ReviewMeta = { sources };
   for (const key of ["hash", "snapshot", "self", "gates"] as const) {
-    if (!Object.hasOwn(value, key) || value[key] === null) continue;
+    // Core §9: a null `hash` or `snapshot` is absent; a null `self` or `gates` is not a string, so CORE001.
+    if (!Object.hasOwn(value, key) || (value[key] === null && (key === "hash" || key === "snapshot"))) continue;
     const text = value[key];
     if (typeof text === "string" && text !== "") review[key] = text;
     else

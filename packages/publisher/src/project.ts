@@ -323,7 +323,12 @@ function refusal(
 function keepRemediation(review: ReviewStatus | null, request: CheckedRequest): string {
   const renew =
     "Review the knowledge against its current sources and its own text, then renew the review with `intentset approve` (Core §9)";
-  const first = review?.keepBlockers[0];
+  // The own-text case is worded apart wherever it holds; otherwise name the first blocker that says more than
+  // "no source changed", which is the usual company of an edit to the knowledge itself.
+  const blockers = review?.keepBlockers ?? [];
+  const first = blockers.includes("self-changed")
+    ? "self-changed"
+    : blockers.find((blocker) => blocker !== "no-source-changed");
   if (review?.keepable && !request.keepUnderReview) {
     return `${renew}; until then it could be published under review: set keepUnderReview (publication §3).`;
   }

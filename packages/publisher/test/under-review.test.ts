@@ -137,6 +137,14 @@ test("BEH-PUBLISH-UNDER-REVIEW: CORE008 says which condition of keepable failed,
   assert.equal(edited.field, "/intentset/review/self");
   assert.match(edited.message, /its own text changed since review/);
   assert.match(edited.remediation, /own text changed since it was reviewed/);
+  const current = { "BEH-ASMT-SCHEDULE": "@current", "RULE-ASMT-AUTH": "@current", "RULE-ASMT-FUTURE": "@current" };
+  const ownTextOnly = remediation(
+    { kb: reviewed({ "intentset.review": { sources: current, self: "0".repeat(64), gates: "@current" } }) },
+    customer({ ...ids, keepUnderReview: true }),
+  );
+  assert.equal(ownTextOnly.field, "/intentset/review/self");
+  assert.match(ownTextOnly.message, /its own text changed since review/);
+  assert.match(ownTextOnly.remediation, /own text changed since it was reviewed, so it cannot be kept under review/);
   assert.match(
     remediation(
       { kb: reviewed({ "intentset.review": { sources: STALE, self: "@current", gates: "0".repeat(64) } }) },

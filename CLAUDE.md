@@ -251,7 +251,8 @@ from source (the installed bin points at `dist/`, which only the build writes).
   an error. A refactor answers drift with an `Intentset-Unchanged: SLICE-…` trailer.
 - **Approved by a maintainer on 2026-10-15**, all but ten records: OUT-DOCS-IMPROVE waits for a measure (CORE012
   refuses an approved outcome nothing measures), and the nine rules have no verification (CORE007 refuses an approved
-  rule at L3 without one). A new record is a draft until a maintainer approves it; an agent never approves one.
+  rule at L3 without one). The behaviors and verifications the 0.3 changes added or revised are drafts again,
+  awaiting a maintainer. A new record is a draft until a maintainer approves it; an agent never approves one.
 
 ## Status
 
