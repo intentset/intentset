@@ -8,9 +8,10 @@ repository-relative.
   contact address, price, legal or privacy claim, or claim that is not true today, such as a tool not yet released.
 - **The bar is five sections by what a reader came to do** (2026-10-05, after markset.org's): Start, Tools,
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
-  each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
-  agent guide), Tools (all
-  tools, the command, what reads a model), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
+  each section's pages, shown beside every page in it: Start, one reading path (2026-11-25: the introduction, How it
+  works, Try it on your code, then a group "Once one capability works" holding Model the whole product with many agents
+  and Make agents' work safe to accept, each label the page's h1), Tools (all tools, the command, what reads a model,
+  and the agent guide as "What your agents read"), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
   of the section, 2026-10-20: "Lantern, a worked example", a group holding the map, the walkthrough and "Review pages",
   a group of the Atlas's five other pages; then the adoption log). A rail entry is a page or a group whose label is not
   a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the map
@@ -42,6 +43,12 @@ repository-relative.
   changes a pinned hash: review the knowledge against the change, re-pin it (`shasum -a 256`) and update `reviewedAt`,
   or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
   record used to be patches `status: draft` itself.
+- **The illustrative change is told one way** (2026-11-25), on Home and in the introduction (`#problem`, `#trust` and
+  `#review`): an agent fixing assessments that open an hour late in Lantern hands back 2,140 lines in 31 files, and
+  one of its changes loosens `RULE-ASMT-FUTURE` to accept a release time up to an hour in the past, with the test that
+  expected the refusal changed to match. It is always labelled illustrative, with Lantern named as invented. Change it
+  in both places or neither. No page says a pass counts only "on this commit": a pass counts while what it checked is
+  unchanged, and a gate may ask for a pass on the commit under review (Streamlane SL-710).
 - **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
   drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the
   Examples rail. Each record's page is the Atlas's (2026-11-02): served at `/example/<ID>/`, the address the

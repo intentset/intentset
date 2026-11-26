@@ -371,8 +371,13 @@ test("the introduction is a deck of 23 slides in order, each with its notes fold
   );
   // The five parts each open on their first slide.
   for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
-  // The one caveat the slides carry, on the example review.
+  // The illustrative change is Home's (2026-11-25): one figure, labelled where it is shown, on the problem and on the
+  // example review. A pass is never said to count only on this commit (SL-710).
   assert.ok(text(body).includes("Illustrative · not a live report"));
+  assert.ok(text(body).includes("Illustrative · one change in Lantern, an invented product"));
+  assert.ok(text(body).includes("2,140 lines"), "the deck's figure is Home's");
+  assert.ok(!text(body).includes("6,800"), "the deck's old figure is gone");
+  assert.ok(!/on this commit/.test(text(body)), "no pass is bound to this commit");
   // Every picture its theme draws is published beside it.
   const theme = await readFile(join(dist, INTRODUCTION.stylesheet), "utf8");
   const pictures = [...theme.matchAll(/url\("\.\.\/([^"]+)"\)/g)].map((m) => m[1] ?? "");

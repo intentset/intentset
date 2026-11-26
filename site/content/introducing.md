@@ -8,7 +8,7 @@ A slide deck
 # Introducing Intentset
 
 {.lead}
-What Intentset is, why it exists and how it works, in 23 slides: plain words first, then the files, the checks and the tools under the hood. Each slide's speaker notes are folded beneath it.
+What Intentset is, why it exists and how it works, in 23 slides, for anyone deciding whether it is worth a closer look. Parts one to three make the case in plain words and need no setup; parts four and five are for whoever will set it up. Each slide's speaker notes are folded beneath it.
 
 {.deck-parts}
 1. [Why Intentset exists](#cover): agents write code faster than anyone can read it.
@@ -19,6 +19,8 @@ What Intentset is, why it exists and how it works, in 23 slides: plain words fir
 
 {.deck-hint}
 On a wide screen, Present shows one slide at a time, filling the screen: the arrow keys, Space and Page Down move between them, N shows the speaker notes, and Esc comes back here. Printed, it is one slide to a page, without the notes.
+
+Already have the idea? [Try it on your code](../start/).
 
 ::::card{#cover .slide .cover}
 
@@ -55,9 +57,9 @@ A team used to understand its product because it wrote the code. Now agents writ
 :::grid{cols=2 .stats}
 - One pull request, as an agent hands it to a reviewer
 
-  **6,800 lines**
+  **2,140 lines**
 
-  of code changed, across 74 files
+  of code changed, across 31 files
 
 - {.spotlight}
   The same pull request, as a person can read it
@@ -67,35 +69,38 @@ A team used to understand its product because it wrote the code. Now agents writ
   lines of records, in product language
 :::
 
+{.caveat}
+Illustrative · one change in Lantern, an invented product
+
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Both boxes are one pull request, of a size agent-written changes reach every day, and many run larger. Nobody can review thousands of lines of generated code properly, every day. But the same change, described as what it does to the product, is short enough to read. That gap is what Intentset fills.
+> Both boxes are one pull request. It is illustrative, in Lantern, the invented school product this deck uses throughout: an agent asked to fix assessments that open an hour late hands back 2,140 lines in 31 files. Nobody can review thousands of lines of generated code properly, every day. But the same change, described as what it does to the product, is short enough to read. That gap is what Intentset fills.
 
 ::::card{#trust .slide .turn}
 
 ## Without a record of what the product promises, every change asks for trust.
 
 :::grid{cols=3 .ruled}
-- In every change
+- While you still read every change
 
-  Behavior shifts without anyone deciding it should.
+  You know what the product does, because you watched each part of it arrive.
 
-- Over months
+- When the changes outgrow you
 
-  Debt gathers where nobody looks.
+  Each pull request passes CI and looks reasonable. You skim the diff and approve.
 
 - When someone asks
 
-  What the product does is known only to the code, and to whichever agent read it last.
+  What the product does when something fails is in the code, and nobody has read all of it.
 :::
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> This is the risk in one sentence. If nobody wrote down what the product is supposed to do, nobody can tell whether a change kept it. Review turns into trusting the agent. Each change shifts a little behavior nobody chose; over months the shortcuts pile up out of sight; and when a customer or a colleague asks what the product does, the only answer is in the code.
+> This is the risk in one sentence. If nobody wrote down what the product is supposed to do, nobody can tell whether a change kept it, and review turns into trusting the agent. Here is how it shows, in an illustrative change in Lantern, the invented product: the agent fixing assessments that open an hour late also lets the release-time check accept a time up to an hour in the past, and updates the test that expected the refusal, so CI stays green and the pull request is approved. Nobody decided that teachers may now schedule an assessment in the past, and the teachers' guide still says they cannot.
 
 ::::card{#idea .slide}
 
@@ -130,7 +135,7 @@ Five questions about each thing the product does, answered in short files beside
 
   Is it tested, and passing now?
 
-  Two tests, both passing on this commit.
+  Its check is written down; in this invented example it has not been run.
 
 - ### Words
 
@@ -240,7 +245,7 @@ A worked example
 {.eyebrow}
 How it fits
 
-## Agents keep the model. You keep control
+## Agents keep the records. You keep control
 
 :::grid{cols=3 .loop}
 - 01
@@ -297,21 +302,21 @@ Step 05 · the product review
 ::::columns{ratio="1:2"}
 
 {.lead}
-One pull request, told as what it does to the product.
+The same pull request, told as what it does to the product.
 
 - **When:** before it merges, once its automated checks have run.
 - **Who:** the pull request's reviewer, often whoever owns the product decision.
-- **How:** from `intentset review`, beside the code review, which still checks the code.
+- **How:** from the `intentset review` report, read beside the code review, which still checks the code.
 
 ::col
 
 :::card{.panel .changes}
-- [Code]{.badge} 6,800 lines changed in 74 files
-- [Behavior]{.badge .info} **Schedule a student assessment** now also refuses a release time after the term ends
-- [Rule]{.badge} **Release time** was "any future time"; now "a future time before the term ends"
-- [Checks]{.badge} Two updated; one passes on this commit, one has not run
-- [Knowledge]{.badge} The teachers' guide describes the old rule, so it is held for review
-- [Drift]{.badge} None: every part of the code that changed updated its records
+- [Code]{.badge} 2,140 lines changed in 31 files
+- [Behavior]{.badge .info} **Schedule a student assessment** now accepts a release time up to an hour in the past
+- [Rule]{.badge} **Require a future release time**: loosened, and waiting for a person to agree
+- [Checks]{.badge} The test on this rule changed with it; no current pass on the new code yet
+- [Help]{.badge} The teachers' guide still describes the old rule, so it is held for review
+- [Drift]{.badge} None: no code changed without its records
 :::
 
 ::::
@@ -323,14 +328,14 @@ Illustrative · not a live report
 
 {.notes}
 > [!NOTE]- Speaker notes
-> The story of this change in one line: the rule about when an assessment may open was tightened so teachers cannot schedule past the end of term, and the scheduling behavior now refuses those times. That is what a reviewer reads instead of, or before, nearly seven thousand lines of code: which promise changed, which rule moved, which checks ran, which customer explanation now needs another look, and whether any code changed without its records. One honest gap is visible too: one of the two checks has not run yet.
+> This is the change from the start of the deck, still illustrative and still in Lantern, the invented product. The story of it in one line: fixing assessments that open an hour late, the agent loosened the rule about when an assessment may open, so a release time up to an hour in the past is now accepted, and changed the test that expected the refusal. That is what a reviewer reads instead of, or before, more than two thousand lines of code: which promise changed, which rule moved and that no person has agreed to it yet, what happened to its check, which customer explanation now needs another look, and whether any code changed without its records. One honest gap is visible too: the changed test has no current pass on the new code.
 
 ::::card{#questions .slide}
 
 {.eyebrow}
 What you can ask
 
-## Questions only a connected model answers
+## Questions only linked records answer
 
 :::grid{cols=4 .asks}
 - ### Product managers
@@ -372,7 +377,7 @@ Honest numbers
 ## Having a test is not passing it
 
 {.lead}
-Many dashboards turn green as soon as a promise has a test attached. Intentset reports two numbers, side by side.
+A promise can have a test and still have no current pass: the test may not have run since the code changed, or may have been changed with it. Intentset reports two numbers, side by side.
 
 :::grid{cols=2}
 - Linked · 12 of 12 promises
@@ -395,7 +400,7 @@ The other five are shown as what they are: stale, skipped, failed, errored or ne
 
 {.notes}
 > [!NOTE]- Speaker notes
-> In this example every one of twelve promises has a test, so a dashboard that counts links would show all twelve green. Only seven have a test that passed on the code as it stands now. The other five might be fine, but nobody can say so: a test that passed last month, on code that has changed since, proves nothing about today. Intentset keeps the two numbers apart and shows both.
+> In this example every one of twelve promises has a test, so counting the tests attached would call all twelve covered. Only seven have a test that passed on the code as it stands now. The other five might be fine, but nobody can say so: a test that passed last month, on code that has changed since, proves nothing about today. Intentset keeps the two numbers apart and shows both.
 
 ::::card{#under .slide .part}
 
@@ -406,6 +411,8 @@ Part two
 
 {.lead}
 The files, the links between them, who owns what in the code, how evidence counts, and the tools that read it all.
+
+For the people who set it up. If you came for the idea, you have seen it: skip to [Adopting it](#levels) or [Try it](#try).
 
 ::::
 
@@ -778,11 +785,11 @@ Adoption
 |---|---|---|
 | **L1** Product model | Records parse, link and read correctly | The model is well formed |
 | **L2** Traceable implementation | Ownership and architecture checks | Each behavior has one owner, and the code respects it |
-| **L3** Verified product | Current passing evidence | Each claim has a current pass |
-| **L4** Published knowledge | Reviewed audience projections | What you publish is authorized and traceable |
+| **L3** Verified product | Current passing evidence | Each promise has a current pass |
+| **L4** Published knowledge | Reviewed help for each audience | What you publish is authorized and traceable |
 | **L5** Continuous product truth | CI checks, impact reports and release automation | All of the above, kept true on every change |
 
-Each level includes the ones before it. A claim always names its scope and snapshot: one capability passing at L3 is not a repository at L3.
+Each level includes the ones before it. A conformance claim always names its scope and the commit it was made at: one capability passing at L3 is not a repository at L3.
 
 ::::
 
@@ -820,7 +827,7 @@ That package, not released, counts what each behavior saw in use.
 |---|---|
 | slices checked | 56 |
 | records | 1,282 |
-| tolerated violations, since 11 October 2026 | 0 |
+| known architecture violations left, since 11 October 2026 | 0 |
 :::
 
 {.caveat}
@@ -837,14 +844,15 @@ Figures as published in the adoption log at [intentset.org/pilot](../pilot/), co
 {.eyebrow}
 Get started
 
-## Try it on one capability
+## Try it
 
 {.lead}
-Let an agent model one capability from your code and tests, review what it wrote, and see what it finds.
+In a scratch directory, not your repository: install the command, add Lantern's records, check them, and follow one behavior's links.
 
 ::::columns{ratio="3:2"}
 
 ```sh
+mkdir intentset-demo && cd intentset-demo && npm init -y
 npm install --save-dev @intentset/cli
 npx intentset init --example
 npx intentset validate
@@ -854,7 +862,7 @@ npx intentset impact BEH-ASMT-SCHEDULE
 ::col
 
 {.cta}
-[intentset.org/start](../start/)
+Your own code: [intentset.org/start](../start/)
 
 Specifications v0.2 in review. Toolchain on npm under @intentset. MIT licensed.
 
@@ -864,4 +872,4 @@ Specifications v0.2 in review. Toolchain on npm under @intentset. MIT licensed.
 
 {.notes}
 > [!NOTE]- Speaker notes
-> The example command sets up Lantern, the invented product from this deck, so you can run validate and impact before touching your own repository. The [start page](../start/) on intentset.org walks through modelling your first real capability.
+> The example command sets up Lantern, the invented product from this deck, so you can run validate and impact before touching your own repository. Run it in a scratch directory: in your own repository, Lantern's records would land in your model. Then [Try it on your code](../start/) walks through modelling your first real capability.
