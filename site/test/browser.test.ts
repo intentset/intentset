@@ -29,6 +29,7 @@ const PAGES = [
   "guide/index.html",
   "tools/index.html",
   "tools/cli/index.html",
+  "tools/readers/index.html",
   "specifications/index.html",
   "specifications/core/index.html",
   "markset/index.html",

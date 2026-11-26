@@ -10,7 +10,7 @@ repository-relative.
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
   each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
   agent guide), Tools (all
-  tools, the command), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
+  tools, the command, what reads a model), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
   of the section, 2026-10-20: "Lantern, a worked example", a group holding the map, the walkthrough and "Review pages",
   a group of the Atlas's five other pages; then the adoption log). A rail entry is a page or a group whose label is not
   a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the map

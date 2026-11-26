@@ -117,8 +117,8 @@ learning from questions, and the AWS rules).
   writes every carrier and dates the Unreleased entry, and refuses one that has drifted; the `v<version>` tag on main
   publishes. A spec's `revision` is the date its
   text last changed.
-- Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline read exports and move
-  their pins when they update. A reader rejects an older export, and a record that declares an older `spec`:
+- Before 1.0 a changed export envelope is a minor bump of the packages; Driftline reads exports and Streamlane reads the
+  repository's records and run records (`/tools/readers/`), and each moves its pin when it updates. A reader rejects an older export, and a record that declares an older `spec`:
   `intentset migrate --to <spec>` rewrites `spec` and `profile` in a repository's records.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.

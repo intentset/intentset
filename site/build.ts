@@ -197,6 +197,7 @@ export const RAILS: Rail[] = [
     items: [
       ["All tools", "tools/index.html"],
       ["The intentset command", "tools/cli/index.html"],
+      ["What reads an Intentset model", "tools/readers/index.html"],
     ],
   },
   {
@@ -331,6 +332,7 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["pilot/index.html", "pilot.md"],
   ["tools/index.html", "tools.md"],
   ["tools/cli/index.html", "cli.md"],
+  ["tools/readers/index.html", "readers.md"],
   ["specifications/index.html", "specifications.md"],
   ["markset/index.html", "markset.md"],
   ["roadmap/index.html", "roadmap.md"],
