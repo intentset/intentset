@@ -45,7 +45,7 @@ pnpm exec intentset init
 
 The command is built from libraries a tool of your own can use directly:
 
-- `@intentset/core` reads records, validates them, traverses impact, selects the records that match a selector and writes the export. It has no dependencies, and its `readExport` is the consumer's check of an export another repository produced.
+- `@intentset/core` reads records, validates them, traverses impact, selects the records that match a selector and writes the export. It has no dependencies, and its `readExport` is the consumer's check of an export another repository produced. A tool can also read the records in the repository directly: [What reads an Intentset model](readers/) says what each path needs.
 - `@intentset/markset-adapter` is the one place Markset is read: it turns a Markset document into what core validates, with Markset's own diagnostics kept apart.
 - `@intentset/architecture` checks slices, claims, imports, layers and resources.
 - `@intentset/verification` reads test reports into run records and decides whether each one still counts.

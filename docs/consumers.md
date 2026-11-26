@@ -1,8 +1,11 @@
 # Consumers of the export: where each need is met
 
-Streamlane and Driftline read Intentset models through the export (`spec/export.md`). This note maps what each one
-needs to the field, report or fixture that supplies it, so implementation in either repository starts from the
-contract rather than from this one's code. The rules a consumer follows are spec/export.md §5; what is below is
+Driftline reads Intentset models through the export (`spec/export.md`). Streamlane does not: it reads the repository's
+records at a commit through its GitHub App and the run records published as assets of the repository's
+`evidence-records` release (Streamlane ADRs 0103 and 0104, which rejected reading the export), and writes the export
+only as a producer. intentset.org's `/tools/readers/` says which reads by which path. This note maps what a reader of
+the export needs to the field, report or fixture that supplies it, so implementation starts from the contract rather
+than from this one's code. The rules a consumer follows are spec/export.md §5; what is below is
 where to find things.
 
 ## Producing the export in CI
@@ -51,6 +54,9 @@ reports supplied, or a rejection category. A consumer in another language makes 
 importer over `@intentset/conformance-suite/consumer/` (or `tests/consumer/` here) in the consumer's own tests.
 
 ## Streamlane
+
+The table is what Streamlane was to need from the export before its ADR 0104 chose to read the repository instead; it
+is kept for the export's fields, and no Streamlane code reads an export.
 
 | Requirement | Met by |
 |---|---|
@@ -116,7 +122,7 @@ Both are breaking, they ship together as 0.7.0, and a consumer moves both pins a
 | Where | What changes |
 |---|---|
 | The repository that produces the export (Streamlane's `model:export`, Intentset's own) | Move `@intentset/cli` to 0.7.0, and run `intentset migrate --to 0.2` once on a clean tree, committing what it rewrites: it changes `spec` and `profile` in each record the scope matches and nothing else. A 0.7.0 reader rejects a record that declares `0.1` (CORE001). |
-| A reader of the export (`readExport`, Driftline's `modelFromExport`, Streamlane's importer) | Support `intentset/export/0.4` and drop 0.3, which a 0.4 reader rejects as `unsupported-contract`. Accept `reports.evidence.binding`, `bindingReason`, each verification's `binding` and `subject`, a run record's optional `binding` and `subjectHash`, and a verification artifact's `exercises`; take a status as the producer's verdict under that binding (export §4.1) and show the binding beside it. |
+| A reader of the export (`readExport`, Driftline's `modelFromExport`) | Support `intentset/export/0.4` and drop 0.3, which a 0.4 reader rejects as `unsupported-contract`. Accept `reports.evidence.binding`, `bindingReason`, each verification's `binding` and `subject`, a run record's optional `binding` and `subjectHash`, and a verification artifact's `exercises`; take a status as the producer's verdict under that binding (export §4.1) and show the binding beside it. |
 | A consumer's own tests | Run the importer over the fixtures again: `subject-current.json`, `subject-stale.json`, `commit-fallback.json`, `subject-hash-mismatch.json` and `unsupported-contract-0.3.json` are new, and every accepted envelope's `spec` is `0.2`. |
 
 A record imported by commit binding stays what it was; under the default a repository with slices reads such a record as
