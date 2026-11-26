@@ -1,6 +1,6 @@
 # ADR 0015: The Atlas's map carries one script, and the picture stands without it
 
-**Status:** accepted, 2026-10-15
+**Status:** accepted, 2026-10-15; amended 2026-11-03 (sizes) and 2026-11-26 (the layered map, #159)
 
 ## Context
 
@@ -43,6 +43,21 @@ has to work at that size too.
   links first, then product, intent and outcome records, then capabilities and slices, behaviors, rules, and checks,
   the most linked first and by ID after that. The pass is one sweep over the records and one over the ranked ones on a
   grid of eight-pixel cells; about 5 ms a wheel step on 3,800 records (the layout in the file is unchanged).
+- **The whole model is layered, and the force layout draws a record's neighborhood (amended 2026-11-26, #159).** On a
+  full product the force layout was a dizzying array of circles over one another, and it showed none of the hierarchy a
+  person reads a model in (Gary, 2026-11-26). The map now lays the model out in rows by position alone: products,
+  intents and outcomes on top, each outcome's measures beside it, then every capability as one node with a count of the
+  records it holds, wrapped toward the frame's proportions, and records no capability reaches in a row of their own.
+  A capability holds its behaviors, their rules and scenarios, the checks and knowledge covering them and the slices,
+  contracts and decisions delivering them, laid out in columns below the capabilities and hidden until a reader opens
+  it. Every detail shares that place, so one capability is open at a time, and a record two capabilities reach is drawn
+  in the first by ID (the panel lists its links to the other). Without the script the picture shows the capabilities
+  folded, each a link to its page; with it, selecting a capability opens it and fits the view to it, All capabilities
+  folds it, and finding or selecting a record another capability holds opens that one. No two labels overlap in any
+  view the map shows. The layout is order and arithmetic only, so it stays deterministic, and costs a few milliseconds
+  on 3,000 records where the force layout took about a second. The force layout is kept for what it shows well: every
+  record's page ends with its neighborhood, the record and the records one link away and, under 24 in all, two links
+  away, as a picture with no controls and no script, so a record's page still runs none.
 - **No dependency.** The layout is about a hundred lines and the script about 250; a graph library (Cytoscape, sigma,
   D3's force module) was the alternative, rejected because the package would take a dependency, and with it a supply
   chain, for what is a fixed layout and a few event handlers, and because a library computing layout in the browser
@@ -61,7 +76,7 @@ has to work at that size too.
   map is public on intentset.org.
 - The Atlas is no longer script-free. The exception is one file on one page, with a test that holds both, and a page
   that still works when the file does not load.
-- The whole-model picture of a large model is dense; the explorer is for finding and focusing, not for reading it all
-  at once. Clustering by capability, or a map per capability, can come later if adopters ask for it.
+- The whole-model picture of a large model was dense; since 2026-11-26 it is folded by capability, and the force
+  layout's picture of a record's links is on that record's page.
 - On the map, a record is a target the size of its circle. Find and the panel's links are the equivalent controls a
   reader can always use instead (WCAG 2.5.8), and the site's browser test counts the map's links apart for that reason.

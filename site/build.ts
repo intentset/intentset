@@ -1083,7 +1083,12 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
   return {
     ...rendered,
     body: placeHtml(rendered.body, page.html ?? ""),
-    ...(isMap ? { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] } : {}),
+    // The map's styles on the map and on a record's page, which draws the record's neighborhood; the script on the map alone.
+    ...(isMap
+      ? { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] }
+      : isRecord
+        ? { styles: [ATLAS_MAP_STYLES] }
+        : {}),
     ...(isRecord
       ? {
           railPlace: {

@@ -26,7 +26,8 @@ import {
 import { reviewStatus } from "@intentset/publisher";
 import type { Model } from "../model.ts";
 import { MAP_SLOT_SOURCE, type PageSource } from "../page.ts";
-import { type PageLink, recordPath, recordText } from "../record-text.ts";
+import { NEIGHBORHOOD_LIMIT, neighborhoodHtml, neighborhoodLayout } from "../map.ts";
+import { type PageLink, recordPath, recordText, relativeLink } from "../record-text.ts";
 import type { SourceUrl } from "../types.ts";
 import { badge, code, fenced, idLink, link, ofTotal, plural, table, text } from "../text.ts";
 import { TYPE_HEADINGS } from "./records.ts";
@@ -121,13 +122,31 @@ export function recordPage(model: Model, artifact: Artifact, pageLink?: PageLink
   if (meta.type === "behavior") body.push(...behaviorSections(model, artifact));
   else body.push(...typeSections(model, artifact), ...linkSection(model, id));
 
+  // The record and the records nearest it, drawn as the map draws them, with no controls and no script.
+  const near = neighborhoodLayout(model, id);
+  const from = recordPath(id);
+  const neighborhood = neighborhoodHtml(near, id, "", (to) => (pageLink ?? relativeLink)(from, to));
+  body.push(
+    "## Neighborhood",
+    "",
+    near.nodes.length === 1
+      ? "No other record links to this one, and it links to none."
+      : `${code(id)} and the ${plural(near.nodes.length - 1, "record")} nearest it: every record one link away` +
+          `${near.nodes.length >= NEIGHBORHOOD_LIMIT ? ", and as many two links away as fit," : " and those two links away,"} ` +
+          "laid out so that records linked to each other sit near each other. Each is a link to its page.",
+    "",
+    ...(near.nodes.length === 1 ? [] : [...MAP_SLOT_SOURCE, ""]),
+  );
+
   const shown = SHOWN_ON[meta.type];
   if (shown !== undefined) body.push("{.small}", `Also on ${link(text(shown.label), `../${shown.page}#${id}`)}.`, "");
+  const text_ = "html" in written && written.html.trim() !== "" ? [written.html] : [];
+  const html = [...text_, ...(near.nodes.length === 1 ? [] : [neighborhood])];
   return {
     path: recordPath(id),
     title: `${id}: ${meta.title}`,
     body,
-    ...("html" in written && written.html.trim() !== "" ? { html: written.html } : {}),
+    ...(html.length === 0 ? {} : { html }),
   };
 }
 

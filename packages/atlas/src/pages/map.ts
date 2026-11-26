@@ -1,7 +1,7 @@
 /**
- * map.html: every record and every authored link as one picture (ADR 0015). The map comes first: one sentence says
- * what it shows, then the SVG `map.ts` draws stands in the page's map slot, and how to read and use it follows below
- * it. The one script the Atlas carries makes it explorable; without the script the picture stands, and every record
+ * map.html: the model as one picture (ADR 0015, amended 2026-11-26): its purpose on top, its capabilities beneath, each
+ * holding its detail until a reader opens it. The map comes first: one sentence says what it shows, then the SVG
+ * `map.ts` draws stands in the page's map slot, and how to read and use it follows below it. The one script the Atlas carries makes it explorable; without the script the picture stands, and every record
  * with a page is a link.
  */
 import { type AtlasMapLayout, GROUPS, type Group, LABEL_LIMIT } from "../map.ts";
@@ -21,15 +21,19 @@ export function mapPage(layout: AtlasMapLayout): PageSource {
     title: "Map of the model",
     body: [
       "{.lead}",
-      `Every record in this snapshot and every link written between them: ${plural(layout.nodes.length, "record")} ` +
-        `and ${plural(layout.edges.length, "link")}.`,
+      `The model in the rows people read it in, its purpose on top and its capabilities beneath, each holding its ` +
+        `records until you open it: ${plural(layout.nodes.length, "record")} and ${plural(layout.edges.length, "link")}.`,
       "",
       ...MAP_SLOT_SOURCE,
       "",
       "## Reading the map",
       "",
-      "Records that link to each other are drawn near each other, so a capability sits among its behaviors, and a " +
-        "behavior among its rules, its slice and its checks.",
+      "Products, intents and outcomes are the top rows, each outcome's measures beside it. Beneath them every " +
+        "capability is one node, its count the records it holds: its behaviors, their rules and scenarios, the " +
+        "checks and the help that cover them, and the code that delivers them. Records no capability reaches follow " +
+        "in a row of their own. Open a capability to see its records laid out in columns, behaviors first, with the " +
+        "code beneath; one capability is open at a time. A record two capabilities reach is drawn in the first, by " +
+        "ID, and its links to the other are listed when you select it. A record's own page shows its neighborhood.",
       "",
       "- **Color** is the record's family:",
       ...counts.map((g) => `  - ${text(g.label)}: ${g.types.join(", ")} (${g.n})`),
@@ -40,10 +44,12 @@ export function mapPage(layout: AtlasMapLayout): PageSource {
       "",
       "## Using the map",
       "",
-      "Find a record by its ID, show or hide each family, drag to move, use the wheel or the buttons to zoom, and " +
-        "choose Full screen to give the map the whole screen. " +
+      "Select a capability to open it, and choose All capabilities to fold it again. Find a record by its ID, which " +
+        "opens the capability that holds it, show or hide each family, drag to move, use the wheel or the buttons to " +
+        "zoom, and choose Full screen to give the map the whole screen. " +
         "Select a record to see only it and what it links to, with the links listed under the map; select it again " +
-        "to open its page, and press Escape to see everything again." +
+        "to open its page, and press Escape to see everything again. Without the script the map shows the " +
+        "capabilities folded, and each is a link to its page." +
         (layout.nodes.length > LABEL_LIMIT ? " IDs show when you zoom in or select a record." : ""),
       "",
     ],

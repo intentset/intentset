@@ -47,6 +47,14 @@ test("BEH-ATLAS-MAP: on a model of thousands of records the map's IDs and circle
     tab.on("pageerror", (error) => errors.push(error.message));
     await tab.goto(address);
     await tab.locator(".am-controls").waitFor();
+    // The layered map opens on the capabilities; finding one opens it, so its records are on screen to measure.
+    assert.equal(await tab.locator(".am-node:visible").count(), 45, "the overview is the 45 capabilities");
+    await tab.fill(".am-find input", model.capabilities[7]);
+    await tab.press(".am-find input", "Enter");
+    assert.equal(await tab.locator(".am-node:visible").count(), 45 + 71, "its 71 records show beside the capabilities");
+    assert.ok(await tab.locator(".am-close").isVisible(), "and All capabilities folds it again");
+    await tab.keyboard.press("Escape");
+    await tab.click('button[data-zoom="reset"]');
     // What a reader sees: the IDs shown inside the frame, their size and whether any two overlap, and the circles' sizes.
     const look = () =>
       tab.evaluate(() => {
@@ -80,10 +88,33 @@ test("BEH-ATLAS-MAP: on a model of thousands of records the map's IDs and circle
           least: labels.length === 0 ? 0 : Math.min(...labels.map((r) => r.height)),
           widest: circles.length === 0 ? 0 : Math.max(...circles.map((r) => r.width)),
           circles: circles.length,
+          // Records drawn wholly inside the frame whose ID is not shown.
+          unlabelled: [...document.querySelectorAll<SVGElement>(".am-node")].filter((el) => {
+            const c = el.querySelector("circle")?.getBoundingClientRect();
+            const t = el.querySelector("text");
+            return (
+              c !== undefined &&
+              getComputedStyle(el).display !== "none" &&
+              c.width > 0 &&
+              c.top >= frame.top &&
+              c.bottom <= frame.bottom &&
+              c.left >= frame.left &&
+              c.right <= frame.right &&
+              t !== null &&
+              getComputedStyle(t).display === "none"
+            );
+          }).length,
         };
       });
-    const box = (await tab.locator(".am-svg").boundingBox()) as { x: number; y: number; width: number; height: number };
-    await tab.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    // Zoom in on the capability's records, where the labels are crowded: a behavior in the middle of its column.
+    const behavior = model.capabilities[7].replace(/^CAP-/, "BEH-").replace(/(\d{3})$/, "$1-010");
+    const target = (await tab.locator(`.am-node[data-id="${behavior}"] circle`).boundingBox()) as {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+    await tab.mouse.move(target.x + target.width / 2, target.y + target.height / 2);
     const seen = [await look()];
     for (const steps of [6, 6, 6]) {
       for (let i = 0; i < steps; i++) await tab.mouse.wheel(0, -100);
@@ -98,7 +129,8 @@ test("BEH-ATLAS-MAP: on a model of thousands of records the map's IDs and circle
       assert.ok(one.widest <= 40, `zoom level ${i}: the largest circle is ${one.widest}px`);
     }
     assert.ok(seen[0].shown > 0, "some IDs show at the fit");
-    assert.ok(seen[3].shown > 3, "and zooming in shows more of them");
+    assert.ok(seen[0].unlabelled > 0, "at the fit some IDs make way for others");
+    assert.equal(seen[2].unlabelled, 0, "and zoomed in, every record in the frame shows its ID");
     // The selected record and its links are labelled, still without overlap.
     await tab.fill(".am-find input", model.capabilities[7]);
     await tab.press(".am-find input", "Enter");
