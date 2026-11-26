@@ -30,7 +30,6 @@ import {
   SITE_HOST,
   SPEC_META_KEYS,
   SPECS,
-  statusLabel,
   termTips,
 } from "../build.ts";
 import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
@@ -479,15 +478,15 @@ test("each specification's frontmatter names it, and its page and index card sho
 
     const page = main(`specifications/${spec.slug}/index.html`);
     const banner = text(/<p class="site-source">([\s\S]*?)<\/p>/u.exec(page)?.[1] ?? "");
-    for (const part of [statusLabel(meta.status), meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
+    for (const part of [meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
       assert.ok(banner.includes(part), `${spec.slug}: banner "${banner}" does not say ${part}`);
     }
+    assert.ok(!banner.includes("Draft"), `${spec.slug}: the banner says Draft`);
     const card = text(index);
     assert.ok(card.includes(cardTitle(meta)), `the index has no card titled ${cardTitle(meta)}`);
-    assert.ok(
-      card.includes(`${meta.id} · revision ${meta.revision}`),
-      `the ${spec.slug} card does not name its revision`,
-    );
+    // The cards carry no status, ID or revision (2026-11-26, the user's decision), and no title names a version.
+    assert.ok(!card.includes(meta.id), `the ${spec.slug} card names its ID`);
+    assert.ok(!cardTitle(meta).match(/ v\d/), `the ${spec.slug} card's title names a version`);
   }
   assert.doesNotMatch(index, /\{\{/u, "a token survived into the index");
 });

@@ -386,11 +386,6 @@ export function readSpecMeta(source: string, file: string): SpecMeta {
   return meta as unknown as SpecMeta;
 }
 
-/** A specification's status for a reader: `draft` reads as Draft. */
-export function statusLabel(status: string): string {
-  return capitalize(status);
-}
-
 /** The content pages: output path and source file under site/content/. */
 export const CONTENT_PAGES: Array<[string, string]> = [
   ["index.html", "index.md"],
@@ -499,13 +494,10 @@ export async function siteInputs(options: InputOptions = {}): Promise<{
   const specs = await Promise.all(SPECS.map((spec, i) => specPage(spec, metas[i])));
   const records = await loadRecords(join(root, EXAMPLE_DIR));
   const knowledge = await publishedKnowledge(options.modelRoot ?? root);
-  // The specifications index's cards: each document's title and status line,
-  // from its frontmatter. `spec.core.title`, `spec.core.meta`, and so on.
+  // The specifications index's cards: each document's title, from its frontmatter. `spec.core.title` and so on. The
+  // cards carry no status, ID or revision (2026-11-26, the user's decision): each document's page says those.
   const specTokens: Record<string, string> = {};
-  for (const [i, spec] of SPECS.entries()) {
-    specTokens[`spec.${spec.slug}.title`] = cardTitle(metas[i]);
-    specTokens[`spec.${spec.slug}.meta`] = cardMeta(metas[i]);
-  }
+  for (const [i, spec] of SPECS.entries()) specTokens[`spec.${spec.slug}.title`] = cardTitle(metas[i]);
   const tokens = {
     ...specTokens,
     repo: REPO,
@@ -726,7 +718,7 @@ async function documentPage(path: string, file: string, meta: SpecMeta): Promise
   failOnErrors(parsed.diagnostics, absolute);
   rewriteLinks(parsed.ast, file);
   const ast = addHeadingIds(parsed.ast);
-  const banner = `<p class="site-source"><span class="ms-span badge">${esc(statusLabel(meta.status))}</span> <code>${esc(meta.id)}</code> · revision ${esc(meta.revision)} · implemented by ${esc(meta.implementation)} · Rendered from <a href="${REPO}/blob/main/${file}"><code>${esc(file)}</code></a> in the repository.</p>\n`;
+  const banner = `<p class="site-source"><code>${esc(meta.id)}</code> · revision ${esc(meta.revision)} · implemented by ${esc(meta.implementation)} · Rendered from <a href="${REPO}/blob/main/${file}"><code>${esc(file)}</code></a> in the repository.</p>\n`;
   return {
     path,
     title: firstHeading(ast) ?? basename(file, ".md"),
@@ -737,14 +729,9 @@ async function documentPage(path: string, file: string, meta: SpecMeta): Promise
   };
 }
 
-/** A card's heading on the specifications index: the document's title without the project's name. */
+/** A card's heading on the specifications index: the document's title without the project's name or its version. */
 export function cardTitle(meta: SpecMeta): string {
-  return meta.title.replace(/^Intentset /, "");
-}
-
-/** A card's status line, as Markset source: the status as a badge, the ID and the revision. */
-export function cardMeta(meta: SpecMeta): string {
-  return `[${md(statusLabel(meta.status))}]{.badge} \`${meta.id}\` · revision ${md(meta.revision)}`;
+  return meta.title.replace(/^Intentset /, "").replace(/ v\d+\.\d+$/, "");
 }
 
 /**

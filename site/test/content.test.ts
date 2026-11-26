@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { after, test } from "node:test";
 import { main } from "@intentset/cli";
 import { parseDocument } from "@markset-lang/parser";
-import { build, CHAT_PAGES, CONTENT_PAGES, EXAMPLE_DIR, VERSION } from "../build.ts";
+import { build, CHAT_PAGES, CONTENT_PAGES, EXAMPLE_DIR } from "../build.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
 const contentDir = join(root, "site", "content");
@@ -47,12 +47,7 @@ test("every content page parses as Markset with no error diagnostics", async () 
 const RETIRED_PHRASE_PAGES = ["index.html", "start/index.html", "specifications/index.html", "about/index.html"];
 
 test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
-  const notes: Array<[string, string]> = [
-    [
-      "specifications/index.html",
-      `All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
-    ],
-  ];
+  const notes: Array<[string, string]> = [];
   for (const [page, note] of notes) {
     const html = await readFile(join(dist, page), "utf8");
     // Inline code becomes a space when tags are stripped, so close up the space before punctuation.

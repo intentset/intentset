@@ -89,8 +89,10 @@ repository-relative.
   reef's `docs/family.md`'s terms and names neither product.
 - **Home stays short** (2026-11-26, the user's decision, after "the home page is massive" at 2,816 words): the
   promise, one example, how it works in three steps, what it is, and one way to try it, under 800 words
-  (`build.test.ts` holds it). No versions, no draft or review status and no family products on a narrative page; the
-  specifications index is the one page that says where the release stands.
+  (`build.test.ts` holds it). No versions, no draft or review status and no family products on a narrative page or the
+  specifications index (2026-11-26): each specification's own page names its ID, revision and the release that
+  implements it in its banner, without a status badge. The index's cards are rows, one per document, each titled
+  without its version and saying first what the document gives a team.
 - **No figures from Coral Reef Ventures' own use on a narrative page** (the user's decision, 2026-11-26): beside the
   invented example they read as the example's numbers, and "the check ran 367 times" left a reader asking which check.
   They live in `docs/adoption/log.md`.
