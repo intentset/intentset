@@ -124,11 +124,15 @@ test("every schema is served under /spec/ unchanged, at the address its $id name
 test("the pages name the release in package.json, through {{version}}, and no page types one", async () => {
   const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as { version: string };
   assert.equal(VERSION, pkg.version);
-  const home = await read("index.html");
-  assert.ok(
-    text(home).includes(`The reference toolchain, version ${VERSION}, is published to try them against.`),
-    "the hero names the release",
-  );
+  // The specifications index is the one page that says where the release stands (2026-11-26, the user's decision:
+  // the narrative pages talk about neither versions nor drafts).
+  const specifications = await read("specifications/index.html");
+  assert.ok(text(specifications).includes(`The reference toolchain is at ${VERSION} on npm.`), "the index names it");
+  for (const page of ["index.html", "how-it-works/index.html", "start/index.html", "about/index.html"]) {
+    const body = text(await read(page));
+    assert.ok(!body.includes(VERSION), `${page} names the release`);
+    assert.doesNotMatch(body, /\bv0\.\d|\bdraft specification|ready for review|early release/i, page);
+  }
   // A toolchain version typed into a page was stale within a day: the hero said
   // 0.4 while the packages were at 0.6. A future version (1.0) is not a release.
   for (const file of await readdir(join(root, "site", "content"))) {

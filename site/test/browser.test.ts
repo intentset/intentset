@@ -29,17 +29,14 @@ const PAGES = [
   "guide/index.html",
   "tools/index.html",
   "tools/cli/index.html",
-  "tools/readers/index.html",
   "specifications/index.html",
   "specifications/core/index.html",
   "markset/index.html",
   "conformance/index.html",
   "glossary/index.html",
-  "pilot/index.html",
   "example/index.html",
   "example/BEH-ASMT-SCHEDULE/index.html",
   "example/atlas/map/index.html",
-  "roadmap/index.html",
   "no/such/page/",
 ];
 
@@ -212,40 +209,6 @@ test("Tab from the top lands on the skip link, which moves focus to main; the ne
   }
 });
 
-test("every term on the adoption log shows its tip inside the window when focused, at phone, tablet and desktop widths", async (t) => {
-  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
-  for (const width of [390, 1024, 1100, 1440]) {
-    const tab = await browser.newPage({ viewport: { width, height: 900 } });
-    try {
-      await tab.goto(url("pilot/index.html"));
-      const count = await tab.locator(".term").count();
-      assert.ok(count > 0, "the log has terms");
-      for (let i = 0; i < count; i++) {
-        const term = tab.locator(".term").nth(i);
-        await term.focus();
-        const box = await term.evaluate((el) => {
-          const tip = el.querySelector(".term-tip") as HTMLElement;
-          const r = tip.getBoundingClientRect();
-          return {
-            text: el.textContent?.slice(0, 40),
-            shown: getComputedStyle(tip).display !== "none",
-            left: r.left,
-            right: r.right,
-            bottom: r.bottom,
-          };
-        });
-        assert.ok(box.shown, `${box.text}: the tip shows on focus at ${width}px`);
-        assert.ok(
-          box.left >= 0 && box.right <= width,
-          `${box.text}: the tip stays inside the window at ${width}px (${Math.round(box.left)} to ${Math.round(box.right)})`,
-        );
-      }
-    } finally {
-      await tab.close();
-    }
-  }
-});
-
 test("a missing address, however deep, gets the 404 page in the site's shell and styles", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   const tab = await browser.newPage({ viewport: { width: 390, height: 900 } });
@@ -351,7 +314,7 @@ test("the rail beside a page in a section names the section and marks the page",
       };
     });
     await tab.close();
-    assert.equal(result.title, "Tools", `at ${width}px`);
+    assert.equal(result.title, "Reference", `at ${width}px`);
     assert.equal(result.current, "The intentset command", `at ${width}px`);
     if (width >= 1440) assert.ok(result.beside, "on a desktop the rail sits beside the page");
     else assert.ok(result.above, "on a phone the rail stacks above the page");
@@ -385,7 +348,7 @@ test("the introduction is a 16:9 slide to a window on a desktop, a column of car
     return { tab, result };
   };
   const desktop = await slides(1440, 900);
-  assert.equal(desktop.result.length, 23);
+  assert.equal(desktop.result.length, 14);
   for (const slide of desktop.result) {
     assert.ok(Math.abs(slide.ratio - 16 / 9) < 0.01, `${slide.id}: 16:9 at 1440 by 900 (${slide.ratio.toFixed(3)})`);
     assert.ok(slide.height <= 900, `${slide.id}: fits the window`);
@@ -465,7 +428,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.presenting);
   assert.deepEqual(s.current, ["cover"]);
   assert.equal(s.top, "cover", "the cover is what the window shows");
-  assert.equal(s.count, "1 / 23");
+  assert.equal(s.count, "1 / 14");
   // The largest 16:9 that fits 1440 by 900 is 1440 by 810.
   assert.ok(
     Math.abs(s.width - 1440) < 1 && Math.abs(s.height - 810) < 1,
@@ -474,7 +437,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.inertHeader, "the page behind is out of reach");
   for (const key of ["ArrowRight", "PageDown", " "]) await tab.keyboard.press(key);
   s = await shown();
-  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 23", "#idea"]);
+  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 14", "#idea"]);
   await tab.keyboard.press("ArrowLeft");
   await tab.mouse.click(720, 300);
   s = await shown();
@@ -493,7 +456,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   );
   await tab.keyboard.press("End");
   s = await shown();
-  assert.deepEqual([s.current, s.count], [["try"], "23 / 23"]);
+  assert.deepEqual([s.current, s.count], [["try"], "14 / 14"]);
   assert.ok(await tab.getByRole("button", { name: "Next slide" }).isDisabled(), "nothing after the last slide");
   await tab.keyboard.press("Escape");
   s = await shown();
@@ -520,18 +483,15 @@ test("the navigation wraps below the brand at phone width and sits beside it on 
     const result = await tab.evaluate(() => {
       const brand = document.querySelector(".site-brand")!.getBoundingClientRect();
       const nav = document.querySelector(".site-nav")!.getBoundingClientRect();
-      const columns = getComputedStyle(document.querySelector(".ms-columns.hero")!).gridTemplateColumns;
-      return { navBelowBrand: nav.top >= brand.bottom - 1, columns: columns.split(" ").length };
+      return { navBelowBrand: nav.top >= brand.bottom - 1 };
     });
     await tab.close();
     return result;
   };
   const phone = await position(390);
   assert.ok(phone.navBelowBrand, "at 390px the nav wraps under the brand");
-  assert.equal(phone.columns, 1, "at 390px the hero stacks");
   const desktop = await position(1440);
   assert.ok(!desktop.navBelowBrand, "at 1440px the nav sits beside the brand");
-  assert.equal(desktop.columns, 2, "at 1440px the hero has two columns");
 });
 
 test("every code block gets a Copy button that copies the block, and only the block", async (t) => {

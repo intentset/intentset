@@ -48,10 +48,6 @@ A person moves a record out of draft. Agents draft; agents never approve. `inten
 
 Code changed and its records did not. `intentset review --fail-on-drift` fails CI on it, unless a commit says that no behavior changed.
 
-### Usage evidence
-
-A draft format, one line per call naming the behaviors it exercised, never a person. It is not published yet.
-
 ## The other terms, in alphabetical order
 
 ### Atlas
@@ -114,4 +110,4 @@ A `Key: value` line at the end of a commit message. `Intentset-Unchanged: SLICE-
 
 The type of record behind a check. It says how a claim is checked, automated or manual, and where: a test's file and a stable selector, or a review procedure. A verification is a definition, not evidence.
 
-[[See the words at work in Lantern](../example/)]{.button .primary} [[How it works](../how-it-works/)]{.button}
+[[See the words at work in the worked example](../example/)]{.button .primary} [[How it works](../how-it-works/)]{.button}

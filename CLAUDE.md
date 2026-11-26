@@ -79,24 +79,19 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
   (2026-10-10): a knowledge record in it that `intentset publish` releases to the public gets a page on the site and a
   place in the chat's corpus, through `site/knowledge.ts`; nothing else in it reaches either. "Intentset's own model" below says how it is
   kept.
-- The adoption log (`site/content/pilot.md`, served at `/pilot/`) names Streamlane and Driftline by Gary's decision
-  of 2026-10-06. It shows Intentset's side: records, check output and counts, each with its source and date, and the
-  friction as well as what worked. Never the products' insides (screens, prices, roadmap detail, account ids,
-  operation, function and log names, unreleased capabilities' names), never a link into their private repositories,
-  and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
-  record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
-  may be quoted, with operation names replaced by `<operation>`.
-- A narrative page of the site (Home, How it works, Try it on your code, Model the whole product with many agents, Make agents' work safe to accept, About, Roadmap, the
-  introduction) may name Streamlane and Driftline once each, in one block, with the family label beside the name:
-  Streamlane `Product · In development`, Driftline `Product · In planning` (reef `docs/conventions.md`, Status labels;
-  reef `docs/family.md` for the loop). The readers page (`/tools/readers/`) lists both with the path each reads.
-  Outside the adoption log the site says nothing of their insides: no screens, no planned capability by name, no
-  price, no roadmap detail, and never a link to either product's site or repository. Every other page the site writes
-  itself (the reference pages and the Lantern walkthrough) names neither. The normative documents under `spec/`, and
-  the conformance cases under `tests/`, are not narrative pages: where they record the origin of a dated decision they
-  are outside this rule and its test, which skips a page by how it is made (`generatedFrom` in `site/build.ts`), not
-  by its address. Gary's decision of 2026-11-25, which widens where they are named and keeps the 2026-10-06 limit on
-  what is said. `site/test/family.test.ts` holds it.
+- **No page of the site names Streamlane or Driftline** (the user's decision, 2026-11-26, replacing Gary's of
+  2026-11-25 and the family loop on Home): a visitor to intentset.org came to learn Intentset, and a product they
+  cannot use reads as a different product entirely. No page links to either. The normative documents under `spec/` and
+  the conformance cases under `tests/` are outside the rule where they record the origin of a dated decision; its test
+  skips a page by how it is made (`generatedFrom` in `site/build.ts`), not by its address. `site/test/family.test.ts`
+  holds it.
+- The adoption log (`docs/adoption/log.md`, on the site at `/pilot/` until 2026-11-26, which now redirects there)
+  names Streamlane and Driftline by Gary's decision of 2026-10-06. It shows Intentset's side: records, check output
+  and counts, each with its source and date, and the friction as well as what worked. Never the products' insides
+  (screens, prices, roadmap detail, account ids, operation, function and log names, unreleased capabilities' names),
+  never a link into their private repositories, and no quoted code beyond a one-line identifier such as the
+  `exercised(context, "BEH-…")` call shape. Intentset record IDs of what the log describes are allowed, and check
+  output, commit trailers and the usage-evidence format may be quoted, with operation names replaced by `<operation>`.
 
 ## Where the rest is
 
@@ -118,7 +113,7 @@ learning from questions, and the AWS rules).
   publishes. A spec's `revision` is the date its
   text last changed.
 - Before 1.0 a changed export envelope is a minor bump of the packages; Driftline reads exports and Streamlane reads the
-  repository's records and run records (`/tools/readers/`), and each moves its pin when it updates. A reader rejects an older export, and a record that declares an older `spec`:
+  repository's records and run records (`docs/consumers.md`), and each moves its pin when it updates. A reader rejects an older export, and a record that declares an older `spec`:
   `intentset migrate --to <spec>` rewrites `spec` and `profile` in a repository's records.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.
@@ -242,7 +237,7 @@ from source (the installed bin points at `dist/`, which only the build writes).
   a baseline of `unknown`, and a target the maintainers confirm. OUT-DOCS-IMPROVE has none yet (a CORE009 warning).
   MEAS-OUTSIDE-PILOT (2026-10-21, approved by Gary the same day, under OUT-MODEL-STAYS-TRUE) is the alpha exit in `docs/implementation-plan.md`:
   an outside codebase with Intentset a required check for four consecutive weeks and a baseline that only shrank. It and
-  the site's roadmap never name the adopter (Gary, 2026-10-21).
+  the roadmap (`docs/roadmap.md`) never name the adopter (Gary, 2026-10-21).
   Never write a reading no source produced.
 - **The gate**: the `model` job in `ci.yml` runs `pnpm run model:validate` (L2, strict mode) and `pnpm run
   model:review` (`--fail-on-drift` against the base). There is no architecture baseline: the last one, 17 VSA003

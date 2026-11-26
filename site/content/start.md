@@ -5,9 +5,9 @@ markset: 0
 # Try it on your code
 
 {.lead}
-For a developer with a JavaScript or TypeScript repository and a coding agent. From a repository that has never seen Intentset to its first passing check in five minutes: install the toolchain, have an agent write one capability down from the code it already holds, and bind the tests that check it. Every command here is copyable, and nothing on this page needs an account, a sign-up or anyone's permission.
+From a repository that has never seen Intentset to its first passing check in about five minutes: install the tool, have your agent write down one feature from the code it already has, and connect the tests that check it. Nothing here needs an account.
 
-The steps are the same in the [README](https://github.com/intentset/intentset#try-it-in-five-minutes). The timings are from a fresh TypeScript repository with one feature and three tests; the install is the only step that waits on the network.
+The timings are from a fresh TypeScript repository with one feature and three tests. The same steps are in the [README](https://github.com/intentset/intentset#try-it-in-five-minutes).
 
 > [!NOTE] Before you start
 > - Node 22.18 or later.
@@ -71,7 +71,7 @@ selector. Use only the names .intentset/registries.yaml holds. Leave every recor
 draft. Run intentset validate and fix what it reports until it reports no error.
 ```
 
-What comes back is eight or so files under `product/`, one record each. The first capability brings three records above it, because a capability sits under an outcome, an outcome under an intent, and an intent under the product; from the second capability on, the agent adds only what is new. To see one record of each type before the agent writes yours, run `npx intentset init --example --root <an empty directory>`, which writes Lantern, the [worked example](../example/), there.
+What comes back is eight or so files under `product/`, one record each. The first capability brings three records above it, because a capability sits under an outcome, an outcome under an intent, and an intent under the product; from the second capability on, the agent adds only what is new.
 
 The record that binds a test is the verification. Its frontmatter names the test file and a selector, and the import in step 5 matches every test whose title holds the selector as whole words, so a `describe`'s name binds all of its tests:
 
@@ -128,15 +128,9 @@ pnpm exec intentset review --base origin/main --fail-on-drift
 
 After the tests, import their report as in step 5 and validate at L3, so each run records which promises passed on which commit. From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear; [Model the whole product with many agents](../adopt/) is for the rest of the product.
 
-## What the records are good for next
-
-- **Stay here.** CI keeps the model true on every change, and the Atlas shows it.
-- **Let another tool read them.** A tool can read the records from your repository, or from the export. [What reads an Intentset model](../tools/readers/) says what each path needs from your repository.
-- **Publish your run records.** Published from CI, they say outside the repository what passed and whether each pass still holds.
-
 ## Run it in CI
 
-Step 7's two commands, as a GitHub Actions job that runs on every pull request. [What CI checks, and what a failure says](../how-it-works/#what-ci-checks-and-what-a-failure-says) shows the second one stopping a change:
+Step 7's two commands, as a GitHub Actions job that runs on every pull request. [What CI checks](../how-it-works/#what-ci-checks) shows the second one stopping a change:
 
 ```yaml
 name: intentset
@@ -183,5 +177,5 @@ Write the model first. Whoever decides what the product does drafts the behavior
 
 [[Model the whole product](../adopt/)]{.button .primary} [[Every command and option](../tools/cli/)]{.button}
 
-> [!NOTE]
-> The reference toolchain is an early release, at {{version}}. The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`, or with npm as `npx -p @intentset/cli -p typescript@7 intentset`.
+> [!NOTE] If you use pnpm
+> The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`, or with npm as `npx -p @intentset/cli -p typescript@7 intentset`.

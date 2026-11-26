@@ -5,7 +5,7 @@ markset: 0
 # The tools
 
 {.lead}
-One command does the work in a repository. The rest are what it is built from, and what other tools read the model through. Every package is at {{version}} on npm.
+One command does the work in a repository. The rest are what it is built from, and what other tools read the model through. Every package is on npm.
 
 ## The intentset command
 

@@ -81,14 +81,14 @@ test("no link on the site ends in index.html: a page's address is its directory 
 });
 
 test("every URL the site had before the bar changed still answers", () => {
-  // The bar changed on 2026-10-05 and no page moved: Reference is the
+  // The adoption log and the roadmap left the site on 2026-11-26 and answer their old addresses by sending the reader
+  // to the repository (build.test.ts holds that). The bar changed on 2026-10-05 and no page moved: Reference is the
   // specifications index, Examples the worked example's, and the Markset page
   // and How it works kept their addresses inside a rail.
   for (const page of [
     "index.html",
     "how-it-works/index.html",
     "start/index.html",
-    "pilot/index.html",
     "specifications/index.html",
     "specifications/core/index.html",
     "specifications/vsa/index.html",
@@ -96,7 +96,6 @@ test("every URL the site had before the bar changed still answers", () => {
     "specifications/publication/index.html",
     "specifications/export/index.html",
     "markset/index.html",
-    "roadmap/index.html",
     "about/index.html",
     "example/index.html",
     "example/BEH-ASMT-SCHEDULE/index.html",
@@ -172,29 +171,29 @@ test("a page in a section carries its section's rail, marks itself once, and the
     const barLabel = NAV.find(([, href]) => href === railLinks(section)[0][1])?.[0];
     assert.deepEqual(current, [barLabel], `${page}: the bar marks ${current.join(", ") || "nothing"}`);
   }
-  // Each bar item but Roadmap opens its section's rail at its first page; Start's is the introduction (2026-10-27).
+  // Each bar item but How it works, one page with no rail, opens its section's rail at its first page.
   assert.deepEqual(
     RAILS.map((r) => railLinks(r)[0][1]),
-    NAV.filter(([label]) => label !== "Roadmap").map(([, href]) => href),
+    NAV.filter(([label]) => label !== "How it works").map(([, href]) => href),
   );
 });
 
-test("Reference holds the specifications, the Markset page and conformance; Tools the command and the guide; Start one reading path", () => {
+test("Reference holds the tools and the specifications; Get started is one path (2026-11-26)", () => {
   const links = (title: string) => railLinks(RAILS.find((r) => r.title === title) ?? { title, items: [] });
   const reference = links("Reference").map(([, href]) => href);
-  for (const page of ["specifications/core/index.html", "markset/index.html", "conformance/index.html"]) {
+  for (const page of [
+    "tools/index.html",
+    "tools/cli/index.html",
+    "guide/index.html",
+    "specifications/core/index.html",
+    "markset/index.html",
+    "conformance/index.html",
+    "glossary/index.html",
+  ]) {
     assert.ok(reference.includes(page), `Reference lacks ${page}`);
   }
-  // The agent guide is what an agent reads, beside what else reads a model (2026-11-25).
-  assert.deepEqual(
-    links("Tools").map(([, href]) => href),
-    ["tools/index.html", "tools/cli/index.html", "tools/readers/index.html", "guide/index.html"],
-  );
-  // Understand first, then do (2026-10-27), and what is for later is a group of its own, so the first five minutes and
-  // the weeks after them are not one flat list (2026-11-25). Each label is the page's h1.
-  assert.deepEqual(RAILS.find((r) => r.title === "Start")?.items, [
-    ["Introducing Intentset", "introducing/index.html"],
-    ["How it works", "how-it-works/index.html"],
+  // Try it first, then what is for later as a group of its own. Each label is the page's h1.
+  assert.deepEqual(RAILS.find((r) => r.title === "Get started")?.items, [
     ["Try it on your code", "start/index.html"],
     {
       label: "Once one capability works",
@@ -209,14 +208,14 @@ test("Reference holds the specifications, the Markset page and conformance; Tool
     start,
     /<li class="site-rail-group"><span class="site-rail-label">Once one capability works<\/span>\n<ul>/,
   );
-  for (const page of ["adopt/index.html", "verify/index.html"]) {
+  for (const page of ["start/index.html", "adopt/index.html", "verify/index.html"]) {
     const h1 = /<h1[^>]*>([^<]+)<\/h1>/.exec(html.get(page) ?? "")?.[1];
     const label = railLinks(RAILS[0]).find(([, href]) => href === page)?.[0];
     assert.equal(h1?.replaceAll("&#x27;", "'").replaceAll("&#39;", "'"), label, `${page}: the rail names its h1`);
   }
 });
 
-test("Examples is one rail on every page of the section: Lantern's walkthrough, its map and review pages, then the adoption log (2026-10-20)", () => {
+test("Examples is one rail on every page of the section: Lantern's walkthrough, its map and review pages (2026-10-20)", () => {
   const examples = RAILS.find((r) => r.title === "Examples");
   assert.ok(examples);
   // Lantern is a group, its review pages a group inside it, so the rail is nested lists and its labels are not links.
@@ -229,7 +228,6 @@ test("Examples is one rail on every page of the section: Lantern's walkthrough, 
         { label: "Review pages", items: REVIEW_PAGES },
       ],
     },
-    ["The adoption log", "pilot/index.html"],
   ]);
   assert.deepEqual(
     REVIEW_PAGES.map(([label]) => label),
@@ -251,7 +249,7 @@ test("Examples is one rail on every page of the section: Lantern's walkthrough, 
     /<li class="site-rail-group"><span class="site-rail-label">Lantern, a worked example<\/span>\n<ul>/,
   );
   assert.match(expected, /<li class="site-rail-group"><span class="site-rail-label">Review pages<\/span>\n<ul>/);
-  const section = pages.filter((page) => page.startsWith("example/") || page === "pilot/index.html");
+  const section = pages.filter((page) => page.startsWith("example/"));
   assert.ok(section.length > 20, `only ${section.length} pages in Examples`);
   for (const page of section) {
     assert.deepEqual(rail(page), expectedRail(page, examples), `${page}: the Examples rail`);

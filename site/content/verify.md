@@ -8,123 +8,81 @@ Once one capability works
 # Make agents' work safe to accept
 
 {.lead}
-For whoever accepts agents' work. Writing the code is no longer the hard part. Knowing it is right is, so the work has to be proved. An agent that says it is done is worth exactly what the checks behind that word are worth, and a person cannot read every line twenty agents write. This page is the checks that let a change carry its own proof: what each one catches, how to set it up so an agent runs it without being asked, and what a reviewer reads once they are in place.
+An agent that says it is done is worth exactly what the checks behind that word are worth, and nobody can read every line twenty agents write. This page is the checks that let a change carry its own proof, so a reviewer can trust it without reading the diff.
 
-[Model the whole product with many agents](../adopt/) says how to split the work and protect what an agent can reach. This page is the other half: what makes the work an agent hands back safe to accept.
+Most of it is general practice, and none of it asks you to change a control you already have. Where Intentset has a part, the section says so.
 
-Most of it is general practice, and each layer says what Intentset's part in it is. None of it asks you to change a control you already have.
+## Each kind of check catches what the others miss
 
-## Confidence comes in layers
+A unit test cannot see a page that scrolls sideways on a phone. A screenshot cannot see a rule that refuses the wrong person. A green build cannot see a test that was quietly loosened. Use all of the checks below; none of them depends on a person reading the diff.
 
-No single check makes a change trustworthy. A unit test cannot see a page that scrolls sideways on a phone; a screenshot cannot see a rule that refuses the wrong person; a green build cannot see a test that was quietly loosened. Each layer below catches what the others miss, and none of them depends on a person reading the diff.
+## Every claim has a test
 
-| The layer | What it catches | Intentset's part |
-|---|---|---|
-| A test with every claim | A promise the code no longer keeps | Verification records, and current passes at L3 |
-| The product, driven | A flow that works in a unit test and fails in the product | Its report, imported as run records |
-| Every screen, in every form | A layout broken in dark mode, on a phone, or for a keyboard | None |
-| Tests that hold the rules | A policy broken by a change that touched no feature | The architecture check |
-| One gate, required | Work that skipped a check, or a check that never ran | `validate` and `review` in the gate |
-| Checks after it ships | A claim about the live product that stopped being true | `evidence import` and `evidence stale` |
-| A clean signal | A failure ignored because failures had become normal | None |
+A behavior ships with the test that checks it, and a verification record names that test. Coverage is then counted in promises, not lines: a rule with no test is listed as a gap, whatever a line counter says.
 
-## A test with every claim
+- Run a new test once against the code without the change, and see it fail. A test that passes either way checks nothing.
 
-A behavior ships with the test that checks it, and a [verification record](../how-it-works/) names that test. A changed behavior ships with the changed test. The model then reports every claim nothing checks, so coverage is measured in promises, not lines: a rule with no test is a gap, listed, whatever percentage a line counter shows.
+`intentset validate --level L3` shows, side by side, which promises have a test linked and which have a current pass.
 
-- **Test against the real thing where it is cheap.** Run the data layer's tests against a local copy of the database, sending it the same conditions production gets, rather than against a mock that agrees with whatever the code assumes.
-- **Let the count only go up.** A gap closed stays closed, because the model lists it again the moment its test goes. An agent asked to "add tests" has a list to work through rather than a guess.
-- **Test the test's failure.** A new test is run once against the code without the change and seen to fail. A test that passes either way checks nothing.
+## The agent drives the product, not just the source
 
-**Intentset's part:** a verification record names the test that checks each behavior and rule, and `intentset validate --level L3` reports, side by side, which promises have a test linked and which have a current pass.
+An agent that opens the page and clicks the button knows it works; one that reads the source only thinks so. Give each agent its own disposable copy of the product and a browser it can drive, such as Playwright, and write one end-to-end test per flow a behavior describes, including how it fails.
 
-## Drive the product, not the source
+Run the tests a change can reach on each pull request, and the whole suite after each batch of merges. In Coral Reef Ventures' own use, 352 of 684 verification records name a browser test (counted on 2026-10-19), so this is about half the proof, not an extra.
 
-An agent that reasons about a component's source will tell you the button works. An agent that opens the page, clicks the button and reads what happened knows. Give every agent its own disposable copy of the product, created from its branch, and a browser it can drive (Playwright is what Coral Reef Ventures uses), and make end-to-end tests the way a behavior with a surface is checked.
+`intentset evidence import --from playwright` turns the browser run's report into run records.
 
-- **One test per flow a behavior describes,** walking it as a user would: sign in, do the thing, read the result from the page, including how it fails.
-- **A stub where determinism matters, the real backend where only it can prove the claim.** A build served against stub backends checks layout and navigation fast and never flakes. A flow that crosses an authorization rule or a database condition runs against the agent's own deployed copy.
-- **Run what the change reaches, then everything.** Each pull request runs the end-to-end tests its change can affect; the whole suite runs after each batch of merges. In one of Coral Reef Ventures' products, 352 of 684 verification records name a browser test (counted on 2026-10-19, in the [adoption log](../pilot/)), so this layer is not an extra: it is about half the proof.
+## Every screen is checked in every form it takes
 
-**Intentset's part:** `intentset evidence import --from playwright` turns the browser run's report into run records, like any other test report. Driving the product is yours.
+- **Both color schemes,** because a color that reads on one ground disappears on the other.
+- **A phone and a desktop,** at least 390px and 1440px.
+- **Screenshots the agent reads,** attached to the pull request.
+- **Checks that need no eyes,** on every pull request: nothing scrolls sideways, every control can be tapped and reached by keyboard, and all text clears WCAG AA contrast.
 
-## Every screen, in every form it takes
+## The product's rules have tests of their own
 
-A screen is a claim too, and it takes more forms than the one a developer looks at. Check each.
+The changes that do the most damage often touch no feature, such as a log line that starts carrying an email address. Write a test for each rule the product keeps, so the rule fails a build rather than an audit.
 
-- **Both color schemes.** Every page in light and in dark, because a color that reads on one ground disappears on the other.
-- **The widths people use.** At least a phone (390px) and a desktop (1440px), and the widths in between where a layout changes; 320px if you claim reflow.
-- **Screenshots the agent reads.** The agent captures each changed screen in each scheme and width, looks at what it captured, and attaches the shots to the pull request as the record of what it saw. A reviewer opens a picture, not a branch.
-- **Checks that need no eyes.** Some layout faults a test measures better than a person sees: nothing scrolls sideways or is clipped; every link and button is a large enough target to tap; the keyboard reaches every control in order, each with a visible focus ring; and every text element clears WCAG AA contrast, measured, in both schemes. These run on every pull request and never tire.
-- **More than one engine where the page is critical.** A page every visitor passes through runs in Chromium, Firefox and WebKit.
-
-**Intentset's part:** none. This is general practice.
-
-## Tests that hold the rules
-
-The changes that do the most damage often touch no feature. A log line that starts carrying an email address, a retention period that no longer matches what the privacy page promises, a page that loads a script from a new origin: none of them breaks a behavior test. Write a test for each rule the product keeps, so the rule fails a build rather than an audit.
-
-- **What is never logged.** A test per function that its logs carry an event kind, ids and a status, and no request body, address or token.
-- **What a document promises.** A test that holds the constants the privacy page quotes to the ones the code enforces, so one cannot change without the other.
-- **The infrastructure, synthesized.** The backend's definition built in a test, reading no account, with the resources that must never be replaced pinned by name, so a rename that would replace a user directory or empty a table fails the build.
-- **The page's own boundaries.** A content security policy on every page, and no origin a page calls that the policy does not name.
-- **The architecture.** `intentset validate --level L2` reports an import that reaches past a slice's entrypoint or crosses a region the wrong way; in a repository with years of history, run it against a baseline so only a new violation fails.
-
-**Intentset's part:** the architecture check. A rule record says what must stay true; the tests that hold it are yours.
+`intentset validate --level L2` adds the architecture check: an import that reaches past another slice's entrypoint fails. In an older codebase, run it against a baseline so only a new violation fails.
 
 ## One gate, the same everywhere
 
-A check that runs on a laptop and not in CI is a suggestion. A check that runs in CI and not on a laptop is a surprise. Make them one list.
+- **The same commands locally and in CI,** each a script CI calls by name, so an agent can run the gate before it opens a pull request.
+- **Required checks on main,** taking changes only through a pull request.
+- **One required job that needs all the others,** so adding a job never means editing the branch rule.
+- **Checks of the live product on a schedule, in a workflow of their own,** so they never fail someone's unrelated pull request.
+- **The drift check.** `intentset review --base origin/main --fail-on-drift` refuses a change that touched a slice's code and none of its records, unless a commit says no behavior changed.
 
-- **The same commands, locally and in CI.** Lint, typecheck, the tests, the Intentset checks and the end-to-end suite, each a script in the repository that CI calls by name. A green local run then predicts a green pull request, and an agent can run the gate before it opens one.
-- **Required checks on main.** A rule on the main branch that refuses a force-push or a deletion, takes changes only through a pull request, and requires the checks to pass. With GitHub, a repository ruleset does all three.
-- **One required job over many.** Split CI into jobs that run at once (lint, typecheck, unit, contract) and require only the one job that needs them all, so adding a job never means editing the branch rule.
-- **A required check that always reports.** A required check whose workflow runs only when certain paths change blocks every pull request that touches none of them, waiting for a result that never comes. Pair it with a second workflow of the same job name and the opposite path filter, so exactly one of them reports on every pull request.
-- **Know main is green before merging.** Requiring every branch to be up to date with main is safest, and with many agents it sends every open pull request back to re-run after each merge. If you drop it, keep the guard on main instead: read main's latest runs before merging, and watch the run for the merge commit after.
-- **What lives outside a pull request runs on a schedule, in a workflow of its own,** so a scheduled check that finds a problem in the live product opens a report rather than failing someone's unrelated pull request.
-- **The drift check.** `intentset review --base origin/main --fail-on-drift` refuses a change that touched a slice's code and none of its records, unless a commit says why.
+Whether a green pull request then merges on its own, or goes to a reviewer, is your process.
 
-Whether a green pull request then merges on its own is your process. Coral Reef Ventures lets an agent merge its own once every check passes; yours may send it to a reviewer. Either way the gate means what arrives has been checked.
+## Some checks run after it ships
 
-**Intentset's part:** `intentset validate` and `intentset review --fail-on-drift`, two of the commands in the gate. The gate itself is your CI's.
+Run a smoke test after every deploy, and a scheduled check of each claim about the live product, such as a page that must stay behind sign-in.
 
-## Checks after it ships
+Run records tie a pass to what it checked. `intentset evidence import` turns a Vitest, Playwright or node:test report into run records. A pass counts while what its check is about is unchanged, and goes stale when that changes; a release gate can ask for the stricter rule, a pass on the commit under review. `intentset evidence stale` lists the checks with no current pass, and can print the arguments that make the test runner run only those.
 
-Some claims are about the live product, not the code: a page stays behind sign-in, a deploy came up, a certificate renews. A test on a pull request cannot see them.
+## Failures stay rare enough to be read
 
-- **A smoke test after every deploy,** signing in as a temporary user and walking one flow end to end, so a deploy that went green and serves nothing is caught at once.
-- **A scheduled check of each live claim.** For example, that a page that must stay behind sign-in still refuses a visitor who is not signed in and serves one who is. Coral Reef Ventures runs a check like that every day, and by hand after every deploy.
-- **Run evidence, bound to what it checked.** `intentset evidence import --from vitest` (or `--from playwright`) turns a test report into run records bound to the commit and to each verification's subject, the files its check is about. A pass stays current while those files are unchanged and goes stale when they change, and `intentset evidence stale --format playwright` prints the arguments that make the runner run only the stale ones. The model then says which of its claims hold today, not which were ever tested.
-- **A slow suite is checked at each release.** A browser suite that takes half an hour cannot run on every commit, and a change to a slice many others depend on makes most of its records stale at once. Check the fast tests' evidence on every commit, and ask for one full, green run of the slow suite on the exact commit a release ships, with a recorded reason when someone ships without it.
+Every check above is worth nothing once failures are normal.
 
-**Intentset's part:** `intentset evidence import` and `intentset evidence stale`. The smoke test and the scheduled checks are yours.
-
-## A clean signal
-
-Every layer above is worth nothing if a failure is ignored, and failures are ignored once they are normal.
-
-- **No flaky tests.** A suite with no failures to expect makes every failure real. An agent reads a failing test's error and trace rather than re-running it until it passes; a test that fails only sometimes is fixed or removed the day it is found, because one teaches every agent to retry.
-- **No loosened test to make a build pass.** A changed expectation is a change in the pull request, with its reason in the commit, where a reviewer can question it. An agent never skips a test, raises a timeout or widens an assertion to get to green.
-- **Deterministic by construction.** Same inputs, same result: fixed clocks and seeds in tests, stub backends for anything a test does not mean to exercise, and each test working in data of its own so tests running at once cannot meet.
-- **A reviewer that is not the author.** The agent that wrote a change has a stake in its tests passing. A second agent reads the diff, the tests and the records cold, and a verifier tries to break each of its findings. What survives is what a person sees.
-
-**Intentset's part:** none. This is general practice.
+- **No flaky tests.** A test that fails only sometimes is fixed or removed the day it is found.
+- **No loosened test to make a build pass.** A changed expectation is a change in the pull request, with its reason in the commit. An agent never skips a test or widens an assertion to get to green.
+- **A reviewer that is not the author.** A second agent reads the change cold.
 
 ## What a reviewer reads
 
-With the layers in place, a pull request carries its proof: the records it changed, the tests that check them, the screenshots of every changed screen in both schemes and at each width, the gate green, and a cold reviewer's findings. A person's review goes to the records, which are a page in product language, and the pictures, which take a glance. The diff is still there for anyone who wants it, and nobody has to read it to know the change works.
+A pull request now carries its proof: the records it changed, the tests that check them, screenshots, a green gate and a second reviewer's findings. A person reads the records and glances at the pictures.
 
 ## Have your agent set it up
 
-Like everything on [Model the whole product](../adopt/), this is work an agent does well: a workflow, a branch rule, a test helper that measures contrast, a script that captures screenshots. Point it here:
+Point your agent at this page:
 
 ```text
 Read https://intentset.org/verify/. I want every change in this repository to
 carry its own proof. Compare what is here with that page, inside the controls we
 already have: <your rules on merging, deploying and approval>. Write the plan
-first, as a page you keep current: each layer we have, each we lack, what you
-would add and in what order, and every question you cannot answer from the
-repository. Stop there until I have read it.
+first: each check we have, each we lack, what you would add and in what order.
+Stop there until I have read it.
 ```
 
-[[Every command and option](../tools/cli/)]{.button .primary} [[Model the whole product](../adopt/)]{.button}
+[[Every command and option](../tools/cli/)]{.button .primary} [[Model the whole product with many agents](../adopt/)]{.button}
