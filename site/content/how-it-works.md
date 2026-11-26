@@ -21,7 +21,7 @@ This page walks through it in the order you would meet it: the files, the model 
 4. **Attach evidence.** Test runs from CI are tied to a commit. A pass counts while what it checked is unchanged, and a gate can ask for a pass on the commit under review.
 5. **Review the impact.** Before a change merges, see every behavior, owner, check and explanation it could reach.
 6. **Publish safely.** Reviewed explanations go out for one audience and one release, and nothing internal leaks through.
-7. **Hand it on.** Other tools read the model through one versioned export, with restricted records left out.
+7. **Hand it on.** A tool reads the model from your repository, or from one versioned export with restricted records left out.
 :::
 
 ## Written by agents, reviewed by people
@@ -177,6 +177,8 @@ Keep run records in CI or another store you control, never in the commit they as
 
 ## Hand the model to other tools
 
+A tool can read the records in your repository directly, or read the export. [What reads an Intentset model](../tools/readers/) says what each path needs from your repository.
+
 `intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
 
 A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. A usage tool can read a product's export to attribute the usage it sees to that product's behaviors. [Read the export contract](../specifications/export/).
@@ -199,6 +201,16 @@ Markset provides the document format, and Intentset adds metadata and meaning to
 
 `intentset serve` builds the Product Atlas, local pages for reviewing the model: every record with its text and its links, capabilities and behaviors, owners, verification status and publication readiness. Every count says what it counts (linked checks or current passes), over which scope and which snapshot. Missing or stale evidence is shown as missing or stale, never folded into a green status. [Lantern, the worked example](../example/atlas/map/), opens on its map: every record and every link between them in one picture, with the review pages beside it.
 
+## After the repository
+
+Everything above happens in your repository and stops at a merged, checked change. After it, the change reaches production, people use it, and what you learn comes back as new intent. Intentset does none of that, by design. It fixes the record IDs, the evidence binding and the export, so that a tool that does can say which behavior it is talking about.
+
+- A behavior is the promise a person approves. In your repository, `intentset approve` writes that approval as a diff, so anything that reads the repository can tell an approved behavior from a draft.
+- A rule is written once and governs many behaviors, so a refusal can name the rule it keeps.
+- A check's run records say what passed and whether that pass still holds. Published from CI, they can be read outside the repository.
+- Code that changes without its records is drift. CI fails on it.
+- The usage-evidence format, one line per call naming the behaviors it exercised and never a person, is a draft and is not published here yet.
+
 ## Adopt in levels
 
 Conformance comes in five levels, each including the ones before it. Start at the first and stop wherever the value runs out.
@@ -220,6 +232,10 @@ Conformance comes in five levels, each including the ones before it. Start at th
 - It does not replace your issue tracker. Tickets describe changes; records describe the behavior that persists after them.
 - It is not a plan for one task. A spec written to drive one change is useful for that change and then goes stale. Records describe the product as it stands, outlive every change, and are checked on every commit.
 - It does not run your code, call the network or edit your files when it validates, builds the graph, checks architecture or reports impact.
+
+## Who is adopting it
+
+Coral Reef Ventures is adopting Intentset in two of its own products, Streamlane (Product · In development) and Driftline (Product · In planning). Neither is released; [the adoption log](../pilot/) records what Intentset has done in both.
 
 ## Try it on the example
 
