@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 2
   links:
-    implements: [BEH-ATLAS, BEH-ATLAS-MAP, BEH-ATLAS-OUTLINE, BEH-ATLAS-TRACE, BEH-ATLAS-ATTENTION]
+    implements: [BEH-ATLAS, BEH-ATLAS-MAP, BEH-ATLAS-OUTLINE, BEH-ATLAS-TRACE, BEH-ATLAS-ATTENTION, BEH-ATLAS-NEIGHBORHOOD]
     dependsOn: [SLICE-CORE, SLICE-PUBLISHER]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:

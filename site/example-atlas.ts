@@ -38,10 +38,10 @@ export interface ExampleAtlasPage {
   /** The page's Markset source, as the Atlas wrote it. */
   source: string;
   /**
-   * HTML for the page's slot, with links at the site's addresses: the map's SVG and controls (ADR 0015), or a
-   * record's text, rendered.
+   * HTML for the page's slots, with links at the site's addresses: the map's SVG and controls (ADR 0015), or a
+   * record's text, rendered, and its neighborhood.
    */
-  html?: string;
+  html?: string | readonly string[];
 }
 
 /** Where the site serves the map's one script and its styles, beside the Atlas's pages. */

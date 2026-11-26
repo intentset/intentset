@@ -100,8 +100,8 @@ export function buildAtlasSources(input: AtlasInput, options: AtlasOptions = {})
 export interface AtlasPage {
   path: string;
   source: string;
-  /** HTML for the source's slot (`placeHtml`): a record's text. The map's comes from `mapHtml`. */
-  html?: string;
+  /** HTML for the source's slots (`placeHtml`), in order: a record's text and its neighborhood. The map's comes from `mapHtml`. */
+  html?: string | readonly string[];
 }
 
 /**

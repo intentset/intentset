@@ -359,7 +359,7 @@ test("BEH-ATLAS: in a record's text, a safe link stays, a link to another record
 
   // The site serves the pages at addresses of its own, and says where the record's text links lead.
   const site = buildAtlasPages(input, { link: (from, to) => `/site/${to}?from=${from}` });
-  const html = site.find((p) => p.path === "records/RULE-ASMT-AUTH.html")?.html ?? "";
+  const html = [site.find((p) => p.path === "records/RULE-ASMT-AUTH.html")?.html ?? []].flat().join("");
   assert.ok(
     html.includes('<a href="/site/records/RULE-ASMT-FUTURE.html?from=records/RULE-ASMT-AUTH.html">the rule</a>'),
   );
@@ -433,10 +433,11 @@ test("BEH-ATLAS-MAP: the map comes first, after one sentence, and how to read an
 function footprints(layout: AtlasMapLayout) {
   return layout.nodes.map((node) => ({
     id: node.id,
+    block: node.block,
     circle: { left: node.x - node.r, right: node.x + node.r, top: node.y - node.r, bottom: node.y + node.r },
     label: {
       left: node.x + node.r + 3,
-      right: node.x + node.r + 3 + node.id.length * 6,
+      right: node.x + node.r + 3 + (node.count === undefined ? node.id : `${node.id} (${node.count})`).length * 6,
       top: node.y - 4.5,
       bottom: node.y + 4.5,
     },
@@ -476,23 +477,30 @@ function crowded(n: number): AtlasInput {
   } as unknown as AtlasInput;
 }
 
-test("BEH-ATLAS-MAP: no label overlaps another record's label or circle, and the box fits the drawing", () => {
+test("BEH-ATLAS-MAP: no label overlaps another record's label or circle in any view the map shows, and the box fits the overview", () => {
   for (const [name, input] of [
     ["the example", example()],
     ["a crowded graph", crowded(100)],
   ] as const) {
     const layout = atlasMapLayout(input);
     assert.ok(layout.nodes.length <= 120, `${name}: labels show, so they must not overlap`);
-    const prints = footprints(layout);
-    for (const [i, a] of prints.entries()) {
-      for (const b of prints.slice(i + 1)) {
-        assert.ok(!overlaps(a.label, b.label), `${name}: ${a.id}'s label overlaps ${b.id}'s`);
-        assert.ok(!overlaps(a.label, b.circle), `${name}: ${a.id}'s label covers ${b.id}`);
-        assert.ok(!overlaps(b.label, a.circle), `${name}: ${b.id}'s label covers ${a.id}`);
-        assert.ok(!overlaps(a.circle, b.circle), `${name}: ${a.id} and ${b.id} overlap`);
+    const all = footprints(layout);
+    // The overview shows every record no capability holds; opening a capability adds its detail, one at a time.
+    const overview = all.filter((p) => p.block === undefined);
+    const blocks = [...new Set(all.map((p) => p.block).filter((b) => b !== undefined))];
+    for (const view of [overview, ...blocks.map((b) => [...overview, ...all.filter((p) => p.block === b)])]) {
+      for (const [i, a] of view.entries()) {
+        for (const b of view.slice(i + 1)) {
+          assert.ok(!overlaps(a.label, b.label), `${name}: ${a.id}'s label overlaps ${b.id}'s`);
+          assert.ok(!overlaps(a.label, b.circle), `${name}: ${a.id}'s label covers ${b.id}`);
+          assert.ok(!overlaps(b.label, a.circle), `${name}: ${b.id}'s label covers ${a.id}`);
+          assert.ok(!overlaps(a.circle, b.circle), `${name}: ${a.id} and ${b.id} overlap`);
+        }
       }
     }
-    // The box holds every circle and label, with no more than a small margin on any side.
+    if (name === "the example") assert.ok(blocks.length > 0, `${name}: some records are folded inside a capability`);
+    const prints = overview;
+    // The box holds every circle and label of the overview, with no more than a small margin on any side.
     const [x, y, w, h] = layout.box;
     const left = Math.min(...prints.map((p) => p.circle.left));
     const right = Math.max(...prints.map((p) => p.label.right));
@@ -929,5 +937,90 @@ test("BEH-ATLAS-ATTENTION: on a large model every long group folds closed and sa
   assert.match(
     html,
     /<summary class="ms-callout-title">Named by no verification: 450 of 540 claims \(no verification definition names it\)<\/summary>/,
+  );
+});
+
+test("BEH-ATLAS-MAP: the map is layered: purpose on top, each capability one node with a count, its records folded inside it until opened", () => {
+  const layout = atlasMapLayout(example());
+  assert.equal(layout.kind, "layered");
+  const at = (id: string) => layout.nodes.find((n) => n.id === id) as (typeof layout.nodes)[number];
+  // The rows, top down: product, intent, outcome with its measures beside it, then the capabilities.
+  const rows = ["PRD-LANTERN", "INT-PREPARE", "OUT-PREPARE", "CAP-ASMT-ASSIGN"].map((id) => at(id).y);
+  assert.deepEqual(
+    [...rows].sort((a, b) => a - b),
+    rows,
+    "purpose above the capabilities",
+  );
+  assert.equal(at("MEAS-PREPARE-MINUTES").y, at("OUT-PREPARE").y, "a measure sits beside its outcome");
+  assert.ok(at("MEAS-PREPARE-MINUTES").x > at("OUT-PREPARE").x);
+  // The capability holds its detail, and says how many records that is.
+  const held = layout.nodes.filter((n) => n.block === "CAP-ASMT-ASSIGN").map((n) => n.id);
+  assert.equal(at("CAP-ASMT-ASSIGN").count, held.length);
+  for (const id of [
+    "BEH-ASMT-SCHEDULE",
+    "RULE-ASMT-FUTURE",
+    "SCN-ASMT-SCHEDULE",
+    "SLICE-ASMT-SCHEDULE",
+    "TEST-ASMT-SCHEDULE",
+    "KB-ASMT-SCHEDULE",
+    "CONTRACT-ASMT-SCHEDULE",
+    "ADR-ASMT-SEAM",
+  ])
+    assert.ok(held.includes(id), `${id} is inside its capability`);
+  // Inside, the behavior's column comes first, its rules beside it, the checks and the help further right, the code below.
+  assert.ok(at("RULE-ASMT-FUTURE").x > at("BEH-ASMT-SCHEDULE").x);
+  assert.ok(at("TEST-ASMT-SCHEDULE").x > at("RULE-ASMT-FUTURE").x);
+  assert.ok(at("KB-ASMT-SCHEDULE").x > at("TEST-ASMT-SCHEDULE").x);
+  assert.ok(at("SLICE-ASMT-SCHEDULE").y > at("BEH-ASMT-SCHEDULE").y);
+  // The drawing says the same: the count beside the ID, the folded records and their links marked, hidden until opened.
+  const map = buildAtlas(example()).get("map.html") ?? "";
+  assert.match(map, /<svg class="am-svg am-layered"/);
+  assert.match(map, new RegExp(`data-id="CAP-ASMT-ASSIGN"[^>]*data-count="${held.length}"`));
+  assert.match(map, new RegExp(`>CAP-ASMT-ASSIGN \\(${held.length}\\)</text>`));
+  assert.match(map, /data-id="BEH-ASMT-SCHEDULE"[^>]*data-block="CAP-ASMT-ASSIGN"/);
+  assert.match(
+    map,
+    /<line class="am-edge" data-from="BEH-ASMT-SCHEDULE" data-to="CAP-ASMT-ASSIGN"[^>]* data-folded=""/,
+  );
+  assert.match(map, /<button type="button" class="am-close" hidden>All capabilities<\/button>/);
+  assert.match(buildAtlas(example()).get("atlas.css") ?? "", /\.am-layered \.am-node\[data-block\]:not\(\.am-shown\)/);
+  // The overview's box holds what shows at first: the purpose rows and the capability, not the folded detail.
+  const [, top, , height] = layout.box;
+  assert.ok(at("BEH-ASMT-SCHEDULE").y > top + height, "the folded detail lies below the overview's frame");
+});
+
+test("BEH-ATLAS-MAP: on a large model the layered map's overview is its capabilities, and each opens alone", () => {
+  const model = largeModel(45, 20);
+  const layout = atlasMapLayout(model.input);
+  const overview = layout.nodes.filter((n) => n.block === undefined);
+  assert.equal(overview.length, 45, "the overview is the 45 capabilities");
+  assert.ok(
+    overview.every((n) => n.count === 20 * 3 + 10 + 1),
+    "each holds its behaviors, rules, scenarios, checks and slice",
+  );
+  const [, , w, h] = layout.box;
+  assert.ok(w / h < 6 && h / w < 6, `the overview is not a ribbon: ${w} by ${h}`);
+});
+
+test("BEH-ATLAS-NEIGHBORHOOD: a record's page shows its neighborhood: it and the records nearest it, laid out by the force layout, each a link", () => {
+  const atlas = buildAtlas(example());
+  const page = atlas.get("records/RULE-ASMT-FUTURE.html") ?? "";
+  const picture = page.slice(page.indexOf('<div class="am-map am-neighborhood">'));
+  assert.ok(picture.length > 0, "the neighborhood is drawn");
+  assert.ok(page.indexOf("Neighborhood</h2>") < page.indexOf('<div class="am-map am-neighborhood">'));
+  assert.match(picture, /<a class="am-node am-selected" data-id="RULE-ASMT-FUTURE"/);
+  for (const near of ["BEH-ASMT-SCHEDULE", "TEST-ASMT-SCHEDULE", "KB-ASMT-SCHEDULE"])
+    assert.match(picture, new RegExp(`data-id="${near}"[^>]* href="${near}.html"`), `${near} is one link away`);
+  assert.doesNotMatch(page, /<script/, "a record's page carries no script");
+  // Two links away while it fits, never more than the limit, and the same bytes every time.
+  const nodes = [...picture.matchAll(/class="am-node[^"]*" data-id="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(nodes.includes("CAP-ASMT-ASSIGN"), "the behavior's capability is two links away");
+  assert.ok(nodes.length <= 24);
+  assert.equal(buildAtlas(example()).get("records/RULE-ASMT-FUTURE.html"), page);
+  const big = buildAtlas(largeModel(4, 30).input).get("records/CAP-CONTENT-GENERATION-AREA-000.html") ?? "";
+  assert.equal(
+    [...big.matchAll(/class="am-node[^"]*" data-id=/g)].length,
+    24,
+    "a crowded neighborhood stops at the limit",
   );
 });

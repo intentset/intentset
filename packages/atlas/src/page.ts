@@ -36,7 +36,7 @@ export interface PageSource {
    * rendered source when it has none: the map's SVG, or a record's text, rendered from its own parse
    * (record-text.ts). Built here, never from a record's text unescaped.
    */
-  html?: string;
+  html?: string | readonly string[];
   /** Scripts the page loads, relative to the Atlas's root, after `<main>`. Only the map has one (ADR 0015). */
   scripts?: string[];
 }
@@ -49,11 +49,18 @@ export const MAP_SLOT_SOURCE: readonly string[] = ["{.am-slot}", "***"];
 /** The slot as render-html writes it. */
 export const MAP_SLOT = '<hr class="am-slot">';
 
-/** A rendered page with its HTML in the map slot, or after it when the page has no slot. */
-export function placeHtml(rendered: string, html: string): string {
-  if (html === "") return rendered;
-  const at = rendered.indexOf(MAP_SLOT);
-  return at === -1 ? rendered + html : rendered.slice(0, at) + html + rendered.slice(at + MAP_SLOT.length);
+/**
+ * A rendered page with its HTML in its slots: one string in the first slot, or a list filling the slots in order (a
+ * record's text, then its neighborhood). HTML with no slot left goes after the page.
+ */
+export function placeHtml(rendered: string, html: string | readonly string[]): string {
+  let out = rendered;
+  for (const one of typeof html === "string" ? [html] : html) {
+    if (one === "") continue;
+    const at = out.indexOf(MAP_SLOT);
+    out = at === -1 ? out + one : out.slice(0, at) + one + out.slice(at + MAP_SLOT.length);
+  }
+  return out;
 }
 
 /**

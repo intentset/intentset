@@ -68,7 +68,9 @@ repository-relative.
 - **The example's Atlas** (`site/example-atlas.ts`, 2026-10-15; the shop's since 2026-11-26) is the example's
   records validated at L1 and drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell
   under `/example/atlas/` in the Reference rail as "What intentset serve shows". Its landing page, `/example/atlas/`, is the product
-  as a tree (#159, 2026-11-26), and each behavior's page opens what the Atlas derives with its trace. Each record's page is the Atlas's
+  as a tree (#159, 2026-11-26), and each behavior's page opens what the Atlas derives with its trace. The map is layered, its
+  capabilities folded until opened, and every record's page ends with its neighborhood, drawn by the force layout,
+  so record pages load the map's stylesheet (`ATLAS_MAP_STYLES`) but never its script. Each record's page is the Atlas's
   (2026-11-02): served at `/example/<ID>/`, it holds the record in one card (its file, linked on GitHub at main, every
   frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records.
   The map's h1 is "The shop's model, as a map", and it links the one-page model and the review pages under the
