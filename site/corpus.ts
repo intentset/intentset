@@ -35,6 +35,7 @@ import {
   siteInputs,
   VERSION,
 } from "./build.ts";
+import { atlasRecordPath } from "./example-atlas.ts";
 import { splitFrontmatter } from "./records.ts";
 
 const root = resolve(import.meta.dirname, "..");
@@ -97,7 +98,7 @@ export async function buildCorpus(options: InputOptions = {}): Promise<Corpus> {
   for (const record of records) {
     const file = `${EXAMPLE_DIR}/${record.file}`;
     const text = await readFile(join(root, file), "utf8");
-    documents.push(doc(`example/${record.id}/index.html`, `${record.id}: ${record.title}`, "example", file, text));
+    documents.push(doc(atlasRecordPath(record.id), `${record.id}: ${record.title}`, "example", file, text));
   }
   for (const { record, body } of knowledge) {
     documents.push(doc(knowledgePath(record.id), record.title, "knowledge", record.file, body));

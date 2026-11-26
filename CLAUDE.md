@@ -124,8 +124,8 @@ learning from questions, and the AWS rules).
   (`ASK_URL` in `site/build.ts`, null until the launch), every page also links `chat/panel.css` and loads
   `chat/panel.js` after `</main>`, with the address in a data attribute: three scripts, still none inside `<main>`, and
   `site/test/chat.test.ts` holds that build. The default build has no chat, and `build.test.ts` holds it at two.
-  The worked example's Atlas map (`/example/atlas/map/`, ADR 0015) loads one more, `example/atlas/atlas-map.js`, also
-  after `</main>`; the same test counts it on that page alone.
+  The shop's Atlas under `/example/atlas/` is the Atlas's own pages, not the site's, so the shell's scripts and
+  this count do not apply to it; its map page loads the Atlas's one script (ADR 0015).
 
 ## Layout
 
@@ -135,7 +135,8 @@ tests/                conformance fixtures, one JSON file per section (core, exp
 tests/consumer/       export consumer fixtures and manifest.json (spec/export.md §6), built by `pnpm run fixtures:consumer`
                       from packages/conformance/src/consumer.ts; a test fails when the committed copy differs
 examples/scheduling/  Lantern, the fixtures' and the conformance suite's baseline, which no page shows
-examples/shop/        the invented online shop: the site's example and what `intentset init --example` writes
+examples/shop/        the invented online shop: its records, and its code and tests under src/; the site's example
+                      and what `intentset init --example` writes
 product/model/        Intentset's own model: the product, intent, outcomes and their measures, capabilities, behaviors,
                       rules, verifications, one decision, and one slice per package under slices/<package>/slice.md
 .intentset/           its configuration, registries, architecture.yaml and agents.md; evidence/ is local run output

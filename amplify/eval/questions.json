@@ -16,7 +16,12 @@
       "question": "What is the difference between a capability and a behavior?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/specifications/core/", "/how-it-works/", "/example/CAP-ACCOUNTS/", "/example/BEH-RESET-PASSWORD/"]
+        "sources": [
+          "/specifications/core/",
+          "/how-it-works/",
+          "/example/atlas/records/CAP-ACCOUNTS.html",
+          "/example/atlas/records/BEH-RESET-PASSWORD.html"
+        ]
       }
     },
     {
@@ -31,7 +36,12 @@
       "question": "Does having a verification record mean a behavior is verified?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/specifications/core/", "/how-it-works/", "/guide/", "/example/TEST-RESET-LINK-EXPIRY/"]
+        "sources": [
+          "/specifications/core/",
+          "/how-it-works/",
+          "/guide/",
+          "/example/atlas/records/TEST-RESET-LINK-EXPIRY.html"
+        ]
       }
     },
     {
@@ -44,7 +54,7 @@
           "/specifications/core/",
           "/specifications/publication/",
           "/how-it-works/",
-          "/example/KB-RESET-PASSWORD/"
+          "/example/atlas/records/KB-RESET-PASSWORD.html"
         ]
       }
     },
@@ -60,7 +70,12 @@
       "question": "Is the online shop in the examples a real product I can use?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/example/PRD-SHOP/", "/example/INT-SELF-SERVE/", "/how-it-works/", "/start/"],
+        "sources": [
+          "/example/atlas/records/PRD-SHOP.html",
+          "/example/atlas/records/INT-SELF-SERVE.html",
+          "/how-it-works/",
+          "/start/"
+        ],
         "includes": ["invent|fiction|not a real|example"]
       }
     },

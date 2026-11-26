@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -145,6 +145,12 @@ test("init --example writes the shop, and it validates with no diagnostics", asy
   assert.equal(init.code, 0, init.err);
   assert.match(init.out, /with 17 example records in scope/);
   assert.equal(readdirSync(join(dir, "product", "shop")).length, 17);
+  // Its code and tests too, at the paths its slices claim, so the checks above L1 and its tests run.
+  for (const file of [
+    "src/features/accounts/reset/policies/link-expiry.ts",
+    "src/features/accounts/sign-in/policies/lockout.test.ts",
+  ])
+    assert.ok(statSync(join(dir, file)).isFile(), file);
   const validate = await run(dir, "validate");
   assert.equal(validate.code, 0, validate.out);
   assert.equal(validate.out, "17 artifacts, 0 errors, 0 warnings (level L1, scope: product/**/*.md)\n");

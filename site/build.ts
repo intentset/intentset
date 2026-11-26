@@ -26,18 +26,7 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
-import { MAP_SCRIPT, MAP_STYLES, placeHtml } from "@intentset/atlas";
-import {
-  ATLAS_MAP_PAGE,
-  ATLAS_MAP_SCRIPT,
-  ATLAS_MAP_STYLES,
-  ATLAS_ROOT,
-  atlasLink,
-  atlasSitePath,
-  type ExampleAtlasPage,
-  exampleAtlas,
-  REVIEW_PAGES,
-} from "./example-atlas.ts";
+import { ATLAS_ROOT, shopAtlas } from "./example-atlas.ts";
 import { EXAMPLE_REQUEST, type ExamplePublication, publishExample } from "./example-publication.ts";
 import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
 import { type ExampleRecord, loadRecords, readYaml, splitFrontmatter } from "./records.ts";
@@ -143,9 +132,6 @@ export const EXAMPLE_DIR = "examples/shop";
 /** The page that opens every record of the example, and its rail label. */
 export const EXAMPLE_TITLE = "The shop's model, record by record";
 
-/** The review pages' group in the Reference rail, and their pages' eyebrow. */
-export const SERVE_NAME = "What intentset serve shows";
-
 /**
  * The bar: three sections, by what a reader came to do (2026-11-26, the user's decisions, replacing the five of
  * 2026-10-05). How it works and Get started come first, because a newcomer asks what Intentset is and then how to
@@ -225,7 +211,7 @@ export const RAILS: Rail[] = [
           ["All tools", "tools/index.html"],
           ["The intentset command", "tools/cli/index.html"],
           ["What your agents read", "guide/index.html"],
-          { label: SERVE_NAME, items: [["The map", ATLAS_MAP_PAGE], ...REVIEW_PAGES] },
+          ["See your model in a browser", "tools/serve/index.html"],
         ],
       },
       {
@@ -264,9 +250,7 @@ export function siteRails(knowledge: readonly PublishedKnowledge[]): typeof RAIL
 export function railFor(path: string, rails: typeof RAILS = RAILS): Rail | undefined {
   return (
     rails.find((rail) => railLinks(rail).some(([, href]) => href === path)) ??
-    (path.startsWith("example/") || path.startsWith("knowledge/")
-      ? rails.find((rail) => rail.title === "Reference")
-      : undefined)
+    (path.startsWith("knowledge/") ? rails.find((rail) => rail.title === "Reference") : undefined)
   );
 }
 
@@ -290,6 +274,31 @@ export const REDIRECTS: Array<[string, string]> = [
   // The Markset page (until 2026-11-26): a visitor learning Intentset needs only that records are Markdown, which the
   // glossary says; the format itself is Markset's own site.
   ["markset/index.html", EXTERNAL.markset],
+  // The shop's record pages and the Atlas's review pages, until the Atlas was published as `intentset serve` writes it
+  // (2026-11-26): each now lives in the Atlas under example/atlas/, at the name the Atlas gives it.
+  ["example/ADR-RESET-LINK-LIFETIME/index.html", `${CANONICAL}example/atlas/records/ADR-RESET-LINK-LIFETIME.html`],
+  ["example/BEH-RESET-PASSWORD/index.html", `${CANONICAL}example/atlas/records/BEH-RESET-PASSWORD.html`],
+  ["example/BEH-SIGN-IN/index.html", `${CANONICAL}example/atlas/records/BEH-SIGN-IN.html`],
+  ["example/CAP-ACCOUNTS/index.html", `${CANONICAL}example/atlas/records/CAP-ACCOUNTS.html`],
+  ["example/INT-SELF-SERVE/index.html", `${CANONICAL}example/atlas/records/INT-SELF-SERVE.html`],
+  ["example/KB-RESET-PASSWORD/index.html", `${CANONICAL}example/atlas/records/KB-RESET-PASSWORD.html`],
+  ["example/MEAS-ACCESS-TICKETS/index.html", `${CANONICAL}example/atlas/records/MEAS-ACCESS-TICKETS.html`],
+  ["example/OUT-FEWER-LOCKOUTS/index.html", `${CANONICAL}example/atlas/records/OUT-FEWER-LOCKOUTS.html`],
+  ["example/PRD-SHOP/index.html", `${CANONICAL}example/atlas/records/PRD-SHOP.html`],
+  ["example/RULE-RESET-LINK-EXPIRY/index.html", `${CANONICAL}example/atlas/records/RULE-RESET-LINK-EXPIRY.html`],
+  ["example/RULE-RESET-LINK-ONCE/index.html", `${CANONICAL}example/atlas/records/RULE-RESET-LINK-ONCE.html`],
+  ["example/RULE-SIGN-IN-LOCKOUT/index.html", `${CANONICAL}example/atlas/records/RULE-SIGN-IN-LOCKOUT.html`],
+  ["example/SCN-RESET-EXPIRED/index.html", `${CANONICAL}example/atlas/records/SCN-RESET-EXPIRED.html`],
+  ["example/SLICE-ACCOUNT-RESET/index.html", `${CANONICAL}example/atlas/records/SLICE-ACCOUNT-RESET.html`],
+  ["example/SLICE-ACCOUNT-SIGN-IN/index.html", `${CANONICAL}example/atlas/records/SLICE-ACCOUNT-SIGN-IN.html`],
+  ["example/TEST-RESET-LINK-EXPIRY/index.html", `${CANONICAL}example/atlas/records/TEST-RESET-LINK-EXPIRY.html`],
+  ["example/TEST-SIGN-IN-LOCKOUT/index.html", `${CANONICAL}example/atlas/records/TEST-SIGN-IN-LOCKOUT.html`],
+  ["example/atlas/map/index.html", `${CANONICAL}example/atlas/map.html`],
+  ["example/atlas/records/index.html", `${CANONICAL}example/atlas/records.html`],
+  ["example/atlas/ownership/index.html", `${CANONICAL}example/atlas/ownership.html`],
+  ["example/atlas/verification/index.html", `${CANONICAL}example/atlas/verification.html`],
+  ["example/atlas/publication/index.html", `${CANONICAL}example/atlas/publication.html`],
+  ["example/atlas/diagnostics/index.html", `${CANONICAL}example/atlas/diagnostics.html`],
   // Lantern's record pages, until the site's example became the shop (2026-11-26): each record is still in the
   // repository, where `intentset init --example` and the conformance suite read it.
   ["example/ADR-ASMT-SEAM/index.html", `${REPO}/blob/main/examples/scheduling/ADR-ASMT-SEAM.md`],
@@ -397,6 +406,7 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["verify/index.html", "verify.md"],
   ["tools/index.html", "tools.md"],
   ["tools/cli/index.html", "cli.md"],
+  ["tools/serve/index.html", "serve.md"],
   ["specifications/index.html", "specifications.md"],
   ["glossary/index.html", "glossary.md"],
   ["about/index.html", "about.md"],
@@ -558,10 +568,6 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await writeFile(join(out, "llms.txt"), llmsTxt());
   await writeFile(join(out, "robots.txt"), robotsTxt());
 
-  // The map's one script and its styles, beside the Atlas's pages (ADR 0015).
-  await mkdir(join(out, ATLAS_ROOT), { recursive: true });
-  await writeFile(join(out, ATLAS_MAP_SCRIPT), MAP_SCRIPT);
-  await writeFile(join(out, ATLAS_MAP_STYLES), MAP_STYLES);
   const { pages, rails } = await sitePages(askUrl, inputs);
 
   const written: string[] = [];
@@ -576,6 +582,13 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
     await mkdir(dirname(join(out, path)), { recursive: true });
     await writeFile(join(out, path), redirectPage(to));
   }
+  // The shop's Atlas, exactly as `intentset serve` writes it, in its own look and navigation (2026-11-26): not in the
+  // site's shell, not in the sitemap (every page of it says noindex), and opened from tools/serve/ in a new tab.
+  for (const [path, text] of await shopAtlas(join(root, EXAMPLE_DIR))) {
+    const file = join(out, ATLAS_ROOT, path);
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, text);
+  }
   return written;
 }
 
@@ -586,7 +599,6 @@ export async function sitePages(
 ): Promise<{ pages: Page[]; rails: typeof RAILS }> {
   const { specs, records, knowledge, tokens } = await siteInputs(inputs);
   const publication = await publishExample(join(root, EXAMPLE_DIR));
-  const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR, (path) => `${REPO}/blob/main/${path}`);
   const rails = siteRails(knowledge);
   const pages: Page[] = [
     ...(await Promise.all(
@@ -596,7 +608,6 @@ export async function sitePages(
     guidePage(),
     await conformancePage(),
     exampleIndex(records, publication),
-    ...atlas.map((page) => atlasPage(page, atlas)),
     ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
     ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
   ];
@@ -647,11 +658,25 @@ function sitemapXml(paths: string[]): string {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Links that open in a new tab, by the page they are on and the href as written: the shop's Atlas, which is a tool to
+ * try rather than a page of the site, so a reader keeps the explanation open beside it (2026-11-26). Markset has no
+ * syntax for a target, so the rendered link gains one here.
+ */
+export const NEW_TAB: Record<string, readonly string[]> = { "tools/serve/index.html": ["../../example/atlas/"] };
+
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
   const text = await contentSource(file, tokens);
   const extra = path === INTRODUCTION.page ? { styles: [INTRODUCTION.stylesheet], scripts: [INTRODUCTION.script] } : {};
-  return renderPage(path, text, join(root, "site", "content", file), extra);
+  const page = renderPage(path, text, join(root, "site", "content", file), extra);
+  let body = page.body;
+  for (const href of NEW_TAB[path] ?? []) {
+    const plain = `<a href="${href}">`;
+    if (!body.includes(plain)) throw new Error(`${path}: no link to ${href} to open in a new tab`);
+    body = body.replaceAll(plain, `<a href="${href}" target="_blank" rel="noopener">`);
+  }
+  return { ...page, body };
 }
 
 function renderPage(
@@ -908,12 +933,12 @@ export const EXAMPLE_ACTS: Array<{ title: string; lead: string; records: string[
   },
   {
     title: "How it is checked",
-    lead: "Each verification record names the test that holds a rule, by its file and its title. No test has been run here, so the review pages show each check as missing rather than passing.",
+    lead: "Each verification record names the test that holds a rule, by its file and its title. The shop's tests run when this site is built, and the Atlas shows what they said, including a pass that no longer holds and a rule no test checks.",
     records: ["TEST-RESET-LINK-EXPIRY", "TEST-SIGN-IN-LOCKOUT"],
   },
   {
     title: "What a customer is told",
-    lead: "The help article is written for customers and kept beside the behavior and rules it explains. It is the one approved record here: a person reviewed it against its three sources, so a change to what any of them promises holds it for review before it is published again. It carries two tips for the shop's own screens. The last fold is what `intentset publish` writes for it.",
+    lead: "The help article is written for customers and kept beside the behavior and rules it explains. A person reviewed it against its three sources, so a change to what any of them promises holds it for review before it is published again. It carries two tips for the shop's own screens. The last fold is what `intentset publish` writes for it.",
     records: ["KB-RESET-PASSWORD"],
   },
 ];
@@ -951,9 +976,11 @@ function foldedRecord(record: ExampleRecord, ref: (id: string) => string): strin
     .trim()
     .replace(/^#\s+.*\n*/, "")
     .replace(/^##(#*)\s/gm, "####$1 ");
-  const inside = [recordFields(record, ref), body, `[Open \`${record.id}\` on a page of its own](${record.id}/)`].join(
-    "\n\n",
-  );
+  const inside = [
+    recordFields(record, ref),
+    body,
+    `[Open \`${record.id}\` in the Atlas](atlas/records/${record.id}.html)`,
+  ].join("\n\n");
   const quoted = inside
     .split("\n")
     .map((line) => (line === "" ? ">" : `> ${line}`))
@@ -990,7 +1017,7 @@ function publicationFold(publication: ExamplePublication): string {
 function exampleIndex(records: ExampleRecord[], publication: ExamplePublication): Page {
   const byId = new Map(records.map((r) => [r.id, r]));
   const ids = new Set(records.map((r) => r.id));
-  const ref = (id: string) => (ids.has(id) ? `[${id}](${id}/)` : `\`${id}\``);
+  const ref = (id: string) => (ids.has(id) ? `[${id}](atlas/records/${id}.html)` : `\`${id}\``);
   const listed = new Set(EXAMPLE_ACTS.flatMap((act) => act.records));
   for (const record of records) {
     if (!listed.has(record.id)) throw new Error(`${record.id} is in the example but in no act of the walkthrough`);
@@ -1020,7 +1047,7 @@ How it works · The example
 {.lead}
 Every record of the shop's accounts, open on one page: ${records.length} short Markdown files that connect why the accounts are changing to what they promise, the code that keeps each promise, the tests that check it and what customers are told. Read the ${EXAMPLE_ACTS.length} steps in order, and open any record to see what a person writes and what an agent reads.
 
-[[See the records on the map](atlas/map/)]{.button .primary} [[Open the review pages](atlas/)]{.button}
+[[Open the shop's model in the Atlas](atlas/)]{.button .primary} [[What the Atlas is](../tools/serve/)]{.button}
 
 :::metrics
 | Count | Value |
@@ -1032,7 +1059,7 @@ Every record of the shop's accounts, open on one page: ${records.length} short M
 :::
 
 > [!NOTE]
-> Nothing here runs. Every record but the help article is a draft, and no test has been run, so the review pages show what a model holds, not a verification report.
+> The shop's code and tests sit beside its records in the repository. [The Atlas](atlas/) shows what those tests said when this site was built: one rule has no test, one pass is stale because the code changed after its tests ran, and the sign-in behavior is still a draft.
 
 ***
 
@@ -1042,68 +1069,11 @@ ${acts}
 
 ## The same records, for review
 
-[The map](atlas/map/) and the [review pages](atlas/) are these records as \`intentset serve\` draws them for the people who review a model: who owns what, which checks are missing and what publication would release.
+[The Atlas](atlas/) is these records as \`intentset serve\` shows them on a team's own machine: the product as a tree, what needs attention, a map, and a page per record. [See your model in a browser](../tools/serve/) says what it is and how to run it.
 
 [[Set up Intentset](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
-}
-
-/** The map page's heading. */
-export const MAP_TITLE = "The shop's model, as a map";
-
-/**
- * One page of the example's Atlas, in the site's shell. Its links to other Atlas pages are pointed at their
- * addresses on the site, and an eyebrow and its title say whose pages they are, since "Ownership" alone names nothing.
- * The map is the example's landing page (2026-10-20), so it takes the example's name for its heading and, under the
- * picture, links the walkthrough and the review pages. A record's page is the record's one page on the site
- * (2026-11-02): its text first, then its links and what the review pages say about it.
- */
-function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
-  const paths = new Set(atlas.map((p) => p.atlasPath));
-  const isMap = page.atlasPath === "map.html";
-  const isRecord = page.atlasPath.startsWith("records/");
-  const eyebrow = isMap ? SERVE_NAME : `${SERVE_NAME} · ${isRecord ? "Record" : "Review page"}`;
-  let source = page.source.replace(
-    /^# (.*)$/m,
-    (_, title: string) => `{.eyebrow}\n${eyebrow}\n\n# ${isMap ? MAP_TITLE : title}`,
-  );
-  if (isMap) {
-    const ways =
-      "Read the same records in order, each open where it stands, in [the walkthrough](../../), or review them as a " +
-      `team would on the review pages: ${REVIEW_PAGES.map(([label, path]) => `[${label}](../${pageAddress(path).slice(ATLAS_ROOT.length + 1)})`).join(", ")}.`;
-    if (!source.includes("\n## Reading the map\n")) throw new Error("the Atlas's map page has no section to precede");
-    source = source.replace("\n## Reading the map\n", `\n${ways}\n\n## Reading the map\n`);
-  }
-  const rendered = renderPage(page.path, source, join(root, EXAMPLE_DIR), {}, (tree) => {
-    visit(tree, (node) => {
-      if (node.type === "link") (node as Link).url = atlasLink(page.atlasPath, (node as Link).url, paths);
-    });
-  });
-  return {
-    ...rendered,
-    body: placeHtml(rendered.body, page.html ?? ""),
-    // The map's styles on the map and on a record's page, which draws the record's neighborhood; the script on the map alone.
-    ...(isMap
-      ? { styles: [ATLAS_MAP_STYLES], scripts: [ATLAS_MAP_SCRIPT] }
-      : isRecord
-        ? { styles: [ATLAS_MAP_STYLES] }
-        : {}),
-    ...(isRecord
-      ? {
-          railPlace: {
-            under: atlasSitePath("records.html"),
-            label: page.atlasPath.slice("records/".length, -".html".length),
-          },
-        }
-      : {}),
-    title: isMap ? MAP_TITLE : rendered.title,
-    description: isMap
-      ? "The shop's model as a map of every record and every link between them, as intentset serve draws it, with the review pages drawn from the same records."
-      : isRecord
-        ? `${rendered.title}, one of the shop's records: its text as written, its links, and what the review pages say about it.`
-        : `${rendered.title}, a review page of the shop's records: what intentset serve shows a team about its own model.`,
-  };
 }
 
 /** The address of a published knowledge record's page, relative to the site's root. */

@@ -105,6 +105,8 @@ You can add these as you need them:
 - **Boundaries in the code.** Each behavior has one slice, and `intentset architecture check` fails an import that reaches into another slice's private files. Violations already in the code are written down once, so only new ones fail.
 - **Help that stays true.** A help article written as a record is held for review when a rule it explains changes, so it is not published out of date.
 
+To read all of it the way a reviewer would, `intentset serve` shows your records as linked pages in a browser on your machine: [see your model in a browser](../tools/serve/).
+
 ## Next to what you have
 
 Intentset replaces none of these. It ties them to what the product promises:

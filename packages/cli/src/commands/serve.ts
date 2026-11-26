@@ -43,28 +43,31 @@ const TYPES: Record<string, string> = {
  * its invented example with `{ notice: "example" }`.
  */
 export function atlasOf(session: Session, options: AtlasOptions = {}): Map<string, string> {
-  return buildAtlas({
-    graph: session.result.graph,
-    registries: session.repo.registries,
-    diagnostics: session.diagnostics,
-    snapshot: {
-      commit: session.snapshot.commit,
-      graphHash: session.snapshot.graphHash,
-      scope: session.repo.config.scope,
-      level: session.level,
+  return buildAtlas(
+    {
+      graph: session.result.graph,
+      registries: session.repo.registries,
+      diagnostics: session.diagnostics,
+      snapshot: {
+        commit: session.snapshot.commit,
+        graphHash: session.snapshot.graphHash,
+        scope: session.repo.config.scope,
+        level: session.level,
+      },
+      evidence:
+        session.evidence === undefined
+          ? null
+          : { classification: session.evidence.check.classification, coverage: session.evidence.check.coverage },
+      architecture:
+        session.architecture === undefined
+          ? null
+          : {
+              diagnostics: session.architecture.diagnostics,
+              summary: session.architecture.summary as unknown as Record<string, unknown>,
+            },
     },
-    evidence:
-      session.evidence === undefined
-        ? null
-        : { classification: session.evidence.check.classification, coverage: session.evidence.check.coverage },
-    architecture:
-      session.architecture === undefined
-        ? null
-        : {
-            diagnostics: session.architecture.diagnostics,
-            summary: session.architecture.summary as unknown as Record<string, unknown>,
-          },
-  }, options);
+    options,
+  );
 }
 
 /**

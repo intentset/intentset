@@ -88,11 +88,17 @@ export async function shopAtlas(exampleDir: string): Promise<Map<string, string>
 
     // The tests, run as a team's CI would, and their report imported as run records bound to that commit.
     const tests = (await files(join(repo, "src"))).filter((f) => f.endsWith(".test.ts")).map((f) => join("src", f));
+    // Run as a fresh test run: under a test runner (the site's own tests build the site), node:test tells a child it
+    // is a subtest through NODE_TEST_CONTEXT and it would report to that runner rather than print TAP.
+    const { NODE_TEST_CONTEXT: _, ...env } = process.env;
     const tap = execFileSync(process.execPath, ["--test", "--test-reporter=tap", ...tests], {
       cwd: repo,
       encoding: "utf8",
+      env,
       stdio: ["ignore", "pipe", "pipe"],
     });
+    if (!/^# pass \d+$/m.test(tap) || !/^# fail 0$/m.test(tap))
+      throw new Error(`the shop's tests did not pass:\n${tap}`);
     await mkdir(join(repo, "reports"), { recursive: true });
     await writeFile(join(repo, "reports", "node-test.tap"), tap);
     await run(

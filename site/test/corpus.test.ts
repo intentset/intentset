@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { CHAT_PAGES, CONTENT_PAGES, canonicalUrl, EXAMPLE_DIR, knowledgePath, NOT_FOUND, SPECS } from "../build.ts";
 import { buildCorpus, CORPUS_FORMAT, estimateTokens, TOKEN_BUDGET } from "../corpus.ts";
 import { publishedKnowledge } from "../knowledge.ts";
+import { atlasRecordPath } from "../example-atlas.ts";
 import { loadRecords } from "../records.ts";
 
 const corpus = await buildCorpus();
@@ -15,7 +16,7 @@ test("the corpus is every published page: content pages, specifications, the gui
     ...[...CONTENT_PAGES, ...CHAT_PAGES].filter(([path]) => path !== NOT_FOUND).map(([path]) => path),
     ...SPECS.map((spec) => `specifications/${spec.slug}/index.html`),
     "guide/index.html",
-    ...records.map((record) => `example/${record.id}/index.html`),
+    ...records.map((record) => atlasRecordPath(record.id)),
     ...knowledge.map(({ record }) => knowledgePath(record.id)),
   ]
     .map(canonicalUrl)
