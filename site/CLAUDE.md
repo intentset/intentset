@@ -55,7 +55,8 @@ repository-relative.
   by the time they click them, and the agent asked to fix it raises the limit to 24 hours and changes the test that
   expected one hour, so a security decision is made as a bug fix; CI is green, and nobody decided it (the agent's reason
   is told, 2026-11-26, so the change reads as believable rather than random). Home, How it works and
-  the introduction (`#problem`, `#review`) tell it, always labelled illustrative and invented. Its records are
+  the introduction (`#problem`, `#review`) tell it as an example, without a label calling it invented (the user's decision, 2026-11-26: a card titled "An
+  example" says enough). Its records are
   `site/test/fixtures/password-reset/`. Change it in all three places or none. No page says a pass counts only "on
   this commit": a pass counts while what it checked is unchanged, and a gate may ask for a pass on the commit under
   review (Streamlane SL-710). Lantern stays the worked example in Examples until that section is rebuilt.

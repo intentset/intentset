@@ -371,9 +371,8 @@ test("the introduction is a deck of 14 slides in order, each with its notes fold
   );
   // The five parts each open on their first slide.
   for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
-  // The illustrative change is Home's password reset (2026-11-26), labelled where it is shown. A pass is never said to
+  // The example is Home's password reset (2026-11-26). A pass is never said to
   // count only on this commit (SL-710).
-  assert.ok(text(body).includes("Illustrative · an invented online shop"));
   assert.ok(text(body).includes("A password reset link stops working one hour after it is sent."));
   assert.ok(!text(body).includes("Lantern"), "the deck tells Home's example, not Lantern");
   assert.ok(!/on this commit/.test(text(body)), "no pass is bound to this commit");
@@ -630,7 +629,6 @@ test("home is short: the promise, one example, how it works, what it is, and one
   assert.match(home, /<span class="ms-span button"><a href="start\/">Try it on your code<\/a>/);
   assert.match(home, /<h2 id="problem">/);
   assert.match(home, /<section class="ms-card example"/);
-  assert.match(home, /Illustrative: an invented shop, not a real event\./, "the example says it is invented");
   // What the user asked to go: the six-record card, the loop, versions and drafts, the status card, the adoption log.
   assert.doesNotMatch(home, /class="[^"]*\b(?:model|loop|status)\b/);
   assert.doesNotMatch(home, /href="pilot\/"|href="roadmap\/"|href="tools\/readers\/"|href="introducing\/"/);

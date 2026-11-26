@@ -81,7 +81,7 @@ Slices whose code changed while none of the records that describe them did: the 
 ```
 
 {.small .muted}
-Real output of `intentset review --base origin/main --fail-on-drift`, run on the shop's records and code in a scratch repository. The shop is invented. The report's other sections are left out.
+Real output of `intentset review --base origin/main --fail-on-drift`, run on the shop's records and code in a scratch repository. The report's other sections are left out.
 
 There are two ways through, and both make the same command pass:
 

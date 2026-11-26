@@ -106,9 +106,8 @@ test("the status notes are on their pages, as callouts, and none still says the 
 
 const FIXTURE = join(root, "site", "test", "fixtures", "password-reset");
 
-test("Home labels its example invented, and its failure excerpt is in the review command's own words", async () => {
+test("Home's failure excerpt is in the review command's own words", async () => {
   const html = await readFile(join(dist, "index.html"), "utf8");
-  assert.ok(text(html).includes("Illustrative: an invented shop, not a real event."), "the example keeps its label");
   // The excerpt was run, not written: each of its lines is one `intentset review` writes, about the fixture's records,
   // so a change to either fails here until the excerpt is run again and requoted.
   const review = await readFile(join(root, "packages", "cli", "src", "commands", "review.ts"), "utf8");

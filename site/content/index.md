@@ -24,9 +24,6 @@ The problem
 Your shop's password reset links work for one hour. Customers write in that their link has already expired by the time they click it, and an agent is asked to fix it. It finds the one-hour limit, raises it to 24 hours so that links don't run out before people get to them, and updates the test that expected one hour. The complaints stop, the tests pass and CI is green. The pull request says it fixes expired reset links, which is true, and it is approved.
 
 Nobody decided that a reset link should last a day. How long a link into someone's account stays open is a security decision, and it was made as a bug fix. The only trace of it is one number in the diff.
-
-{.small .muted}
-Illustrative: an invented shop, not a real event.
 :::
 
 Nobody made a mistake here. Every change makes small decisions about what the product does. When people wrote the code, those decisions passed through someone who knew the product. Now an agent makes them, and writes the tests that check them, in the same change. Green CI tells you the code does what the tests say. It cannot tell you whether anyone meant the product to change.

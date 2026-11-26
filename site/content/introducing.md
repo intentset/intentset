@@ -65,9 +65,6 @@ An online shop's password reset links work for one hour. Customers report that t
 - A security decision was made as a bug fix, and the only trace of it is one number in the diff.
 :::
 
-{.caveat}
-Illustrative · an invented online shop
-
 ::::
 
 {.notes}
@@ -177,7 +174,7 @@ One recognizable thing the product does, **including how it fails.**
 
 :::card{.panel}
 {.label}
-Illustrative · an invented online shop
+A behavior
 
 ### Reset a forgotten password
 
@@ -278,7 +275,7 @@ The agent's fix changed the reset code while the records that describe it stayed
 :::
 
 {.caveat}
-Real output, trimmed · the shop is illustrative
+Real output, trimmed
 
 :::::
 
