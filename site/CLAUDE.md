@@ -10,7 +10,7 @@ repository-relative.
   Reference, Examples, Roadmap. Home is the wordmark; About is in the footer's row. `RAILS` in `site/build.ts` lists
   each section's pages, shown beside every page in it: Start (start, How it works, the adoption, Prove the work, the
   agent guide), Tools (all
-  tools, the command, what reads a model), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
+  tools, the command, what reads a model), Reference (the specifications, the Markset page, conformance, the glossary), Examples (one rail on every page
   of the section, 2026-10-20: "Lantern, a worked example", a group holding the map, the walkthrough and "Review pages",
   a group of the Atlas's five other pages; then the adoption log). A rail entry is a page or a group whose label is not
   a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the map
@@ -61,6 +61,13 @@ repository-relative.
   coordinates rounded. The map comes first on its page, the legend and instructions below it, and where IDs show no
   ID may overlap another record (a separation pass after the forces, tested on a crowded graph). The script writes text, never markup (a test refuses `innerHTML`, `eval`, `fetch` and
   storage), and adds no dependency.
+- **Home's failure excerpt is real output** (2026-11-25): the `intentset review --fail-on-drift` lines under "What it
+  is" were produced by running this repository's CLI in a scratch repository made with `intentset init --example`,
+  and their caption says how. `site/test/content.test.ts` holds each line to the strings `review.ts` writes, so a
+  change to the command's words fails until the excerpt is run again and requoted. The one illustrative change
+  (Lantern, 2,140 lines in 31 files, the release-time rule loosened by an hour) is always labelled illustrative, with
+  Lantern named as invented, and the test holds the problem card's foot. **The glossary** (`/glossary/`, Reference)
+  defines the site's words in reef's `docs/family.md`'s terms and names neither product.
 - **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
   label, not a sentence. The h2s below it are written as sentences and keep theirs.
 - **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose

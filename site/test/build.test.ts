@@ -610,30 +610,28 @@ test("the worked example opens every record on the page, in the act it belongs t
   }
 });
 
-test("home: the hero, the loop, the role cards, the worked example and status are the constructs the layout asks for", () => {
+test("home: the hero, the loop, the worked example and status are the constructs the layout asks for", () => {
   const home = main("index.html");
   assert.match(home, /<div class="ms-columns hero"/);
+  // The eyebrow says who the site is for (the user's decision of 2026-11-25, over SL-716's "eyebrow unchanged").
+  assert.match(home, /For teams shipping with coding agents · v0\.2 draft/);
   assert.match(home, /<section class="ms-card example"/);
-  assert.match(home, /<div class="ms-grid" data-cols="2"/);
-  const roles = [...home.matchAll(/<h3 class="ms-card-title">(For [^<]+)<\/h3>\s*<ul>([\s\S]*?)<\/ul>/g)];
-  assert.deepEqual(
-    roles.map((m) => m[1]),
-    ["For product managers", "For engineers", "For customer knowledge", "For agents"],
-  );
-  for (const [, role, list] of roles) {
-    const questions = [...list.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
-    assert.equal(questions.length, 3, role);
-    assert.ok(
-      questions.every((q) => q.endsWith("?")),
-      `${role}: every item is a question the model can answer`,
-    );
-  }
+  // The four-audience grid and "Keep the architecture yours" moved to How it works (2026-11-25, the clarity plan's
+  // decision 9), and "Read the draft specification" left the hero and the closing card (decision 2): the status card
+  // is the one place Home offers the specifications.
+  assert.doesNotMatch(home, /<h3 class="ms-card-title">For /, "the role cards are not on Home");
+  assert.doesNotMatch(home, /Keep the architecture yours/);
+  assert.doesNotMatch(home, /Read the draft specification/);
+  assert.match(home, /<span class="ms-span button"><a href="start\/">Try it on your code<\/a>/);
+  const status = home.slice(home.indexOf('<section class="ms-card status"'));
+  assert.match(status, /<a href="specifications\/">Read the specifications<\/a>/);
+  assert.match(home, /<h2 id="problem">/);
+  assert.match(home, /<a href="glossary\/">/, "the home page leads to the glossary");
   assert.match(home, /<a href="pilot\/">/, "the home page leads to the pilot");
   assert.match(home, /<ol class="ms-steps adopt">/);
   assert.match(home, /<section class="ms-card status"/);
   assert.match(home, /<div class="ms-callout" data-type="note"/);
   assert.match(home, /<h2 id="example">/);
-  assert.match(home, /<span class="ms-span button"><a href="specifications\/">Read the draft specification<\/a>/);
 });
 
 test("the build leaves no placeholder behind", async () => {
