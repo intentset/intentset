@@ -6,7 +6,8 @@
   "required": ["markset", "intentset"],
   "properties": {
     "markset": {
-      "const": 0
+      "enum": [true, 0],
+      "description": "Declares the document Markset: true, or 0, the form used before Markset 0.6.0, which means the same (Core \u00a73)."
     },
     "intentset": {
       "type": "object",

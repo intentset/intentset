@@ -9,7 +9,9 @@
  * `{ body, frontmatter, ending }`:
  *
  * - `frontmatter` is the whole parsed frontmatter, `markset` and unknown
- *   top-level keys included, without `status`, `delivery`, `reviewedBy`,
+ *   top-level keys included, with `markset: true` hashed as `markset: 0`, the
+ *   two declaring the same thing since Markset 0.6.0, so a file moved from one
+ *   form to the other keeps every pin on it; without `status`, `delivery`, `reviewedBy`,
  *   `reviewedAt`, `approval` and `formalizes` under `intentset`, and without
  *   the `intentset.org/review` extension (and `extensions` itself when
  *   nothing else is in it). `approval` says how the record was approved and
@@ -34,6 +36,8 @@ export const ENDING_STATUSES = ["deprecated", "retired"] as const;
 /** The content hash of a record from its parsed frontmatter and its body (publication §3, ADR 0018). */
 export function contentHashOf(frontmatter: Record<string, unknown>, body: string): string {
   const copy: Record<string, unknown> = { ...frontmatter };
+  // `markset: true` and `markset: 0` are one declaration (Markset 0.6.0); hashing both as 0 keeps every pin taken before.
+  if (copy.markset === true) copy.markset = 0;
   const section = frontmatter.intentset;
   let ending: string | undefined;
   if (isRecord(section)) {

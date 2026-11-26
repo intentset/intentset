@@ -2,7 +2,7 @@
 title: Intentset Core Specification v0.2
 id: intentset/core/0.2
 status: draft
-revision: 2026-11-24
+revision: 2026-11-26
 implementation: 0.17.1
 ---
 
@@ -36,6 +36,7 @@ Revisions that changed what a reader who conformed earlier sees (the breaking on
 | 2026-11-14 (`0.2`, no move, second) | **A record can say on what basis it was approved, and which outside requirement it formalizes** (§5, §7, ADR 0020). |
 | 2026-11-15 (`0.2`, no move) | **A publication names its snapshot in a file of its own, and nowhere else** (§9, [publication §5, §6](publication.md#6-the-snapshot-file), ADR 0021, amending ADR 0019). |
 | 2026-11-24 (`0.2`, no move) | **Approval is a reviewed change to a record, and a review lists it** (§7, §10, ADR 0022). |
+| 2026-11-26 (`0.2`, no move) | **`markset: true` declares a record, and the original `markset: 0` stays valid and means the same** (§3; [publication §2, §3](publication.md#3-review-record-and-needs-review)), following Markset 0.6.0. A `content-v1` pin hashes `true` as `0`, so a source moved from one form to the other keeps the pins on it. |
 
 ## 2. Semantic model and granularity
 
@@ -67,7 +68,7 @@ Frontmatter MUST be the first block between `---` delimiters. It MUST decode to 
 
 ```yaml
 ---
-markset: 0
+markset: true
 intentset:
   spec: "0.2"
   profile: intentset/behavior/0.2
@@ -90,7 +91,7 @@ intentset:
 ---
 ```
 
-`markset` is required by the Intentset Markset binding, not by language-neutral graph interchange. `intentset.profile` is an Intentset-owned semantic profile identifier; it is not a claim that Markset has registered a profile API. Unknown top-level frontmatter is preserved, but cannot alter Intentset semantics. Unknown keys inside `intentset` are errors except under `extensions`.
+`markset` is required by the Intentset Markset binding, not by language-neutral graph interchange. It declares the document Markset: it MUST be the YAML boolean `true`, or the number `0`, the form Markset documents used before Markset 0.6.0, which means the same; any other value, a quoted one included, is CORE001. Tools that write records write `true`. `intentset.profile` is an Intentset-owned semantic profile identifier; it is not a claim that Markset has registered a profile API. Unknown top-level frontmatter is preserved, but cannot alter Intentset semantics. Unknown keys inside `intentset` are errors except under `extensions`.
 
 ## 4. Common fields and identity
 

@@ -153,7 +153,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
       artifact: null,
       location: { line: 1 },
       message: "The document has no frontmatter block between `---` lines at the top of the file.",
-      remediation: "Start the file with `---`, the `markset: 0` and `intentset:` keys, and a closing `---` line.",
+      remediation: "Start the file with `---`, the `markset: true` and `intentset:` keys, and a closing `---` line.",
     });
     return { artifact: null, diagnostics, id: null, locate: NO_LOCATION };
   }
@@ -179,17 +179,19 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const problem = (field: string, message: string, remediation: string, code = "CORE001") =>
     report({ code, artifact: id, location: locate(field), field, message, remediation });
 
+  // The declaration that the record is Markset (Core §3): the YAML boolean `true`, or the number `0`, the form Markset
+  // wrote before 0.6.0 and which means the same.
   if (!Object.hasOwn(root, "markset")) {
     problem(
       "/markset",
       "The frontmatter has no `markset` key.",
-      "Add `markset: 0`, the Markset version the document is written against.",
+      "Add `markset: true`, which declares the file Markset.",
     );
-  } else if (root.markset !== 0) {
+  } else if (root.markset !== true && root.markset !== 0) {
     problem(
       "/markset",
-      "`markset` must be the number 0.",
-      "Write `markset: 0`, unquoted: it is a version, not a flag.",
+      "`markset` must be `true`, or the original `0`.",
+      "Write `markset: true`, unquoted: a quoted value is a string, and `false` or another number is refused.",
     );
   }
   if (!Object.hasOwn(root, "intentset")) {

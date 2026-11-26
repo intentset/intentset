@@ -594,12 +594,12 @@ test("BEH-ATLAS-MAP: the script writes text, never markup, and asks for nothing"
   );
 });
 
-test("every page is Markset version 0 with the derived atlas block, and parses without a diagnostic", () => {
+test("every page declares Markset, with the derived atlas block, and parses without a diagnostic", () => {
   for (const input of [example(), example({ runs: (hash) => [review(hash, { result: "fail" })] })]) {
     for (const [path, source] of buildAtlasSources(input)) {
       const parsed = parseDocument(source);
       assert.deepEqual(parsed.diagnostics, [], path);
-      assert.equal(parsed.frontmatter?.markset, 0, path);
+      assert.equal(parsed.frontmatter?.markset, true, path);
       assert.match(
         source,
         /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.2\n {2}derived: true\n {2}snapshot:\n/,

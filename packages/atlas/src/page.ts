@@ -113,7 +113,7 @@ const NOTICES: Record<AtlasNotice, string[]> = {
 
 /** The complete Markset source of a page. */
 export function pageSource(page: PageSource, meta: AtlasMeta, notice: AtlasNotice = "internal"): string {
-  const yaml = emitYaml({ markset: 0, [ATLAS_KEY]: meta as unknown as YamlValue });
+  const yaml = emitYaml({ markset: true, [ATLAS_KEY]: meta as unknown as YamlValue });
   return [
     "---",
     yaml.trimEnd(),
@@ -132,13 +132,13 @@ export function pageSource(page: PageSource, meta: AtlasMeta, notice: AtlasNotic
   ].join("\n");
 }
 
-/** Parse a page's source as Markset version 0, and refuse one that reports an error: that is a bug here. */
+/** Parse a page's source as Markset, and refuse one that reports an error: that is a bug here. */
 export function checkedTree(path: string, source: string): ReturnType<typeof parseDocument>["ast"] {
   const parsed = parseDocument(source);
   const errors = parsed.diagnostics.filter((d) => d.severity === "error");
-  if (errors.length > 0 || parsed.frontmatter?.markset !== 0) {
+  if (errors.length > 0 || parsed.frontmatter?.markset !== true) {
     const detail = errors.map((d) => `${d.code} at ${d.start}: ${d.message}`).join("; ");
-    throw new Error(`atlas: generated page ${path} is not valid Markset version 0: ${detail || "no markset: 0"}`);
+    throw new Error(`atlas: generated page ${path} is not valid Markset: ${detail || "no markset: true"}`);
   }
   return parsed.ast;
 }

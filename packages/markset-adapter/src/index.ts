@@ -12,7 +12,7 @@ import { parseDocument, type Diagnostic as MarksetDiagnostic } from "@markset-la
 import type { Nodes, Root } from "mdast";
 
 /** The upstream version this adapter is written and tested against. Change it only with the pin in package.json. */
-export const MARKSET_VERSION = "0.4.1";
+export const MARKSET_VERSION = "0.6.0";
 
 /**
  * Markset's guide to writing its syntax, for agents and people. A record is a

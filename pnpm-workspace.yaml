@@ -8,12 +8,12 @@ packages:
 # the last release from the registry.
 linkWorkspacePackages: true
 
-# Markset 0.4.1 was published 2026-10-04, inside the default release-age window.
+# Markset 0.6.0 was published 2026-11-26, inside the default release-age window.
 minimumReleaseAgeExclude:
-  - '@markset-lang/chart-table@0.4.1'
-  - '@markset-lang/diagram-ascii@0.4.1'
-  - '@markset-lang/parser@0.4.1'
-  - '@markset-lang/render-html@0.4.1'
+  - '@markset-lang/chart-table@0.6.0'
+  - '@markset-lang/diagram-ascii@0.6.0'
+  - '@markset-lang/parser@0.6.0'
+  - '@markset-lang/render-html@0.6.0'
 
 # The chat's backend (amplify/) builds with esbuild through Amplify.
 allowBuilds:

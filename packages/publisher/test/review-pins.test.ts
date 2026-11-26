@@ -107,6 +107,13 @@ test("BEH-REVIEW-PINS: the content hash moves for the promise, and when the reco
     contentHashOf({ markset: 0, intentset: { id: "RULE-X", status: "approved" } }, "x"),
     contentHashOf({ intentset: { id: "RULE-X" }, markset: 0 }, "x"),
   );
+  // `markset: true` and the original `markset: 0` declare the same thing (Markset 0.6.0, Core §3), so moving a source
+  // from one form to the other keeps every content-v1 pin on it; a refused value is not folded in.
+  assert.equal(read(RECORD.replace("markset: 0", "markset: true")).contentHash, read(RECORD).contentHash);
+  assert.notEqual(
+    contentHashOf({ markset: "true", intentset: { id: "RULE-X" } }, "x"),
+    contentHashOf({ markset: 0, intentset: { id: "RULE-X" } }, "x"),
+  );
 });
 
 test("BEH-REVIEW-PINS: a review names its pin kind in `hash`, and an unknown kind matches nothing", () => {

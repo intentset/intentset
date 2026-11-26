@@ -454,7 +454,7 @@
   },
   {
     "section": "core",
-    "name": "CORE001 markset version missing",
+    "name": "CORE001 markset missing",
     "baseline": "scheduling",
     "patch": {
       "CAP-ASMT-ASSIGN.md": {
@@ -470,7 +470,7 @@
   },
   {
     "section": "core",
-    "name": "CORE001 markset version is not 0",
+    "name": "CORE001 markset is a number other than 0",
     "baseline": "scheduling",
     "patch": {
       "CAP-ASMT-ASSIGN.md": {
@@ -483,6 +483,54 @@
     "diagnostics": [
       "CORE001"
     ]
+  },
+  {
+    "section": "core",
+    "name": "C01 markset true declares a record, as the original 0 does",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "markset": true
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Markset 0.6.0 made `markset:` a declaration: the YAML boolean true, or the original number 0, which means the same (Core §3)."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 markset false",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "markset": false
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 markset quoted true",
+    "baseline": "scheduling",
+    "patch": {
+      "CAP-ASMT-ASSIGN.md": {
+        "frontmatter": {
+          "markset": "true"
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "A quoted \"true\" is a string, not the boolean, and is refused as Markset refuses it."
   },
   {
     "section": "core",
