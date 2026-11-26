@@ -16,6 +16,7 @@ The steps are the same in the [README](https://github.com/intentset/intentset#tr
 > - Test reports from Vitest, Playwright or node:test (its TAP reporter) for step 5. Jest reports do not import yet.
 > - TypeScript 7 for step 4's second command and for step 7. npm installs it for you; the note at the foot of this page covers pnpm.
 > - Step 5's `<PRD-ID>` is the ID of the product record the agent writes in step 3. `npx intentset list --type product` prints it.
+> - A word you don't know is in [the glossary](../glossary/).
 
 ## 1. Install it (one minute)
 

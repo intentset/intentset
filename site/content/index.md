@@ -268,7 +268,7 @@ Next to what you have
 - **Docs and help pages** fall out of date without anyone noticing. Help written as records is held for review when what it explains changes.
 - **Tickets** describe a change and close. Records describe what the product does after it.
 
-Intentset replaces none of them. It ties them to what the product promises, and fails CI when code changes and its records do not. [How it works](how-it-works/) goes through each part.
+Intentset replaces none of them. It ties them to what the product promises, and fails CI when code changes and its records do not. [What it is not, and what you already have](how-it-works/#alongside) goes through each one.
 
 ***
 
@@ -311,7 +311,7 @@ In the first, the records have been a required check on every pull request since
 
 [Read the adoption log](pilot/): what it caught, what it cost and what it changed in the specifications.
 
-Trying it is one capability, about five minutes on a fresh TypeScript repository with one feature and three tests.
+Trying it is one capability, about five minutes on a fresh TypeScript repository with one feature and three tests; [what adopting it costs](how-it-works/#cost) covers the rest.
 
 ***
 
