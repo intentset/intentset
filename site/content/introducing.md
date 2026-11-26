@@ -52,17 +52,17 @@ The problem
 ## A change can pass every check and still change the product
 
 {.lead}
-An online shop's password reset links work for one hour. An agent is asked to tidy up the account code.
+An online shop's password reset links work for one hour. Customers report that their link has expired by the time they click it, and an agent is asked to fix it.
 
 :::grid{cols=2}
-- On the way, it changes the link's lifetime to 24 hours, and updates the test to match.
+- It raises the limit to 24 hours, so that links don't run out before people get to them, and updates the test that expected one hour.
 
-- The tests pass and CI is green. The summary says "tidy up the account code", which is true. It is approved.
+- The complaints stop, the tests pass and CI is green. The summary says it fixes expired reset links, which is true. It is approved.
 
 - {.spotlight}
   Nobody decided that reset links should last a day.
 
-- The product changed, and the only trace of it is one number in a long diff.
+- A security decision was made as a bug fix, and the only trace of it is one number in the diff.
 :::
 
 {.caveat}
@@ -256,7 +256,7 @@ Step 05 · the product review
 ## The check stops the change, and says why
 
 {.lead}
-The agent's tidy-up changed the reset code while the records that describe it stayed the same, so `intentset review --fail-on-drift` fails with code 1:
+The agent's fix changed the reset code while the records that describe it stayed the same, so `intentset review --fail-on-drift` fails with code 1:
 
 ```text
 ### SLICE-ACCOUNT-RESET: Password reset

@@ -21,9 +21,9 @@ The problem
 ## A change can pass every check and still change the product
 
 :::card[An example]{.example}
-Your shop's password reset links work for one hour. An agent is asked to tidy up the account code. On the way, it changes the link's lifetime to 24 hours and updates the test to match. The tests pass and CI is green. The pull request says it tidies up the account code, which is true, and it is approved.
+Your shop's password reset links work for one hour. Customers write in that their link has already expired by the time they click it, and an agent is asked to fix it. It finds the one-hour limit, raises it to 24 hours so that links don't run out before people get to them, and updates the test that expected one hour. The complaints stop, the tests pass and CI is green. The pull request says it fixes expired reset links, which is true, and it is approved.
 
-Nobody decided that a reset link should last a day. The product changed, and the only trace of it is one number in a long diff.
+Nobody decided that a reset link should last a day. How long a link into someone's account stays open is a security decision, and it was made as a bug fix. The only trace of it is one number in the diff.
 
 {.small .muted}
 Illustrative: an invented shop, not a real event.
@@ -71,7 +71,7 @@ Now the change has to say what it means. If reset links really should last a day
 +A password reset link stops working 24 hours after it is sent.
 ```
 
-If nothing the product does changed, as in a real tidy-up, a line in the commit message says so. Either way, a person sees the decision in plain words before it merges.
+If nothing the product does changed, as in a refactor, a line in the commit message says so. Either way, a person sees the decision in plain words before it merges.
 
 ***
 

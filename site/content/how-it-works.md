@@ -65,7 +65,7 @@ npx intentset review --base origin/main --fail-on-drift
 
 The first checks that the records are complete and link up, and that each slice's code stays out of other slices' internals. The second compares the branch with main and fails on drift: code that changed while the records that describe it did not.
 
-Say an agent tidying up the account code changes the link's lifetime to 24 hours, and updates the test to match. The tests pass, and the review fails with this:
+Say customers report that their reset link has already expired by the time they click it. The agent asked to fix it raises the limit to 24 hours, so that links don't run out before people get to them, and updates the test that expected one hour. The tests pass, and the review fails with this:
 
 ```text
 ## Code changed, records unchanged (1, 1 not acknowledged)
@@ -91,7 +91,7 @@ There are two ways through, and both make the same command pass:
   -A password reset link stops working one hour after it is sent.
   +A password reset link stops working 24 hours after it is sent.
   ```
-- **It did not**, as in a real tidy-up. The commit message ends with `Intentset-Unchanged: SLICE-ACCOUNT-RESET`, where a reviewer can read the claim and question it.
+- **It did not**, as in a refactor. The commit message ends with `Intentset-Unchanged: SLICE-ACCOUNT-RESET`, where a reviewer can read the claim and question it.
 
 An agent can edit a record as easily as a test, and Intentset lets it. The difference is where the edit shows up: a changed rule is one sentence the reviewer reads first, not one number in a long diff.
 

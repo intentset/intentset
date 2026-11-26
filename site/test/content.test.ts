@@ -218,7 +218,7 @@ test("Home and How it works quote review's drift failure as the CLI prints it, a
     git("checkout", "-qb", "tidy-account-code");
     await writeFile(join(reset, "policies", "link-expiry.ts"), code("24 * "));
     await writeFile(join(reset, "policies", "link-expiry.test.ts"), check("24 * ", "24 hours"));
-    git("commit", "-qam", "Tidy the account code");
+    git("commit", "-qam", "Fix reset links that expire before customers click them");
     const review = ["review", "--base", "origin/main", "--fail-on-drift"];
 
     const failed = await intentset(repo, ...review);
