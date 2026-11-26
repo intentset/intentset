@@ -183,30 +183,30 @@ What a team gets
 ## Control of the product, at the speed agents work
 
 :::grid{cols=3}
-- ### Reviews in product language
+- ### Readable reviews
 
-  A changed promise is one sentence the reviewer reads before the code, not one number in a long diff.
+  A changed promise is one sentence, read before the code.
 
-- ### Agents with the right context
+- ### Context for agents
 
-  Before it edits a file, an agent loads the promises and rules that code keeps.
+  An agent loads what a file promises before it edits it.
 
 - ### Tests tied to promises
 
-  Each promise shows whether its test passes on the code as it stands now. A stale pass is shown as stale.
+  Each promise shows whether its test passes now. A stale pass shows as stale.
 
 - ### Help that stays true
 
-  A help article is held for review when a rule it explains changes, so it is not published out of date.
+  A help article is held for review when a rule it explains changes.
 
 - ### Decisions with a history
 
-  Every change to a promise is a reviewed diff in git, with who approved it and when.
+  Every change to a promise is a reviewed diff, with who approved it and when.
 
 - {.spotlight}
   ### Nothing to host or buy
 
-  Plain files you own, and an open-source command-line tool, MIT-licensed.
+  Plain files you own, and an MIT-licensed command-line tool.
 :::
 
 ::::
