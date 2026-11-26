@@ -31,6 +31,8 @@ export function recordsPage(model: Model): PageSource {
   const present = ARTIFACT_TYPES.filter((type) => model.ofType(type).length > 0);
   const body: string[] = [
     "{.lead}",
+    "Every record, listed by type, each with a page of its own.",
+    "",
     `Every record in this snapshot: ${plural(model.graph.artifacts.size, "record")} of ` +
       `${plural(present.length, "type")}, each on a page of its own with its text as written, its links and ` +
       "what the other review pages say about it.",

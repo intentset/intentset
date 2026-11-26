@@ -22,10 +22,12 @@ export function verificationPage(model: Model): PageSource {
   const current = claims.filter((c) => c.meta.status !== "retired");
   const body: string[] = [
     "{.lead}",
+    "Which promises have a test, and which have a test that passes now.",
+    "",
     "Definitions are not evidence. Each count below names its denominator, the claims (behaviors, rules and " +
       "scenarios) that are not retired, and what it measures: **links**, where a verification definition names " +
-      "the claim, or **evidence**, where every applicable definition has a current pass at this snapshot. Only a " +
-      "pass at this commit and graph hash is current. No count is reduced to a percentage.",
+      "the claim, or **evidence**, where every applicable definition has a current pass at this snapshot. A pass " +
+      "counts while what it checked is unchanged. No count is reduced to a percentage.",
     "",
   ];
 

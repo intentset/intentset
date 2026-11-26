@@ -13,8 +13,8 @@ repository-relative.
   Get started (Set up Intentset, then Add Intentset to your CI at `/start/ci/`, then a group "Once one capability
   works" holding Model the whole product with many agents and Make agents' work safe to accept, each label the page's
   h1); Reference (a Tools group with all tools, the command, the agent guide as "What your agents read" and a group
-  "What intentset serve shows" holding the map and the Atlas's eight review pages (the outline first, then needs
-  attention, since #159), then a Specifications group,
+  "What intentset serve shows" holding the map and the Atlas's seven review pages (Product first, then needs
+  attention, since #159 and Gary's rethink of 2026-11-26, which removed the overview), then a Specifications group,
   conformance, the glossary). A record's page sits in Reference beneath Records. The Markset page left the site on
   2026-11-26 (the user's decision; `/markset/` redirects to markset.org): the glossary's Record entry says records are
   written in Markset and read as plain Markdown, which is all a visitor needs. Examples left the bar
@@ -67,8 +67,8 @@ repository-relative.
   baseline under `examples/scheduling/`, and no page of the site shows it; its old record pages redirect to its files.
 - **The example's Atlas** (`site/example-atlas.ts`, 2026-10-15; the shop's since 2026-11-26) is the example's
   records validated at L1 and drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell
-  under `/example/atlas/` in the Reference rail as "What intentset serve shows". Its landing page, `/example/atlas/`, is the outline
-  (#159, 2026-11-26), and each behavior's page opens what the Atlas derives with its trace. Each record's page is the Atlas's
+  under `/example/atlas/` in the Reference rail as "What intentset serve shows". Its landing page, `/example/atlas/`, is the product
+  as a tree (#159, 2026-11-26), and each behavior's page opens what the Atlas derives with its trace. Each record's page is the Atlas's
   (2026-11-02): served at `/example/<ID>/`, it holds the record in one card (its file, linked on GitHub at main, every
   frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records.
   The map's h1 is "The shop's model, as a map", and it links the one-page model and the review pages under the

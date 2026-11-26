@@ -5,7 +5,7 @@ intentset:
   profile: intentset/verification/0.2
   id: TEST-ATLAS-OUTLINE
   type: verification
-  title: The outline renders the hierarchy with each state
+  title: The product page says what each page is for and renders the hierarchy with each state
   status: draft
   owner: maintainers
   visibility: public
@@ -19,7 +19,7 @@ intentset:
     selector: BEH-ATLAS-OUTLINE
 ---
 
-# The outline renders the hierarchy with each state
+# The product page says what each page is for and renders the hierarchy with each state
 
 ## Procedure
 
@@ -27,4 +27,4 @@ intentset:
 
 ## Expected result
 
-Every test whose title carries `BEH-ATLAS-OUTLINE` passes: the product, intent and outcome are headings in that order, the capability is one closed fold with its counts, the behavior's parts are listed and linked, nothing reads as verified without evidence, and the large model gives 45 closed folds.
+Every test whose title carries `BEH-ATLAS-OUTLINE` passes: the page says what the Atlas is and names what each other page answers, the product, intent and outcome are headings in that order, the capability is one closed fold with its counts, the behavior's parts are listed and linked, nothing reads as verified without evidence, and the large model gives 45 closed folds.

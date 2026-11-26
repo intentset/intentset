@@ -21,8 +21,8 @@ export function mapPage(layout: AtlasMapLayout): PageSource {
     title: "Map of the model",
     body: [
       "{.lead}",
-      `Every record in this snapshot and every link written between them: ${plural(layout.nodes.length, "record")} ` +
-        `and ${plural(layout.edges.length, "link")}.`,
+      `How every record connects to the others: ${plural(layout.nodes.length, "record")} and ` +
+        `${plural(layout.edges.length, "link")}, drawn as one picture.`,
       "",
       ...MAP_SLOT_SOURCE,
       "",

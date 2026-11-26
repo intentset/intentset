@@ -23,8 +23,6 @@ import {
   buildAtlasPages,
   buildAtlasSources,
 } from "../src/index.ts";
-import { barRowHeight, middle } from "../src/chart.ts";
-import { chartLabel } from "../src/pages/overview.ts";
 import { largeModel } from "./large-model.ts";
 
 const root = resolve(import.meta.dirname, "..", "..", "..");
@@ -118,19 +116,18 @@ function pages(atlas: Map<string, string>): [string, string][] {
 const PAGES = [
   "index.html",
   "attention.html",
-  "overview.html",
+  "map.html",
   "records.html",
   "ownership.html",
   "verification.html",
   "publication.html",
   "diagnostics.html",
-  "map.html",
   ...files.map(({ name }) => `records/${name.replace(/\.md$/, ".html")}`),
   "atlas.css",
   "atlas-map.js",
 ];
 
-test("BEH-ATLAS: the Atlas of the example has the nine pages, a page per record, and the stylesheet once", () => {
+test("BEH-ATLAS: the Atlas of the example has the eight pages, a page per record, and the stylesheet once", () => {
   const atlas = buildAtlas(example());
   assert.deepEqual([...atlas.keys()], PAGES);
   assert.ok(
@@ -186,7 +183,7 @@ test("BEH-ATLAS: every page states the snapshot and the internal banner", () => 
       text.includes(`Snapshot: commit unknown · graph hash ${prefix} · level L1 · scope examples/scheduling/**`),
       path,
     );
-    assert.ok(text.includes("Internal: not for publication"), path);
+    assert.ok(text.includes("Internal, not for publication:"), path);
     assert.ok(html.includes('<meta name="intentset-atlas" content="'), path);
   }
   const known = example({ commit: COMMIT, level: "L2" });
@@ -201,16 +198,16 @@ test("BEH-ATLAS: an invented example's Atlas says so on every page instead of th
     let checked = 0;
     for (const [path, page] of built) {
       if (!path.endsWith(".html")) continue;
-      assert.ok(page.includes("An invented example"), path);
-      assert.ok(page.includes("stays inside the organization"), path);
-      assert.ok(!page.includes("Internal: not for publication"), path);
+      assert.ok(page.includes("An invented example:"), path);
+      assert.ok(page.includes("stays inside its organization"), path);
+      assert.ok(!page.includes("Internal, not for publication"), path);
       checked++;
     }
     assert.ok(checked > 5, `only ${checked} pages`);
   }
   // The default stays internal.
   for (const [path, source] of buildAtlasSources(input)) {
-    assert.ok(source.includes("Internal: not for publication"), path);
+    assert.ok(source.includes("Internal, not for publication:"), path);
   }
 });
 
@@ -377,62 +374,6 @@ test("BEH-ATLAS: a record's text that does not parse as Markset is shown as writ
   assert.ok(page.includes("Text shown as written"));
   assert.ok(page.includes("does not parse as Markset (DIRECTIVE_UNKNOWN_NAME)"));
   assert.ok(page.includes(":::nope unclosed"));
-});
-
-test("a capability's chart label drops CAP-, keeps up to forty characters whole and cuts a longer one in the middle", () => {
-  assert.equal(chartLabel("CAP-ASK"), "ASK");
-  assert.equal(chartLabel("CAP-LEARN-FROM-QUESTIONS"), "LEARN-FROM-QUESTIONS");
-  assert.equal(chartLabel("OTHER-ID"), "OTHER-ID");
-  const long = chartLabel("CAP-CONTENT-GENERATION-WITH-A-VERY-LONG-NAME-INDEED-ONE");
-  assert.equal(long.length, 40);
-  assert.ok(long.startsWith("CONTENT-GENERATION") && long.endsWith("INDEED-ONE".slice(-6)) && long.includes("…"), long);
-  // Two IDs alike for their first thirty characters still differ after the cut, because the end is kept.
-  assert.notEqual(
-    chartLabel("CAP-CONTENT-GENERATION-WITH-A-VERY-LONG-NAME-ALPHA"),
-    chartLabel("CAP-CONTENT-GENERATION-WITH-A-VERY-LONG-NAME-OMEGA"),
-  );
-  assert.equal(middle("ABCDEFGHIJ", 10), "ABCDEFGHIJ");
-});
-
-/** The overview's chart SVG: its viewBox height and the category labels it draws, in order. */
-function overviewChart(html: string) {
-  const svg = html.match(/<svg class="ms-chart" data-chart="bar" viewBox="0 0 (\d+) (\d+)"[\s\S]*?<\/svg>/);
-  assert.ok(svg, "the overview draws a bar chart");
-  const labels = [
-    ...svg[0].matchAll(/<text class="ms-chart-tick" x="[\d.]+" y="[\d.]+" text-anchor="end">([^<]*)<\/text>/g),
-  ].map((m) => m[1]);
-  const bars = [...svg[0].matchAll(/<path class="ms-chart-bar" data-series="(\d)" d="M[\d.]+,([\d.]+)h[^"]*"/g)].map(
-    (m) => ({
-      series: Number(m[1]),
-      y: Number(m[2]),
-    }),
-  );
-  return { width: Number(svg[1]), height: Number(svg[2]), labels, bars };
-}
-
-test("BEH-ATLAS: the overview's chart stays readable at any number of capabilities: a row each, whole labels, bars you can see", () => {
-  // A few capabilities: the same 340-unit figure Markset's own engine draws.
-  const few = overviewChart(buildAtlas(largeModel(4, 2).input).get("overview.html") ?? "");
-  assert.equal(few.height, 340);
-  // 45 capabilities with long, alike IDs: the figure grows, every label is there whole and distinct, no two rows are
-  // closer than a line of type, and a bar is at least eight units thick.
-  const model = largeModel(45, 4);
-  const chart = overviewChart(buildAtlas(model.input).get("overview.html") ?? "");
-  assert.equal(chart.labels.length, 45);
-  assert.equal(new Set(chart.labels).size, 45, "every label differs from the others");
-  assert.deepEqual(
-    chart.labels,
-    model.capabilities.map((id) => id.replace(/^CAP-/, "")),
-    "every label whole, in order",
-  );
-  const rows = chart.bars.filter((bar) => bar.series === 1).map((bar) => bar.y);
-  assert.equal(rows.length, 45);
-  const pitch = (rows[44] - rows[0]) / 44;
-  assert.ok(pitch >= 20, `a row is ${pitch} units tall, room for its 12-unit label`);
-  assert.ok(chart.height >= 45 * 20, `the figure grows to ${chart.height}`);
-  assert.equal(barRowHeight(45, 2), 26);
-  // And a hundred, still one row each.
-  assert.equal(overviewChart(buildAtlas(largeModel(100, 1).input).get("overview.html") ?? "").labels.length, 100);
 });
 
 test("BEH-ATLAS-MAP: every record is a node and every authored link an edge, drawn once", () => {
@@ -643,8 +584,8 @@ test("a current pass verifies every claim it names, and a failing run stays visi
   assert.ok(verification.includes("current pass 1 of 1 verification definition"));
   assert.ok(verification.includes("Verified at this snapshot 1 of 1 2 of 2 1 of 1 evidence"));
   assert.ok(
-    textOf(passing.get("overview.html") as string).includes(
-      "Behaviors with current passing evidence 1 of 1 of behaviors; evidence at this snapshot",
+    textOf(passing.get("index.html") as string).includes(
+      "Behaviors with a current pass 1 of 1 of behaviors; evidence at this snapshot",
     ),
   );
 
@@ -796,30 +737,31 @@ test("BEH-ATLAS: a record's page shows the basis of its approval and the outside
   assert.doesNotMatch(rule, /Approval|Formalizes/, "a record that states neither shows neither");
 });
 
-test("BEH-ATLAS, BEH-DELIVERY: the overview and a record's page show delivery beside the status, and count it", () => {
+test("BEH-ATLAS, BEH-DELIVERY: the product page counts delivery, and a record's page shows it beside the status", () => {
   const atlas = buildAtlas(
     example({
       edit: (name, source) =>
         name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: draft\n  delivery: built") : source,
     }),
   );
-  const overview = textOf(atlas.get("overview.html") ?? "");
-  assert.match(overview, /Behaviors whose work is built 1 of 1/);
-  assert.match(overview, /Behaviors whose work is planned 0 of 1/);
-  assert.match(overview, /Status says what a person approved; delivery says whether the code exists/);
-  assert.match(overview, /status draft · delivery not stated/, "the capability states none");
-  assert.match(overview, /Schedule a student assessment draft built/);
+  const product = textOf(atlas.get("index.html") ?? "");
+  assert.match(product, /Behaviors whose work is built 1 of 1/);
+  assert.match(product, /Behaviors whose work is planned 0 of 1/);
+  assert.match(product, /BEH-ASMT-SCHEDULE Schedule a student assessment · draft · built/);
   const record = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "");
   assert.match(record, /Status draft Delivery built/);
   const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
   assert.doesNotMatch(knowledge, /Delivery/, "knowledge does not carry delivery");
 });
 
-test("BEH-ATLAS-OUTLINE: the outline is the landing page: product, intent and outcome as headings, each capability folded closed", () => {
+test("BEH-ATLAS-OUTLINE: the product page is the landing page: it says what the Atlas is and what each page answers, then the tree, each capability folded closed", () => {
   const atlas = buildAtlas(example());
   const html = atlas.get("index.html") ?? "";
   const text = textOf(html);
-  assert.match(html, /<title>Outline · Intentset Atlas<\/title>/);
+  assert.match(html, /<title>Your product, as a tree · Intentset Atlas<\/title>/);
+  assert.match(text, /These pages are the Atlas: your records as linked pages, built from the files on this machine\./);
+  for (const question of ["Needs attention: What is waiting on a person?", "Map: How does everything connect?"])
+    assert.ok(text.includes(question), question);
   // The hierarchy, in order: product, intent, outcome with its measures, capability, behavior.
   const order = [
     "Product · PRD-LANTERN",
@@ -840,9 +782,9 @@ test("BEH-ATLAS-OUTLINE: the outline is the landing page: product, intent and ou
   assert.ok(text.indexOf("BEH-ASMT-SCHEDULE") > at[3], "the behavior sits inside its capability");
   assert.match(text, /Measures: MEAS-PREPARE-ADOPTION .*; MEAS-PREPARE-MINUTES/);
   // The product, intent and outcome are headings; the capability is a fold, closed until a reader opens it.
-  assert.match(html, /<h2[^>]*>Product · PRD-LANTERN: Lantern example<\/h2>/);
-  assert.match(html, /<h3[^>]*>Intent · INT-PREPARE: /);
-  assert.match(html, /<h4[^>]*>Outcome · OUT-PREPARE: /);
+  assert.match(html, /<h3[^>]*>Product · PRD-LANTERN: Lantern example<\/h3>/);
+  assert.match(html, /<h4[^>]*>Intent · INT-PREPARE: /);
+  assert.match(html, /<h5[^>]*>Outcome · OUT-PREPARE: /);
   const folds = [
     ...html.matchAll(/<details class="ms-callout"[^>]*?( open)?>\s*<summary class="ms-callout-title">([^<]*)/g),
   ];
@@ -866,7 +808,7 @@ test("BEH-ATLAS-OUTLINE: the outline is the landing page: product, intent and ou
   assert.ok(html.includes("review current"), "the knowledge's review is current");
 });
 
-test("BEH-ATLAS-OUTLINE: without evidence nothing on the outline is verified; a current pass is, and a stale one is stale", () => {
+test("BEH-ATLAS-OUTLINE: without evidence nothing on the product page is verified; a current pass is, and a stale one is stale", () => {
   const noneHtml = buildAtlas(example()).get("index.html") ?? "";
   const none = textOf(noneHtml);
   assert.ok(none.includes("No run evidence supplied"));
@@ -882,7 +824,7 @@ test("BEH-ATLAS-OUTLINE: without evidence nothing on the outline is verified; a 
   assert.match(stale, /BEH-ASMT-SCHEDULE Schedule a student assessment · draft · not stated · stale/);
 });
 
-test("BEH-ATLAS-OUTLINE: on a large model the outline is one closed fold per capability, each with its count", () => {
+test("BEH-ATLAS-OUTLINE: on a large model the product page is one closed fold per capability, each with its count", () => {
   const model = largeModel(45, 4);
   const html = buildAtlas(model.input).get("index.html") ?? "";
   const capabilities = [

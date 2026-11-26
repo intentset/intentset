@@ -1,7 +1,7 @@
 /**
  * @intentset/atlas: static review pages over a validated graph (Core §10,
- * milestone M4). The model as an outline (the landing page), what needs a person, the
- * product and capability overview, every record on a page of
+ * milestone M4). The product as a tree (the landing page, which says what each other page is for), what needs a
+ * person, the map, every record on a page of
  * its own with its text first (a behavior's with its detail), engineering
  * ownership, verification status, publication readiness and diagnostics.
  *
@@ -32,8 +32,7 @@ import { atlasMeta, type PageSource, pageSource, STYLESHEET, shell } from "./pag
 import { attentionPage } from "./pages/attention.ts";
 import { diagnosticsPage } from "./pages/diagnostics.ts";
 import { mapPage } from "./pages/map.ts";
-import { outlinePage } from "./pages/outline.ts";
-import { overviewPage } from "./pages/overview.ts";
+import { productPage } from "./pages/product.ts";
 import { ownershipPage } from "./pages/ownership.ts";
 import { publicationPage } from "./pages/publication.ts";
 import { recordPage } from "./pages/record.ts";
@@ -73,15 +72,14 @@ function pages(input: AtlasInput, pageLink: PageLink = relativeLink, source?: So
   const model = new Model(input);
   const layout = layoutMap(model);
   return [
-    outlinePage(model),
+    productPage(model),
     attentionPage(model),
-    overviewPage(model),
+    { ...mapPage(layout), html: mapHtml(layout) },
     recordsPage(model),
     ownershipPage(model),
     verificationPage(model),
     publicationPage(model),
     diagnosticsPage(model),
-    { ...mapPage(layout), html: mapHtml(layout) },
     ...[...model.graph.artifacts.keys()]
       .sort(compareStrings)
       .map((id) => recordPage(model, model.get(id) as Artifact, pageLink, source)),
