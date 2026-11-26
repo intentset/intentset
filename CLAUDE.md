@@ -62,7 +62,7 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
   CHANGELOG. Relaxing a case so that nothing which conformed stops conforming is not.
 - Determinism: same inputs, same bytes. Canonical JSON for anything hashed. Sort everything you iterate.
 - Don't add dependencies without asking. Approved so far: `@markset-lang/parser` and `@markset-lang/render-html` at
-  exactly 0.4.1 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
+  exactly 0.6.0 (adapter, publisher, atlas, site), `@modelcontextprotocol/sdk` (mcp only), `typescript` as a peer of
   architecture, Playwright and Biome as dev dependencies, and for the chat's backend (2026-10-09, pinned):
   `@aws-amplify/backend`, `@aws-amplify/backend-cli`, `aws-cdk`, `aws-cdk-lib`, `constructs`, `esbuild` and
   `@types/aws-lambda` at the root, and `@anthropic-ai/bedrock-sdk`, `@anthropic-ai/sdk` and the DynamoDB clients in

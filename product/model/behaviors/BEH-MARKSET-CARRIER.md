@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.2'
   profile: intentset/behavior/0.2
@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-VALIDATE
   links:
     governedBy: [RULE-DETERMINISTIC]
@@ -30,7 +30,7 @@ A record in the scope is read as a Markset document. Its frontmatter becomes the
 
 ## Preconditions
 
-The record is Markdown with YAML frontmatter; plain Markdown is valid Markset.
+The record is Markdown with YAML frontmatter that declares Markset with `markset: true`, or with the original `markset: 0`, which means the same (Core §3); any other value is CORE001. Plain Markdown is valid Markset.
 
 ## Outcomes
 

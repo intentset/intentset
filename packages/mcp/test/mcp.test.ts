@@ -327,7 +327,7 @@ test("customer search and get return published knowledge, citing named sources a
   const got = await call(client, "knowledge_get", { id: "KB-ASMT-SCHEDULE" });
   assert.equal(got.isError, false);
   assert.equal(got.json.markset, publication.documents[0].markset);
-  assert.match(got.json.markset as string, /^---\nmarkset: 0\nintentset-publication:\n/);
+  assert.match(got.json.markset as string, /^---\nmarkset: true\nintentset-publication:\n/);
   await client.close();
 });
 
