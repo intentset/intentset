@@ -55,10 +55,6 @@ const RETIRED_PHRASE_PAGES = [
 test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
   const notes: Array<[string, string]> = [
     [
-      "start/index.html",
-      `The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as pnpm dlx --package=@intentset/cli --package=typescript@7 intentset, or with npm as npx -p @intentset/cli -p typescript@7 intentset.`,
-    ],
-    [
       "specifications/index.html",
       `All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
     ],

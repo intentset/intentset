@@ -73,8 +73,8 @@ npx intentset validate --level L3
 
 The last line says `verified: 1 of 1 behavior`: a promise, the code that owns it, and a test that passed on this
 commit. Add `reports/` and `.intentset/evidence/` to `.gitignore`. With pnpm, `pnpm add --save-dev @intentset/cli`,
-then `pnpm exec intentset` wherever `npx intentset` appears; the architecture check needs TypeScript 7, and the note
-at the end of [the Start page](https://intentset.org/start/) says when that needs a different command. To see one
+then `pnpm exec intentset` wherever `npx intentset` appears; the architecture check needs TypeScript 7, and when the
+repository gives it an older one the command says what to run instead. To see one
 record of each type first, `npx intentset init --example --root <an empty directory>` writes the worked example there.
 
 **Status: v0.2 draft.** The specifications are ready for review, and the reference implementation is on npm as

@@ -16,12 +16,7 @@
       "question": "What is the difference between a capability and a behavior?",
       "expect": {
         "outcome": "answered",
-        "sources": [
-          "/specifications/core/",
-          "/how-it-works/",
-          "/example/CAP-ACCOUNTS/",
-          "/example/BEH-RESET-PASSWORD/"
-        ]
+        "sources": ["/specifications/core/", "/how-it-works/", "/example/CAP-ACCOUNTS/", "/example/BEH-RESET-PASSWORD/"]
       }
     },
     {
