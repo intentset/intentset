@@ -54,7 +54,7 @@ How it works
    - Not acknowledged: update the records below, or say in a commit that no behavior changed.
    - Code changed: src/features/accounts/reset/policies/link-expiry.test.ts
    - Code changed: src/features/accounts/reset/policies/link-expiry.ts
-   - Records describing it, none changed: BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, SLICE-ACCOUNT-RESET
+   - Records describing it, none changed: ADR-RESET-LINK-LIFETIME, BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, RULE-RESET-LINK-ONCE, SCN-RESET-EXPIRED, SLICE-ACCOUNT-RESET, TEST-RESET-LINK-EXPIRY
    ```
 
    {.small .muted}

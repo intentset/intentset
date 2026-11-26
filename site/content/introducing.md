@@ -8,7 +8,7 @@ A slide deck
 # Introducing Intentset
 
 {.lead}
-What Intentset is, why it exists and how it works, in 14 slides, for anyone deciding whether it is worth a closer look. Parts one to three make the case in plain words and need no setup; part four is for whoever will set it up; part five is how to adopt it and try it. Each slide's speaker notes are folded beneath it.
+What Intentset is, why it exists and how it works, in 14 slides, for anyone deciding whether it is worth a closer look. Parts one to three make the case in plain words and need no setup; part four is for whoever will set it up; part five is how to adopt it and set it up. Each slide's speaker notes are folded beneath it.
 
 {.deck-parts}
 1. [Why Intentset exists](#cover): agents write code faster than anyone can read it.
@@ -261,7 +261,7 @@ The agent's fix changed the reset code while the records that describe it stayed
 - Not acknowledged: update the records below, or say in a commit that no behavior changed.
 - Code changed: src/features/accounts/reset/policies/link-expiry.test.ts
 - Code changed: src/features/accounts/reset/policies/link-expiry.ts
-- Records describing it, none changed: BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, SLICE-ACCOUNT-RESET
+- Records describing it, none changed: ADR-RESET-LINK-LIFETIME, BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, RULE-RESET-LINK-ONCE, SCN-RESET-EXPIRED, SLICE-ACCOUNT-RESET, TEST-RESET-LINK-EXPIRY
 ```
 
 :::grid{cols=2}
@@ -329,7 +329,7 @@ Part four
 {.lead}
 The files, who owns what in the code, and how evidence counts.
 
-For the people who set it up. If you came for the idea, you have seen it: skip to [Adopting it](#levels) or [Try it](#try).
+For the people who set it up. If you came for the idea, you have seen it: skip to [Adopting it](#levels) or [Set it up](#try).
 
 ::::
 
@@ -509,25 +509,23 @@ Each level includes the ones before it. A conformance claim always names its sco
 {.eyebrow}
 Get started
 
-## Try it
+## Set it up
 
 {.lead}
-In a scratch directory, not your repository: install the command, add the site's worked example, check it, and follow one behavior's links.
+Install the command in your repository, let it write its configuration, and have your agent write down one feature you already have.
 
 ::::columns{ratio="3:2"}
 
 ```sh
-mkdir intentset-demo && cd intentset-demo && npm init -y
 npm install --save-dev @intentset/cli
-npx intentset init --example
+npx intentset init
 npx intentset validate
-npx intentset impact BEH-ASMT-SCHEDULE
 ```
 
 ::col
 
 {.cta}
-Your own code: [intentset.org/start](../start/)
+Every step: [intentset.org/start](../start/)
 
 Toolchain on npm under @intentset. MIT licensed.
 
@@ -537,4 +535,4 @@ Toolchain on npm under @intentset. MIT licensed.
 
 {.notes}
 > [!NOTE]- Speaker notes
-> The example command writes the site's worked example, an invented school product, so you can run validate and impact before touching your own repository. Run it in a scratch directory: in your own repository, its records would land in your model. Then [Try it on your code](../start/) walks through modelling your first real capability.
+> `init` writes the configuration, empty registries and the guide your agents follow. [Set up Intentset](../start/) walks through the rest: the names records may use, the prompt that has an agent write down one feature, connecting the tests, and then adding the checks to CI.

@@ -1,16 +1,16 @@
 /**
- * The worked example's Atlas: what `intentset serve` shows a team about its model, drawn from Lantern's records so it
- * can be published (decided 2026-10-15). The records are validated as the CLI validates them and handed to
+ * The example's Atlas: what `intentset serve` shows a team about its model, drawn from the shop's records so it can
+ * be published (decided 2026-10-15, on Lantern's records until 2026-11-26). The records are validated as the CLI validates them and handed to
  * `@intentset/atlas` with its `example` notice, which says on every page that the product is invented; a team's own
  * Atlas stays internal. No run evidence is supplied, because the example's check has not been executed, so the pages
  * show its verification as missing rather than as a pass. The snapshot names no commit: the pages describe the
  * example's records, not a commit of this repository.
  *
  * The site renders each page's Markset source in its own shell, under /example/atlas/, so the Atlas wears the bar,
- * the Examples rail and the site's addresses: `ownership.html` is served at `example/atlas/ownership/`. The map is
- * the example's landing page, named after it; the others in the Atlas's navigation are its review pages. A record's
- * page is served where the example's records always were, `records/BEH-ASMT-SCHEDULE.html` at
- * `example/BEH-ASMT-SCHEDULE/`, so each record has one page, the one every fold of the walkthrough links (2026-11-02).
+ * the Reference rail and the site's addresses: `ownership.html` is served at `example/atlas/ownership/`. The map is
+ * first, named after the shop; the others in the Atlas's navigation are its review pages. A record's
+ * page is served where the example's records always were, `records/BEH-RESET-PASSWORD.html` at
+ * `example/BEH-RESET-PASSWORD/`, so each record has one page, the one every fold of the walkthrough links (2026-11-02).
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
@@ -31,9 +31,9 @@ import { graphHash, plainCarrier, readRegistries, validate } from "@intentset/co
 export const ATLAS_ROOT = "example/atlas";
 
 export interface ExampleAtlasPage {
-  /** The page's path in the Atlas, e.g. `records/BEH-ASMT-SCHEDULE.html`. */
+  /** The page's path in the Atlas, e.g. `records/BEH-RESET-PASSWORD.html`. */
   atlasPath: string;
-  /** The site's output path, e.g. `example/BEH-ASMT-SCHEDULE/index.html`. */
+  /** The site's output path, e.g. `example/BEH-RESET-PASSWORD/index.html`. */
   path: string;
   /** The page's Markset source, as the Atlas wrote it. */
   source: string;
@@ -60,11 +60,11 @@ export function atlasSitePath(atlasPath: string): string {
     : `${ATLAS_ROOT}/${atlasPath.replace(/\.html$/, "")}/index.html`;
 }
 
-/** The map: Lantern's landing page, where the Examples bar item and every way into the example lead (2026-10-20). */
+/** The map: the first of the review pages in the Reference rail (2026-11-26). */
 export const ATLAS_MAP_PAGE = atlasSitePath("map.html");
 
 /**
- * The Atlas's review pages in its own order, the map apart: the Examples rail lists them under Lantern. A record's
+ * The Atlas's review pages in its own order, the map apart: the Reference rail lists them under its tools. A record's
  * page is in the section without being in the list; Records lists every one.
  */
 export const REVIEW_PAGES: Array<[string, string]> = ATLAS_NAV.filter(({ path }) => path !== "map.html").map(

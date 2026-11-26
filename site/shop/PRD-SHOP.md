@@ -19,4 +19,4 @@ intentset:
 
 ## Scope
 
-An illustrative online shop, used on intentset.org to show one rule. It describes no real system.
+An invented online shop, used on intentset.org to show what a model holds and how it reads. It describes no real system.

@@ -17,6 +17,7 @@ intentset:
   links:
     governedBy:
     - RULE-RESET-LINK-EXPIRY
+    - RULE-RESET-LINK-ONCE
   availability:
     products:
     - PRD-SHOP
@@ -41,4 +42,4 @@ The email address belongs to an account.
 
 ## Outcomes
 
-Success: the new password replaces the old one and the link stops working. Failure: an expired or already used link is refused, and the password is unchanged.
+Success: the new password replaces the old one, and the link stops working. Failure: an expired or already used link is refused, and the password is unchanged. Asking for a link for an email address with no account looks the same as asking for one that has an account.

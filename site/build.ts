@@ -134,17 +134,30 @@ export const INTRODUCTION = {
 };
 
 /**
- * The bar: four sections, by what a reader came to do (2026-11-26, the user's decision, replacing the five of
+ * The site's one example (2026-11-26, the user's decision): an invented online shop's accounts, whose password reset
+ * rule Home, How it works and the deck tell. Its records are the site's own, not the CLI's: `intentset init --example`
+ * and the conformance suite keep Lantern, under examples/scheduling/.
+ */
+export const EXAMPLE_DIR = "site/shop";
+
+/** The page that opens every record of the example, and its rail label. */
+export const EXAMPLE_TITLE = "The shop's model, record by record";
+
+/** The review pages' group in the Reference rail, and their pages' eyebrow. */
+export const SERVE_NAME = "What intentset serve shows";
+
+/**
+ * The bar: three sections, by what a reader came to do (2026-11-26, the user's decisions, replacing the five of
  * 2026-10-05). How it works and Get started come first, because a newcomer asks what Intentset is and then how to
- * set it up; Examples is the worked example; Reference holds the tools and the specifications, which Tools and Reference
- * held apart until then. The roadmap left the bar and the site that day, and the slide deck left Start (2026-10-27)
+ * set it up; Reference holds the tools and the specifications, which Tools and Reference held apart until then.
+ * Examples left the bar the same day: it held one example, now told on How it works and drawn by the review pages
+ * under Reference. The roadmap left the bar and the site that day, and the slide deck left Start (2026-10-27)
  * for the footer's row. Home is the wordmark. Every page kept its URL; a page that left the site redirects
  * (REDIRECTS).
  */
 export const NAV: Array<[string, string]> = [
   ["How it works", "how-it-works/index.html"],
   ["Get started", "start/index.html"],
-  ["Examples", "example/index.html"],
   ["Reference", "tools/index.html"],
 ];
 
@@ -166,8 +179,10 @@ export function railLinks(rail: Rail): Array<[string, string]> {
  * The rails: the pages that belong to each bar item, listed beside every page
  * in that section. The bar cannot hold everything, and a page reached only from
  * a sentence is one most readers never find, so the rest are here. A test
- * requires every page to be in the bar, a rail or the footer's row. How it works
- * is one page and has no rail.
+ * requires every page to be in the bar, a rail or the footer's row.
+ *
+ * How it works (2026-11-26) is the explanation, then every record of the example
+ * it follows, the shop, open on one page.
  *
  * Get started (2026-11-26) is one path: set up Intentset, add it to your CI, then
  * the two pages for once one capability works, each label the page's h1. The
@@ -175,16 +190,18 @@ export function railLinks(rail: Rail): Array<[string, string]> {
  * it holds the real setup, and CI has a page of its own so the rail says where
  * it is.
  *
- * Examples is one rail for the whole section (2026-10-20): Lantern, the
- * invented example, with the walkthrough, its map and the review pages the
- * Atlas draws from the same records. The bar's Examples opens on the
- * walkthrough, the rail's first page (2026-11-25), which links the map at its
- * top.
- *
- * Reference (2026-11-26) holds the tools, then the specifications, the Markset
- * page, conformance and the glossary.
+ * Reference (2026-11-26) holds the tools, with the review pages `intentset
+ * serve` draws, shown on the shop's records, then the specifications, the
+ * Markset page, conformance and the glossary.
  */
 export const RAILS: Rail[] = [
+  {
+    title: "How it works",
+    items: [
+      ["How it works", "how-it-works/index.html"],
+      [EXAMPLE_TITLE, "example/index.html"],
+    ],
+  },
   {
     title: "Get started",
     items: [
@@ -200,19 +217,6 @@ export const RAILS: Rail[] = [
     ],
   },
   {
-    title: "Examples",
-    items: [
-      {
-        label: "Lantern, a worked example",
-        items: [
-          ["The walkthrough", "example/index.html"],
-          ["The map", ATLAS_MAP_PAGE],
-          { label: "Review pages", items: REVIEW_PAGES },
-        ],
-      },
-    ],
-  },
-  {
     title: "Reference",
     items: [
       {
@@ -221,6 +225,7 @@ export const RAILS: Rail[] = [
           ["All tools", "tools/index.html"],
           ["The intentset command", "tools/cli/index.html"],
           ["What your agents read", "guide/index.html"],
+          { label: SERVE_NAME, items: [["The map", ATLAS_MAP_PAGE], ...REVIEW_PAGES] },
         ],
       },
       {
@@ -254,14 +259,15 @@ export function siteRails(knowledge: readonly PublishedKnowledge[]): typeof RAIL
 }
 
 /**
- * The rail a page sits in: the one listing it, or, for any other page of the worked example (a record's page, a
- * behavior's review page), Examples, and for a page of published knowledge, Reference.
+ * The rail a page sits in: the one listing it, or, for any other page of the example's review pages (a record's page),
+ * or of published knowledge, Reference.
  */
 export function railFor(path: string, rails: typeof RAILS = RAILS): Rail | undefined {
   return (
     rails.find((rail) => railLinks(rail).some(([, href]) => href === path)) ??
-    (path.startsWith("example/") ? rails.find((rail) => rail.title === "Examples") : undefined) ??
-    (path.startsWith("knowledge/") ? rails.find((rail) => rail.title === "Reference") : undefined)
+    (path.startsWith("example/") || path.startsWith("knowledge/")
+      ? rails.find((rail) => rail.title === "Reference")
+      : undefined)
   );
 }
 
@@ -275,12 +281,29 @@ export const FOOTER_LINKS: Array<[string, string]> = [
 /**
  * Pages that left the site (2026-11-26, the user's decision), each answered at its old address by a page that sends
  * the reader on, so a link from elsewhere still lands: the adoption log and the roadmap moved to the repository's
- * docs/, and what reads a model is docs/consumers.md. None is in the sitemap.
+ * docs/, what reads a model is docs/consumers.md, and Lantern's record pages are its files. None is in the sitemap.
  */
 export const REDIRECTS: Array<[string, string]> = [
   ["pilot/index.html", `${REPO}/blob/main/docs/adoption/log.md`],
   ["roadmap/index.html", `${REPO}/blob/main/docs/roadmap.md`],
   ["tools/readers/index.html", `${REPO}/blob/main/docs/consumers.md`],
+  // Lantern's record pages, until the site's example became the shop (2026-11-26): each record is still in the
+  // repository, where `intentset init --example` and the conformance suite read it.
+  ["example/ADR-ASMT-SEAM/index.html", `${REPO}/blob/main/examples/scheduling/ADR-ASMT-SEAM.md`],
+  ["example/BEH-ASMT-SCHEDULE/index.html", `${REPO}/blob/main/examples/scheduling/BEH-ASMT-SCHEDULE.md`],
+  ["example/CAP-ASMT-ASSIGN/index.html", `${REPO}/blob/main/examples/scheduling/CAP-ASMT-ASSIGN.md`],
+  ["example/CONTRACT-ASMT-SCHEDULE/index.html", `${REPO}/blob/main/examples/scheduling/CONTRACT-ASMT-SCHEDULE.md`],
+  ["example/INT-PREPARE/index.html", `${REPO}/blob/main/examples/scheduling/INT-PREPARE.md`],
+  ["example/KB-ASMT-SCHEDULE/index.html", `${REPO}/blob/main/examples/scheduling/KB-ASMT-SCHEDULE.md`],
+  ["example/MEAS-PREPARE-ADOPTION/index.html", `${REPO}/blob/main/examples/scheduling/MEAS-PREPARE-ADOPTION.md`],
+  ["example/MEAS-PREPARE-MINUTES/index.html", `${REPO}/blob/main/examples/scheduling/MEAS-PREPARE-MINUTES.md`],
+  ["example/OUT-PREPARE/index.html", `${REPO}/blob/main/examples/scheduling/OUT-PREPARE.md`],
+  ["example/PRD-LANTERN/index.html", `${REPO}/blob/main/examples/scheduling/PRD-LANTERN.md`],
+  ["example/RULE-ASMT-AUTH/index.html", `${REPO}/blob/main/examples/scheduling/RULE-ASMT-AUTH.md`],
+  ["example/RULE-ASMT-FUTURE/index.html", `${REPO}/blob/main/examples/scheduling/RULE-ASMT-FUTURE.md`],
+  ["example/SCN-ASMT-SCHEDULE/index.html", `${REPO}/blob/main/examples/scheduling/SCN-ASMT-SCHEDULE.md`],
+  ["example/SLICE-ASMT-SCHEDULE/index.html", `${REPO}/blob/main/examples/scheduling/SLICE-ASMT-SCHEDULE.md`],
+  ["example/TEST-ASMT-SCHEDULE/index.html", `${REPO}/blob/main/examples/scheduling/TEST-ASMT-SCHEDULE.md`],
 ];
 
 /** A page that sends its reader to `to`: a meta refresh, with the link for anything that does not follow one. */
@@ -364,8 +387,6 @@ export function readSpecMeta(source: string, file: string): SpecMeta {
 export function statusLabel(status: string): string {
   return capitalize(status);
 }
-
-const EXAMPLE_DIR = "examples/scheduling";
 
 /** The content pages: output path and source file under site/content/. */
 export const CONTENT_PAGES: Array<[string, string]> = [
@@ -455,7 +476,7 @@ export async function build(outDir: string = join(root, "dist"), options: BuildO
 
 /**
  * What the pages are made from: each specification's frontmatter and rendered
- * page, the worked example's records, the knowledge records publication
+ * page, the example's records, the knowledge records publication
  * releases from this repository's own model (site/knowledge.ts), and the tokens
  * the content pages substitute. The site and the chat's corpus (site/corpus.ts)
  * both read it, so the chat answers from exactly what the site publishes.
@@ -866,7 +887,7 @@ function sectionAnchor(page: Page, pattern: RegExp): string {
 // ---------------------------------------------------------------------------
 
 /**
- * The acts the worked example is read in, each a step of the model's own chain,
+ * The acts the shop's model is read in, each a step of the model's own chain,
  * with the records that belong to it. A reader who follows them in order has
  * followed one promise from the reason the product is changing to the sentence a
  * customer is shown. The page used to be thirteen headings over fifteen links,
@@ -875,28 +896,36 @@ function sectionAnchor(page: Page, pattern: RegExp): string {
 export const EXAMPLE_ACTS: Array<{ title: string; lead: string; records: string[] }> = [
   {
     title: "Why the product is changing",
-    lead: `A model starts with the reason rather than the feature. Lantern's intent is to take last-minute administrative work off teachers, and the outcome it should produce is less friction preparing an assignment. The outcome is not a slogan, because two measure records say how it will be judged: minutes a teacher spends preparing an assignment, read by an observed task study, and assignments scheduled a day or more ahead, read from product analytics. Each names its metric, baseline, target, window and source, so a reviewer can argue with the target. One baseline reads \`unknown\`, which is a thing a record is allowed to say and a thing a reviewer can see.`,
-    records: ["PRD-LANTERN", "INT-PREPARE", "OUT-PREPARE", "MEAS-PREPARE-MINUTES", "MEAS-PREPARE-ADOPTION"],
+    lead: "A model starts with the reason, not the feature. The shop wants customers who cannot sign in to get back into their accounts without contacting support, and without the accounts becoming easier for anyone else to get into. The measure says how that will be judged: support tickets about getting into an account, per thousand customers. Its baseline reads `unknown`, which a record may say, and a reviewer can see.",
+    records: ["PRD-SHOP", "INT-SELF-SERVE", "OUT-FEWER-LOCKOUTS", "MEAS-ACCESS-TICKETS"],
   },
   {
     title: "What the product promises",
-    lead: `The capability is the ability that persists: teachers prepare and distribute published assessments to classes. Under it sits the one behavior this example follows, and a behavior is written as a promise including how it fails — success records the schedule, and an invalid time, an unauthorized class or an unpublished assessment is rejected without creating one. Two rules govern it, each written once rather than copied into every behavior it constrains, and the scenario is a single worked case: it shows the promise, and does not prove every path. Read the behavior's last sentence: delivery tolerance, cancellation and retry are still draft decisions. A gap written down is a gap somebody can close.`,
-    records: ["CAP-ASMT-ASSIGN", "BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE", "SCN-ASMT-SCHEDULE"],
+    lead: "Two behaviors, each a promise that says how it fails: signing in, and resetting a forgotten password. Three rules govern them, each written once. One is the rule [How it works](../how-it-works/) follows: a reset link stops working an hour after it is sent. The scenario is one worked case of it, an expired link refused.",
+    records: [
+      "CAP-ACCOUNTS",
+      "BEH-SIGN-IN",
+      "BEH-RESET-PASSWORD",
+      "RULE-RESET-LINK-EXPIRY",
+      "RULE-RESET-LINK-ONCE",
+      "RULE-SIGN-IN-LOCKOUT",
+      "SCN-RESET-EXPIRED",
+    ],
   },
   {
-    title: "Where the promise is delivered",
-    lead: `One slice is accountable for the behavior, which is what makes a change to it reviewable: an agent handed this slice's context knows what it may touch. The contract is what another part of the product may rely on, and it says what a breaking change is, so a consumer is reviewed rather than surprised. The decision record carries the reasoning that would otherwise be lost in a pull request, and joined the model by gaining frontmatter, its text unchanged. The slice says plainly that its code paths are planned.`,
-    records: ["SLICE-ASMT-SCHEDULE", "CONTRACT-ASMT-SCHEDULE", "ADR-ASMT-SEAM"],
+    title: "Where it is built, and why",
+    lead: "Each behavior has one slice of the code that delivers it, so a change to that code shows which promises it can affect. The decision record says why reset links last an hour, and what to check first when customers report links that have expired. The review lists it whenever the reset code changes, so the reasoning is in front of whoever changes it.",
+    records: ["SLICE-ACCOUNT-RESET", "SLICE-ACCOUNT-SIGN-IN", "ADR-RESET-LINK-LIFETIME"],
   },
   {
     title: "How it is checked",
-    lead: `One verification record defines the check: a manual pilot review of five cases, recording inputs, observed outputs, environment, commit, graph hash and reviewer. It states that the procedure has not been executed, and its expected result goes further — it cannot pass until the release-time tolerance is defined. That is the model reporting a hole in itself, which is the whole reason for writing checks down beside the promise they hold.`,
-    records: ["TEST-ASMT-SCHEDULE"],
+    lead: "Each verification record names the test that holds a rule, by its file and its title. No test has been run here, so the review pages show each check as missing rather than passing.",
+    records: ["TEST-RESET-LINK-EXPIRY", "TEST-SIGN-IN-LOCKOUT"],
   },
   {
-    title: "What a customer may be told",
-    lead: `The knowledge record is the guidance a teacher would read, kept beside the behavior it explains rather than in a separate system that goes quietly out of date. It is the one approved record in the example, and approval has a shape: a reviewer, a date, and a pin on each of the three sources it was reviewed against, so a change to what the behavior or either rule promises sends it back for review before it is published again, while approving one of them does not. It also carries two tips, one sentence each, for the product to show beside the control that delivers the behavior and where the rule about the release time applies; the permission rule has none, because a tip is optional. The last fold is what \`intentset publish\` writes for it: the document with its provenance, and the help file a product's interface reads.`,
-    records: ["KB-ASMT-SCHEDULE"],
+    title: "What a customer is told",
+    lead: "The help article is written for customers and kept beside the behavior and rules it explains. It is the one approved record here: a person reviewed it against its three sources, so a change to what any of them promises holds it for review before it is published again. It carries two tips for the shop's own screens. The last fold is what `intentset publish` writes for it.",
+    records: ["KB-RESET-PASSWORD"],
   },
 ];
 
@@ -964,7 +993,7 @@ function publicationFold(publication: ExamplePublication): string {
 }
 
 /**
- * The worked example: the five acts, each explained and then opened, in the
+ * The shop's model: the five acts, each explained and then opened, in the
  * model's own order, and after the last what publication writes. Generated as
  * Markset source and rendered, so the page is a Markset document like every
  * other one.
@@ -988,34 +1017,33 @@ function exampleIndex(records: ExampleRecord[], publication: ExamplePublication)
   }).join("\n\n***\n\n");
 
   const types = new Set(records.map((r) => r.type)).size;
+  const behaviors = records.filter((r) => r.type === "behavior").length;
   const approved = records.filter((r) => r.status === "approved").length;
   const source = `---
 markset: 0
 ---
 
 {.eyebrow}
-Lantern, a worked example · The walkthrough
+How it works · The example
 
-# Schedule a student assessment
+# ${EXAMPLE_TITLE}
 
 {.lead}
-One capability of Lantern, an invented product, written down the way Intentset asks for it: ${records.length} records, each a Markdown file a person reads in under a minute, which together connect a reason for the product to change to the code that would deliver it and the check that would hold it.
+Every record of the shop's accounts, open on one page: ${records.length} short Markdown files that connect why the accounts are changing to what they promise, the code that keeps each promise, the tests that check it and what customers are told. Read the ${EXAMPLE_ACTS.length} steps in order, and open any record to see what a person writes and what an agent reads.
 
-Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in order and the chain closes; open any record to see exactly what a person writes and what an agent reads. [The map](atlas/map/) draws the same ${records.length} records and every link between them in one picture.
-
-[[See every record on the map](atlas/map/)]{.button .primary} [[Open the review pages](atlas/)]{.button}
+[[See the records on the map](atlas/map/)]{.button .primary} [[Open the review pages](atlas/)]{.button}
 
 :::metrics
 | Count | Value |
 |---|---|
 | Records | ${records.length} |
 | Record types | ${types} |
-| Behaviors | 1 |
+| Behaviors | ${behaviors} |
 | Records approved | ${approved} |
 :::
 
 > [!NOTE]
-> Lantern is invented and nothing here runs. Every record but the knowledge is a draft, the code paths are planned rather than written and the check has not been executed. The knowledge is approved and reviewed, so the last step can show what publication writes for it. What the example shows is the shape of a model and what it makes visible, not a verification report.
+> Nothing here runs. Every record but the help article is a draft, and no test has been run, so the review pages show what a model holds, not a verification report.
 
 ***
 
@@ -1025,24 +1053,18 @@ ${acts}
 
 ## The same records, for review
 
-The records above are what an agent writes and a person approves. [The map](atlas/map/) and the [review pages](atlas/) are the same records as \`intentset serve\` draws them for the people who review a model: the capability and its behavior, who owns what, verification shown as missing because the check has not been executed, and what publication would release. A team's own Atlas stays inside the team; Lantern's is public because Lantern is invented.
-
-***
-
-## Try the same thing on your own code
-
-Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the first capability modelled in a real product came out this way, and listed two rules with no test and three behaviors checked only in the browser.
+[The map](atlas/map/) and the [review pages](atlas/) are these records as \`intentset serve\` draws them for the people who review a model: who owns what, which checks are missing and what publication would release.
 
 [[Set up Intentset](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
 }
 
-/** The example's name, wherever the site names it: the rail, the eyebrows and the map page's heading. */
-export const EXAMPLE_NAME = "Lantern, a worked example";
+/** The map page's heading. */
+export const MAP_TITLE = "The shop's model, as a map";
 
 /**
- * One page of the worked example's Atlas, in the site's shell. Its links to other Atlas pages are pointed at their
+ * One page of the example's Atlas, in the site's shell. Its links to other Atlas pages are pointed at their
  * addresses on the site, and an eyebrow and its title say whose pages they are, since "Ownership" alone names nothing.
  * The map is the example's landing page (2026-10-20), so it takes the example's name for its heading and, under the
  * picture, links the walkthrough and the review pages. A record's page is the record's one page on the site
@@ -1052,10 +1074,10 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
   const paths = new Set(atlas.map((p) => p.atlasPath));
   const isMap = page.atlasPath === "map.html";
   const isRecord = page.atlasPath.startsWith("records/");
-  const eyebrow = isMap ? "The map" : `${EXAMPLE_NAME} · ${isRecord ? "Record" : "Review page"}`;
+  const eyebrow = isMap ? SERVE_NAME : `${SERVE_NAME} · ${isRecord ? "Record" : "Review page"}`;
   let source = page.source.replace(
     /^# (.*)$/m,
-    (_, title: string) => `{.eyebrow}\n${eyebrow}\n\n# ${isMap ? EXAMPLE_NAME : title}`,
+    (_, title: string) => `{.eyebrow}\n${eyebrow}\n\n# ${isMap ? MAP_TITLE : title}`,
   );
   if (isMap) {
     const ways =
@@ -1081,12 +1103,12 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
           },
         }
       : {}),
-    title: isMap ? EXAMPLE_NAME : `${rendered.title} · ${EXAMPLE_NAME}`,
+    title: isMap ? MAP_TITLE : rendered.title,
     description: isMap
-      ? "Lantern, an invented product, as a map of every record and every link between them, with the walkthrough and the review pages drawn from the same records."
+      ? "The shop's model as a map of every record and every link between them, as intentset serve draws it, with the review pages drawn from the same records."
       : isRecord
-        ? `${rendered.title}, one of Lantern's records: its text as written, its links, and what the review pages say about it.`
-        : `${rendered.title}, a review page of Lantern's records: what intentset serve shows a team about its own model.`,
+        ? `${rendered.title}, one of the shop's records: its text as written, its links, and what the review pages say about it.`
+        : `${rendered.title}, a review page of the shop's records: what intentset serve shows a team about its own model.`,
   };
 }
 

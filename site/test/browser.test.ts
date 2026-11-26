@@ -36,7 +36,7 @@ const PAGES = [
   "conformance/index.html",
   "glossary/index.html",
   "example/index.html",
-  "example/BEH-ASMT-SCHEDULE/index.html",
+  "example/BEH-RESET-PASSWORD/index.html",
   "example/atlas/map/index.html",
   "no/such/page/",
 ];
@@ -226,7 +226,7 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
   assert.equal(result.home, url(""));
 });
 
-test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths", async (t) => {
+test("BEH-ATLAS-MAP: the example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   for (const width of WIDTHS) {
     // Reduced motion turns off the site's smooth scrolling. With it on, scrolling a record into view is an animation,
@@ -238,15 +238,15 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full
     await tab.goto(url("example/atlas/map/index.html"));
     // The script shows the controls; without it they stay hidden and the picture stands alone.
     assert.ok(await tab.locator(".am-controls").isVisible(), `${width}px: controls shown`);
-    await tab.fill(".am-find input", "cap-asmt-assign");
+    await tab.fill(".am-find input", "cap-accounts");
     await tab.press(".am-find input", "Enter");
-    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "CAP-ASMT-ASSIGN");
+    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "CAP-ACCOUNTS");
     assert.ok((await tab.locator(".am-node.am-near").count()) >= 2, "its links are marked");
     const panel = (await tab.locator(".am-panel").textContent()) ?? "";
-    assert.match(panel, /CAP-ASMT-ASSIGN: Student assessment assignment/);
-    assert.match(panel, /BEH-ASMT-SCHEDULE/);
-    await tab.locator(".am-panel button", { hasText: "BEH-ASMT-SCHEDULE" }).click();
-    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "BEH-ASMT-SCHEDULE");
+    assert.match(panel, /CAP-ACCOUNTS: Customer accounts/);
+    assert.match(panel, /BEH-RESET-PASSWORD/);
+    await tab.locator(".am-panel button", { hasText: "BEH-RESET-PASSWORD" }).click();
+    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "BEH-RESET-PASSWORD");
     await tab.keyboard.press("Escape");
     assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, "Escape shows everything again");
     await tab.uncheck('.am-filter input[data-group="verification"]');
@@ -285,14 +285,14 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full
         }),
     );
     // A second activation of a selected record follows its link, to the site's own address.
-    const node = tab.locator('.am-node[data-id="BEH-ASMT-SCHEDULE"] circle');
+    const node = tab.locator('.am-node[data-id="BEH-RESET-PASSWORD"] circle');
     await node.click({ force: true });
     assert.equal(
       await tab.locator(".am-node.am-selected").getAttribute("data-id"),
-      "BEH-ASMT-SCHEDULE",
+      "BEH-RESET-PASSWORD",
       `${width}px: the first activation selects the record`,
     );
-    await Promise.all([tab.waitForURL(/\/example\/BEH-ASMT-SCHEDULE\/$/), node.click({ force: true })]);
+    await Promise.all([tab.waitForURL(/\/example\/BEH-RESET-PASSWORD\/$/), node.click({ force: true })]);
     assert.deepEqual(errors, [], `${width}px: no script error`);
     await tab.close();
   }

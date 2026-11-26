@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CHAT_PAGES, CONTENT_PAGES, canonicalUrl, knowledgePath, NOT_FOUND, SPECS } from "../build.ts";
+import { CHAT_PAGES, CONTENT_PAGES, canonicalUrl, EXAMPLE_DIR, knowledgePath, NOT_FOUND, SPECS } from "../build.ts";
 import { buildCorpus, CORPUS_FORMAT, estimateTokens, TOKEN_BUDGET } from "../corpus.ts";
 import { publishedKnowledge } from "../knowledge.ts";
 import { loadRecords } from "../records.ts";
@@ -9,7 +9,7 @@ const corpus = await buildCorpus();
 const urls = corpus.documents.map((d) => d.url);
 
 test("the corpus is every published page: content pages, specifications, the guide, the example's records and published knowledge", async () => {
-  const records = await loadRecords(new URL("../../examples/scheduling", import.meta.url).pathname);
+  const records = await loadRecords(new URL(`../../${EXAMPLE_DIR}`, import.meta.url).pathname);
   const knowledge = await publishedKnowledge(new URL("../..", import.meta.url).pathname);
   const expected = [
     ...[...CONTENT_PAGES, ...CHAT_PAGES].filter(([path]) => path !== NOT_FOUND).map(([path]) => path),

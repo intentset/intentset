@@ -6,18 +6,17 @@ repository-relative.
 
 - **Copy can be written and changed without approval** (Gary, 2026-10-06). It never invents a fact: no domain, link,
   contact address, price, legal or privacy claim, or claim that is not true today, such as a tool not yet released.
-- **The bar is four sections by what a reader came to do** (the user's decision, 2026-11-26, replacing the five of
-  2026-10-05): How it works, Get started, Examples, Reference. Home is the wordmark; the slide deck ("Slides") and
-  About are in the footer's row, and no page's body links the deck. `RAILS` in `site/build.ts` lists each section's
-  pages, shown beside every page in it: How it works is one page with no rail; Get started is one path (Set up Intentset,
-  then Add Intentset to your CI at `/start/ci/`, then a group "Once one capability works" holding Model the whole product with many agents and Make agents'
-  work safe to accept, each label the page's h1); Examples (one rail on every page of the section, 2026-10-20:
-  "Lantern, a worked example", a group holding the walkthrough, the map and "Review pages", a group of the Atlas's
-  five other pages); Reference (a Tools group with all tools, the command and the agent guide as "What your agents
-  read", a Specifications group, the Markset page, conformance, the glossary). A rail entry is a page or a group whose
-  label is not a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on
-  the walkthrough (`/example/`), the rail's first page, by the user's decision of 2026-11-25; the walkthrough links the
-  map in a button above its first step. The adoption log, the roadmap and the readers page left the site on
+- **The bar is three sections by what a reader came to do** (the user's decisions, 2026-11-26, replacing the five of
+  2026-10-05): How it works, Get started, Reference. Home is the wordmark; the slide deck ("Slides") and About are in
+  the footer's row, and no page's body links the deck. `RAILS` in `site/build.ts` lists each section's pages, shown
+  beside every page in it: How it works (the explanation, then "The shop's model, record by record" at `/example/`);
+  Get started (Set up Intentset, then Add Intentset to your CI at `/start/ci/`, then a group "Once one capability
+  works" holding Model the whole product with many agents and Make agents' work safe to accept, each label the page's
+  h1); Reference (a Tools group with all tools, the command, the agent guide as "What your agents read" and a group
+  "What intentset serve shows" holding the map and the Atlas's six review pages, then a Specifications group, the
+  Markset page, conformance, the glossary). A record's page sits in Reference beneath Records. Examples left the bar
+  on 2026-11-26: it held one example, now told on How it works and drawn by the review pages. A rail entry is a page
+  or a group whose label is not a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The adoption log, the roadmap and the readers page left the site on
   2026-11-26 (the user's decision): their old addresses are pages that send the reader to `docs/adoption/log.md`,
   `docs/roadmap.md` and `docs/consumers.md` on GitHub (`REDIRECTS` in `site/build.ts`), and none is in the sitemap.
   No page has an "On this page" contents rail (2026-11-26, the user's decision, for the whole site, the rendered
@@ -43,39 +42,37 @@ repository-relative.
   walked across the wheel as it darkened (ground 69, surface 100, border 132, accent 159, tile 168). All three light
   values are the tile's hue now, at the lightness they already had, so the contrast is unchanged to a hundredth. The
   dark ground was already the mark's hue and did not move.
-- **The worked example is a walkthrough** (`EXAMPLE_ACTS` in `site/build.ts`, 2026-10-07): five acts of the model's
-  chain, each with its own prose, and every record open on the page in a folding callout (Markset §4.1, a `<details>`
-  with no script) rather than a link to a page a reader has to leave for. A new record goes in an act; the build
-  throws when one is in none. Each record keeps its own page, and each fold links to it. **The knowledge is the one
-  approved record** (2026-10-11, #48): reviewed against its three sources with their real hashes pinned, and carrying
-  two tips, so the last act ends with what `intentset publish` writes for it, published at build time from a copy of
-  the example (`site/example-publication.ts`). Editing `BEH-ASMT-SCHEDULE`, `RULE-ASMT-AUTH` or `RULE-ASMT-FUTURE`
-  changes a pinned hash: review the knowledge against the change, re-pin it (`shasum -a 256`) and update `reviewedAt`,
-  or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
-  record used to be patches `status: draft` itself.
+- **The shop's model is one page** (`EXAMPLE_ACTS` in `site/build.ts`; the walkthrough since 2026-10-07, the shop's
+  since 2026-11-26): five acts of the model's chain, each with its own prose, and every record open on the page in a
+  folding callout (Markset §4.1, a `<details>` with no script). A new record goes in an act; the build throws when one
+  is in none. Each record keeps its own page, and each fold links to it. **The help article is the one approved
+  record**: reviewed against its three sources with their hashes pinned by `intentset approve`, and carrying two
+  tips, so the last act ends with what `intentset publish` writes for it, published at build time from a copy of the
+  example (`site/example-publication.ts`). Editing `BEH-RESET-PASSWORD`, `RULE-RESET-LINK-EXPIRY` or
+  `RULE-RESET-LINK-ONCE` changes a pinned hash and the build refuses to publish: review the article against the
+  change and approve it again.
 - **The example is told one way** (2026-11-26, the user's decision, replacing Lantern's release-time change): an online
   shop's password reset links work for one hour (`RULE-RESET-LINK-EXPIRY`); customers report links that have expired
   by the time they click them, and the agent asked to fix it raises the limit to 24 hours and changes the test that
   expected one hour, so a security decision is made as a bug fix; CI is green, and nobody decided it (the agent's reason
   is told, 2026-11-26, so the change reads as believable rather than random). Home, How it works and
   the introduction (`#problem`, `#review`) tell it as an example, without a label calling it invented (the user's decision, 2026-11-26: a card titled "An
-  example" says enough). Its records are
-  `site/test/fixtures/password-reset/`. Change it in all three places or none. No page says a pass counts only "on
+  example" says enough). Its records are the site's example, `site/shop/` (`EXAMPLE_DIR`), 17 of them, the decision that set the hour among
+  them, which the drift output lists. Change it in all three places or none. No page says a pass counts only "on
   this commit": a pass counts while what it checked is unchanged, and a gate may ask for a pass on the commit under
-  review (Streamlane SL-710). Lantern stays the worked example in Examples until that section is rebuilt.
-- **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
-  drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the
-  Examples rail. Each record's page is the Atlas's (2026-11-02): served at `/example/<ID>/`, the address the
-  walkthrough's folds always linked, it holds the record in one card (its file, linked on GitHub at main, every
-  frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records,
-  a review page that lists every one; the site's own record page and the Atlas's behavior page at `/example/atlas/behaviors/<ID>/` gave
-  way to it, so each record has one page, inside the navigation. The map was Lantern's landing page from 2026-10-20 until the user's decision of 2026-11-25 put the bar's
-  Examples on the walkthrough: its h1 is still "Lantern, a worked example", it links the walkthrough and the review
-  pages under the picture, and the other ways into the example (Tools, the glossary) still lead to it. It has no run evidence and no commit, because the example's check has not been executed and the
-  pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
-  has no public Atlas, and a public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml`
-  draws, with links at the site's addresses, placed in the page's map slot (`placeHtml`), and the map's stylesheet and
-  script are written beside the pages.
+  review (Streamlane SL-710). Lantern is the CLI's example (`intentset init --example`) and the conformance suite's
+  baseline under `examples/scheduling/`, and no page of the site shows it; its old record pages redirect to its files.
+- **The example's Atlas** (`site/example-atlas.ts`, 2026-10-15; the shop's since 2026-11-26) is the example's
+  records validated at L1 and drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell
+  under `/example/atlas/` in the Reference rail as "What intentset serve shows". Each record's page is the Atlas's
+  (2026-11-02): served at `/example/<ID>/`, it holds the record in one card (its file, linked on GitHub at main, every
+  frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records.
+  The map's h1 is "The shop's model, as a map", and it links the one-page model and the review pages under the
+  picture. It has no run evidence and no commit, because no test has been run and the pages describe records rather
+  than a commit. Only an invented product's Atlas is published: Intentset's own model has no public Atlas, and a
+  public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml` draws, with links at the
+  site's addresses, placed in the page's map slot (`placeHtml`), and the map's stylesheet and script are written
+  beside the pages.
 - **The Atlas's map** (ADR 0015, `packages/atlas/src/map.ts` and `map-script.ts`) is the one place the Atlas runs a
   script, and the picture works without it. Its layout is computed at build time and must stay deterministic: no
   `Math.random`, no trigonometry or `Math.exp` (their results differ between engines), iteration in ID order, and

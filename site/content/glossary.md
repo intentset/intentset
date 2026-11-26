@@ -110,4 +110,4 @@ A `Key: value` line at the end of a commit message. `Intentset-Unchanged: SLICE-
 
 The type of record behind a check. It says how a claim is checked, automated or manual, and where: a test's file and a stable selector, or a review procedure. A verification is a definition, not evidence.
 
-[[See the words at work in the worked example](../example/)]{.button .primary} [[How it works](../how-it-works/)]{.button}
+[[See the words at work in the shop's model](../example/)]{.button .primary} [[How it works](../how-it-works/)]{.button}
