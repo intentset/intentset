@@ -47,6 +47,7 @@ subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?
 ```ts
 // @intentset/publisher
 publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
+// renderHtml: true | "page" sets each document's html, "fragment" its htmlFragment (publication §2), renderFragment(markset)
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
 // snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
 reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null

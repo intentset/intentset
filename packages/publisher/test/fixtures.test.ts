@@ -50,5 +50,15 @@ for (const testCase of cases) {
     for (const forbidden of testCase.published?.mustNotContain ?? []) {
       assert.ok(!text.includes(forbidden), `output contains ${JSON.stringify(forbidden)}`);
     }
+    // The fragment is held to the same exclusions as the page (publication §2).
+    const fragments = run(testCase, { renderHtml: "fragment" }).result;
+    assert.deepEqual(
+      fragments.documents.map((document) => document.id),
+      result.documents.map((document) => document.id),
+    );
+    const fragmentText = outputText(fragments);
+    for (const forbidden of testCase.published?.mustNotContain ?? []) {
+      assert.ok(!fragmentText.includes(forbidden), `fragment output contains ${JSON.stringify(forbidden)}`);
+    }
   });
 }

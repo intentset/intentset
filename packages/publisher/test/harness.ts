@@ -19,7 +19,13 @@ import {
   validate,
 } from "@intentset/core";
 import { expandCase } from "@intentset/conformance";
-import { type PublicationRequest, type PublishResult, bindReviewPins, publish } from "../src/index.ts";
+import {
+  type HtmlRendering,
+  type PublicationRequest,
+  type PublishResult,
+  bindReviewPins,
+  publish,
+} from "../src/index.ts";
 
 export const root = resolve(import.meta.dirname, "..", "..", "..");
 export const examplesDir = join(root, "examples");
@@ -70,7 +76,7 @@ export function build(testCase: PublicationCase): Built {
 /** Build and publish one case with the fixture snapshot. */
 export function run(
   testCase: PublicationCase,
-  options: { renderHtml?: boolean } = {},
+  options: { renderHtml?: HtmlRendering } = {},
 ): Built & { result: PublishResult } {
   const built = build(testCase);
   const result = publish(built.graph, built.registries, (testCase.request ?? {}) as unknown as PublicationRequest, {
@@ -81,10 +87,10 @@ export function run(
   return { ...built, result };
 }
 
-/** Every byte the publication wrote or reported: documents, pages, index, help file and diagnostics. */
+/** Every byte the publication wrote or reported: documents, pages or fragments, index, help file and diagnostics. */
 export function outputText(result: PublishResult): string {
   return [
-    ...result.documents.flatMap((document) => [document.markset, document.html ?? ""]),
+    ...result.documents.flatMap((document) => [document.markset, document.html ?? "", document.htmlFragment ?? ""]),
     JSON.stringify(result.index),
     JSON.stringify(result.help),
     JSON.stringify(result.snapshot),

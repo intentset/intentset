@@ -115,13 +115,16 @@ commands
                             --allow-dirty; --dry-run shows what it would do. Never commits, and
                             cannot know who runs it: the diff is what a reviewer accepts
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
-        [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
-        [--published-at <time>] [--no-snapshot]
+        [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir>
+        [--html[=page|fragment]] [--published-at <time>] [--no-snapshot]
                             reviewed knowledge for one audience and release, as Markset with
                             provenance, an index, a help file and chunks, whose bytes do not
                             depend on the commit, and snapshot.json, the one file naming the
                             commit and graph hash published from; --no-snapshot leaves that
-                            file out, for output that is committed
+                            file out, for output that is committed. --html adds each
+                            document as a page, <ID>.html; --html=fragment as the page's
+                            content without its title, <ID>.fragment.html, for a product
+                            to show inside its own interface
   serve [--port <n>] [--host <address>] [--out <dir>]
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
@@ -659,9 +662,19 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
   }
 }
 
+/**
+ * `--html` alone means `--html=page`: parseArgs has no option that is a flag
+ * and may also take a value, so a bare one is given its value here, before the
+ * `--` that ends options, and `--html` is read as a string.
+ */
+function withHtmlValue(argv: string[]): string[] {
+  const end = argv.indexOf("--");
+  return argv.map((arg, index) => (arg === "--html" && (end === -1 || index < end) ? "--html=page" : arg));
+}
+
 function parse(argv: string[]) {
   return parseArgs({
-    args: argv,
+    args: withHtmlValue(argv),
     allowPositionals: true,
     strict: true,
     tokens: true,
@@ -705,7 +718,7 @@ function parse(argv: string[]) {
       flag: { type: "string", multiple: true },
       "authorized-internal": { type: "boolean", default: false },
       "authorized-restricted": { type: "boolean", default: false },
-      html: { type: "boolean", default: false },
+      html: { type: "string" },
       "published-at": { type: "string" },
       "no-snapshot": { type: "boolean", default: false },
       port: { type: "string" },
