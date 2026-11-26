@@ -119,17 +119,19 @@ commands
                             With --renew-review: write only reviewedBy, reviewedAt and the
                             content-v1 pins of the approved or deprecated knowledge given,
                             leaving status and approval as they are; other records are skipped
-  publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
-        [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir>
-        [--html[=page|fragment]] [--published-at <time>] [--no-snapshot]
-                            reviewed knowledge for one audience and release, as Markset with
+  publish --visibility <v> --audience <a>... --product <ID> --release <r> --role <r>...
+        --edition <e> [--flag <f>]... [--authorized-internal] [--authorized-restricted]
+        --out <dir> [--html[=page|fragment]] [--published-at <time>] [--no-snapshot]
+                            reviewed knowledge for one reader and release, as Markset with
                             provenance, an index, a help file and chunks, whose bytes do not
                             depend on the commit, and snapshot.json, the one file naming the
                             commit and graph hash published from; --no-snapshot leaves that
                             file out, for output that is committed. --html adds each
                             document as a page, <ID>.html; --html=fragment as the page's
                             content without its title, <ID>.fragment.html, for a product
-                            to show inside its own interface
+                            to show inside its own interface. Repeat --audience or --role
+                            for a reader who holds more than one; the publication is for a
+                            reader who holds every one, and values are not split on commas
   serve [--port <n>] [--host <address>] [--out <dir>]
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
@@ -143,8 +145,8 @@ commands
                             the move, leaving a stale one stale, and says how many. Refuses a
                             tree with uncommitted changes to tracked files unless --allow-dirty
   mcp --mode engineering [--include-restricted]
-  mcp --mode customer --visibility <public|customer> --audience <a> --product <ID>
-        --release <r> --role <r> --edition <e> [--flag <f>]...
+  mcp --mode customer --visibility <public|customer> --audience <a>... --product <ID>
+        --release <r> --role <r>... --edition <e> [--flag <f>]...
                             the read-only MCP server on stdio: the engineering graph, or one
                             publication made in memory as publish makes it, and nothing else
 
@@ -722,8 +724,8 @@ function parse(argv: string[]) {
       "tool-version": { type: "string" },
       base: { type: "string" },
       visibility: { type: "string" },
-      audience: { type: "string" },
-      role: { type: "string" },
+      audience: { type: "string", multiple: true },
+      role: { type: "string", multiple: true },
       edition: { type: "string" },
       flag: { type: "string", multiple: true },
       "authorized-internal": { type: "boolean", default: false },

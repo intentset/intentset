@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 1
   links:
-    implements: [BEH-HELP-TIPS, BEH-HELP-WATCH]
+    implements: [BEH-HELP-TIPS, BEH-HELP-WATCH, BEH-HELP-READER]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
@@ -39,8 +39,8 @@ The slice is the package `@intentset/help`. Its layers are empty: a package is a
 
 ## Public contract
 
-The exports of `packages/help/src/index.ts`, reached by other packages as `@intentset/help` through the `intentset-source` export condition. No contract record yet.
+The exports of `packages/help/src/index.ts`, reached by other packages as `@intentset/help` through the `intentset-source` export condition, among them `servedTo(file, reader)`, which a product calls before serving a help file or a document's publication block to a reader (ADR 0029). No contract record yet.
 
 ## Verification
 
-The package's tests under `packages/help/test/`. TEST-HELP-TIPS and TEST-HELP-WATCH verify the behaviors it implements, BEH-HELP-TIPS and BEH-HELP-WATCH, each naming the tests whose titles carry its behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/help/test/`. TEST-HELP-TIPS, TEST-HELP-WATCH and TEST-HELP-READER verify the behaviors it implements, BEH-HELP-TIPS, BEH-HELP-WATCH and BEH-HELP-READER, each naming the tests whose titles carry its behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

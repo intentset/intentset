@@ -114,22 +114,27 @@
         "additionalProperties": false,
         "properties": {
           "audience": {
-            "type": "string"
+            "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+            "description": "One value, or a list. Publication \u00a71 accepts a non-empty list only for audience and role; a case may hold an empty list, an empty member, or a list in another dimension to pin its refusal."
           },
           "visibility": {
             "enum": ["public", "customer", "internal", "restricted"]
           },
           "product": {
-            "type": "string"
+            "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+            "description": "One value, or a list. Publication \u00a71 accepts a non-empty list only for audience and role; a case may hold an empty list, an empty member, or a list in another dimension to pin its refusal."
           },
           "release": {
-            "type": "string"
+            "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+            "description": "One value, or a list. Publication \u00a71 accepts a non-empty list only for audience and role; a case may hold an empty list, an empty member, or a list in another dimension to pin its refusal."
           },
           "role": {
-            "type": "string"
+            "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+            "description": "One value, or a list. Publication \u00a71 accepts a non-empty list only for audience and role; a case may hold an empty list, an empty member, or a list in another dimension to pin its refusal."
           },
           "edition": {
-            "type": "string"
+            "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+            "description": "One value, or a list. Publication \u00a71 accepts a non-empty list only for audience and role; a case may hold an empty list, an empty member, or a list in another dimension to pin its refusal."
           },
           "flags": {
             "type": "array",

@@ -40,7 +40,7 @@ The slice is the package `@intentset/mcp`. Its layers are empty: a package is a 
 
 ## Public contract
 
-The exports of `packages/mcp/src/index.ts`, reached by other packages as `@intentset/mcp` through the `intentset-source` export condition. No contract record yet.
+The exports of `packages/mcp/src/index.ts`, reached by other packages as `@intentset/mcp` through the `intentset-source` export condition. Customer mode refuses an index whose profile is not `intentset/publication-index/0.3` or that holds a member the spec does not give, and a document whose block names another entitlement than its index, so documents published for two readers are never served together (ADR 0029). No contract record yet.
 
 ## Verification
 

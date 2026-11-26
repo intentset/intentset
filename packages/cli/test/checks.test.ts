@@ -853,6 +853,70 @@ test("BEH-PUBLISH: publish refuses a graph that does not validate, and a request
   assert.equal(existsSync(join(dir, "broken")), false);
 });
 
+/** The example's registries with the administrator role declared beside the teacher. */
+function withAdministrator(dir: string): void {
+  const file = join(dir, ".intentset", "registries.yaml");
+  const before = readFileSync(file, "utf8");
+  const after = before.replace(/^roles:\n- teacher$/m, "roles:\n- administrator\n- teacher");
+  assert.notEqual(after, before, "the example's registries list roles as expected");
+  writeFileSync(file, after);
+}
+
+test("BEH-PUBLISH-READER: a repeated --role publishes for the reader holding every one, and the summary names the set", async (t) => {
+  const dir = await example(t);
+  withAdministrator(dir);
+  const one = await run(dir, "publish", ...REQUEST, "--out", "one");
+  assert.equal(one.code, 0, one.out + one.err);
+  assert.match(
+    one.out,
+    /^Published 1 document for a customer projection: audience teacher, PRD-LANTERN pilot-1, role teacher, edition standard, flags none$/m,
+  );
+  const oneIndex = JSON.parse(readFileSync(join(dir, "one", "index.json"), "utf8"));
+  assert.deepEqual(oneIndex.request.role, ["teacher"]);
+  assert.deepEqual(oneIndex.request.audience, ["teacher"]);
+
+  const both = await run(dir, "publish", ...REQUEST, "--role", "administrator", "--out", "both");
+  assert.equal(both.code, 0, both.out + both.err);
+  assert.match(both.out, /audience teacher, PRD-LANTERN pilot-1, roles \[administrator, teacher\], edition standard/);
+  const index = JSON.parse(readFileSync(join(dir, "both", "index.json"), "utf8"));
+  assert.equal(index.profile, "intentset/publication-index/0.3");
+  assert.deepEqual(index.request.role, ["administrator", "teacher"]);
+  const help = JSON.parse(readFileSync(join(dir, "both", "help.json"), "utf8"));
+  assert.deepEqual(help.availability.role, ["administrator", "teacher"]);
+  assert.match(
+    readFileSync(join(dir, "both", "KB-ASMT-SCHEDULE.md"), "utf8"),
+    /\n {4}role:\n {6}- administrator\n {6}- teacher\n/,
+  );
+
+  const audiences = await run(dir, "publish", ...REQUEST, "--audience", "product", "--out", "audiences");
+  assert.equal(audiences.code, 0, audiences.out + audiences.err);
+  assert.match(audiences.out, /audiences \[product, teacher\], PRD-LANTERN pilot-1, role teacher/);
+});
+
+test("BEH-PUBLISH-READER: a --role value holding a comma is one unknown role, and the refusal says to repeat --role", async (t) => {
+  const dir = await example(t);
+  withAdministrator(dir);
+  const refused = await run(
+    dir,
+    "publish",
+    ...REQUEST.map((arg, i) => (REQUEST[i - 1] === "--role" ? "teacher,administrator" : arg)),
+    "--out",
+    "refused",
+  );
+  assert.equal(refused.code, 1);
+  assert.match(refused.out, /error PUB001 .*role teacher,administrator, which the registries do not declare/);
+  assert.match(refused.err, /repeat --role for each role; values are not split on commas/);
+  assert.equal(existsSync(join(dir, "refused")), false);
+});
+
+test("BEH-PUBLISH-READER: list reads a repeated --role as before, as a selector token for each", async (t) => {
+  const dir = await example(t);
+  withAdministrator(dir);
+  const listed = await run(dir, "list", "--type", "knowledge", "--role", "administrator", "--role", "teacher");
+  assert.equal(listed.code, 0, listed.out + listed.err);
+  assert.match(listed.out, /KB-ASMT-SCHEDULE/);
+});
+
 test("validate --level L5 is refused as a claim one run cannot check", async (t) => {
   const dir = await example(t);
   mkdirSync(join(dir, "x"));

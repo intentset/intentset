@@ -47,6 +47,8 @@ subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed 
 ```ts
 // @intentset/publisher
 publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
+// a request is for one reader (ADR 0029): audience and role a value or a list, read as a set; checkRequest gives a CheckedRequest
+// with sorted lists, and every file names them, with the flags, as sorted lists held all-of; the index names its profile first
 // renderHtml: true | "page" sets each document's html, "fragment" its htmlFragment (publication §2), renderFragment(markset)
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
 // snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
@@ -55,6 +57,7 @@ reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency over meta.r
 // @intentset/help  (no dependencies; a browser runtime)
 readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
 tipFor(help, id); helpForPage(help, ids)                    // one control, or one page: tips, their articles, what has no tip
+servedTo(file, reader): boolean                             // ADR 0029: the file's projection cleared, product/release/edition equal, every audience, role and flag held
 bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-behavior="BEH-..." by default; data-help-tip + data-help-knowledge, no title
 watchTips(root, help, { render?, unrender?, attribute?, MutationObserver?, requestFrame?, cancelFrame? }): { coverage(), dispose() }   // rebinds once per frame; dispose undoes it
 ```

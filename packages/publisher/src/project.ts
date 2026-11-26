@@ -10,21 +10,31 @@
  *   draft, retired        Core §7: neither is current publication
  *   planned               it explains a record whose delivery is planned: work that does not exist yet (ADR 0017)
  *   visibility            outside what the projection admits
- *   audience              the request's audience is not one the knowledge is written for
+ *   audience              none of the request's audiences is one the knowledge is written for
  *   availability-missing  no availability block: fails closed (Core §4, §7)
- *   product ... edition   the request's value is not in that dimension's list (AND across, OR within)
+ *   product ... edition   the request's value is not in that dimension's list (AND across, OR within); for role,
+ *                         none of the request's roles is (OR within the request's list too, ADR 0029)
  *   flag                  the knowledge needs a flag the request does not name (all named flags required)
  *   needs-review          a source changed since review, a pin is missing, or no reviewer (review.ts)
  *
  * An explicitly requested ID that is not eligible is CORE008. Its message
- * names the reason class, and nothing about the artifact beyond its ID. When
+ * names the reason class, and nothing about the artifact beyond its ID; for
+ * an audience or role it names only the request's values, never the
+ * knowledge's lists. When
  * the artifact's visibility is outside the projection, or no artifact has the
  * ID, the message is the same in both cases and carries no path: a caller
  * without the authorization cannot learn whether an internal ID exists.
  */
-import { type Artifact, type Diagnostic, type Graph, type Registries, graphHash } from "@intentset/core";
+import {
+  type Artifact,
+  type Availability,
+  type Diagnostic,
+  type Graph,
+  type Registries,
+  graphHash,
+} from "@intentset/core";
 import { compareStrings, publicationDiagnostic } from "./diagnostic.ts";
-import { type PublicationRequest, admits, checkRequest } from "./request.ts";
+import { type CheckedRequest, type PublicationRequest, admits, checkRequest } from "./request.ts";
 import { type ReviewStatus, reviewStatus } from "./review.ts";
 
 export const EXCLUSION_REASONS = [
@@ -69,7 +79,7 @@ export interface Projection {
   excluded: Exclusion[];
   diagnostics: Diagnostic[];
   /** The checked request, or null when it was refused (PUB001). */
-  request: PublicationRequest | null;
+  request: CheckedRequest | null;
 }
 
 const PUBLISHABLE_STATUSES = new Set(["approved", "deprecated"]);
@@ -141,7 +151,7 @@ export function project(
  */
 export function exclusionReason(
   artifact: Artifact,
-  request: PublicationRequest,
+  request: CheckedRequest,
   review: (artifact: Artifact) => ReviewStatus,
   graph?: Graph,
 ): Exclude<ExclusionReason, "not-requested"> | null {
@@ -152,15 +162,35 @@ export function exclusionReason(
   if (!PUBLISHABLE_STATUSES.has(meta.status)) return "draft";
   if (graph !== undefined && plannedSources(graph, artifact).length > 0) return "planned";
   if (!admits(request, meta.visibility)) return "visibility";
-  if (!meta.audiences.includes(request.audience)) return "audience";
-  const availability = meta.availability;
+  const dimension = audienceReason(meta.audiences, request) ?? availabilityReason(meta.availability, request);
+  if (dimension !== null) return dimension;
+  if (review(artifact).status !== "current") return "needs-review";
+  return null;
+}
+
+/** `audience` when none of the request's audiences is in the record's `audiences`, else null. */
+export function audienceReason(
+  audiences: readonly string[],
+  request: Pick<CheckedRequest, "audience">,
+): "audience" | null {
+  return request.audience.some((audience) => audiences.includes(audience)) ? null : "audience";
+}
+
+/**
+ * The first availability dimension a record fails for this request, or null when it passes: AND across dimensions,
+ * OR within each list, and for role at least one of the request's roles listed. A record with no availability block
+ * is `availability-missing`, so a caller that treats any non-null result as excluded fails closed (Core §4, §7).
+ */
+export function availabilityReason(
+  availability: Availability | undefined,
+  request: Pick<CheckedRequest, "product" | "release" | "role" | "edition" | "flags">,
+): "availability-missing" | "product" | "release" | "role" | "edition" | "flag" | null {
   if (availability === undefined) return "availability-missing";
   if (!availability.products.includes(request.product)) return "product";
   if (!availability.releases.includes(request.release)) return "release";
-  if (!availability.roles.includes(request.role)) return "role";
+  if (!request.role.some((role) => availability.roles.includes(role))) return "role";
   if (!availability.editions.includes(request.edition)) return "edition";
   if (!availability.flags.every((flag) => request.flags.includes(flag))) return "flag";
-  if (review(artifact).status !== "current") return "needs-review";
   return null;
 }
 
@@ -176,7 +206,7 @@ function refusal(
   id: string,
   artifact: Artifact | undefined,
   reason: ExclusionReason | null,
-  request: PublicationRequest,
+  request: CheckedRequest,
   review: ReviewStatus | null,
   graph: Graph,
 ): Diagnostic {
@@ -230,7 +260,9 @@ function refusal(
     case "audience":
       return refuse(
         "/intentset/audiences",
-        `it is not written for the ${request.audience} audience`,
+        request.audience.length === 1
+          ? `it is not written for the ${request.audience[0]} audience`
+          : `it is written for none of the audiences ${request.audience.join(", ")}`,
         "Request an audience the knowledge lists, or add this one after reviewing the text for it (Core §9).",
       );
     case "availability-missing":
@@ -239,9 +271,16 @@ function refusal(
         "it declares no availability, so publication fails closed",
         "Add availability with products, releases, roles, editions and flags (Core §7).",
       );
+    case "role":
+      return refuse(
+        "/intentset/availability/roles",
+        request.role.length === 1
+          ? `it is not available for role ${request.role[0]}`
+          : `it is available for none of the roles ${request.role.join(", ")}`,
+        "Request a role the knowledge lists, or extend its availability after review; values match exactly (Core §7).",
+      );
     case "product":
     case "release":
-    case "role":
     case "edition":
       return refuse(
         `/intentset/availability/${reason}s`,

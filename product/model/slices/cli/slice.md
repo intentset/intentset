@@ -40,7 +40,7 @@ The slice is the package `@intentset/cli`. Its layers are empty: a package is a 
 
 ## Public contract
 
-The exports of `packages/cli/src/index.ts`, reached by other packages as `@intentset/cli` through the `intentset-source` export condition. No contract record yet.
+The exports of `packages/cli/src/index.ts`, reached by other packages as `@intentset/cli` through the `intentset-source` export condition, and the `intentset` command. `publish` and `mcp --mode customer` take `--audience` and `--role` repeatedly for a reader who holds more than one, never splitting a value on commas, and the summary names the sets (ADR 0029). No contract record yet.
 
 ## Verification
 

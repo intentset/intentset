@@ -3,12 +3,13 @@ import type { SchemaError } from "./schema.ts";
 
 /** A publication request, spec/conformance.schema.json `request`. */
 export interface PublicationRequest {
-  audience?: string;
+  /** One value, or a list (publication §1); a case may hold a list another dimension refuses. */
+  audience?: string | string[];
   visibility?: "public" | "customer" | "internal" | "restricted";
-  product?: string;
-  release?: string;
-  role?: string;
-  edition?: string;
+  product?: string | string[];
+  release?: string | string[];
+  role?: string | string[];
+  edition?: string | string[];
   flags?: string[];
   ids?: string[];
 }

@@ -18,8 +18,8 @@ import { reviewCell } from "./shared.ts";
 interface Readiness {
   /** Per projection: null when it would admit the knowledge, else the reason it would not. */
   results: Record<Visibility, string | null>;
-  /** The request each projection was checked with, or null when none could be built. */
-  request: Omit<PublicationRequest, "visibility"> | null;
+  /** The request each projection was checked with, one value per dimension, or null when none could be built. */
+  request: (Omit<PublicationRequest, "visibility" | "audience" | "role"> & { audience: string; role: string }) | null;
 }
 
 export function publicationPage(model: Model): PageSource {

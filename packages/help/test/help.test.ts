@@ -14,12 +14,14 @@ import {
   HELP_PROFILE,
   type Help,
   KNOWLEDGE_ATTRIBUTE,
+  type Reader,
   TIP_ATTRIBUTE,
   type TipObserver,
   type WatchElement,
   bindTips,
   helpForPage,
   readHelp,
+  servedTo,
   tipFor,
   watchTips,
 } from "../src/index.ts";
@@ -72,13 +74,13 @@ function helpFromPublisher(): Help {
   return read.help;
 }
 
-test("BEH-HELP-TIPS: a help file carries no snapshot, and one written before 0.15.0 with a snapshot still reads", () => {
+test("BEH-HELP-READER: a help file carries no snapshot, and a file with one is refused as a member the table does not give", () => {
   const written = JSON.parse(JSON.stringify(publishExample().help)) as Record<string, unknown>;
   assert.equal(Object.hasOwn(written, "snapshot"), false);
   assert.ok(readHelp(written).ok);
-  assert.ok(readHelp({ ...written, snapshot: { commit: null, graphHash: "a".repeat(64) } }).ok);
-  const malformed = readHelp({ ...written, snapshot: { commit: 7 } });
-  assert.deepEqual(malformed.problems, ["snapshot, when present, must carry commit (a string or null) and graphHash"]);
+  assert.deepEqual(readHelp({ ...written, snapshot: { commit: null, graphHash: "a".repeat(64) } }).problems, [
+    'the file has a member "snapshot" the help file does not define',
+  ]);
 });
 
 test("BEH-HELP-TIPS: the file the publisher writes reads back, as text and as bytes, and carries the tips", () => {
@@ -141,7 +143,7 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
   assert.equal(several.ok, false);
   assert.deepEqual(several.problems, [
     "derived is not true",
-    "audience must be a string",
+    "audience must be a non-empty list of strings, sorted, without repeats",
     'tips key "lowercase" is not an ID',
     "tips.lowercase has an empty text",
   ]);
@@ -149,6 +151,161 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
     (v.knowledge as unknown[]).unshift({ id: "KB-ZZZ-LAST", title: "Z", path: "KB-ZZZ-LAST.md" });
   });
   assert.deepEqual(unsorted.problems, ["knowledge is not sorted by id at KB-ASMT-SCHEDULE"]);
+});
+
+test("BEH-HELP-READER: readHelp reads audience, roles and flags as sorted lists and refuses any other form", () => {
+  const help = helpFromPublisher();
+  assert.deepEqual(help.audience, ["teacher"]);
+  assert.deepEqual(help.availability.role, ["teacher"]);
+  assert.deepEqual(help.availability.flags, []);
+  const read = (edit: (value: Record<string, unknown> & { availability: Record<string, unknown> }) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  const AUDIENCE = "audience must be a non-empty list of strings, sorted, without repeats";
+  const AVAILABILITY =
+    "availability must carry product, release and edition, a non-empty sorted list of roles without repeats, and a sorted list of flags without repeats";
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["product", "teacher"];
+      v.availability.role = ["administrator", "teacher"];
+      v.availability.flags = ["alpha", "beta"];
+    }),
+    [],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = "teacher";
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = [];
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["teacher", "product"];
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["teacher", "teacher"];
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["teacher", 3];
+    }),
+    [AUDIENCE],
+  );
+  for (const role of ["teacher", [], ["teacher", "administrator"], ["teacher", "teacher"], [null]]) {
+    assert.deepEqual(
+      read((v) => {
+        v.availability.role = role;
+      }),
+      [AVAILABILITY],
+      JSON.stringify(role),
+    );
+  }
+  for (const flags of [["beta", "alpha"], ["beta", "beta"], "beta", [7]]) {
+    assert.deepEqual(
+      read((v) => {
+        v.availability.flags = flags;
+      }),
+      [AVAILABILITY],
+      JSON.stringify(flags),
+    );
+  }
+});
+
+test("BEH-HELP-READER: readHelp refuses a member the table does not give, at the top, in availability, a knowledge entry or a tip", () => {
+  const help = helpFromPublisher();
+  const read = (edit: (value: Record<string, unknown> & Help) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  assert.deepEqual(
+    read((v) => {
+      (v as Record<string, unknown>).surfaces = {};
+    }),
+    ['the file has a member "surfaces" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.availability as Record<string, unknown>).region = "eu";
+    }),
+    ['availability has a member "region" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.knowledge[0] as unknown as Record<string, unknown>).underReview = true;
+    }),
+    ['knowledge[0] has a member "underReview" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.tips["BEH-ASMT-SCHEDULE"] as unknown as Record<string, unknown>).underReview = true;
+    }),
+    ['tips.BEH-ASMT-SCHEDULE has a member "underReview" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      delete (v as Partial<Help>).tips;
+    }),
+    ["the file has no tips", "tips must be an object keyed by ID"],
+  );
+});
+
+test("BEH-HELP-READER: servedTo holds only for a reader cleared for the projection who holds everything the file names", () => {
+  const help: Pick<Help, "projection" | "audience" | "availability"> = {
+    projection: "customer",
+    audience: ["product", "teacher"],
+    availability: {
+      product: "PRD-LANTERN",
+      release: "pilot-1",
+      role: ["administrator", "teacher"],
+      edition: "standard",
+      flags: ["beta"],
+    },
+  };
+  const reader: Reader = {
+    visibilities: ["public", "customer"],
+    audiences: ["product", "teacher"],
+    roles: ["administrator", "teacher"],
+    product: "PRD-LANTERN",
+    release: "pilot-1",
+    edition: "standard",
+    flags: ["beta"],
+  };
+  assert.equal(servedTo(help, reader), true);
+  assert.equal(
+    servedTo(help, {
+      ...reader,
+      roles: ["teacher", "student", "administrator"],
+      audiences: ["teacher", "product", "x"],
+    }),
+    true,
+    "a reader who holds more than the file names",
+  );
+  assert.equal(servedTo(help, { ...reader, roles: ["teacher"] }), false, "one role missing");
+  assert.equal(servedTo(help, { ...reader, audiences: ["teacher"] }), false, "one audience missing");
+  assert.equal(servedTo(help, { ...reader, flags: [] }), false, "one flag missing");
+  assert.equal(servedTo(help, { ...reader, product: "PRD-OTHER" }), false, "another product");
+  assert.equal(servedTo(help, { ...reader, release: "pilot-2" }), false, "another release");
+  assert.equal(servedTo(help, { ...reader, edition: "district" }), false, "another edition");
+  assert.equal(servedTo(help, { ...reader, visibilities: ["public"] }), false, "not cleared for the projection");
+  assert.equal(
+    servedTo({ ...help, projection: "internal" }, reader),
+    false,
+    "an internal file whose other values match a customer",
+  );
 });
 
 /** A test double for the part of a DOM element the binder touches. */

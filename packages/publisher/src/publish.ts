@@ -8,16 +8,20 @@
  *     -> generated Markset (generate.ts) -> HTML
  *
  * Selection happens before any text reaches a renderer. A document whose
- * references, titles or Markset fail is not emitted. Links are checked against
- * what is actually being published, so a document that links to one refused
- * here is refused in turn; this repeats until nothing more is refused.
+ * references, titles or Markset fail is not emitted. Links and titles are
+ * checked against what is actually being published: a document that links to
+ * one refused here is refused in turn, and a refused document no longer allows
+ * its title in another's body (publication §4, ADR 0029). The checks repeat
+ * over what is still published until a round refuses nothing. A request for
+ * several audiences or roles is one run over everything any of them admits.
  *
  * The help file (help.ts) carries every published document's tips, keyed by
  * the ID each explains, for a product's runtime.
  *
- * The index is what a customer-facing tool may read (Core §10): the request
- * without its authorization flags, the published IDs, and the number of
- * artifacts excluded for each reason. It names nothing that was not published.
+ * The index is what a customer-facing tool may read (Core §10, publication §4):
+ * its profile, the request without its authorization flags, the published
+ * IDs, and the number of artifacts excluded for each reason. It names nothing
+ * that was not published.
  *
  * The snapshot file (snapshot.ts) is the one place a publication names the
  * commit and graph hash it was made from (ADR 0019, ADR 0021). Both move with
@@ -45,7 +49,13 @@ import { type GeneratedDocument, type PublicationMeta, generateDocument } from "
 import { type HelpFile, helpFile } from "./help.ts";
 import { type ExclusionReason, type Snapshot, project } from "./project.ts";
 import { checkReferences, checkTitles } from "./references.ts";
-import { type IndexedRequest, type PublicationRequest, admits, indexedRequest } from "./request.ts";
+import {
+  type CheckedRequest,
+  type IndexedRequest,
+  type PublicationRequest,
+  admits,
+  indexedRequest,
+} from "./request.ts";
 import type { ReviewStatus } from "./review.ts";
 import { type SnapshotFile, snapshotFile } from "./snapshot.ts";
 import { withSafeUrls } from "./urls.ts";
@@ -77,7 +87,12 @@ export interface PublishedDocument extends GeneratedDocument {
   htmlFragment?: string;
 }
 
+/** The index's profile (publication §4): a reader refuses any other, and any member the spec does not list. */
+export const PUBLICATION_INDEX_PROFILE = "intentset/publication-index/0.3";
+
+/** The index, in the order it is written. */
 export interface PublicationIndex {
+  profile: typeof PUBLICATION_INDEX_PROFILE;
   /** The request without authorization flags, or null when it was refused. */
   request: IndexedRequest | null;
   published: string[];
@@ -121,34 +136,17 @@ export function publish(
   const documents: PublishedDocument[] = [];
   if (req !== null) {
     const candidates = projection.eligible;
-    const allowedTitles = new Set(candidates.map((artifact) => artifact.meta.title.trim()));
-    const refused = new Map<string, RefusalReason>();
     const generated = new Map<string, GeneratedDocument>();
-
+    const unrendered = new Map<string, RefusalReason>();
     for (const artifact of candidates) {
-      const titles = checkTitles(artifact, graph, req, allowedTitles);
       const result = generateDocument(graph, artifact, req, options);
-      diagnostics.push(...titles, ...result.diagnostics);
+      diagnostics.push(...result.diagnostics);
       if (result.document !== null) generated.set(artifact.meta.id, result.document);
-      if (titles.length > 0) refused.set(artifact.meta.id, "title");
-      else if (result.diagnostics.some((d) => d.code === "PUB004")) refused.set(artifact.meta.id, "directive");
-      else if (result.document === null) refused.set(artifact.meta.id, "markset");
+      if (result.diagnostics.some((d) => d.code === "PUB004")) unrendered.set(artifact.meta.id, "directive");
+      else if (result.document === null) unrendered.set(artifact.meta.id, "markset");
     }
-
-    let published = new Set(candidates.map((artifact) => artifact.meta.id).filter((id) => !refused.has(id)));
-    let round: Artifact[] = candidates;
-    while (round.length > 0) {
-      const failed: string[] = [];
-      for (const artifact of round) {
-        const found = checkReferences(artifact, graph, req, published);
-        if (found.length === 0) continue;
-        diagnostics.push(...found);
-        failed.push(artifact.meta.id);
-        refused.set(artifact.meta.id, "reference");
-      }
-      published = new Set([...published].filter((id) => !failed.includes(id)));
-      round = failed.length === 0 ? [] : candidates.filter((artifact) => published.has(artifact.meta.id));
-    }
+    const refused = checkPublished(graph, req, candidates, unrendered, diagnostics);
+    const published = new Set(candidates.map((artifact) => artifact.meta.id).filter((id) => !refused.has(id)));
 
     for (const reason of refused.values()) count(reason);
     for (const id of [...published].sort(compareStrings)) {
@@ -175,6 +173,7 @@ export function publish(
           ),
     snapshot: snapshotFile(options.snapshot),
     index: {
+      profile: PUBLICATION_INDEX_PROFILE,
       request: req === null ? null : indexedRequest(req),
       published: documents.map((document) => document.id),
       excludedCounts,
@@ -182,6 +181,47 @@ export function publish(
     diagnostics: sorted,
     ok: !hasErrors(sorted),
   };
+}
+
+/**
+ * The title and reference checks of publication §4, over what is still published, until a round refuses nothing.
+ * Each round checks every document still published against the titles and IDs of the documents still published at
+ * its start, and reports every problem it finds in the round that refuses it: the reason is `title` when a title
+ * fails, else `reference`. A document whose Markset failed allows no title and is no link target from the first
+ * round, in which it is checked once, so a document failing its title and its Markset keeps the reason `title`. A
+ * document's own title is always allowed in its own body. The published set only shrinks, so the loop ends, and it iterates sorted IDs, so it is deterministic.
+ */
+function checkPublished(
+  graph: Graph,
+  request: CheckedRequest,
+  candidates: readonly Artifact[],
+  unrendered: ReadonlyMap<string, RefusalReason>,
+  diagnostics: Diagnostic[],
+): Map<string, RefusalReason> {
+  const refused = new Map<string, RefusalReason>();
+  let published = new Set(candidates.map((artifact) => artifact.meta.id).filter((id) => !unrendered.has(id)));
+  let round: readonly Artifact[] = candidates;
+  while (round.length > 0) {
+    const allowedTitles = new Set(
+      candidates.filter((artifact) => published.has(artifact.meta.id)).map((artifact) => artifact.meta.title.trim()),
+    );
+    const failed = new Set<string>();
+    for (const artifact of round) {
+      const id = artifact.meta.id;
+      const own = artifact.meta.title.trim();
+      const allowed = allowedTitles.has(own) ? allowedTitles : new Set([...allowedTitles, own]);
+      const titles = checkTitles(artifact, graph, request, allowed);
+      const references = checkReferences(artifact, graph, request, published);
+      diagnostics.push(...titles, ...references);
+      const reason = titles.length > 0 ? "title" : references.length > 0 ? "reference" : (unrendered.get(id) ?? null);
+      if (reason === null) continue;
+      refused.set(id, reason);
+      if (published.has(id)) failed.add(id);
+    }
+    published = new Set([...published].filter((id) => !failed.has(id)));
+    round = failed.size === 0 ? [] : candidates.filter((artifact) => published.has(artifact.meta.id));
+  }
+  return refused;
 }
 
 let stylesheet: string | null = null;

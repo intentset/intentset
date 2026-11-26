@@ -17,8 +17,9 @@
  *
  * Separately, the text may not contain the title of an artifact the
  * projection does not admit (three or more words, case-sensitive, any run of
- * whitespace between words), unless that title is also the title of
- * something being published. That is PUB002.
+ * whitespace between words), unless that title is also the title of a
+ * document still published in this run: a document refused for any reason
+ * allows no title (publication §4, ADR 0029). That is PUB002.
  *
  * Every message names the referencing document and the referenced ID, and
  * never the referenced artifact's title or path.
@@ -28,7 +29,7 @@ import { type Artifact, type Diagnostic, type Graph, ID_PATTERN } from "@intents
 import { parseDocument } from "@markset-lang/parser";
 import { bodyLineOffset, fileLocation, lineAt } from "./body.ts";
 import { compareStrings, publicationDiagnostic } from "./diagnostic.ts";
-import { type PublicationRequest, admits } from "./request.ts";
+import { type CheckedRequest, admits } from "./request.ts";
 
 export type ReferenceKind = "id" | "link" | "path";
 
@@ -142,7 +143,7 @@ export function resolveTarget(url: string, fromPath: string): string | null {
 export function checkReferences(
   artifact: Artifact,
   graph: Graph,
-  request: PublicationRequest,
+  request: Pick<CheckedRequest, "visibility" | "product">,
   published: ReadonlySet<string>,
 ): Diagnostic[] {
   const offset = bodyLineOffset(artifact);
@@ -181,12 +182,13 @@ export function checkReferences(
 /**
  * PUB002 for each artifact outside the projection whose title (three or more
  * words) the body contains, unless that title is in `allowedTitles` (the
- * document's own and those of what is being published).
+ * titles of the documents still published in this run, the document's own
+ * among them).
  */
 export function checkTitles(
   artifact: Artifact,
   graph: Graph,
-  request: PublicationRequest,
+  request: Pick<CheckedRequest, "visibility">,
   allowedTitles: ReadonlySet<string>,
 ): Diagnostic[] {
   const offset = bodyLineOffset(artifact);

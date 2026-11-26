@@ -1,6 +1,7 @@
 # @intentset/publisher
 
-Publishes reviewed knowledge for one audience and release (`spec/publication.md`): it projects the graph deny by
+Publishes reviewed knowledge for one reader, in one or more audiences and roles, on one release
+(`spec/publication.md`): it projects the graph deny by
 default, checks that no excluded record's title or path leaks, and writes Markset documents with their provenance,
 an index, retrieval chunks, `help.json`, the tips a product shows beside its controls, and `snapshot.json`, the one
 file that names the commit and graph hash it was published from.
@@ -27,7 +28,11 @@ for `intentset` alone would fetch an unrelated unscoped package from the registr
 
 From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the index, the help
 file, the snapshot file and the diagnostics, and refuses the whole request when any field is missing or undeclared
-(PUB001). The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
+(PUB001). A request is for one reader: `audience` and `role` are each one value or a list of every one the reader holds
+(the CLI repeats `--audience` and `--role`), read as a set, while `product`, `release` and `edition` are one value
+each. Every file names the request's audiences, roles and flags as sorted lists, and they are held all-of: serve the
+publication only to a reader who holds every value it names, and publish once for each combination you serve. The
+index's `request` is the request in canonical form, so key any cache on `canonicalJson(index.request)`. The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
 document pins what it was made from by its sources' hashes. So publishing the same knowledge at two commits writes
 the same bytes in every file but that one.
 

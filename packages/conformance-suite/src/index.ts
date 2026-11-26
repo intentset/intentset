@@ -19,12 +19,13 @@ import { join, resolve } from "node:path";
 
 /** A publication request, for publication cases. */
 export interface PublicationRequest {
-  audience?: string;
+  /** One value, or a list (publication §1); a case may hold a list another dimension refuses. */
+  audience?: string | string[];
   visibility?: "public" | "customer" | "internal" | "restricted";
-  product?: string;
-  release?: string;
-  role?: string;
-  edition?: string;
+  product?: string | string[];
+  release?: string | string[];
+  role?: string | string[];
+  edition?: string | string[];
   flags?: string[];
   ids?: string[];
 }

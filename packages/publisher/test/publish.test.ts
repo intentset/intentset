@@ -19,7 +19,17 @@ import {
   toChunks,
 } from "../src/index.ts";
 import { safeUrl } from "../src/urls.ts";
-import { PUBLISHED_AT, customer, example, guidance, readCases, reviewed, run, snapshotOf } from "./harness.ts";
+import {
+  PUBLISHED_AT,
+  customer,
+  example,
+  guidance,
+  readCases,
+  registriesWith,
+  reviewed,
+  run,
+  snapshotOf,
+} from "./harness.ts";
 
 const passing = () => example({ kb: reviewed() });
 
@@ -79,8 +89,8 @@ test("the publication block carries provenance and names only what the projectio
     source: { id: "KB-ASMT-SCHEDULE", revision: 1, sourceHash: kb.sourceHash },
     sources: [],
     withheldSources: 3,
-    audience: "teacher",
-    availability: { product: "PRD-LANTERN", release: "pilot-1", role: "teacher", edition: "standard", flags: [] },
+    audience: ["teacher"],
+    availability: { product: "PRD-LANTERN", release: "pilot-1", role: ["teacher"], edition: "standard", flags: [] },
     reviewer: "team-assessment",
     reviewedAt: "2026-09-30",
     publishedAt: PUBLISHED_AT,
@@ -150,7 +160,7 @@ test("an authorized internal projection names internal sources and the knowledge
   assert.equal(document.publication.projection, "internal");
 });
 
-test("availability records the request's values and only the flags the knowledge needs", () => {
+test("BEH-PUBLISH-READER: availability records the request's values, every flag the request holds included", () => {
   const { graph, registries } = example({
     kb: reviewed({
       "intentset.availability.flags": ["beta"],
@@ -180,9 +190,9 @@ test("availability records the request's values and only the flags the knowledge
   assert.deepEqual(result.documents[0].publication.availability, {
     product: "PRD-LANTERN",
     release: "pilot-1",
-    role: "teacher",
+    role: ["teacher"],
     edition: "standard",
-    flags: ["beta"],
+    flags: ["beta", "gamma"],
   });
   assert.ok(!result.documents[0].markset.includes("district"), "other editions are not disclosed");
   assert.deepEqual(result.index.request?.flags, ["beta", "gamma"]);
@@ -397,7 +407,8 @@ test("BEH-PUBLISH-FRAGMENT: a diagram the renderer draws stays a data:image/svg+
 
 test("the index names the request without authorization and counts exclusions", () => {
   const result = publishOnce(customer({ visibility: "internal", authorizedInternal: true }));
-  assert.deepEqual(Object.keys(result.index), ["request", "published", "excludedCounts"]);
+  assert.deepEqual(Object.keys(result.index), ["profile", "request", "published", "excludedCounts"]);
+  assert.equal(result.index.profile, "intentset/publication-index/0.3");
   assert.equal(Object.hasOwn(result.index.request ?? {}, "authorizedInternal"), false);
   assert.deepEqual(result.index.published, ["KB-ASMT-SCHEDULE"]);
   assert.deepEqual(result.index.excludedCounts, { "not-knowledge": 14 });
@@ -429,4 +440,181 @@ test("the YAML writer quotes anything a reader could take for another type", () 
     "a: plain-id\nb: '2026-01-01'\nc: 'true'\nd: 'it''s'\ne: null\nf: []\ng: 3\nh:\n  - x\ni:\n  - id: X\n    'n': 1\n",
   );
   assert.throws(() => emitYaml({ a: "line\nbreak" }), /control character/);
+});
+
+/** Every byte of a publication but the snapshot file: documents, pages, chunks, index and help file. */
+function bytesOf(result: ReturnType<typeof publish>): string {
+  return JSON.stringify([
+    result.documents.map((document) => [document.markset, document.html ?? ""]),
+    toChunks(result.documents),
+    result.index,
+    result.help,
+    result.diagnostics,
+  ]);
+}
+
+test("BEH-PUBLISH-READER: a role given as a string, a list of one or a list with a repeat publishes the same bytes", () => {
+  const { graph, registries } = passing();
+  const at = (role: unknown) =>
+    bytesOf(
+      publish(graph, registries, customer({ role }), {
+        snapshot: snapshotOf(graph),
+        publishedAt: PUBLISHED_AT,
+        renderHtml: true,
+      }),
+    );
+  const one = at("teacher");
+  assert.equal(at(["teacher"]), one);
+  assert.equal(at(["teacher", "teacher"]), one);
+});
+
+test("BEH-PUBLISH-READER: the index's request, with its authorization added back, publishes the same bytes", () => {
+  const { graph, registries } = example({
+    kb: reviewed(),
+    registries: registriesWith({ roles: ["administrator", "teacher"], flags: ["beta"] }),
+  });
+  const options = { snapshot: snapshotOf(graph), publishedAt: PUBLISHED_AT, renderHtml: true as const };
+  const first = publish(
+    graph,
+    registries,
+    customer({ role: ["teacher", "administrator", "teacher"], audience: ["teacher"], flags: ["beta"] }),
+    options,
+  );
+  assert.equal(first.ok, true);
+  assert.deepEqual(first.index.request, {
+    visibility: "customer",
+    audience: ["teacher"],
+    product: "PRD-LANTERN",
+    release: "pilot-1",
+    role: ["administrator", "teacher"],
+    edition: "standard",
+    flags: ["beta"],
+  });
+  const replay = publish(graph, registries, first.index.request as unknown as PublicationRequest, options);
+  assert.equal(bytesOf(replay), bytesOf(first));
+});
+
+test("BEH-PUBLISH-READER: every document of a run names the same entitlement as its help file and index", () => {
+  const classes = [
+    "---",
+    "markset: 0",
+    "intentset:",
+    "  spec: '0.3'",
+    "  profile: intentset/knowledge/0.3",
+    "  id: KB-ASMT-CLASSES",
+    "  type: knowledge",
+    "  title: Choose a class",
+    "  status: approved",
+    "  owner: team-assessment",
+    "  visibility: customer",
+    "  audiences: [product]",
+    "  revision: 1",
+    "  reviewedBy: team-assessment",
+    "  reviewedAt: '2026-09-30'",
+    "  links:",
+    "    explains: [BEH-ASMT-SCHEDULE]",
+    "  availability:",
+    "    products: [PRD-LANTERN]",
+    "    releases: [pilot-1]",
+    "    roles: [administrator]",
+    "    editions: [standard]",
+    "    flags: []",
+    "  review:",
+    "    sources:",
+    "      BEH-ASMT-SCHEDULE: '@current'",
+    "      RULE-ASMT-AUTH: '@current'",
+    "      RULE-ASMT-FUTURE: '@current'",
+    "---",
+    "",
+    "# Choose a class",
+    "",
+    "## Guidance",
+    "",
+    "Choose the class first.",
+    "",
+  ].join("\n");
+  const { graph, registries } = example({
+    kb: reviewed(),
+    files: { "KB-ASMT-CLASSES.md": classes },
+    registries: registriesWith({ roles: ["administrator", "teacher"] }),
+  });
+  const result = publish(
+    graph,
+    registries,
+    customer({ role: ["teacher", "administrator"], audience: ["teacher", "product"] }),
+    {
+      snapshot: snapshotOf(graph),
+      publishedAt: PUBLISHED_AT,
+    },
+  );
+  assert.deepEqual(
+    result.documents.map((document) => document.id),
+    ["KB-ASMT-CLASSES", "KB-ASMT-SCHEDULE"],
+  );
+  const help = result.help as NonNullable<typeof result.help>;
+  for (const document of result.documents) {
+    assert.deepEqual(document.publication.audience, help.audience, document.id);
+    assert.deepEqual(document.publication.availability, help.availability, document.id);
+  }
+  assert.deepEqual(help.audience, ["product", "teacher"]);
+  assert.deepEqual(help.availability.role, ["administrator", "teacher"]);
+  assert.deepEqual(result.index.request?.audience, help.audience);
+  assert.deepEqual(result.index.request?.role, help.availability.role);
+});
+
+test("BEH-PUBLISH-READER: a document refused for its Markset lends no title to another document's body", () => {
+  // KB-ASMT-ACCEPT shares its title with the internal SCN-ASMT-SCHEDULE and is refused for an unknown directive, so
+  // the title in KB-ASMT-SCHEDULE's body is no longer allowed (publication §4).
+  const accept = [
+    "---",
+    "markset: 0",
+    "intentset:",
+    "  spec: '0.3'",
+    "  profile: intentset/knowledge/0.3",
+    "  id: KB-ASMT-ACCEPT",
+    "  type: knowledge",
+    "  title: Accept an eligible schedule",
+    "  status: approved",
+    "  owner: team-assessment",
+    "  visibility: customer",
+    "  audiences: [teacher]",
+    "  revision: 1",
+    "  reviewedBy: team-assessment",
+    "  reviewedAt: '2026-09-30'",
+    "  links:",
+    "    explains: [BEH-ASMT-SCHEDULE]",
+    "  availability:",
+    "    products: [PRD-LANTERN]",
+    "    releases: [pilot-1]",
+    "    roles: [teacher]",
+    "    editions: [standard]",
+    "    flags: []",
+    "  review:",
+    "    sources:",
+    "      BEH-ASMT-SCHEDULE: '@current'",
+    "      RULE-ASMT-AUTH: '@current'",
+    "      RULE-ASMT-FUTURE: '@current'",
+    "---",
+    "",
+    "# Accept an eligible schedule",
+    "",
+    "## Guidance",
+    "",
+    ":::behavior",
+    "Check the class.",
+    ":::",
+    "",
+  ].join("\n");
+  const { graph, registries } = example({
+    kb: reviewed(),
+    body: guidance("Choose a published assessment. Accept an eligible schedule before you confirm."),
+    files: { "KB-ASMT-ACCEPT.md": accept },
+  });
+  const result = publish(graph, registries, customer(), { snapshot: snapshotOf(graph), publishedAt: PUBLISHED_AT });
+  assert.deepEqual(result.index.published, []);
+  assert.deepEqual(
+    result.diagnostics.map((d) => `${d.code} ${d.artifact}`),
+    ["PUB004 KB-ASMT-ACCEPT", "PUB002 KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(result.index.excludedCounts, { directive: 1, title: 1 });
 });

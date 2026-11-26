@@ -48,8 +48,27 @@ watch.coverage(); // { bound, missing } as of the last pass
 watch.dispose(); // stop observing and unrender every element it bound
 ```
 
-The file was published for one audience, release, role, edition and set of flags, so a product serves each person
-the one published for their entitlement.
+The file was published for one reader: every audience, role and flag it names, on one product, release and edition.
+Those lists are held all-of, never read as "any of", so serve the file only where `servedTo` holds for the person:
+
+```ts
+import { servedTo } from "@intentset/help";
+
+const reader = {
+  visibilities: ["public", "customer"],
+  audiences: ["teacher"],
+  roles: ["administrator", "teacher"],
+  product: "PRD-LANTERN",
+  release: "pilot-1",
+  edition: "standard",
+  flags: [],
+};
+if (read.ok && servedTo(read.help, reader)) bindTips(document, read.help);
+```
+
+The same test applies to a published document's `intentset-publication` block, which names the same entitlement. A
+reader refuses a file holding any member publication §5 does not give it, so a newer file is refused rather than shown
+in part.
 
 ## Learn more
 

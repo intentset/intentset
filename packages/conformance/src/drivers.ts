@@ -126,13 +126,19 @@ function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvide
     graph: result.graph,
     level: expanded.level,
     evidence: expanded.evidence,
-    request: expanded.request,
+    request: scalarScope(expanded.request),
     documents: expanded.files.keys(),
     sources: expanded.sources.keys(),
     configuredBinding: evidence.binding,
     changedSince: expanded.changedSince,
     ...(subject === undefined ? {} : { subjectSource: subject }),
   });
+}
+
+/** The case's product and release, when both are single values; a list in either names no scope (publication §1). */
+function scalarScope(request: ExpandedCase["request"]): { product: string; release: string } | null {
+  if (request === null || typeof request.product !== "string" || typeof request.release !== "string") return null;
+  return { product: request.product, release: request.release };
 }
 
 /**
@@ -151,7 +157,7 @@ export const exportDriver: Driver = (expanded) => {
     diagnostics = sortDiagnostics([...diagnostics, ...run.diagnostics]);
     exported = { ...result, diagnostics, ok: !hasErrors(diagnostics) };
     const { commitUnavailable: _unavailable, ...rest } = FIXTURE_META;
-    const scope = requestedScope(expanded.request);
+    const scope = requestedScope(scalarScope(expanded.request));
     meta = {
       ...rest,
       commit: FIXTURE_COMMIT,

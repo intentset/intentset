@@ -8,13 +8,16 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Artifact, Availability, Graph } from "@intentset/core";
 import {
+  type CheckedRequest,
   type ExclusionReason,
   type PublicationRequest,
   type ReviewStatus,
+  availabilityReason,
+  checkRequest,
   exclusionReason,
   project,
 } from "../src/index.ts";
-import { customer, example, reviewed, snapshotOf } from "./harness.ts";
+import { customer, example, registriesWith, reviewed, snapshotOf } from "./harness.ts";
 
 const CURRENT: ReviewStatus = {
   status: "current",
@@ -57,17 +60,30 @@ const AVAILABLE: Availability = {
   editions: ["standard", "district"],
   flags: [],
 };
-const REQUEST: PublicationRequest = {
+const REQUEST: CheckedRequest = {
   visibility: "customer",
-  audience: "teacher",
+  audience: ["teacher"],
   product: "PRD-B",
   release: "r2",
-  role: "admin",
+  role: ["admin"],
   edition: "district",
   flags: [],
+  authorizedInternal: false,
+  authorizedRestricted: false,
 };
+/** A checked request from the baseline with these changes; a string audience or role is a list of one. */
+function checked(request: Partial<PublicationRequest> = {}): CheckedRequest {
+  const { audience, role, ...rest } = request;
+  const list = (value: string | readonly string[]) => (typeof value === "string" ? [value] : [...value]);
+  return {
+    ...REQUEST,
+    ...rest,
+    ...(audience === undefined ? {} : { audience: list(audience) }),
+    ...(role === undefined ? {} : { role: list(role) }),
+  } as CheckedRequest;
+}
 const reason = (artifact: Artifact, request: Partial<PublicationRequest> = {}): ExclusionReason | null =>
-  exclusionReason(artifact, { ...REQUEST, ...request }, () => CURRENT);
+  exclusionReason(artifact, checked(request), () => CURRENT);
 
 test("availability is OR within a dimension: any listed value matches", () => {
   assert.equal(reason(knowledge(AVAILABLE)), null);
@@ -218,4 +234,105 @@ test("precomputed review statuses are honoured", () => {
     result.excluded.find((e) => e.id === "KB-ASMT-SCHEDULE"),
     { id: "KB-ASMT-SCHEDULE", reason: "needs-review" },
   );
+});
+
+test("BEH-PUBLISH-READER: checkRequest reads an audience or role list as a set, so order and repeats change nothing", () => {
+  const { graph, registries } = example({
+    kb: reviewed(),
+    registries: registriesWith({ roles: ["administrator", "student", "teacher"] }),
+  });
+  const read = (extra: Record<string, unknown>) => checkRequest(customer(extra), graph, registries);
+  const one = read({});
+  assert.deepEqual(one.diagnostics, []);
+  assert.deepEqual(one.request?.role, ["teacher"]);
+  assert.deepEqual(one.request?.audience, ["teacher"]);
+  assert.deepEqual(read({ role: ["teacher"] }).request, one.request);
+  assert.deepEqual(read({ role: ["teacher", "teacher"] }).request, one.request);
+  const two = read({ role: ["teacher", "administrator", "teacher"] });
+  assert.deepEqual(two.request?.role, ["administrator", "teacher"]);
+  assert.deepEqual(read({ role: ["administrator", "teacher"] }).request, two.request);
+  assert.equal(two.request?.authorizedInternal, false);
+  assert.equal(two.request?.authorizedRestricted, false);
+});
+
+test("BEH-PUBLISH-READER: a list member that is not a name, an empty list, and a list for a single dimension are refused", () => {
+  const { graph, registries } = example({ kb: reviewed() });
+  const messages = (extra: Record<string, unknown>) =>
+    checkRequest(customer(extra), graph, registries).diagnostics.map((d) => `${d.code} ${d.message}`);
+  assert.deepEqual(messages({ role: ["teacher", ""] }), [
+    "PUB001 The request's role is not a role name or a list of role names.",
+  ]);
+  assert.deepEqual(messages({ role: ["teacher", 7] }), [
+    "PUB001 The request's role is not a role name or a list of role names.",
+  ]);
+  assert.deepEqual(messages({ audience: [null] }), [
+    "PUB001 The request's audience is not an audience name or a list of audience names.",
+  ]);
+  assert.deepEqual(messages({ role: [] }), ["PUB001 The request names no role."]);
+  assert.deepEqual(messages({ audience: [] }), ["PUB001 The request names no audience."]);
+  assert.deepEqual(messages({ release: ["pilot-1"] }), [
+    "PUB001 The request's release is a list; a request is for one reader, on one release.",
+  ]);
+  assert.deepEqual(messages({ product: ["PRD-LANTERN"], edition: ["standard"] }), [
+    "PUB001 The request's product is a list; a request is for one reader, on one product.",
+    "PUB001 The request's edition is a list; a request is for one reader, on one edition.",
+  ]);
+});
+
+test("BEH-PUBLISH-READER: each unknown member of a list is refused on its own, and a known one never rescues it", () => {
+  const { graph, registries } = example({ kb: reviewed() });
+  const result = checkRequest(customer({ role: ["teacher", "principal", "dean"] }), graph, registries);
+  assert.equal(result.request, null);
+  assert.deepEqual(
+    result.diagnostics.map((d) => d.message),
+    [
+      "The request names role dean, which the registries do not declare.",
+      "The request names role principal, which the registries do not declare.",
+    ],
+  );
+});
+
+test("BEH-PUBLISH-READER: a role list admits knowledge available to any one of its roles", () => {
+  const available = knowledge({ ...AVAILABLE, roles: ["teacher"] });
+  assert.equal(reason(available, { role: ["admin"] }), "role");
+  assert.equal(reason(available, { role: ["admin", "teacher"] }), null);
+  assert.equal(reason(knowledge(AVAILABLE, { audiences: ["product"] }), { audience: ["teacher", "product"] }), null);
+  assert.equal(
+    reason(knowledge(AVAILABLE, { audiences: ["product"] }), { audience: ["teacher", "parent"] }),
+    "audience",
+  );
+});
+
+test("BEH-PUBLISH-READER: availabilityReason fails closed on a missing block and names the first failing dimension", () => {
+  assert.equal(availabilityReason(undefined, REQUEST), "availability-missing");
+  assert.equal(availabilityReason(AVAILABLE, REQUEST), null);
+  assert.equal(availabilityReason(AVAILABLE, checked({ release: "r3", role: ["student"] })), "release");
+  assert.equal(availabilityReason(AVAILABLE, checked({ role: ["student", "parent"] })), "role");
+  assert.equal(availabilityReason({ ...AVAILABLE, flags: ["beta"] }, REQUEST), "flag");
+});
+
+test("BEH-PUBLISH-READER: CORE008 for an audience or role names only the request's values", () => {
+  const { graph, registries } = example({
+    kb: reviewed(),
+    registries: registriesWith({ roles: ["administrator", "student", "teacher"] }),
+  });
+  const refusal = (extra: Record<string, unknown>) => {
+    const result = project(graph, registries, customer({ ids: ["KB-ASMT-SCHEDULE"], ...extra }), {
+      snapshot: snapshotOf(graph),
+    });
+    assert.equal(result.diagnostics.length, 1);
+    return result.diagnostics[0];
+  };
+  const one = refusal({ role: "student" });
+  assert.equal(one.field, "/intentset/availability/roles");
+  assert.match(one.message, /\(role\): it is not available for role student\.$/);
+  const roles = refusal({ role: ["student", "administrator"] });
+  assert.equal(roles.field, "/intentset/availability/roles");
+  assert.match(roles.message, /it is available for none of the roles administrator, student\.$/);
+  assert.ok(!roles.message.includes("teacher"));
+  const audience = refusal({ audience: "product" });
+  assert.match(audience.message, /it is not written for the product audience\.$/);
+  const audiences = refusal({ audience: ["product", "engineering"] });
+  assert.equal(audiences.field, "/intentset/audiences");
+  assert.match(audiences.message, /it is written for none of the audiences engineering, product\.$/);
 });

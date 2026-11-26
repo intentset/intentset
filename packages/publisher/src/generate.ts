@@ -11,13 +11,16 @@
  *
  * Provenance names only what the projection may show. The knowledge's own
  * path appears only in a projection that admits internal records; sources
- * outside the projection are counted, not named; availability is the
- * request's own values, so a document does not list the other editions,
- * roles or releases its knowledge also serves. The block carries no snapshot:
- * that is the same for every document in a run and moves with any record in
- * the model, so the run names it once, in the help file and the index
- * (publication §2, §5; ADR 0019), and a document's bytes change only when what
- * it was made from does.
+ * outside the projection are counted, not named. `audience` and
+ * `availability` are the request's whole entitlement, its audiences, roles
+ * and flags as sorted lists (ADR 0029): the document's links and titles were
+ * checked against everything published for that reader, so it is labeled for
+ * that reader and no narrower one, and every document of a run carries the
+ * same values as its help file and index. The block carries no snapshot: that
+ * is the same for every document in a run and moves with any record in the
+ * model, so the run names it once, in the snapshot file (publication §2, §6;
+ * ADR 0019, ADR 0021), and a document's bytes change only when what it was
+ * made from does.
  *
  * The result is checked as Markset before it is emitted: a Markset error is
  * PUB003, and a `:::` directive outside Markset's vocabulary is PUB004
@@ -28,7 +31,7 @@ import { marksetCarrier } from "@intentset/markset-adapter";
 import { BLOCK_DIRECTIVE_NAMES, parseDocument } from "@markset-lang/parser";
 import { bodyLineOffset } from "./body.ts";
 import { publicationDiagnostic, sortedUnique } from "./diagnostic.ts";
-import { type PublicationRequest, admits } from "./request.ts";
+import { type CheckedRequest, admits } from "./request.ts";
 import { type YamlValue, emitYaml } from "./yaml.ts";
 
 export const PUBLICATION_PROFILE = "intentset/publication/0.3";
@@ -54,9 +57,10 @@ export interface PublicationMeta {
   sources: SourceStamp[];
   /** How many explained artifacts are outside the projection and so not named. */
   withheldSources: number;
-  audience: string;
-  /** The request's values, and the flags the knowledge requires (every one of them named by the request). */
-  availability: { product: string; release: string; role: string; edition: string; flags: string[] };
+  /** The request's audiences, sorted: the reader is in every one (publication §1, §2). */
+  audience: string[];
+  /** The request's values, its roles and flags as sorted lists: the reader holds every one (publication §1, §2). */
+  availability: { product: string; release: string; role: string[]; edition: string; flags: string[] };
   reviewer: string;
   reviewedAt: string;
   publishedAt: string;
@@ -83,7 +87,7 @@ export function markerLine(id: string): string {
 export function publicationMeta(
   graph: Graph,
   artifact: Artifact,
-  request: PublicationRequest,
+  request: CheckedRequest,
   options: GenerateOptions,
 ): PublicationMeta {
   const { meta } = artifact;
@@ -110,13 +114,13 @@ export function publicationMeta(
     source,
     sources,
     withheldSources,
-    audience: request.audience,
+    audience: sortedUnique(request.audience),
     availability: {
       product: request.product,
       release: request.release,
-      role: request.role,
+      role: sortedUnique(request.role),
       edition: request.edition,
-      flags: sortedUnique((meta.availability?.flags ?? []).filter((flag) => request.flags.includes(flag))),
+      flags: sortedUnique(request.flags),
     },
     reviewer: meta.reviewedBy,
     reviewedAt: meta.reviewedAt,
@@ -140,7 +144,7 @@ export function marksetSource(publication: PublicationMeta, body: string): { sou
 export function generateDocument(
   graph: Graph,
   artifact: Artifact,
-  request: PublicationRequest,
+  request: CheckedRequest,
   options: GenerateOptions,
 ): { document: GeneratedDocument | null; diagnostics: Diagnostic[] } {
   const id = artifact.meta.id;

@@ -741,7 +741,7 @@ Published knowledge
 
 `intentset publish`
 
-Builds what one audience may see for one release, from knowledge records marked public, customer, internal or restricted.
+Builds what one reader, in every audience and role they hold, may see for one release, from knowledge records marked public, customer, internal or restricted.
 
 - Denies by default, and intersects product, release, role, edition and flags
 - Leaves out drafts and retired records

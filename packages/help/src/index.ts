@@ -7,9 +7,10 @@
  * on the control.
  *
  * Nothing here decides who may see what. That was decided when the file was
- * published, for one audience, release, role, edition and set of flags; a
- * product serves each person the file published for their entitlement. This
- * package reads a file, checks its shape, and binds. No dependencies, no
+ * published, for one reader: every audience, role and flag it names, on one
+ * product, release and edition. Those lists are held all-of, so serve the
+ * file only where `servedTo` holds for the person (publication §1, ADR 0029).
+ * This package reads a file, checks its shape, and binds. No dependencies, no
  * network, no DOM of its own: the binder takes any root with `querySelectorAll`
  * and elements with `getAttribute`/`setAttribute`, which is a document, a
  * shadow root or a test double alike. `watchTips` also observes the root, with
@@ -26,6 +27,7 @@ export const TIP_ATTRIBUTE = "data-help-tip";
 
 const ID_PATTERN = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/;
 const VISIBILITIES = ["public", "customer", "internal", "restricted"] as const;
+export type Visibility = (typeof VISIBILITIES)[number];
 
 export interface HelpKnowledge {
   id: string;
@@ -45,11 +47,11 @@ export interface HelpTip {
 export interface Help {
   profile: typeof HELP_PROFILE;
   derived: true;
-  projection: (typeof VISIBILITIES)[number];
-  /** Only in a file written before 0.15.0: a publication names its snapshot in `snapshot.json` (publication §6). */
-  snapshot?: { commit: string | null; graphHash: string };
-  audience: string;
-  availability: { product: string; release: string; role: string; edition: string; flags: string[] };
+  projection: Visibility;
+  /** Every audience the reader is in, sorted without repeats. */
+  audience: string[];
+  /** The reader's product, release and edition, and every role and flag the reader holds, sorted without repeats. */
+  availability: { product: string; release: string; role: string[]; edition: string; flags: string[] };
   publishedAt: string;
   knowledge: HelpKnowledge[];
   tips: Record<string, HelpTip>;
@@ -63,6 +65,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function str(value: unknown): value is string {
   return typeof value === "string";
+}
+
+/** A list of strings in strictly ascending code-unit order, so sorted and without repeats; non-empty unless allowed. */
+function sortedList(value: unknown, allowEmpty: boolean): value is string[] {
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0) || !value.every(str)) return false;
+  return value.every((member, i) => i === 0 || (value[i - 1] as string) < member);
+}
+
+/** The members publication §5's table gives each object of the file: a reader refuses any other (help/0.3 is closed). */
+const MEMBERS = {
+  file: ["profile", "derived", "projection", "audience", "availability", "publishedAt", "knowledge", "tips"],
+  availability: ["product", "release", "role", "edition", "flags"],
+  knowledge: ["id", "title", "path"],
+  tip: ["text", "knowledge"],
+} as const;
+
+function unknownMembers(
+  value: Record<string, unknown>,
+  members: readonly string[],
+  where: string,
+  out: string[],
+): void {
+  for (const key of Object.keys(value).sort()) {
+    if (!members.includes(key)) out.push(`${where} has a member ${JSON.stringify(key)} the help file does not define`);
+  }
 }
 
 /**
@@ -86,6 +113,10 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
   }
   const problems: string[] = [];
   if (!isRecord(value)) return { ok: false, help: null, problems: ["the help file is not a JSON object"] };
+  unknownMembers(value, MEMBERS.file, "the file", problems);
+  for (const key of MEMBERS.file) {
+    if (!Object.hasOwn(value, key)) problems.push(`the file has no ${key}`);
+  }
   if (value.profile !== HELP_PROFILE) {
     problems.push(`profile is ${JSON.stringify(value.profile)}, not ${HELP_PROFILE}`);
   }
@@ -93,22 +124,20 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
   if (!str(value.projection) || !(VISIBILITIES as readonly string[]).includes(value.projection)) {
     problems.push("projection is not one of public, customer, internal, restricted");
   }
-  const snapshot = value.snapshot;
-  if (
-    snapshot !== undefined &&
-    (!isRecord(snapshot) || !(snapshot.commit === null || str(snapshot.commit)) || !str(snapshot.graphHash))
-  ) {
-    problems.push("snapshot, when present, must carry commit (a string or null) and graphHash");
+  if (!sortedList(value.audience, false)) {
+    problems.push("audience must be a non-empty list of strings, sorted, without repeats");
   }
-  if (!str(value.audience)) problems.push("audience must be a string");
   const availability = value.availability;
+  if (isRecord(availability)) unknownMembers(availability, MEMBERS.availability, "availability", problems);
   if (
     !isRecord(availability) ||
-    !["product", "release", "role", "edition"].every((key) => str(availability[key])) ||
-    !Array.isArray(availability.flags) ||
-    !availability.flags.every(str)
+    !["product", "release", "edition"].every((key) => str(availability[key])) ||
+    !sortedList(availability.role, false) ||
+    !sortedList(availability.flags, true)
   ) {
-    problems.push("availability must carry product, release, role, edition and a list of flags");
+    problems.push(
+      "availability must carry product, release and edition, a non-empty sorted list of roles without repeats, and a sorted list of flags without repeats",
+    );
   }
   if (!str(value.publishedAt)) problems.push("publishedAt must be a string");
 
@@ -121,6 +150,7 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
         problems.push(`knowledge[${i}] must carry id, title and path`);
         return;
       }
+      unknownMembers(entry, MEMBERS.knowledge, `knowledge[${i}]`, problems);
       if (!ID_PATTERN.test(entry.id)) problems.push(`knowledge[${i}].id ${JSON.stringify(entry.id)} is not an ID`);
       if (previous !== null && entry.id <= previous) problems.push(`knowledge is not sorted by id at ${entry.id}`);
       previous = entry.id;
@@ -136,6 +166,7 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
         problems.push(`tips.${key} must carry text and knowledge`);
         continue;
       }
+      unknownMembers(tip, MEMBERS.tip, `tips.${key}`, problems);
       if (tip.text.trim() === "") problems.push(`tips.${key} has an empty text`);
       if (!known.has(tip.knowledge))
         problems.push(`tips.${key} names knowledge ${tip.knowledge}, which the file does not list`);
@@ -143,6 +174,40 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
   }
   if (problems.length > 0) return { ok: false, help: null, problems };
   return { ok: true, help: value as unknown as Help, problems: [] };
+}
+
+/**
+ * A person a product may serve a publication to: the visibilities they are cleared for, every audience they are in,
+ * every role and flag they hold, and the product, release and edition they are on.
+ */
+export interface Reader {
+  visibilities: readonly Visibility[];
+  audiences: readonly string[];
+  roles: readonly string[];
+  product: string;
+  release: string;
+  edition: string;
+  flags: readonly string[];
+}
+
+/**
+ * Whether a help file, or a document's publication block, may be served to this reader (publication §1, ADR 0029):
+ * its projection is among the reader's visibilities, its product, release and edition are the reader's, and the
+ * reader holds every audience, role and flag it names. The lists are held all-of, never read as "any of": a file
+ * published for the roles administrator and teacher is not for a reader who holds only one of them.
+ */
+export function servedTo(file: Pick<Help, "projection" | "audience" | "availability">, reader: Reader): boolean {
+  const { availability } = file;
+  const holds = (named: readonly string[], held: readonly string[]) => named.every((value) => held.includes(value));
+  return (
+    reader.visibilities.includes(file.projection) &&
+    availability.product === reader.product &&
+    availability.release === reader.release &&
+    availability.edition === reader.edition &&
+    holds(file.audience, reader.audiences) &&
+    holds(availability.role, reader.roles) &&
+    holds(availability.flags, reader.flags)
+  );
 }
 
 /** A tip with the ID it was asked for and the knowledge entry it points at. */

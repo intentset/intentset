@@ -34,12 +34,15 @@ export {
   type ProjectOptions,
   type Projection,
   type Snapshot,
+  audienceReason,
+  availabilityReason,
   exclusionReason,
   plannedSources,
   project,
 } from "./project.ts";
 export {
   type HtmlRendering,
+  PUBLICATION_INDEX_PROFILE,
   type PublicationIndex,
   type PublishOptions,
   type PublishResult,
@@ -60,14 +63,17 @@ export {
   titlePattern,
 } from "./references.ts";
 export {
+  type CheckedRequest,
   type IndexedRequest,
+  LIST_DIMENSIONS,
   PROJECTION_ADMITS,
   type PublicationRequest,
-  REQUEST_DIMENSIONS,
   type RequestDimension,
+  SINGLE_DIMENSIONS,
   admits,
   checkRequest,
   indexedRequest,
+  requestList,
 } from "./request.ts";
 export {
   CURRENT_PIN,

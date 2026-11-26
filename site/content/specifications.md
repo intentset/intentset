@@ -45,7 +45,7 @@ Intentset separates product meaning from implementation architecture and platfor
 
   {{spec.publication.meta}}
 
-  How reviewed explanations become documentation and in-app help for one audience and release: what a request must name, what it may include and what stays withheld, the provenance each document keeps, and when an explanation needs review again.
+  How reviewed explanations become documentation and in-app help for one reader, in one or more audiences and roles, on one release: what a request must name, what it may include and what stays withheld, the provenance each document keeps, and when an explanation needs review again.
 
   [[Read the publication profile](publication/)]{.button}
   :::

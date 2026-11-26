@@ -39,7 +39,7 @@ function run(testCase: ConformanceCase) {
     graph: validated.graph,
     level: expanded.level,
     evidence: expanded.evidence,
-    request: expanded.request,
+    request: scope(expanded.request),
     documents: expanded.files.keys(),
     sources: expanded.sources.keys(),
     configuredBinding: validated.evidence.binding,
@@ -47,6 +47,12 @@ function run(testCase: ConformanceCase) {
     ...(subject === undefined ? {} : { subjectSource: subject }),
   });
   return { expanded, evidence, diagnostics: [...validated.diagnostics, ...evidence.diagnostics] };
+}
+
+/** A case's product and release when both are single values; publication §1 lets a case hold a list. */
+function scope(request: { product?: unknown; release?: unknown } | null): { product: string; release: string } | null {
+  if (request === null || typeof request.product !== "string" || typeof request.release !== "string") return null;
+  return { product: request.product, release: request.release };
 }
 
 /** What each case means for the example's review, beyond its codes. */

@@ -11,18 +11,23 @@ implementation: 0.17.1
 **Extends:** [Core §9](core-0.3.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
 
 Publication turns reviewed knowledge, the explanations a product's readers are given, into documentation and in-app
-help for one audience and release, and leaves out everything that audience may not see. It is not deployment: nothing
-here ships a product. Core §9 names the generated publication profile and lists the provenance a published knowledge
+help for one reader, in one or more audiences and roles, on one release, and leaves out everything that reader may
+not see. It is not deployment: nothing here ships a product. Core §9 names the generated publication profile and lists the provenance a published knowledge
 document must retain. This note fixes the fields that carry it, the review record that decides `needs-review`, and the
 diagnostics a publisher reports. MUST, MUST NOT, SHOULD and MAY are used as in Core §1.
 
 ## 1. Request and projection
 
-A publication request names `visibility`, `audience`, `product`, `release`, `role`, `edition` and `flags`, and MAY
-name `ids` (knowledge IDs; omitted means every eligible one). Every other field is required: a missing one MUST refuse
-the request rather than be read as "any", and `flags: []` is the only way to say "no flags". Each value MUST be one
-the registries declare (the product: a product artifact in the snapshot); an unknown value, such as an unknown release
-label, MUST refuse the request rather than match nothing.
+A publication request is for one reader. It names `visibility`, `audience`, `product`, `release`, `role`, `edition`
+and `flags`, and MAY name `ids` (knowledge IDs; omitted means every eligible one). `audience` and `role` are each one
+value or a non-empty list of values, for a reader who is in more than one audience or holds more than one role.
+`visibility`, `product`, `release` and `edition` are one value each, and a list in any of them, a list of one
+included, MUST refuse the request. A list is read as the set of its values: its order and repeated members change
+nothing, and a list of one value is the same request as that value alone. Every other field is required: a missing
+one, and an empty `audience` or `role` list, MUST refuse the request rather than be read as "any", and `flags: []`
+is the only way to say "no flags". Each value, every member of a list included, MUST be one the registries declare
+(the product: a product artifact in the snapshot). An unknown value, such as an unknown release label or one unknown
+role in a list, MUST refuse the whole request rather than match nothing or be dropped.
 
 | Projection | Admits | Requires |
 |---|---|---|
@@ -34,11 +39,29 @@ label, MUST refuse the request rather than match nothing.
 A knowledge artifact is eligible only when all hold: type `knowledge`; status `approved` or `deprecated`;
 no artifact it `explains` says `delivery: planned` (Core §7: planned work is not current, and
 prospective documentation belongs only in a separately labeled roadmap projection, which v0.3 does not define);
-visibility admitted; the request's audience in `audiences`; `availability` present; the request's
-product, release, role and edition each in the corresponding list; every flag in `availability.flags` named by the
+visibility admitted; at least one of the request's audiences in `audiences`; `availability` present; the request's
+product, release and edition each in the corresponding list, and at least one of the request's roles in
+`availability.roles`; every flag in `availability.flags` named by the
 request; and its review current (§3). Everything else is excluded. An excluded artifact the request named in `ids` is
 CORE008. When the artifact's visibility is outside the projection, or no artifact has the ID, the diagnostic MUST be
 the same in both cases and MUST NOT carry a path.
+
+A request that names several audiences or roles makes eligible exactly the knowledge that a request naming one of
+its audiences and one of its roles, and otherwise the same, would make eligible. Every later step runs once over that
+set: the title and reference checks of §4, and the help file of §5 with its tie-break. A document may therefore link
+to one that only another of the request's roles admits, and such a run can publish a document that every
+single-role run refuses.
+
+Every file of a publication is therefore for one reader: its documents, their HTML and chunks, its help file and its
+index. That reader is in every audience it names, holds every role and every flag it names, and is on its product,
+release and edition. The lists in a publication's `audience` and `availability` are held all-of. Core §7's "OR
+within an array" reads a record's availability, never a publication's: a publication that names the roles
+`administrator` and `teacher` is not for a reader who holds only one of them. A product MUST NOT serve any file of a
+publication to a reader who lacks a value it names, and publishes once for each combination of audiences, roles and
+flags it serves. The request is the caller's statement of the reader's entitlement. Publication does not
+authenticate it, a caller MUST name only what the reader holds, and documentation availability never grants runtime
+access (Core §9). A product that serves a publication to readers it does not tell apart, such as a public site, is
+stating by doing so that each of them holds what the request names.
 
 ## 2. The generated document
 
@@ -56,10 +79,16 @@ knowledge body unchanged, preceded by one blank line when it does not begin with
 | `source` | `id`, `revision` (null when undeclared), `sourceHash` of the knowledge; `path` only when the projection admits internal |
 | `sources` | `{ id, revision, sourceHash }` for each explained artifact the projection admits, sorted by ID |
 | `withheldSources` | the number of explained artifacts outside the projection; they are counted, never named |
-| `audience` | the request's audience |
-| `availability` | `product`, `release`, `role`, `edition` from the request, and `flags`: those the knowledge requires |
+| `audience` | the request's audiences, a list sorted by code unit without repeats |
+| `availability` | `product`, `release` and `edition` from the request; `role`, the request's roles; and `flags`, the request's flags; each list sorted by code unit without repeats |
 | `reviewer`, `reviewedAt` | the knowledge's `reviewedBy` and `reviewedAt` |
 | `publishedAt` | the publication timestamp, an input to the publisher |
+
+`audience` and `availability` name the whole entitlement the document was published for (§1), not the part of it
+the knowledge lists. The document's references and titles were checked against everything published for that
+entitlement, so a narrower label would invite a reader it is not safe for. Every document of a run carries the same
+`audience` and `availability`, which are those of the run's help file and the request its index records. A request
+for one audience or role writes a list of one.
 
 A generated document MUST NOT carry the snapshot it was published from. The snapshot is the same for every document
 in a run, and the graph hash moves with every record in the model, so a document that carried it would change
@@ -151,13 +180,15 @@ A body MUST NOT refer, by bare ID, to an artifact whose visibility the projectio
 requested product; nor link to, or write out the repository path of, an artifact not published in the same run. A
 document refused here refuses, in turn, any document that links to it. A body MUST NOT contain, case-sensitively and
 with any whitespace between words, the title (three or more words) of an artifact the projection does not admit,
-unless a published artifact has the same title. No publication diagnostic may contain the title or path of an
+unless a document published in the same run has the same title. A document refused for any reason, by this section
+or because its Markset failed, allows no title, and the title and reference checks repeat over what is still
+published until a round refuses nothing. No publication diagnostic may contain the title or path of an
 artifact the projection does not admit; it names such an artifact by ID only.
 
 | Code | Condition |
 |---|---|
 | CORE008 | A requested ID is not eligible, or a body refers to something its projection does not publish |
-| PUB001 | The request is refused: a field missing or unknown, a value undeclared, authorization absent, or a snapshot whose graph hash is not the graph's |
+| PUB001 | The request is refused: a field missing, empty, of the wrong type or unknown, a list where one value is required, a value undeclared, authorization absent, or a snapshot whose graph hash is not the graph's |
 | PUB002 | A body contains the title of an artifact outside the projection |
 | PUB003 | The generated document is not valid Markset version 0 |
 | PUB004 | The generated document uses a `:::` directive outside Markset's vocabulary |
@@ -168,11 +199,28 @@ one of `not-requested`, `not-knowledge`, `draft`, `retired`, `planned`, `visibil
 eligible document refused later, `reference`, `title`, `directive`, `markset`. The index counts an exclusion only when the projection admits the excluded artifact's visibility, so a public
 or customer index never reveals how many internal or restricted records exist; a refused request counts nothing.
 
+`audience` applies when none of the request's audiences is in the knowledge's `audiences`, and `role` when none of
+its roles is in `availability.roles`. A CORE008 for a requested ID excluded by either names only the request's
+values, never the knowledge's.
+
+The index a publisher writes for customer tools (Core §10) has these members, in this order: `profile`
+(`intentset/publication-index/0.3`), `request`, `published` and `excludedCounts`. A reader MUST refuse an index whose
+`profile` is any other value or that has a member this paragraph does not give it. `request` records the request
+without its authorization: `visibility`, `audience`, `product`, `release`, `role`, `edition`, `flags`, then `ids`
+when the request named them, in that order. `audience`, `role`, `flags` and `ids` are each a list sorted by code
+unit without repeats. With its authorization added back it is a request, and publishing that request from the same
+graph with the same `publishedAt` writes the same bytes in every file but the snapshot file. A product that caches
+publications keys them on this request in canonical JSON, never on the request as its caller wrote it. `request` is
+null for a refused request, which counts nothing. `published` lists the documents published, sorted.
+`excludedCounts` maps each exclusion and refusal reason to its count, keys sorted, zero counts left out; every
+record whose visibility the projection admits is counted once, in `published` or under one reason.
+
 ## 5. The help file
 
 Beside the documents, a publication writes `help.json`: every tip (Core §9) of every document published in the run,
 keyed by the ID it explains, for a product's runtime to show beside the control that delivers that behavior. It is
-one UTF-8 JSON object with its keys sorted, written whenever the request is accepted, so a runtime can rely on it
+one UTF-8 JSON object whose members appear in the table's order, with `knowledge` sorted by `id` and every member
+keyed by ID sorted by key, written whenever the request is accepted, so a runtime can rely on it
 being there, and the same bytes for the same inputs. It MUST NOT carry the snapshot it was published from (§6), so
 its bytes change only when a tip, a published document, the request or `publishedAt` does.
 
@@ -181,24 +229,32 @@ its bytes change only when a tip, a published document, the request or `publishe
 | `profile` | `intentset/help/0.3` |
 | `derived` | `true` |
 | `projection` | the request's visibility |
-| `audience` | the request's audience |
-| `availability` | `product`, `release`, `role`, `edition` and `flags` from the request |
+| `audience` | the request's audiences, a list sorted by code unit without repeats |
+| `availability` | `product`, `release` and `edition` from the request; `role`, the request's roles; and `flags`, the request's flags; each list sorted by code unit without repeats |
 | `publishedAt` | the publication timestamp |
 | `knowledge` | one entry per published document, sorted by `id`: `id`, `title`, `path` (`<ID>.md`) |
-| `tips` | by explained ID: `text`, the tip as written, and `knowledge`, the ID of the document it comes from |
+| `tips` | by explained ID, keys sorted: `text`, the tip as written, and `knowledge`, the ID of the document it comes from |
 
 A tip is written exactly when its knowledge was published in the same run, so what gates a tip is what gates its
 document: status, visibility, audience, availability and review. The key is the explained artifact's ID whatever that
 artifact's visibility, because a product that binds a control to the ID has already written it where the same reader
 can see it, and the file carries nothing else of that artifact: never its title, path, status or prose. When two
-published documents tip the same ID, the tip from the knowledge with the lower ID is written. A retrieval system MUST
-NOT index the help file as knowledge; its text is already in the documents it points at. The help file is not the
+published documents tip the same ID, the tip from the knowledge with the lower ID is written. Which of the request's
+audiences or roles admitted each document makes no difference. A retrieval system MUST NOT index the help file as
+knowledge; its text is already in the documents it points at. The help file is not the
 export: an export withholds a tip whose key is a withheld artifact's ID (export §3, ADR 0025), and the help file keys
 its tips by explained ID whatever that artifact's visibility, because the projection that wrote it already admitted
 the document the tip comes from.
 
-A help file written before revision 2026-11-15 carries a `snapshot` member, `commit` and `graphHash`, between
-`projection` and `audience`. A reader MUST accept a help file with or without it, and SHOULD NOT rely on it.
+A reader MUST refuse a help file, whole, when its `profile` is not `intentset/help/0.3`; when a member of the table
+is missing, or the file or any object in it (an `availability`, a `knowledge` entry, a tip) has a member the table
+does not give it; when `audience` or `availability.role` is not a non-empty list of strings in strictly ascending
+code-unit order; when `availability.flags` is not a list of strings in that order; when `knowledge` is not strictly
+ascending by `id`; when a `tips` key is not an ID; or when a tip names knowledge the file does not list. A member
+added later to any object in the file therefore makes an older reader refuse the file rather than show too much,
+and adding one moves this profile. A help file carries the entitlement it was published for. Like every file of its
+publication, it MUST NOT be served to a reader who lacks any audience, role or flag it names, or whose clearance does
+not include its `projection`, and that holds for every member in it (§1).
 
 ## 6. The snapshot file
 

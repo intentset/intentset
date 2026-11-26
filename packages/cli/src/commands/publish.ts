@@ -1,6 +1,7 @@
 /**
  * `intentset publish` (Core §9): the deny-by-default projection of reviewed
- * knowledge for one audience, release and entitlement, as generated Markset
+ * knowledge for one reader, every audience and role they hold given by
+ * repeating --audience and --role (ADR 0029), on one release, as generated Markset
  * with provenance, optional HTML (a page, or under --html=fragment the page's
  * content without its title), the index a customer tool may read, the
  * help file a product's runtime reads, retrieval chunks that carry the
@@ -29,10 +30,12 @@ import type { Session } from "../session.ts";
 
 export interface PublishCliOptions {
   visibility?: string;
-  audience?: string;
+  /** Every --audience given; values are not split on commas. */
+  audience?: string[];
   product?: string;
   release?: string;
-  role?: string;
+  /** Every --role given; values are not split on commas. */
+  role?: string[];
   edition?: string;
   flags: string[];
   authorizedInternal: boolean;
@@ -121,10 +124,12 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
   const lines: string[] = [];
   if (index.request === null) {
     lines.push("The request was refused, so nothing was projected and nothing was written.");
+    const hint = commaHint(options);
+    if (hint !== null) io.stderr(`intentset publish: ${hint}\n`);
   } else {
     const r = index.request;
     lines.push(
-      `Published ${count(index.published.length, "document")} for a ${r.visibility} projection: audience ${r.audience}, ${r.product} ${r.release}, role ${r.role}, edition ${r.edition}, flags ${r.flags.length === 0 ? "none" : r.flags.join(", ")}`,
+      `Published ${count(index.published.length, "document")} for a ${r.visibility} projection: ${entitlement(r)}, edition ${r.edition}, flags ${r.flags.length === 0 ? "none" : r.flags.join(", ")}`,
       ...index.published.map((id) => `  ${id}`),
     );
     const reasons = Object.keys(index.excludedCounts);
@@ -136,4 +141,26 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
   }
   io.stdout(`${lines.join("\n")}\n`);
   return published.ok ? 0 : 1;
+}
+
+/** "audience teacher, PRD-X r1, role teacher", with each list bracketed when it holds more than one value. */
+export function entitlement(request: {
+  audience: readonly string[];
+  product: string;
+  release: string;
+  role: readonly string[];
+}): string {
+  const named = (one: string, many: string, values: readonly string[]) =>
+    values.length === 1 ? `${one} ${values[0]}` : `${many} [${values.join(", ")}]`;
+  return `${named("audience", "audiences", request.audience)}, ${request.product} ${request.release}, ${named("role", "roles", request.role)}`;
+}
+
+/** For a refused request: a --role or --audience value holding a comma was one value, and here is how to give several. */
+export function commaHint(options: { audience?: readonly string[]; role?: readonly string[] }): string | null {
+  for (const name of ["role", "audience"] as const) {
+    if ((options[name] ?? []).some((value) => value.includes(","))) {
+      return `repeat --${name} for each ${name}; values are not split on commas`;
+    }
+  }
+  return null;
 }

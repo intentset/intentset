@@ -158,6 +158,13 @@ export function example(
   });
 }
 
+/** The example's registries with these keys replaced, for a case's `registries`. */
+export function registriesWith(changes: Record<string, unknown>): Record<string, unknown> {
+  const read = parseYaml(readFileSync(join(examplesDir, "scheduling", "registries.yaml"), "utf8"));
+  if (read.value === null) throw new Error("the example's registries do not parse");
+  return { ...read.value, ...changes };
+}
+
 /** A knowledge body with the example's heading and section around the given guidance. */
 export function guidance(text: string): string {
   return `\n# Prepare a scheduled student assessment\n\n## Guidance\n\n${text}\n`;

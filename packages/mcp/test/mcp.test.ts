@@ -392,6 +392,65 @@ test("customer mode refuses a publication that is not a public or customer proje
   );
 });
 
+test("BEH-PUBLISH-READER: customer results name the reader's audiences and roles as lists", async () => {
+  const { publication } = customerPublication();
+  const client = await connect(createIntentsetServer({ mode: "customer", publication }));
+  const search = (await call(client, "knowledge_search", { query: "release time" })).json;
+  assert.deepEqual(search.audience, ["teacher"]);
+  assert.deepEqual(search.availability, {
+    product: "PRD-LANTERN",
+    release: "pilot-1",
+    role: ["teacher"],
+    edition: "standard",
+    flags: [],
+  });
+  await client.close();
+});
+
+test("BEH-PUBLISH-READER: customer mode refuses an index of another profile or with a member the spec does not give", () => {
+  const { publication } = customerPublication();
+  const other = { ...publication, index: { ...publication.index, profile: "intentset/publication-index/0.2" } };
+  assert.throws(
+    () => createIntentsetServer({ mode: "customer", publication: other as unknown as PublishResult }),
+    /profile "intentset\/publication-index\/0\.2", not intentset\/publication-index\/0\.3/,
+  );
+  const extra = { ...publication, index: { ...publication.index, keptUnderReview: [] } };
+  assert.throws(
+    () => createIntentsetServer({ mode: "customer", publication: extra as unknown as PublishResult }),
+    /has a member keptUnderReview it does not define/,
+  );
+});
+
+test("BEH-PUBLISH-READER: customer mode refuses a document published for another reader than its index", () => {
+  const { publication } = customerPublication();
+  const [document] = publication.documents;
+  const mixed = (availability: Partial<typeof document.publication.availability>, audience?: string[]) => ({
+    ...publication,
+    documents: [
+      {
+        ...document,
+        publication: {
+          ...document.publication,
+          ...(audience === undefined ? {} : { audience }),
+          availability: { ...document.publication.availability, ...availability },
+        },
+      },
+    ],
+  });
+  for (const [label, changed] of [
+    ["another role", mixed({ role: ["administrator", "teacher"] })],
+    ["another audience", mixed({}, ["product", "teacher"])],
+    ["another flag", mixed({ flags: ["beta"] })],
+    ["another edition", mixed({ edition: "district" })],
+  ] as const) {
+    assert.throws(
+      () => createIntentsetServer({ mode: "customer", publication: changed }),
+      /document KB-ASMT-SCHEDULE was published for another reader than its index/,
+      label,
+    );
+  }
+});
+
 test("an unknown tool is an error in both modes", async () => {
   const eng = await engineering();
   await assert.rejects(eng.callTool({ name: "intentset_write", arguments: {} }), /Unknown tool: intentset_write/);

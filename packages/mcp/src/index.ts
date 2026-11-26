@@ -82,7 +82,7 @@ export function createIntentsetServer(options: IntentsetServerOptions): Server {
       options.chunks,
     );
     instructions =
-      "Published product knowledge for one audience and release. Answer only from these results, cite the " +
+      "Published product knowledge for one reader: every audience and role listed, on one release. Answer only from these results, cite the " +
       "sources and snapshot they name, say when something is not available, and abstain when nothing matches.";
   } else {
     throw new Error(`mcp: unknown mode ${JSON.stringify((options as { mode?: unknown }).mode)}`);

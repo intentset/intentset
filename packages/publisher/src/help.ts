@@ -9,7 +9,13 @@
  * artifact's ID whatever that artifact's visibility, because a product that
  * binds a control to the ID has already written it where the same reader can
  * see it, and nothing else of that artifact is carried: never its title, path,
- * status or prose. Two documents tipping one ID: the lower knowledge ID wins.
+ * status or prose. Two documents tipping one ID: the lower knowledge ID wins,
+ * whichever of the request's audiences or roles admitted each.
+ *
+ * Like every file of its publication, it is for one reader (ADR 0029): its
+ * `audience` and `availability` name the request's audiences, roles and flags
+ * as sorted lists, held all-of. Members are written in publication §5's table
+ * order, every collection always written.
  *
  * It carries no snapshot: the run names the commit and graph hash it was
  * published from in the snapshot file alone (snapshot.ts, ADR 0021), so this
@@ -17,7 +23,7 @@
  */
 import type { Artifact, Graph, Visibility } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
-import type { PublicationRequest } from "./request.ts";
+import type { CheckedRequest } from "./request.ts";
 
 export const HELP_PROFILE = "intentset/help/0.3";
 /** The file's name beside the published documents. */
@@ -42,8 +48,10 @@ export interface HelpFile {
   profile: typeof HELP_PROFILE;
   derived: true;
   projection: Visibility;
-  audience: string;
-  availability: { product: string; release: string; role: string; edition: string; flags: string[] };
+  /** The request's audiences, sorted: the reader is in every one. */
+  audience: string[];
+  /** The request's roles and flags, sorted: the reader holds every one. */
+  availability: { product: string; release: string; role: string[]; edition: string; flags: string[] };
   publishedAt: string;
   /** One entry per published document, sorted by ID. */
   knowledge: HelpKnowledge[];
@@ -59,7 +67,7 @@ export interface HelpOptions {
 export function helpFile(
   graph: Graph,
   publishedIds: readonly string[],
-  request: PublicationRequest,
+  request: CheckedRequest,
   options: HelpOptions,
 ): HelpFile {
   const ids = [...publishedIds].sort(compareStrings);
@@ -80,11 +88,11 @@ export function helpFile(
     profile: HELP_PROFILE,
     derived: true,
     projection: request.visibility,
-    audience: request.audience,
+    audience: [...new Set(request.audience)].sort(compareStrings),
     availability: {
       product: request.product,
       release: request.release,
-      role: request.role,
+      role: [...new Set(request.role)].sort(compareStrings),
       edition: request.edition,
       flags: [...new Set(request.flags)].sort(compareStrings),
     },
