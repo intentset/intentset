@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 ---
 
 {.eyebrow}
@@ -16,7 +16,7 @@ Each promise is a record: one Markdown file under `product/`, reviewed in the sa
 
 ```markdown
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.2'
   profile: intentset/rule/0.2

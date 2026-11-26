@@ -51,8 +51,8 @@ commands
   init [--repository <name>] [--example] [--agents]
                             create .intentset/config.yaml, an empty .intentset/registries.yaml
                             and .intentset/agents.md, the guide that tells coding agents how to
-                            keep the model current; --example adds the scheduling example under
-                            product/scheduling/; --agents writes only the guide, for a
+                            keep the model current; --example adds the shop example under
+                            product/shop/; --agents writes only the guide, for a
                             repository already initialized. Never overwrites a file.
   guide                     print that guide for this repository, for the scope its config
                             names, without writing anything

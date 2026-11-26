@@ -20,7 +20,7 @@ export const packageDir = resolve(import.meta.dirname);
 const repoRoot = resolve(packageDir, "..", "..");
 
 export const SCHEMAS = ["conformance", "frontmatter", "export", "evidence"] as const;
-export const EXAMPLES = ["scheduling"] as const;
+export const EXAMPLES = ["scheduling", "shop"] as const;
 
 /** The keys a staged case may carry, in the order they are written. */
 const STAGED_KEYS = [
