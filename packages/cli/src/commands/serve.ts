@@ -16,7 +16,7 @@ import { mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { ARCHITECTURE_CONFIG_PATH } from "@intentset/architecture";
-import { buildAtlas } from "@intentset/atlas";
+import { type AtlasOptions, buildAtlas } from "@intentset/atlas";
 import { count, type Io, snapshotLine } from "../output.ts";
 import { outputDirProblem, outputProblem } from "../outputs.ts";
 import { CONFIG_PATH } from "../repository.ts";
@@ -38,8 +38,11 @@ const TYPES: Record<string, string> = {
   ".js": "text/javascript; charset=utf-8",
 };
 
-/** The Atlas built from a session. */
-export function atlasOf(session: Session): Map<string, string> {
+/**
+ * The Atlas built from a session, with the Atlas's options: what `serve` shows, and what intentset.org publishes for
+ * its invented example with `{ notice: "example" }`.
+ */
+export function atlasOf(session: Session, options: AtlasOptions = {}): Map<string, string> {
   return buildAtlas({
     graph: session.result.graph,
     registries: session.repo.registries,
@@ -61,7 +64,7 @@ export function atlasOf(session: Session): Map<string, string> {
             diagnostics: session.architecture.diagnostics,
             summary: session.architecture.summary as unknown as Record<string, unknown>,
           },
-  });
+  }, options);
 }
 
 /**

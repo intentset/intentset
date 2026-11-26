@@ -6,7 +6,11 @@ intentset:
   id: RULE-SIGN-IN-LOCKOUT
   type: rule
   title: Lock sign-in after five failed attempts
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
   owner: team-accounts
   visibility: internal
   audiences:

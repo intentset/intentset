@@ -7,4 +7,6 @@ export { main, USAGE } from "./main.ts";
 export { AGENT_GUIDE_PATH, AGENT_POINTERS, agentGuide, type PackageManager } from "./agents.ts";
 export type { Io } from "./output.ts";
 export { matchAny, matchGlob } from "./glob.ts";
+export { atlasOf } from "./commands/serve.ts";
+export { openSession, type Session, type SessionOptions } from "./session.ts";
 export { CONFIG_PATH, enumerate, findRoot, loadRepository, readCommit, type Repository } from "./repository.ts";

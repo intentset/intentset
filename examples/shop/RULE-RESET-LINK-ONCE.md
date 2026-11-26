@@ -6,7 +6,11 @@ intentset:
   id: RULE-RESET-LINK-ONCE
   type: rule
   title: Reset links work once
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
   owner: team-accounts
   visibility: internal
   audiences:

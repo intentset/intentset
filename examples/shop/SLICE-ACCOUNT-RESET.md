@@ -6,7 +6,12 @@ intentset:
   id: SLICE-ACCOUNT-RESET
   type: slice
   title: Password reset
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
+  delivery: built
   owner: team-accounts
   visibility: internal
   audiences:

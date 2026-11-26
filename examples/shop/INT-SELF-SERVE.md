@@ -6,7 +6,11 @@ intentset:
   id: INT-SELF-SERVE
   type: intent
   title: Customers get back into their own accounts
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
   owner: team-accounts
   visibility: internal
   audiences:

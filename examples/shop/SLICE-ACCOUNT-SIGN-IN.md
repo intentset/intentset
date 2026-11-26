@@ -6,7 +6,12 @@ intentset:
   id: SLICE-ACCOUNT-SIGN-IN
   type: slice
   title: Sign-in
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
+  delivery: built
   owner: team-accounts
   visibility: internal
   audiences:
