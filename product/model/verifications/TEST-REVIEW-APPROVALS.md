@@ -32,7 +32,7 @@ intentset:
 - `packages/cli/test/approve.test.ts`: the test "review lists each record whose status or approval differs from the base"
 - `packages/cli/test/approve.test.ts`: the tests "review reads a base at 0.2 as migrated, …" and "… at 0.1 …"
 - `packages/cli/test/approve.test.ts`: the test "a review written by hand is listed, though no status or approval changed", and the renewal test of BEH-APPROVE, which lists the renewed review (ADR 0027)
-- `packages/cli/test/cli.test.ts`: the tests "a migration that re-pins a matching review lists no review" and "a branch that migrates, edits a source and re-pins it lists the review"
+- `packages/cli/test/cli.test.ts`: the tests "a migration that re-pins a matching review lists no review", "a branch that migrates, edits a source and re-pins it lists the review" and "a 0.2 review naming hash: file-v1, migrated and then re-pinned by hand, is listed"
 
 ## Expected result
 

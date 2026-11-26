@@ -33,7 +33,7 @@
  * PUB003, and a `:::` directive outside Markset's vocabulary is PUB004
  * (CLAUDE.md invariant 5: profiles never add a directive).
  */
-import { type Artifact, type Diagnostic, type Graph, type Visibility, collectHeadings } from "@intentset/core";
+import type { Artifact, Diagnostic, Graph, Visibility } from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { BLOCK_DIRECTIVE_NAMES, parseDocument } from "@markset-lang/parser";
 import { bodyLineOffset } from "./body.ts";
@@ -184,21 +184,37 @@ export function keptPublicationMeta(
 
 /**
  * A kept document's body (publication §2): the note right after its title heading (first when it has none), and each
- * relative link whose target is a document published as current written with `../` before it. Returns the body and
- * the body line after which the note's three lines were inserted (0 when first).
+ * relative link whose target is a document published as current written with `../` before it. The note is a block of
+ * its own: a blank line before it and one after it (the body's own, when one follows the title already), so no
+ * paragraph of the article continues into it, and it goes after the title heading's last line, so a setext heading
+ * stays whole. Returns the body, the body line after which the note was inserted (0 when first) and how many lines
+ * were inserted.
  */
 export function keptBody(
   artifact: Artifact,
   graph: Graph,
   current: ReadonlySet<string>,
-): { body: string; noteAfterLine: number } {
+): { body: string; noteAfterLine: number; noteLines: number } {
   const linked = prefixCurrentLinks(artifact, graph, current);
   const lines = linked.split("\n");
-  const title = collectHeadings(lines, 0).find((heading) => heading.depth === 1);
-  const after = title?.line ?? 0;
+  const after = titleHeadingEndLine(linked);
   const note = UNDER_REVIEW_NOTE.replace(/\n$/, "").split("\n");
-  const inserted = after === 0 ? [...note, ""] : ["", ...note];
-  return { body: [...lines.slice(0, after), ...inserted, ...lines.slice(after)].join("\n"), noteAfterLine: after };
+  const blankFollows = after < lines.length && lines[after].trim() === "";
+  const inserted = after === 0 ? [...note, ""] : blankFollows ? ["", ...note] : ["", ...note, ""];
+  return {
+    body: [...lines.slice(0, after), ...inserted, ...lines.slice(after)].join("\n"),
+    noteAfterLine: after,
+    noteLines: inserted.length,
+  };
+}
+
+/** The last body line of the title heading, the first level-one heading at the top level (publication §2), or 0. */
+function titleHeadingEndLine(body: string): number {
+  const root = parseDocument(body).ast as {
+    children?: { type?: string; depth?: number; position?: { end: { line: number } } }[];
+  };
+  const title = (root.children ?? []).find((node) => node.type === "heading" && node.depth === 1);
+  return title?.position?.end.line ?? 0;
 }
 
 /** The body with `../` before each Markdown link, image or definition destination that is a current document's file. */
@@ -270,7 +286,7 @@ export function generateDocument(
   const path = kept === undefined ? `${id}.md` : `${UNDER_REVIEW_DIR}/${id}.md`;
   let publication: PublicationMeta;
   let generated: { source: string; bodyStartLine: number };
-  let noteAfterLine: number | undefined;
+  let note: { after: number; lines: number } | undefined;
   try {
     if (kept === undefined) {
       publication = publicationMeta(graph, artifact, request, options);
@@ -278,7 +294,7 @@ export function generateDocument(
     } else {
       publication = keptPublicationMeta(graph, artifact, request, options, kept.review);
       const body = keptBody(artifact, graph, kept.current);
-      noteAfterLine = body.noteAfterLine;
+      note = { after: body.noteAfterLine, lines: body.noteLines };
       generated = marksetSource(publication, body.body);
     }
   } catch (error) {
@@ -296,7 +312,7 @@ export function generateDocument(
       ],
     };
   }
-  const diagnostics = checkGenerated(artifact, generated.source, generated.bodyStartLine, noteAfterLine);
+  const diagnostics = checkGenerated(artifact, generated.source, generated.bodyStartLine, note);
   if (diagnostics.length > 0) return { document: null, diagnostics };
   return { document: { id, path, markset: generated.source, publication }, diagnostics };
 }
@@ -306,18 +322,17 @@ export function checkGenerated(
   artifact: Artifact,
   source: string,
   bodyStartLine: number,
-  noteAfterLine?: number,
+  note?: { after: number; lines: number },
 ): Diagnostic[] {
   const id = artifact.meta.id;
   const offset = bodyLineOffset(artifact);
-  // A kept document's note adds three body lines after `noteAfterLine`; a line in it is no line of the record.
-  const noteLines = UNDER_REVIEW_NOTE.split("\n").length;
+  // A kept document's note adds `note.lines` body lines after `note.after`; a line in it is no line of the record.
   const locate = (line: number | undefined) => {
     if (line === undefined || offset === null || line < bodyStartLine) return undefined;
     let bodyLine = line - bodyStartLine + 1;
-    if (noteAfterLine !== undefined && bodyLine > noteAfterLine) {
-      if (bodyLine <= noteAfterLine + noteLines) return undefined;
-      bodyLine -= noteLines;
+    if (note !== undefined && bodyLine > note.after) {
+      if (bodyLine <= note.after + note.lines) return undefined;
+      bodyLine -= note.lines;
     }
     return { line: bodyLine + offset };
   };

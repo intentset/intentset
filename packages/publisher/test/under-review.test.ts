@@ -11,7 +11,9 @@ import {
   type PublicationRequest,
   type PublishResult,
   UNDER_REVIEW_NOTE,
+  keptBody,
   publish,
+  renderFragment,
   reviewStatus,
   toChunks,
 } from "../src/index.ts";
@@ -246,6 +248,35 @@ test("BEH-PUBLISH-UNDER-REVIEW: a kept document's output is the same bytes at tw
   assert.deepEqual(two.keptUnderReview, one.keptUnderReview);
   assert.deepEqual(two.help, one.help);
   assert.deepEqual(two.index, one.index);
+});
+
+test("BEH-PUBLISH-UNDER-REVIEW: the note is a block of its own, whatever follows the title heading", () => {
+  const built = example({ kb: KEPT });
+  const note = UNDER_REVIEW_NOTE.replace(/\n$/, "");
+  const kept = (body: string) => keptBody({ ...kb(built), body }, built.graph, new Set());
+
+  const tight = kept("\n# Title\nThe first paragraph of the article.\n");
+  assert.equal(tight.body, `\n# Title\n\n${note}\n\nThe first paragraph of the article.\n`);
+  assert.deepEqual([tight.noteAfterLine, tight.noteLines], [2, 4]);
+  const html = renderFragment(tight.body);
+  const callout = /<div class="ms-callout-body">([\s\S]*?)<\/div>/.exec(html)?.[1] ?? "";
+  assert.doesNotMatch(callout, /first paragraph/, "the article's paragraph stays outside the note");
+  assert.match(html, /<p>The first paragraph of the article\.<\/p>/);
+
+  const spaced = kept("\n# Title\n\nThe first paragraph.\n");
+  assert.equal(
+    spaced.body,
+    `\n# Title\n\n${note}\n\nThe first paragraph.\n`,
+    "an existing blank line is the one after",
+  );
+  assert.deepEqual([spaced.noteAfterLine, spaced.noteLines], [2, 3]);
+
+  const setext = kept("\nTitle\n=====\nThe first paragraph.\n");
+  assert.equal(setext.body, `\nTitle\n=====\n\n${note}\n\nThe first paragraph.\n`, "a setext heading stays whole");
+
+  const untitled = kept("The first paragraph.\n");
+  assert.equal(untitled.body, `${note}\n\nThe first paragraph.\n`);
+  assert.deepEqual([untitled.noteAfterLine, untitled.noteLines], [0, 3]);
 });
 
 test("BEH-PUBLISH-UNDER-REVIEW: a kept page carries noindex and a kept fragment is wrapped, a current one neither", () => {

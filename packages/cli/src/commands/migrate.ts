@@ -262,12 +262,13 @@ export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan
   return null;
 }
 
-const REVIEW_KEYS: readonly string[] = ["sources", "hash", "snapshot"];
+const REVIEW_KEYS: readonly string[] = ["sources", "hash", "snapshot", "self", "gates"];
 
 /**
  * ADR 0025: why a review did not move in full to `review` with the meaning it had, or null when it did (or there was
  * none). Before `0.3` the extension was read on knowledge alone, by its `sources`, `hash` and `snapshot`, and anything
- * else in it was ignored; after, `review` is CORE001 on any other type, and core drops a whole review that holds a key,
+ * else in it was ignored; after, `review` also reads `self` and `gates` (ADR 0027), so those move with it, `review` is
+ * CORE001 on any other type, and core drops a whole review that holds a key,
  * pin key or value it does not read (Core §9), so the knowledge would read as unreviewed. A review that would is named
  * rather than counted as moved. Before `0.3` a review with no `hash` pinned the whole file; after, `review` with no
  * `hash` pins content, so the pin kind is compared too.
@@ -319,6 +320,10 @@ function reviewShapeProblem(review: unknown): string | null {
   for (const key of ["hash", "snapshot"]) {
     const value = review[key];
     if (value !== undefined && value !== null && !filled(value)) return `a ${key} that is not a non-empty string`;
+  }
+  // ADR 0027: `self` and `gates` are read too, and a null one is CORE001 rather than absent.
+  for (const key of ["self", "gates"]) {
+    if (review[key] !== undefined && !filled(review[key])) return `a ${key} that is not a non-empty string`;
   }
   return null;
 }
@@ -546,6 +551,28 @@ function declaredPinKind(before: string, line: number): PinKind | null {
 }
 
 /**
+ * How `repinReviews` treats a knowledge record's own pins, read from its text before the move: whether the move
+ * rewrites its pins at all (it moves the record, or the record is already at the target), the source pin kind it reads
+ * them by (null: none matches, so none is re-pinned), and whether its `self` can be re-pinned (only when the move
+ * changes the record itself). `intentset review` replays exactly this, so a hand edit migrate would never write is listed.
+ */
+export function repinPlan(before: string, line: number): { rewrites: boolean; kind: PinKind | null; self: boolean } {
+  const span = frontmatterAt(before, line);
+  const atTarget = declaredSpec(span) === MIGRATE_TO;
+  const moved = atTarget ? null : migrateRecord(before, span);
+  const changes = moved !== null && moved !== before;
+  if (!atTarget && !changes) return { rewrites: false, kind: null, self: false };
+  if (!atTarget) return { rewrites: true, kind: declaredPinKind(before, line), self: true };
+  const meta = intentsetMapping(span);
+  const review = typeof meta === "string" ? undefined : meta.review;
+  const hash =
+    review !== null && typeof review === "object" && !Array.isArray(review)
+      ? (review as Record<string, unknown>).hash
+      : undefined;
+  return { rewrites: true, kind: currentPinKind(hash), self: false };
+}
+
+/**
  * Core §1 and publication §3 (decided 2026-11-25): the move re-pins each knowledge review pin that matched before it.
  * A pin, of the review's kind as the knowledge record's own declared version read it, that equals its source's hash
  * as the source was written, at the version it declared, becomes the same kind of hash of the source as moved; a pin
@@ -714,8 +741,8 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     io.stderr(
       `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full; give each one key per name, a status of approved, delivery: built ` +
         "where its type carries delivery and it states none, and, on knowledge alone, its review under review (with " +
-        "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash and snapshot, each a " +
-        "non-empty string:\n" +
+        "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash, snapshot, self and " +
+        "gates, each a non-empty string:\n" +
         [...left]
           .sort((a, b) => compareStrings(a.path, b.path))
           .map(({ path, problem }) => `  ${path}: ${problem}\n`)

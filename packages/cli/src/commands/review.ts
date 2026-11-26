@@ -66,7 +66,7 @@ import { type CarrierName, CARRIERS } from "../repository.ts";
 import type { Session } from "../session.ts";
 import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "@intentset/core";
 import { pathText, REACHABILITY_NOTE } from "./impact.ts";
-import { migrateRecord, recordHash } from "./migrate.ts";
+import { migrateRecord, recordHash, repinPlan } from "./migrate.ts";
 
 export interface Attribution {
   /** The artifact impact starts from. */
@@ -283,7 +283,7 @@ function reviewOf(artifact: Artifact, review = artifact.meta.review): string {
 /**
  * The base copy's review as `intentset migrate` would leave it beside this head (Core §10, ADR 0027): each pin, a
  * source pin or `self`, that differs from the head's is taken as the head's only when it exactly replays the move's
- * re-pin. The base pin equals the pinned record's base copy's hash of the review's kind, the head pin equals the same
+ * re-pin. The base pin equals the pinned record's base copy's hash of the kind the move reads the review by (`repinPlan`), the head pin equals the same
  * kind of hash of that copy as migrated, and the pinned record's head hash equals that value, so the pinned record
  * changed only by migrating. A head pin copied from a record edited after the move is not that value, and is listed.
  */
@@ -298,7 +298,14 @@ function replayedReview(
   const review = before.meta.review;
   const now = head.meta.review;
   if (review === undefined || now === undefined) return reviewOf(before);
-  const kind = review.hash === undefined ? "content-v1" : review.hash;
+  // The move's own plan for this record, read from the base text as written: a record it would not rewrite, a pin kind
+  // its declared version did not read (a 0.2 `hash: file-v1` among them) and a `self` of a record it does not move are
+  // never replays.
+  const own = CARRIERS[carrier](head.path, baseText).frontmatter;
+  if (own === null) return reviewOf(before);
+  const plan = repinPlan(baseText, own.line);
+  if (!plan.rewrites) return reviewOf(before);
+  const kind = plan.kind;
   const replays = (
     pin: string,
     headPin: string | undefined,
@@ -328,6 +335,7 @@ function replayedReview(
   }
   const replayed = { ...review, sources };
   if (
+    plan.self &&
     review.self !== undefined &&
     now.self !== review.self &&
     replays(review.self, now.self, head.path, baseText, "own", head.ownContentHash)

@@ -1079,6 +1079,53 @@ for (const [what, change, named] of [
   });
 }
 
+for (const [what, change, named] of [
+  [
+    "an empty self",
+    (text: string) => text.replace("      hash: content-v1\n", "      hash: content-v1\n      self: ''\n"),
+    "a self that is not a non-empty string",
+  ],
+  [
+    "a null gates",
+    (text: string) => text.replace("      hash: content-v1\n", "      hash: content-v1\n      gates: null\n"),
+    "a gates that is not a non-empty string",
+  ],
+] as const) {
+  test(`BEH-MIGRATE: migrate names a knowledge record whose review extension holds ${what}, and exits 1`, async (t) => {
+    const { dir, files } = await atEarlier(t);
+    const path = RECORD(dir, "KB-ASMT-SCHEDULE");
+    writeFileSync(path, change(readFileSync(path, "utf8")));
+    git(dir, "commit", "-q", "-am", `a review extension with ${what}`);
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 1);
+    assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
+    assert.ok(
+      moved.err.includes(`KB-ASMT-SCHEDULE.md: its review holds ${named}, which 0.3 does not read\n`),
+      moved.err,
+    );
+  });
+}
+
+test("BEH-MIGRATE: a review extension's self and gates move to review, and the record counts as moved", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  const path = RECORD(dir, "KB-ASMT-SCHEDULE");
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8").replace(
+      "      hash: content-v1\n",
+      "      hash: content-v1\n      self: abc\n      gates: def\n",
+    ),
+  );
+  git(dir, "commit", "-q", "-am", "a review extension with self and gates");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(moved.out, new RegExp(`moved ${files.length} records to 0\\.3`));
+  assert.doesNotMatch(moved.err, /does not read/);
+  const after = readFileSync(path, "utf8");
+  assert.match(after, /\n {4}self: abc\n/, "a self that did not match is left as written");
+  assert.match(after, /\n {4}gates: def\n/, "no move changes gates");
+});
+
 /** A record's hash of one pin kind, computed as publication §3 says, over the file as it is written now. */
 function pinOf(path: string, kind: "content-v1" | "file-v1"): string {
   const text = readFileSync(path, "utf8");
@@ -1169,6 +1216,32 @@ test("BEH-REVIEW-APPROVALS: a branch that migrates, edits a source and re-pins i
   assert.match(section, /^## Approvals, reviews and status changes \(1\)$/m, section);
   assert.match(section, /^- KB-ASMT-SCHEDULE \(knowledge\): approved; .*review written or changed: /m);
   const json = JSON.parse((await run(dir, "review", "--base", "HEAD~1", "--json")).out);
+  assert.deepEqual(
+    json.statusChanges.map((item: { id: string; reviewChanged: boolean }) => [item.id, item.reviewChanged]),
+    [["KB-ASMT-SCHEDULE", true]],
+  );
+});
+
+test("BEH-REVIEW-APPROVALS: a 0.2 review naming hash: file-v1, migrated and then re-pinned by hand, is listed", async (t) => {
+  const { dir } = await atEarlier(t, "0.2");
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  // 0.2 did not read `hash: file-v1`, so this review is stale there and the move leaves its pins as written.
+  const earlier = readFileSync(kb, "utf8").replace("      hash: content-v1\n", "      hash: file-v1\n");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "file-v1", earlier),
+  );
+  git(dir, "commit", "-q", "-am", "a file-v1 review at 0.2");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.doesNotMatch(moved.out, /re-pinned [1-9]/, moved.out);
+  git(dir, "commit", "-q", "-am", "migrated");
+  // Each pin set by hand to its source's moved file: what a replay of the move would hold, had the move re-pinned it.
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "file-v1"),
+  );
+  git(dir, "commit", "-q", "-am", "re-pinned by hand");
+  const json = JSON.parse((await run(dir, "review", "--base", "HEAD~2", "--json")).out);
   assert.deepEqual(
     json.statusChanges.map((item: { id: string; reviewChanged: boolean }) => [item.id, item.reviewChanged]),
     [["KB-ASMT-SCHEDULE", true]],
