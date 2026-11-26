@@ -1,8 +1,10 @@
 owners:
 - team-accounts
+- team-support
 audiences:
 - engineering
 - product
+- customer
 releases:
 - v1
 roles:
@@ -10,5 +12,6 @@ roles:
 editions:
 - standard
 flags: []
-evidenceSources: []
+evidenceSources:
+- support-tickets
 resources: []

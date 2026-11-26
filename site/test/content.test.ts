@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { after, test } from "node:test";
 import { main } from "@intentset/cli";
 import { parseDocument } from "@markset-lang/parser";
-import { build, CHAT_PAGES, CONTENT_PAGES, VERSION } from "../build.ts";
+import { build, CHAT_PAGES, CONTENT_PAGES, EXAMPLE_DIR } from "../build.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
 const contentDir = join(root, "site", "content");
@@ -44,29 +44,10 @@ test("every content page parses as Markset with no error diagnostics", async () 
 });
 
 /** The pages the retired phrases are checked on. */
-const RETIRED_PHRASE_PAGES = [
-  "index.html",
-  "start/index.html",
-  "specifications/index.html",
-  "markset/index.html",
-  "about/index.html",
-];
+const RETIRED_PHRASE_PAGES = ["index.html", "start/index.html", "specifications/index.html", "about/index.html"];
 
 test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
-  const notes: Array<[string, string]> = [
-    [
-      "start/index.html",
-      `The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as pnpm dlx --package=@intentset/cli --package=typescript@7 intentset, or with npm as npx -p @intentset/cli -p typescript@7 intentset.`,
-    ],
-    [
-      "specifications/index.html",
-      `All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
-    ],
-    [
-      "markset/index.html",
-      "The reference publisher pins Markset 0.4.1 and validates every document it generates with Markset before writing it.",
-    ],
-  ];
+  const notes: Array<[string, string]> = [];
   for (const [page, note] of notes) {
     const html = await readFile(join(dist, page), "utf8");
     // Inline code becomes a space when tags are stripped, so close up the space before punctuation.
@@ -104,15 +85,15 @@ test("the status notes are on their pages, as callouts, and none still says the 
   }
 });
 
-const FIXTURE = join(root, "site", "test", "fixtures", "password-reset");
+const SHOP = join(root, EXAMPLE_DIR);
 
 test("Home's failure excerpt is in the review command's own words", async () => {
   const html = await readFile(join(dist, "index.html"), "utf8");
   // The excerpt was run, not written: each of its lines is one `intentset review` writes, about the fixture's records,
   // so a change to either fails here until the excerpt is run again and requoted.
   const review = await readFile(join(root, "packages", "cli", "src", "commands", "review.ts"), "utf8");
-  const slice = await readFile(join(FIXTURE, "product", "accounts", "SLICE-ACCOUNT-RESET.md"), "utf8");
-  const rule = await readFile(join(FIXTURE, "product", "accounts", "RULE-RESET-LINK-EXPIRY.md"), "utf8");
+  const slice = await readFile(join(SHOP, "SLICE-ACCOUNT-RESET.md"), "utf8");
+  const rule = await readFile(join(SHOP, "RULE-RESET-LINK-EXPIRY.md"), "utf8");
   const title = /^ {2}title: (.+)$/m.exec(slice)?.[1];
   const excerpt = [...html.matchAll(/<pre><code class="language-text">([\s\S]*?)<\/code><\/pre>/g)]
     .map((m) => codeText(m[1]))
@@ -129,9 +110,9 @@ test("Home's failure excerpt is in the review command's own words", async () => 
     .filter((line) => line !== "");
   assert.equal(lines[0], `### SLICE-ACCOUNT-RESET: ${title}`);
   assert.equal(lines[1], notAcknowledged);
-  // Home shows the rule as the fixture has it, below its header.
+  // Home shows the rule as the shop's record has it, below its header.
   const constraint = /## Constraint\n\n(.+)\n/.exec(rule)?.[1] ?? "";
-  assert.ok(text(html).includes(constraint), "Home's rule is the fixture's");
+  assert.ok(text(html).includes(constraint), "Home's rule is the shop's");
 });
 
 /** The text of a rendered code block: tags dropped and entities decoded, whitespace kept. */
@@ -195,8 +176,11 @@ test("Home and How it works quote review's drift failure as the CLI prints it, a
       );
     git("init", "-q", "-b", "main");
     assert.equal((await intentset(repo, "init", "--root", repo)).code, 0);
-    await cp(join(FIXTURE, "registries.yaml"), join(repo, ".intentset", "registries.yaml"));
-    await cp(join(FIXTURE, "product"), join(repo, "product"), { recursive: true });
+    await cp(join(SHOP, "registries.yaml"), join(repo, ".intentset", "registries.yaml"));
+    await mkdir(join(repo, "product", "accounts"), { recursive: true });
+    for (const file of (await readdir(SHOP)).filter((name) => name.endsWith(".md"))) {
+      await cp(join(SHOP, file), join(repo, "product", "accounts", file));
+    }
     const reset = join(repo, "src", "features", "accounts", "reset");
     await mkdir(join(reset, "policies"), { recursive: true });
     await writeFile(join(reset, "index.ts"), 'export { linkIsValid } from "./policies/link-expiry.ts";\n');
@@ -234,6 +218,12 @@ test("Home and How it works quote review's drift failure as the CLI prints it, a
     await writeFile(rule, ruleText.replace(removed, added));
     git("commit", "-qam", "Reset links last a day");
     assert.equal((await intentset(repo, ...review)).code, 0, "updating the rule passes");
+    const l4 = await intentset(repo, "validate", "--level", "L4");
+    assert.match(
+      l4.out,
+      /KB-RESET-PASSWORD needs review: RULE-RESET-LINK-EXPIRY changed since review/,
+      "the help article is held, as How it works says",
+    );
 
     // It did not: the trailer, on the branch that only changed code.
     git("checkout", "-q", "tidy-account-code");

@@ -21,6 +21,7 @@ import {
   NOT_FOUND,
   COPY_SCRIPT,
   EXAMPLE_ACTS,
+  EXAMPLE_DIR,
   REDIRECTS,
   readSpecMeta,
   REPO,
@@ -29,7 +30,6 @@ import {
   SITE_HOST,
   SPEC_META_KEYS,
   SPECS,
-  statusLabel,
   termTips,
 } from "../build.ts";
 import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
@@ -46,7 +46,7 @@ after(async () => {
   await rm(dist, { recursive: true, force: true });
 });
 
-const records = await loadRecords(join(root, "examples", "scheduling"));
+const records = await loadRecords(join(root, EXAMPLE_DIR));
 
 /** Visible text of a fragment of HTML. */
 function text(fragment: string): string {
@@ -176,7 +176,7 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
   }
 });
 
-test("the bar is the four sections by what a reader came to do", () => {
+test("the bar is the three sections by what a reader came to do", () => {
   for (const [page, doc] of html) {
     const nav = doc.slice(doc.indexOf('<nav class="site-nav"'), doc.indexOf("</nav>"));
     const labels = [...nav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]);
@@ -185,7 +185,7 @@ test("the bar is the four sections by what a reader came to do", () => {
       NAV.map(([label]) => label),
       page,
     );
-    assert.deepEqual(labels, ["How it works", "Get started", "Examples", "Reference"]);
+    assert.deepEqual(labels, ["How it works", "Get started", "Reference"]);
     assert.doesNotMatch(doc, /On this page/, `${page} has a contents rail`);
   }
 });
@@ -214,15 +214,7 @@ test("the footer is the family's: the bar, the slides and About, then one line, 
     );
     assert.deepEqual(
       [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
-      [
-        "How it works",
-        "Get started",
-        "Examples",
-        "Reference",
-        "Slides",
-        "About",
-        ...(ASK_URL === null ? [] : ["Privacy"]),
-      ],
+      ["How it works", "Get started", "Reference", "Slides", "About", ...(ASK_URL === null ? [] : ["Privacy"])],
       `${page}: About stays in the footer's row`,
     );
     const afterNav = footer.slice(footer.indexOf("</nav>") + "</nav>".length);
@@ -245,11 +237,15 @@ test("tab titles follow the family's pattern: the home page names Intentset firs
   }
 });
 
-test("How it works is a page of its own in the bar, with no rail, and the home page leads to it", () => {
+test("How it works is in the bar, with the example in its rail, and the home page leads to it", () => {
   const page = html.get("how-it-works/index.html") ?? "";
   // "On this page" left every page the site writes from site/content on 2026-11-26 (the user's decision).
   assert.doesNotMatch(page, /<nav aria-label="Contents">/, "no contents rail");
-  assert.doesNotMatch(page, /<nav class="site-rail"/, "one page, no section rail");
+  assert.match(
+    page,
+    /<nav class="site-rail" aria-label="How it works">[\s\S]*?<a href="\.\.\/example\/">The shop.s model, record by record<\/a>/,
+    "the rail leads to the example",
+  );
   assert.match(
     page,
     /<nav class="site-nav"[\s\S]*?<a href="\.\.\/how-it-works\/" aria-current="page">How it works<\/a>/,
@@ -330,35 +326,20 @@ test("the only destinations outside the site are the repository, Markset, Coral 
       assert.ok(allowed.has(new URL(href).host), `${page}: unexpected destination ${href}`);
     }
   }
-  assert.match(html.get("markset/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
+  assert.match(html.get("glossary/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
   assert.match(html.get("about/index.html") ?? "", new RegExp(`href="${EXTERNAL.coralReef}"`));
 });
 
 /** The deck's slides, in its order (decided 2026-10-26: published here, in Markset, rather than linked on claude.ai). */
-const DECK = [
-  "cover",
-  "problem",
-  "trust",
-  "idea",
-  "behavior",
-  "loop",
-  "review",
-  "honest",
-  "under",
-  "record",
-  "slices",
-  "evidence",
-  "levels",
-  "try",
-];
+const DECK = ["cover", "problem", "trust", "idea", "review", "value", "loop", "fits", "adopt", "try"];
 
-test("the introduction is a deck of 14 slides in order, each with its notes folded beneath it, on its own theme", async () => {
+test("the introduction is a deck of 10 slides in order, each with its notes folded beneath it, on its own theme", async () => {
   const page = html.get(INTRODUCTION.page) ?? "";
   const body = main(INTRODUCTION.page);
   assert.match(page, /<title>Introducing Intentset · Intentset<\/title>/);
   assert.match(body, /<h1 id="introducing-intentset">Introducing Intentset<\/h1>/);
   const description = /<meta name="description" content="([^"]+)">/.exec(page)?.[1] ?? "";
-  assert.ok(description.startsWith("What Intentset is, why it exists and how it works"), description);
+  assert.ok(description.startsWith("What Intentset is, what it gives a team"), description);
   // A slide is a card carrying .slide, and what follows it is its notes, a folded NOTE callout: in document order
   // the two alternate, a slide and then its notes, once per slide.
   const order = [
@@ -370,8 +351,8 @@ test("the introduction is a deck of 14 slides in order, each with its notes fold
     order,
     DECK.flatMap((id) => [id, "notes"]),
   );
-  // The five parts each open on their first slide.
-  for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
+  // The four parts each open on their first slide.
+  for (const id of ["problem", "idea", "value", "adopt"]) assert.ok(body.includes(`href="#${id}"`), id);
   // The example is Home's password reset (2026-11-26). A pass is never said to
   // count only on this commit (SL-710).
   assert.ok(text(body).includes("A password reset link stops working one hour after it is sent."));
@@ -482,15 +463,15 @@ test("each specification's frontmatter names it, and its page and index card sho
 
     const page = main(`specifications/${spec.slug}/index.html`);
     const banner = text(/<p class="site-source">([\s\S]*?)<\/p>/u.exec(page)?.[1] ?? "");
-    for (const part of [statusLabel(meta.status), meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
+    for (const part of [meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
       assert.ok(banner.includes(part), `${spec.slug}: banner "${banner}" does not say ${part}`);
     }
+    assert.ok(!banner.includes("Draft"), `${spec.slug}: the banner says Draft`);
     const card = text(index);
     assert.ok(card.includes(cardTitle(meta)), `the index has no card titled ${cardTitle(meta)}`);
-    assert.ok(
-      card.includes(`${meta.id} · revision ${meta.revision}`),
-      `the ${spec.slug} card does not name its revision`,
-    );
+    // The cards carry no status, ID or revision (2026-11-26, the user's decision), and no title names a version.
+    assert.ok(!card.includes(meta.id), `the ${spec.slug} card names its ID`);
+    assert.ok(!cardTitle(meta).match(/ v\d/), `the ${spec.slug} card's title names a version`);
   }
   assert.doesNotMatch(index, /\{\{/u, "a token survived into the index");
 });
@@ -570,7 +551,7 @@ test("the worked example opens every record on the page, in the act it belongs t
       assert.ok(pageText.includes(`Tip for ${id} ${tip}`), `${record.id}: tip for ${id}`);
     // The card links the file on GitHub, at main, which every push to main rebuilds this page from.
     assert.ok(
-      page.includes(`<a href="${REPO}/blob/main/examples/scheduling/${record.file}">View the file on GitHub</a>`),
+      page.includes(`<a href="${REPO}/blob/main/${EXAMPLE_DIR}/${record.file}">View the file on GitHub</a>`),
       `${record.id}: no link to its file`,
     );
     // The body is rendered, the frontmatter is not.
@@ -578,13 +559,13 @@ test("the worked example opens every record on the page, in the act it belongs t
     assert.doesNotMatch(page, /<pre/, `${record.id}: frontmatter rendered as a code block`);
   }
   // Nothing on the example claims a running system or passing evidence.
-  assert.ok(text(index).includes("Lantern is invented and nothing here runs."));
-  assert.ok(text(index).includes("the check has not been executed"));
+  assert.ok(text(index).includes("Nothing here runs."));
+  assert.ok(text(index).includes("no test has been run"));
 
-  // The knowledge is the one approved record (since 2026-10-11): reviewed against its three sources, with two tips.
-  const kb = records.find((r) => r.id === "KB-ASMT-SCHEDULE");
+  // The help article is the one approved record: reviewed against its three sources, with two tips.
+  const kb = records.find((r) => r.id === "KB-RESET-PASSWORD");
   assert.equal(kb?.status, "approved");
-  assert.deepEqual(kb?.review?.pins, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]);
+  assert.deepEqual(kb?.review?.pins, ["BEH-RESET-PASSWORD", "RULE-RESET-LINK-EXPIRY", "RULE-RESET-LINK-ONCE"]);
   assert.equal(kb?.tips.length, 2);
   assert.ok(text(index).includes("Records approved 1"));
 
@@ -594,25 +575,25 @@ test("the worked example opens every record on the page, in the act it belongs t
   const published = allFolds.filter((m) => m[1].includes("publication-fold")).map((m) => m[2]);
   assert.equal(published.length, 1, "one publication fold");
   assert.ok(
-    index.lastIndexOf("publication-fold") > index.lastIndexOf("<code>KB-ASMT-SCHEDULE</code>"),
+    index.lastIndexOf("publication-fold") > index.lastIndexOf("<code>KB-RESET-PASSWORD</code>"),
     "the publication follows the knowledge",
   );
   const out = text(published[0]);
   for (const expected of [
     "intentset/publication/0.2",
     "withheldSources: 3",
-    "reviewer: team-assessment",
+    "reviewer: team-support",
     "intentset/help/0.2",
     ...(kb?.tips.map(([, tip]) => tip) ?? []),
   ]) {
     assert.ok(out.includes(expected), `the publication lacks ${expected}`);
   }
   for (const internal of [
-    "Schedule a student assessment",
-    "Require a future release time",
-    "Require assignment permission",
-    "BEH-ASMT-SCHEDULE.md",
-    "RULE-ASMT-AUTH",
+    "Reset a forgotten password",
+    "Reset links expire after one hour",
+    "Reset links work once",
+    "BEH-RESET-PASSWORD.md",
+    "RULE-RESET-LINK-ONCE",
   ]) {
     assert.ok(!out.includes(internal), `the publication names ${internal}`);
   }
@@ -664,7 +645,10 @@ test("a page that left the site sends its reader on from its old address, and is
     assert.ok(doc.includes(`<meta http-equiv="refresh" content="0; url=${to}">`), path);
     assert.ok(doc.includes(`<a href="${to}">`), `${path}: a link for what does not follow a refresh`);
     assert.match(doc, /<meta name="robots" content="noindex">/, path);
-    assert.ok(to.startsWith(`${REPO}/blob/main/docs/`), `${path} goes to the repository's docs`);
+    assert.ok(
+      to.startsWith(`${REPO}/blob/main/`) || to === EXTERNAL.markset,
+      `${path} goes to the repository or Markset`,
+    );
     assert.ok(!sitemap.includes(path.replace(/index\.html$/, "")), `${path} is in the sitemap`);
     assert.ok(!html.has(path), `${path} is still a page`);
   }

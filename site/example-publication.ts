@@ -17,21 +17,21 @@ import { join } from "node:path";
 import { type Io, main } from "@intentset/cli";
 import { PUBLISHED_AT } from "./knowledge.ts";
 
-/** The publication request the example's knowledge is written for: a teacher on Lantern's pilot release. */
+/** The publication request the example's knowledge is written for: a customer of the shop's first release. */
 export const EXAMPLE_REQUEST = {
   visibility: "customer",
-  audience: "teacher",
-  product: "PRD-LANTERN",
-  release: "pilot-1",
-  role: "teacher",
+  audience: "customer",
+  product: "PRD-SHOP",
+  release: "v1",
+  role: "customer",
   edition: "standard",
 } as const;
 
 /** The knowledge record the example publishes. */
-export const EXAMPLE_KNOWLEDGE = "KB-ASMT-SCHEDULE";
+export const EXAMPLE_KNOWLEDGE = "KB-RESET-PASSWORD";
 
 export interface ExamplePublication {
-  /** The generated document, `KB-ASMT-SCHEDULE.md`, exactly as publication wrote it. */
+  /** The generated document, `KB-RESET-PASSWORD.md`, exactly as publication wrote it. */
   document: string;
   /** `help.json`, exactly as publication wrote it. */
   help: string;
@@ -45,7 +45,7 @@ export async function publishExample(exampleDir: string): Promise<ExamplePublica
     await mkdir(join(repo, ".intentset"));
     await writeFile(
       join(repo, ".intentset", "config.yaml"),
-      'repository: "example/scheduling"\nscope:\n  - "product/**/*.md"\nregistries: "product/registries.yaml"\n',
+      'repository: "example/shop"\nscope:\n  - "product/**/*.md"\nregistries: "product/registries.yaml"\n',
     );
     const out = join(repo, "published");
     let stdout = "";

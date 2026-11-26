@@ -16,12 +16,7 @@
       "question": "What is the difference between a capability and a behavior?",
       "expect": {
         "outcome": "answered",
-        "sources": [
-          "/specifications/core/",
-          "/how-it-works/",
-          "/example/CAP-ASMT-ASSIGN/",
-          "/example/BEH-ASMT-SCHEDULE/"
-        ]
+        "sources": ["/specifications/core/", "/how-it-works/", "/example/CAP-ACCOUNTS/", "/example/BEH-RESET-PASSWORD/"]
       }
     },
     {
@@ -36,7 +31,7 @@
       "question": "Does having a verification record mean a behavior is verified?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/specifications/core/", "/how-it-works/", "/guide/", "/example/TEST-ASMT-SCHEDULE/"]
+        "sources": ["/specifications/core/", "/how-it-works/", "/guide/", "/example/TEST-RESET-LINK-EXPIRY/"]
       }
     },
     {
@@ -49,7 +44,7 @@
           "/specifications/core/",
           "/specifications/publication/",
           "/how-it-works/",
-          "/example/KB-ASMT-SCHEDULE/"
+          "/example/KB-RESET-PASSWORD/"
         ]
       }
     },
@@ -57,15 +52,15 @@
       "id": "core-markset",
       "topic": "core concepts",
       "question": "What is Markset and why do Intentset records use it?",
-      "expect": { "outcome": "answered", "sources": ["/markset/", "/specifications/core/", "/how-it-works/"] }
+      "expect": { "outcome": "answered", "sources": ["/glossary/", "/specifications/core/", "/how-it-works/"] }
     },
     {
-      "id": "core-lantern",
+      "id": "core-example-shop",
       "topic": "core concepts",
-      "question": "What is Lantern? Is it a real product I can use?",
+      "question": "Is the online shop in the examples a real product I can use?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/example/PRD-LANTERN/", "/example/INT-PREPARE/", "/how-it-works/", "/start/"],
+        "sources": ["/example/PRD-SHOP/", "/example/INT-SELF-SERVE/", "/how-it-works/", "/start/"],
         "includes": ["invent|fiction|not a real|example"]
       }
     },

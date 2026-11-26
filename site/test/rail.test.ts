@@ -18,9 +18,12 @@ import {
   FOOTER_LINKS,
   NAV,
   NOT_FOUND,
+  type RailItem,
   RAILS,
   railFor,
   railLinks,
+  SERVE_NAME,
+  EXAMPLE_TITLE,
   siteRails,
 } from "../build.ts";
 import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
@@ -95,10 +98,8 @@ test("every URL the site had before the bar changed still answers", () => {
     "specifications/profile-typescript-amplify-gen2/index.html",
     "specifications/publication/index.html",
     "specifications/export/index.html",
-    "markset/index.html",
     "about/index.html",
     "example/index.html",
-    "example/BEH-ASMT-SCHEDULE/index.html",
   ]) {
     assert.ok(html.has(page), `${page} no longer exists`);
   }
@@ -171,10 +172,10 @@ test("a page in a section carries its section's rail, marks itself once, and the
     const barLabel = NAV.find(([, href]) => href === railLinks(section)[0][1])?.[0];
     assert.deepEqual(current, [barLabel], `${page}: the bar marks ${current.join(", ") || "nothing"}`);
   }
-  // Each bar item but How it works, one page with no rail, opens its section's rail at its first page.
+  // Each bar item opens its section's rail at its first page.
   assert.deepEqual(
     RAILS.map((r) => railLinks(r)[0][1]),
-    NAV.filter(([label]) => label !== "How it works").map(([, href]) => href),
+    NAV.map(([, href]) => href),
   );
 });
 
@@ -186,7 +187,6 @@ test("Reference holds the tools and the specifications; Get started is one path 
     "tools/cli/index.html",
     "guide/index.html",
     "specifications/core/index.html",
-    "markset/index.html",
     "conformance/index.html",
     "glossary/index.html",
   ]) {
@@ -211,51 +211,41 @@ test("Reference holds the tools and the specifications; Get started is one path 
   );
   for (const page of ["start/index.html", "start/ci/index.html", "adopt/index.html", "verify/index.html"]) {
     const h1 = /<h1[^>]*>([^<]+)<\/h1>/.exec(html.get(page) ?? "")?.[1];
-    const label = railLinks(RAILS[0]).find(([, href]) => href === page)?.[0];
+    const label = railLinks(RAILS.find((r) => r.title === "Get started") ?? RAILS[0]).find(
+      ([, href]) => href === page,
+    )?.[0];
     assert.equal(h1?.replaceAll("&#x27;", "'").replaceAll("&#39;", "'"), label, `${page}: the rail names its h1`);
   }
 });
 
-test("Examples is one rail on every page of the section: Lantern's walkthrough, its map and review pages (2026-10-20)", () => {
-  const examples = RAILS.find((r) => r.title === "Examples");
-  assert.ok(examples);
-  // Lantern is a group, its review pages a group inside it, so the rail is nested lists and its labels are not links.
-  assert.deepEqual(examples.items, [
-    {
-      label: "Lantern, a worked example",
-      items: [
-        ["The walkthrough", "example/index.html"],
-        ["The map", ATLAS_MAP_PAGE],
-        { label: "Review pages", items: REVIEW_PAGES },
-      ],
-    },
+test("the one example is on How it works' rail, and its map, review pages and records are in Reference (2026-11-26)", () => {
+  assert.deepEqual(RAILS.find((r) => r.title === "How it works")?.items, [
+    ["How it works", "how-it-works/index.html"],
+    [EXAMPLE_TITLE, "example/index.html"],
   ]);
+  assert.ok(!NAV.some(([label]) => label === "Examples"), "Examples left the bar");
+  const reference = RAILS.find((r) => r.title === "Reference");
+  assert.ok(reference);
+  const serve = (reference.items[0] as { items: RailItem[] }).items.find(
+    (item): item is { label: string; items: RailItem[] } => !Array.isArray(item) && item.label === SERVE_NAME,
+  );
+  assert.deepEqual(serve?.items, [["The map", ATLAS_MAP_PAGE], ...REVIEW_PAGES]);
   assert.deepEqual(
     REVIEW_PAGES.map(([label]) => label),
     ["Overview", "Records", "Ownership", "Verification", "Publication", "Diagnostics"],
   );
-  // The bar's Examples opens on the walkthrough (2026-11-25, the user's decision, reversing the map of 2026-10-20),
-  // which links the map near its top, and no rail of the section leads in a circle back to another.
-  assert.deepEqual(
-    NAV.find(([label]) => label === "Examples"),
-    ["Examples", "example/index.html"],
-  );
+  // The walkthrough links the map near its top.
   const walkthrough = /<main[\s\S]*?<\/main>/.exec(html.get("example/index.html") ?? "")?.[0] ?? "";
   const mapButton = walkthrough.indexOf('<span class="ms-span button primary"><a href="atlas/map/">');
   assert.ok(mapButton > 0, "the walkthrough's first button opens the map");
   assert.ok(mapButton < walkthrough.indexOf("<h2"), "the map's button is above the first step");
-  const expected = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html.get(ATLAS_MAP_PAGE) ?? "")?.[1] ?? "";
-  assert.match(
-    expected,
-    /<li class="site-rail-group"><span class="site-rail-label">Lantern, a worked example<\/span>\n<ul>/,
-  );
-  assert.match(expected, /<li class="site-rail-group"><span class="site-rail-label">Review pages<\/span>\n<ul>/);
-  const section = pages.filter((page) => page.startsWith("example/"));
-  assert.ok(section.length > 20, `only ${section.length} pages in Examples`);
+  const section = pages.filter((page) => page.startsWith("example/") && page !== "example/index.html");
+  assert.ok(section.length > 20, `only ${section.length} review and record pages`);
   for (const page of section) {
-    assert.deepEqual(rail(page), expectedRail(page, examples), `${page}: the Examples rail`);
-    assert.equal(railFor(page, rails)?.title, "Examples", page);
+    assert.deepEqual(rail(page), expectedRail(page, reference), `${page}: the Reference rail`);
+    assert.equal(railFor(page, rails)?.title, "Reference", page);
   }
+  assert.equal(railFor("example/index.html", rails)?.title, "How it works");
 });
 
 test("every address of the worked example still answers: the walkthrough at /example/, the map and every review page under /example/atlas/", () => {
@@ -268,9 +258,9 @@ test("every address of the worked example still answers: the walkthrough at /exa
     "example/atlas/publication/index.html",
     "example/atlas/diagnostics/index.html",
     "example/atlas/records/index.html",
-    // A record's page was the walkthrough's until the Atlas's took its address (2026-11-02). The behavior's Atlas
-    // page, example/atlas/behaviors/BEH-ASMT-SCHEDULE/, moved there with it, so that each record has one page.
-    "example/BEH-ASMT-SCHEDULE/index.html",
+    // A record's page was the walkthrough's until the Atlas's took its address (2026-11-02). The example's records
+    // became the shop's on 2026-11-26; Lantern's record pages redirect to their files (build.test.ts).
+    "example/BEH-RESET-PASSWORD/index.html",
   ]) {
     assert.ok(html.has(page), `${page} no longer exists`);
   }

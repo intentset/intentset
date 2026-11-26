@@ -14,7 +14,7 @@ The timings are from a fresh TypeScript repository with one feature and three te
 > - A git repository with JavaScript or TypeScript code and its tests.
 > - A coding agent that can run commands in the repository.
 > - Test reports from Vitest, Playwright or node:test (its TAP reporter) for step 5. Jest reports do not import.
-> - TypeScript 7 for every command from step 4's second one on (validate at L2 and above, and review). npm installs it for you; the note at the foot of this page covers pnpm.
+> - TypeScript 7 for the checks that read your code, from step 4's second command on. npm installs it for you. If your repository gives the tool an older one, as pnpm can, the command says what to run instead.
 > - Step 5's `<PRD-ID>` is the ID of the product record the agent writes in step 3. `npx intentset list --type product` prints it.
 > - A word you don't know is in [the glossary](../glossary/).
 
@@ -123,6 +123,3 @@ Run the same checks on every pull request, so a change cannot merge while its co
 Write the model first. Whoever decides what the product does drafts the behaviors with an agent, and a slice for the code that will deliver them, before any of it exists, each with `delivery: planned`. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved, and the change that builds a record's work marks it `delivery: built`.
 
 [[Add Intentset to your CI](ci/)]{.button .primary} [[Every command and option](../tools/cli/)]{.button}
-
-> [!NOTE] If you use pnpm
-> The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`, or with npm as `npx -p @intentset/cli -p typescript@7 intentset`.

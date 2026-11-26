@@ -20,4 +20,4 @@ intentset:
 
 ## Overview
 
-Customers sign in, and recover an account they cannot sign in to.
+Customers sign in to their account, and get back into it when they cannot.

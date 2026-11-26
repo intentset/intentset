@@ -77,13 +77,13 @@ Slices whose code changed while none of the records that describe them did: the 
 - Not acknowledged: update the records below, or say in a commit that no behavior changed.
 - Code changed: src/features/accounts/reset/policies/link-expiry.test.ts
 - Code changed: src/features/accounts/reset/policies/link-expiry.ts
-- Records describing it, none changed: BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, SLICE-ACCOUNT-RESET
+- Records describing it, none changed: ADR-RESET-LINK-LIFETIME, BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, RULE-RESET-LINK-ONCE, SCN-RESET-EXPIRED, SLICE-ACCOUNT-RESET, TEST-RESET-LINK-EXPIRY
 ```
 
 {.small .muted}
 Real output of `intentset review --base origin/main --fail-on-drift`, run on the shop's records and code in a scratch repository. The report's other sections are left out.
 
-There are two ways through, and both make the same command pass:
+The records it lists include the decision that set the hour, which says to check how long the email takes to arrive before changing how long the link lasts. There are two ways through, and both make the same command pass:
 
 - **The behavior changed.** The agent updates the rule in the same pull request, and the reviewer reads one line before the code:
 
@@ -91,6 +91,8 @@ There are two ways through, and both make the same command pass:
   -A password reset link stops working one hour after it is sent.
   +A password reset link stops working 24 hours after it is sent.
   ```
+
+  The help article that tells customers the link works for one hour is held for review by the same edit: `intentset validate --level L4` reports that it needs review because RULE-RESET-LINK-EXPIRY changed since it was reviewed.
 - **It did not**, as in a refactor. The commit message ends with `Intentset-Unchanged: SLICE-ACCOUNT-RESET`, where a reviewer can read the claim and question it.
 
 An agent can edit a record as easily as a test, and Intentset lets it. The difference is where the edit shows up: a changed rule is one sentence the reviewer reads first, not one number in a long diff.
@@ -135,4 +137,8 @@ Start at the first level and stop wherever the value runs out.
 
 L1 to L4 say what is true of the model at one commit, and `intentset validate --level L4` checks them. L5 says those checks run on every change, so it describes how your repository works rather than anything `validate` can check.
 
-[[Set up Intentset](../start/)]{.button .primary} [[Every term, defined](../glossary/)]{.button}
+## The whole example
+
+The shop has 17 records: why its accounts are changing, two behaviors and their rules, the code that delivers them, the tests that check them and the help article customers read. [The shop's model, record by record](../example/) opens every one.
+
+[[Set up Intentset](../start/)]{.button .primary} [[See every record of the shop](../example/)]{.button}

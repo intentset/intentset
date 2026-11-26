@@ -16,6 +16,8 @@ intentset:
   links:
     implements:
     - BEH-RESET-PASSWORD
+    informedBy:
+    - ADR-RESET-LINK-LIFETIME
   slice:
     kind: product
     domain: accounts
@@ -42,4 +44,4 @@ Send a reset link to an account's email address, and set a new password from a l
 
 ## Verification
 
-The rule's test sends a link and tries it just before and just after the hour.
+TEST-RESET-LINK-EXPIRY checks a link just before the hour and at the hour.
