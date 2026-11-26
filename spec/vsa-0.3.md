@@ -33,7 +33,7 @@ The architecture regions are composition, product slices, shared neutral abstrac
 | VSA009 | Source, backend, and contract artifacts MUST have explicit accountable ownership | Path/resource claim resolution |
 | VSA010 | Backend access MUST pass through the slice's declared external-access seam | SDK/network access analysis + review |
 | VSA011 | Public contract changes MUST include compatibility assessment and consumer verification | Contract diff + review record |
-| VSA012 | Deleting or splitting a slice MUST disposition all owned behavior, paths, and contracts | Snapshot graph diff |
+| VSA012 | Deleting or splitting a slice MUST disposition all owned behavior, paths, contracts and surfaces | Snapshot graph diff |
 | VSA013 | Exception records MUST be complete, unique and current (§9) | Exception record check |
 | VSA014 | A migration baseline MUST hold only violations that still exist (§9) | Baseline application |
 
@@ -63,7 +63,7 @@ slice:
       path: amplify/functions/schedule-assessment/**
   usesResources: [RES-ASSESSMENT-DATA]
   surfaces:
-    lantern-web:/assessments/schedule:
+    "lantern-web:/assessments/schedule":
       knowledge: [KB-ASMT-SCHEDULE, KB-ASMT-CLASSES]
 ```
 
@@ -79,7 +79,7 @@ A draft slice whose effective delivery is `built` (Core §7), or that implements
 
 Two slices MUST NOT own the same resolved file. When ownership differs inside a file, extract a contract/module or assign the file to a technical resource owner; v0.3 does not infer symbol ownership from line ranges. A backend registry MAY declare one technical owner for a shared resource and list consuming slices. `usesResources` references those resource IDs and does not transfer ownership. This registry is a deployment inventory, not a second product graph.
 
-`surfaces` is optional, on a slice of either kind. A **surface** is a place in the product's interface where a reader is shown help: a page, a route, a panel, or a module wherever it is mounted. It is not a public contract surface, which `entrypoints` declares. `surfaces` maps a surface ID to an entry whose one member, `knowledge`, lists the knowledge that leads that surface in the order a reader is shown it. A surface ID is a string the product chooses and its interface already holds, such as a route, or an exposed module and its internal route when one screen is mounted in several host applications. Intentset treats it as opaque, compares it exactly and never resolves it to a file or a URL. A surface ID MUST match `^[!#-&(-;=?-\[\]-_a-~]{1,200}$`: 1 to 200 printable ASCII characters other than `"`, `'`, `<`, `>`, `\` and the backtick. It MUST NOT consist of digits only, and MUST NOT be `__proto__`. A non-ASCII route is written percent-encoded. `knowledge` MUST be a non-empty list of unique IDs, and an entry MUST have no other member. `surfaces: {}` declares none. A malformed `surfaces`, a repeated ID included, is CORE001. A slice that declares at least one surface MUST declare `availability` (Core §4); without it, the slice is CORE001.
+`surfaces` is optional, on a slice of either kind. A **surface** is a place in the product's interface where a reader is shown help: a page, a route, a panel, or a module wherever it is mounted. It is not a public contract surface, which `entrypoints` declares. `surfaces` maps a surface ID to an entry whose one member, `knowledge`, lists the knowledge that leads that surface in the order a reader is shown it. A surface ID is a string the product chooses and its interface already holds, such as a route, or an exposed module and its internal route when one screen is mounted in several host applications. Intentset treats it as opaque, compares it exactly and never resolves it to a file or a URL. A surface ID MUST match `^[!#-&(-;=?-\[\]-_a-~]{1,200}$`: 1 to 200 printable ASCII characters other than `"`, `'`, `<`, `>`, `\` and the backtick. It MUST NOT consist of digits only, and MUST NOT be `__proto__`. A non-ASCII route is written percent-encoded. A surface ID that contains `:` is written as a quoted YAML key, as in the example above: Core's reader takes it either way, but Markset's parser reports an unquoted key with a `:` in it as frontmatter it cannot read. `knowledge` MUST be a non-empty list of unique IDs, and an entry MUST have no other member. `surfaces: {}` declares none. A malformed `surfaces`, a repeated ID included, is CORE001. A slice that declares at least one surface MUST declare `availability` (Core §4); without it, the slice is CORE001.
 
 Each ID in `knowledge` MUST name a knowledge artifact in the graph (CORE003). A slice that is not retired MUST NOT name retired knowledge (CORE005); name the successor that its `replacedBy` gives. Draft knowledge MAY lead a surface, and is shown once it is published. A surface ID MUST NOT be declared by more than one slice that is not retired, drafts included (CORE013, reported on each). A slice being replaced keeps its surfaces until the commit that retires it, and its successor declares them in that commit. A retired slice's surfaces are history.
 

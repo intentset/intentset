@@ -97,7 +97,7 @@ test("BEH-AGENT-GUIDE: the guide forbids an agent from writing a knowledge revie
   );
 });
 
-test("BEH-AGENT-GUIDE: the guide says which field leads a page, and that a surface ID must name nothing some reader may not see", async (t) => {
+test("BEH-AGENT-GUIDE: the guide says which field leads a page, that a surface ID must name nothing some reader may not see, and that one holding a colon is quoted", async (t) => {
   const dir = temp(t);
   mkdirSync(join(dir, ".intentset"));
   writeFileSync(
@@ -116,6 +116,10 @@ test("BEH-AGENT-GUIDE: the guide says which field leads a page, and that a surfa
   assert.match(
     changes,
     /never put a name in it that some reader may not see, such as an internal record's ID or path\./,
+  );
+  assert.match(
+    changes,
+    /Quote a surface ID that contains `:` as a YAML key, such as `"lantern-web:\/assessments\/schedule":`\./,
   );
 });
 

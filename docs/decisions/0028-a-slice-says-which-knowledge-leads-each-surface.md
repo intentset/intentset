@@ -66,7 +66,7 @@ intentset:
     kind: product
     # ...
     surfaces:
-      lantern-web:/assessments/schedule:
+      "lantern-web:/assessments/schedule":
         knowledge: [KB-ASMT-SCHEDULE, KB-ASMT-CLASSES]
       '@lantern/assessments#/review':
         knowledge: [KB-ASMT-REVIEW]

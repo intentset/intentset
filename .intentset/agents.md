@@ -44,6 +44,7 @@ Update the records in the same change as the code.
 - Which articles lead a page, route or panel: `surfaces` on the slice that owns it (VSA §3), with
   `availability` on that slice. A surface ID is written into every eligible reader's help file once the slice is
   approved, so never put a name in it that some reader may not see, such as an internal record's ID or path.
+  Quote a surface ID that contains `:` as a YAML key, such as `"lantern-web:/assessments/schedule":`.
 
 Write each link once, on the record that points: a behavior is `governedBy` its rules, a scenario `illustrates`
 a behavior, a slice `implements` behaviors, a verification `verifies` what it checks. Never write the reverse.
