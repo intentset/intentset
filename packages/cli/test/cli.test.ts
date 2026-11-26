@@ -1173,6 +1173,58 @@ test("BEH-MIGRATE: migrate leaves a pin that did not match before the move as wr
   assert.match(found[0].message, /RULE-ASMT-AUTH/);
 });
 
+test("BEH-MIGRATE: migrate leaves a 0.2 review that named hash: file-v1, a kind its reader did not know, stale after the move", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  // At 0.2 a review pinned whole files only with no hash; hash: file-v1 was a kind no pin matched.
+  const earlier = readFileSync(kb, "utf8").replace("      hash: content-v1\n", "      hash: file-v1\n");
+  assert.ok(earlier.includes("      hash: file-v1\n"));
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "file-v1", earlier),
+  );
+  git(dir, "commit", "-q", "-am", "a 0.2 review naming a kind 0.2 did not read");
+  const pinned = readFileSync(kb, "utf8");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(
+    moved.out,
+    new RegExp(
+      `moved ${files.length} records to 0\\.3; re-pinned 0 review pins that matched before the move, and left 3 review pins that did not as written\\.`,
+    ),
+  );
+  for (const pin of pinned.matchAll(/^ {8}([A-Z][A-Z0-9-]+): ([0-9a-f]{64})$/gm)) {
+    assert.ok(readFileSync(kb, "utf8").includes(`      ${pin[1]}: ${pin[2]}\n`), `${pin[1]} is left as written`);
+  }
+  const found = await currentAtL4(dir);
+  assert.deepEqual(
+    found.map((d: { code: string; artifact: string }) => [d.code, d.artifact]),
+    [["CORE008", "KB-ASMT-SCHEDULE"]],
+  );
+});
+
+test("BEH-MIGRATE: migrate leaves a knowledge record that declares neither version byte for byte, its matched pins included", async (t) => {
+  const { dir, files, current } = await atEarlier(t);
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  // Its review in the core field, as a later version would carry it, each pin matching its source at 0.2.
+  const pinned = pinEach(kb, (id) => RECORD(dir, id), "content-v1", current.get(KB)).replace(
+    "  spec: '0.3'\n",
+    "  spec: '0.4'\n",
+  );
+  assert.ok(pinned.includes("  spec: '0.4'\n"));
+  writeFileSync(kb, pinned);
+  git(dir, "commit", "-q", "-am", "knowledge at a version migrate does not read, pinning sources it moves");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(
+    moved.out,
+    new RegExp(`moved ${files.length - 1} records to 0\\.3; 1 declare neither \\(left as they are\\)\\.\\n$`),
+  );
+  assert.equal(readFileSync(kb, "utf8"), pinned);
+});
+
 test("BEH-MIGRATE: migrate re-pins a knowledge record already at 0.3 whose sources the same run moves", async (t) => {
   const { dir, files, current } = await atEarlier(t);
   const kb = RECORD(dir, "KB-ASMT-SCHEDULE");

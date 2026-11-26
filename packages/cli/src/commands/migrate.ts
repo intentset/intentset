@@ -502,13 +502,38 @@ function rewritePin(source: string, line: number, id: string, from: string, to: 
   return null;
 }
 
+/** The pin kind a review at the target reads (Core §9): an absent or null `hash` is `content-v1`; null for a kind no pin matches. */
+function currentPinKind(hash: unknown): PinKind | null {
+  if (hash === undefined || hash === null || hash === "content-v1") return "content-v1";
+  return hash === "file-v1" ? "file-v1" : null;
+}
+
+/**
+ * The pin kind the review of a record the run moves had at the version it declared, read from the record as written:
+ * before `0.3` the `intentset.org/review` extension with no `hash` pinned the whole file (`file-v1` after the move) and
+ * `hash: content-v1` pinned content; any other `hash`, `file-v1` and null included, was a kind that reader did not know,
+ * so no pin matched and the review stays stale. Null too when the record carried no such extension.
+ */
+function declaredPinKind(before: string, line: number): PinKind | null {
+  const meta = intentsetMapping(frontmatterAt(before, line));
+  if (typeof meta === "string") return null;
+  const extensions = meta.extensions;
+  if (extensions === null || typeof extensions !== "object" || Array.isArray(extensions)) return null;
+  const review = (extensions as Record<string, unknown>)["intentset.org/review"];
+  if (review === null || typeof review !== "object" || Array.isArray(review)) return null;
+  const hash = (review as Record<string, unknown>).hash;
+  if (hash === undefined) return "file-v1";
+  return hash === "content-v1" ? "content-v1" : null;
+}
+
 /**
  * Core §1 and publication §3 (decided 2026-11-25): the move re-pins each knowledge review pin that matched before it.
- * A pin, of the review's kind (`hash`, absent or null meaning `content-v1`), that equals its source's hash as the
- * source was written, at the version it declared, becomes the same kind of hash of the source as moved; a pin that did
- * not match, names a record outside the tree or is of a kind no pin matches is left as written, so a stale review stays
- * stale and no review is created. Every record in scope takes part, those already at the target included, since a
- * knowledge record at the target can pin a source the run moves. A `file-v1` pin of a knowledge record whose own pins
+ * A pin, of the review's kind as the knowledge record's own declared version read it, that equals its source's hash
+ * as the source was written, at the version it declared, becomes the same kind of hash of the source as moved; a pin
+ * that did not match, names a record outside the tree or is of a kind that version did not know is left as written, so
+ * a stale review stays stale and no review is created. Every record in scope counts as a source; the pins of a knowledge
+ * record are rewritten when the run moves it or it is already at the target, since one at the target can pin a source
+ * the run moves, and never when it declares neither. A `file-v1` pin of a knowledge record whose own pins
  * were re-pinned follows it, so the rewrite runs until nothing changes.
  */
 export function repinReviews(records: readonly RepinRecord[]): RepinResult {
@@ -527,19 +552,21 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
   let stale = 0;
   metas.forEach((meta, i) => {
     if (typeof meta === "string" || meta.type !== "knowledge" || !isMapping(meta.review)) return;
-    const { hash, sources } = meta.review;
+    const { sources } = meta.review;
     if (!isMapping(sources)) return;
-    const kind = hash === undefined || hash === null ? "content-v1" : hash;
+    const record = records[i];
+    // Only a record the run moves, or one already at the target, has its pins rewritten; one that declares neither is
+    // left byte for byte, as the command reports it.
+    const atTarget = declaredSpec(frontmatterAt(record.before, record.line)) === MIGRATE_TO;
+    if (!atTarget && record.before === record.after) return;
+    const kind = atTarget ? currentPinKind(meta.review.hash) : declaredPinKind(record.before, record.line);
     for (const id of Object.keys(sources).sort(compareStrings)) {
       const source = byId.get(id);
       if (source === undefined || records[source].before === records[source].after) continue;
       const pin = sources[id];
-      const was =
-        kind === "content-v1" || kind === "file-v1"
-          ? recordHash(records[source].before, records[source].line, kind)
-          : null;
-      if (typeof pin === "string" && was !== null && pin === was) {
-        pins.push({ record: i, source, id, kind: kind as PinKind, original: pin, value: pin });
+      const was = kind === null ? null : recordHash(records[source].before, records[source].line, kind);
+      if (kind !== null && typeof pin === "string" && was !== null && pin === was) {
+        pins.push({ record: i, source, id, kind, original: pin, value: pin });
       } else stale++;
     }
   });

@@ -114,8 +114,10 @@ is absent.
 
 **Moving and renewing.** A move to a new `spec` (Core §1) rewrites `spec` and `profile`, which both kinds cover, so it
 re-pins each pin that matched before it: a pin equal to its source's hash, of the record's kind, as the source was
-written at the version it declared becomes the same kind of hash of the source as moved. A pin that did not match is
-left as written. A review current before the move is so after it, with no step of its own, and a stale review stays
+written at the version it declared becomes the same kind of hash of the source as moved. The record's kind is the one
+its own version read: before `0.3` a review with no `hash` pinned the whole file, and a `hash` other than `content-v1`
+was a kind no pin matched. A pin that did not match is left as written, and only the pins of a knowledge record the
+move rewrites, or of one already at the new `spec`, are re-pinned. A review current before the move is so after it, with no step of its own, and a stale review stays
 stale. A review is renewed by the person reviewing, as a change to the knowledge (Core §7): `reviewedBy`,
 `reviewedAt`, and a pin of each source at its current hash, with `status` and `approval` left as they are.
 
