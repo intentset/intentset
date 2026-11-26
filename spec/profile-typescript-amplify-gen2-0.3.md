@@ -107,7 +107,7 @@ The type bridge is not a permitted seam by default. An adopting repository inspe
 
 ## 5. Scheduling example: responsibilities, not a cloud implementation
 
-The sample behavior is illustrative and is not claimed to exist in any product. A teacher schedules a published assessment for a class they can manage. The authoritative server checks permissions, published state, and future time; it records the schedule and ensures students cannot access it before release. Product review must define time zone presentation, retries, cancellation, precision, and delivery tolerance before marking this behavior released.
+The sample behavior is illustrative and is not claimed to exist in any product. A teacher schedules a published assessment for a class they can manage. The authoritative server checks permissions, published state, and future time; it records the schedule and ensures students cannot access it before release. Product review must define time zone presentation, retries, cancellation, precision, and delivery tolerance before approving this behavior or writing `delivery: built` on it.
 
 | Responsibility | Owner / location |
 |---|---|

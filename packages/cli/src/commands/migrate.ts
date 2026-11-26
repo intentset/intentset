@@ -12,7 +12,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { DELIVERY_TYPES, SPEC_VERSION, sortDiagnostics } from "@intentset/core";
+import { DELIVERY_TYPES, parseYaml, SPEC_VERSION, sortDiagnostics } from "@intentset/core";
 import { trackedChanges } from "../git.ts";
 import { formatDiagnostic, type Io } from "../output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository } from "../repository.ts";
@@ -49,35 +49,58 @@ const DELIVERY_LINE = /^\s+delivery:/;
  * `delivery` keeps the value it states, a type that never carries one gets nothing more, and every other status,
  * `deprecated` included, is left as it is (its effective delivery is still `built`).
  */
-export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) => {
-  const lines = source.split("\n");
+/** One top-level line of a record's `intentset:` mapping: its index in the record's lines, and its text without `\r`. */
+interface IntentsetLine {
+  index: number;
+  line: string;
+  indent: number;
+  eol: string;
+}
+
+/**
+ * The lines directly under the frontmatter's `intentset:` key, at the indent of its first child, in order. A blank or
+ * comment-only line belongs to no key, wherever its `#` stands (YAML allows a comment at column 0 inside a block
+ * mapping), so it neither ends the mapping nor sets the child indent.
+ */
+function intentsetLines(lines: readonly string[], frontmatter: FrontmatterSpan): IntentsetLine[] {
   const first = frontmatter.line - 1;
   const last = first + frontmatter.text.split("\n").length;
+  const found: IntentsetLine[] = [];
   let inIntentset = false;
   let childIndent: number | null = null;
+  for (let i = first; i < last && i < lines.length; i++) {
+    const raw = lines[i];
+    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith("#")) continue;
+    if (/^\S/.test(line)) {
+      inIntentset = /^intentset:\s*(#.*)?$/.test(line);
+      childIndent = null;
+      continue;
+    }
+    if (!inIntentset) continue;
+    const indent = line.length - line.trimStart().length;
+    childIndent ??= indent;
+    if (indent !== childIndent) continue;
+    found.push({ index: i, line, indent, eol: raw.endsWith("\r") ? "\r" : "" });
+  }
+  return found;
+}
+
+export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) => {
+  const lines = source.split("\n");
   let statusAt: number | null = null;
   let statusText = "";
   let type: string | null = null;
   let deliveryStated = false;
   let eol = "";
   let statusIndent = "";
-  for (let i = first; i < last && i < lines.length; i++) {
-    const raw = lines[i];
-    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
-    if (/^\S/.test(line)) {
-      inIntentset = /^intentset:\s*(#.*)?$/.test(line);
-      childIndent = null;
-      continue;
-    }
-    if (!inIntentset || line.trim() === "") continue;
-    const indent = line.length - line.trimStart().length;
-    childIndent ??= indent;
-    if (indent !== childIndent) continue;
+  for (const { index, line, indent, eol: lineEol } of intentsetLines(lines, frontmatter)) {
     const status = STATUS_LINE.exec(line);
     if (status !== null) {
-      statusAt = i;
+      statusAt = index;
       statusIndent = " ".repeat(indent);
-      eol = raw.endsWith("\r") ? "\r" : "";
+      eol = lineEol;
       statusText = `${status[1]}${status[2]}approved${status[2]}${status[4]}`;
       continue;
     }
@@ -91,6 +114,20 @@ export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) =>
   }
   return lines.join("\n");
 };
+
+/**
+ * True when the record, read as YAML, still declares a status earlier versions listed and `0.3` does not. The
+ * transform rewrites every status line it can read; one it cannot (a flow mapping, a block scalar) is left, and the
+ * command says so rather than count the record as moved.
+ */
+export function declaresRemovedStatus(frontmatter: FrontmatterSpan): boolean {
+  const parsed = parseYaml(frontmatter.text);
+  if (parsed.value === null) return false;
+  const intentset = parsed.value.intentset;
+  if (intentset === null || typeof intentset !== "object" || Array.isArray(intentset)) return false;
+  const status = (intentset as Record<string, unknown>).status;
+  return status === "implemented" || status === "released";
+}
 
 /** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
 export const MIGRATIONS: readonly MigrationStep[] = [
@@ -130,35 +167,19 @@ const PROFILE_LINE = /^(\s+profile:\s*)(['"]?)intentset\/([a-z0-9-]+)\/(\d+\.\d+
  */
 export function migrateText(source: string, frontmatter: FrontmatterSpan, from: string, to: string): string | null {
   const lines = source.split("\n");
-  const first = frontmatter.line - 1;
-  const last = first + frontmatter.text.split("\n").length;
-  let inIntentset = false;
-  let childIndent: number | null = null;
   let specSeen = false;
   const edits = new Map<number, string>();
-  for (let i = first; i < last && i < lines.length; i++) {
-    const raw = lines[i];
-    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
-    const eol = raw.endsWith("\r") ? "\r" : "";
-    if (/^\S/.test(line)) {
-      inIntentset = /^intentset:\s*(#.*)?$/.test(line);
-      childIndent = null;
-      continue;
-    }
-    if (!inIntentset || line.trim() === "") continue;
-    const indent = line.length - line.trimStart().length;
-    childIndent ??= indent;
-    if (indent !== childIndent) continue;
+  for (const { index, line, eol } of intentsetLines(lines, frontmatter)) {
     const spec = SPEC_LINE.exec(line);
     if (spec !== null) {
       if (spec[3] !== from) return null;
       specSeen = true;
-      edits.set(i, `${spec[1]}${spec[2]}${to}${spec[2]}${spec[4]}${eol}`);
+      edits.set(index, `${spec[1]}${spec[2]}${to}${spec[2]}${spec[4]}${eol}`);
       continue;
     }
     const profile = PROFILE_LINE.exec(line);
     if (profile !== null && profile[4] === from) {
-      edits.set(i, `${profile[1]}${profile[2]}intentset/${profile[3]}/${to}${profile[2]}${profile[5]}${eol}`);
+      edits.set(index, `${profile[1]}${profile[2]}intentset/${profile[3]}/${to}${profile[2]}${profile[5]}${eol}`);
     }
   }
   if (!specSeen) return null;
@@ -236,6 +257,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   let moved = 0;
   let current = 0;
   let other = 0;
+  const left: string[] = [];
   for (const input of repo.inputs) {
     if (input.frontmatter === null) continue;
     const text = migrateRecord(input.source, input.frontmatter);
@@ -246,11 +268,22 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     }
     if (text === input.source) continue;
     writeFileSync(join(root, input.path), text);
-    moved++;
+    if (declaresRemovedStatus(frontmatterAt(text, input.frontmatter.line))) left.push(input.path);
+    else moved++;
   }
   io.stdout(
     `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} to ${MIGRATE_TO}` +
       `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}.\n`,
   );
-  return 0;
+  if (left.length === 0) return 0;
+  io.stderr(
+    `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} still declare${left.length === 1 ? "s" : ""} ` +
+      `a status ${MIGRATE_TO} does not list, in a form the rewrite could not read; set each to approved, with delivery: built ` +
+      "where its type carries delivery and it states none:\n" +
+      [...left]
+        .sort()
+        .map((path) => `  ${path}\n`)
+        .join(""),
+  );
+  return 1;
 }

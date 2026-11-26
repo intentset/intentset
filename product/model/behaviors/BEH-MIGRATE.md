@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset migrate --to 0.3` in a repository whose records declare `spec: '0.2'` or `spec: '0.1'`. It moves each record the model reads one version at a time, rewriting `intentset.spec` and `intentset.profile` in its frontmatter and applying that version's own rewrites. The move to `0.3` has one (ADR 0023): a `status` of `implemented` or `released` becomes `approved`, and a capability, behavior, rule, scenario, slice or contract that states no `delivery` gets `delivery: built`, which is what the status claimed; a record that states `delivery` keeps it, a type that never carries it gets nothing more, and a deprecated record is left as it is. It keeps every other byte, and the quoting and comment of each line it rewrites, and prints how many records it moved. A record already at `0.3` is left alone, and so is one at a version it does not know.
+Someone runs `intentset migrate --to 0.3` in a repository whose records declare `spec: '0.2'` or `spec: '0.1'`. It moves each record the model reads one version at a time, rewriting `intentset.spec` and `intentset.profile` in its frontmatter and applying that version's own rewrites. The move to `0.3` has one (ADR 0023): a `status` of `implemented` or `released` becomes `approved`, and a capability, behavior, rule, scenario, slice or contract that states no `delivery` gets `delivery: built`, which is what the status claimed; a record that states `delivery` keeps it, a type that never carries it gets nothing more, and a deprecated record is left as it is. It keeps every other byte, and the quoting and comment of each line it rewrites, reads past a comment line inside the `intentset:` mapping wherever its `#` stands, and prints how many records it moved. A record that still declares `implemented` or `released` after the move, in a form the rewrite could not read, is not counted as moved: the command names it and says what to change. A record already at `0.3` is left alone, and so is one at a version it does not know.
 
 ## Preconditions
 
@@ -34,7 +34,7 @@ A repository root, and a work tree with no uncommitted changes to tracked files,
 
 ## Outcomes
 
-Success: the records are at `0.3`, each with a status `0.3` lists, the command says how many it moved and exits zero. Failure: a tree with uncommitted changes to tracked files (or no git work tree) is refused with nothing written, and a `--to` other than `0.3` is a usage error.
+Success: the records are at `0.3`, each with a status `0.3` lists, the command says how many it moved and exits zero. A record moved whose status the rewrite could not read is named, with what to change, and the command exits 1. Failure: a tree with uncommitted changes to tracked files (or no git work tree) is refused with nothing written, and a `--to` other than `0.3` is a usage error.
 
 ## Sources
 

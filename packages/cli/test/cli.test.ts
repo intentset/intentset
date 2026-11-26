@@ -695,6 +695,46 @@ for (const version of ["0.2", "0.1"]) {
   });
 }
 
+test("BEH-MIGRATE: migrate reads past a comment line inside the intentset mapping, at column 0 or indented", async (t) => {
+  const { dir } = await atEarlier(t);
+  // A column-0 comment between profile and status, and another before type: YAML allows both inside the mapping.
+  edit(dir, "RULE-ASMT-AUTH", /^ {2}status: draft$/m, "# shipped in pilot-1\n  status: implemented");
+  edit(dir, "RULE-ASMT-AUTH", /^ {2}type: rule$/m, "# a rule\n  type: rule");
+  edit(dir, "BEH-ASMT-SCHEDULE", /^ {2}status: draft$/m, "  # shipped\n  status: released");
+  edit(dir, "OUT-PREPARE", /^ {2}spec: '0\.2'$/m, "# the version\n  spec: '0.2'");
+  git(dir, "commit", "-q", "-am", "comments inside the mapping");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.doesNotMatch(moved.out, /declare neither/);
+  const auth = readFileSync(RECORD(dir, "RULE-ASMT-AUTH"), "utf8");
+  assert.match(auth, /\n# shipped in pilot-1\n {2}status: approved\n {2}delivery: built\n/);
+  assert.match(auth, /\n# a rule\n {2}type: rule\n/);
+  assert.match(
+    readFileSync(RECORD(dir, "BEH-ASMT-SCHEDULE"), "utf8"),
+    /\n {2}# shipped\n {2}status: approved\n {2}delivery: built\n/,
+  );
+  assert.match(readFileSync(RECORD(dir, "OUT-PREPARE"), "utf8"), /\n# the version\n {2}spec: '0\.3'\n/);
+  const report = JSON.parse((await run(dir, "validate", "--json")).out);
+  assert.deepEqual(
+    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+    [],
+  );
+});
+
+test("BEH-MIGRATE: migrate names a record whose status it could not rewrite, does not count it as moved, and exits 1", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  // A double-quoted escape the YAML reader reads as implemented, in a form the line rewrite does not read.
+  edit(dir, "RULE-ASMT-AUTH", "status: draft", 'status: "implement\\x65d"');
+  git(dir, "commit", "-q", "-am", "a status the rewrite cannot read");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 1);
+  assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
+  assert.match(moved.err, /1 record moved to 0\.3 still declares a status 0\.3 does not list/);
+  assert.match(moved.err, /\n {2}product\/scheduling\/RULE-ASMT-AUTH\.md\n/);
+  assert.match(readFileSync(RECORD(dir, "RULE-ASMT-AUTH"), "utf8"), /spec: '0\.3'/, "its spec and profile still move");
+});
+
 test("BEH-MIGRATE: migrate refuses a tree with uncommitted changes, and a target it does not know, and writes nothing", async (t) => {
   const { dir } = await atEarlier(t);
   edit(dir, "OUT-PREPARE", "teachers spend less time", "teachers spend much less time");
