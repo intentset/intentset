@@ -118,7 +118,7 @@ It does not prove the product correct: a passing test can still assert the wrong
 ## What it costs
 
 - **One feature.** An agent writes it down from your code and tests, and you review about eight files. On a fresh TypeScript repository with one feature and three tests, [Try it on your code](../start/) takes five minutes.
-- **Every change.** The agent updates the records in the same commit, or adds one line to the commit message saying no behavior changed. In Coral Reef Ventures' own use, the check ran 367 times from 2026-10-07 to 2026-10-10 and passed 355 times without anyone noticing it. Nine of the failures were drift, and each passed once a commit added that one line.
+- **Every change.** The agent updates the records in the same commit, or adds one line to the commit message saying no behavior changed.
 - **A whole product.** Writing down a product that already exists takes time. [Model the whole product](../adopt/) is how one person running many agents does it.
 
 ## Adopt in levels

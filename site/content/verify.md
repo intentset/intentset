@@ -28,7 +28,7 @@ A behavior ships with the test that checks it, and a verification record names t
 
 An agent that opens the page and clicks the button knows it works; one that reads the source only thinks so. Give each agent its own disposable copy of the product and a browser it can drive, such as Playwright, and write one end-to-end test per flow a behavior describes, including how it fails.
 
-Run the tests a change can reach on each pull request, and the whole suite after each batch of merges. In Coral Reef Ventures' own use, 352 of 684 verification records name a browser test (counted on 2026-10-19), so this is about half the proof, not an extra.
+Run the tests a change can reach on each pull request, and the whole suite after each batch of merges. In a product with a user interface, browser tests are part of the proof, not an extra.
 
 `intentset evidence import --from playwright` turns the browser run's report into run records.
 

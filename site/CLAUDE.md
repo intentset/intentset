@@ -89,6 +89,9 @@ repository-relative.
   promise, one example, how it works in three steps, what it is, and one way to try it, under 800 words
   (`build.test.ts` holds it). No versions, no draft or review status and no family products on a narrative page; the
   specifications index is the one page that says where the release stands.
+- **No figures from Coral Reef Ventures' own use on a narrative page** (the user's decision, 2026-11-26): beside the
+  invented example they read as the example's numbers, and "the check ran 367 times" left a reader asking which check.
+  They live in `docs/adoption/log.md`.
 - **A page's h1 does not end in a period** (2026-10-07), on a content page or a rendered document: a title is a
   label, not a sentence. The h2s below it are written as sentences and keep theirs.
 - **A code block runs to the document's width**, not the reading measure (`site.css`, 2026-10-07): a line of prose
