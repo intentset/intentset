@@ -9,6 +9,7 @@ import {
   build,
   CHAT_PAGES,
   CARD,
+  CANONICAL,
   CARD_ALT,
   cardUrl,
   CONTENT_PAGES,
@@ -32,7 +33,7 @@ import {
   SPECS,
   termTips,
 } from "../build.ts";
-import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
+import { ATLAS_ROOT, atlasRecordPath, EXAMPLE_TIMES } from "../example-atlas.ts";
 import { loadRecords } from "../records.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
@@ -66,7 +67,7 @@ function main(page: string): string {
   return doc.slice(doc.indexOf("<main"), doc.indexOf("</main>"));
 }
 
-test("the page list is the content pages, the specifications, the guide, conformance, one page per record and the example's Atlas", () => {
+test("the page list is the content pages, the specifications, the guide, conformance and the example's one page", () => {
   const expected = [
     ...CONTENT_PAGES.map(([path]) => path),
     // The privacy page, once the chat is launched.
@@ -75,11 +76,6 @@ test("the page list is the content pages, the specifications, the guide, conform
     "guide/index.html",
     "conformance/index.html",
     "example/index.html",
-    // Each record's one page, the Atlas's, at the address the walkthrough links (2026-11-02).
-    ...records.map((r) => `example/${r.id}/index.html`),
-    // The worked example's Atlas: its map and its six review pages.
-    ATLAS_MAP_PAGE,
-    ...REVIEW_PAGES.map(([, path]) => path),
   ].sort();
   assert.deepEqual([...pages].sort(), expected);
   assert.ok(records.length >= 10, "the worked example has fewer records than expected");
@@ -144,20 +140,13 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
     assert.match(doc, /<a class="site-skip" href="#main">Skip to content<\/a>/, page);
     assert.match(doc, /<main id="main" class="ms-document" tabindex="-1">/, page);
     // The chat panel's, after </main>, once the chat is launched (chat.test.ts drives it).
-    // The worked example's map loads its one script after </main> too (ADR 0015).
-    const map = page === "example/atlas/map/index.html";
-    if (map)
-      assert.ok(
-        doc.indexOf('example/atlas/atlas-map.js" defer>') > doc.indexOf("</main>"),
-        "the map's script after main",
-      );
     // The introduction loads Present after </main> the same way.
     const deck = page === INTRODUCTION.page;
     if (deck)
       assert.ok(doc.indexOf(`${INTRODUCTION.script}" defer>`) > doc.indexOf("</main>"), "the deck's script after main");
     assert.equal(
       (doc.match(/<script/gi) ?? []).length,
-      (ASK_URL === null ? 2 : 3) + (map || deck ? 1 : 0),
+      (ASK_URL === null ? 2 : 3) + (deck ? 1 : 0),
       `${page}: the shell's scripts`,
     );
     if (ASK_URL !== null)
@@ -476,7 +465,7 @@ test("each specification's frontmatter names it, and its page and index card sho
   assert.doesNotMatch(index, /\{\{/u, "a token survived into the index");
 });
 
-test("the worked example opens every record on the page, in the act it belongs to, and keeps a page per record", () => {
+test("the worked example opens every record on the page, in the act it belongs to, and links each to its page in the Atlas", async () => {
   // The page used to be thirteen headings over fifteen links: it said what the
   // records were called and nothing about what they do, and reading one meant
   // leaving. Now each act explains what that part of the model is doing, and the
@@ -511,63 +500,30 @@ test("the worked example opens every record on the page, in the act it belongs t
     const opening = flat(record.body.split(/\n## [^\n]+\n/)[1] ?? "").replace(/[`*]/g, "");
     assert.ok(opening.length > 20, `${record.id}: nothing to compare`);
     assert.ok(flat(read).includes(opening.slice(0, 60)), `${record.id}: the fold lacks its body`);
-    // And the way to the record's own page, which the deep links and the search results use.
-    assert.match(fold, new RegExp(`<a href="${record.id}/">`), `${record.id}: no way to its own page`);
+    // And the way to the record's page in the Atlas, which the deep links and the search results use (2026-11-26).
+    assert.match(fold, new RegExp(`<a href="atlas/records/${record.id}\\.html">`), `${record.id}: no way to its page`);
 
-    // The record's page is the Atlas's (2026-11-02): its text first, rendered, then its links and what the review
-    // pages say about it, every record it names linked to that record's page.
-    const page = main(`example/${record.id}/index.html`);
+    // The record's page is the Atlas's own, as `intentset serve` writes it: its heading, then its text as written.
+    const page = await readFile(join(dist, atlasRecordPath(record.id)), "utf8");
     const title = record.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    assert.match(page, new RegExp(`<h1 id="[^"]+">${record.id}: ${title}</h1>`), `${record.id}: its heading`);
-    const pageText = text(page);
-    for (const value of [record.type, record.status, record.owner, record.visibility, ...record.audiences]) {
-      assert.ok(pageText.includes(value), `${record.id}: the page lacks ${value}`);
-    }
-    const written = page.indexOf('id="the-record"');
-    assert.ok(written > 0, `${record.id}: no record text`);
-    assert.ok(flat(text(page.slice(written))).includes(opening.slice(0, 60)), `${record.id}: the page lacks its body`);
-    for (const [, heading] of record.body.matchAll(/^## (.+)$/gm)) {
-      assert.match(page.slice(written), new RegExp(`<h3>${heading}</h3>`), `${record.id}: ${heading}, a level down`);
-    }
-    for (const target of [
-      ...(record.parent ? [record.parent] : []),
-      ...record.links.flatMap(([, ids]) => ids),
-      ...(record.review?.pins ?? []),
-    ]) {
-      assert.match(
-        page,
-        new RegExp(`<a href="\\.\\./${target}/"><code>${target}</code></a>`),
-        `${record.id}: ${target}`,
-      );
-    }
-    // A reviewed record's page says who reviewed it and when, and carries each tip beside the ID it is for.
-    if (record.review) {
-      assert.ok(
-        pageText.includes(`Reviewed by ${record.review.by} Reviewed at ${record.review.at}`),
-        `${record.id}: review`,
-      );
-    }
-    for (const [id, tip] of record.tips)
-      assert.ok(pageText.includes(`Tip for ${id} ${tip}`), `${record.id}: tip for ${id}`);
-    // The card links the file on GitHub, at main, which every push to main rebuilds this page from.
-    assert.ok(
-      page.includes(`<a href="${REPO}/blob/main/${EXAMPLE_DIR}/${record.file}">View the file on GitHub</a>`),
-      `${record.id}: no link to its file`,
-    );
-    // The body is rendered, the frontmatter is not.
-    assert.doesNotMatch(page, /intentset:\s*\n\s*spec:/, `${record.id}: frontmatter leaked into the page`);
-    assert.doesNotMatch(page, /<pre/, `${record.id}: frontmatter rendered as a code block`);
+    assert.match(page, new RegExp(`<h1[^>]*>${record.id}: ${title}</h1>`), `${record.id}: its heading`);
+    assert.ok(flat(text(page)).includes(opening.slice(0, 60)), `${record.id}: the page lacks its body`);
+    assert.doesNotMatch(page, /class="site-header"/, `${record.id}: the Atlas wears its own shell, not the site's`);
   }
-  // Nothing on the example claims a running system or passing evidence.
-  assert.ok(text(index).includes("Nothing here runs."));
-  assert.ok(text(index).includes("no test has been run"));
+  // The example says what state its Atlas shows: tests run at build time, one stale pass, one rule with no test.
+  assert.ok(text(index).includes("one pass is stale because the code changed after its tests ran"));
 
-  // The help article is the one approved record: reviewed against its three sources, with two tips.
+  // The help article is approved, reviewed against its three sources, with two tips; every record but the sign-in
+  // behavior is approved (2026-11-26), so Needs attention has one draft to show.
   const kb = records.find((r) => r.id === "KB-RESET-PASSWORD");
   assert.equal(kb?.status, "approved");
   assert.deepEqual(kb?.review?.pins, ["BEH-RESET-PASSWORD", "RULE-RESET-LINK-EXPIRY", "RULE-RESET-LINK-ONCE"]);
   assert.equal(kb?.tips.length, 2);
-  assert.ok(text(index).includes("Records approved 1"));
+  assert.ok(text(index).includes(`Records approved ${records.length - 1}`));
+  assert.deepEqual(
+    records.filter((r) => r.status !== "approved").map((r) => r.id),
+    ["BEH-SIGN-IN"],
+  );
 
   // After the last act, what publication writes for it, as written: the document with provenance in place of its
   // frontmatter and its internal sources counted rather than named, and the help file with the two tips keyed by the
@@ -646,13 +602,42 @@ test("a page that left the site sends its reader on from its old address, and is
     assert.ok(doc.includes(`<a href="${to}">`), `${path}: a link for what does not follow a refresh`);
     assert.match(doc, /<meta name="robots" content="noindex">/, path);
     assert.ok(
-      to.startsWith(`${REPO}/blob/main/`) || to === EXTERNAL.markset,
-      `${path} goes to the repository or Markset`,
+      to.startsWith(`${REPO}/blob/main/`) || to === EXTERNAL.markset || to.startsWith(`${CANONICAL}${ATLAS_ROOT}/`),
+      `${path} goes to the repository, Markset or the shop's Atlas`,
     );
+    if (to.startsWith(CANONICAL)) await access(join(dist, to.slice(CANONICAL.length)));
     assert.ok(!sitemap.includes(path.replace(/index\.html$/, "")), `${path} is in the sitemap`);
     assert.ok(!html.has(path), `${path} is still a page`);
   }
   for (const doc of ["docs/adoption/log.md", "docs/roadmap.md", "docs/consumers.md"]) await access(join(root, doc));
+});
+
+test("the shop's Atlas is published as intentset serve writes it, and the serve page opens it in a new tab (2026-11-26)", async () => {
+  const atlas = (name: string) => readFile(join(dist, ATLAS_ROOT, name), "utf8");
+  const product = await atlas("index.html");
+  // The Atlas's own shell and navigation, not the site's, saying on every page that the shop is invented.
+  assert.doesNotMatch(product, /class="site-header"/);
+  assert.match(product, /<meta name="robots" content="noindex, nofollow">/);
+  const nav = [...product.matchAll(/<a href="[^"]*"(?: aria-current="page")?>([^<]+)<\/a>/g)].map((m) => m[1]);
+  for (const label of ["Product", "Needs attention", "Map", "Records"]) assert.ok(nav.includes(label), label);
+  assert.ok(text(product).includes("An invented example:"));
+  assert.ok(text(product).includes("Your product, as a tree"));
+  // The state it shows is real: the tests ran, so the reset link's rule is verified, the sign-in code changed after
+  // its run so its pass is stale, the rule that a link works once has no test, and the sign-in behavior is a draft.
+  const attention = text(await atlas("attention.html"));
+  assert.match(attention, /Stale: 2 of 6 claims/);
+  assert.match(attention, /BEH-SIGN-IN Sign in · behavior/);
+  assert.match(attention, /Named by no verification: 1 of 6 claims .* RULE-RESET-LINK-ONCE/);
+  // None of it is in the sitemap.
+  const sitemap = await readFile(join(dist, "sitemap.xml"), "utf8");
+  assert.ok(!sitemap.includes(`${ATLAS_ROOT}/`), "the Atlas is not in the sitemap");
+  // The run records carry the example's fixed times, so the build is the same every time.
+  assert.ok(EXAMPLE_TIMES.testsStarted < EXAMPLE_TIMES.laterCommit);
+  // The serve page explains the command and opens the Atlas in a new tab.
+  const serve = main("tools/serve/index.html");
+  assert.match(serve, /<a href="\.\.\/\.\.\/example\/atlas\/" target="_blank" rel="noopener">Open the shop/);
+  assert.match(text(serve), /starts a small web server on your machine/);
+  assert.match(text(serve), /http:\/\/127\.0\.0\.1:3000\//);
 });
 
 test("every page points at the social card, and the committed card is the size it claims", async () => {

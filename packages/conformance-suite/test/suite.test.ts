@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { test } from "node:test";
 import { type ParseYaml, validateSchema } from "@intentset/conformance";
 import { loadSection, loadSuite, sections } from "@intentset/conformance-suite";
@@ -97,9 +97,15 @@ test("staging copies the schemas and the example verbatim", async () => {
     }
     assert.ok(staged.schemas.includes("conformance") && staged.schemas.includes("frontmatter"));
 
+    // Every file of each example, its code and tests included (the shop's, 2026-11-26), at the same relative path.
+    const tree = async (at: string) =>
+      (await readdir(at, { withFileTypes: true, recursive: true }))
+        .filter((entry) => entry.isFile())
+        .map((entry) => relative(at, join(entry.parentPath, entry.name)))
+        .sort();
     for (const name of EXAMPLES) {
-      const files = (await readdir(join(root, "examples", name))).sort();
-      assert.deepEqual((await readdir(join(dir, "examples", name))).sort(), files);
+      const files = await tree(join(root, "examples", name));
+      assert.deepEqual(await tree(join(dir, "examples", name)), files);
       for (const file of files) {
         assert.equal(
           await readFile(join(dir, "examples", name, file), "utf8"),

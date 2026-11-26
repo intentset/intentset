@@ -6,7 +6,12 @@ intentset:
   id: BEH-RESET-PASSWORD
   type: behavior
   title: Reset a forgotten password
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
+  delivery: built
   owner: team-accounts
   visibility: internal
   audiences:

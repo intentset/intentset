@@ -6,7 +6,11 @@ intentset:
   id: OUT-FEWER-LOCKOUTS
   type: outcome
   title: Fewer customers need support to get into their account
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
   owner: team-accounts
   visibility: internal
   audiences:

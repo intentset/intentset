@@ -6,7 +6,11 @@ intentset:
   id: TEST-RESET-LINK-EXPIRY
   type: verification
   title: A reset link works for one hour
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
   owner: team-accounts
   visibility: internal
   audiences:
@@ -15,6 +19,7 @@ intentset:
   revision: 1
   links:
     verifies:
+    - BEH-RESET-PASSWORD
     - RULE-RESET-LINK-EXPIRY
     - SCN-RESET-EXPIRED
   verification:

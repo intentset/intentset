@@ -181,15 +181,11 @@ test("Home and How it works quote review's drift failure as the CLI prints it, a
     for (const file of (await readdir(SHOP)).filter((name) => name.endsWith(".md"))) {
       await cp(join(SHOP, file), join(repo, "product", "accounts", file));
     }
-    const reset = join(repo, "src", "features", "accounts", "reset");
-    await mkdir(join(reset, "policies"), { recursive: true });
-    await writeFile(join(reset, "index.ts"), 'export { linkIsValid } from "./policies/link-expiry.ts";\n');
-    const code = (hours: string) =>
-      `export const LINK_LIFETIME_MS = ${hours}60 * 60 * 1000;\n\nexport function linkIsValid(sentAt: number, now: number): boolean {\n  return now - sentAt < LINK_LIFETIME_MS;\n}\n`;
-    const check = (hours: string, name: string) =>
-      `import assert from "node:assert/strict";\nimport { test } from "node:test";\nimport { LINK_LIFETIME_MS, linkIsValid } from "./link-expiry.ts";\n\ntest("a reset link expires after ${name}", () => {\n  assert.equal(LINK_LIFETIME_MS, ${hours}60 * 60 * 1000);\n  assert.equal(linkIsValid(0, LINK_LIFETIME_MS - 1), true);\n  assert.equal(linkIsValid(0, LINK_LIFETIME_MS), false);\n});\n`;
-    await writeFile(join(reset, "policies", "link-expiry.ts"), code(""));
-    await writeFile(join(reset, "policies", "link-expiry.test.ts"), check("", "one hour"));
+    // The shop's own code and tests (examples/shop/src, 2026-11-26), as the agent finds them.
+    await cp(join(SHOP, "src"), join(repo, "src"), { recursive: true });
+    const policy = join(repo, "src", "features", "accounts", "reset", "policies");
+    const code = join(policy, "link-expiry.ts");
+    const check = join(policy, "link-expiry.test.ts");
     git("add", "-A");
     git("commit", "-qm", "Password reset, with its records");
     assert.equal(
@@ -199,8 +195,13 @@ test("Home and How it works quote review's drift failure as the CLI prints it, a
     );
     git("update-ref", "refs/remotes/origin/main", "HEAD");
     git("checkout", "-qb", "tidy-account-code");
-    await writeFile(join(reset, "policies", "link-expiry.ts"), code("24 * "));
-    await writeFile(join(reset, "policies", "link-expiry.test.ts"), check("24 * ", "24 hours"));
+    // The agent's fix: the limit raised to 24 hours, and the test that expected one hour changed to match.
+    const longer = (text: string) => text.replaceAll("= 60 * 60 * 1000", "= 24 * 60 * 60 * 1000");
+    await writeFile(code, longer(await readFile(code, "utf8")));
+    const tests = await readFile(check, "utf8");
+    const changed = tests.replace("60 * 60 * 1000);", "24 * 60 * 60 * 1000);").replace("for one hour", "for 24 hours");
+    assert.notEqual(changed, tests, "the shop's test still names the hour the fix changes");
+    await writeFile(check, changed);
     git("commit", "-qam", "Fix reset links that expire before customers click them");
     const review = ["review", "--base", "origin/main", "--fail-on-drift"];
 

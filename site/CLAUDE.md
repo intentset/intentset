@@ -12,10 +12,10 @@ repository-relative.
   beside every page in it: How it works (the explanation, then "The shop's model, record by record" at `/example/`);
   Get started (Set up Intentset, then Add Intentset to your CI at `/start/ci/`, then a group "Once one capability
   works" holding Model the whole product with many agents and Make agents' work safe to accept, each label the page's
-  h1); Reference (a Tools group with all tools, the command, the agent guide as "What your agents read" and a group
-  "What intentset serve shows" holding the map and the Atlas's seven review pages (Product first, then needs
-  attention, since #159 and Gary's rethink of 2026-11-26, which removed the overview), then a Specifications group,
-  conformance, the glossary). A record's page sits in Reference beneath Records. The Markset page left the site on
+  h1); Reference (a Tools group with all tools, the command, "See your model in a browser" at `/tools/serve/` and the
+  agent guide as "What your agents read", then a Specifications group, conformance, the glossary). The serve page says
+  what `intentset serve` is and opens the shop's Atlas in a new tab (`NEW_TAB` in `site/build.ts`, since Markset has no
+  syntax for a target); the Atlas's pages are in no rail, because they are the Atlas's own (Gary, 2026-11-26). The Markset page left the site on
   2026-11-26 (the user's decision; `/markset/` redirects to markset.org): the glossary's Record entry says records are
   written in Markset and read as plain Markdown, which is all a visitor needs. Examples left the bar
   on 2026-11-26: it held one example, now told on How it works and drawn by the review pages. A rail entry is a page
@@ -65,20 +65,18 @@ repository-relative.
   this commit": a pass counts while what it checked is unchanged, and a gate may ask for a pass on the commit under
   review (Streamlane SL-710). Lantern is the CLI's example (`intentset init --example`) and the conformance suite's
   baseline under `examples/scheduling/`, and no page of the site shows it; its old record pages redirect to its files.
-- **The example's Atlas** (`site/example-atlas.ts`, 2026-10-15; the shop's since 2026-11-26) is the example's
-  records validated at L1 and drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell
-  under `/example/atlas/` in the Reference rail as "What intentset serve shows". Its landing page, `/example/atlas/`, is the product
-  as a tree (#159, 2026-11-26), and each behavior's page opens what the Atlas derives with its trace. The map is layered, its
-  capabilities folded until opened, and every record's page ends with its neighborhood, drawn by the force layout,
-  so record pages load the map's stylesheet (`ATLAS_MAP_STYLES`) but never its script. Each record's page is the Atlas's
-  (2026-11-02): served at `/example/<ID>/`, it holds the record in one card (its file, linked on GitHub at main, every
-  frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records.
-  The map's h1 is "The shop's model, as a map", and it links the one-page model and the review pages under the
-  picture. It has no run evidence and no commit, because no test has been run and the pages describe records rather
-  than a commit. Only an invented product's Atlas is published: Intentset's own model has no public Atlas, and a
-  public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml` draws, with links at the
-  site's addresses, placed in the page's map slot (`placeHtml`), and the map's stylesheet and script are written
-  beside the pages.
+- **The shop's Atlas is published as `intentset serve` writes it** (`site/example-atlas.ts`, Gary, 2026-11-26): the
+  Atlas's own pages, look and navigation under `/example/atlas/`, not wrapped in the site's shell, in no rail and not
+  in the sitemap (each page says noindex). `shopAtlas` builds it the way a team would get it: a scratch repository with
+  the shop's records under `product/shop/` and its code and tests (`examples/shop/src/`), committed with fixed dates;
+  the tests run with node:test's TAP reporter (outside the test runner's `NODE_TEST_CONTEXT`, or a child reports to
+  the parent instead of printing TAP) and imported as run records with fixed times; then a later commit renames a
+  parameter in the sign-in code, so the sign-in check's pass is stale by subject binding; then `atlasOf` from
+  `@intentset/cli` at L3 with the `example` notice. So the Atlas shows one draft (BEH-SIGN-IN), the reset link's rule
+  verified, two stale claims and one rule no test checks (RULE-RESET-LINK-ONCE), and the build gives the same bytes
+  every time. The one-page model links each record to `atlas/records/<ID>.html`; the old site-shell addresses
+  (`/example/<ID>/`, `/example/atlas/<page>/`) redirect there. Only an invented product's Atlas is published:
+  Intentset's own model has no public Atlas.
 - **The Atlas's map** (ADR 0015, `packages/atlas/src/map.ts` and `map-script.ts`) is the one place the Atlas runs a
   script, and the picture works without it. Its layout is computed at build time and must stay deterministic: no
   `Math.random`, no trigonometry or `Math.exp` (their results differ between engines), iteration in ID order, and

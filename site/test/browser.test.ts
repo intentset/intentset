@@ -35,8 +35,7 @@ const PAGES = [
   "conformance/index.html",
   "glossary/index.html",
   "example/index.html",
-  "example/BEH-RESET-PASSWORD/index.html",
-  "example/atlas/map/index.html",
+  "tools/serve/index.html",
   "no/such/page/",
 ];
 
@@ -46,6 +45,7 @@ await build(dist);
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
 };
 /** A static server over the build, answering a missing address with 404.html as Pages does. */
@@ -234,7 +234,7 @@ test("BEH-ATLAS-MAP: the example's map finds, focuses, filters, goes full screen
     const tab = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
     const errors: string[] = [];
     tab.on("pageerror", (error) => errors.push(error.message));
-    await tab.goto(url("example/atlas/map/index.html"));
+    await tab.goto(url("example/atlas/map.html"));
     // The script shows the controls; without it they stay hidden and the picture stands alone.
     assert.ok(await tab.locator(".am-controls").isVisible(), `${width}px: controls shown`);
     await tab.fill(".am-find input", "cap-accounts");
@@ -305,7 +305,10 @@ test("BEH-ATLAS-MAP: the example's map finds, focuses, filters, goes full screen
       "BEH-RESET-PASSWORD",
       `${width}px: the first activation selects the record`,
     );
-    await Promise.all([tab.waitForURL(/\/example\/BEH-RESET-PASSWORD\/$/), node.click({ force: true })]);
+    await Promise.all([
+      tab.waitForURL(/\/example\/atlas\/records\/BEH-RESET-PASSWORD\.html$/),
+      node.click({ force: true }),
+    ]);
     assert.deepEqual(errors, [], `${width}px: no script error`);
     await tab.close();
   }

@@ -6,7 +6,11 @@ intentset:
   id: MEAS-ACCESS-TICKETS
   type: measure
   title: Support requests about getting into an account
-  status: draft
+  status: approved
+  approval:
+    at: "2026-11-26"
+    basis: direct
+    by: "team-accounts"
   owner: team-accounts
   visibility: internal
   audiences:

@@ -7,6 +7,7 @@ intentset:
   type: behavior
   title: Sign in
   status: draft
+  delivery: built
   owner: team-accounts
   visibility: internal
   audiences:
