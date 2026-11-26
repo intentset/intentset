@@ -5,7 +5,7 @@ markset: 0
 # The tools
 
 {.lead}
-One command does the work in a repository. The rest are what it is built from, and what other tools read the model through. Every package is at {{version}} on npm.
+One command does the work in a repository. The rest are what it is built from, and what other tools read the model through. Every package is on npm.
 
 ## The intentset command
 
@@ -25,7 +25,7 @@ pnpm exec intentset init
 ```
 :::
 
-[[Every command and option](cli/)]{.button .primary} [[Start with one capability](../start/)]{.button}
+[[Every command and option](cli/)]{.button .primary} [[Set up Intentset](../start/)]{.button}
 
 ## The MCP server
 

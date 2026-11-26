@@ -2,221 +2,93 @@
 markset: 0
 ---
 
-::::::columns{.hero ratio="5:4"}
 {.eyebrow}
-Product truth for agentic development · v0.2 draft
+For teams shipping with coding agents
 
 # Keep control of what your agents build
 
 {.lead}
-Agents write code faster than anyone can read it. Intentset keeps what your product promises, which code delivers each promise and how it is checked, in readable records your agents update with every change.
+Agents write code faster than anyone can review it. Intentset writes down what your product is supposed to do, in short files beside the code, and stops a change in CI when the code moves and those files do not.
 
-People review the product rather than the diff, and steer it where it needs to go.
-
-[[See how it works](how-it-works/)]{.button .primary} [[Read the draft specification](specifications/)]{.button}
-
-New to Intentset? [Page through the introduction](introducing/), a slide deck that starts in plain words and ends under the hood.
-
-> [!NOTE]
-> The specifications are ready for review. The reference toolchain, version {{version}}, is published to try them against.
-
-::col
-
-:::::card{.model}
-{.eyebrow}
-One change · what the reviewer reads
-
-:::steps
-1. [Code]{.badge} 2,140 lines changed in 31 files
-2. [Behavior]{.badge .info} Schedule a student assessment: its failure outcome rewritten
-3. [Rule]{.badge} Future release time: tightened
-4. [Checks]{.badge} Two updated; one passes on this commit, one has not run
-5. [Knowledge]{.badge} The teachers' guide is held for review
-6. [Drift]{.badge} None: every slice whose code changed updated its records
-:::
-
-{.small .muted}
-Illustrative · not a live report
-:::::
-::::::
+[[See how it works](how-it-works/)]{.button .primary} [[Get started](start/)]{.button}
 
 ***
 
 {.eyebrow}
 The problem
 
-## Agents write faster than anyone can read
+{#problem}
+## A change can pass every check and still change the product
 
-{.lead}
-A team used to understand its product because it wrote the code. Now agents write most of it, in changes too long to read line by line.
+:::card[An example]{.example}
+Your shop's password reset links work for one hour. Customers write in that their link has already expired by the time they click it, and an agent is asked to fix it. It finds the one-hour limit, raises it to 24 hours so that links don't run out before people get to them, and updates the test that expected one hour. The complaints stop, the tests pass and CI is green. The pull request says it fixes expired reset links, which is true, and it is approved.
 
-Without a record of what the product promises, every change asks for trust. Behavior shifts without anyone deciding it should. Debt gathers where nobody looks. What the product does is known only to the code, and to whichever agent read it last.
-
-Intentset gives that knowledge a durable place in the repository, centered on observable product behavior, and keeps it true as the code changes.
-
-***
-
-{.eyebrow}
-Where it sits
-
-## One loop, and the part you can take alone
-
-{.lead}
-Intentset is the first part of a loop, the part that happens in your repository. It is MIT-licensed and needs no service and no purchase.
-
-:::steps{.loop}
-1. [Your repository]{.badge} **Intent written down** \
-   Intentset (Open source · Early release)
-2. **Carried to production on evidence** \
-   Streamlane (Product · In development)
-3. **Proven in use** \
-   Driftline (Product · In planning)
+Nobody decided that a reset link should last a day. How long a link into someone's account stays open is a security decision, and it was made as a bug fix. The only trace of it is one number in the diff.
 :::
 
-{.loop-return}
-What use shows comes back as new intent.
-
-None of the three needs the others.
+Nobody made a mistake here. Every change makes small decisions about what the product does. When people wrote the code, those decisions passed through someone who knew the product. Now an agent makes them, and writes the tests that check them, in the same change. Green CI tells you the code does what the tests say. It cannot tell you whether anyone meant the product to change.
 
 ***
 
 {.eyebrow}
-How it fits
+How it works
 
-## Your agents keep the model. You keep control
+## Write the promise down, and let CI hold the code to it
 
-:::steps{.adopt}
-1. **Agree the promise.** A product manager and an agent draft the behaviors and rules for what comes next, as draft records in the repository.
-2. **Approve it.** A person reads the drafts and approves them. Agents never approve.
-3. **Build it.** An agent loads what the code it is changing promises, works inside the slice that owns it, and updates the records and checks in the same commit.
-4. **Check it.** CI validates the model, holds the boundaries between slices, binds test results to the commit, and fails when code changed and its records did not.
-5. **Review the product.** The reviewer reads what changed in behavior, ownership and evidence, and everything the change could reach.
-6. **Explain it.** Customer explanations whose sources changed are held for review before they are published again.
+:::steps
+1. **Write down what the product promises.** Each promise is a short Markdown file under `product/`, kept in your repository and reviewed in the same pull request as the code. Your agent drafts it, often from code you already have, and a person approves it. This is the shop's rule, without the header your agent fills in:
+
+   ```markdown
+   # Reset links expire after one hour
+
+   ## Constraint
+
+   A password reset link stops working one hour after it is sent.
+   ```
+2. **Say which code keeps it.** The records name the code that delivers each promise, so Intentset knows which promises a change to that code can affect.
+3. **Check every pull request.** When code changes and the records that describe it do not, CI fails and says why:
+
+   ```text
+   ### SLICE-ACCOUNT-RESET: Password reset
+
+   - Not acknowledged: update the records below, or say in a commit that no behavior changed.
+   - Code changed: src/features/accounts/reset/policies/link-expiry.test.ts
+   - Code changed: src/features/accounts/reset/policies/link-expiry.ts
+   - Records describing it, none changed: BEH-RESET-PASSWORD, RULE-RESET-LINK-EXPIRY, SLICE-ACCOUNT-RESET
+   ```
+
+   {.small .muted}
+   Real output of `intentset review --fail-on-drift` on the example above, trimmed to the part that failed.
 :::
 
-{.muted}
-Records are short, written in product language, and diff cleanly: a few dozen lines a person can review, where the code runs to thousands.
+Now the change has to say what it means. If reset links really should last a day, the agent updates the rule, and the reviewer reads one line before any code:
+
+```diff
+-A password reset link stops working one hour after it is sent.
++A password reset link stops working 24 hours after it is sent.
+```
+
+If nothing the product does changed, as in a refactor, a line in the commit message says so. Either way, a person sees the decision in plain words before it merges.
 
 ***
 
 {.eyebrow}
-After the repository
+What it is
 
-## Where each record goes
+## Plain files, and a command that checks them
 
-- A behavior is the promise a person approves. In your repository, `intentset approve` writes that approval as a diff, so anything that reads the repository can tell an approved behavior from a draft.
-- A rule is written once and governs many behaviors, so a refusal can name the rule it keeps.
-- A check's run records say what passed and whether that pass still holds. Published from CI, they can be read outside the repository.
-- Code that changes without its records is drift. CI fails on it.
-- The usage-evidence format, one line per call naming the behaviors it exercised and never a person, is a draft and is not published here yet.
-
-[What reads an Intentset model](tools/readers/), by two paths.
-
-***
-
-{.eyebrow}
-What you can ask
-
-## Questions only a connected model can answer
-
-::::grid{cols=2}
-- :::card[For product managers]
-  - What does the product promise today, and what changed this week?
-  - Does this new requirement contradict a rule we already keep?
-  - Which promises have no check passing on this release?
-  :::
-- :::card[For engineers]
-  - Which slice owns this file, and what does it promise?
-  - What could this change reach: behaviors, owners, checks, explanations?
-  - Are the boundaries holding, and is the debt going down?
-  :::
-- :::card[For customer knowledge]
-  - What may we tell this audience about this release?
-  - Which explanations went out of date when that rule changed?
-  - Where did this answer come from, and who reviewed it?
-  :::
-- :::card[For agents]
-  - What must I read before I edit this file?
-  - Which records does my change have to update?
-  - What am I not allowed to decide?
-  :::
-::::
-
-***
-
-{.eyebrow}
-Architecture
-
-## Keep the architecture yours
-
-Agents follow the shape of the code they are shown. Intentset gives every behavior one owning slice and checks the boundaries between slices on every change: another slice's private files, dependencies nobody declared, layers out of order, product rules hiding in shared code. Today's violations become a baseline that may shrink and may not grow, so debt is a number you can watch fall. An agent handed one slice's context makes a change that stays in that slice.
-
-***
-
-{.eyebrow}
-A worked model
-
-{#example}
-## One behavior. A connected view
-
-:::::card[Example: Schedule a student assessment]{.example}
-::::columns{ratio="2:3"}
-In Lantern, an invented product, a teacher chooses when a published student assessment becomes available to a class.
-
-[[See Lantern on the map](example/atlas/map/)]{.button} [[Read the walkthrough](example/)]{.button}
-
-::col
-
-- **Intent:** Help teachers prepare learning in advance.
-- **Behavior:** Schedule a student assessment for a future time.
-- **Rule:** The student assessment must be published and the teacher must be allowed to assign it.
-- **Implementation:** One accountable slice, with explicit contracts and backend ownership.
-- **Verification:** Named checks, with evidence tied to a particular snapshot.
-- **Knowledge:** Reviewed guidance for the right audience and release.
-::::
-
-> [!NOTE]
-> Illustrative model. These links describe the proposed structure, not a live verification report.
-:::::
-
-***
-
-{.eyebrow}
-In practice
-
-## Two products adopting it, in the open
-
-{.lead}
-Coral Reef Ventures is adopting Intentset in the two products named in the loop above, and recording what it catches, what it costs and what it changes.
-
-In the first, a work management product, the model is a required check on every pull request. The first capability modelled, from the code, tests and decision records the repository already held, listed what nobody had: two of three rules had no test, and three behaviors were checked only in the browser. The check now runs in strict mode against 56 slices and 1,282 records, with no tolerated violations left: the baseline of those already there reached zero on 2026-10-11.
-
-The second was modelled before any of its code existed, and its first package was checked against what had been approved. That package, not released, counts what each behavior saw, from the usage evidence the first product's backend writes.
-
-[Read the adoption log](pilot/), and what it changed in the specifications.
-
-***
-
-:::card{.status}
-{.eyebrow}
-Project status
-
-## Specifications in review. A toolchain to try them with
-
-The v0.2 specifications define the product model, traceable vertical slices, a TypeScript + AWS Amplify Gen 2 reference profile and reviewed publication. An export contract fixes what other tools read from a model.
-
-The reference toolchain is at {{version}} on npm: validation, architecture checks, evidence, change impact, questions over the model, a Product Atlas, reviewed publication with tips for the product's own interface, agent context and the export, with a guide and a drift check for the agents that keep the model. They are early releases, to try against one real capability.
-
-[Read the specifications](specifications/) · [View the roadmap](roadmap/)
-:::
+- **Files you own.** The records are Markdown in your repository. Anyone can read them, on GitHub or in an editor, with nothing installed.
+- **A command-line tool.** `@intentset/cli` on npm runs on your machine and in CI. There is no service, no database and no account.
+- **Open.** The format is an open specification and the tool is MIT-licensed, so any tool can read the records.
+- **Next to what you have.** Your tests, your pull requests and your agents' instructions stay as they are. Intentset ties them to what the product promises.
 
 ***
 
 :::card{.closing}
-## Try it on one capability
+## Start with one feature you already have
 
 {.lead}
-Let an agent model one capability from your code and tests, review what it wrote, and see what it finds.
+An agent writes down one feature from your code and tests. You review what it wrote and see what it finds.
 
-[[Start with one capability](start/)]{.button .primary} [[Read the draft specification](specifications/)]{.button}
+[[Get started](start/)]{.button .primary} [[See how it works](how-it-works/)]{.button}
 :::

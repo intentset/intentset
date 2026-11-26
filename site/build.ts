@@ -1,7 +1,7 @@
 /**
  * Static site generator for intentset.org. Every page is a Markset document
  * rendered by the Markset reference implementation and wrapped in a shell that
- * carries the header, the navigation, an optional contents rail and the footer.
+ * carries the header, the navigation, the section's rail and the footer.
  *
  * Five kinds of page: the content pages, written in site/content/*.md; the
  * normative documents, rendered from spec/ so the site cannot drift from the
@@ -134,24 +134,18 @@ export const INTRODUCTION = {
 };
 
 /**
- * The bar: five sections, by what a reader came to do, as markset.org's is
- * (decided 2026-10-05). Five is the phone's limit, and home is the wordmark.
- * Until then the bar was by topic, from the handoff's IA: How it works, Start,
- * Specifications, Markset and Roadmap, which gave a slot to the sibling's page
- * while the tools had no page at all. How it works moved into Start's rail, the
- * Markset page into Reference's, and Roadmap took the slot markset.org gives its
- * Playground, because an early release's reader asks first where it stands.
- * Every page kept its URL: Reference is the specifications index. Examples
- * opens on Lantern's map (2026-10-20), the most useful view of the example; the
- * walkthrough kept /example/. Start opens on the introduction (2026-10-27), the
- * first page of its rail, so a newcomer meets what Intentset is before what to do.
+ * The bar: four sections, by what a reader came to do (2026-11-26, the user's decision, replacing the five of
+ * 2026-10-05). How it works and Get started come first, because a newcomer asks what Intentset is and then how to
+ * set it up; Examples is the worked example; Reference holds the tools and the specifications, which Tools and Reference
+ * held apart until then. The roadmap left the bar and the site that day, and the slide deck left Start (2026-10-27)
+ * for the footer's row. Home is the wordmark. Every page kept its URL; a page that left the site redirects
+ * (REDIRECTS).
  */
 export const NAV: Array<[string, string]> = [
-  ["Start", INTRODUCTION.page],
-  ["Tools", "tools/index.html"],
-  ["Reference", "specifications/index.html"],
-  ["Examples", ATLAS_MAP_PAGE],
-  ["Roadmap", "roadmap/index.html"],
+  ["How it works", "how-it-works/index.html"],
+  ["Get started", "start/index.html"],
+  ["Examples", "example/index.html"],
+  ["Reference", "tools/index.html"],
 ];
 
 /** An entry in a rail: a page, as label and output path, or a group of entries under a label that is not a link. */
@@ -172,46 +166,37 @@ export function railLinks(rail: Rail): Array<[string, string]> {
  * The rails: the pages that belong to each bar item, listed beside every page
  * in that section. The bar cannot hold everything, and a page reached only from
  * a sentence is one most readers never find, so the rest are here. A test
- * requires every page to be in the bar, a rail or the footer's row.
+ * requires every page to be in the bar, a rail or the footer's row. How it works
+ * is one page and has no rail.
+ *
+ * Get started (2026-11-26) is one path: set up Intentset, add it to your CI, then
+ * the two pages for once one capability works, each label the page's h1. The
+ * setup page was "Try it on your code" until the user's decision of 2026-11-26:
+ * it holds the real setup, and CI has a page of its own so the rail says where
+ * it is.
  *
  * Examples is one rail for the whole section (2026-10-20): Lantern, the
- * invented example, with its map, the walkthrough and the review pages the
- * Atlas draws from the same records, then the adoption log. Until then the
- * Atlas's pages had a rail of their own that led back to the walkthrough,
- * whose rail led to the Atlas.
+ * invented example, with the walkthrough, its map and the review pages the
+ * Atlas draws from the same records. The bar's Examples opens on the
+ * walkthrough, the rail's first page (2026-11-25), which links the map at its
+ * top.
+ *
+ * Reference (2026-11-26) holds the tools, then the specifications, the Markset
+ * page, conformance and the glossary.
  */
 export const RAILS: Rail[] = [
   {
-    title: "Start",
+    title: "Get started",
     items: [
-      ["Introducing Intentset", INTRODUCTION.page],
-      ["How it works", "how-it-works/index.html"],
-      ["Start with one capability", "start/index.html"],
-      ["Run the adoption", "adopt/index.html"],
-      ["Prove the work", "verify/index.html"],
-      ["The agent guide", "guide/index.html"],
-    ],
-  },
-  {
-    title: "Tools",
-    items: [
-      ["All tools", "tools/index.html"],
-      ["The intentset command", "tools/cli/index.html"],
-      ["What reads an Intentset model", "tools/readers/index.html"],
-    ],
-  },
-  {
-    title: "Reference",
-    items: [
-      ["Specifications", "specifications/index.html"],
-      ["Core", "specifications/core/index.html"],
-      ["Traceable VSA", "specifications/vsa/index.html"],
-      ["TypeScript + Amplify Gen 2", "specifications/profile-typescript-amplify-gen2/index.html"],
-      ["Publication profile", "specifications/publication/index.html"],
-      ["Export contract", "specifications/export/index.html"],
-      ["List contract", "specifications/list/index.html"],
-      ["Markset", "markset/index.html"],
-      ["Conformance", "conformance/index.html"],
+      ["Set up Intentset", "start/index.html"],
+      ["Add Intentset to your CI", "start/ci/index.html"],
+      {
+        label: "Once one capability works",
+        items: [
+          ["Model the whole product with many agents", "adopt/index.html"],
+          ["Make agents' work safe to accept", "verify/index.html"],
+        ],
+      },
     ],
   },
   {
@@ -220,12 +205,39 @@ export const RAILS: Rail[] = [
       {
         label: "Lantern, a worked example",
         items: [
-          ["The map", ATLAS_MAP_PAGE],
           ["The walkthrough", "example/index.html"],
+          ["The map", ATLAS_MAP_PAGE],
           { label: "Review pages", items: REVIEW_PAGES },
         ],
       },
-      ["The adoption log", "pilot/index.html"],
+    ],
+  },
+  {
+    title: "Reference",
+    items: [
+      {
+        label: "Tools",
+        items: [
+          ["All tools", "tools/index.html"],
+          ["The intentset command", "tools/cli/index.html"],
+          ["What your agents read", "guide/index.html"],
+        ],
+      },
+      {
+        label: "Specifications",
+        items: [
+          ["All specifications", "specifications/index.html"],
+          ["Core", "specifications/core/index.html"],
+          ["Traceable VSA", "specifications/vsa/index.html"],
+          ["TypeScript + Amplify Gen 2", "specifications/profile-typescript-amplify-gen2/index.html"],
+          ["Publication profile", "specifications/publication/index.html"],
+          ["Export contract", "specifications/export/index.html"],
+          ["List contract", "specifications/list/index.html"],
+        ],
+      },
+      ["Markset", "markset/index.html"],
+      ["Conformance", "conformance/index.html"],
+      ["Glossary", "glossary/index.html"],
     ],
   },
 ];
@@ -253,8 +265,42 @@ export function railFor(path: string, rails: typeof RAILS = RAILS): Rail | undef
   );
 }
 
-/** The footer's row: the bar again, and About, which is in no rail. */
-export const FOOTER_LINKS: Array<[string, string]> = [...NAV, ["About", "about/index.html"]];
+/** The footer's row: the bar again, the slide deck (2026-11-26) and About, which are in no rail. */
+export const FOOTER_LINKS: Array<[string, string]> = [
+  ...NAV,
+  ["Slides", INTRODUCTION.page],
+  ["About", "about/index.html"],
+];
+
+/**
+ * Pages that left the site (2026-11-26, the user's decision), each answered at its old address by a page that sends
+ * the reader on, so a link from elsewhere still lands: the adoption log and the roadmap moved to the repository's
+ * docs/, and what reads a model is docs/consumers.md. None is in the sitemap.
+ */
+export const REDIRECTS: Array<[string, string]> = [
+  ["pilot/index.html", `${REPO}/blob/main/docs/adoption/log.md`],
+  ["roadmap/index.html", `${REPO}/blob/main/docs/roadmap.md`],
+  ["tools/readers/index.html", `${REPO}/blob/main/docs/consumers.md`],
+];
+
+/** A page that sends its reader to `to`: a meta refresh, with the link for anything that does not follow one. */
+export function redirectPage(to: string): string {
+  const href = esc(to);
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moved</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${href}">
+<meta http-equiv="refresh" content="0; url=${href}">
+</head>
+<body>
+<p>This page has moved to <a href="${href}">${href}</a>.</p>
+</body>
+</html>
+`;
+}
 
 /**
  * Pages that exist only with the chat: the privacy page, which describes what the chat keeps (approved 2026-10-09).
@@ -327,15 +373,14 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["how-it-works/index.html", "how-it-works.md"],
   [INTRODUCTION.page, "introducing.md"],
   ["start/index.html", "start.md"],
+  ["start/ci/index.html", "ci.md"],
   ["adopt/index.html", "adopt.md"],
   ["verify/index.html", "verify.md"],
-  ["pilot/index.html", "pilot.md"],
   ["tools/index.html", "tools.md"],
   ["tools/cli/index.html", "cli.md"],
-  ["tools/readers/index.html", "readers.md"],
   ["specifications/index.html", "specifications.md"],
   ["markset/index.html", "markset.md"],
-  ["roadmap/index.html", "roadmap.md"],
+  ["glossary/index.html", "glossary.md"],
   ["about/index.html", "about.md"],
   [NOT_FOUND, "404.md"],
 ];
@@ -358,8 +403,6 @@ export interface Page {
   description: string;
   /** Rendered <main> content. */
   body: string;
-  /** Contents rail, as HTML, for the long documents. */
-  toc?: string;
   bodyAttributes: string;
   /**
    * Stylesheets and scripts this page alone loads, from the site's root: the Atlas's map has both (ADR 0015), and so
@@ -514,6 +557,10 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
     written.push(page.path);
   }
   await writeFile(join(out, "sitemap.xml"), sitemapXml(written));
+  for (const [path, to] of REDIRECTS) {
+    await mkdir(dirname(join(out, path)), { recursive: true });
+    await writeFile(join(out, path), redirectPage(to));
+  }
   return written;
 }
 
@@ -557,8 +604,9 @@ when it exists. The records are Markset documents, so Markset's authoring guide 
 - [Agent guide](${site}/guide.md): before and after a change, the record format, and what an agent never does
 - [Specifications](${site}/specifications/): the source of truth
 - [The intentset command](${site}/tools/cli/): every command, option and exit code
-- [Run the adoption](${site}/adopt/): how one person runs an adoption through many agents, and how to set that up
-- [Prove the work](${site}/verify/): the checks that let a change carry its own proof, and how to set them up
+- [Add Intentset to your CI](${site}/start/ci/): the job that runs the checks on every pull request, and how to make it required
+- [Model the whole product with many agents](${site}/adopt/): how one person runs an adoption through many agents, and how to set that up
+- [Make agents' work safe to accept](${site}/verify/): the checks that let a change carry its own proof, and how to set them up
 - [Markset authoring guide](${EXTERNAL.markset}guide.md): the document syntax the records are written in
 `;
 }
@@ -584,21 +632,11 @@ function sitemapXml(paths: string[]): string {
 
 // ---------------------------------------------------------------------------
 
-/** Content pages long enough to want the contents rail the specifications have. */
-const RAIL_PAGES = new Set([
-  "how-it-works/index.html",
-  "adopt/index.html",
-  "pilot/index.html",
-  "start/index.html",
-  "tools/index.html",
-  "verify/index.html",
-]);
-
 /** A content page: site/content/<file>, tokens substituted, rendered and wrapped. */
 async function contentPage(path: string, file: string, tokens: Record<string, string>): Promise<Page> {
   const text = await contentSource(file, tokens);
   const extra = path === INTRODUCTION.page ? { styles: [INTRODUCTION.stylesheet], scripts: [INTRODUCTION.script] } : {};
-  return renderPage(path, text, join(root, "site", "content", file), extra, RAIL_PAGES.has(path));
+  return renderPage(path, text, join(root, "site", "content", file), extra);
 }
 
 function renderPage(
@@ -606,7 +644,6 @@ function renderPage(
   source: string,
   file: string,
   extra: Partial<Page> = {},
-  rail = false,
   transform?: (tree: Root) => void,
 ): Page {
   const parsed = parseDocument(source);
@@ -619,7 +656,6 @@ function renderPage(
     description: firstParagraph(ast),
     body: termTips(renderHtml(ast, { diagrams: false, charts: false })),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
-    ...(rail ? { toc: tableOfContents(ast, 2, 3) } : {}),
     ...extra,
   };
 }
@@ -643,7 +679,7 @@ export function termTips(html: string): string {
 }
 
 /**
- * A normative document, rendered from spec/ with a contents rail. Links between
+ * A normative document, rendered from spec/. Links between
  * the documents become links between their pages; a link to anything else in
  * the repository goes to the repository.
  */
@@ -673,7 +709,6 @@ async function documentPage(path: string, file: string, meta: SpecMeta): Promise
     title: firstHeading(ast) ?? basename(file, ".md"),
     description: firstParagraph(ast),
     body: underHeading(renderHtml(ast, { diagrams: false, charts: false }), banner),
-    toc: tableOfContents(ast, 2, 3),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
     generatedFrom: "spec",
   };
@@ -694,7 +729,7 @@ export function cardMeta(meta: SpecMeta): string {
  * it is and where the file is.
  */
 function guidePage(): Page {
-  const page = renderPage("guide/index.html", siteGuide(), join(root, "packages", "cli", "src", "agents.ts"), {}, true);
+  const page = renderPage("guide/index.html", siteGuide(), join(root, "packages", "cli", "src", "agents.ts"));
   const banner = `<p class="site-source">The guide <code>intentset init</code> writes to <code>.intentset/agents.md</code>, generated by the same code, with <code>${esc(GUIDE_SCOPE)}</code> where your repository's scope goes. As a file for an agent: <a href="../guide.md">guide.md</a>.</p>\n`;
   return { ...page, body: underHeading(page.body, banner) };
 }
@@ -968,6 +1003,8 @@ One capability of Lantern, an invented product, written down the way Intentset a
 
 Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in order and the chain closes; open any record to see exactly what a person writes and what an agent reads. [The map](atlas/map/) draws the same ${records.length} records and every link between them in one picture.
 
+[[See every record on the map](atlas/map/)]{.button .primary} [[Open the review pages](atlas/)]{.button}
+
 :::metrics
 | Count | Value |
 |---|---|
@@ -994,9 +1031,9 @@ The records above are what an agent writes and a person approves. [The map](atla
 
 ## Try the same thing on your own code
 
-Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in a real product](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
+Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the first capability modelled in a real product came out this way, and listed two rules with no test and three behaviors checked only in the browser.
 
-[[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
+[[Set up Intentset](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
 }
@@ -1027,7 +1064,7 @@ function atlasPage(page: ExampleAtlasPage, atlas: ExampleAtlasPage[]): Page {
     if (!source.includes("\n## Reading the map\n")) throw new Error("the Atlas's map page has no section to precede");
     source = source.replace("\n## Reading the map\n", `\n${ways}\n\n## Reading the map\n`);
   }
-  const rendered = renderPage(page.path, source, join(root, EXAMPLE_DIR), {}, false, (tree) => {
+  const rendered = renderPage(page.path, source, join(root, EXAMPLE_DIR), {}, (tree) => {
     visit(tree, (node) => {
       if (node.type === "link") (node as Link).url = atlasLink(page.atlasPath, (node as Link).url, paths);
     });
@@ -1163,10 +1200,8 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
   const sectionNav = section
     ? `<nav class="site-rail" aria-label="${esc(section.title)}"><p class="site-rail-title">${esc(section.title)}</p>\n${railList(section.items)}</nav>\n`
     : "";
-  const contentsNav = page.toc
-    ? `<nav aria-label="Contents"><p class="site-rail-title">On this page</p>\n${page.toc}</nav>\n`
-    : "";
-  const rail = sectionNav || contentsNav ? `<aside class="site-toc">${sectionNav}${contentsNav}</aside>\n` : "";
+  // No page has an "On this page" contents rail (2026-11-26, the user's decision): the aside holds the section's rail.
+  const rail = sectionNav ? `<aside class="site-toc">${sectionNav}</aside>\n` : "";
   // The pattern all four sites share (Streamlane's): the home page is "Intentset
   // · what it is", every other page "Page · Intentset", and a heading's closing
   // period is dropped, since a title is a label rather than a sentence.
@@ -1394,13 +1429,6 @@ function sectionHeadings(node: Nodes, min: number, max: number, into: Heading[] 
     }
   }
   return into;
-}
-
-function tableOfContents(ast: Root, min: number, max: number): string {
-  const items = sectionHeadings(ast, min, max);
-  return `<ul>\n${items
-    .map((h) => `<li class="toc-${h.depth}"><a href="#${h.attributes?.id ?? ""}">${esc(text(h))}</a></li>`)
-    .join("\n")}\n</ul>`;
 }
 
 function visit(node: Nodes, fn: (node: Nodes) => void): void {
