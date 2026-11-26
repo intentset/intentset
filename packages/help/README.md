@@ -52,9 +52,9 @@ The file was published for one reader: every audience, role and flag it names, o
 Those lists are held all-of, never read as "any of", so serve the file only where `servedTo` holds for the person:
 
 ```ts
-import { servedTo } from "@intentset/help";
+import { type Reader, servedTo } from "@intentset/help";
 
-const reader = {
+const reader: Reader = {
   visibilities: ["public", "customer"],
   audiences: ["teacher"],
   roles: ["administrator", "teacher"],

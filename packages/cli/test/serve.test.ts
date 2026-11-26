@@ -233,7 +233,10 @@ test("BEH-MCP-CONTEXT: mcp customer serves only the two knowledge tools over one
   const built = build(dir, { mode: "customer", ...REQUEST });
   assert.notEqual(typeof built.server, "number", built.err);
   assert.equal(built.out, "");
-  assert.match(built.err, /customer knowledge over stdio: 1 published document for a customer projection/);
+  assert.match(
+    built.err,
+    /customer knowledge over stdio: 1 published document for a customer projection, audience teacher, PRD-LANTERN pilot-1\. /,
+  );
   const client = await connect(built.server as McpServer);
   t.after(() => client.close());
   const tools = (await client.listTools()).tools.map((tool) => tool.name);

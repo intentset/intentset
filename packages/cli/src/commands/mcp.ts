@@ -130,7 +130,7 @@ export function buildMcpServer(options: McpOptions, sessionOptions: SessionOptio
     });
     const r = published.index.request;
     io.stderr(
-      `intentset mcp: customer knowledge over stdio: ${count(documents.length, "published document")} for a ${r.visibility} projection, ${entitlement(r)}. ${snapshotLine(snapshot)}\n`,
+      `intentset mcp: customer knowledge over stdio: ${count(documents.length, "published document")} for a ${r.visibility} projection, ${mcpEntitlement(r)}. ${snapshotLine(snapshot)}\n`,
     );
     return server;
   } catch (error) {
@@ -145,4 +145,20 @@ export async function mcpCommand(options: McpOptions, sessionOptions: SessionOpt
   io.signal?.addEventListener("abort", () => void server.close(), { once: true });
   await runStdio(server);
   return 0;
+}
+
+/**
+ * The summary's entitlement: "audience teacher, PRD-X r1" for one role, as before ADR 0029, and the roles only when
+ * the reader holds more than one ("..., roles [administrator, teacher]").
+ */
+function mcpEntitlement(request: {
+  audience: readonly string[];
+  product: string;
+  release: string;
+  role: readonly string[];
+}): string {
+  if (request.role.length > 1) return entitlement(request);
+  const audience =
+    request.audience.length === 1 ? `audience ${request.audience[0]}` : `audiences [${request.audience.join(", ")}]`;
+  return `${audience}, ${request.product} ${request.release}`;
 }
