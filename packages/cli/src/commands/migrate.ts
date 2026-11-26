@@ -41,14 +41,9 @@ export interface MigrationStep {
 const STATUS_LINE = /^(\s+status:\s*)(['"]?)(implemented|released)\2(\s*(?:#.*)?)$/;
 const TYPE_LINE = /^\s+type:\s*(['"]?)([a-z]+)\1\s*(?:#.*)?$/;
 const DELIVERY_LINE = /^\s+delivery:/;
+/** A `delivery` key that states nothing (Core §7 reads null as not stated): its key and its trailing comment. */
+const NULL_DELIVERY_LINE = /^(\s+delivery:)(?:\s+(?:null|Null|NULL|~))?(\s*(?:#.*)?)$/;
 
-/**
- * Core §7 at `0.3` (ADR 0023): `status` is the review lifecycle only. A record whose status is `implemented` or
- * `released` becomes `approved`; when its type carries `delivery` and it states none, `delivery: built` is written on
- * the line after its status, at the same indent, since that is what the status claimed. A record that states
- * `delivery` keeps the value it states, a type that never carries one gets nothing more, and every other status,
- * `deprecated` included, is left as it is (its effective delivery is still `built`).
- */
 /** One top-level line of a record's `intentset:` mapping: its index in the record's lines, and its text without `\r`. */
 interface IntentsetLine {
   index: number;
@@ -87,12 +82,22 @@ function intentsetLines(lines: readonly string[], frontmatter: FrontmatterSpan):
   return found;
 }
 
+/**
+ * Core §7 at `0.3` (ADR 0023): `status` is the review lifecycle only. A record whose status is `implemented` or
+ * `released` becomes `approved`; when its type carries `delivery` and it states none, `delivery: built` is written on
+ * the line after its status, at the same indent, since that is what the status claimed. A `delivery` key holding
+ * `null`, `~` or nothing states none (Core §7), so that line itself becomes `delivery: built`, keeping its comment.
+ * A record that states `delivery` keeps the value it states, a type that never carries one gets nothing more, and
+ * every other status, `deprecated` included, is left as it is (its effective delivery is still `built`).
+ */
 export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) => {
   const lines = source.split("\n");
   let statusAt: number | null = null;
   let statusText = "";
   let type: string | null = null;
   let deliveryStated = false;
+  let nullDeliveryAt: number | null = null;
+  let nullDeliveryText = "";
   let eol = "";
   let statusIndent = "";
   for (const { index, line, indent, eol: lineEol } of intentsetLines(lines, frontmatter)) {
@@ -105,11 +110,19 @@ export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) =>
       continue;
     }
     type = TYPE_LINE.exec(line)?.[2] ?? type;
-    if (DELIVERY_LINE.test(line)) deliveryStated = true;
+    const nullDelivery = NULL_DELIVERY_LINE.exec(line);
+    if (nullDelivery !== null) {
+      nullDeliveryAt = index;
+      nullDeliveryText = `${nullDelivery[1]} built${nullDelivery[2]}${lineEol}`;
+    } else if (DELIVERY_LINE.test(line)) deliveryStated = true;
   }
   if (statusAt === null) return source;
   lines[statusAt] = `${statusText}${eol}`;
-  if (!deliveryStated && type !== null && (DELIVERY_TYPES as readonly string[]).includes(type)) {
+  if (deliveryStated || type === null || !(DELIVERY_TYPES as readonly string[]).includes(type)) {
+    return lines.join("\n");
+  }
+  if (nullDeliveryAt !== null) lines[nullDeliveryAt] = nullDeliveryText;
+  else {
     lines.splice(statusAt + 1, 0, `${statusIndent}delivery: built${eol}`);
   }
   return lines.join("\n");

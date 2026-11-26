@@ -17,7 +17,7 @@ impact(graph: Graph, id: string): ImpactReport
 readSelector(value): { ok, selector } | { ok: false, problems }   // spec/list.md §1: closed, AND across fields, OR within
 select(graph | checkedExport, selector, { includeRestricted?, registries? }): Selection   // throws on a rejected selector
 listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
-deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017: the field, else built for implemented/released/deprecated
+deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017, ADR 0023: the field, else built for deprecated, else null
 activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
 // Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016)
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path

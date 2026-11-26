@@ -722,6 +722,29 @@ test("BEH-MIGRATE: migrate reads past a comment line inside the intentset mappin
   );
 });
 
+test("BEH-MIGRATE: migrate counts a null or empty delivery as not stated and writes built on that line", async (t) => {
+  const { dir } = await atEarlier(t);
+  edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "status: implemented\n  delivery: null");
+  edit(dir, "CAP-ASMT-ASSIGN", "status: draft", "delivery: # not said\n  status: released");
+  edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: implemented\n  delivery: ~");
+  git(dir, "commit", "-q", "-am", "null and empty delivery");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  const after = (id: string) => readFileSync(RECORD(dir, id), "utf8");
+  assert.match(after("BEH-ASMT-SCHEDULE"), /\n {2}status: approved\n {2}delivery: built\n/);
+  assert.match(after("CAP-ASMT-ASSIGN"), /\n {2}delivery: built # not said\n {2}status: approved\n/);
+  assert.match(after("SLICE-ASMT-SCHEDULE"), /\n {2}status: approved\n {2}delivery: built\n/);
+  for (const id of ["BEH-ASMT-SCHEDULE", "CAP-ASMT-ASSIGN", "SLICE-ASMT-SCHEDULE"]) {
+    assert.equal(after(id).match(/delivery:/g)?.length, 1, `${id} keeps one delivery key`);
+  }
+  const report = JSON.parse((await run(dir, "validate", "--json")).out);
+  assert.deepEqual(
+    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+    [],
+  );
+});
+
 test("BEH-MIGRATE: migrate names a record whose status it could not rewrite, does not count it as moved, and exits 1", async (t) => {
   const { dir, files } = await atEarlier(t);
   // A double-quoted escape the YAML reader reads as implemented, in a form the line rewrite does not read.
