@@ -224,3 +224,118 @@ test("BEH-APPROVE: approve replaces a review left under the extension 0.2 read, 
     "well formed, and current against its sources",
   );
 });
+
+test("BEH-APPROVE: approve --renew-review rewrites only the review of approved knowledge, leaving its status and approval", async (t) => {
+  const dir = await committed(t);
+  // The knowledge was approved by a person, and a source it explains changed since its review.
+  edit(
+    dir,
+    "KB-ASMT-SCHEDULE",
+    "  status: approved\n",
+    '  status: approved\n  approval:\n    at: "2026-10-11"\n    basis: direct\n    by: "team-lead"\n',
+  );
+  edit(dir, "BEH-ASMT-SCHEDULE", "revision: 1", "revision: 2");
+  git(dir, "commit", "-q", "-am", "an approved article whose source changed");
+  const stale = await run(dir, "validate", "--level", "L4", "--json");
+  assert.ok(
+    JSON.parse(stale.out).diagnostics.some(
+      (d: { code: string; artifact: string }) => d.code === "CORE008" && d.artifact === "KB-ASMT-SCHEDULE",
+    ),
+    "it needs review",
+  );
+  const before = read(dir, "KB-ASMT-SCHEDULE");
+
+  const renewed = await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review", ...BY);
+  assert.equal(renewed.code, 0, renewed.err);
+  assert.match(renewed.out, /renewed the review of 1 record by ana\.reyes at 2026-11-24, checked at L1/);
+  assert.match(renewed.out, /KB-ASMT-SCHEDULE .*\(reviewed: 3 sources pinned, content-v1\)/);
+  const after = read(dir, "KB-ASMT-SCHEDULE");
+  const strip = (text: string) =>
+    text.replace(/^ {2}reviewed(By|At): .*\n/gm, "").replace(/\n {2}review:\n(?: {4,}.*\n)+/, "\n");
+  assert.equal(strip(after), strip(before), "no line but the review changed");
+  assert.match(
+    after,
+    / {2}status: approved\n {2}approval:\n {4}at: "2026-10-11"\n {4}basis: direct\n {4}by: "team-lead"\n/,
+  );
+  assert.match(after, / {2}reviewedBy: "ana\.reyes"\n {2}reviewedAt: "2026-11-24"\n/);
+  assert.match(after, /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3}---/);
+  assert.equal(git(dir, "status", "--porcelain").split("\n").length, 1, "one file changed, and nothing was committed");
+  assert.deepEqual(
+    JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out).diagnostics.filter(
+      (d: { artifact: string }) => d.artifact === "KB-ASMT-SCHEDULE",
+    ),
+    [],
+    "current again",
+  );
+  // Neither the status nor the approval changed, so review lists no approval.
+  git(dir, "commit", "-q", "-am", "the review renewed");
+  const review = await run(dir, "review", "--base", "HEAD~1");
+  assert.match(review.out, /^## Approvals and status changes \(0\)$/m);
+});
+
+test("BEH-APPROVE: approve --renew-review takes deprecated knowledge, and skips drafts and records that are not knowledge", async (t) => {
+  const dir = await committed(t);
+  edit(dir, "KB-ASMT-SCHEDULE", "status: approved", "status: deprecated");
+  git(dir, "commit", "-q", "-am", "a deprecated article");
+  const tree = snapshot(dir);
+
+  const dry = await run(
+    dir,
+    "approve",
+    "KB-ASMT-SCHEDULE",
+    "RULE-ASMT-FUTURE",
+    "--renew-review",
+    "--dry-run",
+    ...BY,
+    "--json",
+  );
+  assert.equal(dry.code, 0, dry.err);
+  const result = JSON.parse(dry.out);
+  assert.deepEqual(
+    result.renewed.map((item: { id: string }) => item.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.equal(result.approved, undefined);
+  assert.deepEqual(result.skipped, [{ id: "RULE-ASMT-FUTURE", status: "draft", type: "rule" }]);
+  assert.deepEqual(snapshot(dir), tree, "--dry-run changed nothing");
+
+  const renewed = await run(dir, "approve", "KB-ASMT-SCHEDULE", "RULE-ASMT-FUTURE", "--renew-review", ...BY);
+  assert.equal(renewed.code, 0, renewed.err);
+  assert.match(
+    renewed.out,
+    /Skipped, not approved or deprecated knowledge \(1\):\n {2}RULE-ASMT-FUTURE {2}rule, draft/,
+  );
+  assert.match(read(dir, "KB-ASMT-SCHEDULE"), / {2}status: deprecated\n/);
+  assert.match(read(dir, "RULE-ASMT-FUTURE"), / {2}status: draft\n/, "the draft rule is not approved");
+
+  // A knowledge draft is approved with approve, which writes its review; the renewal skips it.
+  git(dir, "commit", "-q", "-am", "renewed");
+  edit(dir, "KB-ASMT-SCHEDULE", "status: deprecated", "status: draft");
+  git(dir, "commit", "-q", "-am", "the article back to draft");
+  const draft = await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review", ...BY);
+  assert.equal(draft.code, 0, draft.err);
+  assert.match(draft.out, /renewed the review of 0 records/);
+  assert.match(draft.out, / {2}KB-ASMT-SCHEDULE {2}knowledge, draft/);
+  assert.equal(git(dir, "status", "--porcelain"), "");
+});
+
+test("BEH-APPROVE: approve --renew-review refuses a bare run, a run with no --by, and a tree with uncommitted changes", async (t) => {
+  const dir = await committed(t);
+  const bare = await run(dir, "approve", "--renew-review", ...BY);
+  assert.equal(bare.code, 2);
+  assert.match(bare.err, /name the knowledge whose review to renew/);
+  const anonymous = await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review");
+  assert.equal(anonymous.code, 2);
+  assert.match(anonymous.err, /--by is required: the person reviewing/);
+
+  edit(dir, "RULE-ASMT-AUTH", "revision: 1", "revision: 2");
+  const tree = snapshot(dir);
+  const dirty = await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review", ...BY);
+  assert.equal(dirty.code, 2);
+  assert.match(
+    dirty.err,
+    /1 tracked file has uncommitted changes\. Commit or stash them so the review is a diff on its own/,
+  );
+  assert.deepEqual(snapshot(dir), tree);
+  assert.equal((await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review", ...BY, "--allow-dirty")).code, 0);
+});

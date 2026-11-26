@@ -114,8 +114,9 @@ of its own above them, it is not read.
 
 - Set a status past \`draft\`, or publish knowledge. People approve, and validation passing is not approval;
   \`delivery\` is the fact you may write.
-- Run \`intentset approve\` unless the person approving tells you to in so many words. It writes their approval for
-  them, so \`--by\` is the name they give, never your own.
+- Run \`intentset approve\` unless the person approving tells you to in so many words, or
+  \`intentset approve --renew-review\` unless the person reviewing the knowledge does. Each writes that person's
+  approval or review for them, so \`--by\` is the name they give, never your own.
 - Write or change \`approval\`, the block that says who approved a record, when and on what basis, unless the
   approval workflow you are running tells you to and gives you every value. It records an approval that happened;
   writing it approves nothing, and one you made up is a false statement about a person.

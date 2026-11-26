@@ -9,8 +9,10 @@
  * review, evidence stale, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
  * --out write only what they name; init only creates; migrate rewrites the
- * two version values of each record's frontmatter and nothing else; approve
- * rewrites the status, approval and review of the drafts it is given.
+ * two version values of each record's frontmatter, applies that version's
+ * transforms and re-pins the review pins that matched before the move; approve
+ * rewrites the status, approval and review of the drafts it is given, and with
+ * --renew-review only the review of the approved or deprecated knowledge.
  */
 import { parseArgs } from "node:util";
 import { type Mode, TypeScriptMissingError } from "@intentset/architecture";
@@ -104,7 +106,7 @@ commands
                             acknowledged with an Intentset-Unchanged trailer. With --baseline,
                             the entries the base's copy did not hold and those it retired;
                             --fail-on-baseline-growth exits 1 for any it did not hold
-  approve <ID>... --by <person> [--at <date>] [--dry-run] [--allow-dirty]
+  approve <ID>... --by <person> [--at <date>] [--dry-run] [--allow-dirty] [--renew-review]
         [list's selector options]
                             write a person's approval into the drafts named or matched: status
                             approved and an approval block (basis direct); a knowledge record
@@ -113,7 +115,10 @@ commands
                             nothing if it would add an error. Records that are not drafts are
                             skipped. Refuses a tree with uncommitted changes unless
                             --allow-dirty; --dry-run shows what it would do. Never commits, and
-                            cannot know who runs it: the diff is what a reviewer accepts
+                            cannot know who runs it: the diff is what a reviewer accepts.
+                            With --renew-review: write only reviewedBy, reviewedAt and the
+                            content-v1 pins of the approved or deprecated knowledge given,
+                            leaving status and approval as they are; other records are skipped
   publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
         [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir> [--html]
         [--published-at <time>] [--no-snapshot]
@@ -129,9 +134,11 @@ commands
   migrate --to 0.3 [--allow-dirty]
                             move the records the model reads to specifications 0.3, from
                             0.2 or 0.1: rewrites intentset.spec and intentset.profile in
-                            each record's frontmatter and nothing else, and says how many.
-                            Refuses a tree with uncommitted changes to tracked files unless
-                            --allow-dirty
+                            each record's frontmatter, applies the version's rewrites (a
+                            status of implemented or released, a review under the extension),
+                            re-pins each knowledge review pin that matched its source before
+                            the move, leaving a stale one stale, and says how many. Refuses a
+                            tree with uncommitted changes to tracked files unless --allow-dirty
   mcp --mode engineering [--include-restricted]
   mcp --mode customer --visibility <public|customer> --audience <a> --product <ID>
         --release <r> --role <r> --edition <e> [--flag <f>]...
@@ -233,6 +240,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "by",
     "at",
     "dry-run",
+    "renew-review",
     "allow-dirty",
     "evidence",
     "mode",
@@ -546,6 +554,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
         dryRun: values["dry-run"],
         allowDirty: values["allow-dirty"],
         json: values.json,
+        renewReview: values["renew-review"],
         selected: given.length > 0 || values.where !== undefined,
       };
       const problem = approveUsageProblem(options);
@@ -716,6 +725,7 @@ function parse(argv: string[]) {
       by: { type: "string" },
       at: { type: "string" },
       "dry-run": { type: "boolean", default: false },
+      "renew-review": { type: "boolean", default: false },
       id: { type: "string", multiple: true },
       type: { type: "string", multiple: true },
       status: { type: "string", multiple: true },

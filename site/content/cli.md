@@ -52,6 +52,8 @@ intentset approve BEH-ASMT-SCHEDULE RULE-ASMT-FUTURE --by ana.reyes
 
 It changes only drafts, writing each one's status and who approved it and when, and for a knowledge record the review that publication requires. It validates the model with the approvals applied and writes nothing if that adds an error, and `--dry-run` shows what it would write. It never commits: the approval is a diff, and `review` lists it for whoever reviews the pull request.
 
+A person who reviews approved knowledge again, after a source it explains changed, renews its review without returning it to draft: `approve KB-ASMT-SCHEDULE --renew-review --by ana.reyes` writes who reviewed it, when, and the sources as they are now, and leaves its status and approval alone. A move to a new specification version needs no renewal: `migrate` re-pins each review that was current before the move.
+
 ## Every command
 
 This is the command's own help, as `intentset --help` prints it.

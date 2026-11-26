@@ -1,6 +1,6 @@
 # ADR 0022: Approval is a reviewed change to a record, and the tools write it and show it
 
-**Status:** accepted, 2026-11-24
+**Status:** accepted, 2026-11-24. **Amended 2026-11-25: migrate re-pins, and `approve --renew-review` renews a review (decisions).**
 
 ## Context
 

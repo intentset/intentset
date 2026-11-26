@@ -112,6 +112,13 @@ behavior. The knowledge is `needs-review`, and MUST NOT be published, when any s
 record's kind, differs from its pin or the source is gone, when a pin is missing, or when `reviewedBy` or `reviewedAt`
 is absent.
 
+**Moving and renewing.** A move to a new `spec` (Core §1) rewrites `spec` and `profile`, which both kinds cover, so it
+re-pins each pin that matched before it: a pin equal to its source's hash, of the record's kind, as the source was
+written at the version it declared becomes the same kind of hash of the source as moved. A pin that did not match is
+left as written. A review current before the move is so after it, with no step of its own, and a stale review stays
+stale. A review is renewed by the person reviewing, as a change to the knowledge (Core §7): `reviewedBy`,
+`reviewedAt`, and a pin of each source at its current hash, with `status` and `approval` left as they are.
+
 In conformance fixtures only, a pin of the literal `@current` stands for the source's hash, of the record's kind, in
 the case's own tree and is bound before projection. Unbound, it equals no hash and so reads as changed. A literal pin
 in a fixture is the hash of the baseline's source, so a case can edit the source after review.

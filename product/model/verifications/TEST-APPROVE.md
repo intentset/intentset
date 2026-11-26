@@ -14,7 +14,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   links:
     verifies: [BEH-APPROVE]
   verification:
@@ -34,7 +34,8 @@ intentset:
 - The same file: a draft knowledge record gains its review, `review` with no `hash` and each source pinned at its content hash, and is current at L4; a review left under the retired extension is replaced, and `extensions` goes with it.
 - The same file: approving an outcome nothing measures is refused with CORE012 and nothing is written, the other record named with it included; an unknown ID is refused.
 - The same file: a bare run, a run without `--by` and a dirty tree are refused; `--allow-dirty` proceeds.
+- The same file: `--renew-review` rewrites only `reviewedBy`, `reviewedAt` and `review` of approved knowledge whose source changed, leaving its status and approval, and the knowledge is current at L4 again, with no approval listed by `review`; it takes deprecated knowledge, skips a draft rule and a knowledge draft, and `--dry-run` writes nothing; a bare run, a run without `--by` and a dirty tree are refused, and `--allow-dirty` proceeds.
 
 ## Expected result
 
-Every test whose title carries `BEH-APPROVE` passes. An approval changes exactly the lines the behavior names, a refused run leaves every file as it was, and nothing is committed.
+Every test whose title carries `BEH-APPROVE` passes. An approval, or a renewed review, changes exactly the lines the behavior names, a refused run leaves every file as it was, and nothing is committed.

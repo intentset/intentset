@@ -6,7 +6,10 @@
  * `statusToReviewLifecycle` (ADR 0023), by which a `status` of `implemented` or `released` becomes `approved`, and a
  * record of a type that carries `delivery` and states none gets `delivery: built`, which is what the status claimed;
  * and `reviewToCoreField` (ADR 0025), by which a review under `extensions.intentset.org/review` moves to `review`, with
- * `hash: file-v1` where it named no hash, so no review changes what it pins. Every
+ * `hash: file-v1` where it named no hash, so no review changes what it pins. Then, over the whole tree, `repinReviews`
+ * re-pins each knowledge review pin that matched its source before the move (Core §1, publication §3): the move
+ * rewrites `spec` and `profile`, which both pin kinds cover, so a pin equal to its source's hash as the source was
+ * written becomes the same kind of hash of the source as moved, and a pin that did not match is left as written. Every
  * other line is left byte for byte, and each rewritten line keeps its quoting, comment and line ending. It reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
  * changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a diff of its own that
  * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
@@ -14,7 +17,17 @@
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { compareStrings, DELIVERY_TYPES, ID_PATTERN, parseYaml, SPEC_VERSION, sortDiagnostics } from "@intentset/core";
+import {
+  closingFenceIndex,
+  compareStrings,
+  contentHashOf,
+  DELIVERY_TYPES,
+  ID_PATTERN,
+  parseYaml,
+  SPEC_VERSION,
+  sha256Hex,
+  sortDiagnostics,
+} from "@intentset/core";
 import { trackedChanges } from "../git.ts";
 import { formatDiagnostic, type Io } from "../output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository } from "../repository.ts";
@@ -403,6 +416,175 @@ export function migrateRecord(source: string, frontmatter: FrontmatterSpan, to: 
   return text;
 }
 
+/** One record in scope as `repinReviews` reads it: its path, where its frontmatter starts, and its text before and after the move. */
+export interface RepinRecord {
+  path: string;
+  line: number;
+  before: string;
+  after: string;
+}
+
+export interface RepinResult {
+  /** The text of each record whose pins were re-pinned, by path, in place of its `after`. */
+  texts: Map<string, string>;
+  /** Pins rewritten: each matched its source as written and now holds the same kind of hash of the source as moved. */
+  repinned: number;
+  /** Pins of a source the move changed that did not match it before the move, left as written: a stale review stays stale. */
+  stale: number;
+  /** A record holding a matched pin the line rewrite could not reach (a key written as an escape), and why. */
+  problems: { path: string; problem: string }[];
+}
+
+type PinKind = "content-v1" | "file-v1";
+
+/**
+ * A record's hash of one pin kind (publication §3): `file-v1` is the SHA-256 of the whole file, its `sourceHash`, and
+ * `content-v1` the content hash of its parsed frontmatter and its body, as core computes `contentHash`. Null when the
+ * frontmatter does not read, since no pin can match a content hash that cannot be taken.
+ */
+function recordHash(source: string, line: number, kind: PinKind): string | null {
+  if (kind === "file-v1") return sha256Hex(source);
+  const parsed = parseYaml(frontmatterAt(source, line).text);
+  if (parsed.value === null) return null;
+  const text = source.startsWith("\uFEFF") ? source.slice(1) : source;
+  const lines = text.split("\n");
+  const close = closingFenceIndex(lines);
+  return contentHashOf(parsed.value, close === -1 ? text : lines.slice(close + 1).join("\n"));
+}
+
+const REVIEW_LINE = /^\s+(['"]?)review\1\s*:\s*(?:#.*)?$/;
+const SOURCES_LINE = /^\s+(['"]?)sources\1\s*:\s*(?:#.*)?$/;
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+
+/**
+ * The record's text with the pin for `id` under `review.sources` rewritten from `from` to `to`, keeping its quoting,
+ * comment and line ending; null when no line holds that pin in block form.
+ */
+function rewritePin(source: string, line: number, id: string, from: string, to: string): string | null {
+  const lines = source.split("\n");
+  const strip = (raw: string) => (raw.endsWith("\r") ? raw.slice(0, -1) : raw);
+  const indentOf = (text: string) => text.length - text.trimStart().length;
+  const content = (text: string) => text.trim() !== "" && !text.trim().startsWith("#");
+  const span = frontmatterAt(source, line);
+  const last = Math.min(span.line - 1 + span.text.split("\n").length, lines.length);
+  const blockEnd = (at: number, indent: number) => {
+    let end = at + 1;
+    for (let i = at + 1; i < last; i++) {
+      const text = strip(lines[i]);
+      if (!content(text)) continue;
+      if (indentOf(text) <= indent) break;
+      end = i + 1;
+    }
+    return end;
+  };
+  const review = intentsetLines(lines, span).find(({ line: text }) => REVIEW_LINE.test(text));
+  if (review === undefined) return null;
+  const reviewEnd = blockEnd(review.index, review.indent);
+  let sources = -1;
+  let childIndent: number | null = null;
+  for (let i = review.index + 1; i < reviewEnd; i++) {
+    const text = strip(lines[i]);
+    if (!content(text)) continue;
+    childIndent ??= indentOf(text);
+    if (indentOf(text) === childIndent && SOURCES_LINE.test(text)) sources = i;
+  }
+  if (sources === -1) return null;
+  const pin = new RegExp(
+    `^(\\s+)(['"]?)${escapeRegExp(id)}\\2(\\s*:\\s*)(['"]?)${escapeRegExp(from)}\\4(\\s*(?:#.*)?)$`,
+  );
+  for (let i = sources + 1; i < blockEnd(sources, indentOf(strip(lines[sources]))); i++) {
+    const match = pin.exec(strip(lines[i]));
+    if (match === null) continue;
+    lines[i] =
+      `${match[1]}${match[2]}${id}${match[2]}${match[3]}${match[4]}${to}${match[4]}${match[5]}${lines[i].endsWith("\r") ? "\r" : ""}`;
+    return lines.join("\n");
+  }
+  return null;
+}
+
+/**
+ * Core §1 and publication §3 (decided 2026-11-25): the move re-pins each knowledge review pin that matched before it.
+ * A pin, of the review's kind (`hash`, absent or null meaning `content-v1`), that equals its source's hash as the
+ * source was written, at the version it declared, becomes the same kind of hash of the source as moved; a pin that did
+ * not match, names a record outside the tree or is of a kind no pin matches is left as written, so a stale review stays
+ * stale and no review is created. Every record in scope takes part, those already at the target included, since a
+ * knowledge record at the target can pin a source the run moves. A `file-v1` pin of a knowledge record whose own pins
+ * were re-pinned follows it, so the rewrite runs until nothing changes.
+ */
+export function repinReviews(records: readonly RepinRecord[]): RepinResult {
+  const metas = records.map((record) => intentsetMapping(frontmatterAt(record.after, record.line)));
+  const byId = new Map<string, number>();
+  const repeated = new Set<string>();
+  metas.forEach((meta, i) => {
+    if (typeof meta === "string" || typeof meta.id !== "string") return;
+    if (byId.has(meta.id)) repeated.add(meta.id);
+    byId.set(meta.id, i);
+  });
+  for (const id of repeated) byId.delete(id);
+  const isMapping = (value: unknown): value is Record<string, unknown> =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+  const pins: { record: number; source: number; id: string; kind: PinKind; original: string; value: string }[] = [];
+  let stale = 0;
+  metas.forEach((meta, i) => {
+    if (typeof meta === "string" || meta.type !== "knowledge" || !isMapping(meta.review)) return;
+    const { hash, sources } = meta.review;
+    if (!isMapping(sources)) return;
+    const kind = hash === undefined || hash === null ? "content-v1" : hash;
+    for (const id of Object.keys(sources).sort(compareStrings)) {
+      const source = byId.get(id);
+      if (source === undefined || records[source].before === records[source].after) continue;
+      const pin = sources[id];
+      const was =
+        kind === "content-v1" || kind === "file-v1"
+          ? recordHash(records[source].before, records[source].line, kind)
+          : null;
+      if (typeof pin === "string" && was !== null && pin === was) {
+        pins.push({ record: i, source, id, kind: kind as PinKind, original: pin, value: pin });
+      } else stale++;
+    }
+  });
+  const current = records.map((record) => record.after);
+  const problems: { record: number; problem: string }[] = [];
+  const left = new Set<(typeof pins)[number]>();
+  for (let round = 0; round <= records.length; round++) {
+    let moved = false;
+    for (const pin of pins) {
+      if (left.has(pin)) continue;
+      const now = recordHash(current[pin.source], records[pin.source].line, pin.kind);
+      if (now === pin.value) continue;
+      const text =
+        now === null ? null : rewritePin(current[pin.record], records[pin.record].line, pin.id, pin.value, now);
+      if (now === null || text === null) {
+        left.add(pin);
+        problems.push({
+          record: pin.record,
+          problem:
+            now === null
+              ? `its review pin for ${pin.id} matched before the move, and ${pin.id} no longer reads as YAML, so it was left as written`
+              : `its review pin for ${pin.id} matched before the move and is written in a form the rewrite does not read, so it was left as written`,
+        });
+        continue;
+      }
+      current[pin.record] = text;
+      pin.value = now;
+      moved = true;
+    }
+    if (!moved) break;
+  }
+  const texts = new Map<string, string>();
+  records.forEach((record, i) => {
+    if (current[i] !== record.after) texts.set(record.path, current[i]);
+  });
+  return {
+    texts,
+    repinned: pins.filter((pin) => pin.value !== pin.original).length,
+    stale,
+    problems: problems
+      .map(({ record, problem }) => ({ path: records[record].path, problem }))
+      .sort((a, b) => compareStrings(a.path, b.path) || compareStrings(a.problem, b.problem)),
+  };
+}
+
 export function migrateCommand(options: MigrateOptions, io: Io): number {
   const root = findRoot(io.cwd, options.root);
   if (root === null) {
@@ -436,34 +618,55 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   let current = 0;
   let other = 0;
   const left: { path: string; problem: string }[] = [];
+  // Every record is moved in memory first, so the review pins can be re-pinned against the whole tree before anything is written.
+  const records: RepinRecord[] = [];
   for (const input of repo.inputs) {
     if (input.frontmatter === null) continue;
     const text = migrateRecord(input.source, input.frontmatter);
+    records.push({ path: input.path, line: input.frontmatter.line, before: input.source, after: text ?? input.source });
     if (text === null) {
       if (declaredSpec(input.frontmatter) === MIGRATE_TO) current++;
       else other++;
       continue;
     }
     if (text === input.source) continue;
-    writeFileSync(join(root, input.path), text);
     const problem = migrationProblem(input.frontmatter, frontmatterAt(text, input.frontmatter.line));
     if (problem !== null) left.push({ path: input.path, problem });
     else moved++;
   }
+  const repin = repinReviews(records);
+  for (const record of records) {
+    const text = repin.texts.get(record.path) ?? record.after;
+    if (text !== record.before) writeFileSync(join(root, record.path), text);
+  }
+  const pins = (n: number) => `${n} review pin${n === 1 ? "" : "s"}`;
+  const repinned =
+    repin.repinned > 0 || repin.stale > 0
+      ? `; re-pinned ${pins(repin.repinned)} that matched before the move` +
+        `${repin.stale > 0 ? `, and left ${pins(repin.stale)} that did not as written` : ""}`
+      : "";
   io.stdout(
     `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} to ${MIGRATE_TO}` +
-      `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}.\n`,
+      `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}${repinned}.\n`,
   );
-  if (left.length === 0) return 0;
-  io.stderr(
-    `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full; give each one key per name, a status of approved, delivery: built ` +
-      "where its type carries delivery and it states none, and, on knowledge alone, its review under review (with " +
-      "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash and snapshot, each a " +
-      "non-empty string:\n" +
-      [...left]
-        .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
-        .map(({ path, problem }) => `  ${path}: ${problem}\n`)
-        .join(""),
-  );
+  if (left.length === 0 && repin.problems.length === 0) return 0;
+  if (left.length > 0) {
+    io.stderr(
+      `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full; give each one key per name, a status of approved, delivery: built ` +
+        "where its type carries delivery and it states none, and, on knowledge alone, its review under review (with " +
+        "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash and snapshot, each a " +
+        "non-empty string:\n" +
+        [...left]
+          .sort((a, b) => compareStrings(a.path, b.path))
+          .map(({ path, problem }) => `  ${path}: ${problem}\n`)
+          .join(""),
+    );
+  }
+  if (repin.problems.length > 0) {
+    io.stderr(
+      `intentset migrate: ${pins(repin.problems.length)} that matched before the move could not be re-pinned; write each in block form under review.sources, or have the knowledge reviewed again:\n` +
+        repin.problems.map(({ path, problem }) => `  ${path}: ${problem}\n`).join(""),
+    );
+  }
   return 1;
 }

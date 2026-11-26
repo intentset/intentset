@@ -1,13 +1,26 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { TypeScriptMissingError } from "@intentset/architecture";
+import { contentHashOf, parseYaml } from "@intentset/core";
 import { validateSchema } from "../../conformance/src/harness.ts";
 import { typescriptMissing } from "../src/commands/shared.ts";
-import { asEarlier, atEarlier, edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
+import {
+  asEarlier,
+  atEarlier,
+  edit,
+  example,
+  exportSchema,
+  git,
+  REPO,
+  RECORD,
+  run,
+  snapshot,
+  temp,
+} from "./helpers.ts";
 
 test("BEH-AGENT-GUIDE: init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
   const dir = temp(t);
@@ -1045,3 +1058,242 @@ for (const [what, change, named] of [
     );
   });
 }
+
+/** A record's hash of one pin kind, computed as publication §3 says, over the file as it is written now. */
+function pinOf(path: string, kind: "content-v1" | "file-v1"): string {
+  const text = readFileSync(path, "utf8");
+  if (kind === "file-v1") return createHash("sha256").update(text).digest("hex");
+  const lines = text.split("\n");
+  const close = lines.indexOf("---", 1);
+  const parsed = parseYaml(lines.slice(1, close).join("\n"));
+  assert.ok(parsed.value !== null, path);
+  return contentHashOf(parsed.value, lines.slice(close + 1).join("\n"));
+}
+
+/**
+ * The knowledge with each review pin (a line `<ID>: <hash>` under its sources) set to that source's hash as written
+ * now, keeping its quoting.
+ */
+function pinEach(file: string, pathOf: (id: string) => string, kind: "content-v1" | "file-v1", text?: string): string {
+  return (text ?? readFileSync(file, "utf8")).replace(
+    /^( {6,8})([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+): (['"]?)[^'"\s]*\3$/gm,
+    (_, indent: string, id: string, quote: string) => `${indent}${id}: ${quote}${pinOf(pathOf(id), kind)}${quote}`,
+  );
+}
+
+const KB = "KB-ASMT-SCHEDULE.md";
+
+for (const version of ["0.2", "0.1"]) {
+  test(`BEH-MIGRATE: migrate --to 0.3 from ${version} re-pins each content-v1 pin that matched its source, so a review current before the move is current after it with no manual step`, async (t) => {
+    const { dir, files, current } = await atEarlier(t, version);
+    const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+    // Reviewed at the earlier version: each pin is its source's content hash as the source is written there.
+    writeFileSync(
+      kb,
+      pinEach(kb, (id) => RECORD(dir, id), "content-v1"),
+    );
+    git(dir, "commit", "-q", "-am", `the knowledge reviewed at ${version}`);
+    assert.notEqual(
+      readFileSync(kb, "utf8"),
+      asEarlier(current.get(KB) as string, version),
+      "spec and profile move every content hash",
+    );
+
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 0, moved.err);
+    assert.match(
+      moved.out,
+      new RegExp(`moved ${files.length} records to 0\\.3; re-pinned 3 review pins that matched before the move\\.\\n$`),
+    );
+    for (const name of files) {
+      assert.equal(readFileSync(join(dir, "product", "scheduling", name), "utf8"), current.get(name), name);
+    }
+    assert.deepEqual(await currentAtL4(dir), [], "current before the move and after it");
+  });
+}
+
+test("BEH-MIGRATE: migrate re-pins a whole-file review as file-v1, each pin the hash of its source's file as moved", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  // Before 0.3 a review that named no hash pinned whole files.
+  const earlier = readFileSync(kb, "utf8").replace("      hash: content-v1\n", "");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "file-v1", earlier),
+  );
+  git(dir, "commit", "-q", "-am", "a whole-file review at 0.2");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(moved.out, new RegExp(`moved ${files.length} records to 0\\.3; re-pinned 3 review pins`));
+  const after = readFileSync(kb, "utf8");
+  assert.match(after, /\n {2}review:\n {4}hash: file-v1\n {4}sources:\n/);
+  for (const id of ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]) {
+    assert.match(
+      after,
+      new RegExp(`\n {6}${id}: '?${pinOf(RECORD(dir, id), "file-v1")}'?\n`),
+      `${id} is pinned at its moved file`,
+    );
+  }
+  assert.deepEqual(await currentAtL4(dir), []);
+});
+
+test("BEH-MIGRATE: migrate leaves a pin that did not match before the move as written, so a stale review stays stale", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "content-v1"),
+  );
+  git(dir, "commit", "-q", "-am", "the knowledge reviewed at 0.2");
+  // The rule changes after the review, so its pin no longer matches before the move.
+  const stale = /^ {8}RULE-ASMT-AUTH: ([0-9a-f]{64})$/m.exec(readFileSync(kb, "utf8"))?.[1] as string;
+  writeFileSync(
+    RECORD(dir, "RULE-ASMT-AUTH"),
+    `${readFileSync(RECORD(dir, "RULE-ASMT-AUTH"), "utf8")}\nOne more line.\n`,
+  );
+  git(dir, "commit", "-q", "-am", "the rule changed after the review");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(
+    moved.out,
+    new RegExp(
+      `moved ${files.length} records to 0\\.3; re-pinned 2 review pins that matched before the move, and left 1 review pin that did not as written\\.`,
+    ),
+  );
+  const after = readFileSync(kb, "utf8");
+  assert.ok(after.includes(`      RULE-ASMT-AUTH: ${stale}\n`), "the stale pin is left as written");
+  assert.ok(after.includes(`      RULE-ASMT-FUTURE: ${pinOf(RECORD(dir, "RULE-ASMT-FUTURE"), "content-v1")}\n`));
+  const found = await currentAtL4(dir);
+  assert.deepEqual(
+    found.map((d: { code: string; artifact: string }) => [d.code, d.artifact]),
+    [["CORE008", "KB-ASMT-SCHEDULE"]],
+  );
+  assert.match(found[0].message, /RULE-ASMT-AUTH/);
+});
+
+test("BEH-MIGRATE: migrate re-pins a knowledge record already at 0.3 whose sources the same run moves", async (t) => {
+  const { dir, files, current } = await atEarlier(t);
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "content-v1", current.get(KB)),
+  );
+  git(dir, "commit", "-q", "-am", "the knowledge at 0.3, reviewed against the sources at 0.2");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(
+    moved.out,
+    new RegExp(`moved ${files.length - 1} records to 0\\.3; 1 already 0\\.3; re-pinned 3 review pins`),
+  );
+  assert.equal(readFileSync(kb, "utf8"), current.get(KB));
+  assert.deepEqual(await currentAtL4(dir), []);
+});
+
+test("BEH-MIGRATE: migrate names a matched pin it cannot reach, leaves it as written, re-pins the others, and exits 1", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  const pinned = pinEach(kb, (id) => RECORD(dir, id), "content-v1");
+  // One pin's key as a double-quoted escape, which YAML reads as the ID and the line rewrite does not.
+  const escaped = pinned.replace("        BEH-ASMT-SCHEDULE:", '        "BEH-ASMT\\x2DSCHEDULE":');
+  assert.notEqual(escaped, pinned);
+  writeFileSync(kb, escaped);
+  git(dir, "commit", "-q", "-am", "a pin key written as an escape");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 1);
+  assert.match(moved.out, new RegExp(`moved ${files.length} records to 0\\.3; re-pinned 2 review pins`), moved.err);
+  assert.match(
+    moved.err,
+    /1 review pin that matched before the move could not be re-pinned[^\n]*\n {2}product\/scheduling\/KB-ASMT-SCHEDULE\.md: its review pin for BEH-ASMT-SCHEDULE matched before the move and is written in a form the rewrite does not read, so it was left as written\n/,
+  );
+});
+
+test("BEH-MIGRATE: migrate keeps current a review of the repository's own model, its records moved from 0.2 in the same run", async (t) => {
+  const dir = temp(t);
+  cpSync(join(REPO, "product", "model"), join(dir, "product", "model"), { recursive: true });
+  mkdirSync(join(dir, ".intentset"));
+  for (const name of ["config.yaml", "registries.yaml"]) {
+    cpSync(join(REPO, ".intentset", name), join(dir, ".intentset", name));
+  }
+  const originals = new Map<string, string>();
+  const walk = (folder: string): string[] =>
+    readdirSync(folder, { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory()
+        ? walk(join(folder, entry.name))
+        : entry.name.endsWith(".md")
+          ? [join(folder, entry.name)]
+          : [],
+    );
+  const byId = new Map<string, string>();
+  for (const path of walk(join(dir, "product", "model"))) {
+    const text = readFileSync(path, "utf8");
+    originals.set(path, text);
+    byId.set(/^ {2}id: (\S+)$/m.exec(text)?.[1] as string, path);
+    writeFileSync(path, asEarlier(text, "0.2"));
+  }
+  // Two articles reviewed at 0.2 against the model's own records: one pinning content, one whole files.
+  const article = (id: string, hash: string) => `---
+markset: 0
+intentset:
+  spec: '0.2'
+  profile: intentset/knowledge/0.2
+  id: ${id}
+  type: knowledge
+  title: Moving the model to a new specification version ${id.slice(-1)}
+  status: approved
+  owner: maintainers
+  visibility: public
+  audiences: [engineering]
+  revision: 1
+  reviewedBy: maintainers
+  reviewedAt: '2026-11-25'
+  links:
+    explains: [BEH-MIGRATE, BEH-APPROVE]
+  availability:
+    products: [PRD-INTENTSET]
+    releases: [v0.1-draft]
+    roles: [developer]
+    editions: [open-source]
+    flags: []
+  extensions:
+    intentset.org/review:
+${hash}      sources:
+        BEH-APPROVE: x
+        BEH-MIGRATE: x
+        RULE-NEVER-REWRITE: x
+---
+
+# Moving the model to a new specification version ${id.slice(-1)}
+
+## Guidance
+
+Run the migration on a clean tree, and commit what it writes as a change of its own.
+`;
+  mkdirSync(join(dir, "product", "model", "knowledge"));
+  const kbs = { "KB-MODEL-MOVE-A": "content-v1", "KB-MODEL-MOVE-B": "file-v1" } as const;
+  for (const [id, kind] of Object.entries(kbs)) {
+    const path = join(dir, "product", "model", "knowledge", `${id}.md`);
+    const text = article(id, kind === "content-v1" ? "      hash: content-v1\n" : "");
+    writeFileSync(
+      path,
+      pinEach(path, (source) => byId.get(source) as string, kind, text),
+    );
+  }
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "the model at 0.2, with two reviewed articles");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  assert.match(moved.out, /; re-pinned 6 review pins that matched before the move\.\n$/);
+  for (const [path, text] of originals) assert.equal(readFileSync(path, "utf8"), text, path);
+  const report = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out);
+  assert.deepEqual(
+    report.diagnostics.filter((d: { artifact: string }) => d.artifact in kbs),
+    [],
+    "both articles are current after the move, as before it",
+  );
+});
