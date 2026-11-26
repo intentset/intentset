@@ -753,9 +753,49 @@ test("BEH-MIGRATE: migrate names a record whose status it could not rewrite, doe
   const moved = await run(dir, "migrate", "--to", "0.3");
   assert.equal(moved.code, 1);
   assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
-  assert.match(moved.err, /1 record moved to 0\.3 still declares a status 0\.3 does not list/);
-  assert.match(moved.err, /\n {2}product\/scheduling\/RULE-ASMT-AUTH\.md\n/);
+  assert.match(moved.err, /1 record moved to 0\.3 could not be rewritten in full/);
+  assert.match(
+    moved.err,
+    /\n {2}product\/scheduling\/RULE-ASMT-AUTH\.md: still declares a status 0\.3 does not list\n/,
+  );
   assert.match(readFileSync(RECORD(dir, "RULE-ASMT-AUTH"), "utf8"), /spec: '0\.3'/, "its spec and profile still move");
+});
+
+test("BEH-MIGRATE: migrate reads a quoted or spaced key as YAML does, keeping a stated delivery and writing built after a quoted type", async (t) => {
+  const { dir } = await atEarlier(t);
+  edit(dir, "RULE-ASMT-AUTH", "status: draft", 'status: implemented\n  "delivery": planned');
+  edit(dir, "CAP-ASMT-ASSIGN", "status: draft", "status: released\n  delivery : planned");
+  edit(dir, "BEH-ASMT-SCHEDULE", /^ {2}type: behavior$/m, '  "type": behavior');
+  edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "'status' : released");
+  git(dir, "commit", "-q", "-am", "quoted and spaced keys");
+
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  const after = (id: string) => readFileSync(RECORD(dir, id), "utf8");
+  assert.match(after("RULE-ASMT-AUTH"), /\n {2}status: approved\n {2}"delivery": planned\n/);
+  assert.match(after("CAP-ASMT-ASSIGN"), /\n {2}status: approved\n {2}delivery : planned\n/);
+  assert.match(after("BEH-ASMT-SCHEDULE"), /\n {2}'status' : approved\n {2}delivery: built\n/);
+  for (const id of ["RULE-ASMT-AUTH", "CAP-ASMT-ASSIGN", "BEH-ASMT-SCHEDULE"]) {
+    assert.equal(after(id).match(/delivery['"]? ?:/g)?.length, 1, `${id} keeps one delivery key`);
+  }
+  const report = JSON.parse((await run(dir, "validate", "--json")).out);
+  assert.deepEqual(
+    report.diagnostics.filter((d: { code: string }) => d.code === "CORE001"),
+    [],
+  );
+});
+
+test("BEH-MIGRATE: migrate names a record whose rewrite would lose the delivery its status claimed, and exits 1", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  // A double-quoted escape the YAML reader reads as behavior, which the line rewrite does not read: the record would
+  // become approved with no delivery.
+  edit(dir, "BEH-ASMT-SCHEDULE", /^ {2}type: behavior$/m, '  type: "behavio\\x72"');
+  edit(dir, "BEH-ASMT-SCHEDULE", "status: draft", "status: released");
+  git(dir, "commit", "-q", "-am", "a type the rewrite cannot read");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 1);
+  assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
+  assert.match(moved.err, /\n {2}product\/scheduling\/BEH-ASMT-SCHEDULE\.md: lost the delivery its status claimed\n/);
 });
 
 test("BEH-MIGRATE: migrate refuses a tree with uncommitted changes, and a target it does not know, and writes nothing", async (t) => {

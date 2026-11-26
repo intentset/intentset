@@ -38,11 +38,12 @@ export interface MigrationStep {
   transforms: readonly RecordTransform[];
 }
 
-const STATUS_LINE = /^(\s+status:\s*)(['"]?)(implemented|released)\2(\s*(?:#.*)?)$/;
-const TYPE_LINE = /^\s+type:\s*(['"]?)([a-z]+)\1\s*(?:#.*)?$/;
-const DELIVERY_LINE = /^\s+delivery:/;
+// Each key is read as YAML reads a plain block key: bare, single- or double-quoted, with optional spaces before the colon.
+const STATUS_LINE = /^(\s+(['"]?)status\2\s*:\s*)(['"]?)(implemented|released)\3(\s*(?:#.*)?)$/;
+const TYPE_LINE = /^\s+(['"]?)type\1\s*:\s*(['"]?)([a-z]+)\2\s*(?:#.*)?$/;
+const DELIVERY_LINE = /^\s+(['"]?)delivery\1\s*:/;
 /** A `delivery` key that states nothing (Core §7 reads null as not stated): its key and its trailing comment. */
-const NULL_DELIVERY_LINE = /^(\s+delivery:)(?:\s+(?:null|Null|NULL|~))?(\s*(?:#.*)?)$/;
+const NULL_DELIVERY_LINE = /^(\s+(['"]?)delivery\2\s*:)(?:\s+(?:null|Null|NULL|~))?(\s*(?:#.*)?)$/;
 
 /** One top-level line of a record's `intentset:` mapping: its index in the record's lines, and its text without `\r`. */
 interface IntentsetLine {
@@ -106,14 +107,14 @@ export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) =>
       statusAt = index;
       statusIndent = " ".repeat(indent);
       eol = lineEol;
-      statusText = `${status[1]}${status[2]}approved${status[2]}${status[4]}`;
+      statusText = `${status[1]}${status[3]}approved${status[3]}${status[5]}`;
       continue;
     }
-    type = TYPE_LINE.exec(line)?.[2] ?? type;
+    type = TYPE_LINE.exec(line)?.[3] ?? type;
     const nullDelivery = NULL_DELIVERY_LINE.exec(line);
     if (nullDelivery !== null) {
       nullDeliveryAt = index;
-      nullDeliveryText = `${nullDelivery[1]} built${nullDelivery[2]}${lineEol}`;
+      nullDeliveryText = `${nullDelivery[1]} built${nullDelivery[3]}${lineEol}`;
     } else if (DELIVERY_LINE.test(line)) deliveryStated = true;
   }
   if (statusAt === null) return source;
@@ -128,18 +129,34 @@ export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) =>
   return lines.join("\n");
 };
 
-/**
- * True when the record, read as YAML, still declares a status earlier versions listed and `0.3` does not. The
- * transform rewrites every status line it can read; one it cannot (a flow mapping, a block scalar) is left, and the
- * command says so rather than count the record as moved.
- */
-export function declaresRemovedStatus(frontmatter: FrontmatterSpan): boolean {
+/** The `intentset` mapping of a frontmatter read as YAML, or a message when it does not read. */
+function intentsetMapping(frontmatter: FrontmatterSpan): Record<string, unknown> | string {
   const parsed = parseYaml(frontmatter.text);
-  if (parsed.value === null) return false;
+  if (parsed.value === null) return parsed.error.message;
   const intentset = parsed.value.intentset;
-  if (intentset === null || typeof intentset !== "object" || Array.isArray(intentset)) return false;
-  const status = (intentset as Record<string, unknown>).status;
-  return status === "implemented" || status === "released";
+  if (intentset === null || typeof intentset !== "object" || Array.isArray(intentset)) return {};
+  return intentset as Record<string, unknown>;
+}
+
+const REMOVED_STATUSES: readonly unknown[] = ["implemented", "released"];
+
+/**
+ * Why a record the line rewrite moved did not move in full, read by comparing the original and the rewritten
+ * frontmatter as YAML; null when it did. The transform rewrites every line it can read; one it cannot (a flow mapping,
+ * a block scalar, an escaped value) is left, and the command says so rather than count the record as moved: a
+ * rewrite that no longer reads as YAML (a duplicate key), a status `0.3` does not list, or a status that claimed an
+ * implementation on a type that carries `delivery` and now leaves it unstated, which would change what it means.
+ */
+export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan): string | null {
+  const moved = intentsetMapping(after);
+  if (typeof moved === "string") return `no longer reads as YAML (${moved})`;
+  if (REMOVED_STATUSES.includes(moved.status)) return "still declares a status 0.3 does not list";
+  const original = intentsetMapping(before);
+  if (typeof original === "string" || !REMOVED_STATUSES.includes(original.status)) return null;
+  const type = moved.type;
+  if (typeof type !== "string" || !(DELIVERY_TYPES as readonly string[]).includes(type)) return null;
+  if (moved.delivery === undefined || moved.delivery === null) return "lost the delivery its status claimed";
+  return null;
 }
 
 /** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
@@ -270,7 +287,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   let moved = 0;
   let current = 0;
   let other = 0;
-  const left: string[] = [];
+  const left: { path: string; problem: string }[] = [];
   for (const input of repo.inputs) {
     if (input.frontmatter === null) continue;
     const text = migrateRecord(input.source, input.frontmatter);
@@ -281,7 +298,8 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     }
     if (text === input.source) continue;
     writeFileSync(join(root, input.path), text);
-    if (declaresRemovedStatus(frontmatterAt(text, input.frontmatter.line))) left.push(input.path);
+    const problem = migrationProblem(input.frontmatter, frontmatterAt(text, input.frontmatter.line));
+    if (problem !== null) left.push({ path: input.path, problem });
     else moved++;
   }
   io.stdout(
@@ -290,12 +308,12 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   );
   if (left.length === 0) return 0;
   io.stderr(
-    `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} still declare${left.length === 1 ? "s" : ""} ` +
-      `a status ${MIGRATE_TO} does not list, in a form the rewrite could not read; set each to approved, with delivery: built ` +
+    `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full, ` +
+      "in a form the rewrite could not read; give each one key per name, a status of approved, and delivery: built " +
       "where its type carries delivery and it states none:\n" +
       [...left]
-        .sort()
-        .map((path) => `  ${path}\n`)
+        .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+        .map(({ path, problem }) => `  ${path}: ${problem}\n`)
         .join(""),
   );
   return 1;

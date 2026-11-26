@@ -21,7 +21,8 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 1. **One carrier, one record per artifact.** Markdown with YAML frontmatter under `intentset:`. Tools never merge
    duplicate records and never rewrite files, with two exceptions, each only when asked and each refusing a tree with
    uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate --to 0.3` rewrites
-   `spec` and `profile` in each record's frontmatter, and `intentset approve` (ADR 0022) rewrites `status` and
+   `spec` and `profile` in each record's frontmatter and, moving to 0.3, a `status` of `implemented` or `released` to
+   `approved`, writing `delivery: built` beside it where the type carries delivery and states none (ADR 0023), and `intentset approve` (ADR 0022) rewrites `status` and
    `approval` in the drafts it is given, and the review of a knowledge record among them. Unknown keys inside
    `intentset` are errors except under `extensions`; unknown top-level keys are preserved and never interpreted.
 2. **Authored forward edges only.** Relationships are written once in the Core §5 direction; every inverse is

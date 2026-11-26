@@ -287,11 +287,7 @@ function fields(model: Model, artifact: Artifact): string[] {
   add(
     "delivery",
     "Delivery",
-    delivery === null
-      ? undefined
-      : delivery.derived
-        ? `${delivery.word}, because its status claims an implementation`
-        : delivery.word,
+    delivery === null ? undefined : delivery.derived ? `${delivery.word}, because it is deprecated` : delivery.word,
   );
   add("owner", "Owner", text(meta.owner));
   add("visibility", "Visibility", meta.visibility);

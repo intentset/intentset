@@ -812,3 +812,29 @@ test("BEH-ATLAS, BEH-DELIVERY: the overview and a record's page show delivery be
   const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
   assert.doesNotMatch(knowledge, /Delivery/, "knowledge does not carry delivery");
 });
+
+test("BEH-ATLAS, BEH-DELIVERY: a deprecated record that states no delivery shows built because it is deprecated, the one status that implies it", () => {
+  const atlas = buildAtlas(
+    example({
+      edit: (name, source) =>
+        name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: deprecated") : source,
+    }),
+  );
+  const record = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "");
+  assert.match(record, /Status deprecated Delivery built, because it is deprecated/);
+  assert.doesNotMatch(record, /claims an implementation/);
+  const overview = textOf(atlas.get("index.html") ?? "");
+  assert.match(
+    overview,
+    /Behaviors whose work is built 1 of 1 of behaviors; delivery as written, or built for a deprecated record/,
+  );
+  const approved = textOf(
+    buildAtlas(
+      example({
+        edit: (name, source) =>
+          name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: approved") : source,
+      }),
+    ).get("records/BEH-ASMT-SCHEDULE.html") ?? "",
+  );
+  assert.match(approved, /Status approved Delivery not stated/, "approval implies nothing about the code");
+});
