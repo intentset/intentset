@@ -59,7 +59,7 @@ repository-relative.
   expected one hour, so a security decision is made as a bug fix; CI is green, and nobody decided it (the agent's reason
   is told, 2026-11-26, so the change reads as believable rather than random). Home, How it works and
   the introduction (`#problem`, `#review`) tell it as an example, without a label calling it invented (the user's decision, 2026-11-26: a card titled "An
-  example" says enough). Its records are the site's example, `site/shop/` (`EXAMPLE_DIR`), 17 of them, the decision that set the hour among
+  example" says enough). Its records are `examples/shop/` (`EXAMPLE_DIR`), 17 of them, which `intentset init --example` writes, the decision that set the hour among
   them, which the drift output lists. Change it in all three places or none. No page says a pass counts only "on
   this commit": a pass counts while what it checked is unchanged, and a gate may ask for a pass on the commit under
   review (Streamlane SL-710). Lantern is the CLI's example (`intentset init --example`) and the conformance suite's

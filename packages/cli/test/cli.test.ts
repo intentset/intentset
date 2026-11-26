@@ -139,13 +139,24 @@ test("the guide's behavior template validates once its placeholders name real va
   assert.match(validate.out, /^16 artifacts, 0 errors/);
 });
 
-test("init --example then validate: 15 artifacts and no diagnostics", async (t) => {
+test("init --example writes the shop, and it validates with no diagnostics", async (t) => {
+  const dir = temp(t);
+  const init = await run(dir, "init", "--example", "--repository", "example/shop");
+  assert.equal(init.code, 0, init.err);
+  assert.match(init.out, /with 17 example records in scope/);
+  assert.equal(readdirSync(join(dir, "product", "shop")).length, 17);
+  const validate = await run(dir, "validate");
+  assert.equal(validate.code, 0, validate.out);
+  assert.equal(validate.out, "17 artifacts, 0 errors, 0 warnings (level L1, scope: product/**/*.md)\n");
+  assert.equal(validate.err, "");
+});
+
+test("the Lantern repository the tests build validates with no diagnostics", async (t) => {
   const dir = await example(t);
   assert.equal(readdirSync(join(dir, "product", "scheduling")).length, 15);
   const validate = await run(dir, "validate");
   assert.equal(validate.code, 0, validate.out);
   assert.equal(validate.out, "15 artifacts, 0 errors, 0 warnings (level L1, scope: product/**/*.md)\n");
-  assert.equal(validate.err, "");
 });
 
 test("BEH-VALIDATE-REPORTS: a broken record exits 1 with its code, location, artifact, fix and field", async (t) => {
@@ -688,7 +699,7 @@ test("BEH-CONTEXT: context of a file no slice claims names the file, never a mal
   assert.equal(json.diagnostics[0].path, "src/nowhere/else.ts");
 });
 
-test("BEH-AGENT-GUIDE: init's registries say what each list holds, and the guide carries a verification template and the way to see one record of each type", async (t) => {
+test("BEH-AGENT-GUIDE: init's registries say what each list holds, and the guide carries a verification template and the way to see an example model", async (t) => {
   const dir = temp(t);
   assert.equal((await run(dir, "init")).code, 0);
   const registries = readFileSync(join(dir, ".intentset", "registries.yaml"), "utf8");
@@ -703,7 +714,7 @@ test("BEH-AGENT-GUIDE: init's registries say what each list holds, and the guide
   const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
   assert.match(guide, /^ {2}profile: intentset\/verification\/0\.2$/m);
   assert.match(guide, /^ {4}selector: the test's title, or the describe's name$/m);
-  assert.match(guide, /`npx intentset init --example --root <an empty directory>` writes one record of each type/);
+  assert.match(guide, /`npx intentset init --example --root <an empty directory>` writes a small example model/);
   assert.match(
     guide,
     /A capability sits\nunder an outcome, an outcome under an intent, and an intent under the product/,

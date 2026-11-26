@@ -148,7 +148,7 @@ callouts, tables and other constructs a record may use and the codes \`validate\
 guide at ${MARKSET_GUIDE_URL}, or print it with \`${markset}\`.
 
 An existing record of the same type in this repository is the best template; in a repository with none yet,
-\`${run} init --example --root <an empty directory>\` writes one record of each type there to read. A capability sits
+\`${run} init --example --root <an empty directory>\` writes a small example model there to read. A capability sits
 under an outcome, an outcome under an intent, and an intent under the product, so the first capability brings those
 three with it. A new behavior looks like this, one recognizable promise including how it fails:
 
