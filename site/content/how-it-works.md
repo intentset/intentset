@@ -17,12 +17,12 @@ Deciding whether the idea is for you at all? [The home page](../) starts with th
 ## The short version
 
 :::steps
-1. **Write records.** Each behavior, rule, slice and check is a Markdown file with YAML frontmatter, written by the agent that changes the code and reviewed in the same pull request.
-2. **Link them once.** A record names what it points at. Intentset works out the reverse, so every behavior knows its rules, its owner, its checks and its explanations.
-3. **Give each behavior one owner.** A slice of your code is accountable for it, and an architecture check keeps other code out of that slice's internals.
+1. **Agents write records.** Each behavior, rule, slice and check is a short Markdown file beside the code, written by the agent that changes the code, in the same commit.
+2. **People approve them.** Only a person moves a record out of draft. Agents never approve.
+3. **CI catches drift.** `intentset review --fail-on-drift` fails a change whose code moved while its records did not, unless a commit says no behavior changed.
 4. **Attach evidence.** Test runs from CI are tied to a commit. A pass counts while what it checked is unchanged, and a gate can ask for a pass on the commit under review.
-5. **Review the impact.** Before a change merges, see every behavior, owner, check and explanation it could reach.
-6. **Publish safely.** Reviewed explanations go out for one audience and one release, and nothing internal leaks through.
+5. **Review the product, then the code.** Before a change merges, the reviewer sees what changed in the records, and every behavior, owner, check and explanation the change could reach.
+6. **Keep the boundaries and the help.** One slice of your code owns each behavior and an architecture check keeps other code out of its internals; explanations whose sources changed are held for review before they are published again.
 7. **Hand it on.** A tool reads the model from your repository, or from one versioned export with restricted records left out.
 :::
 
@@ -34,7 +34,7 @@ You already have tests, pull request summaries, instructions for your agents, de
 - **Tests.** A test checks the code, and an agent often changes it in the same commit as the code. A record says what the test is meant to hold, and Intentset reports whether it passed on the code as it stands.
 - **Pull request summaries.** A summary is written from the diff, by the agent that made it. `intentset review` starts from what the records say changed.
 - **CLAUDE.md and AGENTS.md.** They say how to work in the repository, not what the product promises. One line in either points your agents at the guide Intentset writes.
-- **Decision records.** An existing one joins the model as a decision record by gaining frontmatter, its text unchanged.
+- **Decision records.** An existing one with Context, Decision and Consequences sections joins the model as a decision record by gaining frontmatter, its text unchanged.
 - **Docs and help articles.** They go out of date without anyone noticing. A knowledge record, an explanation written for one audience, is held for review when what it explains changes.
 
 It ties them to what the product promises, and fails CI when the code and the records come apart. Nor is it any of these:
@@ -109,9 +109,7 @@ Keeping the model in files is a deliberate choice, and it has consequences worth
 - The repository is the source of truth. The graph, the reports, the Atlas and the published pages are views rebuilt from these files, and no tool ever rewrites them.
 - There is no database and no hosted service to run.
 
-A record's status says where it stands with people: a draft until a person approves it, then implemented, released, and in time deprecated or retired. An optional `delivery` says something else, whether the work it describes exists: `planned` on a record that proposes work, `built` on one written from code that is already there. An agent may write it, because it states a fact about the code; only a person approves.
-
-A record can also say how it came to be approved. An optional `approval` names who approved it, when, and on what basis: a person read this record, or it was derived from something a person approved, such as a work item in another tool, or an agent attested it and no person has. A behavior, rule or scenario can name the outside requirement it `formalizes`. Intentset checks the form of both and holds no policy on either: it never decides who may approve, and it never opens what a record points at.
+A record's status says where it stands with people: a draft until a person approves it, then implemented, released, and in time deprecated or retired.
 
 ## What CI checks, and what a failure says
 
@@ -122,7 +120,7 @@ npx intentset validate --level L2
 npx intentset review --base origin/main --fail-on-drift
 ```
 
-The first checks the records and the boundaries in the code. The second compares the branch with main: what the change could reach, every record whose status or approval changed, and each [slice]{.term tip="The part of the code accountable for a set of behaviors: the files it claims, and the entrypoints other code may use."} whose code changed while none of the records that describe it did.
+The first checks the records and the boundaries in the code. The second compares the branch with main: what the change could reach, every record whose status or approval changed, and each [slice]{.term tip="The part of the code accountable for a set of behaviors, end to end."} whose code changed while none of the records that describe it did.
 
 Say an agent changes Lantern's release-time check to accept a time up to an hour in the past, and changes nothing else. The review exits with code 1, and this is the part of its report that says why:
 
@@ -171,7 +169,7 @@ Approval stays with people: only a person moves a record from draft to approved,
 
 - **One capability.** An agent writes it from the code you already have, and you review about eight files. On a fresh TypeScript repository with one feature and three tests, the steps on [Try it on your code](../start/) take five minutes.
 - **Every change.** The agent updates the records in the same commit, or adds a trailer line saying no behavior changed. In the first of Coral Reef Ventures' own products to adopt it, the check ran 367 times on its pull requests from 2026-10-07 to 2026-10-10, and 355 of 367 runs passed without anyone noticing the gate was there. Nine of the failures were drift, and each passed once a commit added one trailer per slice.
-- **Existing debt.** In the same product, the architecture check found 472 violations when it was switched on, on 2026-10-06. They were written down as a [baseline]{.term tip="The list of violations that existed when a rule started applying. They are tolerated; any new one fails."} that could only shrink, and it reached zero on 2026-10-11, while the product grew from 37 slices to 43.
+- **Existing debt.** In the same product, the architecture check found 472 violations when it was switched on, on 2026-10-06. They were written down as a [baseline]{.term tip="The architecture violations already in the code when the check is switched on, written to a file so that only a new one fails."} that could only shrink, and it reached zero on 2026-10-11, while the product grew from 37 slices to 43.
 - **A whole product.** Modelling a product that already exists is a team's work for a long time. [Modelling the whole product](../adopt/) is how one person running many agents does it.
 
 [The adoption log](../pilot/) has each figure with its source and date.
@@ -214,6 +212,12 @@ There are thirteen record types. They fall into five groups, each answering a di
 The behavior is the center of the model. It is one recognizable promise, including how it fails: *schedule a student assessment for a future time*, rather than *student assessments*. When parts of a behavior would be released, owned or reviewed separately, they are separate behaviors. A rule can govern many behaviors and is written once, not copied into each. A scenario is a worked example; it shows the promise, and it does not prove every case.
 
 People arrive from different ends and meet at the same records. A product reviewer starts at the top and drills down, from product to intent, outcome, capability and behavior. An engineer starts from the slice they are working in. Both end up reading the same behavior.
+
+## What a record can say about itself
+
+Besides its status, a record can say more. An optional `delivery` says something else, whether the work it describes exists: `planned` on a record that proposes work, `built` on one written from code that is already there. An agent may write it, because it states a fact about the code; only a person approves.
+
+A record can also say how it came to be approved. An optional `approval` names who approved it, when, and on what basis: a person read this record, or it was derived from something a person approved, such as a work item in another tool, or an agent attested it and no person has. A behavior, rule or scenario can name the outside requirement it `formalizes`. Intentset checks the form of both and holds no policy on either: it never decides who may approve, and it never opens what a record points at.
 
 ## Intent, outcome, measure, verification
 

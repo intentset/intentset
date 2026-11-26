@@ -13,8 +13,8 @@ The steps are the same in the [README](https://github.com/intentset/intentset#tr
 > - Node 22.18 or later.
 > - A git repository with JavaScript or TypeScript code and its tests.
 > - A coding agent that can run commands in the repository.
-> - Test reports from Vitest, Playwright or node:test (its TAP reporter) for step 5. Jest reports do not import yet.
-> - TypeScript 7 for step 4's second command and for step 7. npm installs it for you; the note at the foot of this page covers pnpm.
+> - Test reports from Vitest, Playwright or node:test (its TAP reporter) for step 5. Jest reports do not import.
+> - TypeScript 7 for every command from step 4's second one on (validate at L2 and above, and review). npm installs it for you; the note at the foot of this page covers pnpm.
 > - Step 5's `<PRD-ID>` is the ID of the product record the agent writes in step 3. `npx intentset list --type product` prints it.
 > - A word you don't know is in [the glossary](../glossary/).
 
@@ -126,7 +126,7 @@ pnpm exec intentset review --base origin/main --fail-on-drift
 ```
 :::
 
-After the tests, import their report as in step 5 and validate at L3, so each run records which promises passed on which commit. From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear; [Run the adoption](../adopt/) is for the rest of the product.
+After the tests, import their report as in step 5 and validate at L3, so each run records which promises passed on which commit. From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear; [Model the whole product with many agents](../adopt/) is for the rest of the product.
 
 ## What the records are good for next
 
@@ -136,7 +136,7 @@ After the tests, import their report as in step 5 and validate at L3, so each ru
 
 ## Run it in CI
 
-Step 7's two commands, as a GitHub Actions job that runs on every pull request:
+Step 7's two commands, as a GitHub Actions job that runs on every pull request. [What CI checks, and what a failure says](../how-it-works/#what-ci-checks-and-what-a-failure-says) shows the second one stopping a change:
 
 ```yaml
 name: intentset

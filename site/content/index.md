@@ -30,7 +30,7 @@ One change · what the reviewer reads first
 1. [Code]{.badge} 2,140 lines changed in 31 files
 2. [Behavior]{.badge .info} Schedule a student assessment: now accepts a release time up to an hour in the past
 3. [Rule]{.badge} Require a future release time: loosened, and waiting for a person to approve it
-4. [Checks]{.badge} The test on this rule changed with it, and has no current pass yet
+4. [Checks]{.badge} The test on this rule was changed to expect the new behavior, so it passes for the new rule, not the old one
 5. [Help]{.badge} The teachers' guide still describes the old rule, so it is held for review
 6. [Drift]{.badge} None: no code changed without its records
 :::
@@ -78,7 +78,7 @@ If every answer comes easily, you may not need Intentset yet. If one of them too
 None of this is a mistake anyone made. Every change makes small decisions about what the product does: what to refuse, what to allow, what happens when a step fails. When people wrote the code, those decisions passed through someone who knew the product. Now an agent makes them, and writes the tests that check them, in the same change. Green CI tells you the code does what the tests say. It cannot tell you whether anyone meant the product to change. Twice as many changes means twice as many of those decisions, and none of them is written down where a person decides.
 
 :::::card[Illustrative: one change in Lantern, an invented school product]{.example}
-An agent is asked to fix a bug: in one school, assessments open an hour late. Its fix runs to 2,140 lines in 31 files. One of those changes is in the code that refuses a release time in the past: it now allows a time up to an hour back, to absorb clocks that disagree. The test that expected the refusal is updated to expect acceptance, so it passes. CI is green. The pull request's summary says it fixes time zone handling for scheduled assessments, which is true. It is approved.
+An agent is asked to fix a bug: in one school, assessments open an hour late. Its fix, with the tidying and renaming the agent did on the way, runs to 2,140 lines in 31 files. One of those changes is in the code that refuses a release time in the past: it now allows a time up to an hour back, to absorb clocks that disagree. The test that expected the refusal is updated to expect acceptance, so it passes. CI is green. The pull request's summary says it fixes time zone handling for scheduled assessments, which is true. It is approved.
 
 Nobody decided that teachers may now schedule an assessment in the past. The teachers' guide still tells them to choose a future release time. The product changed, and the only trace of it is one line in a long diff.
 
@@ -90,20 +90,19 @@ The card at the top of this page is the same change as Intentset shows it to the
 
 ### It was already there, in a tested repository
 
-On 2026-10-02 an agent wrote down one capability of the first of Coral Reef Ventures' own products to adopt Intentset, from the code, tests and decision record the repository already held. Two of the capability's three rules had no test, and three of the things it does were checked only in the browser. None of this was new to the code. It was new to the people reading it.
+On 2026-10-02 an agent wrote down one capability of the first product Coral Reef Ventures, the company behind Intentset, is adopting it in, from the code, tests and decision record the repository already held. Two of the capability's three rules had no test, and three of the things it does were checked only in the browser. None of this was new to the code. It was new to the people reading it.
 
-Once its records were a required check on every pull request, from 2026-10-06:
-
-- The architecture check found 472 violations already in the code when it was switched on. It tolerated those and failed any new one. They reached 0 on 2026-10-11, and nothing has been tolerated since.
-- From 2026-10-07 to 2026-10-10 the check ran 367 times. Nine times in four days, it stopped a change until someone said whether behavior had changed, and 355 of the 367 runs passed without anyone noticing it was there.
+Its records have been a required check on every pull request since 2026-10-06. From 2026-10-07 to 2026-10-10 the check ran 367 times, and 355 runs passed without anyone noticing it was there. Nine of the 12 that failed were the check stopping a change until someone said whether behavior had changed.
 
 [Read the adoption log](pilot/) for how each was measured.
 
 ### What would have caught it
 
-Not more review: no one reads 2,140 lines well. What helps is a short written statement of what the product promises, kept beside the code and changed only when someone means to, plus a check that stops a change whose code moved while that statement did not.
+Not more review: no one reads 2,140 lines well. What helps is a short written statement of what the product promises, kept beside the code and changed in the open, plus a check that stops a change whose code moved while that statement did not.
 
 That is what Intentset keeps. Each promise is a **behavior**: one thing the product does, including how it fails. Something that must stay true across behaviors is a **rule**, written once. Both are short Markdown records. Your agents update them in the same commit as the code, and a person approves them. Intentset does not stop an agent from changing the product. It makes the change visible in product language, to the person who decides, before it merges.
+
+An agent can edit a record as easily as a test, and Intentset lets it. The difference is where the edit shows up. A rewritten test is one line in 2,140. A loosened rule is one changed sentence in a file under `product/`, which the reviewer reads before the code, and only a person can approve it.
 
 ***
 
@@ -138,9 +137,9 @@ What it is
 ## Files in your repository, and a command that checks them
 
 {.lead}
-Intentset is two things: an open specification for writing down what your product promises, and a command-line tool, `@intentset/cli` on npm, that checks your code, your tests and your published help against what is written. There is no service to sign up for, no account and no database.
+Intentset is two things: an open specification for writing down what your product promises, and a command-line tool, `@intentset/cli` on npm, that checks your code, your tests and your published help against what is written.
 
-`npx intentset init` writes three files under `.intentset/`. The records themselves are Markdown files under `product/`, one per promise, reviewed in the same pull request as the code. No Intentset command edits your code.
+After `npm install --save-dev @intentset/cli`, `npx intentset init` writes three files under `.intentset/`. The records themselves are Markdown files under `product/`, one per record (a behavior, a rule, a check and so on), reviewed in the same pull request as the code. No Intentset command edits your code.
 
 ```text
 your-repository/
@@ -156,24 +155,18 @@ your-repository/
   src/                 your code, as it was
 ```
 
-This is one whole record, a rule from Lantern, the invented school product the site uses as its example, exactly as `intentset init --example` writes it into `product/scheduling/`. Your agent writes the part between the `---` lines; you read the part below it. Linked together, a product's records are its model: a set of files, not an AI model.
+This is a rule from Lantern, the invented school product the site uses as its example, as `intentset init --example` writes it into `product/scheduling/`, with its frontmatter shortened ([the whole file](https://github.com/intentset/intentset/blob/main/examples/scheduling/RULE-ASMT-FUTURE.md)). Your agent writes the part between the `---` lines; you read the part below it. Linked together, a product's records are its model: a set of files, not an AI model.
 
 ```markdown
 ---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/rule/0.2
   id: RULE-ASMT-FUTURE
   type: rule
   title: Require a future release time
   status: draft
   owner: team-assessment
-  visibility: internal
-  audiences:
-  - engineering
-  - product
-  revision: 1
+  # spec, profile, visibility, audiences and revision left out here
 ---
 
 # Require a future release time
@@ -185,13 +178,14 @@ The authoritative server time must be earlier than the requested release time wh
 
 ### One check, and what a failure says
 
-CI runs one command on every pull request:
+CI runs two commands on every pull request. The first checks the records and the boundaries in the code; the second is the one that catches drift:
 
 ```sh
+npx intentset validate --level L2
 npx intentset review --base origin/main --fail-on-drift
 ```
 
-Here the code that decides whether a release time is accepted was changed to let one up to an hour in the past through, and the records were left alone. The check fails with exit code 1, and says why:
+Each part of the code that delivers a set of behaviors is a [slice]{.term tip="The part of the code accountable for a set of behaviors, end to end."}. Here the code that decides whether a release time is accepted was changed to let one up to an hour in the past through, and the records were left alone. The check fails with exit code 1, and says why:
 
 ```text
 ## Code changed, records unchanged (1, 1 not acknowledged)
@@ -202,13 +196,13 @@ Here the code that decides whether a release time is accepted was changed to let
 ```
 
 {.small .muted}
-Real output, trimmed to the part that failed. It was made on 2026-11-25 by running this repository's `intentset` from source as `intentset review --base origin/main --fail-on-drift`, in a scratch git repository holding the worked example's records from `intentset init --example`, the one resource file the example's registry names, and one file of code their [slice]{.term tip="The part of the code accountable for a set of behaviors, end to end. Each behavior past draft has exactly one."} claims, committed on main and then changed on a branch. Lantern is invented; this is not a report from a real product.
+Real output, trimmed to the part that failed. It was made on 2026-11-25 by running this repository's `intentset` from source as `intentset review --base origin/main --fail-on-drift`, in a scratch git repository holding the worked example's records from `intentset init --example`, the data file its registry names, and one file of code the slice claims, committed on main and then changed on a branch. Lantern is invented; this is not a report from a real product.
 
 Code that changed while its records did not is [drift]{.term tip="Code changed and its records did not."}. If the behavior changed, the agent updates the rule in the same pull request, and the reviewer reads one line:
 
 ```diff
 -The authoritative server time must be earlier than the requested release time when the schedule is accepted.
-+The requested release time must be no more than one hour earlier than the authoritative server time when the schedule is accepted.
++The requested release time must be no more than one hour before the authoritative server time when the schedule is accepted.
 ```
 
 If it did not, as in a refactor, a commit says so with `Intentset-Unchanged: SLICE-ASMT-SCHEDULE`. In the same scratch repository, either one made the same command pass.
@@ -261,14 +255,9 @@ Next to what you have
 
 ## Tests, summaries and notes each hold part of it
 
-- **Tests.** An agent that changes a behavior can change its test in the same commit, and CI stays green.
-- **A pull request summary** says what the agent meant to do, in its words, about one change.
-- **CLAUDE.md or AGENTS.md** says how to work in the repository, not what the product promises.
-- **Decision records** say why, once. An existing one joins the model by gaining frontmatter, its text unchanged.
-- **Docs and help pages** fall out of date without anyone noticing. Help written as records is held for review when what it explains changes.
-- **Tickets** describe a change and close. Records describe what the product does after it.
+Tests check the code, and an agent can change them in the same commit as the behavior they check. A pull request summary, agent instructions in CLAUDE.md or AGENTS.md, decision records, docs and tickets each hold part of the picture, and none of them says what the product promises today.
 
-Intentset replaces none of them. It ties them to what the product promises, and fails CI when code changes and its records do not. [What it is not, and what you already have](how-it-works/#alongside) goes through each one.
+Intentset replaces none of them. It ties them to what the product promises, and fails CI when code changes and its records do not. [How it sits beside each one](how-it-works/#alongside).
 
 ***
 

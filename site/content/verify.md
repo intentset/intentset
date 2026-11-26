@@ -20,7 +20,7 @@ No single check makes a change trustworthy. A unit test cannot see a page that s
 
 | The layer | What it catches | Intentset's part |
 |---|---|---|
-| A test with every claim | A promise the code no longer keeps | Verification records, and coverage at L3 |
+| A test with every claim | A promise the code no longer keeps | Verification records, and current passes at L3 |
 | The product, driven | A flow that works in a unit test and fails in the product | Its report, imported as run records |
 | Every screen, in every form | A layout broken in dark mode, on a phone, or for a keyboard | None |
 | Tests that hold the rules | A policy broken by a change that touched no feature | The architecture check |

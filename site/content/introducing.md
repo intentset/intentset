@@ -8,7 +8,7 @@ A slide deck
 # Introducing Intentset
 
 {.lead}
-What Intentset is, why it exists and how it works, in 23 slides, for anyone deciding whether it is worth a closer look. Parts one to three make the case in plain words and need no setup; parts four and five are for whoever will set it up. Each slide's speaker notes are folded beneath it.
+What Intentset is, why it exists and how it works, in 23 slides, for anyone deciding whether it is worth a closer look. Parts one to three make the case in plain words and need no setup; part four is for whoever will set it up; part five is how to adopt it and try it. Each slide's speaker notes are folded beneath it.
 
 {.deck-parts}
 1. [Why Intentset exists](#cover): agents write code faster than anyone can read it.
@@ -313,7 +313,7 @@ The same pull request, told as what it does to the product.
 :::card{.panel .changes}
 - [Code]{.badge} 2,140 lines changed in 31 files
 - [Behavior]{.badge .info} **Schedule a student assessment** now accepts a release time up to an hour in the past
-- [Rule]{.badge} **Require a future release time**: loosened, and waiting for a person to agree
+- [Rule]{.badge} **Require a future release time**: loosened, and waiting for a person to approve it
 - [Checks]{.badge} The test on this rule changed with it; no current pass on the new code yet
 - [Help]{.badge} The teachers' guide still describes the old rule, so it is held for review
 - [Drift]{.badge} None: no code changed without its records
@@ -328,7 +328,7 @@ Illustrative · not a live report
 
 {.notes}
 > [!NOTE]- Speaker notes
-> This is the change from the start of the deck, still illustrative and still in Lantern, the invented product. The story of it in one line: fixing assessments that open an hour late, the agent loosened the rule about when an assessment may open, so a release time up to an hour in the past is now accepted, and changed the test that expected the refusal. That is what a reviewer reads instead of, or before, more than two thousand lines of code: which promise changed, which rule moved and that no person has agreed to it yet, what happened to its check, which customer explanation now needs another look, and whether any code changed without its records. One honest gap is visible too: the changed test has no current pass on the new code.
+> This is the change from the start of the deck, still illustrative and still in Lantern, the invented product. The story of it in one line: fixing assessments that open an hour late, the agent loosened the rule about when an assessment may open, so a release time up to an hour in the past is now accepted, and changed the test that expected the refusal. That is what a reviewer reads instead of, or before, more than two thousand lines of code: which promise changed, which rule moved and that no person has approved it yet, what happened to its check, which customer explanation now needs another look, and whether any code changed without its records. One honest gap is visible too: the changed test has no current pass on the new code.
 
 ::::card{#questions .slide}
 
@@ -396,6 +396,9 @@ A promise can have a test and still have no current pass: the test may not have 
 
 The other five are shown as what they are: stale, skipped, failed, errored or never run. **None of them counts as a pass.**
 
+{.caveat}
+Illustrative · not a measured product
+
 ::::
 
 {.notes}
@@ -405,7 +408,7 @@ The other five are shown as what they are: stale, skipped, failed, errored or ne
 ::::card{#under .slide .part}
 
 {.eyebrow}
-Part two
+Part four
 
 ## Under the hood
 

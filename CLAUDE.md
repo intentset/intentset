@@ -86,7 +86,7 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
   and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
   record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
   may be quoted, with operation names replaced by `<operation>`.
-- A narrative page of the site (Home, How it works, Start, Run the adoption, Prove the work, About, Roadmap, the
+- A narrative page of the site (Home, How it works, Try it on your code, Model the whole product with many agents, Make agents' work safe to accept, About, Roadmap, the
   introduction) may name Streamlane and Driftline once each, in one block, with the family label beside the name:
   Streamlane `Product · In development`, Driftline `Product · In planning` (reef `docs/conventions.md`, Status labels;
   reef `docs/family.md` for the loop). The readers page (`/tools/readers/`) lists both with the path each reads.

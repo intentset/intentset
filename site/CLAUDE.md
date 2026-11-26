@@ -59,7 +59,7 @@ repository-relative.
   a review page that lists every one; the site's own record page and the Atlas's behavior page at `/example/atlas/behaviors/<ID>/` gave
   way to it, so each record has one page, inside the navigation. The map was Lantern's landing page from 2026-10-20 until the user's decision of 2026-11-25 put the bar's
   Examples on the walkthrough: its h1 is still "Lantern, a worked example", it links the walkthrough and the review
-  pages under the picture, and the other ways into the example (the home page, Start, Tools, How it works, the roadmap)
+  pages under the picture, and the other ways into the example (the home page, Tools, How it works, the roadmap)
   still lead to it. It has no run evidence and no commit, because the example's check has not been executed and the
   pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
   has no public Atlas, and a public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml`

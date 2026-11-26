@@ -104,7 +104,7 @@ The commit and graph hash a report or a publication was made from, so that every
 
 ### Tip
 
-One sentence a knowledge record carries for one behavior, for the product to show beside the control that delivers it. Tips are reviewed and published with the record.
+One sentence a knowledge record carries for one behavior or rule, for the product to show beside the control that delivers the behavior or enforces the rule. Tips are reviewed and published with the record.
 
 ### Trailer
 
