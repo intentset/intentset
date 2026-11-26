@@ -119,6 +119,12 @@ pnpm exec intentset review --base origin/main --fail-on-drift
 
 After the tests, import their report as in step 5 and validate at L3, so each run records which promises passed on which commit. From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear; [Run the adoption](../adopt/) is for the rest of the product.
 
+## What the records are good for next
+
+- **Stay here.** CI keeps the model true on every change, and the Atlas shows it.
+- **Let another tool read them.** A tool can read the records from your repository, or from the export. [What reads an Intentset model](../tools/readers/) says what each path needs from your repository.
+- **Publish your run records.** Published from CI, they say outside the repository what passed and whether each pass still holds.
+
 ## Starting a new product?
 
 Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists, each with `delivery: planned`. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved, and the change that builds a record's work marks it `delivery: built`.
