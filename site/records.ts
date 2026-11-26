@@ -1,6 +1,6 @@
 /**
  * The worked example as the site reads it: every record under
- * examples/scheduling/, its frontmatter decoded and its body kept as source.
+ * the site's example (EXAMPLE_DIR in build.ts), its frontmatter decoded and its body kept as source.
  *
  * The frontmatter is read here rather than by Markset's parser. Markset's YAML
  * subset reads `markset:` and `theme:` and leaves everything else to the

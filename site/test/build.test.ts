@@ -21,6 +21,8 @@ import {
   NOT_FOUND,
   COPY_SCRIPT,
   EXAMPLE_ACTS,
+  EXAMPLE_DIR,
+  REDIRECTS,
   readSpecMeta,
   REPO,
   SCHEME_SCRIPT,
@@ -28,7 +30,6 @@ import {
   SITE_HOST,
   SPEC_META_KEYS,
   SPECS,
-  statusLabel,
   termTips,
 } from "../build.ts";
 import { ATLAS_MAP_PAGE, REVIEW_PAGES } from "../example-atlas.ts";
@@ -45,7 +46,7 @@ after(async () => {
   await rm(dist, { recursive: true, force: true });
 });
 
-const records = await loadRecords(join(root, "examples", "scheduling"));
+const records = await loadRecords(join(root, EXAMPLE_DIR));
 
 /** Visible text of a fragment of HTML. */
 function text(fragment: string): string {
@@ -175,7 +176,7 @@ test("every page has exactly one h1, a skip link to main, and no script but the 
   }
 });
 
-test("the bar is the five sections by what a reader came to do", () => {
+test("the bar is the three sections by what a reader came to do", () => {
   for (const [page, doc] of html) {
     const nav = doc.slice(doc.indexOf('<nav class="site-nav"'), doc.indexOf("</nav>"));
     const labels = [...nav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]);
@@ -184,11 +185,12 @@ test("the bar is the five sections by what a reader came to do", () => {
       NAV.map(([label]) => label),
       page,
     );
-    assert.deepEqual(labels, ["Start", "Tools", "Reference", "Examples", "Roadmap"]);
+    assert.deepEqual(labels, ["How it works", "Get started", "Reference"]);
+    assert.doesNotMatch(doc, /On this page/, `${page} has a contents rail`);
   }
 });
 
-test("the footer is the family's: the bar and About, then one line, then the family's mark", () => {
+test("the footer is the family's: the bar, the slides and About, then one line, then the family's mark", () => {
   // Decided 2026-10-06 for both product sites: a row of links, then one line
   // naming the product, what it is, its source, the company and the sibling.
   assert.equal(FOOTER.statement, "Keep control of what your agents build.");
@@ -212,7 +214,7 @@ test("the footer is the family's: the bar and About, then one line, then the fam
     );
     assert.deepEqual(
       [...footerNav.matchAll(/<a [^>]*>([^<]+)<\/a>/g)].map((m) => m[1]),
-      ["Start", "Tools", "Reference", "Examples", "Roadmap", "About", ...(ASK_URL === null ? [] : ["Privacy"])],
+      ["How it works", "Get started", "Reference", "Slides", "About", ...(ASK_URL === null ? [] : ["Privacy"])],
       `${page}: About stays in the footer's row`,
     );
     const afterNav = footer.slice(footer.indexOf("</nav>") + "</nav>".length);
@@ -235,14 +237,19 @@ test("tab titles follow the family's pattern: the home page names Intentset firs
   }
 });
 
-test("How it works is a page of its own, in Start's rail with its contents, and the home page leads to it", () => {
+test("How it works is in the bar, with the example in its rail, and the home page leads to it", () => {
   const page = html.get("how-it-works/index.html") ?? "";
-  assert.match(page, /<nav aria-label="Contents">/, "the explanation has a contents rail");
+  // "On this page" left every page the site writes from site/content on 2026-11-26 (the user's decision).
+  assert.doesNotMatch(page, /<nav aria-label="Contents">/, "no contents rail");
   assert.match(
     page,
-    /<nav class="site-rail" aria-label="Start">[\s\S]*?<a href="\.\.\/how-it-works\/" aria-current="page">How it works<\/a>/,
+    /<nav class="site-rail" aria-label="How it works">[\s\S]*?<a href="\.\.\/example\/">The shop.s model, record by record<\/a>/,
+    "the rail leads to the example",
   );
-  assert.match(page, /<nav class="site-nav"[\s\S]*?<a href="\.\.\/introducing\/" aria-current="page">Start<\/a>/);
+  assert.match(
+    page,
+    /<nav class="site-nav"[\s\S]*?<a href="\.\.\/how-it-works\/" aria-current="page">How it works<\/a>/,
+  );
   const home = main("index.html");
   assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/">See how it works<\/a>/);
   assert.doesNotMatch(html.get("index.html") ?? "", /index\.html#how/, "nothing points at the old anchor");
@@ -319,47 +326,22 @@ test("the only destinations outside the site are the repository, Markset, Coral 
       assert.ok(allowed.has(new URL(href).host), `${page}: unexpected destination ${href}`);
     }
   }
-  assert.match(html.get("markset/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
+  assert.match(html.get("glossary/index.html") ?? "", new RegExp(`href="${EXTERNAL.markset}"`));
   assert.match(html.get("about/index.html") ?? "", new RegExp(`href="${EXTERNAL.coralReef}"`));
-  assert.match(html.get("roadmap/index.html") ?? "", new RegExp(`href="${REPO}">Contribute on GitHub`));
 });
 
 /** The deck's slides, in its order (decided 2026-10-26: published here, in Markset, rather than linked on claude.ai). */
-const DECK = [
-  "cover",
-  "problem",
-  "trust",
-  "idea",
-  "behavior",
-  "lantern",
-  "loop",
-  "review",
-  "questions",
-  "honest",
-  "under",
-  "record",
-  "types",
-  "measure",
-  "links",
-  "slices",
-  "evidence",
-  "drift",
-  "views",
-  "publish",
-  "levels",
-  "practice",
-  "try",
-];
+const DECK = ["cover", "problem", "trust", "idea", "review", "value", "loop", "fits", "adopt", "try"];
 
-test("the introduction is a deck of 23 slides in order, each with its notes folded beneath it, on its own theme", async () => {
+test("the introduction is a deck of 10 slides in order, each with its notes folded beneath it, on its own theme", async () => {
   const page = html.get(INTRODUCTION.page) ?? "";
   const body = main(INTRODUCTION.page);
   assert.match(page, /<title>Introducing Intentset · Intentset<\/title>/);
   assert.match(body, /<h1 id="introducing-intentset">Introducing Intentset<\/h1>/);
   const description = /<meta name="description" content="([^"]+)">/.exec(page)?.[1] ?? "";
-  assert.ok(description.startsWith("What Intentset is, why it exists and how it works"), description);
+  assert.ok(description.startsWith("What Intentset is, what it gives a team"), description);
   // A slide is a card carrying .slide, and what follows it is its notes, a folded NOTE callout: in document order
-  // the two alternate, a slide and then its notes, 23 times.
+  // the two alternate, a slide and then its notes, once per slide.
   const order = [
     ...body.matchAll(
       /<section class="ms-card slide[^"]*" id="([^"]+)"|<details class="ms-callout notes" data-type="note">\n<summary class="ms-callout-title">Speaker notes<\/summary>/g,
@@ -369,10 +351,13 @@ test("the introduction is a deck of 23 slides in order, each with its notes fold
     order,
     DECK.flatMap((id) => [id, "notes"]),
   );
-  // The five parts each open on their first slide.
-  for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
-  // The one caveat the slides carry, on the example review.
-  assert.ok(text(body).includes("Illustrative · not a live report"));
+  // The four parts each open on their first slide.
+  for (const id of ["problem", "idea", "value", "adopt"]) assert.ok(body.includes(`href="#${id}"`), id);
+  // The example is Home's password reset (2026-11-26). A pass is never said to
+  // count only on this commit (SL-710).
+  assert.ok(text(body).includes("A password reset link stops working one hour after it is sent."));
+  assert.ok(!text(body).includes("Lantern"), "the deck tells Home's example, not Lantern");
+  assert.ok(!/on this commit/.test(text(body)), "no pass is bound to this commit");
   // Every picture its theme draws is published beside it.
   const theme = await readFile(join(dist, INTRODUCTION.stylesheet), "utf8");
   const pictures = [...theme.matchAll(/url\("\.\.\/([^"]+)"\)/g)].map((m) => m[1] ?? "");
@@ -389,9 +374,18 @@ test("the introduction is a deck of 23 slides in order, each with its notes fold
   for (const [, href] of body.matchAll(/href="([^"]+)"/g)) assert.ok(!/^[a-z][a-z0-9+.-]*:/i.test(href), href);
 });
 
-test("the home page and How it works lead to the introduction on the site", () => {
-  assert.match(main("index.html"), /<a href="introducing\/">Page through the introduction<\/a>/);
-  assert.match(main("how-it-works/index.html"), /<a href="\.\.\/introducing\/">page through the introduction<\/a>/);
+test("the slide deck is in the footer's row and nowhere in a page's body (2026-11-26, the user's decision)", () => {
+  for (const [page, doc] of html) {
+    if (page === INTRODUCTION.page) continue;
+    const body = doc.slice(doc.indexOf("<main"), doc.indexOf("</main>"));
+    assert.doesNotMatch(body, /href="(?:\.\.\/)*introducing\/"/, `${page} leads to the deck from its body`);
+    const footer = doc.slice(doc.indexOf('<footer class="site-footer">'));
+    assert.match(
+      footer,
+      /href="(?:\/|\.\/|(?:\.\.\/)*)introducing\/">Slides<\/a>/,
+      `${page}: the footer's row has the deck`,
+    );
+  }
 });
 
 /** The headings a Markdown source declares, outside code fences, as the text a reader sees. */
@@ -412,19 +406,14 @@ function renderedHeadings(page: string): string[] {
   return [...main(page).matchAll(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/g)].map((m) => text(m[1]));
 }
 
-test("the specification pages carry exactly the headings their source files declare, in order, with a contents rail", async () => {
+test("the specification pages carry exactly the headings their source files declare, in order, with no contents rail", async () => {
   const docs = SPECS.map((s) => [`specifications/${s.slug}/index.html`, join("spec", s.file)]);
   for (const [page, file] of docs) {
     assert.deepEqual(renderedHeadings(page), await sourceHeadings(file), page);
     const doc = html.get(page) ?? "";
     assert.match(doc, /<aside class="site-toc"><nav class="site-rail" aria-label="Reference">/, page);
-    const toc = doc.slice(doc.indexOf('<nav aria-label="Contents">'), doc.indexOf("</aside>"));
-    assert.ok(toc.length > 0, `${page}: no contents rail`);
-    const entries = [...toc.matchAll(/<a href="#([^"]+)">/g)].map((m) => m[1]);
-    // The publication profile is the shortest, at four sections.
-    assert.ok(entries.length >= 4, `${page}: rail has ${entries.length} entries`);
-    for (const id of entries)
-      assert.ok(doc.includes(`<h2 id="${id}">`) || doc.includes(`<h3 id="${id}">`), `${page}: #${id}`);
+    // "On this page" left the whole site on 2026-11-26 (the user's decision).
+    assert.doesNotMatch(doc, /On this page|<nav aria-label="Contents">/, page);
     assert.match(doc, new RegExp(`<a href="${REPO}/blob/main/${file}">`), `${page}: names its source`);
   }
   // Links between the documents are links between their pages.
@@ -474,15 +463,15 @@ test("each specification's frontmatter names it, and its page and index card sho
 
     const page = main(`specifications/${spec.slug}/index.html`);
     const banner = text(/<p class="site-source">([\s\S]*?)<\/p>/u.exec(page)?.[1] ?? "");
-    for (const part of [statusLabel(meta.status), meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
+    for (const part of [meta.id, `revision ${meta.revision}`, `implemented by ${version}`]) {
       assert.ok(banner.includes(part), `${spec.slug}: banner "${banner}" does not say ${part}`);
     }
+    assert.ok(!banner.includes("Draft"), `${spec.slug}: the banner says Draft`);
     const card = text(index);
     assert.ok(card.includes(cardTitle(meta)), `the index has no card titled ${cardTitle(meta)}`);
-    assert.ok(
-      card.includes(`${meta.id} · revision ${meta.revision}`),
-      `the ${spec.slug} card does not name its revision`,
-    );
+    // The cards carry no status, ID or revision (2026-11-26, the user's decision), and no title names a version.
+    assert.ok(!card.includes(meta.id), `the ${spec.slug} card names its ID`);
+    assert.ok(!cardTitle(meta).match(/ v\d/), `the ${spec.slug} card's title names a version`);
   }
   assert.doesNotMatch(index, /\{\{/u, "a token survived into the index");
 });
@@ -562,7 +551,7 @@ test("the worked example opens every record on the page, in the act it belongs t
       assert.ok(pageText.includes(`Tip for ${id} ${tip}`), `${record.id}: tip for ${id}`);
     // The card links the file on GitHub, at main, which every push to main rebuilds this page from.
     assert.ok(
-      page.includes(`<a href="${REPO}/blob/main/examples/scheduling/${record.file}">View the file on GitHub</a>`),
+      page.includes(`<a href="${REPO}/blob/main/${EXAMPLE_DIR}/${record.file}">View the file on GitHub</a>`),
       `${record.id}: no link to its file`,
     );
     // The body is rendered, the frontmatter is not.
@@ -570,13 +559,13 @@ test("the worked example opens every record on the page, in the act it belongs t
     assert.doesNotMatch(page, /<pre/, `${record.id}: frontmatter rendered as a code block`);
   }
   // Nothing on the example claims a running system or passing evidence.
-  assert.ok(text(index).includes("Lantern is invented and nothing here runs."));
-  assert.ok(text(index).includes("the check has not been executed"));
+  assert.ok(text(index).includes("Nothing here runs."));
+  assert.ok(text(index).includes("no test has been run"));
 
-  // The knowledge is the one approved record (since 2026-10-11): reviewed against its three sources, with two tips.
-  const kb = records.find((r) => r.id === "KB-ASMT-SCHEDULE");
+  // The help article is the one approved record: reviewed against its three sources, with two tips.
+  const kb = records.find((r) => r.id === "KB-RESET-PASSWORD");
   assert.equal(kb?.status, "approved");
-  assert.deepEqual(kb?.review?.pins, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]);
+  assert.deepEqual(kb?.review?.pins, ["BEH-RESET-PASSWORD", "RULE-RESET-LINK-EXPIRY", "RULE-RESET-LINK-ONCE"]);
   assert.equal(kb?.tips.length, 2);
   assert.ok(text(index).includes("Records approved 1"));
 
@@ -586,54 +575,43 @@ test("the worked example opens every record on the page, in the act it belongs t
   const published = allFolds.filter((m) => m[1].includes("publication-fold")).map((m) => m[2]);
   assert.equal(published.length, 1, "one publication fold");
   assert.ok(
-    index.lastIndexOf("publication-fold") > index.lastIndexOf("<code>KB-ASMT-SCHEDULE</code>"),
+    index.lastIndexOf("publication-fold") > index.lastIndexOf("<code>KB-RESET-PASSWORD</code>"),
     "the publication follows the knowledge",
   );
   const out = text(published[0]);
   for (const expected of [
     "intentset/publication/0.2",
     "withheldSources: 3",
-    "reviewer: team-assessment",
+    "reviewer: team-support",
     "intentset/help/0.2",
     ...(kb?.tips.map(([, tip]) => tip) ?? []),
   ]) {
     assert.ok(out.includes(expected), `the publication lacks ${expected}`);
   }
   for (const internal of [
-    "Schedule a student assessment",
-    "Require a future release time",
-    "Require assignment permission",
-    "BEH-ASMT-SCHEDULE.md",
-    "RULE-ASMT-AUTH",
+    "Reset a forgotten password",
+    "Reset links expire after one hour",
+    "Reset links work once",
+    "BEH-RESET-PASSWORD.md",
+    "RULE-RESET-LINK-ONCE",
   ]) {
     assert.ok(!out.includes(internal), `the publication names ${internal}`);
   }
 });
 
-test("home: the hero, the loop, the role cards, the worked example and status are the constructs the layout asks for", () => {
+test("home is short: the promise, one example, how it works, what it is, and one way to try it (2026-11-26)", async () => {
   const home = main("index.html");
-  assert.match(home, /<div class="ms-columns hero"/);
+  assert.match(home, /For teams shipping with coding agents/);
+  assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/">See how it works<\/a>/);
+  assert.match(home, /<span class="ms-span button"><a href="start\/">Get started<\/a>/);
+  assert.match(home, /<h2 id="problem">/);
   assert.match(home, /<section class="ms-card example"/);
-  assert.match(home, /<div class="ms-grid" data-cols="2"/);
-  const roles = [...home.matchAll(/<h3 class="ms-card-title">(For [^<]+)<\/h3>\s*<ul>([\s\S]*?)<\/ul>/g)];
-  assert.deepEqual(
-    roles.map((m) => m[1]),
-    ["For product managers", "For engineers", "For customer knowledge", "For agents"],
-  );
-  for (const [, role, list] of roles) {
-    const questions = [...list.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
-    assert.equal(questions.length, 3, role);
-    assert.ok(
-      questions.every((q) => q.endsWith("?")),
-      `${role}: every item is a question the model can answer`,
-    );
-  }
-  assert.match(home, /<a href="pilot\/">/, "the home page leads to the pilot");
-  assert.match(home, /<ol class="ms-steps adopt">/);
-  assert.match(home, /<section class="ms-card status"/);
-  assert.match(home, /<div class="ms-callout" data-type="note"/);
-  assert.match(home, /<h2 id="example">/);
-  assert.match(home, /<span class="ms-span button"><a href="specifications\/">Read the draft specification<\/a>/);
+  // What the user asked to go: the six-record card, the loop, versions and drafts, the status card, the adoption log.
+  assert.doesNotMatch(home, /class="[^"]*\b(?:model|loop|status)\b/);
+  assert.doesNotMatch(home, /href="pilot\/"|href="roadmap\/"|href="tools\/readers\/"|href="introducing\/"/);
+  // It stays short: the user found it massive at 2,816 words.
+  const words = (await readFile(join(root, "site", "content", "index.md"), "utf8")).split(/\s+/).length;
+  assert.ok(words < 800, `Home's source is ${words} words`);
 });
 
 test("the build leaves no placeholder behind", async () => {
@@ -660,38 +638,21 @@ test("a term becomes a tooltip reached by pointer, keyboard or tap, described by
   );
 });
 
-test("the adoption log: the counts first, dated chapters newest first, and no link into the products", () => {
-  const page = main("pilot/index.html");
-  const chapters = [...page.matchAll(/<h2 id="[^"]*">([^<]*)<\/h2>/g)].map((m) => m[1]);
-  const dated = chapters.filter((heading) => /^\d{4}-\d{2}-\d{2}/.test(heading));
-  assert.equal(chapters[0], "Where it stands", "the counts come before the first chapter");
-  assert.ok(dated.length >= 2, "the log has dated chapters");
-  assert.deepEqual(dated, chapters.slice(1), "every chapter after the counts is dated");
-  // A chapter spanning days is placed by its last date.
-  const last = dated.map((heading) => [...heading.matchAll(/\d{4}-\d{2}-\d{2}/g)].at(-1)?.[0] ?? "");
-  assert.deepEqual(last, [...last].sort().reverse(), "chapters are newest first");
-  const counts = page.slice(page.indexOf('id="where-it-stands"'), page.indexOf(`>${dated[0]}<`));
-  assert.match(counts, /class="ms-metrics"/, "the counts are a metrics block");
-  // Every card in the counts says what it counts, and every term on the page carries its explanation.
-  const labels = [...counts.matchAll(/<div class="ms-metric-label">([\s\S]*?)<\/div>/g)].map((m) => m[1]);
-  const explained = new Set<string>();
-  for (const label of labels) {
-    const text = label.replace(/<span class="term-tip"[^>]*>[^<]*<\/span>/g, "").replace(/<[^>]+>/g, "");
-    if (label.includes('class="term"')) explained.add(text);
+test("a page that left the site sends its reader on from its old address, and is not in the sitemap", async () => {
+  const sitemap = await readFile(join(dist, "sitemap.xml"), "utf8");
+  for (const [path, to] of REDIRECTS) {
+    const doc = await readFile(join(dist, path), "utf8");
+    assert.ok(doc.includes(`<meta http-equiv="refresh" content="0; url=${to}">`), path);
+    assert.ok(doc.includes(`<a href="${to}">`), `${path}: a link for what does not follow a refresh`);
+    assert.match(doc, /<meta name="robots" content="noindex">/, path);
+    assert.ok(
+      to.startsWith(`${REPO}/blob/main/`) || to === EXTERNAL.markset,
+      `${path} goes to the repository or Markset`,
+    );
+    assert.ok(!sitemap.includes(path.replace(/index\.html$/, "")), `${path} is in the sitemap`);
+    assert.ok(!html.has(path), `${path} is still a page`);
   }
-  assert.ok(explained.has("Baselined architecture violations"), "the baseline's card explains itself");
-  assert.doesNotMatch(page, /class="ms-span term"/, "no term is left without its tooltip");
-  // Every chapter says what it achieved.
-  for (const heading of dated) {
-    const start = page.indexOf(`>${heading}<`);
-    const next = dated[dated.indexOf(heading) + 1];
-    const chapter = page.slice(start, next ? page.indexOf(`>${next}<`) : undefined);
-    assert.match(chapter, />What it achieved</, `${heading}: says what it achieved`);
-  }
-  // The products' sites are locked and their repositories private, so the log counts and describes, never links.
-  for (const [, href] of page.matchAll(/href="([^"]*)"/g)) {
-    assert.doesNotMatch(href, /streamlane|driftline/i, href);
-  }
+  for (const doc of ["docs/adoption/log.md", "docs/roadmap.md", "docs/consumers.md"]) await access(join(root, doc));
 });
 
 test("every page points at the social card, and the committed card is the size it claims", async () => {
