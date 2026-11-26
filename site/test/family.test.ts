@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { after, test } from "node:test";
 import { build, CONTENT_PAGES, type Page, sitePages } from "../build.ts";
 
@@ -135,4 +136,83 @@ test("the check fails on a second naming block, a missing label, or a page that 
   assert.equal(namingProblems("<h3>Streamlane, a work management product</h3>", true).length, 1, "a missing label");
   assert.equal(namingProblems(labelled, false).length, 2, "a reference page names neither");
   assert.deepEqual(namingProblems("<p>A work management product.</p>", false), []);
+});
+
+// The family's loop, as reef's docs/family.md has it (Gary's decisions 8 and 18, 2026-11-25): its three parts in order,
+// each with the product that does it and that product's family label. reef is not readable from this repository's CI,
+// so these are literals; the test after the next compares them with reef's file where a sibling checkout is present.
+const LOOP = [
+  { part: "Intent written down", product: "Intentset", label: "Open source · Early release" },
+  { part: "Carried to production on evidence", product: "Streamlane", label: "Product · In development" },
+  { part: "Proven in use", product: "Driftline", label: "Product · In planning" },
+] as const;
+
+/** The parts of the loop figure on a page, each as its list item's text, in order. */
+export function loopParts(html: string): string[] {
+  const list = html.match(/<ol class="ms-steps loop">([\s\S]*?)<\/ol>/);
+  if (!list) return [];
+  return [...list[1].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map((m) => blocks(m[1]).join(" "));
+}
+
+test("Home's loop shows reef's three parts in order, each with its product and label, the first in the repository", () => {
+  const home = pages.find((page) => page.path === "index.html");
+  assert.ok(home, "Home is built");
+  const parts = loopParts(home.body);
+  assert.equal(parts.length, LOOP.length, "Home draws the loop's three parts");
+  LOOP.forEach(({ part, product, label }, i) => {
+    assert.ok(parts[i].includes(part), `part ${i + 1} is "${part}": "${parts[i]}"`);
+    assert.ok(parts[i].includes(`${product} (${label})`), `part ${i + 1} is ${product} with its label: "${parts[i]}"`);
+  });
+  assert.ok(parts[0].startsWith("Your repository"), "the first part is inside the repository's boundary");
+  assert.ok(!parts.slice(1).some((p) => p.includes("Your repository")), "only the first part is in the repository");
+  assert.match(home.body, /<p class="loop-return">What use shows comes back as new intent\.<\/p>/, "the return");
+  assert.match(home.body, /<p>None of the three needs the others\.<\/p>/, "the independence sentence");
+});
+
+test("the loop check fails on a part out of order, a changed label or a missing boundary", () => {
+  const item = (text: string) => `<li class="ms-step">${text}</li>`;
+  const figure = (items: string[]) => `<ol class="ms-steps loop">${items.join("")}</ol>`;
+  const good = [
+    item(
+      "<span>Your repository</span> <strong>Intent written down</strong> <br>Intentset (Open source · Early release)",
+    ),
+    item("<strong>Carried to production on evidence</strong> <br>Streamlane (Product · In development)"),
+    item("<strong>Proven in use</strong> <br>Driftline (Product · In planning)"),
+  ];
+  assert.deepEqual(loopParts(figure(good)), [
+    "Your repository Intent written down Intentset (Open source · Early release)",
+    "Carried to production on evidence Streamlane (Product · In development)",
+    "Proven in use Driftline (Product · In planning)",
+  ]);
+  assert.notEqual(loopParts(figure([good[1], good[0], good[2]]))[0], loopParts(figure(good))[0], "order is read");
+  assert.equal(loopParts('<ol class="ms-steps"></ol>').length, 0, "another list is not the loop");
+});
+
+/** reef's checkout beside this repository, or beside the repository a worktree belongs to; null where there is none. */
+function reefFamily(): string | null {
+  let dir = resolve(import.meta.dirname, "..", "..");
+  for (let up = 0; up < 6; up++) {
+    const candidate = join(dir, "reef", "docs", "family.md");
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+const family = reefFamily();
+test(`the loop's literals are reef's docs/family.md${family ? "" : " (skipped: no reef checkout beside this repository)"}`, {
+  skip: family === null,
+}, async () => {
+  const text = await readFile(family as string, "utf8");
+  const lines = [...text.matchAll(/^\d\. \*\*(.+?)\*\* · (\w+) · `(.+?)`$/gm)].map(([, part, product, label]) => ({
+    part,
+    product,
+    label,
+  }));
+  assert.deepEqual(
+    lines,
+    LOOP.map((l) => ({ ...l })),
+  );
 });

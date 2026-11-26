@@ -57,6 +57,30 @@ Intentset gives that knowledge a durable place in the repository, centered on ob
 ***
 
 {.eyebrow}
+Where it sits
+
+## One loop, and the part you can take alone
+
+{.lead}
+Intentset is the first part of a loop, the part that happens in your repository. It is MIT-licensed and needs no service and no purchase.
+
+:::steps{.loop}
+1. [Your repository]{.badge} **Intent written down** \
+   Intentset (Open source · Early release)
+2. **Carried to production on evidence** \
+   Streamlane (Product · In development)
+3. **Proven in use** \
+   Driftline (Product · In planning)
+:::
+
+{.loop-return}
+What use shows comes back as new intent.
+
+None of the three needs the others.
+
+***
+
+{.eyebrow}
 How it fits
 
 ## Your agents keep the model. You keep control
@@ -72,6 +96,21 @@ How it fits
 
 {.muted}
 Records are short, written in product language, and diff cleanly: a few dozen lines a person can review, where the code runs to thousands.
+
+***
+
+{.eyebrow}
+After the repository
+
+## Where each record goes
+
+- A behavior is the promise a person approves. In your repository, `intentset approve` writes that approval as a diff, so anything that reads the repository can tell an approved behavior from a draft.
+- A rule is written once and governs many behaviors, so a refusal can name the rule it keeps.
+- A check's run records say what passed and whether that pass still holds. Published from CI, they can be read outside the repository.
+- Code that changes without its records is drift. CI fails on it.
+- The usage-evidence format, one line per call naming the behaviors it exercised and never a person, is a draft and is not published here yet.
+
+[What reads an Intentset model](tools/readers/), by two paths.
 
 ***
 
@@ -148,7 +187,7 @@ In practice
 ## Two products adopting it, in the open
 
 {.lead}
-Coral Reef Ventures is adopting Intentset in two of its own products, Streamlane (Product · In development) and Driftline (Product · In planning), and recording what it catches, what it costs and what it changes.
+Coral Reef Ventures is adopting Intentset in the two products named in the loop above, and recording what it catches, what it costs and what it changes.
 
 In the first, a work management product, the model is a required check on every pull request. The first capability modelled, from the code, tests and decision records the repository already held, listed what nobody had: two of three rules had no test, and three behaviors were checked only in the browser. The check now runs in strict mode against 56 slices and 1,282 records, with no tolerated violations left: the baseline of those already there reached zero on 2026-10-11.
 
