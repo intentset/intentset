@@ -556,6 +556,32 @@
         "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
       }
     },
+    "review": {
+      "type": "object",
+      "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID; hash null means content-v1. A pin whose source is withheld is left out and counted in withheldLinks.",
+      "additionalProperties": false,
+      "required": ["sources", "hash", "snapshot"],
+      "properties": {
+        "sources": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "hash": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "snapshot": {
+          "type": ["string", "null"],
+          "minLength": 1
+        }
+      }
+    },
     "approval": {
       "type": "object",
       "description": "The basis a record states for its approval (Core \u00a77, ADR 0020). by, source and attestedBy are null where the basis does not carry them.",
@@ -632,6 +658,7 @@
         "verification",
         "measure",
         "tips",
+        "review",
         "extensions"
       ],
       "properties": {
@@ -972,6 +999,16 @@
             },
             {
               "$ref": "#/$defs/tips"
+            }
+          ]
+        },
+        "review": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/review"
             }
           ]
         },

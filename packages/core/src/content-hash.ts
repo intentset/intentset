@@ -10,10 +10,13 @@
  *
  * - `frontmatter` is the whole parsed frontmatter, `markset` and unknown
  *   top-level keys included, without `status`, `delivery`, `reviewedBy`,
- *   `reviewedAt`, `approval` and `formalizes` under `intentset`, and without
- *   the `intentset.org/review` extension (and `extensions` itself when
- *   nothing else is in it). `approval` says how the record was approved and
- *   `formalizes` where its promise came from (ADR 0020); neither is the promise;
+ *   `reviewedAt`, `approval`, `formalizes` and `review` under `intentset`,
+ *   and without the `intentset.org/review` extension (and `extensions` itself
+ *   when nothing else is in it). `approval` says how the record was approved
+ *   and `formalizes` where its promise came from (ADR 0020); neither is the
+ *   promise. `review` is a knowledge record's own pins, which 0.3 moved out of
+ *   that extension (ADR 0025); both are left out, so no hash taken before the
+ *   move differs from the one taken after it over the same record;
  * - `body` is everything after the frontmatter, as written;
  * - `ending` is the status when it is `deprecated` or `retired`, and absent
  *   otherwise, so a record that is going away still moves the hash: what a
@@ -25,8 +28,16 @@
 import { canonicalJson, sha256Hex } from "./hash.ts";
 
 /** The `intentset` fields a content hash leaves out: lifecycle, review, approval and provenance, not promise. */
-export const CONTENT_HASH_OMITS = ["status", "delivery", "reviewedBy", "reviewedAt", "approval", "formalizes"] as const;
-/** The extension a content hash leaves out: the review's own pins. */
+export const CONTENT_HASH_OMITS = [
+  "status",
+  "delivery",
+  "reviewedBy",
+  "reviewedAt",
+  "approval",
+  "formalizes",
+  "review",
+] as const;
+/** The extension a content hash leaves out: the review's own pins as 0.2 wrote them (ADR 0025), CORE001 since 0.3. */
 export const CONTENT_HASH_OMITS_EXTENSION = "intentset.org/review";
 /** The statuses a content hash names, because a record in them is going away. */
 export const ENDING_STATUSES = ["deprecated", "retired"] as const;

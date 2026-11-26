@@ -15,7 +15,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-NEVER-REWRITE]
@@ -31,7 +31,7 @@ intentset:
 
 ## Behavior
 
-A person runs `intentset approve <ID>... --by <person>`, naming records or giving the selector options of `intentset list`. Each matched draft gets `status: approved` and an `approval` block with basis `direct`, the person and the date (`--at`, today when absent), replacing any approval it carried. A knowledge record also gets its review: `reviewedBy`, `reviewedAt` and a `content-v1` pin of each source. Those lines change and no other byte does. Matched records that are not drafts are skipped and named. `--dry-run` reports the same and writes nothing. The command never commits.
+A person runs `intentset approve <ID>... --by <person>`, naming records or giving the selector options of `intentset list`. Each matched draft gets `status: approved` and an `approval` block with basis `direct`, the person and the date (`--at`, today when absent), replacing any approval it carried. A knowledge record also gets its review: `reviewedBy`, `reviewedAt` and `review`, the content hash of each source with no `hash`, which means `content-v1` (ADR 0025), in place of any earlier review, one left under the `intentset.org/review` extension included. Those lines change and no other byte does. Matched records that are not drafts are skipped and named. `--dry-run` reports the same and writes nothing. The command never commits.
 
 ## Preconditions
 

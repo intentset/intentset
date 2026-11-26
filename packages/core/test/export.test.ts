@@ -157,25 +157,20 @@ function withRestrictedRule() {
   );
 }
 
-/**
- * The envelope as text, less each artifact's `extensions`. The example's knowledge is reviewed, and a review pins every
- * source it explains and every rule governing them (publication §3), so its pins name the restricted rule; export §2
- * carries extensions as authored. Whether a pin of a withheld artifact should itself be withheld is issue #49.
- */
-function outsideReviewPins(envelope: ReturnType<typeof exportGraph>): string {
-  return JSON.stringify({ ...envelope, artifacts: envelope.artifacts.map((a) => ({ ...a, extensions: null })) });
-}
-
 test("BEH-EXPORT: a restricted artifact is withheld by default: absent, unlinked, counted, and still in the graph hash", () => {
   const result = validate(withRestrictedRule(), registries);
   const envelope = exportGraph(result, registries, META);
   assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
   assert.deepEqual(envelope.withholding, { visibilities: ["restricted"], artifacts: 1, diagnostics: 0 });
   assert.ok(!envelope.artifacts.some((a) => a.id === "RULE-ASMT-AUTH"));
-  assert.ok(!outsideReviewPins(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere but the review pins");
+  // The example's knowledge pins the rule, as a review must (publication §3); the pin is withheld with it (ADR 0025, #49).
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere");
   const behavior = envelope.artifacts.find((a) => a.id === "BEH-ASMT-SCHEDULE");
   assert.deepEqual(behavior?.links.governedBy, ["RULE-ASMT-FUTURE"]);
   assert.equal(behavior?.withheldLinks, 1);
+  const knowledge = envelope.artifacts.find((a) => a.id === "KB-ASMT-SCHEDULE");
+  assert.deepEqual(Object.keys(knowledge?.review?.sources ?? {}), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  assert.equal(knowledge?.withheldLinks, 2, "the explains link and the pin");
   assert.equal(envelope.graphHash, graphHash(result.graph));
   const everything = exportGraph(result, registries, { ...META, includeRestricted: true });
   assert.deepEqual(everything.withholding, { visibilities: [], artifacts: 0, diagnostics: 0 });
@@ -221,7 +216,7 @@ test("reports are withheld inside as the artifacts are, and each omission is cou
   assert.ok(!impact.starts.some((entry) => entry.start === "RULE-ASMT-AUTH"));
   const fromBehavior = impact.starts.find((entry) => entry.start === "BEH-ASMT-SCHEDULE");
   assert.equal(fromBehavior?.withheld, 1, "the governing rule left the review context");
-  assert.ok(!outsideReviewPins(envelope).includes("RULE-ASMT-AUTH"));
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"));
   assert.equal(impact.note, IMPACT_NOTE);
   assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
 });

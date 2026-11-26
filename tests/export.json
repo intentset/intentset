@@ -84,7 +84,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "graphHash": "7e8dcc5ee9efce0a45dd0dc2bff5fbc6a7c58dd284c2c17dfbdaaafc0394e296"
+      "graphHash": "facc505b59d0be12861ec0d05aebe1ac9bcbdb5d7cef90abc39f959ce83b7647"
     },
     "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
   },
@@ -280,6 +280,92 @@
       ]
     },
     "notes": "Every artifact carries slice, verification, measure and tips, null where the type has none; a measure's direction is null when the author set none."
+  },
+  {
+    "section": "export",
+    "name": "export a knowledge review as a field, its hash and snapshot null where the record leaves them out",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            }
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "review": null
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": null,
+            "snapshot": null
+          },
+          "tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          },
+          "extensions": null,
+          "withheldLinks": 0
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "Export §2 (ADR 0025): review is a field on knowledge, null on every other type; a null hash means content-v1, as it does in the record."
   },
   {
     "section": "export",
@@ -840,6 +926,181 @@
       }
     },
     "notes": "spec/export.md §3: a withheld product is not listed, so a connection made for it fails identity rather than reading a product it may not see."
+  },
+  {
+    "section": "export",
+    "name": "export withholds a review pin and a tip with the restricted artifact each names, and counts both",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "withholding": {
+        "visibilities": [
+          "restricted"
+        ],
+        "artifacts": 1,
+        "diagnostics": 0
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "review": null
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "links": {
+            "explains": [
+              "BEH-ASMT-SCHEDULE",
+              "RULE-ASMT-AUTH"
+            ]
+          },
+          "review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10"
+            },
+            "hash": "content-v1",
+            "snapshot": null
+          },
+          "tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          },
+          "withheldLinks": 3
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "Export §3 (ADR 0025, #49): a pin and a tip name an artifact as a link does, so the restricted rule's ID leaves the explains link, the review's sources and the tips, and withheldLinks counts all three. Whether the knowledge is current stays the producer's judgment, in reports.knowledge."
+  },
+  {
+    "section": "export",
+    "name": "export boundary: a restricted source with a pin and no tip withholds the pin alone",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-AUTH.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "withholding": {
+        "visibilities": [
+          "restricted"
+        ],
+        "artifacts": 1,
+        "diagnostics": 0
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE",
+          "review": null
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "links": {
+            "explains": [
+              "BEH-ASMT-SCHEDULE",
+              "RULE-ASMT-FUTURE"
+            ]
+          },
+          "review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": "content-v1",
+            "snapshot": null
+          },
+          "tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
+            "RULE-ASMT-FUTURE": "The release time must be in the future."
+          },
+          "withheldLinks": 2
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "The knowledge tips no restricted ID here, so the tips are whole: withheldLinks counts the explains link and the pin."
   },
   {
     "section": "export",

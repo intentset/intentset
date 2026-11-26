@@ -10,7 +10,7 @@
     "commit": null,
     "commitUnavailable": "The fixture describes no commit."
   },
-  "graphHash": "4818a0d13c1a2321a3b8e8f5ec3e883636c7368a2485e3ec4d8d6e74d68a7a25",
+  "graphHash": "dd07b7fb9daf45a91e5dcb80cc336e6def2dd4943a7bd62433105c2b2313b75c",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -82,6 +82,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -136,6 +137,7 @@
       },
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -163,6 +165,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -190,6 +193,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -217,6 +221,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -232,7 +237,7 @@
       "profile": "intentset/knowledge/0.1",
       "revision": 1,
       "path": "KB-ASMT-SCHEDULE.md",
-      "sourceHash": "c5d3db8cda834473d8fb69a4de5f17079e7631172ba055b66834cb6af4f9d091",
+      "sourceHash": "3b1c6f1de6f76df8f208a164ba302e37ac4679e8c38e0946c4825a9cccb69730",
       "parent": null,
       "links": {
         "explains": [
@@ -258,16 +263,15 @@
       },
       "slice": null,
       "verification": null,
-      "extensions": {
-        "intentset.org/review": {
-          "hash": "content-v1",
-          "sources": {
-            "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-            "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-            "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-          }
-        }
-      }
+      "review": {
+        "sources": {
+          "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+          "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+        },
+        "hash": "content-v1",
+        "snapshot": null
+      },
+      "extensions": null
     },
     {
       "id": "OUT-PREPARE",
@@ -294,6 +298,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -321,6 +326,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -354,6 +360,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -385,6 +392,7 @@
       "availability": null,
       "slice": null,
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -454,6 +462,7 @@
         ]
       },
       "verification": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -488,6 +497,7 @@
         "selector": "schedule-review-v1",
         "exercises": []
       },
+      "review": null,
       "extensions": null
     }
   ]

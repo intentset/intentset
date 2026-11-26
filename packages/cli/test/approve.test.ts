@@ -90,10 +90,13 @@ test("BEH-APPROVE: approve gives a knowledge record its review, pinning each sou
   assert.match(approved.out, /KB-ASMT-SCHEDULE .*\(reviewed: 3 sources pinned, content-v1\)/);
   const after = read(dir, "KB-ASMT-SCHEDULE");
   assert.match(after, / {2}reviewedBy: "ana\.reyes"\n {2}reviewedAt: "2026-11-24"\n/);
-  for (const pin of reviewed.matchAll(/^ {8}([A-Z-]+): '?([0-9a-f]{64})'?$/gm)) {
-    assert.ok(after.includes(`        ${pin[1]}: "${pin[2]}"`), `${pin[1]} is pinned at the hash the example reviewed`);
+  for (const pin of reviewed.matchAll(/^ {6}([A-Z-]+): '?([0-9a-f]{64})'?$/gm)) {
+    assert.ok(after.includes(`      ${pin[1]}: "${pin[2]}"`), `${pin[1]} is pinned at the hash the example reviewed`);
   }
-  assert.equal(after.match(/intentset\.org\/review:/g)?.length, 1, "the stale review is replaced");
+  assert.equal(after.match(/^ {2}review:$/gm)?.length, 1, "the stale review is replaced");
+  // ADR 0025: the review names no hash, which means content-v1.
+  assert.match(after, /\n {2}review:\n {4}sources:\n/);
+  assert.doesNotMatch(after, /hash:/);
   const ready = await run(dir, "validate", "--level", "L4", "--mode", "strict");
   assert.doesNotMatch(ready.out, /CORE008/, "the approved knowledge is current against its sources");
 });
@@ -196,3 +199,28 @@ for (const version of ["0.2", "0.1"]) {
     );
   });
 }
+
+test("BEH-APPROVE: approve replaces a review left under the extension 0.2 read, and drops extensions left empty", async (t) => {
+  const dir = await committed(t);
+  edit(dir, "KB-ASMT-SCHEDULE", "status: approved", "status: draft");
+  edit(
+    dir,
+    "KB-ASMT-SCHEDULE",
+    /\n {2}review:\n(?: {4,}.*\n)+/,
+    "\n  extensions:\n    intentset.org/review:\n      sources: {}\n",
+  );
+  git(dir, "commit", "-q", "-am", "a draft whose review is the retired extension");
+  assert.equal((await run(dir, "validate")).code, 1, "the extension is CORE001 at 0.3");
+
+  const approved = await run(dir, "approve", "KB-ASMT-SCHEDULE", ...BY);
+  assert.equal(approved.code, 0, approved.err);
+  const after = read(dir, "KB-ASMT-SCHEDULE");
+  assert.doesNotMatch(after, /extensions:|intentset\.org\/review/);
+  assert.match(after, /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3}---/);
+  const ready = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out);
+  assert.deepEqual(
+    ready.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE008"),
+    [],
+    "well formed, and current against its sources",
+  );
+});

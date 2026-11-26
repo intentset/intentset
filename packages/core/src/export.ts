@@ -18,6 +18,7 @@ import {
   type Availability,
   EXPORT_CONTRACT,
   type ExportApproval,
+  type ExportReview,
   type ExportArtifact,
   type ExportFormalized,
   type Formalized,
@@ -217,6 +218,24 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
   }
 
   const exercises = keep(meta.verification?.exercises ?? []);
+  // Export §2, §3 (ADR 0025): a tip and a review pin name an artifact as a link does, so each is withheld with it.
+  const keepKeys = <T>(map: Record<string, T>): Record<string, T> => {
+    const out: Record<string, T> = {};
+    for (const key of Object.keys(map).sort(compareStrings)) {
+      if (withheld.has(key)) withheldLinks++;
+      else out[key] = map[key];
+    }
+    return out;
+  };
+  const tips = meta.tips === undefined ? null : (sortKeysDeep(keepKeys(meta.tips)) as Record<string, string>);
+  const review: ExportReview | null =
+    meta.review === undefined
+      ? null
+      : {
+          sources: keepKeys(meta.review.sources),
+          hash: meta.review.hash ?? null,
+          snapshot: meta.review.snapshot ?? null,
+        };
 
   const exported: ExportArtifact = {
     id,
@@ -259,7 +278,8 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
             source: meta.measure.source,
             direction: meta.measure.direction ?? null,
           },
-    tips: meta.tips === undefined ? null : (sortKeysDeep(meta.tips) as Record<string, string>),
+    tips,
+    review,
     extensions: meta.extensions === undefined ? null : (sortKeysDeep(meta.extensions) as Record<string, unknown>),
   };
   if (includeBody) exported.body = artifact.body;

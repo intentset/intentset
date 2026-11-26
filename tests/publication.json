@@ -9,13 +9,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": null
@@ -78,13 +76,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -118,13 +114,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -158,13 +152,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.visibility": "public"
@@ -198,13 +190,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -239,13 +229,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -351,13 +339,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": null
@@ -403,13 +389,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": null
@@ -449,13 +433,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": null
@@ -493,13 +475,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.visibility": "public"
@@ -538,13 +518,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.visibility": "public"
@@ -583,13 +561,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.visibility": "public"
@@ -640,13 +616,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         },
@@ -721,13 +695,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -796,13 +768,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -841,13 +811,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "0000000000000000000000000000000000000000000000000000000000000000"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "0000000000000000000000000000000000000000000000000000000000000000"
             }
           },
           "intentset.links.explains": [
@@ -891,13 +860,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "0000000000000000000000000000000000000000000000000000000000000000"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "0000000000000000000000000000000000000000000000000000000000000000"
             }
           },
           "intentset.links.explains": [
@@ -935,13 +903,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -977,14 +944,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1026,14 +991,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1075,14 +1038,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1125,14 +1086,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1176,14 +1135,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1232,14 +1189,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1324,14 +1279,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1378,14 +1331,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1431,14 +1382,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1489,14 +1438,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v1",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1535,7 +1482,7 @@
   },
   {
     "section": "publication",
-    "name": "P04 whole-file pins need review when an explained behavior is approved",
+    "name": "P04 file-v1 pins, the whole file, need review when an explained behavior is approved",
     "baseline": "scheduling",
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -1543,13 +1490,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-                "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-                "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
             }
           },
           "intentset.tips": null
@@ -1580,14 +1526,14 @@
         "Choose a published assessment"
       ]
     },
-    "notes": "A review record without hash pins each source's whole file, as every review before 0.13.0 does, and is read as it always was: any edit to the source, its status included, needs review.",
+    "notes": "`hash: file-v1` pins each source's whole file, as every review before 0.13.0 does and as `intentset migrate --to 0.3` names each review that named no hash (ADR 0025): any edit to the source, its status included, needs review.",
     "diagnostics": [
       "CORE008"
     ]
   },
   {
     "section": "publication",
-    "name": "P04 whole-file pins need review when an explained behavior records the basis of its approval",
+    "name": "P04 file-v1 pins, the whole file, need review when an explained behavior records the basis of its approval",
     "baseline": "scheduling",
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -1595,13 +1541,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-                "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-                "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
             }
           },
           "intentset.tips": null
@@ -1636,14 +1581,14 @@
         "Choose a published assessment"
       ]
     },
-    "notes": "A review record without hash pins the whole file, whose hash is unchanged in meaning: every byte counts, approval included.",
+    "notes": "A file-v1 pin holds the whole file: every byte counts, approval included.",
     "diagnostics": [
       "CORE008"
     ]
   },
   {
     "section": "publication",
-    "name": "P04 whole-file pins of an unchanged source stay current",
+    "name": "P04 file-v1 pins, the whole file, of an unchanged source stay current",
     "baseline": "scheduling",
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -1651,13 +1596,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-                "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-                "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
             }
           },
           "intentset.tips": null
@@ -1682,7 +1626,7 @@
         "KB-ASMT-SCHEDULE"
       ]
     },
-    "notes": "Literal whole-file pins of the baseline's sources, with nothing changed: the earlier pin kind still reads as current."
+    "notes": "Literal whole-file pins of the baseline's sources under `hash: file-v1`, with nothing changed: the whole-file kind still reads as current."
   },
   {
     "section": "publication",
@@ -1694,14 +1638,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "hash": "content-v9",
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
-              }
+          "intentset.review": {
+            "hash": "content-v9",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
             }
           },
           "intentset.tips": null
@@ -1734,6 +1676,145 @@
   },
   {
     "section": "publication",
+    "name": "P04 a review with no hash pins content-v1, so approving an explained behavior leaves it current",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved"
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "Core §9, publication §3 (ADR 0025): a review that names no hash pins content hashes, so these literal content-v1 pins hold after the behavior's approval changes its bytes."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a review with no hash pins content-v1, so a changed body of an explained behavior needs review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            }
+          },
+          "intentset.tips": null
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "body": "# Schedule a student assessment\n\n## Behavior\n\nA teacher submits a release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher may assign to the class.\n\n## Outcomes\n\nSuccess: the assessment is scheduled. Failure: nothing is scheduled.\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "The default kind is content-v1 (ADR 0025): an edit to what the behavior promises moves its content hash.",
+    "diagnostics": [
+      "CORE008"
+    ]
+  },
+  {
+    "section": "publication",
+    "name": "P04 boundary: a review with no hash reads its pins as content hashes, so whole-file pins of unchanged sources need review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
+              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
+              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
+            }
+          },
+          "intentset.tips": null
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "published": {
+      "ids": [],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "Before 0.3 a review with no hash pinned the whole file; since ADR 0025 it pins content, so the same whole-file pins match nothing. `intentset migrate --to 0.3` writes `hash: file-v1` on such a review so that it keeps its meaning.",
+    "diagnostics": [
+      "CORE008"
+    ]
+  },
+  {
+    "section": "publication",
     "name": "P05 customer request for raw engineering context is denied",
     "baseline": "scheduling",
     "patch": {
@@ -1742,13 +1823,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -1793,13 +1872,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.visibility": null
@@ -1840,13 +1917,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.availability": null
@@ -1887,13 +1962,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -1929,13 +2002,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -1983,13 +2054,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -2027,13 +2096,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -2103,13 +2170,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.availability.flags": [
@@ -2185,13 +2250,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.availability.flags": [
@@ -2264,13 +2327,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -2306,13 +2367,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -2348,13 +2407,11 @@
           "intentset.status": "retired",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -2392,13 +2449,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": null,
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         }
@@ -2434,13 +2489,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         },
@@ -2477,13 +2530,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         },
@@ -2517,13 +2568,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           }
         },
@@ -2558,13 +2607,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": {
@@ -2613,13 +2660,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": {
@@ -2703,13 +2748,12 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "hash": "file-v1",
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": {
@@ -2744,7 +2788,7 @@
     "name": "two published documents tip one ID: the lower knowledge ID wins",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  extensions:\n    intentset.org/review:\n      sources:\n        BEH-ASMT-SCHEDULE: '@current'\n        RULE-ASMT-AUTH: '@current'\n        RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -2752,13 +2796,11 @@
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": {
-              "sources": {
-                "BEH-ASMT-SCHEDULE": "@current",
-                "RULE-ASMT-AUTH": "@current",
-                "RULE-ASMT-FUTURE": "@current"
-              }
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
             }
           },
           "intentset.tips": {

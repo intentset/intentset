@@ -53,7 +53,7 @@ second import of it as the same snapshot rather than a new one.
 ## 2. Artifacts
 
 Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`, `status`, `delivery`, `approval`, `formalizes`, `owner`,
-`visibility`, `audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `extensions`), its source `path` and
+`visibility`, `audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `review`, `extensions`), its source `path` and
 `sourceHash`, its `parent`, its authored `links` by kind, and `derived`: the inverse edges by the authored kind, so
 `derived.governedBy` on a rule lists the behaviors that name it. Derived edges are never authored (Core §5).
 `withheldLinks` counts the link targets and sources left out because the artifact at the other end is withheld. A
@@ -65,6 +65,13 @@ verification's metadata carries `exercises`, the slice and resource IDs it decla
 never carries one (Core §7). It is not the effective delivery: a consumer that wants "is this built" computes it as
 Core §7 does, `built` for a null `delivery` whose `status` is `deprecated`, as
 `deliveryOf` in `@intentset/core` does.
+
+`review` is a knowledge record's review pins (Core §9, ADR 0025), and null on any other type or where the knowledge
+states none: `sources`, the hash pinned for each source by ID, and `hash` and `snapshot` as authored, null where the
+record leaves them out. A null `hash` means `content-v1`, as it does in the record. `tips` is the knowledge's tips by
+explained ID. A pin, or a tip, whose key is a withheld artifact's ID is left out and counted in `withheldLinks` (§3),
+so a review with a pin withheld cannot be used to recompute whether the knowledge is current; that judgment is the
+producer's, in `reports.knowledge` (§4.2).
 
 `approval` is the basis the record states for its approval (Core §7), and null when it states none: `at`, `basis`
 (`direct`, `derived` or `attested`), and `by`, `source` and `attestedBy`, each null where the basis does not carry it.
@@ -88,7 +95,9 @@ as unresolved rather than drop it.
 
 A producer MUST withhold `restricted` artifacts unless the export was explicitly asked to include them. A withheld
 artifact is absent from `artifacts`, `products` and every report; its ID is removed from the links, derived edges and
-parent of every exported artifact, from `registries.resources[].consumers`, and from the lists inside every report; and
+parent of every exported artifact, from the keys of every knowledge artifact's `tips` and `review.sources` (§2: a pin
+and a tip name the artifact as a link does), from `registries.resources[].consumers`, and from the lists inside every
+report; and
 a diagnostic whose artifact or path is a withheld artifact's is left out of `validation.diagnostics`, while one that
 names a withheld ID in its text has that ID replaced by "a withheld artifact". Every omission is counted where it
 happened: `withholding.artifacts` and `withholding.diagnostics` for the envelope, `withheldLinks` per artifact, and a
@@ -267,7 +276,9 @@ changed.
 0.7 (2026-11-25) carries the specifications' second move. `spec` in the envelope moves from `0.2` to `0.3` with Core's
 (Core §1, ADR 0023 to ADR 0026), and each artifact's `profile` with it, so a 0.6 reader would reject every 0.7 envelope
 on its `spec` alone. A 0.7 reader rejects a 0.6 envelope as `unsupported-contract`, as each earlier move did, with the
-version it supports in the message, because it cannot read a 0.2 model as one written against 0.3.
+version it supports in the message, because it cannot read a 0.2 model as one written against 0.3. Each knowledge
+artifact carries `review` (ADR 0025), its pins as a field and no longer an extension, and the export withholds a pin
+and a tip with the artifact each names (§3).
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

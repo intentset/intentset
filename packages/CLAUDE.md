@@ -49,7 +49,7 @@ subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed 
 publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
 // snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
-reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null
+reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency over meta.review (ADR 0025); pinHash(undefined) and ("content-v1") are contentHash, ("file-v1") sourceHash, else null
 
 // @intentset/help  (no dependencies; a browser runtime)
 readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole

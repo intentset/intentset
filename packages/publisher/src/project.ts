@@ -260,11 +260,9 @@ function refusal(
     }
     default:
       return refuse(
-        review !== null && review.reviewer === null
-          ? "/intentset/reviewedBy"
-          : `/intentset/extensions/intentset.org~1review`,
+        review !== null && review.reviewer === null ? "/intentset/reviewedBy" : "/intentset/review",
         `it needs review because ${describeReview(review)}`,
-        "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the intentset.org/review pins (Core §9).",
+        "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the pins in review.sources (Core §9).",
       );
   }
 }

@@ -302,9 +302,9 @@ export function publicationReadiness(graph: Graph): { checked: string[]; diagnos
         ? "/intentset/reviewedBy"
         : review.reviewedAt === null
           ? "/intentset/reviewedAt"
-          : "/intentset/extensions/intentset.org~1review",
+          : "/intentset/review",
       `${meta.status} knowledge ${id} needs review: ${reasons.join("; ")} (Core §9).`,
-      "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the intentset.org/review pins (Core §9).",
+      "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the pins in review.sources (Core §9).",
     );
   }
   return { checked, diagnostics };

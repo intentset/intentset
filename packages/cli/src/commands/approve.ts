@@ -1,8 +1,8 @@
 /**
  * `intentset approve` (Core §7, ADR 0022): writes a person's approval into the drafts a selector matches. Each one
  * gets `status: approved` and an `approval` block with basis `direct` (ADR 0020); a knowledge record also gets the
- * review that publication requires of it (publication §3): `reviewedBy`, `reviewedAt` and `content-v1` pins of its
- * sources. Those lines change and no other byte does.
+ * review that publication requires of it (publication §3): `reviewedBy`, `reviewedAt` and `review`, the content hash of
+ * each source with no `hash`, which means `content-v1` (ADR 0025). Those lines change and no other byte does.
  *
  * It validates the tree as it is and again in memory with the approvals applied, and writes nothing when the second
  * run holds an error the first did not. A tree with uncommitted changes to tracked files is refused unless
@@ -11,8 +11,15 @@
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { type Artifact, compareStrings, type Diagnostic, type Selector, select } from "@intentset/core";
-import { REVIEW_EXTENSION, reviewSources } from "@intentset/publisher";
+import {
+  type Artifact,
+  compareStrings,
+  type Diagnostic,
+  RETIRED_REVIEW_EXTENSION,
+  type Selector,
+  select,
+} from "@intentset/core";
+import { reviewSources } from "@intentset/publisher";
 import { trackedChanges } from "../git.ts";
 import { count, formatDiagnostic, type Io, json, TOOL } from "../output.ts";
 import { findRoot } from "../repository.ts";
@@ -54,7 +61,8 @@ const quoted = (value: string) => JSON.stringify(value);
 
 /**
  * The record's text with the approval written, or a reason it could not be. Only the `intentset:` mapping of the
- * frontmatter is touched: `status`, `approval`, and for a review `reviewedBy`, `reviewedAt` and the review extension.
+ * frontmatter is touched: `status`, `approval`, and for a review `reviewedBy`, `reviewedAt`, `review` and a review left
+ * under the extension 0.2 read.
  * Line endings are kept.
  */
 export function approveText(
@@ -121,27 +129,30 @@ export function approveText(
       else if (blockEnd(at, indent, end()) !== at + 1) return { problem: `its \`${key}\` is not written on one line` };
       else region[at] = line;
     }
-    let extensions = find("extensions", indent, top + 1, end());
-    if (extensions === -1) {
-      extensions = end();
-      region.splice(extensions, 0, `${pad}extensions:`);
-    } else if (!/^\s+extensions:\s*(#.*)?$/.test(region[extensions])) {
-      return { problem: "its `extensions` is not a block mapping, so the review could not be written into it" };
+    // A review written before 0.3 under the retired extension (ADR 0025) is replaced too, and `extensions` goes
+    // with it when nothing else is left in it.
+    const extensions = find("extensions", indent, top + 1, end());
+    if (extensions !== -1 && /^\s+extensions:\s*(#.*)?$/.test(region[extensions])) {
+      const extensionsEnd = blockEnd(extensions, indent, end());
+      const inside = region.slice(extensions + 1, extensionsEnd).find(content);
+      if (inside !== undefined) {
+        const deep = indentOf(inside);
+        const stale = find(RETIRED_REVIEW_EXTENSION, deep, extensions + 1, extensionsEnd);
+        if (stale !== -1) region.splice(stale, blockEnd(stale, deep, extensionsEnd) - stale);
+        const left = region.slice(extensions + 1, blockEnd(extensions, indent, end())).some(content);
+        if (!left) region.splice(extensions, blockEnd(extensions, indent, end()) - extensions);
+      }
     }
-    const inside = region.slice(extensions + 1, blockEnd(extensions, indent, end())).find(content);
-    const deep = inside === undefined ? indent * 2 : indentOf(inside);
-    const stale = find(REVIEW_EXTENSION, deep, extensions + 1, blockEnd(extensions, indent, end()));
-    if (stale !== -1) region.splice(stale, blockEnd(stale, deep, blockEnd(extensions, indent, end())) - stale);
-    const at = (levels: number) => " ".repeat(deep + indent * levels);
-    region.splice(
-      extensions + 1,
-      0,
-      `${at(0)}${REVIEW_EXTENSION}:`,
-      `${at(1)}hash: content-v1`,
+    // Core §9: the review pins content-v1 when it names no hash, so it names none.
+    const block = [
+      `${pad}review:`,
       ...(edit.review.length === 0
-        ? [`${at(1)}sources: {}`]
-        : [`${at(1)}sources:`, ...edit.review.map((pin) => `${at(2)}${pin.id}: ${quoted(pin.hash)}`)]),
-    );
+        ? [`${pad}${pad}sources: {}`]
+        : [`${pad}${pad}sources:`, ...edit.review.map((pin) => `${pad}${pad}${pad}${pin.id}: ${quoted(pin.hash)}`)]),
+    ];
+    const existing = find("review", indent, top + 1, end());
+    if (existing === -1) region.splice(end(), 0, ...block);
+    else region.splice(existing, blockEnd(existing, indent, end()) - existing, ...block);
   }
   all.splice(first, frontmatter.text.split("\n").length, ...region.map((line) => `${line}${eol}`));
   return { text: all.join("\n") };

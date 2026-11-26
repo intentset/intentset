@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,7 +7,7 @@ import { test } from "node:test";
 import { TypeScriptMissingError } from "@intentset/architecture";
 import { validateSchema } from "../../conformance/src/harness.ts";
 import { typescriptMissing } from "../src/commands/shared.ts";
-import { atEarlier, edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
+import { asEarlier, atEarlier, edit, example, exportSchema, git, RECORD, run, snapshot, temp } from "./helpers.ts";
 
 test("BEH-AGENT-GUIDE: init writes a config and empty registries, and validate passes on the empty scope", async (t) => {
   const dir = temp(t);
@@ -582,7 +583,7 @@ test("in a git repository the commit is read, and an empty repository says why t
 });
 
 for (const version of ["0.2", "0.1"]) {
-  test(`BEH-MIGRATE: migrate --to 0.3 rewrites spec and profile from ${version} in every record and nothing else, and says how many`, async (t) => {
+  test(`BEH-MIGRATE: migrate --to 0.3 rewrites spec and profile from ${version} in every record, moves the knowledge's review, and says how many`, async (t) => {
     const { dir, files, current } = await atEarlier(t, version);
     const before = await run(dir, "validate");
     assert.equal(before.code, 1, `a reader of 0.3 rejects the records at ${version}`);
@@ -594,12 +595,16 @@ for (const version of ["0.2", "0.1"]) {
     for (const name of files) {
       assert.equal(readFileSync(join(dir, "product", "scheduling", name), "utf8"), current.get(name), name);
     }
-    assert.equal(git(dir, "diff", "--numstat").split("\n").length, files.length);
+    const numstat = git(dir, "diff", "--numstat").split("\n");
+    assert.equal(numstat.length, files.length);
     assert.ok(
-      git(dir, "diff", "--numstat")
-        .split("\n")
-        .every((line) => line.startsWith("2\t2\t")),
-      "each record changed by exactly two lines",
+      numstat.filter((line) => !line.endsWith("KB-ASMT-SCHEDULE.md")).every((line) => line.startsWith("2\t2\t")),
+      "each record but the knowledge changed by exactly two lines",
+    );
+    // ADR 0025: the knowledge's review leaves `extensions` for `review`, one level up, and `extensions` goes with it.
+    assert.ok(
+      numstat.some((line) => line.startsWith("8\t9\t") && line.endsWith("KB-ASMT-SCHEDULE.md")),
+      numstat.join("; "),
     );
     assert.equal((await run(dir, "validate")).code, 0);
 
@@ -882,5 +887,96 @@ test("BEH-ARCH-CHECK: without TypeScript 7 the command says what it found and wh
   assert.match(
     none,
     /no `typescript` resolves from @intentset\/architecture\. .*`npx -p @intentset\/cli -p typescript@7 intentset`/,
+  );
+});
+
+/**
+ * The example with only its knowledge written for an earlier version, so the sources keep their bytes through the move
+ * (it rewrites `spec` and `profile`, which both pin kinds cover) and a review's meaning can be compared across it.
+ */
+async function knowledgeAtEarlier(t: Parameters<typeof example>[0], version: string, edit?: (text: string) => string) {
+  const dir = await example(t);
+  const path = RECORD(dir, "KB-ASMT-SCHEDULE");
+  const at03 = readFileSync(path, "utf8");
+  const earlier = asEarlier(at03, version);
+  writeFileSync(path, edit === undefined ? earlier : edit(earlier));
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", `the knowledge at ${version}`);
+  return { dir, at03 };
+}
+
+const currentAtL4 = async (dir: string) => {
+  const report = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out);
+  return report.diagnostics.filter((d: { code: string }) => d.code === "CORE001" || d.code === "CORE008");
+};
+
+for (const version of ["0.2", "0.1"]) {
+  test(`BEH-MIGRATE: migrate --to 0.3 from ${version} moves a knowledge review to review, naming file-v1 where it named no hash, so a current review stays current`, async (t) => {
+    const whole = (dir: string, id: string) =>
+      createHash("sha256")
+        .update(readFileSync(RECORD(dir, id)))
+        .digest("hex");
+    let target = "";
+    const { dir } = await knowledgeAtEarlier(t, version, (text) => {
+      target = text;
+      return text;
+    });
+    // Before 0.3 a review that named no hash pinned each source's whole file: pin the example's sources that way,
+    // with a comment inside the review and another extension beside it.
+    let kb = target;
+    for (const [line, id] of [...kb.matchAll(/^ {8}([A-Z-]+): '?([0-9a-f]{64})'?$/gm)]) {
+      kb = kb.replace(line, `        ${id}: ${whole(dir, id)}`);
+    }
+    kb = kb
+      .replace("      hash: content-v1\n", "      # reviewed in the pilot\n")
+      .replace("  extensions:\n", "  extensions:\n    org.example/ticket: LAN-12\n");
+    writeFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), kb);
+    git(dir, "commit", "-q", "-am", "a whole-file review beside another extension");
+
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 0, moved.err);
+    assert.match(moved.out, /moved 1 record to 0\.3/);
+    const after = readFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), "utf8");
+    assert.match(
+      after,
+      /\n {2}review:\n {4}hash: file-v1\n {4}# reviewed in the pilot\n {4}sources:\n(?: {6}[A-Z-]+: [0-9a-f]{64}\n){3} {2}extensions:\n {4}org\.example\/ticket: LAN-12\n---/,
+      "the review moves up a level with file-v1 first, and the other extension stays",
+    );
+    assert.doesNotMatch(after, /intentset\.org\/review/);
+    assert.deepEqual(await currentAtL4(dir), [], "the whole-file review is current after the move, as before it");
+    // Without file-v1 the same pins would be read as content hashes, and the knowledge would need review.
+    writeFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), after.replace("    hash: file-v1\n", ""));
+    assert.deepEqual(
+      (await currentAtL4(dir)).map((d: { code: string }) => d.code),
+      ["CORE008"],
+    );
+  });
+}
+
+test("BEH-MIGRATE: migrate keeps a content-v1 review content-v1 and drops extensions left empty", async (t) => {
+  const { dir, at03 } = await knowledgeAtEarlier(t, "0.2");
+  const before = readFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), "utf8");
+  assert.match(before, /\n {2}extensions:\n {4}intentset\.org\/review:\n {6}hash: content-v1\n/);
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 0, moved.err);
+  const after = readFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), "utf8");
+  assert.equal(after, at03, "the record the example holds at 0.3");
+  assert.match(after, /\n {2}review:\n {4}hash: content-v1\n/);
+  assert.doesNotMatch(after, /extensions:/);
+  assert.deepEqual(await currentAtL4(dir), [], "current before the move and after it");
+});
+
+test("BEH-MIGRATE: migrate names a record whose review it could not move, and exits 1", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  // A double-quoted escape the YAML reader reads as the extension's key, in a form the line rewrite does not read.
+  edit(dir, "KB-ASMT-SCHEDULE", "    intentset.org/review:\n", '    "intentset.org\\x2Freview":\n');
+  git(dir, "commit", "-q", "-am", "a review in flow style");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 1);
+  assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
+  assert.match(
+    moved.err,
+    /\n {2}product\/scheduling\/KB-ASMT-SCHEDULE\.md: still carries the intentset\.org\/review extension 0\.3 does not read\n/,
   );
 });

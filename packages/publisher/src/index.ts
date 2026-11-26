@@ -71,7 +71,7 @@ export {
   CURRENT_PIN,
   PIN_KINDS,
   type PinKind,
-  REVIEW_EXTENSION,
+  DEFAULT_PIN_KIND,
   type ReviewRecord,
   type ReviewStatus,
   bindReviewPins,

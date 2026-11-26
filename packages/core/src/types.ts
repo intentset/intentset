@@ -225,6 +225,18 @@ export interface MeasureMeta {
   direction?: MeasureDirection;
 }
 
+/**
+ * Core §9, publication §3, ADR 0025: a knowledge record's review pins, by source ID, each the hash of the kind `hash`
+ * names. `hash` absent means `content-v1`; `file-v1` is the whole file; any other value is a kind no pin matches.
+ */
+export interface ReviewMeta {
+  /** Source ID -> the hash it had at review, keys sorted. */
+  sources: Record<string, string>;
+  hash?: string;
+  /** The commit or graph hash at review: informative, never compared. */
+  snapshot?: string;
+}
+
 /** The `intentset` block of a document's frontmatter after validation, Core §4. */
 export interface ArtifactMeta {
   spec: typeof SPEC_VERSION;
@@ -252,6 +264,8 @@ export interface ArtifactMeta {
   extensions?: Record<string, unknown>;
   /** Knowledge only (Core §9): one sentence per explained ID, keys sorted. */
   tips?: Record<string, string>;
+  /** Knowledge only (Core §9, publication §3, ADR 0025): the pins of the sources it was reviewed against. */
+  review?: ReviewMeta;
   slice?: SliceMeta;
   verification?: VerificationMeta;
   measure?: MeasureMeta;
@@ -472,11 +486,23 @@ export interface ExportArtifact {
   verification: (Omit<VerificationMeta, "exercises"> & { exercises: string[] }) | null;
   /** Null unless the artifact is a measure; `direction` is null when the author set none. */
   measure: (Omit<MeasureMeta, "direction"> & { direction: MeasureDirection | null }) | null;
-  /** Null unless the artifact is knowledge with tips (Core §9). */
+  /** Null unless the artifact is knowledge with tips (Core §9); a tip whose key is withheld is left out and counted in `withheldLinks`. */
   tips: Record<string, string> | null;
+  /**
+   * Null unless the artifact is knowledge with a review (Core §9, ADR 0025): `hash` and `snapshot` as authored, null
+   * where absent; a pin whose source is withheld is left out and counted in `withheldLinks`.
+   */
+  review: ExportReview | null;
   extensions: Record<string, unknown> | null;
   /** Present only when the export was asked to include bodies. */
   body?: string;
+}
+
+/** A knowledge record's review as the export carries it (export §2): `hash` null means `content-v1`. */
+export interface ExportReview {
+  sources: Record<string, string>;
+  hash: string | null;
+  snapshot: string | null;
 }
 
 /** An approval as the export carries it: every member present, null where the basis does not carry it. */

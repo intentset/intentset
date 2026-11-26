@@ -697,7 +697,7 @@ test("publication readiness runs the projection per visibility with the knowledg
       : source
           .replace("  status: approved", "  status: draft")
           .replace(/\n {2}reviewedBy: .*\n {2}reviewedAt: .*\n/, "\n")
-          .replace(/\n {2}extensions:\n(?: {4,}.*\n)+/, "\n");
+          .replace(/\n {2}review:\n(?: {4,}.*\n)+/, "\n");
   const draft = textOf(buildAtlas(example({ edit: unreview })).get("publication.html") as string);
   assert.ok(draft.includes("public public excluded draft"));
   assert.ok(

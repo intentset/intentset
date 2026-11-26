@@ -442,14 +442,15 @@ test("the worked example's knowledge is reviewed against its sources as they are
   const dir = join(root, "examples", "scheduling");
   const knowledge = await readFile(join(dir, "KB-ASMT-SCHEDULE.md"), "utf8");
   assert.match(knowledge, /^ {2}status: approved$/mu);
-  const pins = [...knowledge.matchAll(/^ {8}([A-Z][A-Z0-9-]+): '?([0-9a-f]{64})'?$/gmu)];
+  const pins = [...knowledge.matchAll(/^ {6}([A-Z][A-Z0-9-]+): '?([0-9a-f]{64})'?$/gmu)];
   assert.deepEqual(
     pins.map(([, id]) => id),
     ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"],
     "a pin on each explained source and each rule governing the explained behavior (publication §3)",
   );
-  // The pins are content hashes (ADR 0018), so approving or implementing a source leaves the knowledge current.
-  assert.match(knowledge, /^ {6}hash: content-v1$/mu, "the example pins content-v1, as publication §3 recommends");
+  // The pins are content hashes (ADR 0018), so approving or implementing a source leaves the knowledge current. The
+  // review is the core field `review` (ADR 0025), where content-v1 is also the kind a review naming none pins.
+  assert.match(knowledge, /^ {2}review:\n {4}hash: content-v1$/mu, "the example's review pins content-v1");
   for (const [, id, pinned] of pins) {
     const { artifact } = readArtifact(plainCarrier(`${id}.md`, await readFile(join(dir, `${id}.md`), "utf8")));
     const current = artifact?.contentHash;

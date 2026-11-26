@@ -291,8 +291,38 @@
         },
         "extensions": {
           "type": "object",
+          "description": "Namespaced keys, preserved and never interpreted. intentset.org/review is no longer read: a knowledge record's review is review (ADR 0025).",
           "propertyNames": {
-            "pattern": "^[^/]+/.+$"
+            "pattern": "^[^/]+/.+$",
+            "not": {
+              "const": "intentset.org/review"
+            }
+          }
+        },
+        "review": {
+          "type": "object",
+          "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID. hash absent means content-v1; file-v1 is the whole file; any other value matches no pin. snapshot is informative.",
+          "additionalProperties": false,
+          "required": ["sources"],
+          "properties": {
+            "sources": {
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "hash": {
+              "type": ["string", "null"],
+              "minLength": 1
+            },
+            "snapshot": {
+              "type": ["string", "null"],
+              "minLength": 1
+            }
           }
         },
         "slice": {
@@ -760,6 +790,18 @@
         {
           "if": { "required": ["formalizes"] },
           "then": { "properties": { "type": { "enum": ["behavior", "rule", "scenario"] } } }
+        },
+        {
+          "if": {
+            "required": ["review"]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "knowledge"
+              }
+            }
+          }
         },
         {
           "if": {

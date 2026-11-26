@@ -2,9 +2,11 @@
  * `intentset migrate --to 0.3` (Core §1): moves the records the model reads to the specifications' current version,
  * `0.3`, from `0.2` or from `0.1`. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
  * values in the record's frontmatter, `intentset.spec` and `intentset.profile`, which Core §4 requires to agree with
- * it, and then applies the per-record transforms that version lists, in order. The step to `0.3` has one
- * (`statusToReviewLifecycle`, ADR 0023): a `status` of `implemented` or `released` becomes `approved`, and a record of
- * a type that carries `delivery` and states none gets `delivery: built`, which is what the status claimed. Every
+ * it, and then applies the per-record transforms that version lists, in order. The step to `0.3` has two:
+ * `statusToReviewLifecycle` (ADR 0023), by which a `status` of `implemented` or `released` becomes `approved`, and a
+ * record of a type that carries `delivery` and states none gets `delivery: built`, which is what the status claimed;
+ * and `reviewToCoreField` (ADR 0025), by which a review under `extensions.intentset.org/review` moves to `review`, with
+ * `hash: file-v1` where it named no hash, so no review changes what it pins. Every
  * other line is left byte for byte, and each rewritten line keeps its quoting, comment and line ending. It reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
  * changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a diff of its own that
  * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
@@ -129,6 +131,85 @@ export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) =>
   return lines.join("\n");
 };
 
+const EXTENSIONS_LINE = /^\s+(['"]?)extensions\1\s*:\s*(?:#.*)?$/;
+const REVIEW_EXTENSION_LINE = /^(\s+)(['"]?)intentset\.org\/review\2\s*:(.*)$/;
+const HASH_LINE = /^\s+(['"]?)hash\1\s*:/;
+
+/**
+ * Core §9 at `0.3` (ADR 0025): a knowledge record's review is `review`, a core field, and no longer the
+ * `intentset.org/review` extension. The extension's block moves out of `extensions` to `review` at the place
+ * `extensions` stood, each of its lines dedented to sit one level under `intentset` and kept byte for byte otherwise,
+ * comments included. Where the extension named no `hash`, `hash: file-v1` is written as its first line, since a review
+ * with no `hash` pinned the whole file before `0.3` and pins content hashes after it, so no review changes what it pins.
+ * `extensions` is removed when nothing else is left in it, and kept, with its other keys, otherwise. An extension
+ * written in a form the rewrite does not read (a flow mapping, a value on the key's line) is left, and the command
+ * names the record.
+ */
+export const reviewToCoreField: RecordTransform = (source, frontmatter) => {
+  const lines = source.split("\n");
+  const strip = (raw: string) => (raw.endsWith("\r") ? raw.slice(0, -1) : raw);
+  const indentOf = (line: string) => line.length - line.trimStart().length;
+  const content = (line: string) => line.trim() !== "" && !line.trim().startsWith("#");
+  const top = intentsetLines(lines, frontmatter);
+  const at = top.findIndex(({ line }) => EXTENSIONS_LINE.test(line));
+  if (at === -1) return source;
+  const { index: extensions, indent: childIndent } = top[at];
+  const last = frontmatter.line - 1 + frontmatter.text.split("\n").length;
+  /** The end (exclusive) of the block under the line at `from` deeper than `indent`, trailing blank and comment lines left out. */
+  const blockEnd = (from: number, indent: number, limit: number) => {
+    let end = from + 1;
+    for (let i = from + 1; i < limit; i++) {
+      const line = strip(lines[i]);
+      if (!content(line)) continue;
+      if (indentOf(line) <= indent) break;
+      end = i + 1;
+    }
+    return end;
+  };
+  const extensionsEnd = blockEnd(extensions, childIndent, Math.min(last, lines.length));
+  let key = -1;
+  let keyIndent = 0;
+  let deep: number | null = null;
+  for (let i = extensions + 1; i < extensionsEnd; i++) {
+    const line = strip(lines[i]);
+    if (!content(line)) continue;
+    deep ??= indentOf(line);
+    if (indentOf(line) !== deep) continue;
+    const match = REVIEW_EXTENSION_LINE.exec(line);
+    if (match === null) continue;
+    if (match[3].trim() !== "" && !match[3].trim().startsWith("#")) return source;
+    key = i;
+    keyIndent = indentOf(line);
+    break;
+  }
+  if (key === -1) return source;
+  const reviewEnd = blockEnd(key, keyIndent, extensionsEnd);
+  const shift = keyIndent - childIndent;
+  const eol = lines[key].endsWith("\r") ? "\r" : "";
+  const dedent = (raw: string) => {
+    const line = strip(raw);
+    const lead = Math.min(shift, indentOf(line));
+    return `${line.slice(lead)}${raw.endsWith("\r") ? "\r" : ""}`;
+  };
+  const head = REVIEW_EXTENSION_LINE.exec(strip(lines[key])) as RegExpExecArray;
+  const moved = [`${" ".repeat(childIndent)}review:${head[3]}${eol}`];
+  const children = lines.slice(key + 1, reviewEnd);
+  const firstChild = children.map(strip).find(content);
+  if (firstChild !== undefined) {
+    const childDepth = indentOf(firstChild);
+    const named = children
+      .map(strip)
+      .some((line) => content(line) && indentOf(line) === childDepth && HASH_LINE.test(line));
+    if (!named) moved.push(`${" ".repeat(childDepth - shift)}hash: file-v1${eol}`);
+  }
+  moved.push(...children.map(dedent));
+  lines.splice(key, reviewEnd - key);
+  const left = lines.slice(extensions + 1, extensionsEnd - (reviewEnd - key)).some((raw) => content(strip(raw)));
+  if (left) lines.splice(extensions, 0, ...moved);
+  else lines.splice(extensions, extensionsEnd - (reviewEnd - key) - extensions, ...moved);
+  return lines.join("\n");
+};
+
 /** The `intentset` mapping of a frontmatter read as YAML, or a message when it does not read. */
 function intentsetMapping(frontmatter: FrontmatterSpan): Record<string, unknown> | string {
   const parsed = parseYaml(frontmatter.text);
@@ -152,6 +233,8 @@ export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan
   if (typeof moved === "string") return `no longer reads as YAML (${moved})`;
   if (REMOVED_STATUSES.includes(moved.status)) return "still declares a status 0.3 does not list";
   const original = intentsetMapping(before);
+  const review = reviewProblem(typeof original === "string" ? {} : original, moved);
+  if (review !== null) return review;
   if (typeof original === "string" || !REMOVED_STATUSES.includes(original.status)) return null;
   const type = moved.type;
   if (typeof type !== "string" || !(DELIVERY_TYPES as readonly string[]).includes(type)) return null;
@@ -159,10 +242,35 @@ export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan
   return null;
 }
 
+/**
+ * ADR 0025: why a review did not move in full to `review` with the meaning it had, or null when it did (or there was
+ * none). Before `0.3` a review with no `hash` pinned the whole file; after, `review` with no `hash` pins content.
+ */
+function reviewProblem(original: Record<string, unknown>, moved: Record<string, unknown>): string | null {
+  const ext = (mapping: Record<string, unknown>) => {
+    const extensions = mapping.extensions;
+    if (extensions === null || typeof extensions !== "object" || Array.isArray(extensions)) return undefined;
+    return (extensions as Record<string, unknown>)["intentset.org/review"];
+  };
+  if (ext(moved) !== undefined) return "still carries the intentset.org/review extension 0.3 does not read";
+  const before = ext(original);
+  if (before === undefined) return null;
+  // Before, a null `hash` was a kind no pin matched; after, core reads a null as absent, which is content-v1.
+  const kind = (review: unknown, absent: string, nullKind: string) => {
+    if (review === null || typeof review !== "object" || Array.isArray(review)) return null;
+    const hash = (review as Record<string, unknown>).hash;
+    return hash === undefined ? absent : hash === null ? nullKind : JSON.stringify(hash);
+  };
+  const wasKind = kind(before, JSON.stringify("file-v1"), "null");
+  const nowKind = kind(moved.review, JSON.stringify("content-v1"), JSON.stringify("content-v1"));
+  if (wasKind !== nowKind) return "moved its review to review with another pin kind";
+  return null;
+}
+
 /** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
 export const MIGRATIONS: readonly MigrationStep[] = [
   { from: "0.1", to: "0.2", transforms: [] },
-  { from: "0.2", to: "0.3", transforms: [statusToReviewLifecycle] },
+  { from: "0.2", to: "0.3", transforms: [statusToReviewLifecycle, reviewToCoreField] },
 ];
 
 /** The one target: the version this reader reads. */
@@ -309,8 +417,9 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   if (left.length === 0) return 0;
   io.stderr(
     `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full, ` +
-      "in a form the rewrite could not read; give each one key per name, a status of approved, and delivery: built " +
-      "where its type carries delivery and it states none:\n" +
+      "in a form the rewrite could not read; give each one key per name, a status of approved, delivery: built " +
+      "where its type carries delivery and it states none, and its review under review (with hash: file-v1 where " +
+      "the extension named none):\n" +
       [...left]
         .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
         .map(({ path, problem }) => `  ${path}: ${problem}\n`)

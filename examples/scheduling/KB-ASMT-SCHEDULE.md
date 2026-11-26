@@ -32,13 +32,12 @@ intentset:
   tips:
     BEH-ASMT-SCHEDULE: Pick a published assessment, a class you manage and a future release time.
     RULE-ASMT-FUTURE: The release time must be in the future.
-  extensions:
-    intentset.org/review:
-      hash: content-v1
-      sources:
-        BEH-ASMT-SCHEDULE: '4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4'
-        RULE-ASMT-AUTH: d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10
-        RULE-ASMT-FUTURE: a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f
+  review:
+    hash: content-v1
+    sources:
+      BEH-ASMT-SCHEDULE: '4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4'
+      RULE-ASMT-AUTH: d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10
+      RULE-ASMT-FUTURE: a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f
 ---
 
 # Prepare a scheduled student assessment

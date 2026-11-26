@@ -76,7 +76,7 @@ const IMPORT = ["--product", "PRD-LANTERN", "--release", "pilot-1"];
  * nothing to say what it was reviewed against; and the approval, leaving the draft it used to be.
  */
 function unpinKnowledge(dir: string): void {
-  edit(dir, "KB-ASMT-SCHEDULE", /\n {2}extensions:\n(?: {4,}.*\n)+/, "\n");
+  edit(dir, "KB-ASMT-SCHEDULE", /\n {2}review:\n(?: {4,}.*\n)+/, "\n");
 }
 function draftKnowledge(dir: string): void {
   edit(dir, "KB-ASMT-SCHEDULE", "  status: approved\n", "  status: draft\n");
@@ -884,12 +884,8 @@ test("BEH-EXPORT, BEH-READ-EXPORT: graph --report all at L3 writes every report 
     ),
   );
   assert.ok(envelope.reports.ownership?.files.some((f) => f.path === TEST_FILE && f.region === "test"));
-  // The knowledge's review pins name the rule, as publication §3 requires and export §2 carries (issue #49).
-  const outsidePins = JSON.stringify({
-    ...envelope,
-    artifacts: envelope.artifacts.map((artifact) => ({ ...artifact, extensions: null })),
-  });
-  assert.ok(!outsidePins.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere but the review pins");
+  // The knowledge's review pins the rule, as publication §3 requires; export §3 withholds the pin with it (ADR 0025, #49).
+  assert.ok(!text.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere");
 
   const everything = await run(dir, "graph", "--report", "knowledge", "--include-restricted");
   assert.equal(everything.code, 0, everything.err);

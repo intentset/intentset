@@ -22,7 +22,7 @@ function* nodes(
     }
   } else if (value !== null && typeof value === "object") {
     for (const key of Object.keys(value)) {
-      // RFC 6901: `intentset.org/review`, the review extension's key, is `intentset.org~1review` in a pointer.
+      // RFC 6901: an extension key such as `example.org/name` is `example.org~1name` in a pointer.
       const token = key.replace(/~/g, "~0").replace(/\//g, "~1");
       yield [`${pointer}/${token}`, value as Record<string, unknown>, key];
       yield* nodes((value as Record<string, unknown>)[key], `${pointer}/${token}`);

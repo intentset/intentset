@@ -74,25 +74,25 @@ NOT contain a `:::` directive outside Markset's vocabulary. Retrieval chunks of 
 
 ## 3. Review record and needs-review
 
-A review is `reviewedBy` and `reviewedAt` on the knowledge plus this extension, which pins a hash of each source as it
-was when the knowledge was reviewed:
+A review is `reviewedBy` and `reviewedAt` on the knowledge plus `review` (Core §9, ADR 0025), which pins a hash of
+each source as it was when the knowledge was reviewed:
 
 ```yaml
-extensions:
-  intentset.org/review:
-    hash: content-v1                   # what the pins hash; absent means the whole file
-    sources:
-      BEH-ASMT-SCHEDULE: 4fede99f81c7...
-      RULE-ASMT-FUTURE: a89cf09ddc01...
-    snapshot: <commit or graph hash at review>   # optional, informative
+review:
+  sources:
+    BEH-ASMT-SCHEDULE: 4fede99f81c7...
+    RULE-ASMT-FUTURE: a89cf09ddc01...
+  hash: content-v1                     # what the pins hash; absent means content-v1
+  snapshot: <commit or graph hash at review>   # optional, informative
 ```
 
-`hash` names what every pin in the record holds (ADR 0018):
+`hash` names what every pin in the record holds (ADR 0018, ADR 0025):
 
-- **`content-v1`, the content hash.** SHA-256 over the canonical JSON (ADR 0005) of an object with three members:
+- **`content-v1`, the content hash, and the default.** SHA-256 over the canonical JSON (ADR 0005) of an object with
+  three members:
   - `frontmatter`, the source's whole parsed frontmatter without, under `intentset`, `status`, `delivery`,
-    `reviewedBy`, `reviewedAt`, `approval`, `formalizes` and the `intentset.org/review` extension, and without
-    `extensions` when nothing else is in it;
+    `reviewedBy`, `reviewedAt`, `approval`, `formalizes`, `review` and the `intentset.org/review` extension, and
+    without `extensions` when nothing else is in it;
   - `body`, everything after the frontmatter, as written;
   - `ending`, the status when it is `deprecated` or `retired`, and absent otherwise.
 
@@ -100,10 +100,11 @@ extensions:
   of its approval (`approval`, Core §7) or naming the outside requirement it formalizes (`formalizes`, Core §5) leaves
   the knowledge current: none of them changes what the source promises (ADR 0018, ADR 0020). Every other edit to the source makes it `needs-review`: its title, body, links, availability and
   any other frontmatter, and a status that says it is going away. A change in key order, quoting or indentation does
-  not, because the frontmatter is hashed as parsed. A review SHOULD pin this kind.
-- **Absent: the whole file.** Each pin is the SHA-256 of the source file's bytes, its `sourceHash` (ADR 0005), so any
-  edit to the source, its status included, makes the knowledge `needs-review`. A review record written before
-  `content-v1` existed has no `hash` and is read this way, unchanged.
+  not, because the frontmatter is hashed as parsed. A review with no `hash` pins this kind.
+- **`file-v1`, the whole file.** Each pin is the SHA-256 of the source file's bytes, its `sourceHash` (ADR 0005), so
+  any edit to the source, its status included, makes the knowledge `needs-review`. Before `0.3` this was the kind of a
+  review with no `hash`; `intentset migrate --to 0.3` writes `hash: file-v1` on each such review, so none changes what
+  it pins.
 - **Any other value** is a kind the implementation does not read: no pin matches, so the knowledge is `needs-review`.
 
 The sources a review MUST pin are those the knowledge `explains` and the rules in `governedBy` of each explained
@@ -162,7 +163,10 @@ document: status, visibility, audience, availability and review. The key is the 
 artifact's visibility, because a product that binds a control to the ID has already written it where the same reader
 can see it, and the file carries nothing else of that artifact: never its title, path, status or prose. When two
 published documents tip the same ID, the tip from the knowledge with the lower ID is written. A retrieval system MUST
-NOT index the help file as knowledge; its text is already in the documents it points at.
+NOT index the help file as knowledge; its text is already in the documents it points at. The help file is not the
+export: an export withholds a tip whose key is a withheld artifact's ID (export §3, ADR 0025), and the help file keys
+its tips by explained ID whatever that artifact's visibility, because the projection that wrote it already admitted
+the document the tip comes from.
 
 A help file written before revision 2026-11-15 carries a `snapshot` member, `commit` and `graphHash`, between
 `projection` and `audience`. A reader MUST accept a help file with or without it, and SHOULD NOT rely on it.

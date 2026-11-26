@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-REVIEW-PINS]
   verification:
@@ -23,7 +23,7 @@ intentset:
 
 ## Procedure
 
-`pnpm test` runs these tests with node:test. They compute content hashes of one record under lifecycle, review, key-order and quoting edits, which leave it unchanged, and under edits to its body, its other frontmatter and a deprecation or retirement, which move it; they read each pin kind, bind `@current` by the record's kind, and judge an unknown kind as needing review. The P04 cases of `tests/publication.json`, which `pnpm run conformance` runs, pin literal content hashes of the example's sources and edit them after review. The selector is the behavior's ID, which each test's title carries.
+`pnpm test` runs these tests with node:test. They compute content hashes of one record under lifecycle, review, key-order and quoting edits, which leave it unchanged, and under edits to its body, its other frontmatter and a deprecation or retirement, which move it; they show that `review`, like the extension it replaced, is outside the content hash and that the example's sources hash as they did before the move; they read each pin kind, absent as `content-v1` and `file-v1` as the whole file, bind `@current` by the record's kind, judge an unknown kind as needing review, and drop a review whose `hash` is not a string. The P04 cases of `tests/publication.json`, which `pnpm run conformance` runs, pin literal content hashes, with and without `hash`, and literal whole-file hashes under `file-v1` and with no `hash`, of the example's sources, and edit them after review; the core cases on `review` hold its shape and CORE001 for the retired extension. The selector is the behavior's ID, which each test's title carries.
 
 ## Expected result
 

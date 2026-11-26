@@ -53,6 +53,7 @@ import {
   STATUSES,
   TIP_MAX_LENGTH,
   TIP_PATTERN,
+  type ReviewMeta,
   type SliceMeta,
   VISIBILITIES,
   type VerificationMeta,
@@ -94,6 +95,7 @@ const OPTIONAL_COMMON = [
   "formalizes",
   "extensions",
   "tips",
+  "review",
   "slice",
   "verification",
   "measure",
@@ -102,6 +104,9 @@ const KNOWN_KEYS = new Set<string>([...REQUIRED_COMMON, ...OPTIONAL_COMMON]);
 const LINK_FIELDS = LINK_KINDS.filter((kind) => kind !== "parent") as Exclude<LinkKind, "parent">[];
 const AVAILABILITY_KEYS = ["products", "releases", "roles", "editions", "flags"] as const;
 const EXTENSION_KEY = /^[^/]+\/.+$/;
+/** The extension a review was authored under before 0.3 (ADR 0025): CORE001 now, since it would read as no review. */
+export const RETIRED_REVIEW_EXTENSION = "intentset.org/review";
+const REVIEW_KEYS = ["sources", "hash", "snapshot"] as const;
 
 /** Core §3, §4, §6 and §7 (ADR 0002): read one document into an Artifact, reporting CORE001 and its kin with origin "profile". */
 export function readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] } {
@@ -438,7 +443,13 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
     } else {
       extensions = {};
       for (const key of Object.keys(s.extensions).sort(compareStrings)) {
-        if (EXTENSION_KEY.test(key)) extensions[key] = s.extensions[key];
+        if (key === RETIRED_REVIEW_EXTENSION) {
+          problem(
+            `${base}/extensions/${pointerToken(key)}`,
+            "`extensions.intentset.org/review` is no longer read: a knowledge record's review is `review` (Core §9, ADR 0025).",
+            "Move it to `review`, writing `hash: file-v1` where it names no hash, or run `intentset migrate --to 0.3` on a record written for 0.2.",
+          );
+        } else if (EXTENSION_KEY.test(key)) extensions[key] = s.extensions[key];
         else
           problem(
             `${base}/extensions/${pointerToken(key)}`,
@@ -469,6 +480,18 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       );
     } else {
       tips = readTips(s.tips, `${base}/tips`, problem) ?? undefined;
+    }
+  }
+  let review: ReviewMeta | undefined;
+  if (Object.hasOwn(s, "review") && s.review !== null) {
+    if (type !== null && type !== "knowledge") {
+      problem(
+        `${base}/review`,
+        `\`review\` is written on ${aType(type)}; only knowledge is reviewed against its sources.`,
+        "Remove it; a review pins the sources a knowledge record explains (Core §9).",
+      );
+    } else {
+      review = readReview(s.review, `${base}/review`, problem) ?? undefined;
     }
   }
   let verification: VerificationMeta | undefined;
@@ -515,6 +538,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
   if (formalizes !== undefined) meta.formalizes = formalizes;
   if (extensions !== undefined) meta.extensions = extensions;
   if (tips !== undefined) meta.tips = tips;
+  if (review !== undefined) meta.review = review;
   if (slice !== undefined) meta.slice = slice;
   if (verification !== undefined) meta.verification = verification;
   if (measure !== undefined) meta.measure = measure;
@@ -719,6 +743,79 @@ function readTips(value: unknown, field: string, problem: Problem): Record<strin
     tips[key] = text;
   }
   return tips;
+}
+
+/**
+ * Core §9, publication §3 (ADR 0025): a knowledge record's review, a mapping with `sources`, a mapping from a source ID
+ * to the hash it had at review, and optionally `hash`, the pin kind, and `snapshot`, informative. Any problem drops the
+ * whole review, so the knowledge reads as unreviewed rather than as reviewed against part of what it pinned.
+ */
+function readReview(value: unknown, field: string, problem: Problem): ReviewMeta | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`review` must be a mapping with `sources`.",
+      "Write `sources:` under `review:`, one `ID: hash` line per source the knowledge was reviewed against (Core §9).",
+    );
+    return null;
+  }
+  let ok = true;
+  const fail = (at: string, message: string, remediation: string) => {
+    problem(at, message, remediation);
+    ok = false;
+  };
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    if (!(REVIEW_KEYS as readonly string[]).includes(key)) {
+      fail(
+        `${field}/${pointerToken(key)}`,
+        `Unknown review key \`${key}\`.`,
+        `The keys are ${REVIEW_KEYS.join(", ")} (Core §9).`,
+      );
+    }
+  }
+  const sources: Record<string, string> = {};
+  if (!Object.hasOwn(value, "sources") || value.sources === null) {
+    fail(
+      `${field}/sources`,
+      "`review.sources` is missing.",
+      "Pin each source the knowledge was reviewed against, by ID.",
+    );
+  } else if (!isRecord(value.sources)) {
+    fail(
+      `${field}/sources`,
+      "`review.sources` must be a mapping from a source ID to its hash.",
+      "Write one `ID: hash` line per source.",
+    );
+  } else {
+    for (const key of Object.keys(value.sources).sort(compareStrings)) {
+      const at = `${field}/sources/${pointerToken(key)}`;
+      const pin = value.sources[key];
+      if (!ID_PATTERN.test(key))
+        fail(at, `Review pin key \`${key}\` is not an ID.`, "Key each pin by the ID of a source.");
+      else if (typeof pin !== "string" || pin === "") {
+        fail(
+          at,
+          `The pin for ${key} must be a non-empty string.`,
+          "Write the source's hash of the review's kind, quoted.",
+        );
+      } else sources[key] = pin;
+    }
+  }
+  const review: ReviewMeta = { sources };
+  for (const key of ["hash", "snapshot"] as const) {
+    if (!Object.hasOwn(value, key) || value[key] === null) continue;
+    const text = value[key];
+    if (typeof text === "string" && text !== "") review[key] = text;
+    else
+      fail(
+        `${field}/${key}`,
+        `\`review.${key}\` must be a non-empty string.`,
+        key === "hash"
+          ? "Write `content-v1` (the default when absent) or `file-v1` (publication §3)."
+          : "Write the commit or graph hash the review was made at, or leave it out.",
+      );
+  }
+  return ok ? review : null;
 }
 
 const APPROVAL_KEYS = ["by", "at", "basis", "source", "attestedBy"] as const;

@@ -437,6 +437,7 @@ class Shape {
         "verification",
         "measure",
         "tips",
+        "review",
         "extensions",
       ],
       ["body"],
@@ -523,6 +524,21 @@ class Shape {
           this.fail(q, `Expected one line of plain text, at most ${TIP_MAX_LENGTH} characters.`);
         }
       }
+    });
+    this.nullable(a.review, `${at}/review`, (x, p) => {
+      const r = this.object(x, p, ["sources", "hash", "snapshot"]);
+      if (r === null) return;
+      if (!isRecord(r.sources)) this.fail(`${p}/sources`, "Expected an object of pins by source ID.");
+      else {
+        for (const key of Object.keys(r.sources).sort(compareStrings)) {
+          const q = `${p}/sources/${key}`;
+          if (!ID_PATTERN.test(key)) this.fail(q, "Expected an artifact ID as the key.");
+          const pin = r.sources[key];
+          if (typeof pin !== "string" || pin === "") this.fail(q, "Expected a non-empty string.");
+        }
+      }
+      this.nullable(r.hash, `${p}/hash`, (h, q) => this.string(h, q));
+      this.nullable(r.snapshot, `${p}/snapshot`, (h, q) => this.string(h, q));
     });
     this.nullable(a.extensions, `${at}/extensions`, (x, p) => this.extensions(x, p));
     if (Object.hasOwn(a, "body") && typeof a.body !== "string") this.fail(`${at}/body`, "Expected a string.");

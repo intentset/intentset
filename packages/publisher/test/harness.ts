@@ -108,7 +108,7 @@ export function reviewed(
     "intentset.status": "approved",
     "intentset.reviewedBy": "team-assessment",
     "intentset.reviewedAt": "2026-09-30",
-    "intentset.extensions": { "intentset.org/review": { sources: pins } },
+    "intentset.review": { sources: pins },
     ...extra,
   };
 }

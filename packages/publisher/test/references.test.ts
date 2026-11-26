@@ -137,7 +137,7 @@ test("a document linking to one refused in the same run is refused in turn", () 
     "  title: Review a schedule\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n" +
     "  links:\n    explains:\n    - CAP-ASMT-ASSIGN\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n" +
     "    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n" +
-    "  extensions:\n    intentset.org/review:\n      sources:\n        CAP-ASMT-ASSIGN: '@current'\n---\n\n# Review a schedule\n\n" +
+    "  review:\n    sources:\n      CAP-ASMT-ASSIGN: '@current'\n---\n\n# Review a schedule\n\n" +
     "## Guidance\n\nBefore confirming, read [how to prepare one](KB-ASMT-SCHEDULE.md).\n";
   const clean = example({ kb: reviewed(), files: { "KB-ASMT-REVIEW.md": second } });
   const ok = publish(clean.graph, clean.registries, customer(), {

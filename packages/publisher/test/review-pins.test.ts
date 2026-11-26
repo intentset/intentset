@@ -1,14 +1,23 @@
 /**
- * Review pins of two kinds (publication §3, ADR 0018, BEH-REVIEW-PINS): a pin
- * without `hash` holds the source's whole-file hash, and `hash: content-v1`
- * holds its content hash, which leaves out the lifecycle and review fields.
- * The P04 cases of tests/publication.json hold the rest.
+ * Review pins of two kinds (publication §3, ADR 0018, ADR 0025, BEH-REVIEW-PINS):
+ * a pin without `hash`, or with `hash: content-v1`, holds the source's content
+ * hash, which leaves out the lifecycle and review fields, and `hash: file-v1`
+ * holds its whole-file hash. The P04 cases of tests/publication.json hold the rest.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
-import { type Artifact, CONTENT_HASH_OMITS, contentHashOf, plainCarrier, readArtifact } from "@intentset/core";
+import {
+  type Artifact,
+  CONTENT_HASH_OMITS,
+  contentHashOf,
+  parseYaml,
+  plainCarrier,
+  readArtifact,
+} from "@intentset/core";
 import { bindReviewPins, pinHash, readReviewRecord, reviewStatus } from "../src/index.ts";
-import { build } from "./harness.ts";
+import { build, examplesDir } from "./harness.ts";
 
 const RECORD = `---
 markset: 0
@@ -31,6 +40,16 @@ intentset:
 Short.
 `;
 
+/** The parsed frontmatter and the body, for contentHashOf: `review` on a rule is CORE001, so it is hashed directly. */
+function parsed(source: string): Record<string, unknown> {
+  const yaml = parseYaml(source.slice(4, source.indexOf("\n---\n", 4)));
+  assert.ok(yaml.value !== null);
+  return yaml.value;
+}
+function body(source: string): string {
+  return source.slice(source.indexOf("\n---\n", 4) + 5);
+}
+
 function read(source: string): Artifact {
   const { artifact } = readArtifact(plainCarrier("RULE-X.md", source));
   assert.ok(artifact, "the record reads");
@@ -41,7 +60,7 @@ test("BEH-REVIEW-PINS: the content hash ignores lifecycle, review fields, key or
   const base = read(RECORD).contentHash;
   assert.deepEqual(
     [...CONTENT_HASH_OMITS],
-    ["status", "delivery", "reviewedBy", "reviewedAt", "approval", "formalizes"],
+    ["status", "delivery", "reviewedBy", "reviewedAt", "approval", "formalizes", "review"],
   );
 
   const lifecycle = RECORD.replace("status: draft", "status: approved\n  delivery: built").replace(
@@ -81,6 +100,10 @@ test("BEH-REVIEW-PINS: the content hash ignores lifecycle, review fields, key or
     "audiences: [engineering]\n  extensions:\n    intentset.org/review:\n      sources: {}",
   );
   assert.equal(read(pins).contentHash, base, "the review extension, and `extensions` left empty without it");
+  // ADR 0025: the review moved from that extension to `review`, and a content hash leaves out both, so a record's
+  // content hash is the same before and after the move.
+  const moved = RECORD.replace("audiences: [engineering]", "audiences: [engineering]\n  review:\n    sources: {}");
+  assert.equal(contentHashOf(parsed(moved), body(moved)), base, "the review, as the core field");
   const other = RECORD.replace(
     "audiences: [engineering]",
     "audiences: [engineering]\n  extensions:\n    org.example/x: 1",
@@ -111,8 +134,9 @@ test("BEH-REVIEW-PINS: the content hash moves for the promise, and when the reco
 
 test("BEH-REVIEW-PINS: a review names its pin kind in `hash`, and an unknown kind matches nothing", () => {
   const source = read(RECORD);
-  assert.equal(pinHash(undefined)?.(source), source.sourceHash);
+  assert.equal(pinHash(undefined)?.(source), source.contentHash, "absent is content-v1 (ADR 0025)");
   assert.equal(pinHash("content-v1")?.(source), source.contentHash);
+  assert.equal(pinHash("file-v1")?.(source), source.sourceHash);
   assert.equal(pinHash("content-v9"), null);
 
   const reviewed = (review: Record<string, unknown>) =>
@@ -126,7 +150,7 @@ test("BEH-REVIEW-PINS: a review names its pin kind in `hash`, and an unknown kin
             "intentset.status": "approved",
             "intentset.reviewedBy": "team-assessment",
             "intentset.reviewedAt": "2026-09-30",
-            "intentset.extensions": { "intentset.org/review": review },
+            "intentset.review": review,
           },
         },
         "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.status": "approved" } },
@@ -154,9 +178,7 @@ test("BEH-REVIEW-PINS: a review names its pin kind in `hash`, and an unknown kin
           "intentset.status": "approved",
           "intentset.reviewedBy": "team-assessment",
           "intentset.reviewedAt": "2026-09-30",
-          "intentset.extensions": {
-            "intentset.org/review": { hash: "content-v1", sources: { ...all, "BEH-ASMT-SCHEDULE": before } },
-          },
+          "intentset.review": { hash: "content-v1", sources: { ...all, "BEH-ASMT-SCHEDULE": before } },
         },
       },
       "BEH-ASMT-SCHEDULE.md": {
@@ -189,7 +211,40 @@ test("BEH-REVIEW-PINS: a review names its pin kind in `hash`, and an unknown kin
   assert.equal(status.unknownHash, "content-v9");
   assert.deepEqual(status.changed, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-AUTH", "RULE-ASMT-FUTURE"]);
 
+  // Absent is content-v1, and file-v1 binds and matches the whole file.
+  const absent = reviewed({ sources: all });
+  const absentKb = absent.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  assert.equal(readReviewRecord(absentKb)?.hash, undefined);
+  assert.equal(
+    readReviewRecord(absentKb)?.sources["BEH-ASMT-SCHEDULE"],
+    absent.artifacts.get("BEH-ASMT-SCHEDULE")?.contentHash,
+  );
+  assert.equal(reviewStatus(absent, absentKb).status, "current");
+  const file = reviewed({ hash: "file-v1", sources: all });
+  const fileKb = file.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  assert.equal(
+    readReviewRecord(fileKb)?.sources["BEH-ASMT-SCHEDULE"],
+    file.artifacts.get("BEH-ASMT-SCHEDULE")?.sourceHash,
+  );
+  assert.equal(reviewStatus(file, fileKb).status, "current");
+
+  // A hash that is not a string is CORE001 (Core §9), and the review is dropped whole, so it reads as none.
   const notString = reviewed({ hash: 1, sources: all });
-  assert.equal(readReviewRecord(notString.artifacts.get("KB-ASMT-SCHEDULE") as Artifact)?.hash, "1");
+  assert.equal(readReviewRecord(notString.artifacts.get("KB-ASMT-SCHEDULE") as Artifact), null);
   assert.equal(bindReviewPins(notString).artifacts.size, notString.artifacts.size);
+});
+
+test("BEH-REVIEW-PINS: leaving `review` out of the content hash moved no pin taken before 0.3", () => {
+  // These are the content-v1 pins the example's knowledge held under the extension before the review became a core
+  // field: the sources' content hashes are what they were, so no review moved by migrate needs review (ADR 0025).
+  const pinned: Record<string, string> = {
+    "BEH-ASMT-SCHEDULE.md": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+    "RULE-ASMT-AUTH.md": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+    "RULE-ASMT-FUTURE.md": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f",
+  };
+  for (const [name, hash] of Object.entries(pinned)) {
+    const source = readFileSync(join(examplesDir, "scheduling", name), "utf8");
+    const { artifact } = readArtifact(plainCarrier(name, source));
+    assert.equal(artifact?.contentHash, hash, name);
+  }
 });

@@ -3587,6 +3587,368 @@
   },
   {
     "section": "core",
+    "name": "C01 a knowledge review pins its sources by ID, with a hash kind and a snapshot",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": "content-v1",
+            "snapshot": "6f1c2d9"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "Core §9 (ADR 0025): review is a core field on knowledge: sources, and optionally hash and snapshot."
+  },
+  {
+    "section": "core",
+    "name": "C01 a knowledge review with no hash is accepted, and pins content-v1",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            }
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "hash absent means content-v1 (publication §3); which kind a pin holds is publication's to judge, not CORE001's."
+  },
+  {
+    "section": "core",
+    "name": "C01 a knowledge review naming file-v1 is accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": "file-v1"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "file-v1 pins each source's whole file, the kind every review that named no hash held before 0.3."
+  },
+  {
+    "section": "core",
+    "name": "C01 boundary: a review naming a hash kind no version reads is accepted, and matches no pin",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": "content-v9"
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "A kind this version does not read is not malformed: the review is well formed and needs review (publication §3, P04)."
+  },
+  {
+    "section": "core",
+    "name": "C01 boundary: a review with no sources pinned is accepted",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {}
+          }
+        }
+      }
+    },
+    "valid": true,
+    "notes": "An empty mapping is well formed; publication finds each source unpinned and the knowledge needs review."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 extensions.intentset.org/review on knowledge is no longer read",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": null,
+          "intentset.extensions": {
+            "intentset.org/review": {
+              "hash": "content-v1",
+              "sources": {
+                "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+                "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+                "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              }
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "ADR 0025: left alone it would read as no review, so a review that silently stopped counting is said. intentset migrate --to 0.3 moves it to review."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 extensions.intentset.org/review beside other extensions on a behavior",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.extensions": {
+            "example/change": {
+              "ticket": "LAN-12"
+            },
+            "intentset.org/review": {
+              "sources": {}
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "The key is CORE001 on any type; the other extension is preserved."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review on a behavior",
+    "baseline": "scheduling",
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "notes": "Only knowledge is reviewed against its sources (Core §9)."
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review is a list rather than a mapping",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": [
+            "BEH-ASMT-SCHEDULE"
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review names no sources",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "hash": "content-v1"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review has an unknown key",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "reviewer": "team-assessment"
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a review pin key is not an ID",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "schedule": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a review pin is not a string",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": 42
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 a review pin is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": ""
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review hash is not a string",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": 1
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review hash is empty",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "hash": ""
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
+    "name": "CORE001 review snapshot is not a string",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "snapshot": [
+              "6f1c2d9"
+            ]
+          }
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ]
+  },
+  {
+    "section": "core",
     "name": "CORE001 delivery on a measure",
     "baseline": "scheduling",
     "patch": {
