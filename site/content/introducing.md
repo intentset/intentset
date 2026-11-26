@@ -28,7 +28,7 @@ Already have the idea? [Try it on your code](../start/).
 Intentset
 
 {.eyebrow}
-Product truth for agentic development
+For teams shipping with coding agents · v0.2 draft
 
 ## Keep control of what your agents build
 

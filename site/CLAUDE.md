@@ -12,10 +12,12 @@ repository-relative.
   works, Try it on your code, then a group "Once one capability works" holding Model the whole product with many agents
   and Make agents' work safe to accept, each label the page's h1), Tools (all tools, the command, what reads a model,
   and the agent guide as "What your agents read"), Reference (the specifications, the Markset page, conformance), Examples (one rail on every page
-  of the section, 2026-10-20: "Lantern, a worked example", a group holding the map, the walkthrough and "Review pages",
+  of the section, 2026-10-20: "Lantern, a worked example", a group holding the walkthrough, the map and "Review pages",
   a group of the Atlas's five other pages; then the adoption log). A rail entry is a page or a group whose label is not
-  a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the map
-  (`/example/atlas/map/`); the walkthrough kept `/example/`. No URL moved when the bar or the rail changed. `site/test/rail.test.ts` requires every page to be named by the bar,
+  a link (`RailItem`, `railLinks` in `site/build.ts`), drawn as nested lists. The bar's Examples opens on the walkthrough
+  (`/example/`), the rail's first page, by the user's decision of 2026-11-25, which reversed the map of 2026-10-20;
+  the walkthrough links the map in a button above its first step, so the map stays one click away. No URL moved when
+  the bar or the rail changed. `site/test/rail.test.ts` requires every page to be named by the bar,
   a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
   rail.
 - `{{version}}` in a content page is the root `package.json` version; a test fails on a typed `at 0.x` or
@@ -55,9 +57,10 @@ repository-relative.
   walkthrough's folds always linked, it holds the record in one card (its file, linked on GitHub at main, every
   frontmatter field, then its text) with what the Atlas derives below it; the rail names the record beneath Records,
   a review page that lists every one; the site's own record page and the Atlas's behavior page at `/example/atlas/behaviors/<ID>/` gave
-  way to it, so each record has one page, inside the navigation. The map is Lantern's landing page (2026-10-20): its h1 is "Lantern, a worked example", it links the
-  walkthrough and the review pages under the picture, and every way into the example (the bar, the home page, Start,
-  Tools, How it works, the roadmap) leads to it. It has no run evidence and no commit, because the example's check has not been executed and the
+  way to it, so each record has one page, inside the navigation. The map was Lantern's landing page from 2026-10-20 until the user's decision of 2026-11-25 put the bar's
+  Examples on the walkthrough: its h1 is still "Lantern, a worked example", it links the walkthrough and the review
+  pages under the picture, and the other ways into the example (the home page, Start, Tools, How it works, the roadmap)
+  still lead to it. It has no run evidence and no commit, because the example's check has not been executed and the
   pages describe records rather than a commit. Only an invented product's Atlas is published: Intentset's own model
   has no public Atlas, and a public mode for one is undecided. Its Map page carries the SVG and controls `mapHtml`
   draws, with links at the site's addresses, placed in the page's map slot (`placeHtml`), and the map's stylesheet and

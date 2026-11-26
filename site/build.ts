@@ -150,7 +150,7 @@ export const NAV: Array<[string, string]> = [
   ["Start", INTRODUCTION.page],
   ["Tools", "tools/index.html"],
   ["Reference", "specifications/index.html"],
-  ["Examples", ATLAS_MAP_PAGE],
+  ["Examples", "example/index.html"],
   ["Roadmap", "roadmap/index.html"],
 ];
 
@@ -179,10 +179,12 @@ export function railLinks(rail: Rail): Array<[string, string]> {
  * The agent guide is in Tools, beside what else reads a model.
  *
  * Examples is one rail for the whole section (2026-10-20): Lantern, the
- * invented example, with its map, the walkthrough and the review pages the
+ * invented example, with the walkthrough, its map and the review pages the
  * Atlas draws from the same records, then the adoption log. Until then the
  * Atlas's pages had a rail of their own that led back to the walkthrough,
- * whose rail led to the Atlas.
+ * whose rail led to the Atlas. The bar's Examples opens on the walkthrough,
+ * the rail's first page (2026-11-25, the user's decision, reversing the map of
+ * 2026-10-20), and the walkthrough links the map at its top.
  */
 export const RAILS: Rail[] = [
   {
@@ -229,8 +231,8 @@ export const RAILS: Rail[] = [
       {
         label: "Lantern, a worked example",
         items: [
-          ["The map", ATLAS_MAP_PAGE],
           ["The walkthrough", "example/index.html"],
+          ["The map", ATLAS_MAP_PAGE],
           { label: "Review pages", items: REVIEW_PAGES },
         ],
       },
@@ -976,6 +978,8 @@ Lantern, a worked example · The walkthrough
 One capability of Lantern, an invented product, written down the way Intentset asks for it: ${records.length} records, each a Markdown file a person reads in under a minute, which together connect a reason for the product to change to the code that would deliver it and the check that would hold it.
 
 Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in order and the chain closes; open any record to see exactly what a person writes and what an agent reads. [The map](atlas/map/) draws the same ${records.length} records and every link between them in one picture.
+
+[[See every record on the map](atlas/map/)]{.button .primary} [[Open the review pages](atlas/)]{.button}
 
 :::metrics
 | Count | Value |
