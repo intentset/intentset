@@ -5,7 +5,9 @@
  * each source with no `hash`, which means `content-v1` (ADR 0025), then `self`, the knowledge's own content hash, and
  * `gates`, the gate hash of its sources (ADR 0027). Everything an approval writes is left out of both, so the values
  * written are the values the edited record has. Those lines change and no other byte does. `approve` is the only
- * command that writes a review: no command prints review values to copy (Core §10).
+ * command that writes a review, and no command prints a gate hash (Core §10). `intentset context --json` prints a
+ * record's `contentHash`, which for knowledge that is neither deprecated nor retired equals the own content hash `self`
+ * pins; `intentset review` lists a review that changed, a pin copied from it included.
  *
  * With `--renew-review` it writes only the review, `reviewedBy`, `reviewedAt` and `review`, of the approved or
  * deprecated knowledge it is given, and leaves `status` and `approval` as they are: a person renews a review they made

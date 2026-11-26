@@ -11,7 +11,9 @@
  * rewrites `spec` and `profile`, which both pin kinds cover, so a pin equal to its source's hash as the source was
  * written becomes the same kind of hash of the source as moved, and a pin that did not match is left as written. A
  * knowledge record's `self` (ADR 0027), its own content hash at review, is re-pinned the same way when it matched the
- * record as written. `gates` covers neither `spec` nor `profile`, so no move changes it. Every
+ * record as written and the record's own version read `self` (`0.3` or later); a review extension's `self` and `gates`,
+ * which no earlier version read, are left out of `review` and named, so a review current before the move is current
+ * after it. `gates` covers neither `spec` nor `profile`, so no move changes it. Every
  * other line is left byte for byte, and each rewritten line keeps its quoting, comment and line ending. It reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
  * changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a diff of its own that
  * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
@@ -150,6 +152,11 @@ export const statusToReviewLifecycle: RecordTransform = (source, frontmatter) =>
 const EXTENSIONS_LINE = /^\s+(['"]?)extensions\1\s*:\s*(?:#.*)?$/;
 const REVIEW_EXTENSION_LINE = /^(\s+)(['"]?)intentset\.org\/review\2\s*:(.*)$/;
 const HASH_LINE = /^\s+(['"]?)hash\1\s*:/;
+const UNREAD_BEFORE_0_3_LINE = /^\s+(['"]?)(?:self|gates)\1\s*:/;
+const SEQUENCE_ENTRY_LINE = /^\s*-(?:\s|$)/;
+
+/** The review keys `review` reads from `0.3` (ADR 0027) that a review extension before it held with no meaning. */
+const UNREAD_BEFORE_0_3: readonly string[] = ["gates", "self"];
 
 /**
  * Core §9 at `0.3` (ADR 0025): a knowledge record's review is `review`, a core field, and no longer the
@@ -160,7 +167,10 @@ const HASH_LINE = /^\s+(['"]?)hash\1\s*:/;
  * `extensions` is removed when nothing else is left in it, and kept, with its other keys, otherwise. Only a knowledge
  * record's extension moves: on any other type `review` is CORE001 as the extension is, so the extension is left where
  * it is and the command names the record. An extension written in a form the rewrite does not read (a flow mapping, a
- * value on the key's line) is left too, and the command names the record.
+ * value on the key's line) is left too, and the command names the record. A `self` or `gates` in the extension, which
+ * no reader before `0.3` read, is left out of `review`, with the lines nested under it, since `0.3` reads each as a
+ * review pin that no earlier tool could have computed, a block sequence written at the key's own indent included; the
+ * command names the record and the keys it left out.
  */
 export const reviewToCoreField: RecordTransform = (source, frontmatter) => {
   const lines = source.split("\n");
@@ -213,10 +223,20 @@ export const reviewToCoreField: RecordTransform = (source, frontmatter) => {
   };
   const head = REVIEW_EXTENSION_LINE.exec(strip(lines[key])) as RegExpExecArray;
   const moved = [`${" ".repeat(childIndent)}review:${head[3]}${eol}`];
-  const children = lines.slice(key + 1, reviewEnd);
-  const firstChild = children.map(strip).find(content);
+  const block = lines.slice(key + 1, reviewEnd);
+  const firstChild = block.map(strip).find(content);
+  const childDepth = firstChild === undefined ? 0 : indentOf(firstChild);
+  const children: string[] = [];
+  let unread = false;
+  for (const raw of block) {
+    const line = strip(raw);
+    if (content(line) && indentOf(line) === childDepth && !SEQUENCE_ENTRY_LINE.test(line)) {
+      unread = UNREAD_BEFORE_0_3_LINE.test(line);
+    }
+    if (unread && content(line)) continue;
+    children.push(raw);
+  }
   if (firstChild !== undefined) {
-    const childDepth = indentOf(firstChild);
     const named = children
       .map(strip)
       .some((line) => content(line) && indentOf(line) === childDepth && HASH_LINE.test(line));
@@ -262,13 +282,13 @@ export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan
   return null;
 }
 
-const REVIEW_KEYS: readonly string[] = ["sources", "hash", "snapshot", "self", "gates"];
+const REVIEW_KEYS: readonly string[] = ["sources", "hash", "snapshot"];
 
 /**
  * ADR 0025: why a review did not move in full to `review` with the meaning it had, or null when it did (or there was
  * none). Before `0.3` the extension was read on knowledge alone, by its `sources`, `hash` and `snapshot`, and anything
- * else in it was ignored; after, `review` also reads `self` and `gates` (ADR 0027), so those move with it, `review` is
- * CORE001 on any other type, and core drops a whole review that holds a key,
+ * else in it was ignored; after, `review` also reads `self` and `gates` (ADR 0027), which the move leaves out
+ * (`unreadReviewKeys` names them), `review` is CORE001 on any other type, and core drops a whole review that holds a key,
  * pin key or value it does not read (Core §9), so the knowledge would read as unreviewed. A review that would is named
  * rather than counted as moved. Before `0.3` a review with no `hash` pinned the whole file; after, `review` with no
  * `hash` pins content, so the pin kind is compared too.
@@ -321,11 +341,25 @@ function reviewShapeProblem(review: unknown): string | null {
     const value = review[key];
     if (value !== undefined && value !== null && !filled(value)) return `a ${key} that is not a non-empty string`;
   }
-  // ADR 0027: `self` and `gates` are read too, and a null one is CORE001 rather than absent.
-  for (const key of ["self", "gates"]) {
-    if (review[key] !== undefined && !filled(review[key])) return `a ${key} that is not a non-empty string`;
-  }
   return null;
+}
+
+/**
+ * ADR 0027: the keys of a knowledge record's review extension that no reader before `0.3` read and that `0.3` reads as
+ * review pins (`self`, `gates`), which the move left out of `review`, sorted; empty when it left out none or did not
+ * move the review.
+ */
+export function unreadReviewKeys(before: FrontmatterSpan, after: FrontmatterSpan): string[] {
+  const original = intentsetMapping(before);
+  const moved = intentsetMapping(after);
+  if (typeof original === "string" || typeof moved === "string") return [];
+  const isMapping = (value: unknown): value is Record<string, unknown> =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+  const extensions = original.extensions;
+  const review = isMapping(extensions) ? extensions["intentset.org/review"] : undefined;
+  if (!isMapping(review) || !isMapping(moved.review)) return [];
+  const now = moved.review;
+  return UNREAD_BEFORE_0_3.filter((key) => key in review && !(key in now));
 }
 
 /** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
@@ -389,6 +423,13 @@ export function migrateText(source: string, frontmatter: FrontmatterSpan, from: 
 /** The `intentset.spec` a record declares, as the line holds it, or null when it declares none in the frontmatter. */
 function declaredSpec(frontmatter: FrontmatterSpan): string | null {
   return /^\s+spec:\s*(['"]?)(\d+\.\d+)\1\s*(?:#.*)?$/m.exec(frontmatter.text)?.[2] ?? null;
+}
+
+const UNREAD_SELF_VERSIONS: readonly string[] = ["0.1", "0.2"];
+
+/** Whether a record that declares `spec` read a review's `self` (ADR 0027): from `0.3` on. */
+function readsSelf(spec: string | null): boolean {
+  return spec !== null && !UNREAD_SELF_VERSIONS.includes(spec);
 }
 
 /** The frontmatter of `source` that starts at `line`, read again after a step may have changed it. */
@@ -554,7 +595,8 @@ function declaredPinKind(before: string, line: number): PinKind | null {
  * How `repinReviews` treats a knowledge record's own pins, read from its text before the move: whether the move
  * rewrites its pins at all (it moves the record, or the record is already at the target), the source pin kind it reads
  * them by (null: none matches, so none is re-pinned), and whether its `self` can be re-pinned (only when the move
- * changes the record itself). `intentset review` replays exactly this, so a hand edit migrate would never write is listed.
+ * changes the record itself, and its declared version read `self`). `intentset review` replays exactly this, so a hand
+ * edit migrate would never write is listed.
  */
 export function repinPlan(before: string, line: number): { rewrites: boolean; kind: PinKind | null; self: boolean } {
   const span = frontmatterAt(before, line);
@@ -562,7 +604,7 @@ export function repinPlan(before: string, line: number): { rewrites: boolean; ki
   const moved = atTarget ? null : migrateRecord(before, span);
   const changes = moved !== null && moved !== before;
   if (!atTarget && !changes) return { rewrites: false, kind: null, self: false };
-  if (!atTarget) return { rewrites: true, kind: declaredPinKind(before, line), self: true };
+  if (!atTarget) return { rewrites: true, kind: declaredPinKind(before, line), self: readsSelf(declaredSpec(span)) };
   const meta = intentsetMapping(span);
   const review = typeof meta === "string" ? undefined : meta.review;
   const hash =
@@ -613,9 +655,11 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
     const atTarget = declaredSpec(frontmatterAt(record.before, record.line)) === MIGRATE_TO;
     if (!atTarget && record.before === record.after) return;
     const kind = atTarget ? currentPinKind(meta.review.hash) : declaredPinKind(record.before, record.line);
-    // ADR 0027: `self` is the record's own content hash whatever the kind; it moves only when the record itself does.
+    // ADR 0027: `self` is the record's own content hash whatever the kind; it moves only when the record itself does,
+    // and only from a version that read it.
     const self = meta.review.self;
-    if (typeof self === "string" && record.before !== record.after) {
+    const ownSpec = declaredSpec(frontmatterAt(record.before, record.line));
+    if (typeof self === "string" && record.before !== record.after && readsSelf(ownSpec)) {
       if (self === recordHash(record.before, record.line, "own")) {
         pins.push({ record: i, source: i, id: SELF, kind: "own", original: self, value: self });
       } else stale++;
@@ -705,6 +749,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   let current = 0;
   let other = 0;
   const left: { path: string; problem: string }[] = [];
+  const unread: { path: string; keys: string[] }[] = [];
   // Every record is moved in memory first, so the review pins can be re-pinned against the whole tree before anything is written.
   const records: RepinRecord[] = [];
   for (const input of repo.inputs) {
@@ -717,9 +762,12 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
       continue;
     }
     if (text === input.source) continue;
-    const problem = migrationProblem(input.frontmatter, frontmatterAt(text, input.frontmatter.line));
+    const after = frontmatterAt(text, input.frontmatter.line);
+    const problem = migrationProblem(input.frontmatter, after);
     if (problem !== null) left.push({ path: input.path, problem });
     else moved++;
+    const keys = unreadReviewKeys(input.frontmatter, after);
+    if (keys.length > 0) unread.push({ path: input.path, keys });
   }
   const repin = repinReviews(records);
   for (const record of records) {
@@ -736,13 +784,23 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} to ${MIGRATE_TO}` +
       `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}${repinned}.\n`,
   );
+  if (unread.length > 0) {
+    io.stderr(
+      `intentset migrate: left out of review ${unread.length === 1 && unread[0].keys.length === 1 ? "a key" : "keys"} that no version before ${MIGRATE_TO} read; ` +
+        `${MIGRATE_TO} reads self and gates as review pins, which no earlier tool could have written, so the review means what it did:\n` +
+        [...unread]
+          .sort((a, b) => compareStrings(a.path, b.path))
+          .map(({ path, keys }) => `  ${path}: ${keys.join(", ")}\n`)
+          .join(""),
+    );
+  }
   if (left.length === 0 && repin.problems.length === 0) return 0;
   if (left.length > 0) {
     io.stderr(
       `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full; give each one key per name, a status of approved, delivery: built ` +
         "where its type carries delivery and it states none, and, on knowledge alone, its review under review (with " +
-        "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash, snapshot, self and " +
-        "gates, each a non-empty string:\n" +
+        "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash and snapshot, each a " +
+        "non-empty string:\n" +
         [...left]
           .sort((a, b) => compareStrings(a.path, b.path))
           .map(({ path, problem }) => `  ${path}: ${problem}\n`)

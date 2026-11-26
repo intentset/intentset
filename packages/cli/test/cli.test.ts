@@ -513,6 +513,26 @@ test("BEH-CONTEXT: context from a rule, a slice and a capability reaches the sam
   );
 });
 
+test("BEH-CONTEXT: context --json prints a knowledge record's contentHash, the own content hash its review's self pins, as ADR 0027 says", async (t) => {
+  const dir = await example(t);
+  const knowledge = JSON.parse((await run(dir, "context", "KB-ASMT-SCHEDULE", "--json")).out);
+  const start = knowledge.artifacts.find((a: { id: string }) => a.id === "KB-ASMT-SCHEDULE");
+  const lines = readFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), "utf8").split("\n");
+  const close = lines.indexOf("---", 1);
+  const parsed = parseYaml(lines.slice(1, close).join("\n"));
+  assert.ok(parsed.value !== null);
+  assert.equal(start.contentHash, ownContentHashOf(parsed.value, lines.slice(close + 1).join("\n")));
+  const adr = readFileSync(
+    join(REPO, "docs", "decisions", "0027-knowledge-under-review-keeps-its-reviewed-text.md"),
+    "utf8",
+  ).replace(/\s+/g, " ");
+  assert.doesNotMatch(adr, /prints no own content hash|no command prints review values/);
+  assert.match(
+    adr,
+    /`intentset context --json` and `intentset mcp`'s engineering tools print each record's `contentHash`/,
+  );
+});
+
 test("BEH-CONTEXT: context carries the basis of a record's approval and the outside requirement it formalizes", async (t) => {
   const dir = await example(t);
   const plain = JSON.parse((await run(dir, "context", "BEH-ASMT-SCHEDULE", "--json")).out);
@@ -1079,52 +1099,29 @@ for (const [what, change, named] of [
   });
 }
 
-for (const [what, change, named] of [
-  [
-    "an empty self",
-    (text: string) => text.replace("      hash: content-v1\n", "      hash: content-v1\n      self: ''\n"),
-    "a self that is not a non-empty string",
-  ],
-  [
-    "a null gates",
-    (text: string) => text.replace("      hash: content-v1\n", "      hash: content-v1\n      gates: null\n"),
-    "a gates that is not a non-empty string",
-  ],
+for (const [what, keys] of [
+  ["a self and a gates", "      self: note-from-a-0.2-tool\n      gates: whatever\n"],
+  ["an empty self and a null gates", "      self: ''\n      gates: null\n"],
+  ["a gates with lines nested under it", "      gates:\n        visibility: customer\n      # kept\n"],
+  ["a gates holding a list at its own indent", "      gates:\n      - a\n      -\n      - b\n"],
 ] as const) {
-  test(`BEH-MIGRATE: migrate names a knowledge record whose review extension holds ${what}, and exits 1`, async (t) => {
-    const { dir, files } = await atEarlier(t);
-    const path = RECORD(dir, "KB-ASMT-SCHEDULE");
-    writeFileSync(path, change(readFileSync(path, "utf8")));
-    git(dir, "commit", "-q", "-am", `a review extension with ${what}`);
-    const moved = await run(dir, "migrate", "--to", "0.3");
-    assert.equal(moved.code, 1);
-    assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
-    assert.ok(
-      moved.err.includes(`KB-ASMT-SCHEDULE.md: its review holds ${named}, which 0.3 does not read\n`),
-      moved.err,
+  test(`BEH-MIGRATE: migrate leaves ${what} a 0.2 review extension held out of review and names them, so a review current before the move is current after it`, async (t) => {
+    const { dir, at03 } = await knowledgeAtEarlier(t, "0.2", (text) =>
+      text.replace("      hash: content-v1\n", `      hash: content-v1\n${keys}`),
     );
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 0, moved.err);
+    assert.match(moved.out, /moved 1 record to 0\.3/);
+    const named = keys.includes("self") ? "gates, self" : "gates";
+    assert.ok(moved.err.includes(`\n  product/scheduling/KB-ASMT-SCHEDULE.md: ${named}\n`), moved.err);
+    assert.match(moved.err, new RegExp(`left out of review ${named === "gates" ? "a key" : "keys"} that`));
+    const after = readFileSync(RECORD(dir, "KB-ASMT-SCHEDULE"), "utf8");
+    assert.doesNotMatch(after, /\bself\b|\bgates\b|visibility: customer\n {4}sources/);
+    const comments = keys.includes("# kept") ? "    # kept\n" : "";
+    assert.equal(after, at03.replace("    hash: content-v1\n", `    hash: content-v1\n${comments}`));
+    assert.deepEqual(await currentAtL4(dir), [], "current before the move and after it");
   });
 }
-
-test("BEH-MIGRATE: a review extension's self and gates move to review, and the record counts as moved", async (t) => {
-  const { dir, files } = await atEarlier(t);
-  const path = RECORD(dir, "KB-ASMT-SCHEDULE");
-  writeFileSync(
-    path,
-    readFileSync(path, "utf8").replace(
-      "      hash: content-v1\n",
-      "      hash: content-v1\n      self: abc\n      gates: def\n",
-    ),
-  );
-  git(dir, "commit", "-q", "-am", "a review extension with self and gates");
-  const moved = await run(dir, "migrate", "--to", "0.3");
-  assert.equal(moved.code, 0, moved.err);
-  assert.match(moved.out, new RegExp(`moved ${files.length} records to 0\\.3`));
-  assert.doesNotMatch(moved.err, /does not read/);
-  const after = readFileSync(path, "utf8");
-  assert.match(after, /\n {4}self: abc\n/, "a self that did not match is left as written");
-  assert.match(after, /\n {4}gates: def\n/, "no move changes gates");
-});
 
 /** A record's hash of one pin kind, computed as publication §3 says, over the file as it is written now. */
 function pinOf(path: string, kind: "content-v1" | "file-v1"): string {
@@ -1248,7 +1245,7 @@ test("BEH-REVIEW-APPROVALS: a 0.2 review naming hash: file-v1, migrated and then
   );
 });
 
-test("BEH-MIGRATE: a move re-pins a review's self that matched the knowledge's own text, and leaves a stale one", () => {
+test("BEH-MIGRATE: a move from 0.2, which did not read a review's self, never re-pins one, matched or not", () => {
   const own = (text: string) => {
     const lines = text.split("\n");
     const close = lines.indexOf("---", 1);
@@ -1259,18 +1256,13 @@ test("BEH-MIGRATE: a move re-pins a review's self that matched the knowledge's o
   const at03 = readFileSync(join(REPO, "examples", "scheduling", KB), "utf8");
   const earlier = at03.replace("spec: '0.3'", "spec: '0.2'").replace("knowledge/0.3", "knowledge/0.2");
   const withSelf = (text: string, self: string) => text.replace("  review:\n", `  review:\n    self: '${self}'\n`);
-  const matched = repinReviews([
-    { path: KB, line: 2, before: withSelf(earlier, own(earlier)), after: withSelf(at03, own(earlier)) },
-  ]);
-  assert.equal(matched.repinned, 1);
-  assert.equal(matched.texts.get(KB), withSelf(at03, own(at03)), "self is the knowledge's own text as moved");
   assert.notEqual(own(earlier), own(at03), "spec and profile move the own content hash");
-  const stale = repinReviews([
-    { path: KB, line: 2, before: withSelf(earlier, "0".repeat(64)), after: withSelf(at03, "0".repeat(64)) },
-  ]);
-  assert.equal(stale.repinned, 0);
-  assert.equal(stale.stale, 1);
-  assert.equal(stale.texts.size, 0, "a stale self stays as written");
+  for (const self of [own(earlier), "0".repeat(64)]) {
+    const result = repinReviews([{ path: KB, line: 2, before: withSelf(earlier, self), after: withSelf(at03, self) }]);
+    assert.equal(result.repinned, 0);
+    assert.equal(result.stale, 0);
+    assert.equal(result.texts.size, 0, "a self 0.2 did not read stays as written");
+  }
 });
 
 test("BEH-MIGRATE: migrate re-pins a whole-file review as file-v1, each pin the hash of its source's file as moved", async (t) => {

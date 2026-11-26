@@ -40,7 +40,7 @@ The slice is the package `@intentset/cli`. Its layers are empty: a package is a 
 
 ## Public contract
 
-The exports of `packages/cli/src/index.ts`, reached by other packages as `@intentset/cli` through the `intentset-source` export condition, and the `intentset` command. `publish` and `mcp --mode customer` take `--audience` and `--role` repeatedly for a reader who holds more than one, never splitting a value on commas, and the summary names the sets (ADR 0029). `publish --keep-under-review` writes documents kept under review under `under-review/`; `approve` writes a knowledge review's `self` and `gates`; `review` lists knowledge whose review changed beside approvals, leaving out exactly a migration's re-pins; and `migrate` re-pins a `self` that matched (ADR 0027). No contract record yet.
+The exports of `packages/cli/src/index.ts`, reached by other packages as `@intentset/cli` through the `intentset-source` export condition, and the `intentset` command. `publish` and `mcp --mode customer` take `--audience` and `--role` repeatedly for a reader who holds more than one, never splitting a value on commas, and the summary names the sets (ADR 0029). `publish --keep-under-review` writes documents kept under review under `under-review/`; `approve` writes a knowledge review's `self` and `gates`; `review` lists knowledge whose review changed beside approvals, leaving out exactly a migration's re-pins; and `migrate` re-pins a `self` that matched, from a version that read it, and leaves a `0.2` review extension's `self` and `gates` out of `review` (ADR 0027). No contract record yet.
 
 ## Verification
 

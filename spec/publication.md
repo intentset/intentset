@@ -220,7 +220,9 @@ written at the version it declared becomes the same kind of hash of the source a
 its own version read: before `0.3` a review with no `hash` pinned the whole file, and a `hash` other than `content-v1`
 was a kind no pin matched. A pin that did not match is left as written, and only the pins of a knowledge record the
 move rewrites, or of one already at the new `spec`, are re-pinned. A review's `self` is re-pinned the same way when
-it equals the knowledge's own content hash as written; `gates` is never re-pinned, because no move changes it. A
+it equals the knowledge's own content hash as written and the knowledge's own version read `self` (`0.3` or later), so
+the move to `0.3` re-pins none and leaves out of `review` a `self` or `gates` an earlier review extension held (Core
+§1); `gates` is never re-pinned, because no move changes it. A
 review current before the move is so after it, with no step of its own, and a stale review stays stale. A review is
 renewed by the person reviewing, as a change to the knowledge (Core §7): `reviewedBy`, `reviewedAt`, a pin of each
 source at its current hash, `self` and `gates`, with `status` and `approval` left as they are.

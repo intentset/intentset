@@ -240,7 +240,7 @@ function prefixCurrentLinks(artifact: Artifact, graph: Graph, current: ReadonlyS
       if (id !== undefined && current.has(id) && start !== undefined && end !== undefined) {
         const lastChild = n.children?.[n.children.length - 1]?.position?.end.offset ?? start;
         const at = destinationOffset(body, n.type, lastChild, end);
-        if (at !== null && body.startsWith(url, at)) inserts.push(at);
+        if (at !== null && writtenDestinationIs(body, at, n.url)) inserts.push(at);
       }
     }
     for (const child of (n.children ?? []) as unknown[]) visit(child);
@@ -249,6 +249,36 @@ function prefixCurrentLinks(artifact: Artifact, graph: Graph, current: ReadonlyS
   let out = body;
   for (const at of inserts.sort((a, b) => b - a)) out = `${out.slice(0, at)}../${out.slice(at)}`;
   return out;
+}
+
+/**
+ * Whether the destination written at `at` is the one CommonMark decoded to `url`. The written destination runs to its
+ * closing `>` in the angle form, otherwise to whitespace or the `)` that closes the link, and is decoded by parsing it
+ * as a link of its own, so a backslash escape or a character reference anywhere in it, the file name included, reads
+ * as it does in the article.
+ */
+function writtenDestinationIs(body: string, at: number, url: string): boolean {
+  const angle = body[at - 1] === "<";
+  let end = at;
+  let depth = 0;
+  for (; end < body.length; end++) {
+    const c = body[end];
+    if (c === "\\" && end + 1 < body.length) {
+      end++;
+      continue;
+    }
+    if (angle ? c === ">" || c === "\n" : /\s/.test(c)) break;
+    if (!angle && c === "(") depth++;
+    if (!angle && c === ")" && depth-- === 0) break;
+  }
+  const written = body.slice(at, end);
+  if (written === "") return false;
+  const link = (
+    parseDocument(angle ? `[x](<${written}>)` : `[x](${written})`).ast as {
+      children?: { children?: { type?: string; url?: unknown }[] }[];
+    }
+  ).children?.[0]?.children?.[0];
+  return link?.type === "link" && link.url === url;
 }
 
 /** Where a link's destination starts in the body: after `](` (or `]:` for a definition), spaces and an opening `<`. */

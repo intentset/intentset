@@ -5,6 +5,7 @@
  * tests/publication.json hold the rest.
  */
 import assert from "node:assert/strict";
+import { dirname, relative } from "node:path";
 import { test } from "node:test";
 import { type Artifact, graphHash } from "@intentset/core";
 import {
@@ -277,6 +278,43 @@ test("BEH-PUBLISH-UNDER-REVIEW: the note is a block of its own, whatever follows
   const untitled = kept("The first paragraph.\n");
   assert.equal(untitled.body, `${note}\n\nThe first paragraph.\n`);
   assert.deepEqual([untitled.noteAfterLine, untitled.noteLines], [0, 3]);
+});
+
+test("BEH-PUBLISH-UNDER-REVIEW: a kept document's link to a current document gets ../ whatever escapes its destination holds", () => {
+  const built = example({ kb: KEPT });
+  const own = kb(built);
+  const target = built.graph.artifacts.get("BEH-ASMT-SCHEDULE") as Artifact;
+  const file = relative(dirname(own.path), target.path);
+  const links = [
+    `[a](${file})`,
+    `[b](${file}#a\\_b)`,
+    `[c](${file}#r&eacute;sum&eacute;)`,
+    `[d](<${file}#a\\_b> "title")`,
+    `[e](${file}?q=&amp;)`,
+    "[f][g]",
+    "",
+    `[g]: ${file}#&#x41;`,
+  ];
+  const kept = keptBody({ ...own, body: `${links.join("\n")}\n` }, built.graph, new Set(["BEH-ASMT-SCHEDULE"]));
+  const prefixed = kept.body.split("\n").filter((line) => line.includes(file));
+  assert.equal(prefixed.length, 6);
+  for (const line of prefixed) assert.ok(line.includes(`../${file}`), line);
+  const inName = [file.replace("BEH-", "BEH\\-"), file.replace("BEH-", "BEH&#45;"), file.replace("BEH-", "BEH&#x2D;")];
+  for (const written of inName) {
+    assert.notEqual(written, file);
+    const escaped = keptBody(
+      { ...own, body: `[a](${written})\n[b](<${written}#x>)\n\n[c]: ${written}\n` },
+      built.graph,
+      new Set(["BEH-ASMT-SCHEDULE"]),
+    );
+    const expected = `[a](../${written})\n[b](<../${written}#x>)\n\n[c]: ../${written}\n`;
+    assert.ok(
+      escaped.body.endsWith(expected),
+      `an escape or a character reference in the file name gets ../: ${escaped.body}`,
+    );
+  }
+  const untouched = keptBody({ ...own, body: `[a](${file}x#a\\_b)\n` }, built.graph, new Set(["BEH-ASMT-SCHEDULE"]));
+  assert.doesNotMatch(untouched.body, /\.\.\//, "a destination naming another file is left as written");
 });
 
 test("BEH-PUBLISH-UNDER-REVIEW: a kept page carries noindex and a kept fragment is wrapped, a current one neither", () => {

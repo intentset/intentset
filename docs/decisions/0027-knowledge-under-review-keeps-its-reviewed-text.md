@@ -112,8 +112,11 @@ intentset:
 A renewed review is a person's claim, so only the command a person runs writes one: `intentset approve <KB-…> --by
 <name>` on a draft, or `intentset approve --renew-review <KB-…> --by <name>` on approved or deprecated knowledge, which
 writes `reviewedBy`, `reviewedAt`, the pins, `self` and `gates` and leaves `status` and `approval` alone. Each refuses a
-dirty tree. No other command prints review values in a form made to be copied: `intentset context` prints no own
-content hash and no gate hash.
+dirty tree. No other command prints a gate hash. `intentset context --json` and `intentset mcp`'s engineering tools
+print each record's `contentHash`, which they printed before this ADR and keep printing (decided 2026-11-25); for
+knowledge that is neither deprecated nor retired it is the own content hash `self` pins, since the two differ only by
+`ending`. A `self` copied from it still needs a `gates` no command prints before the knowledge can be kept, and
+`intentset review` lists the changed review, so the copy is caught in review rather than prevented.
 
 ### Migration re-pins what matched
 
@@ -122,7 +125,10 @@ move: a source pin (ADR 0025), and `self`. A pin is re-pinned when it equals the
 pinned record's text before the move; `self` is always the own content hash. It is then replaced with the same kind of
 hash of that record's text after the move. A pin that did not match stays as it is, so a stale review stays stale and
 no review is created. `gates` needs nothing. `migrate` never writes a `self` or `gates` that was not there. No 0.2
-review carries a `self`, so the move to 0.3 re-pins none; the step is there for every later move.
+reader read a `self`, so the move to 0.3 re-pins none; the step is there for every later move. A 0.2 review extension
+that holds a `self` or `gates` held keys its reader ignored, and no 0.2 tool could have computed either, so the move
+leaves both out of `review` and names the record: carried over, they would become pins, and a review current before
+the move would need review after it.
 
 `intentset review` ignores a review pin's difference from the base only when it is exactly what the move would write:
 the base pin equals the hash, of the review's kind, of the pinned record's base copy; the head pin equals the same kind
@@ -260,8 +266,9 @@ site's knowledge pages publish with the default request, so the chat's corpus is
 A review is a claim a person makes, like an approval. Core §10 gains a sentence: an agent MUST NOT write or change
 `reviewedBy`, `reviewedAt` or `review` (its pins, `self` and `gates` included) unless the review workflow it runs gives
 it every value. A hash copied from a tool's output into a pin claims a review nobody made. The agent guide's Never list
-says the same, `intentset approve` is the only command that writes a review, and no command prints review values to
-copy. `intentset review` lists every knowledge record whose review changed against the base, in the section that
+says the same, `intentset approve` is the only command that writes a review, and no command prints a gate hash.
+`intentset context --json` prints a record's `contentHash`, which for knowledge that is neither deprecated nor retired
+equals its own content hash; `intentset review` is what catches a pin copied from it. `intentset review` lists every knowledge record whose review changed against the base, in the section that
 already lists approvals, and leaves out exactly a migration's re-pins, as defined above.
 
 ### Export
@@ -297,7 +304,9 @@ because a hash confirms a guess.
 - **Ignore a head pin that equals the head record's hash when the base copy declares an earlier spec.** A branch that
   migrates, edits a source and copies its new hash into the pin would pass unlisted.
 - **Print the values a renewed review would write from `intentset context`.** The agent guide sends agents to
-  `context` before every change, so it would hand them a ready-made review to paste.
+  `context` before every change, so it would hand them a ready-made review to paste. `context --json` keeps the
+  `contentHash` it already printed, which for knowledge that is neither deprecated nor retired is the value `self`
+  pins, but no gate hash, so it never holds a whole review.
 - **Keep `ending` in `self`.** Deprecating reviewed knowledge would unpublish it until it is reviewed again, although
   its text did not change.
 - **Two shapes under the name `underReview`**, or **`review: { status: under-review }`** as the mark. A consumer that
