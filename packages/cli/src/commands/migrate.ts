@@ -14,7 +14,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { DELIVERY_TYPES, parseYaml, SPEC_VERSION, sortDiagnostics } from "@intentset/core";
+import { compareStrings, DELIVERY_TYPES, ID_PATTERN, parseYaml, SPEC_VERSION, sortDiagnostics } from "@intentset/core";
 import { trackedChanges } from "../git.ts";
 import { formatDiagnostic, type Io } from "../output.ts";
 import { type CarrierName, CONFIG_PATH, findRoot, loadRepository } from "../repository.ts";
@@ -141,9 +141,10 @@ const HASH_LINE = /^\s+(['"]?)hash\1\s*:/;
  * `extensions` stood, each of its lines dedented to sit one level under `intentset` and kept byte for byte otherwise,
  * comments included. Where the extension named no `hash`, `hash: file-v1` is written as its first line, since a review
  * with no `hash` pinned the whole file before `0.3` and pins content hashes after it, so no review changes what it pins.
- * `extensions` is removed when nothing else is left in it, and kept, with its other keys, otherwise. An extension
- * written in a form the rewrite does not read (a flow mapping, a value on the key's line) is left, and the command
- * names the record.
+ * `extensions` is removed when nothing else is left in it, and kept, with its other keys, otherwise. Only a knowledge
+ * record's extension moves: on any other type `review` is CORE001 as the extension is, so the extension is left where
+ * it is and the command names the record. An extension written in a form the rewrite does not read (a flow mapping, a
+ * value on the key's line) is left too, and the command names the record.
  */
 export const reviewToCoreField: RecordTransform = (source, frontmatter) => {
   const lines = source.split("\n");
@@ -151,6 +152,9 @@ export const reviewToCoreField: RecordTransform = (source, frontmatter) => {
   const indentOf = (line: string) => line.length - line.trimStart().length;
   const content = (line: string) => line.trim() !== "" && !line.trim().startsWith("#");
   const top = intentsetLines(lines, frontmatter);
+  let type: string | null = null;
+  for (const { line } of top) type = TYPE_LINE.exec(line)?.[3] ?? type;
+  if (type !== "knowledge") return source;
   const at = top.findIndex(({ line }) => EXTENSIONS_LINE.test(line));
   if (at === -1) return source;
   const { index: extensions, indent: childIndent } = top[at];
@@ -242,9 +246,15 @@ export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan
   return null;
 }
 
+const REVIEW_KEYS: readonly string[] = ["sources", "hash", "snapshot"];
+
 /**
  * ADR 0025: why a review did not move in full to `review` with the meaning it had, or null when it did (or there was
- * none). Before `0.3` a review with no `hash` pinned the whole file; after, `review` with no `hash` pins content.
+ * none). Before `0.3` the extension was read on knowledge alone, by its `sources`, `hash` and `snapshot`, and anything
+ * else in it was ignored; after, `review` is CORE001 on any other type, and core drops a whole review that holds a key,
+ * pin key or value it does not read (Core §9), so the knowledge would read as unreviewed. A review that would is named
+ * rather than counted as moved. Before `0.3` a review with no `hash` pinned the whole file; after, `review` with no
+ * `hash` pins content, so the pin kind is compared too.
  */
 function reviewProblem(original: Record<string, unknown>, moved: Record<string, unknown>): string | null {
   const ext = (mapping: Record<string, unknown>) => {
@@ -252,9 +262,17 @@ function reviewProblem(original: Record<string, unknown>, moved: Record<string, 
     if (extensions === null || typeof extensions !== "object" || Array.isArray(extensions)) return undefined;
     return (extensions as Record<string, unknown>)["intentset.org/review"];
   };
-  if (ext(moved) !== undefined) return "still carries the intentset.org/review extension 0.3 does not read";
+  if (ext(moved) !== undefined) {
+    if (moved.type !== "knowledge") {
+      const type = typeof moved.type === "string" ? `a ${moved.type}` : "a record of no type";
+      return `carries the intentset.org/review extension on ${type}, which 0.3 rejects (only knowledge is reviewed)`;
+    }
+    return "still carries the intentset.org/review extension 0.3 does not read";
+  }
   const before = ext(original);
   if (before === undefined) return null;
+  const shape = reviewShapeProblem(moved.review);
+  if (shape !== null) return `its review holds ${shape}, which 0.3 does not read`;
   // Before, a null `hash` was a kind no pin matched; after, core reads a null as absent, which is content-v1.
   const kind = (review: unknown, absent: string, nullKind: string) => {
     if (review === null || typeof review !== "object" || Array.isArray(review)) return null;
@@ -264,6 +282,28 @@ function reviewProblem(original: Record<string, unknown>, moved: Record<string, 
   const wasKind = kind(before, JSON.stringify("file-v1"), "null");
   const nowKind = kind(moved.review, JSON.stringify("content-v1"), JSON.stringify("content-v1"));
   if (wasKind !== nowKind) return "moved its review to review with another pin kind";
+  return null;
+}
+
+/** What in a moved `review` core's reader rejects (Core §9), or null when it reads the whole of it. */
+function reviewShapeProblem(review: unknown): string | null {
+  const isMapping = (value: unknown): value is Record<string, unknown> =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+  const filled = (value: unknown) => typeof value === "string" && value !== "";
+  if (!isMapping(review)) return "no mapping";
+  const keys = Object.keys(review).sort(compareStrings);
+  const unknown = keys.find((key) => !REVIEW_KEYS.includes(key));
+  if (unknown !== undefined) return `the key ${unknown}`;
+  if (review.sources === undefined || review.sources === null) return "no sources";
+  if (!isMapping(review.sources)) return "sources that are not a mapping";
+  for (const key of Object.keys(review.sources).sort(compareStrings)) {
+    if (!ID_PATTERN.test(key)) return `the pin key ${key}, which is not an ID`;
+    if (!filled(review.sources[key])) return `a pin for ${key} that is not a non-empty string`;
+  }
+  for (const key of ["hash", "snapshot"]) {
+    const value = review[key];
+    if (value !== undefined && value !== null && !filled(value)) return `a ${key} that is not a non-empty string`;
+  }
   return null;
 }
 
@@ -416,10 +456,10 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   );
   if (left.length === 0) return 0;
   io.stderr(
-    `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full, ` +
-      "in a form the rewrite could not read; give each one key per name, a status of approved, delivery: built " +
-      "where its type carries delivery and it states none, and its review under review (with hash: file-v1 where " +
-      "the extension named none):\n" +
+    `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full; give each one key per name, a status of approved, delivery: built ` +
+      "where its type carries delivery and it states none, and, on knowledge alone, its review under review (with " +
+      "hash: file-v1 where the extension named none) holding only sources keyed by ID, hash and snapshot, each a " +
+      "non-empty string:\n" +
       [...left]
         .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
         .map(({ path, problem }) => `  ${path}: ${problem}\n`)

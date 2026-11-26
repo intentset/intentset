@@ -980,3 +980,68 @@ test("BEH-MIGRATE: migrate names a record whose review it could not move, and ex
     /\n {2}product\/scheduling\/KB-ASMT-SCHEDULE\.md: still carries the intentset\.org\/review extension 0\.3 does not read\n/,
   );
 });
+
+test("BEH-MIGRATE: migrate leaves the review extension on a record that is not knowledge, names it, and exits 1", async (t) => {
+  const { dir, files } = await atEarlier(t);
+  // Valid at 0.2, where an extension was never read on a behavior; at 0.3 `review` and the extension are CORE001 there.
+  edit(
+    dir,
+    "BEH-ASMT-SCHEDULE",
+    "    flags: []\n---",
+    "    flags: []\n  extensions:\n    intentset.org/review:\n      sources:\n        RULE-ASMT-AUTH: abc\n---",
+  );
+  git(dir, "commit", "-q", "-am", "a review extension on a behavior");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.equal(moved.code, 1);
+  assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
+  assert.match(
+    moved.err,
+    /\n {2}product\/scheduling\/BEH-ASMT-SCHEDULE\.md: carries the intentset\.org\/review extension on a behavior, which 0\.3 rejects \(only knowledge is reviewed\)\n/,
+  );
+  const after = readFileSync(RECORD(dir, "BEH-ASMT-SCHEDULE"), "utf8");
+  assert.match(after, /\n {2}extensions:\n {4}intentset\.org\/review:\n/, "the extension is left where it was");
+  assert.doesNotMatch(after, /\n {2}review:/);
+});
+
+for (const [what, change, named] of [
+  [
+    "an extra key",
+    (text: string) =>
+      text.replace("      hash: content-v1\n", "      hash: content-v1\n      notes: checked in pilot\n"),
+    "the key notes",
+  ],
+  [
+    "a pin key that is not an ID",
+    (text: string) => text.replace("        RULE-ASMT-AUTH:", "        rule-asmt-auth:"),
+    "the pin key rule-asmt-auth, which is not an ID",
+  ],
+  [
+    "an empty pin",
+    (text: string) => text.replace(/^( {8}RULE-ASMT-AUTH:) .*$/m, "$1 ''"),
+    "a pin for RULE-ASMT-AUTH that is not a non-empty string",
+  ],
+  [
+    "an empty snapshot",
+    (text: string) => text.replace("      hash: content-v1\n", "      hash: content-v1\n      snapshot: ''\n"),
+    "a snapshot that is not a non-empty string",
+  ],
+] as const) {
+  test(`BEH-MIGRATE: migrate names a knowledge record whose review extension holds ${what} 0.3 rejects, and exits 1`, async (t) => {
+    const { dir, files } = await atEarlier(t);
+    const path = RECORD(dir, "KB-ASMT-SCHEDULE");
+    const before = readFileSync(path, "utf8");
+    const changed = change(before);
+    assert.notEqual(changed, before);
+    writeFileSync(path, changed);
+    git(dir, "commit", "-q", "-am", `a review extension with ${what}`);
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 1);
+    assert.match(moved.out, new RegExp(`moved ${files.length - 1} records to 0\\.3`));
+    assert.ok(
+      moved.err.includes(
+        `\n  product/scheduling/KB-ASMT-SCHEDULE.md: its review holds ${named}, which 0.3 does not read\n`,
+      ),
+      moved.err,
+    );
+  });
+}
