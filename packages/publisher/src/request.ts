@@ -114,14 +114,22 @@ export function admits(request: Pick<PublicationRequest, "visibility">, visibili
   return PROJECTION_ADMITS[request.visibility].includes(visibility);
 }
 
-/** The request without its authorization flags, for an index a reader may see. */
-export function indexedRequest(request: CheckedRequest): IndexedRequest {
+/** A request's audience or role as a list: one value is a list of one (publication §1), never its characters. */
+export function asList(value: string | readonly string[]): readonly string[] {
+  return typeof value === "string" ? [value] : value;
+}
+
+/**
+ * The request without its authorization flags, for an index a reader may see. It takes the request `checkRequest`
+ * returns, or one written as `PublicationRequest` allows, whose one `audience` or `role` is a list of one.
+ */
+export function indexedRequest(request: PublicationRequest | CheckedRequest): IndexedRequest {
   const out: IndexedRequest = {
     visibility: request.visibility,
-    audience: sortedUnique(request.audience),
+    audience: sortedUnique(asList(request.audience)),
     product: request.product,
     release: request.release,
-    role: sortedUnique(request.role),
+    role: sortedUnique(asList(request.role)),
     edition: request.edition,
     flags: sortedUnique(request.flags),
   };

@@ -32,7 +32,7 @@
 import type { Artifact, Graph, Visibility } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
 import { UNDER_REVIEW_DIR } from "./generate.ts";
-import type { CheckedRequest } from "./request.ts";
+import { type CheckedRequest, type PublicationRequest, asList } from "./request.ts";
 
 export const HELP_PROFILE = "intentset/help/0.3";
 /** The file's name beside the published documents. */
@@ -80,12 +80,12 @@ export interface HelpOptions {
 
 /**
  * The help file for the documents a run published, given by knowledge ID: the current documents, then the documents
- * kept under review.
+ * kept under review. A request with one `audience` or `role` reads it as a list of one; nothing else of it is checked.
  */
 export function helpFile(
   graph: Graph,
   publishedIds: readonly string[],
-  request: CheckedRequest,
+  request: PublicationRequest | CheckedRequest,
   options: HelpOptions,
   keptIds: readonly string[] = [],
 ): HelpFile {
@@ -124,11 +124,11 @@ export function helpFile(
     profile: HELP_PROFILE,
     derived: true,
     projection: request.visibility,
-    audience: [...new Set(request.audience)].sort(compareStrings),
+    audience: [...new Set(asList(request.audience))].sort(compareStrings),
     availability: {
       product: request.product,
       release: request.release,
-      role: [...new Set(request.role)].sort(compareStrings),
+      role: [...new Set(asList(request.role))].sort(compareStrings),
       edition: request.edition,
       flags: [...new Set(request.flags)].sort(compareStrings),
     },

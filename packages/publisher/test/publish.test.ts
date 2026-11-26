@@ -12,10 +12,16 @@ import {
   type HtmlRendering,
   PUBLICATION_KEY,
   PUBLICATION_PROFILE,
+  checkRequest,
   emitYaml,
+  generateDocument,
+  helpFile,
+  keptPublicationMeta,
   markerLine,
+  publicationMeta,
   publish,
   type PublicationRequest,
+  reviewStatus,
   toChunks,
 } from "../src/index.ts";
 import { safeUrl } from "../src/urls.ts";
@@ -467,6 +473,35 @@ test("BEH-PUBLISH-READER: a role given as a string, a list of one or a list with
   const one = at("teacher");
   assert.equal(at(["teacher"]), one);
   assert.equal(at(["teacher", "teacher"]), one);
+});
+
+test("BEH-PUBLISH-READER: publicationMeta, keptPublicationMeta, generateDocument and helpFile read one audience or role as a list of one, never as its characters", () => {
+  const { graph, registries } = passing();
+  const raw = customer();
+  assert.equal(typeof raw.audience, "string");
+  assert.equal(typeof raw.role, "string");
+  const { request } = checkRequest(raw, graph, registries);
+  assert.ok(request !== null);
+  const kb = graph.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  const options = { publishedAt: PUBLISHED_AT };
+  const entitlement = (meta: { audience: string[]; availability: { role: string[] } }) => [
+    meta.audience,
+    meta.availability.role,
+  ];
+  const expected = [["teacher"], ["teacher"]];
+  assert.deepEqual(entitlement(publicationMeta(graph, kb, raw, options)), expected);
+  assert.deepEqual(publicationMeta(graph, kb, raw, options), publicationMeta(graph, kb, request, options));
+  const review = reviewStatus(graph, kb);
+  assert.deepEqual(entitlement(keptPublicationMeta(graph, kb, raw, options, review)), expected);
+  const fromRaw = generateDocument(graph, kb, raw, options).document;
+  assert.ok(fromRaw !== null);
+  assert.equal(fromRaw.markset, generateDocument(graph, kb, request, options).document?.markset);
+  assert.deepEqual(entitlement(fromRaw.publication), expected);
+  assert.deepEqual(entitlement(helpFile(graph, ["KB-ASMT-SCHEDULE"], raw, options)), expected);
+  assert.deepEqual(
+    helpFile(graph, ["KB-ASMT-SCHEDULE"], raw, options),
+    helpFile(graph, ["KB-ASMT-SCHEDULE"], request, options),
+  );
 });
 
 test("BEH-PUBLISH-READER: the index's request, with its authorization added back, publishes the same bytes", () => {

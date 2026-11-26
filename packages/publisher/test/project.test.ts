@@ -12,9 +12,11 @@ import {
   type ExclusionReason,
   type PublicationRequest,
   type ReviewStatus,
+  audienceReason,
   availabilityReason,
   checkRequest,
   exclusionReason,
+  indexedRequest,
   project,
 } from "../src/index.ts";
 import { customer, example, registriesWith, reviewed, snapshotOf } from "./harness.ts";
@@ -315,6 +317,35 @@ test("BEH-PUBLISH-READER: availabilityReason fails closed on a missing block and
   assert.equal(availabilityReason(AVAILABLE, checked({ release: "r3", role: ["student"] })), "release");
   assert.equal(availabilityReason(AVAILABLE, checked({ role: ["student", "parent"] })), "role");
   assert.equal(availabilityReason({ ...AVAILABLE, flags: ["beta"] }, REQUEST), "flag");
+});
+
+test("BEH-PUBLISH-READER: exclusionReason and indexedRequest read one audience or role as a list of one, never as its characters", () => {
+  const raw: PublicationRequest = {
+    visibility: "customer",
+    audience: "teacher",
+    product: "PRD-B",
+    release: "r2",
+    role: "admin",
+    edition: "district",
+    flags: [],
+  };
+  assert.equal(
+    exclusionReason(knowledge(AVAILABLE), raw, () => CURRENT),
+    null,
+  );
+  assert.equal(
+    exclusionReason(knowledge(AVAILABLE), { ...raw, audience: "parent" }, () => CURRENT),
+    "audience",
+  );
+  assert.equal(
+    exclusionReason(knowledge(AVAILABLE), { ...raw, role: "student" }, () => CURRENT),
+    "role",
+  );
+  assert.equal(audienceReason(["teacher"], { audience: "teacher" }), null);
+  assert.equal(availabilityReason(AVAILABLE, { ...raw, role: "teacher" }), null);
+  const indexed = indexedRequest(raw);
+  assert.deepEqual([indexed.audience, indexed.role], [["teacher"], ["admin"]]);
+  assert.deepEqual(indexed, indexedRequest(checked({ audience: "teacher", role: "admin" })));
 });
 
 test("BEH-PUBLISH-READER: CORE008 for an audience or role names only the request's values", () => {

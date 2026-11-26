@@ -32,7 +32,10 @@ under review (`keptUnderReview`), the index, the help file, the snapshot file an
 (the CLI repeats `--audience` and `--role`), read as a set, while `product`, `release` and `edition` are one value
 each. Every file names the request's audiences, roles and flags as sorted lists, and they are held all-of: serve the
 publication only to a reader who holds every value it names, and publish once for each combination you serve. The
-index's `request` is the request in canonical form, so key any cache on `canonicalJson(index.request)`. The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
+index's `request` is the request in canonical form, so key any cache on `canonicalJson(index.request)`. `checkRequest`
+returns that canonical request, and `exclusionReason`, `indexedRequest`, `publicationMeta`, `keptPublicationMeta`,
+`generateDocument` and `helpFile` take it; given one `audience` or `role`, they read it as a list of one, and check
+nothing else. The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
 document pins what it was made from by its sources' hashes. So publishing the same knowledge at two commits writes
 the same bytes in every file but that one.
 

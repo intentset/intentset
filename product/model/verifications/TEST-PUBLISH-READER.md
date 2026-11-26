@@ -31,6 +31,8 @@ intentset:
 - `packages/publisher/test/project.test.ts`: the test "a role list admits knowledge available to any one of its roles"
 - `packages/publisher/test/project.test.ts`: the test "availabilityReason fails closed on a missing block and names the first failing dimension"
 - `packages/publisher/test/project.test.ts`: the test "CORE008 for an audience or role names only the request's values"
+- `packages/publisher/test/project.test.ts`: the test "exclusionReason and indexedRequest read one audience or role as a list of one, never as its characters", over a request written with one string each, as `PublicationRequest` allows
+- `packages/publisher/test/publish.test.ts`: the test "publicationMeta, keptPublicationMeta, generateDocument and helpFile read one audience or role as a list of one, never as its characters", over the example's customer request with one string each, which writes the same block, document and help file as the request `checkRequest` returns
 - `packages/publisher/test/publish.test.ts`: the test "availability records the request's values, every flag the request holds included"
 - `packages/publisher/test/publish.test.ts`: the test "a role given as a string, a list of one or a list with a repeat publishes the same bytes"
 - `packages/publisher/test/publish.test.ts`: the test "the index's request, with its authorization added back, publishes the same bytes"

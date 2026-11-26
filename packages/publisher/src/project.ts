@@ -36,7 +36,7 @@ import {
   graphHash,
 } from "@intentset/core";
 import { compareStrings, publicationDiagnostic } from "./diagnostic.ts";
-import { type CheckedRequest, type PublicationRequest, admits, checkRequest } from "./request.ts";
+import { type CheckedRequest, type PublicationRequest, admits, asList, checkRequest } from "./request.ts";
 import { type ReviewStatus, reviewStatus } from "./review.ts";
 
 export const EXCLUSION_REASONS = [
@@ -156,11 +156,13 @@ export function project(
 
 /**
  * The first check an artifact fails for this request, or null when it is eligible. Requested-ness is the caller's.
- * Without the graph, the explained records cannot be read, so `planned` is not checked.
+ * Without the graph, the explained records cannot be read, so `planned` is not checked. A request written as
+ * `PublicationRequest` allows, with one `audience` or `role`, reads it as a list of one; nothing else of it is checked
+ * here, so a caller with a request from outside passes the one `checkRequest` returns.
  */
 export function exclusionReason(
   artifact: Artifact,
-  request: CheckedRequest,
+  request: Pick<PublicationRequest, "visibility" | "audience" | "product" | "release" | "role" | "edition" | "flags">,
   review: (artifact: Artifact) => ReviewStatus,
   graph?: Graph,
 ): Exclude<ExclusionReason, "not-requested"> | null {
@@ -177,12 +179,12 @@ export function exclusionReason(
   return null;
 }
 
-/** `audience` when none of the request's audiences is in the record's `audiences`, else null. */
+/** `audience` when none of the request's audiences (one is a list of one) is in the record's `audiences`, else null. */
 export function audienceReason(
   audiences: readonly string[],
-  request: Pick<CheckedRequest, "audience">,
+  request: Pick<PublicationRequest, "audience">,
 ): "audience" | null {
-  return request.audience.some((audience) => audiences.includes(audience)) ? null : "audience";
+  return asList(request.audience).some((audience) => audiences.includes(audience)) ? null : "audience";
 }
 
 /**
@@ -192,12 +194,12 @@ export function audienceReason(
  */
 export function availabilityReason(
   availability: Availability | undefined,
-  request: Pick<CheckedRequest, "product" | "release" | "role" | "edition" | "flags">,
+  request: Pick<PublicationRequest, "product" | "release" | "role" | "edition" | "flags">,
 ): "availability-missing" | "product" | "release" | "role" | "edition" | "flag" | null {
   if (availability === undefined) return "availability-missing";
   if (!availability.products.includes(request.product)) return "product";
   if (!availability.releases.includes(request.release)) return "release";
-  if (!request.role.some((role) => availability.roles.includes(role))) return "role";
+  if (!asList(request.role).some((role) => availability.roles.includes(role))) return "role";
   if (!availability.editions.includes(request.edition)) return "edition";
   if (!availability.flags.every((flag) => request.flags.includes(flag))) return "flag";
   return null;
