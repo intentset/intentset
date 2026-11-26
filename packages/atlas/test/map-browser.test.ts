@@ -52,6 +52,16 @@ test("BEH-ATLAS-MAP: on a model of thousands of records the map's IDs and circle
     await tab.fill(".am-find input", model.capabilities[7]);
     await tab.press(".am-find input", "Enter");
     assert.equal(await tab.locator(".am-node:visible").count(), 45 + 71, "its 71 records show beside the capabilities");
+    // Opening dims nothing: every record inside the capability is drawn at full strength.
+    const faded = await tab.evaluate(
+      (id) =>
+        [...document.querySelectorAll<SVGElement>(`.am-node[data-block="${id}"]`)].filter(
+          (el) => Number(getComputedStyle(el).opacity) < 1,
+        ).length,
+      model.capabilities[7],
+    );
+    assert.equal(faded, 0, "no record of the opened capability is dimmed");
+    assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, "opening is not a focus on one record");
     assert.ok(await tab.locator(".am-close").isVisible(), "and All capabilities folds it again");
     await tab.keyboard.press("Escape");
     await tab.click('button[data-zoom="reset"]');

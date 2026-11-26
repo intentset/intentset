@@ -240,12 +240,26 @@ test("BEH-ATLAS-MAP: the example's map finds, focuses, filters, goes full screen
     await tab.fill(".am-find input", "cap-accounts");
     await tab.press(".am-find input", "Enter");
     assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "CAP-ACCOUNTS");
+    // Opening the capability shows every record inside it at full strength, with no record dimmed.
+    assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, `${width}px: opening is not a focus`);
+    const faded = await tab.evaluate(
+      () =>
+        [...document.querySelectorAll<SVGElement>('.am-node[data-block="CAP-ACCOUNTS"]')].filter(
+          (el) => Number(getComputedStyle(el).opacity) < 1,
+        ).length,
+    );
+    assert.equal(faded, 0, `${width}px: no record of the opened capability is dimmed`);
+    assert.ok(
+      (await tab.locator('.am-node[data-block="CAP-ACCOUNTS"]:visible').count()) >= 10,
+      `${width}px: the capability's records show`,
+    );
     assert.ok((await tab.locator(".am-node.am-near").count()) >= 2, "its links are marked");
     const panel = (await tab.locator(".am-panel").textContent()) ?? "";
     assert.match(panel, /CAP-ACCOUNTS: Customer accounts/);
     assert.match(panel, /BEH-RESET-PASSWORD/);
     await tab.locator(".am-panel button", { hasText: "BEH-RESET-PASSWORD" }).click();
     assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "BEH-RESET-PASSWORD");
+    assert.equal(await tab.locator(".am-svg.am-focus").count(), 1, `${width}px: a deliberate selection focuses on it`);
     await tab.keyboard.press("Escape");
     assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, "Escape shows everything again");
     await tab.uncheck('.am-filter input[data-group="verification"]');

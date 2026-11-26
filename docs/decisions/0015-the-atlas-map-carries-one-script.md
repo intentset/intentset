@@ -52,8 +52,8 @@ has to work at that size too.
   contracts and decisions delivering them, laid out in columns below the capabilities and hidden until a reader opens
   it. Every detail shares that place, so one capability is open at a time, and a record two capabilities reach is drawn
   in the first by ID (the panel lists its links to the other). Without the script the picture shows the capabilities
-  folded, each a link to its page; with it, selecting a capability opens it and fits the view to it, All capabilities
-  folds it, and finding or selecting a record another capability holds opens that one. No two labels overlap in any
+  folded, each a link to its page; with it, selecting a capability opens it and fits the view to it, dimming nothing
+  inside it (a deliberate selection of a record afterwards focuses as before), All capabilities folds it, and finding or selecting a record another capability holds opens that one. No two labels overlap in any
   view the map shows. The layout is order and arithmetic only, so it stays deterministic, and costs a few milliseconds
   on 3,000 records where the force layout took about a second. The force layout is kept for what it shows well: every
   record's page ends with its neighborhood, the record and the records one link away and, under 24 in all, two links
