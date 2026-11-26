@@ -2832,5 +2832,54 @@
       ]
     },
     "notes": "Deterministic rather than diagnosed: a product that wants one tip per control writes one."
+  },
+  {
+    "section": "publication",
+    "name": "the HTML carries no link or image URL whose scheme is not http, https or mailto, and keeps their text",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        },
+        "body": "\n# Prepare a scheduled student assessment\n\n## Guidance\n\n[Open the form](javascript:alert(1)) and read ![the guide](JaVaScript:alert(2)) or [the help][help].\n\nAsk [the site](https://lantern.example/help), [write](mailto:help@lantern.example) or see [below](#guidance).\n\n[help]: data:text/html,boom\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "<p>Open the form and read the guide or the help.</p>",
+        "<a href=\"https://lantern.example/help\">the site</a>",
+        "<a href=\"mailto:help@lantern.example\">write</a>",
+        "<a href=\"#guidance\">below</a>"
+      ],
+      "mustNotContain": [
+        "href=\"javascript:",
+        "src=\"JaVaScript:",
+        "href=\"data:"
+      ]
+    },
+    "notes": "Publication §2: render-html drops raw HTML but checks no URL scheme, so the publisher removes a link, image or definition whose URL has a scheme other than http, https or mailto, before a page or a fragment is rendered, keeping the link text and the image's alt text. A relative URL and a #fragment have no scheme and are kept. The Markset document keeps the body unchanged; only the HTML is held to this."
   }
 ]

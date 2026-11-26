@@ -71,8 +71,8 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 - No Streamlane record or code enters this repository; the adoption log describes them. Its records live in the
   Streamlane repository.
 - The example product is Lantern, invented: the fixtures, the worked example and the site's walkthrough use it and
-  nothing else. Nothing in this repository names another real product, except the adoption log, and the one real
-  product it models is Intentset itself.
+  nothing else. Nothing in this repository names another real product, except as the next rules allow, and the one
+  real product it models is Intentset itself.
 - **Intentset's own model** (`product/model/`, decided 2026-10-09) describes this repository's packages: what each
   promises, which package delivers it, and the design invariants as rules. It is not an example: no fixture, test or
   site page reads it, and the example's records never link into it. The one exception is published knowledge
@@ -86,6 +86,17 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
   and no quoted code beyond a one-line identifier such as the `exercised(context, "BEH-…")` call shape. Intentset
   record IDs of what the log describes are allowed, and check output, commit trailers and the usage-evidence format
   may be quoted, with operation names replaced by `<operation>`.
+- A narrative page of the site (Home, How it works, Start, Run the adoption, Prove the work, About, Roadmap, the
+  introduction) may name Streamlane and Driftline once each, in one block, with the family label beside the name:
+  Streamlane `Product · In development`, Driftline `Product · In planning` (reef `docs/conventions.md`, Status labels;
+  reef `docs/family.md` for the loop). The readers page (`/tools/readers/`) lists both with the path each reads.
+  Outside the adoption log the site says nothing of their insides: no screens, no planned capability by name, no
+  price, no roadmap detail, and never a link to either product's site or repository. Every other page the site writes
+  itself (the reference pages and the Lantern walkthrough) names neither. The normative documents under `spec/`, and
+  the conformance cases under `tests/`, are not narrative pages: where they record the origin of a dated decision they
+  are outside this rule and its test, which skips a page by how it is made (`generatedFrom` in `site/build.ts`), not
+  by its address. Gary's decision of 2026-11-25, which widens where they are named and keeps the 2026-10-06 limit on
+  what is said. `site/test/family.test.ts` holds it.
 
 ## Where the rest is
 
@@ -107,8 +118,8 @@ learning from questions, and the AWS rules).
   writes every carrier and dates the Unreleased entry, and refuses one that has drifted; the `v<version>` tag on main
   publishes. A spec's `revision` is the date its
   text last changed.
-- Before 1.0 a changed export envelope is a minor bump of the packages; Streamlane and Driftline read exports and move
-  their pins when they update. A reader rejects an older export, and a record that declares an older `spec`:
+- Before 1.0 a changed export envelope is a minor bump of the packages; Driftline reads exports and Streamlane reads the
+  repository's records and run records (`/tools/readers/`), and each moves its pin when it updates. A reader rejects an older export, and a record that declares an older `spec`:
   `intentset migrate --to <spec>` rewrites `spec` and `profile` in a repository's records.
 - Package layout: `packages/<name>/src/index.ts` is the public surface; `test/*.test.ts` with `node --test`;
   `tsconfig.build.json` extends `../../tsconfig.build.base.json`.

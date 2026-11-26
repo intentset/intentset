@@ -39,6 +39,7 @@ export {
   project,
 } from "./project.ts";
 export {
+  type HtmlRendering,
   type PublicationIndex,
   type PublishOptions,
   type PublishResult,
@@ -47,6 +48,7 @@ export {
   type RefusalReason,
   publish,
   renderDocument,
+  renderFragment,
 } from "./publish.ts";
 export {
   type Reference,

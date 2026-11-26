@@ -189,20 +189,21 @@ export const FIXTURE_PUBLISHED_AT = "2026-01-01T00:00:00Z";
 /**
  * Publication over the same validation (Core §9): review pins written as
  * `@current` bound to the patched sources, then the case's request published
- * with HTML, and every byte written or reported offered to `mustContain` and
+ * with HTML, as a page and as a fragment, and every byte written or reported offered to `mustContain` and
  * `mustNotContain`.
  */
 export const publicationDriver: Driver = (expanded) => {
   const { result, registries, diagnostics } = validateTree(expanded);
   const graph = bindReviewPins(result.graph);
-  const published = publish(graph, registries, (expanded.request ?? {}) as unknown as PublicationRequest, {
-    snapshot: { commit: null, graphHash: graphHash(graph) },
-    publishedAt: FIXTURE_PUBLISHED_AT,
-    renderHtml: true,
-  });
+  const request = (expanded.request ?? {}) as unknown as PublicationRequest;
+  const options = { snapshot: { commit: null, graphHash: graphHash(graph) }, publishedAt: FIXTURE_PUBLISHED_AT };
+  const published = publish(graph, registries, request, { ...options, renderHtml: "page" });
+  // The fragment (publication §2) is offered to the same checks as the page.
+  const fragments = publish(graph, registries, request, { ...options, renderHtml: "fragment" }).documents;
   const all = [...diagnostics, ...published.diagnostics];
   const text = [
     ...published.documents.flatMap((document) => [document.markset, document.html ?? ""]),
+    ...fragments.map((document) => document.htmlFragment ?? ""),
     JSON.stringify(published.index),
     JSON.stringify(published.help),
     JSON.stringify(published.snapshot),

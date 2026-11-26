@@ -799,6 +799,45 @@ test("BEH-PUBLISH: publishing the same knowledge at two commits writes the same 
   assert.match(bare.out, /^Snapshot: commit /m, "the run still says what it read");
 });
 
+test("BEH-PUBLISH-FRAGMENT: publish --html=fragment writes <ID>.fragment.html, the page's content without its title; --html=page is --html", async (t) => {
+  const dir = await example(t);
+  const page = await run(dir, "publish", ...REQUEST, "--html", "--out", "page");
+  assert.equal(page.code, 0, page.out + page.err);
+  const explicit = await run(dir, "publish", ...REQUEST, "--html=page", "--out", "explicit");
+  assert.equal(explicit.code, 0, explicit.out + explicit.err);
+  const fragment = await run(dir, "publish", ...REQUEST, "--html=fragment", "--out", "fragment");
+  assert.equal(fragment.code, 0, fragment.out + fragment.err);
+  const read = (out: string, file: string) => readFileSync(join(dir, out, file), "utf8");
+  for (const file of readdirSync(join(dir, "page"))) assert.equal(read("explicit", file), read("page", file), file);
+
+  const files = readdirSync(join(dir, "fragment")).sort();
+  assert.deepEqual(files, [
+    "KB-ASMT-SCHEDULE.fragment.html",
+    "KB-ASMT-SCHEDULE.md",
+    "chunks.jsonl",
+    "help.json",
+    "index.json",
+    "snapshot.json",
+  ]);
+  for (const file of files.filter((name) => !name.endsWith(".html") && name !== "snapshot.json")) {
+    assert.equal(read("fragment", file), read("page", file), `${file} does not depend on the rendering`);
+  }
+  const html = read("fragment", "KB-ASMT-SCHEDULE.fragment.html");
+  assert.ok(html.startsWith('<h2 id="guidance">Guidance</h2>\n'), html);
+  assert.ok(read("page", "KB-ASMT-SCHEDULE.html").includes(html), "the fragment is what the page holds");
+  for (const absent of ["<html", "<head", "<style", "<h1", "intentset-publication"]) {
+    assert.ok(!html.includes(absent), absent);
+  }
+  assert.match(fragment.out, /fragment\/KB-ASMT-SCHEDULE\.fragment\.html/);
+
+  for (const bad of ["--html=body", "--html="]) {
+    const refused = await run(dir, "publish", ...REQUEST, bad, "--out", "refused");
+    assert.equal(refused.code, 2, bad);
+    assert.match(refused.err, /--html takes page or fragment/);
+    assert.equal(existsSync(join(dir, "refused")), false);
+  }
+});
+
 test("BEH-PUBLISH: publish refuses a graph that does not validate, and a request missing a dimension", async (t) => {
   const dir = await example(t);
   const partial = await run(dir, "publish", "--visibility", "customer", "--audience", "teacher", "--out", "partial");

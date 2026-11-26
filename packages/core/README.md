@@ -13,7 +13,7 @@ pnpm add @intentset/core
 
 ## Example
 
-Read an export another repository's CI wrote, as Streamlane and Driftline do:
+Read an export another repository's CI wrote, as a tool that reads the export does:
 
 ```ts
 import { readFile } from "node:fs/promises";
