@@ -28,6 +28,7 @@ import {
   DELIVERY_TYPES,
   FORMALIZES_TYPES,
   type ExportEnvelope,
+  isSurfaceId,
   type ExportReportName,
   ID_PATTERN,
   LEVELS,
@@ -580,7 +581,7 @@ class Shape {
     const s = this.object(
       value,
       at,
-      ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"],
+      ["kind", "domain", "entrypoints", "layers", "claims", "usesResources", "surfaces"],
       ["rationale"],
     );
     if (s === null) return;
@@ -601,6 +602,17 @@ class Shape {
       this.string(c.path, `${p}/path`);
     });
     this.ids(s.usesResources, `${at}/usesResources`);
+    // Export §2, §5 (ADR 0028): keys by VSA §3's rules; a list may be emptied by withholding.
+    if (isRecord(s.surfaces)) {
+      for (const [key, entry] of Object.entries(s.surfaces)) {
+        const p = `${at}/surfaces/${pointerToken(key)}`;
+        if (!isSurfaceId(key)) this.fail(p, "Expected a surface ID (VSA §3).");
+        const e = this.object(entry, p, ["knowledge"]);
+        if (e !== null) this.ids(e.knowledge, `${p}/knowledge`);
+      }
+    } else if (Object.hasOwn(s, "surfaces")) {
+      this.fail(`${at}/surfaces`, "Expected an object.");
+    }
   }
 
   reports(value: unknown): void {

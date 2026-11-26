@@ -25,6 +25,11 @@
  * as sorted lists, held all-of. Members are written in publication §5's table
  * order, every collection always written.
  *
+ * Its `surfaces` (surfaces.ts, ADR 0028) map each surface a slice declares to
+ * the documents published in the run that lead it, written only from an
+ * approved or deprecated built slice available to the request; nothing else of
+ * the slice is carried.
+ *
  * It carries no snapshot: the run names the commit and graph hash it was
  * published from in the snapshot file alone (snapshot.ts, ADR 0021), so this
  * file's bytes change only when a tip, a published document or the request does.
@@ -33,6 +38,7 @@ import type { Artifact, Graph, Visibility } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
 import { UNDER_REVIEW_DIR } from "./generate.ts";
 import { type CheckedRequest, type PublicationRequest, asList } from "./request.ts";
+import { helpSurfaces } from "./surfaces.ts";
 
 export const HELP_PROFILE = "intentset/help/0.3";
 /** The file's name beside the published documents. */
@@ -45,6 +51,11 @@ export interface HelpKnowledge {
   path: string;
   /** Only on a document kept under review (publication §5); never written as false. */
   underReview?: true;
+}
+
+/** The documents published in the run that lead one surface, in the order its slice declares them (ADR 0028). */
+export interface HelpSurface {
+  knowledge: string[];
 }
 
 export interface HelpTip {
@@ -68,6 +79,8 @@ export interface HelpFile {
   publishedAt: string;
   /** One entry per published document, sorted by ID. */
   knowledge: HelpKnowledge[];
+  /** By surface ID in code-unit order (publication §5, ADR 0028); `{}` when no surface is written. */
+  surfaces: Record<string, HelpSurface>;
   /** By explained ID, sorted. */
   tips: Record<string, HelpTip>;
   /** Rule IDs whose tips were held back because their document is kept under review and no current one tips them. */
@@ -120,20 +133,34 @@ export function helpFile(
   knowledge.sort((a, b) => compareStrings(a.id, b.id));
   for (const key of [...claimed.keys()].sort(compareStrings)) tips[key] = claimed.get(key) as HelpTip;
   const withheldForReview = [...held].filter((key) => !claimed.has(key)).sort(compareStrings);
+  const audience = [...new Set(asList(request.audience))].sort(compareStrings);
+  const role = [...new Set(asList(request.role))].sort(compareStrings);
+  const flags = [...new Set(request.flags)].sort(compareStrings);
+  // A surface's gates read the request as checked; an authorization the request does not state is not given.
+  const checked: CheckedRequest = {
+    ...request,
+    audience,
+    role,
+    flags,
+    keepUnderReview: request.keepUnderReview === true,
+    authorizedInternal: request.authorizedInternal === true,
+    authorizedRestricted: request.authorizedRestricted === true,
+  };
   return {
     profile: HELP_PROFILE,
     derived: true,
     projection: request.visibility,
-    audience: [...new Set(asList(request.audience))].sort(compareStrings),
+    audience,
     availability: {
       product: request.product,
       release: request.release,
-      role: [...new Set(asList(request.role))].sort(compareStrings),
+      role,
       edition: request.edition,
-      flags: [...new Set(request.flags)].sort(compareStrings),
+      flags,
     },
     publishedAt: options.publishedAt,
     knowledge,
+    surfaces: helpSurfaces(graph, [...current, ...kept], checked).surfaces,
     tips,
     withheldForReview,
   };

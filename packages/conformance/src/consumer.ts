@@ -71,6 +71,16 @@ const APPROVAL = {
   source: { ref: "https://tracker.example/LAN-12", revision: "7" },
   attestedBy: "drafting-agent",
 };
+/** Who the slice is for, which a slice that declares surfaces says (VSA §3). */
+const SLICE_AVAILABILITY = {
+  products: ["PRD-LANTERN"],
+  releases: ["pilot-1"],
+  roles: ["teacher"],
+  editions: ["standard"],
+  flags: [],
+};
+/** The slice's surfaces in every fixture: one page, led by the example's knowledge. */
+const SURFACES = { "lantern-web:/assessments/schedule": { knowledge: ["KB-ASMT-SCHEDULE"] } };
 /** What the behavior formalizes in every fixture: the item, and one criterion of it. */
 const FORMALIZES = [
   { source: "https://tracker.example/LAN-12" },
@@ -154,6 +164,15 @@ function build(options: BuildOptions): ExportEnvelope {
         "KB-ASMT-SCHEDULE.md": { frontmatter: { "intentset.approval": APPROVAL } },
         "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.formalizes": FORMALIZES } },
         ...options.patch,
+        // What 0.7 added (ADR 0028), so every fixture's slice declares one surface, beside any patch of its own.
+        "SLICE-ASMT-SCHEDULE.md": {
+          ...options.patch?.["SLICE-ASMT-SCHEDULE.md"],
+          frontmatter: {
+            "intentset.availability": SLICE_AVAILABILITY,
+            "intentset.slice.surfaces": SURFACES,
+            ...options.patch?.["SLICE-ASMT-SCHEDULE.md"]?.frontmatter,
+          },
+        },
       },
     },
     { examplesDir: join(repoRoot, "examples"), parseYaml },

@@ -393,6 +393,32 @@
                 "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
               },
               "uniqueItems": true
+            },
+            "surfaces": {
+              "description": "VSA §3, ADR 0028: by surface ID, the knowledge that leads the surface, in order. Not a binding field.",
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[!#-&(-;=?-\\[\\]-_a-~]{1,200}$",
+                "not": {
+                  "anyOf": [{ "pattern": "^[0-9]+$" }, { "const": "__proto__" }]
+                }
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["knowledge"],
+                "properties": {
+                  "knowledge": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+                    }
+                  }
+                }
+              }
             }
           }
         },
@@ -823,6 +849,20 @@
                 "const": "knowledge"
               }
             }
+          }
+        },
+        {
+          "if": {
+            "required": ["slice"],
+            "properties": {
+              "slice": {
+                "required": ["surfaces"],
+                "properties": { "surfaces": { "not": { "const": {} } } }
+              }
+            }
+          },
+          "then": {
+            "required": ["availability"]
           }
         }
       ]

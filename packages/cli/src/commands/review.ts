@@ -31,6 +31,12 @@
  * pinned record's head hash is that value, so it changed only by migrating. A report, never a failure. A base copy that
  * declares an earlier version is read as `intentset migrate` would move it, in
  * memory, so a change that only migrates records lists none of them.
+ *
+ * It lists every slice past draft whose `surfaces` (VSA §3, ADR 0028) gained or
+ * lost a key, or changed a key's list, against the base's copy read the same
+ * way: a surface ID reaches every eligible reader's help file once its slice is
+ * approved, so this is where a reviewer sees the key text first. A report,
+ * never a failure.
  */
 import {
   type BaselineComparison,
@@ -345,6 +351,51 @@ function replayedReview(
   return reviewOf(before, replayed);
 }
 
+export interface SurfaceChange {
+  id: string;
+  path: string;
+  status: string;
+  /** Surface IDs the head declares and the base's copy does not, sorted. */
+  added: string[];
+  /** Surface IDs the base's copy declares and the head does not, sorted. */
+  removed: string[];
+  /** Surface IDs both declare whose list of leading knowledge differs, sorted. */
+  changed: string[];
+}
+
+export const SURFACES_NOTE =
+  "Slices past draft whose surfaces (VSA §3) gained or lost a surface ID, or changed which knowledge leads one. A " +
+  "surface ID is written into the help file of every reader the slice is available to once the slice is approved: " +
+  "check that no ID below names something one of those readers may not see.";
+
+/** Each changed slice past draft whose surfaces differ from the base's copy as migrated, sorted by ID. */
+export function surfaceChanges(
+  graph: Graph,
+  changed: readonly string[],
+  atBase: (path: string) => string | null,
+  carrier: CarrierName,
+): SurfaceChange[] {
+  const touched = new Set(changed);
+  const out: SurfaceChange[] = [];
+  for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
+    const { path, meta } = graph.artifacts.get(id) as Artifact;
+    if (meta.type !== "slice" || meta.status === "draft" || !touched.has(path)) continue;
+    const text = atBase(path);
+    const before = text === null ? null : readBaseCopy(path, text, carrier);
+    const now = meta.slice?.surfaces ?? {};
+    const then = before?.meta.slice?.surfaces ?? {};
+    const keys = (map: object) => Object.keys(map).sort(compareStrings);
+    const added = keys(now).filter((key) => !Object.hasOwn(then, key));
+    const removed = keys(then).filter((key) => !Object.hasOwn(now, key));
+    const listChanged = keys(now).filter(
+      (key) => Object.hasOwn(then, key) && canonicalJson(now[key].knowledge) !== canonicalJson(then[key].knowledge),
+    );
+    if (added.length + removed.length + listChanged.length === 0) continue;
+    out.push({ id, path, status: meta.status, added, removed, changed: listChanged });
+  }
+  return out;
+}
+
 export function reviewCommand(
   session: Session,
   options: {
@@ -384,6 +435,15 @@ export function reviewCommand(
           (path) => fileAt(repo.root, base.commit, movedFrom.get(path) ?? path),
           options.carrier,
         );
+  const surfaces =
+    base === null
+      ? []
+      : surfaceChanges(
+          graph,
+          changed,
+          (path) => fileAt(repo.root, base.commit, movedFrom.get(path) ?? path),
+          options.carrier,
+        );
   const failing =
     (options.failOnDrift === true && drifted.some((item) => !item.acknowledged)) ||
     (options.failOnBaselineGrowth === true && (baseline?.added?.length ?? 0) > 0);
@@ -418,6 +478,7 @@ export function reviewCommand(
         impact: impacts,
         drift: drifted,
         statusChanges: statuses,
+        surfaceChanges: surfaces,
         ...(baseline === null ? {} : { baseline }),
         unattributed,
       }),
@@ -485,6 +546,17 @@ export function reviewCommand(
       ? `; review written or changed: ${item.reviewedBy ?? "no reviewer"}, ${item.reviewedAt ?? "no date"}`
       : "";
     out.push(`- ${item.id} (${item.type}): ${status}; ${approval}${review}`);
+  }
+  out.push("", `## Surfaces changed (${surfaces.length})`, "", SURFACES_NOTE, "");
+  if (base === null) out.push("There is no base, so nothing was compared.");
+  else if (surfaces.length === 0) out.push("None.");
+  for (const item of surfaces) {
+    const parts = [
+      ...item.added.map((key) => `added \`${key}\``),
+      ...item.removed.map((key) => `removed \`${key}\``),
+      ...item.changed.map((key) => `leads changed for \`${key}\``),
+    ];
+    out.push(`- ${item.id} (${item.status}): ${parts.join("; ")}`);
   }
   if (baseline !== null) out.push("", ...baselineSection(baseline));
   out.push("", `## Changed files no artifact accounts for (${unattributed.length})`, "");

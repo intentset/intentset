@@ -1039,7 +1039,7 @@ describe("checkArchitecture: declared scope and modes", () => {
     );
     assert.match(
       leak[0].message,
-      /^legacy\/src\/new\.ts lies outside the declared scope and imports "\.\.\/\.\.\/packages\/a\/src\/internal", a private file of SLICE-A .*; its public surface is packages\/a\/src\/index\.ts\.$/,
+      /^legacy\/src\/new\.ts lies outside the declared scope and imports "\.\.\/\.\.\/packages\/a\/src\/internal", a private file of SLICE-A .*; its public contract surface is packages\/a\/src\/index\.ts\.$/,
     );
     assert.equal(after.summary.edges, before.summary.edges);
     assert.equal(after.summary.crossSliceEdges, before.summary.crossSliceEdges);
@@ -1319,7 +1319,7 @@ Test.
     assert.deepEqual(
       vsa002.map((d) => `${d.field} ${d.message}`),
       [
-        "/intentset/slice/entrypoints/2 SLICE-M declares two entrypoints in the package at apps/web, apps/web/src/index.ts and apps/web/src/ui.ts; a slice has one public surface per package it spans.",
+        "/intentset/slice/entrypoints/2 SLICE-M declares two entrypoints in the package at apps/web, apps/web/src/index.ts and apps/web/src/ui.ts; a slice has one public contract surface per package it spans.",
       ],
     );
   });

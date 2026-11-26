@@ -22,9 +22,11 @@ import {
   articles,
   bindTips,
   helpForPage,
+  leadFor,
   readHelp,
   reviewStateFor,
   servedTo,
+  surfaceHelp,
   tipFor,
   watchTips,
 } from "../src/index.ts";
@@ -236,9 +238,9 @@ test("BEH-HELP-READER: readHelp refuses a member the table does not give, at the
   };
   assert.deepEqual(
     read((v) => {
-      (v as Record<string, unknown>).surfaces = {};
+      (v as Record<string, unknown>).pages = {};
     }),
-    ['the file has a member "surfaces" the help file does not define'],
+    ['the file has a member "pages" the help file does not define'],
   );
   assert.deepEqual(
     read((v) => {
@@ -840,4 +842,143 @@ test("BEH-HELP-WATCH: a watch renders the under-review mark, restores its prior 
   watch.dispose();
   assert.deepEqual(schedule.snapshot(), before, "the page is left as the watch found it");
   assert.deepEqual(watch.coverage(), { bound: [], missing: [], pendingReview: [] });
+});
+
+/** A file with two articles, one kept under review, and two surfaces: one led by both, one by the kept one alone. */
+function surfacedHelp(): Help {
+  const help = JSON.parse(JSON.stringify(helpFromPublisher())) as Help;
+  help.knowledge = [
+    { id: "KB-ASMT-CLASSES", title: "Choose a class", path: "under-review/KB-ASMT-CLASSES.md", underReview: true },
+    ...help.knowledge,
+  ];
+  help.surfaces = {
+    "@lantern/assessments#/review": { knowledge: ["KB-ASMT-CLASSES"] },
+    "lantern-web:/assessments/schedule": { knowledge: ["KB-ASMT-CLASSES", "KB-ASMT-SCHEDULE"] },
+  };
+  const read = readHelp(help);
+  assert.deepEqual(read.problems, []);
+  return help;
+}
+
+test("BEH-HELP-SURFACES: the file the publisher writes carries surfaces, {} when no slice writes one", () => {
+  assert.deepEqual(helpFromPublisher().surfaces, {});
+});
+
+test("BEH-HELP-SURFACES: leadFor and surfaceHelp give a surface's leads in order, leaving one under review out by default", () => {
+  const help = surfacedHelp();
+  const page = "lantern-web:/assessments/schedule";
+  assert.deepEqual(
+    leadFor(help, page).map((entry) => entry.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(
+    leadFor(help, page, { underReviewHelp: "include" }).map((entry) => [entry.id, entry.underReview]),
+    [
+      ["KB-ASMT-CLASSES", true],
+      ["KB-ASMT-SCHEDULE", undefined],
+    ],
+  );
+  assert.deepEqual(surfaceHelp(help, page).pendingReview, ["KB-ASMT-CLASSES"]);
+  assert.deepEqual(surfaceHelp(help, page, { underReviewHelp: "include" }).pendingReview, ["KB-ASMT-CLASSES"]);
+  // A surface whose leads are all under review, and one the file does not list: leadFor cannot tell them apart.
+  assert.deepEqual(leadFor(help, "@lantern/assessments#/review"), []);
+  assert.deepEqual(leadFor(help, "lantern-web:/nowhere"), []);
+  assert.deepEqual(surfaceHelp(help, "@lantern/assessments#/review"), { lead: [], pendingReview: ["KB-ASMT-CLASSES"] });
+  assert.deepEqual(surfaceHelp(help, "lantern-web:/nowhere"), { lead: [], pendingReview: [] });
+  assert.deepEqual(leadFor(help, "__proto__"), [], "a prototype name is not a surface");
+  assert.deepEqual(leadFor(help, "constructor"), []);
+});
+
+test("BEH-HELP-SURFACES: helpForPage lists a surface's leads first, then the tips' articles, each once", () => {
+  const help = surfacedHelp();
+  const plain = helpForPage(help, ["BEH-ASMT-SCHEDULE"]);
+  assert.equal(plain.surface, null);
+  assert.deepEqual([plain.lead, plain.leadPendingReview], [[], []]);
+  const page = helpForPage(help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" });
+  assert.equal(page.surface, "lantern-web:/assessments/schedule");
+  assert.deepEqual(
+    page.lead.map((entry) => entry.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(
+    page.knowledge.map((entry) => entry.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(page.leadPendingReview, ["KB-ASMT-CLASSES"]);
+  assert.deepEqual(page.pendingReview, [], "pendingReview holds control IDs only");
+  const shown = helpForPage(help, ["BEH-ASMT-SCHEDULE"], {
+    surface: "lantern-web:/assessments/schedule",
+    underReviewHelp: "include",
+  });
+  assert.deepEqual(
+    shown.knowledge.map((entry) => entry.id),
+    ["KB-ASMT-CLASSES", "KB-ASMT-SCHEDULE"],
+  );
+  const kept = helpForPage(help, [], { surface: "@lantern/assessments#/review" });
+  assert.deepEqual([kept.lead, kept.knowledge, kept.leadPendingReview], [[], [], ["KB-ASMT-CLASSES"]]);
+});
+
+test("BEH-HELP-SURFACES: readHelp refuses a file whose surfaces break the rules", () => {
+  const help = surfacedHelp();
+  const read = (edit: (value: Record<string, unknown> & Help) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  assert.deepEqual(
+    read((v) => {
+      delete (v as Partial<Help>).surfaces;
+    }),
+    ["the file has no surfaces", "surfaces must be an object keyed by surface ID"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v as Record<string, unknown>).surfaces = [];
+    }),
+    ["surfaces must be an object keyed by surface ID"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["404"] = { knowledge: ["KB-ASMT-SCHEDULE"] };
+    }),
+    ['surfaces key "404" is not a surface ID'],
+  );
+  assert.deepEqual(
+    readHelp(
+      `{${JSON.stringify(help)
+        .slice(1, -1)
+        .replace('"surfaces":{', '"surfaces":{"__proto__":{"knowledge":["KB-ASMT-SCHEDULE"]},')}}`,
+    ).problems,
+    ['surfaces key "__proto__" is not a surface ID'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["a<b"] = { knowledge: ["KB-ASMT-SCHEDULE"] };
+    }),
+    ['surfaces key "a<b" is not a surface ID'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.surfaces["lantern-web:/assessments/schedule"] as unknown as Record<string, unknown>).feature = "beta";
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"] has a member "feature" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["lantern-web:/assessments/schedule"].knowledge = [];
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"].knowledge must be a non-empty list of IDs'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["lantern-web:/assessments/schedule"].knowledge = ["KB-ASMT-SCHEDULE", "KB-ASMT-SCHEDULE"];
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"].knowledge repeats an ID'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["lantern-web:/assessments/schedule"].knowledge = ["KB-ASMT-OTHER"];
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"] names knowledge KB-ASMT-OTHER, which the file does not list'],
+  );
 });

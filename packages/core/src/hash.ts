@@ -17,7 +17,15 @@ export function sortKeysDeep(value: unknown): unknown {
     const record = value as Record<string, unknown>;
     const out: Record<string, unknown> = {};
     for (const key of Object.keys(record).sort()) {
-      if (record[key] !== undefined) out[key] = sortKeysDeep(record[key]);
+      // defineProperty, so a key such as `__proto__` read from JSON stays an own property and is hashed.
+      if (record[key] !== undefined) {
+        Object.defineProperty(out, key, {
+          value: sortKeysDeep(record[key]),
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
+      }
     }
     return out;
   }

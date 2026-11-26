@@ -1692,5 +1692,292 @@
         }
       }
     }
+  },
+  {
+    "section": "export",
+    "name": "export a slice's surfaces as authored: keys in code-unit order, each surface's knowledge in declared order",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.surfaces": {
+            "lantern-web:/b": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            },
+            "/1": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          },
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-CLASSES"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE",
+          "slice": {
+            "surfaces": {
+              "/1": {
+                "knowledge": [
+                  "KB-ASMT-SCHEDULE"
+                ]
+              },
+              "lantern-web:/b": {
+                "knowledge": [
+                  "KB-ASMT-SCHEDULE",
+                  "KB-ASMT-CLASSES"
+                ]
+              }
+            }
+          },
+          "withheldLinks": 0
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "Export §1, §2 (ADR 0028): a surface's knowledge is the one ID list whose order is the meaning, so it is not sorted. Key order is held by the core tests, since this comparison ignores it."
+  },
+  {
+    "section": "export",
+    "name": "export a slice with no surfaces carries an empty map",
+    "baseline": "scheduling",
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE",
+          "slice": {
+            "surfaces": {}
+          }
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "Export §2: `surfaces` is always present on a slice, `{}` when it declares none."
+  },
+  {
+    "section": "export",
+    "name": "export withholds restricted knowledge from a surface, keeps the key and counts it",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: restricted\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            },
+            "/classes": {
+              "knowledge": [
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          },
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          }
+        }
+      }
+    },
+    "valid": true,
+    "diagnostics": [],
+    "export": {
+      "withholding": {
+        "visibilities": [
+          "restricted"
+        ],
+        "artifacts": 1,
+        "diagnostics": 0
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE"
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "RULE-ASMT-FUTURE"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE",
+          "slice": {
+            "surfaces": {
+              "/classes": {
+                "knowledge": []
+              },
+              "lantern-web:/assessments/schedule": {
+                "knowledge": [
+                  "KB-ASMT-SCHEDULE"
+                ]
+              }
+            }
+          },
+          "withheldLinks": 2
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "Export §3 (ADR 0028): a surface's knowledge names an artifact as a link does, so a withheld ID leaves it and is counted; a list emptied by withholding keeps its key."
   }
 ]

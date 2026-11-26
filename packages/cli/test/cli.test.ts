@@ -97,6 +97,28 @@ test("BEH-AGENT-GUIDE: the guide forbids an agent from writing a knowledge revie
   );
 });
 
+test("BEH-AGENT-GUIDE: the guide says which field leads a page, and that a surface ID must name nothing some reader may not see", async (t) => {
+  const dir = temp(t);
+  mkdirSync(join(dir, ".intentset"));
+  writeFileSync(
+    join(dir, ".intentset", "config.yaml"),
+    'repository: "acme/app"\nscope:\n  - "docs/model/**/*.md"\nregistries: null\nignore: []\n',
+  );
+  const guide = (await run(dir, "guide")).out;
+  const changes = guide.slice(
+    guide.indexOf("## When behavior changes"),
+    guide.indexOf("## When behavior does not change"),
+  );
+  assert.match(
+    changes,
+    /^- Which articles lead a page, route or panel: `surfaces` on the slice that owns it \(VSA §3\), with$/m,
+  );
+  assert.match(
+    changes,
+    /never put a name in it that some reader may not see, such as an internal record's ID or path\./,
+  );
+});
+
 test("BEH-AGENT-GUIDE: guide prints the guide init --agents writes, for the config's scope, and writes nothing", async (t) => {
   const dir = temp(t);
   mkdirSync(join(dir, ".intentset"));

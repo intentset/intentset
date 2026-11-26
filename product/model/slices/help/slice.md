@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 1
   links:
-    implements: [BEH-HELP-TIPS, BEH-HELP-WATCH, BEH-HELP-READER]
+    implements: [BEH-HELP-TIPS, BEH-HELP-WATCH, BEH-HELP-READER, BEH-HELP-SURFACES]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
     kind: product
@@ -33,14 +33,14 @@ intentset:
 
 ## Responsibility
 
-Reads a help file and binds its tips to a product's controls, in a browser, once or for as long as it watches. It has no dependencies.
+Reads a help file, binds its tips to a product's controls, in a browser, once or for as long as it watches, and lists the articles that lead a page. It has no dependencies.
 
 The slice is the package `@intentset/help`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice. Its one source file is its entrypoint, so the check has nothing to place in a layer and reports no VSA006. It uses no backend resources.
 
 ## Public contract
 
-The exports of `packages/help/src/index.ts`, reached by other packages as `@intentset/help` through the `intentset-source` export condition, among them `servedTo(file, reader)`, which a product calls before serving a help file or a document's publication block to a reader (ADR 0029), and `underReviewHelp`, `pendingReview`, `reviewStateFor` and `articles` for help kept under review, which every reader leaves out unless told to include it (ADR 0027). No contract record yet.
+The exports of `packages/help/src/index.ts`, reached by other packages as `@intentset/help` through the `intentset-source` export condition, among them `servedTo(file, reader)`, which a product calls before serving a help file or a document's publication block to a reader (ADR 0029), and `underReviewHelp`, `pendingReview`, `reviewStateFor` and `articles` for help kept under review, which every reader leaves out unless told to include it (ADR 0027), and `leadFor`, `surfaceHelp` and `helpForPage`'s `surface` option for the articles that lead a surface (ADR 0028). No contract record yet.
 
 ## Verification
 
-The package's tests under `packages/help/test/`. TEST-HELP-TIPS, TEST-HELP-WATCH and TEST-HELP-READER verify the behaviors it implements, BEH-HELP-TIPS, BEH-HELP-WATCH and BEH-HELP-READER, each naming the tests whose titles carry its behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/help/test/`. TEST-HELP-TIPS, TEST-HELP-WATCH, TEST-HELP-READER and TEST-HELP-SURFACES verify the behaviors it implements, BEH-HELP-TIPS, BEH-HELP-WATCH, BEH-HELP-READER and BEH-HELP-SURFACES, each naming the tests whose titles carry its behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

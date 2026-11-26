@@ -10,7 +10,7 @@
  * VSA002: each of a slice's entrypoints is a file in the repository and lies
  * inside one of the slice's own source claims, and no two lie in the same
  * package (the nearest directory above holding a package.json, or the
- * repository root): a slice has one public surface per package it spans. An
+ * repository root): a slice has one public contract surface per package it spans. An
  * empty entrypoint module is allowed for a leaf. While the slice is draft, an
  * entrypoint that is not a file yet is a warning: planned, not yet owned
  * (VSA §3), unless the slice or a behavior it implements says its work is
@@ -118,7 +118,7 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
             artifact: slice.id,
             path: slice.path,
             field,
-            message: `${slice.id} declares two entrypoints in ${describePackage(pkg)}, ${first} and ${entrypoint}; a slice has one public surface per package it spans.`,
+            message: `${slice.id} declares two entrypoints in ${describePackage(pkg)}, ${first} and ${entrypoint}; a slice has one public contract surface per package it spans.`,
             remediation: `Export what ${entrypoint} offers from ${first} and remove it from entrypoints, or move it into the package it serves (VSA002).`,
             paths: [first, entrypoint],
           }),

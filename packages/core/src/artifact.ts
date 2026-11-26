@@ -41,6 +41,7 @@ import {
   FORMALIZES_TYPES,
   type Formalized,
   ID_PATTERN,
+  isSurfaceId,
   LINK_KINDS,
   type LinkKind,
   MEASURE_DIRECTIONS,
@@ -56,6 +57,7 @@ import {
   TIP_PATTERN,
   type ReviewMeta,
   type SliceMeta,
+  type SliceSurface,
   VISIBILITIES,
   type VerificationMeta,
 } from "./types.ts";
@@ -256,7 +258,9 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       problem(
         `${base}/${pointerToken(key)}`,
         `Unknown key \`${key}\` under intentset.`,
-        "Remove it, or move it under `extensions` with a namespaced key such as `org.example/change`.",
+        key === "surfaces"
+          ? "Write `surfaces` under `slice:`, on the slice that owns the surfaces (VSA §3)."
+          : "Remove it, or move it under `extensions` with a namespaced key such as `org.example/change`.",
       );
     }
   }
@@ -477,6 +481,13 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       `${base}/slice`,
       "A slice must carry the `slice` metadata block.",
       "Add `slice:` with kind, domain, entrypoints, layers, claims and usesResources (VSA §3).",
+    );
+  }
+  if (slice?.surfaces !== undefined && Object.keys(slice.surfaces).length > 0 && !Object.hasOwn(s, "availability")) {
+    problem(
+      `${base}/availability`,
+      "A slice that declares surfaces must declare `availability`.",
+      "A slice that declares surfaces says who may see them: add `availability` (VSA §3).",
     );
   }
   let tips: Record<string, string> | undefined;
@@ -1086,14 +1097,14 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     return null;
   }
   let ok = true;
-  const known = ["kind", "rationale", "domain", "entrypoints", "layers", "claims", "usesResources"];
+  const known = ["kind", "rationale", "domain", "entrypoints", "layers", "claims", "usesResources", "surfaces"];
   for (const key of Object.keys(value).sort(compareStrings)) {
     if (!known.includes(key)) {
       problem(
         `${field}/${pointerToken(key)}`,
         `Unknown slice key \`${key}\`.`,
         key === "entrypoint"
-          ? "A slice lists its public surfaces, one per package it spans: write `entrypoints: [path]` (VSA §3)."
+          ? "A slice lists its public contract surfaces, one per package it spans: write `entrypoints: [path]` (VSA §3)."
           : `The slice keys are ${known.join(", ")} (VSA §3).`,
       );
       ok = false;
@@ -1189,6 +1200,12 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     if (list === null) ok = false;
     else usesResources = list;
   }
+  let surfaces: Record<string, SliceSurface> | undefined;
+  if (Object.hasOwn(value, "surfaces") && value.surfaces !== null) {
+    const read = readSurfaces(value.surfaces, `${field}/surfaces`, problem);
+    if (read === null) ok = false;
+    else surfaces = read;
+  }
   if (!ok) return null;
   const slice: SliceMeta = {
     kind: value.kind as SliceMeta["kind"],
@@ -1199,7 +1216,77 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     usesResources,
   };
   if (rationale !== undefined) slice.rationale = rationale;
+  if (surfaces !== undefined) slice.surfaces = surfaces;
   return slice;
+}
+
+/**
+ * VSA §3, ADR 0028: `surfaces` maps a surface ID to `{ knowledge }`, a non-empty list of unique IDs in the order a
+ * reader is shown them, and nothing else. Every problem is CORE001; the map is built in code-unit key order.
+ */
+function readSurfaces(value: unknown, field: string, problem: Problem): Record<string, SliceSurface> | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`slice.surfaces` must be a mapping of surface IDs to `{ knowledge: [...] }`.",
+      "Write each surface as `<surface ID>:` with `knowledge: [KB-...]` under it; `{}` declares none (VSA §3).",
+    );
+    return null;
+  }
+  let ok = true;
+  const out: Record<string, SliceSurface> = {};
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    const keyField = `${field}/${pointerToken(key)}`;
+    if (!isSurfaceId(key)) {
+      problem(
+        keyField,
+        `Surface ID \`${key}\` is not one VSA §3 accepts.`,
+        "Use 1 to 200 printable ASCII characters other than \" ' < > \\ and the backtick, not digits only; write a non-ASCII route percent-encoded (VSA §3).",
+      );
+      ok = false;
+      continue;
+    }
+    const entry = value[key];
+    if (!isRecord(entry)) {
+      problem(
+        keyField,
+        `Surface \`${key}\` must be a mapping with \`knowledge\`.`,
+        "Write `knowledge: [KB-...]` under the surface ID.",
+      );
+      ok = false;
+      continue;
+    }
+    for (const member of Object.keys(entry).sort(compareStrings)) {
+      if (member !== "knowledge") {
+        problem(
+          `${keyField}/${pointerToken(member)}`,
+          `Unknown surface key \`${member}\`.`,
+          "A surface entry has one member, `knowledge` (VSA §3).",
+        );
+        ok = false;
+      }
+    }
+    if (!Object.hasOwn(entry, "knowledge") || entry.knowledge === null) {
+      problem(
+        `${keyField}/knowledge`,
+        `Surface \`${key}\` names no \`knowledge\`.`,
+        "List the knowledge that leads the surface, in order.",
+      );
+      ok = false;
+      continue;
+    }
+    const list = stringList(entry.knowledge, `${keyField}/knowledge`, "knowledge", problem, {
+      pattern: ID_PATTERN,
+      minItems: 1,
+      minItemsRemediation: "List at least one knowledge record, or remove the surface.",
+    });
+    if (list === null || list.length !== (entry.knowledge as unknown[]).length) {
+      ok = false;
+      continue;
+    }
+    out[key] = { knowledge: list };
+  }
+  return ok ? out : null;
 }
 
 function readClaim(value: unknown, field: string, problem: Problem): Claim | null {

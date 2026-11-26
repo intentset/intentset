@@ -31,7 +31,9 @@ import {
   type LinkKind,
   type Registries,
   SPEC_VERSION,
+  type ExportSlice,
   type SliceMeta,
+  type SliceSurface,
   type ValidationResult,
   type Visibility,
 } from "./types.ts";
@@ -226,6 +228,16 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
   }
 
   const exercises = keep(meta.verification?.exercises ?? []);
+  // Export §2 (ADR 0028): a surface's knowledge keeps its declared order, less withheld IDs; an emptied key stays.
+  const surfaces: Record<string, SliceSurface> = {};
+  for (const key of Object.keys(meta.slice?.surfaces ?? {}).sort(compareStrings)) {
+    const knowledge: string[] = [];
+    for (const target of meta.slice?.surfaces?.[key].knowledge ?? []) {
+      if (withheld.has(target)) withheldLinks++;
+      else knowledge.push(target);
+    }
+    surfaces[key] = { knowledge };
+  }
   // Export §2, §3 (ADR 0025): a tip and a review pin name an artifact as a link does, so each is withheld with it.
   const keepKeys = <T>(map: Record<string, T>): Record<string, T> => {
     const out: Record<string, T> = {};
@@ -265,7 +277,7 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
     derived,
     withheldLinks,
     availability: meta.availability === undefined ? null : sortedAvailability(meta.availability),
-    slice: meta.slice === undefined ? null : sortedSlice(meta.slice),
+    slice: meta.slice === undefined ? null : sortedSlice(meta.slice, surfaces),
     verification:
       meta.verification === undefined
         ? null
@@ -403,12 +415,12 @@ function sortedAvailability(availability: Availability): Availability {
   };
 }
 
-function sortedSlice(slice: SliceMeta): SliceMeta {
+function sortedSlice(slice: SliceMeta, surfaces: Record<string, SliceSurface>): ExportSlice {
   const layers: Record<string, string[]> = {};
   for (const layer of Object.keys(slice.layers).sort(compareStrings)) {
     layers[layer] = [...slice.layers[layer]].sort(compareStrings);
   }
-  const out: SliceMeta = {
+  const out: ExportSlice = {
     kind: slice.kind,
     domain: slice.domain,
     entrypoints: [...slice.entrypoints].sort(compareStrings),
@@ -417,6 +429,7 @@ function sortedSlice(slice: SliceMeta): SliceMeta {
       .map((claim) => ({ kind: claim.kind, path: claim.path }))
       .sort((a, b) => compareStrings(a.kind, b.kind) || compareStrings(a.path, b.path)),
     usesResources: [...slice.usesResources].sort(compareStrings),
+    surfaces,
   };
   if (slice.rationale !== undefined) out.rationale = slice.rationale;
   return out;

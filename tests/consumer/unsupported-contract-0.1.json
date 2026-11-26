@@ -10,7 +10,7 @@
     "commit": null,
     "commitUnavailable": "The fixture describes no commit."
   },
-  "graphHash": "dd07b7fb9daf45a91e5dcb80cc336e6def2dd4943a7bd62433105c2b2313b75c",
+  "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -409,7 +409,7 @@
       "profile": "intentset/slice/0.1",
       "revision": 1,
       "path": "SLICE-ASMT-SCHEDULE.md",
-      "sourceHash": "269b6841e8a05a805d8543b6a4754960fb74d573bdcd56877f2427f76108653d",
+      "sourceHash": "6cd60542b69d12157849904780bfb891c92e8b4daae4b0dc5c736ead931ceb9e",
       "parent": null,
       "links": {
         "implements": [
@@ -423,7 +423,21 @@
         ]
       },
       "derived": {},
-      "availability": null,
+      "availability": {
+        "products": [
+          "PRD-LANTERN"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": []
+      },
       "slice": {
         "kind": "product",
         "domain": "assessment",
@@ -459,7 +473,14 @@
         ],
         "usesResources": [
           "RES-ASSESSMENT-DATA"
-        ]
+        ],
+        "surfaces": {
+          "lantern-web:/assessments/schedule": {
+            "knowledge": [
+              "KB-ASMT-SCHEDULE"
+            ]
+          }
+        }
       },
       "verification": null,
       "review": null,

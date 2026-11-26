@@ -24,6 +24,11 @@
  * `underReviewHelp: "include"`, because a product's own renderer may not show
  * the mark, and a runtime that shows an item under review MUST show that it
  * is. Either way the ID goes to `pendingReview`, never to `missing`.
+ *
+ * A file also maps each surface of the product (a page, route, panel or
+ * module, named by an ID the product chooses) to the articles that lead it,
+ * in order (VSA §3, ADR 0028). `leadFor`, `surfaceHelp` and `helpForPage`'s
+ * `surface` option read it; a surface the file does not list has no lead.
  */
 
 export const HELP_PROFILE = "intentset/help/0.3";
@@ -39,6 +44,18 @@ export const UNDER_REVIEW_ATTRIBUTE = "data-help-under-review";
 const UNDER_REVIEW_DIR = "under-review/";
 
 const ID_PATTERN = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/;
+/**
+ * A surface ID (VSA §3): 1 to 200 printable ASCII characters other than `"`, `'`, `<`, `>`, `\` and the backtick,
+ * never digits only (`SURFACE_ID_DIGITS`) and never `__proto__`. Copied from `@intentset/core`, which this package
+ * does not import; a test holds the sources equal.
+ */
+// biome-ignore lint/complexity/noUselessEscapeInRegex: the pattern is VSA §3's, character for character.
+export const SURFACE_ID_PATTERN = /^[!#-&(-;=?-\[\]-_a-~]{1,200}$/;
+export const SURFACE_ID_DIGITS = /^[0-9]+$/;
+
+function isSurfaceId(key: string): boolean {
+  return SURFACE_ID_PATTERN.test(key) && !SURFACE_ID_DIGITS.test(key) && key !== "__proto__";
+}
 const VISIBILITIES = ["public", "customer", "internal", "restricted"] as const;
 export type Visibility = (typeof VISIBILITIES)[number];
 
@@ -63,6 +80,11 @@ export interface HelpTip {
   underReview?: true;
 }
 
+/** The articles that lead one surface, in the order its slice declares them: each one of `Help.knowledge`. */
+export interface HelpSurface {
+  knowledge: string[];
+}
+
 /** `help.json` as spec/publication.md §5 defines it. */
 export interface Help {
   profile: typeof HELP_PROFILE;
@@ -74,6 +96,8 @@ export interface Help {
   availability: { product: string; release: string; role: string[]; edition: string; flags: string[] };
   publishedAt: string;
   knowledge: HelpKnowledge[];
+  /** By surface ID, sorted: the articles published for this reader that lead each surface. */
+  surfaces: Record<string, HelpSurface>;
   tips: Record<string, HelpTip>;
   /** Rule IDs whose tip was held back because its document is kept under review, sorted: never coverage to write. */
   withheldForReview: string[];
@@ -89,7 +113,10 @@ export interface ReviewOptions {
 }
 
 /** The options `helpForPage` takes. */
-export interface PageOptions extends ReviewOptions {}
+export interface PageOptions extends ReviewOptions {
+  /** The surface the page is, whose lead articles are listed first (ADR 0028). */
+  surface?: string;
+}
 
 /** Where a control's help stands: a current tip, a tip under review, a rule tip held back, or none. */
 export type ReviewState = "current" | "under-review" | "held-back" | "none";
@@ -120,11 +147,13 @@ const MEMBERS = {
     "availability",
     "publishedAt",
     "knowledge",
+    "surfaces",
     "tips",
     "withheldForReview",
   ],
   availability: ["product", "release", "role", "edition", "flags"],
   knowledge: ["id", "title", "path", "underReview"],
+  surface: ["knowledge"],
   tip: ["text", "knowledge", "underReview"],
 } as const;
 
@@ -213,6 +242,28 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
         }
       }
     });
+  }
+  if (!isRecord(value.surfaces)) problems.push("surfaces must be an object keyed by surface ID");
+  else {
+    for (const key of Object.keys(value.surfaces)) {
+      const where = `surfaces[${JSON.stringify(key)}]`;
+      if (!isSurfaceId(key)) problems.push(`surfaces key ${JSON.stringify(key)} is not a surface ID`);
+      const surface = value.surfaces[key];
+      if (!isRecord(surface)) {
+        problems.push(`${where} must carry knowledge`);
+        continue;
+      }
+      unknownMembers(surface, MEMBERS.surface, where, problems);
+      const list = surface.knowledge;
+      if (!Array.isArray(list) || list.length === 0 || !list.every(str)) {
+        problems.push(`${where}.knowledge must be a non-empty list of IDs`);
+        continue;
+      }
+      if (new Set(list).size !== list.length) problems.push(`${where}.knowledge repeats an ID`);
+      for (const id of list) {
+        if (!known.has(id)) problems.push(`${where} names knowledge ${id}, which the file does not list`);
+      }
+    }
   }
   if (!isRecord(value.tips)) problems.push("tips must be an object keyed by ID");
   else {
@@ -331,10 +382,50 @@ export function articles(help: Help, options?: ReviewOptions): { knowledge: Help
   return { knowledge, pendingReview };
 }
 
+/**
+ * The articles that lead a surface, in order (ADR 0028), honouring `underReviewHelp`: under `exclude` an article under
+ * review is left out, and `pendingReview` names it in either mode, in declared order. A surface the file does not list
+ * has an empty `lead` and `pendingReview`.
+ */
+export function surfaceHelp(
+  help: Help,
+  surface: string,
+  options?: ReviewOptions,
+): { lead: HelpKnowledge[]; pendingReview: string[] } {
+  const entry = Object.hasOwn(help.surfaces, surface) ? help.surfaces[surface] : undefined;
+  const lead: HelpKnowledge[] = [];
+  const pendingReview: string[] = [];
+  for (const id of entry?.knowledge ?? []) {
+    const article = help.knowledge.find((candidate) => candidate.id === id);
+    if (article === undefined) continue;
+    if (article.underReview === true) {
+      pendingReview.push(id);
+      if (!including(options)) continue;
+    }
+    lead.push(article);
+  }
+  return { lead, pendingReview };
+}
+
+/**
+ * The articles that lead a surface, in order, or `[]`. Empty cannot tell a surface the file does not list from one
+ * whose leads are all under review: a coverage report uses `surfaceHelp` or `helpForPage`, never `leadFor` alone.
+ */
+export function leadFor(help: Help, surface: string, options?: ReviewOptions): HelpKnowledge[] {
+  return surfaceHelp(help, surface, options).lead;
+}
+
 export interface PageHelp {
+  /** The surface as given in the options, or null. */
+  surface: string | null;
+  /** The articles that lead the surface, in order: `leadFor`'s result. */
+  lead: HelpKnowledge[];
   /** The tips found, in the order the IDs were given, each ID once. */
   tips: Tip[];
-  /** The knowledge those tips come from, each once, sorted by ID: what a page's help panel lists. */
+  /**
+   * What a page's help panel lists, each once: `lead`, then the knowledge the tips come from that is not in `lead`,
+   * sorted by ID.
+   */
   knowledge: HelpKnowledge[];
   /** IDs with no tip and none pending review, each once, in the order given: the coverage a product has yet to write. */
   missing: string[];
@@ -343,9 +434,14 @@ export interface PageHelp {
    * tip under review is in `tips` too, marked. Never in `missing`.
    */
   pendingReview: string[];
+  /** The knowledge IDs of the surface's leads that are under review, in declared order, in either mode. */
+  leadPendingReview: string[];
 }
 
-/** What a page can show for the behaviors on it: its tips, the articles behind them, and what has no tip yet. */
+/**
+ * What a page can show for the behaviors on it: the articles that lead its surface when `surface` names one, its
+ * tips, the articles behind them, and what has no tip yet.
+ */
 export function helpForPage(help: Help, ids: Iterable<string>, options?: PageOptions): PageHelp {
   const seen = new Set<string>();
   const tips: Tip[] = [];
@@ -364,11 +460,24 @@ export function helpForPage(help: Help, ids: Iterable<string>, options?: PageOpt
       if (tip.article !== null) found.set(tip.article.id, tip.article);
     }
   }
+  const surface = options?.surface ?? null;
+  const { lead, pendingReview: leadPendingReview } =
+    surface === null ? { lead: [], pendingReview: [] } : surfaceHelp(help, surface, options);
+  const leading = new Set(lead.map((article) => article.id));
   return {
+    surface,
+    lead,
     tips,
-    knowledge: [...found.keys()].sort().map((id) => found.get(id) as HelpKnowledge),
+    knowledge: [
+      ...lead,
+      ...[...found.keys()]
+        .filter((id) => !leading.has(id))
+        .sort()
+        .map((id) => found.get(id) as HelpKnowledge),
+    ],
     missing,
     pendingReview,
+    leadPendingReview,
   };
 }
 

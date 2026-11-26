@@ -159,6 +159,7 @@ class Parser {
       if (split === null) throw new YamlFailure("Expected `key: value`.", current.line);
       const { key, rest } = split;
       if (key === "<<") throw new YamlFailure("Merge keys (`<<`) are not accepted.", current.line);
+      if (key === "__proto__") throw new YamlFailure("The key `__proto__` is not accepted.", current.line);
       if (Object.hasOwn(result, key)) throw new YamlFailure(`Duplicate key \`${key}\`.`, current.line);
       const childPointer = `${pointer}/${pointerToken(key)}`;
       this.positions.set(childPointer, current.line);

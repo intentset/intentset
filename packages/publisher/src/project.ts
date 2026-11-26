@@ -86,7 +86,8 @@ export interface Projection {
   request: CheckedRequest | null;
 }
 
-const PUBLISHABLE_STATUSES = new Set(["approved", "deprecated"]);
+/** The statuses at which a record may be published (Core §7): an allow-list, so a status added later is not admitted. Used for knowledge and, in surfaces.ts, for slices (ADR 0028). Not exported from the package. */
+export const PUBLISHABLE_STATUSES: ReadonlySet<string> = new Set(["approved", "deprecated"]);
 
 /** Core §9: select what this request may publish, before any text is sent to a renderer. */
 export function project(

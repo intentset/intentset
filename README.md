@@ -161,6 +161,17 @@ file was published for one reader: every audience, role and flag it names, on on
 lists are held all-of, so a product serves the file only to a person who holds every one, which `servedTo(file,
 reader)` checks.
 
+A slice may also say which knowledge leads each surface of the product, a page, route or panel named by an ID the
+product chooses, in `surfaces` (VSA §3). The help file maps each surface to the articles published for its reader, and
+`helpForPage` lists them first:
+
+```ts
+import { helpForPage, leadFor } from "@intentset/help";
+
+leadFor(read.help, "lantern-web:/assessments/schedule"); // the page's lead articles, in order
+helpForPage(read.help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" }).knowledge; // lead first
+```
+
 ## Develop
 
 ```sh

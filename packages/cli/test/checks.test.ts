@@ -1490,3 +1490,49 @@ test("BEH-ARCH-CHECK: without TypeScript, init and validate at L1 still run, and
     assert.match(result.err, new RegExp(`intentset ${argv.join(" ")}\``));
   }
 });
+
+/** The example's slice given availability and one surface, with any other frontmatter edits, by line. */
+function surfacedSlice(dir: string, status = "draft"): void {
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    "  links:\n",
+    "  availability:\n    products: [PRD-LANTERN]\n    releases: [pilot-1]\n    roles: [teacher]\n    editions: [standard]\n    flags: []\n  links:\n",
+  );
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    "    - RES-ASSESSMENT-DATA\n",
+    "    - RES-ASSESSMENT-DATA\n    surfaces:\n      lantern-web:/assessments/schedule:\n        knowledge: [KB-ASMT-SCHEDULE]\n",
+  );
+  if (status !== "draft") edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", `status: ${status}\n  delivery: built`);
+}
+
+test("BEH-PUBLISH-SURFACES: publish names the slices the projection admits whose surfaces it left out, and says nothing of the others", async (t) => {
+  const dir = await example(t);
+  surfacedSlice(dir);
+  // The slice is internal: a customer projection does not admit it, so the run names and counts nothing of it.
+  const customer = await run(dir, "publish", ...REQUEST, "--out", "customer");
+  assert.equal(customer.code, 0, customer.out + customer.err);
+  assert.doesNotMatch(customer.out, /Surfaces left out|SLICE-ASMT-SCHEDULE/);
+  const internal = REQUEST.map((value) => (value === "customer" ? "internal" : value));
+  const named = await run(dir, "publish", ...internal, "--authorized-internal", "--out", "internal");
+  assert.equal(named.code, 0, named.out + named.err);
+  assert.match(named.out, /^Surfaces left out of help\.json, by slice:\n {2}SLICE-ASMT-SCHEDULE: draft$/m);
+  for (const out of ["customer", "internal"]) {
+    for (const name of readdirSync(join(dir, out))) {
+      assert.doesNotMatch(readFileSync(join(dir, out, name), "utf8"), /SLICE-ASMT-SCHEDULE/, `${out}/${name}`);
+    }
+    assert.deepEqual(JSON.parse(readFileSync(join(dir, out, "help.json"), "utf8")).surfaces, {});
+  }
+
+  // Approved and built, the slice writes its surface into the customer file, and no line is printed.
+  const approved = await example(t);
+  surfacedSlice(approved, "approved");
+  const written = await run(approved, "publish", ...REQUEST, "--out", "customer");
+  assert.equal(written.code, 0, written.out + written.err);
+  assert.doesNotMatch(written.out, /Surfaces left out/);
+  assert.deepEqual(JSON.parse(readFileSync(join(approved, "customer", "help.json"), "utf8")).surfaces, {
+    "lantern-web:/assessments/schedule": { knowledge: ["KB-ASMT-SCHEDULE"] },
+  });
+});

@@ -5651,5 +5651,1713 @@
       ]
     },
     "notes": "Publication never checks a source's audiences against the knowledge; the gate pin does, so a source narrowed to other audiences takes its knowledge out until it is reviewed again."
+  },
+  {
+    "section": "publication",
+    "name": "the help file maps each surface to the published knowledge that leads it, in declared order",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-CLASSES",
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/assessments/schedule\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\",\"KB-ASMT-CLASSES\"]}},\"tips\":"
+      ],
+      "mustNotContain": [
+        "SLICE-ASMT-SCHEDULE",
+        "Student assessment scheduling slice",
+        "SLICE-ASMT-SCHEDULE.md"
+      ]
+    },
+    "notes": "Publication §5 (ADR 0028): the surface keeps its slice's order, and the file carries nothing else of the slice: not its ID, title or path."
+  },
+  {
+    "section": "publication",
+    "name": "a surface leaves out knowledge this publication did not publish",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}"
+      ],
+      "mustNotContain": [
+        "KB-ASMT-CLASSES"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P02 a lead outside the projection is left out of its surface and not named",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}"
+      ],
+      "mustNotContain": [
+        "KB-ASMT-CLASSES"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "a surface whose knowledge was all left out is not in the help file",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    },
+    "notes": "Absent, not empty: a reader's file never names a surface it has no article for."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a surface whose only lead needs review is not written without keepUnderReview",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a surface whose only lead is kept under review is written, the lead marked on its knowledge entry",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/assessments/schedule\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}}",
+        "\"path\":\"under-review/KB-ASMT-SCHEDULE.md\",\"underReview\":true}"
+      ]
+    },
+    "notes": "A document kept under review is written in the run, so it may lead a surface; its mark is on its knowledge entry, never on the surface."
+  },
+  {
+    "section": "publication",
+    "name": "P02 a restricted slice writes no surface without authorization for restricted data",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          },
+          "intentset.visibility": "restricted"
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    },
+    "notes": "Core §9: restricted data needs separate explicit authorization, and a surface ID is no exception."
+  },
+  {
+    "section": "publication",
+    "name": "P02 a surface ID naming an artifact the projection does not admit is not written",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/SCN-ASMT-SCHEDULE": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "SCN-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "Publication §4's bare-ID test applies to the key: SCN-ASMT-SCHEDULE is internal."
+  },
+  {
+    "section": "publication",
+    "name": "P01 a draft slice's surfaces are not in the help file",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "draft",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P01 an approved slice that does not say it is built writes no surface",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P01 a slice whose work is planned writes no surface",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "planned",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P06 a slice without availability writes no surface, through the library",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001"
+    ],
+    "published": {
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    },
+    "notes": "The library publishes from a graph that did not validate; publication fails closed on a missing availability as validation does (Core §4)."
+  },
+  {
+    "section": "publication",
+    "name": "P03 a slice whose availability excludes the request writes no surface",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "district",
+        "standard"
+      ],
+      "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "district"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P03 a slice whose product is another writes no surface",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-OTHER"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    },
+    "files": {
+      "PRD-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/product/0.3\n  id: PRD-OTHER\n  type: product\n  title: Other example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Other example\n\n## Scope\n\nA second invented product.\n"
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P03 a slice available to one of the request's roles writes its surface",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "administrator",
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "administrator"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": [
+        "teacher",
+        "administrator"
+      ],
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/assessments/schedule\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}}"
+      ]
+    },
+    "notes": "ADR 0029: one of the request's roles listed suffices, and the file is served only to a reader holding both."
+  },
+  {
+    "section": "publication",
+    "name": "P03 boundary: the same slice writes no surface for a request with the teacher role alone",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "administrator",
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "administrator"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "a surface declared by two slices is written from neither",
+    "baseline": "scheduling",
+    "files": {
+      "SLICE-ASMT-HELP.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-HELP\n  type: slice\n  title: Assessment help wiring\n  status: approved\n  delivery: built\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  slice:\n    kind: technical\n    rationale: Shared help wiring for the assessment pages.\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/help/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/help/**\n    usesResources: []\n    surfaces:\n      'lantern-web:/assessments/schedule':\n        knowledge:\n        - KB-ASMT-SCHEDULE\n---\n\n# Assessment help wiring\n\n## Responsibility\n\nOwns assessment help wiring.\n\n## Public contract\n\nNone beyond its entrypoint.\n\n## Verification\n\nNone yet.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    },
+    "notes": "CORE013 in the graph; the library publishes anyway, and picks neither slice.",
+    "diagnostics": [
+      "CORE013",
+      "CORE013"
+    ]
+  },
+  {
+    "section": "publication",
+    "name": "a surface declared by an approved slice and a draft slice is written from neither",
+    "baseline": "scheduling",
+    "files": {
+      "SLICE-ASMT-HELP.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-HELP\n  type: slice\n  title: Assessment help wiring\n  status: draft\n  delivery: built\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  slice:\n    kind: technical\n    rationale: Shared help wiring for the assessment pages.\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/help/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/help/**\n    usesResources: []\n    surfaces:\n      'lantern-web:/assessments/schedule':\n        knowledge:\n        - KB-ASMT-SCHEDULE\n---\n\n# Assessment help wiring\n\n## Responsibility\n\nOwns assessment help wiring.\n\n## Public contract\n\nNone beyond its entrypoint.\n\n## Verification\n\nNone yet.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": false,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "lantern-web:/assessments/schedule"
+      ]
+    },
+    "diagnostics": [
+      "CORE013",
+      "CORE013"
+    ]
+  },
+  {
+    "section": "publication",
+    "name": "a publication restricted by ids lists only the requested articles in its surfaces",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/assessments/schedule\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}}"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "boundary: a customer projection writes the surface key of an internal slice whose lead is customer-visible",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/assessments/schedule\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}}"
+      ],
+      "mustNotContain": [
+        "SLICE-ASMT-SCHEDULE",
+        "Student assessment scheduling slice"
+      ]
+    },
+    "notes": "Core §9 states the exception: an internal slice's surface ID is a name the product's interface holds, as an explained ID is a tip's key."
+  },
+  {
+    "section": "publication",
+    "name": "the help file carries an empty surfaces map when no slice declares one",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"knowledge\":[{\"id\":\"KB-ASMT-SCHEDULE\",\"title\":\"Prepare a scheduled student assessment\",\"path\":\"KB-ASMT-SCHEDULE.md\"}],\"surfaces\":{},\"tips\":"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "surface keys are written in code-unit order, digit-led keys included",
+    "baseline": "scheduling",
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/z": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            },
+            "/2": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            },
+            "1a": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"/2\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]},\"1a\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]},\"lantern-web:/z\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}}"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "no generated document, page or fragment carries surfaces",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+    },
+    "patch": {
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/assessments/schedule": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE",
+                "KB-ASMT-CLASSES"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-CLASSES",
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustNotContain": [
+        "surfaces:",
+        "&quot;surfaces&quot;"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/assessments/schedule\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\",\"KB-ASMT-CLASSES\"]}},\"tips\":"
+      ]
+    },
+    "notes": "Publication §5 (ADR 0028): a surface reaches the help file alone; no document, page or fragment carries it. Chunks are checked by the publisher's unit tests, since the driver does not chunk."
   }
 ]

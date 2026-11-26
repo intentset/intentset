@@ -71,6 +71,29 @@ reviewStateFor(read.help, "RULE-ASMT-AUTH"); // "held-back" while its knowledge 
 const { knowledge, pendingReview } = articles(read.help); // current articles; under-review IDs in pendingReview
 ```
 
+## Lead articles for a page
+
+A slice may say which knowledge leads each surface of the product, a page, route, panel or module named by an ID the
+product chooses (VSA §3, ADR 0028), and the help file maps each surface to the articles published for its reader.
+`leadFor` returns a surface's articles in order, and `helpForPage` with a `surface` lists them first, then the articles
+its controls' tips reach, each once:
+
+```ts
+import { helpForPage, leadFor, surfaceHelp } from "@intentset/help";
+
+leadFor(read.help, "lantern-web:/assessments/schedule"); // the lead articles, in order, or []
+const page = helpForPage(read.help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" });
+page.knowledge; // the lead first, then the tips' articles
+page.leadPendingReview; // the leads under review, which are left out unless underReviewHelp is "include"
+surfaceHelp(read.help, "lantern-web:/assessments/schedule"); // { lead, pendingReview }
+```
+
+`leadFor` returns `[]` both for a surface the file does not list and for one whose leads are all under review, so a
+coverage report uses `surfaceHelp` or `helpForPage`, never `leadFor` alone. A surface ID is the product's own text:
+insert it into markup or a selector only escaped.
+
+## Serving the file
+
 The file was published for one reader: every audience, role and flag it names, on one product, release and edition.
 Those lists are held all-of, never read as "any of", so serve the file only where `servedTo` holds for the person:
 

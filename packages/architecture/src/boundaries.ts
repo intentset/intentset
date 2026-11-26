@@ -45,7 +45,7 @@
  *
  * Edges from files inside the declared scope are checked, including those to
  * a file outside it that a slice claims. Edges from files outside the scope
- * are checked for one thing only: reaching past a slice's public surfaces to
+ * are checked for one thing only: reaching past a slice's public contract surfaces to
  * a file inside the scope, which is VSA003 (TS003 for a screen) as a warning,
  * so a narrow scope cannot hide its consumers and they do not fail it
  * (VSA §9). They count toward no edge total and no slice dependency.
@@ -104,14 +104,14 @@ function surfacesFor(model: Model, target: SliceInfo, from: string): { own: stri
   return { own, others: target.meta.entrypoints.filter((entry) => !own.includes(entry)) };
 }
 
-/** "its public surface is X", or with several, the one in the importer's package first. */
+/** "its public contract surface is X", or with several, the one in the importer's package first. */
 function describeSurfaces(model: Model, target: SliceInfo, from: string): string {
   const entries = target.meta.entrypoints;
-  if (entries.length === 1) return `its public surface is ${entries[0]}`;
+  if (entries.length === 1) return `its public contract surface is ${entries[0]}`;
   const { own, others } = surfacesFor(model, target, from);
-  if (own.length === 0) return `its public surfaces are ${listSome(others, others.length)}`;
+  if (own.length === 0) return `its public contract surfaces are ${listSome(others, others.length)}`;
   const elsewhere = others.length === 0 ? "" : `, and elsewhere ${listSome(others, others.length)}`;
-  return `its public surface in ${describePackage(model.packageOf(from))} is ${listSome(own, own.length)}${elsewhere}`;
+  return `its public contract surface in ${describePackage(model.packageOf(from))} is ${listSome(own, own.length)}${elsewhere}`;
 }
 
 /** The file to import instead: the entrypoint in the importer's package, or the only one. */
@@ -149,7 +149,7 @@ export function checkBoundaries(
     region.kind === "slice" ? model.sliceById.get(region.owner as string) : undefined;
   const isScreen = (path: string) => matchPattern(config.screensGlob, path);
 
-  // VSA §9: from outside the declared scope, only an import past a slice's public surfaces into the scope is
+  // VSA §9: from outside the declared scope, only an import past a slice's public contract surfaces into the scope is
   // reported, and as a warning. The exemptions are those that hold inside the scope.
   const outOfScope = (edge: ImportEdge): Finding | null => {
     const { from, to } = edge;

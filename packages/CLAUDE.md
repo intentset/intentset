@@ -47,13 +47,16 @@ subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed 
 
 ```ts
 // @intentset/publisher
-publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, keptUnderReview, index, help, snapshot, diagnostics, ok }
+publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, keptUnderReview, index, help, snapshot, omittedSurfaces, diagnostics, ok }
 // request.keepUnderReview (ADR 0027): keepable knowledge is published under under-review/, marked underReview, in
 // keptUnderReview and index.keptUnderReview, never in documents or index.published; never chunked; rule tips held in help.withheldForReview
 // a request is for one reader (ADR 0029): audience and role a value or a list, read as a set; checkRequest gives a CheckedRequest
 // with sorted lists, and every file names them, with the flags, as sorted lists held all-of; the index names its profile first
 // renderHtml: true | "page" sets each document's html, "fragment" its htmlFragment (publication §2), renderFragment(markset)
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
+// help.surfaces (ADR 0028): helpSurfaces(graph, documentIds, checkedRequest) maps each surface of an approved or deprecated
+// built slice available to the request to its published leads; omittedSurfaces names, by slice and reason, only slices the
+// projection admits, and is written into no file
 // snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
 reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency over meta.review (ADR 0025); pinHash(undefined) and ("content-v1") are contentHash, ("file-v1") sourceHash, else null
 // reviewStatus also gives self and gates ("unchanged" | "changed" | "unpinned"), keepable and keepBlockers (ADR 0027); reviewGateHash(graph, knowledge)
@@ -62,6 +65,8 @@ reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency over meta.r
 readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
 tipFor(help, id, { underReviewHelp? }); helpForPage(help, ids, options?)   // one control, or one page: tips, their articles, what has no tip, what is pendingReview
 reviewStateFor(help, id); articles(help, options?)          // ADR 0027: help under review is left out unless underReviewHelp: "include"; never counted missing
+leadFor(help, surface, options?); surfaceHelp(help, surface, options?)   // ADR 0028: a surface's lead articles in order; surfaceHelp also names those pendingReview
+helpForPage(help, ids, { surface?, underReviewHelp? })      // with a surface: lead first, then the tips' articles, each once; leadPendingReview
 servedTo(file, reader): boolean                             // ADR 0029: the file's projection cleared, product/release/edition equal, every audience, role and flag held
 bindTips(root, help, { attribute?, render?, underReviewHelp? }): { bound, missing, pendingReview }   // data-behavior="BEH-..." by default; data-help-tip + data-help-knowledge (+ data-help-under-review), no title
 watchTips(root, help, { render?, unrender?, attribute?, MutationObserver?, requestFrame?, cancelFrame? }): { coverage(), dispose() }   // rebinds once per frame; dispose undoes it

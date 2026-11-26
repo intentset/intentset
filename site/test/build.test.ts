@@ -595,6 +595,8 @@ test("the worked example opens every record on the page, in the act it belongs t
     "withheldSources: 3",
     "reviewer: team-assessment",
     "intentset/help/0.3",
+    // The worked example's slice is a draft, so it writes no surface (ADR 0028).
+    '"surfaces": {}',
     ...(kb?.tips.map(([, tip]) => tip) ?? []),
   ]) {
     assert.ok(out.includes(expected), `the publication lacks ${expected}`);

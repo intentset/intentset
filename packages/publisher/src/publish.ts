@@ -26,7 +26,9 @@
  * its own member: `documents` and `index.published` stay current only.
  *
  * The help file (help.ts) carries every published document's tips, keyed by
- * the ID each explains, for a product's runtime.
+ * the ID each explains, and the documents that lead each surface a slice
+ * declares (surfaces.ts), for a product's runtime. The slices whose surfaces
+ * were left out are returned to the operator alone, in `omittedSurfaces`.
  *
  * The index is what a customer-facing tool may read (Core §10, publication §4):
  * its profile, the request without its authorization flags, the published
@@ -68,6 +70,7 @@ import {
 } from "./request.ts";
 import { type ReviewStatus, reviewStatus } from "./review.ts";
 import { type SnapshotFile, snapshotFile } from "./snapshot.ts";
+import { type OmittedSurface, helpSurfaces } from "./surfaces.ts";
 import { withSafeUrls } from "./urls.ts";
 
 /** Why a document that passed the projection was still not published. */
@@ -128,6 +131,12 @@ export interface PublishResult {
   help: HelpFile | null;
   /** The snapshot file (spec/publication.md §6): the only part of the result that names the snapshot. */
   snapshot: SnapshotFile;
+  /**
+   * The slices whose surfaces were left out of the help file, by ID and reason, for the operator (ADR 0028). Only
+   * slices whose visibility the projection admits are recorded; it never enters the index, the help file, a document
+   * or a chunk.
+   */
+  omittedSurfaces: OmittedSurface[];
   diagnostics: Diagnostic[];
   ok: boolean;
 }
@@ -242,6 +251,14 @@ export function publish(
             keptDocuments.map((document) => document.id),
           ),
     snapshot: snapshotFile(options.snapshot),
+    omittedSurfaces:
+      req === null
+        ? []
+        : helpSurfaces(
+            graph,
+            [...documents, ...keptDocuments].map((document) => document.id),
+            req,
+          ).omitted,
     index: {
       profile: PUBLICATION_INDEX_PROFILE,
       request: req === null ? null : indexedRequest(req),

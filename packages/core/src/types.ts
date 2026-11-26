@@ -182,6 +182,25 @@ export interface Claim {
   path: string;
 }
 
+/**
+ * VSA §3, ADR 0028: a surface ID is 1 to 200 printable ASCII characters other than `"`, `'`, `<`, `>`, `\` and the
+ * backtick, and is never digits only (`SURFACE_ID_DIGITS`) nor `__proto__`. `@intentset/help` copies both patterns,
+ * and a test holds their sources equal.
+ */
+// biome-ignore lint/complexity/noUselessEscapeInRegex: the pattern is VSA §3's, character for character.
+export const SURFACE_ID_PATTERN = /^[!#-&(-;=?-\[\]-_a-~]{1,200}$/;
+export const SURFACE_ID_DIGITS = /^[0-9]+$/;
+
+/** VSA §3: whether a string is a surface ID. */
+export function isSurfaceId(key: string): boolean {
+  return SURFACE_ID_PATTERN.test(key) && !SURFACE_ID_DIGITS.test(key) && key !== "__proto__";
+}
+
+/** VSA §3, ADR 0028: the knowledge that leads one surface, in the order a reader is shown it. */
+export interface SliceSurface {
+  knowledge: string[];
+}
+
 /** VSA §3 slice metadata. */
 export interface SliceMeta {
   kind: "product" | "technical";
@@ -192,7 +211,12 @@ export interface SliceMeta {
   layers: Record<string, string[]>;
   claims: Claim[];
   usesResources: string[];
+  /** VSA §3, ADR 0028: by surface ID, keys in code-unit order; absent when the record writes none. Not a binding field. */
+  surfaces?: Record<string, SliceSurface>;
 }
+
+/** Export §2, ADR 0028: a slice's metadata as the export carries it, `surfaces` always present (`{}` when none). */
+export type ExportSlice = Omit<SliceMeta, "surfaces"> & { surfaces: Record<string, SliceSurface> };
 
 /** Core §8 verification metadata. */
 export interface VerificationMeta {
@@ -490,7 +514,7 @@ export interface ExportArtifact {
   /** Link targets and sources left out because the artifact at the other end is withheld: authored, derived and parent. */
   withheldLinks: number;
   availability: Availability | null;
-  slice: SliceMeta | null;
+  slice: ExportSlice | null;
   /** `exercises` is the list as authored, less withheld IDs (counted in `withheldLinks`); empty when the record names none. */
   verification: (Omit<VerificationMeta, "exercises"> & { exercises: string[] }) | null;
   /** Null unless the artifact is a measure; `direction` is null when the author set none. */

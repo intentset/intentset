@@ -60,6 +60,15 @@ HTML page carries `noindex`. In the help file its entry and tips carry `underRev
 held back, listed in `withheldForReview`. Anything that shows such a document or tip must show that it is under review.
 Knowledge that is not keepable stays excluded, with a CORE008 that says which condition failed.
 
+**Surfaces.** A slice may say which knowledge leads each surface of the product, in `surfaces` (VSA §3). The help file
+maps each surface ID to the documents published in the run that lead it, in the slice's order, as `surfaces` (`{}`
+when none is written; publication §5, ADR 0028). A surface is written only from an approved or deprecated slice that
+says `delivery: built`, declares `availability` the request passes, is not restricted unless the request is authorized
+for restricted data, and is the only slice that is not retired to declare the ID; only for a key that holds no ID the
+projection does not admit and no path of a record not published; and only when one of its leads was published, a
+document kept under review included. Nothing else of the slice is written. `publish` returns the slices the projection
+admits whose surfaces were left out in `omittedSurfaces`, with the reason, for the operator; no file carries them.
+
 **When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control. The
 commit it names is the one checked out when the command ran, which is never the commit that will contain the output,
 and it differs on every branch that changed a record, so branches would conflict on it. Git already records where

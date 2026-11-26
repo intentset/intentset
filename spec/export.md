@@ -22,8 +22,8 @@ knowledge by writing to it.
 ## 1. The envelope
 
 An export is one UTF-8 JSON object. Its lists are sorted (artifacts by `id`, report entries by their ID or path, ID
-lists by code point) except where order is the meaning: an impact entry's `ancestors` run from parent to root, and a
-hit's `path` from the start. The same validation with the same `generatedAt` is the same bytes.
+lists by code point) except where order is the meaning: an impact entry's `ancestors` run from parent to root, a
+hit's `path` from the start, and a surface's `knowledge` in the order its slice declares it. The same validation with the same `generatedAt` is the same bytes.
 
 | Field | Meaning |
 |---|---|
@@ -59,7 +59,10 @@ Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`
 `withheldLinks` counts the link targets and sources left out because the artifact at the other end is withheld. A
 verification's metadata carries `exercises`, the slice and resource IDs it declares it drives beyond its behaviors' slices
 (Core §8): as authored and sorted, an empty list when it declares none, less the IDs of withheld artifacts, which
-`withheldLinks` counts.
+`withheldLinks` counts. A slice's metadata carries `surfaces` (VSA §3, ADR 0028): by surface ID, keys in code-unit
+order, each with `knowledge` as authored and in declared order, less the IDs of withheld artifacts, which
+`withheldLinks` counts. A surface whose every ID was withheld keeps its key with an empty `knowledge`. A slice that
+declares none carries `{}`.
 
 `delivery` is the record's field as authored, `planned` or `built`, and null when the record states none or its type
 never carries one (Core §7). It is not the effective delivery: a consumer that wants "is this built" computes it as
@@ -97,7 +100,7 @@ as unresolved rather than drop it.
 A producer MUST withhold `restricted` artifacts unless the export was explicitly asked to include them. A withheld
 artifact is absent from `artifacts`, `products` and every report; its ID is removed from the links, derived edges and
 parent of every exported artifact, from the keys of every knowledge artifact's `tips` and `review.sources` (§2: a pin
-and a tip name the artifact as a link does), from `registries.resources[].consumers`, and from the lists inside every
+and a tip name the artifact as a link does), from every slice's surfaces' `knowledge`, from `registries.resources[].consumers`, and from the lists inside every
 report; and
 a diagnostic whose artifact or path is a withheld artifact's is left out of `validation.diagnostics`, while one that
 names a withheld ID in its text or its `field` has that ID replaced by "a withheld artifact" (in `field`, the pointer
@@ -201,7 +204,7 @@ they are reported:
 |---|---|
 | `not-json` | is not UTF-8 JSON, or is over the consumer's size limit |
 | `unsupported-contract` | has no `contract`, or one this consumer does not support |
-| `malformed` | does not satisfy spec/export.schema.json, or a list of artifacts or report entries is out of order or repeats its key |
+| `malformed` | does not satisfy spec/export.schema.json, or a list of artifacts or report entries is out of order or repeats its key; a slice whose `surfaces` is missing, or whose surface key breaks VSA §3's rules, is malformed |
 | `identity-mismatch` | has another `repository` than the connection's, or does not contain the connection's product |
 | `mixed-snapshot` | carries a report computed at another commit or graph hash than its own |
 | `forbidden-content` | contains an artifact of a visibility its own `withholding` says it withheld |
@@ -285,7 +288,7 @@ changed.
 on its `spec` alone. A 0.7 reader rejects a 0.6 envelope as `unsupported-contract`, as each earlier move did, with the
 version it supports in the message, because it cannot read a 0.2 model as one written against 0.3. Each knowledge
 artifact carries `review` (ADR 0025), its pins as a field and no longer an extension, and the export withholds a pin
-and a tip with the artifact each names (§3).
+and a tip with the artifact each names (§3). Each slice carries `surfaces` (ADR 0028), `{}` when it declares none.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

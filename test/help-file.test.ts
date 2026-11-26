@@ -14,6 +14,8 @@ import {
   type DocumentInput,
   EMPTY_REGISTRIES,
   type Registries,
+  SURFACE_ID_DIGITS,
+  SURFACE_ID_PATTERN,
   graphHash,
   parseYaml,
   plainCarrier,
@@ -21,7 +23,7 @@ import {
   validate,
 } from "@intentset/core";
 import type * as Help from "@intentset/help";
-import { readHelp } from "@intentset/help";
+import { readHelp, SURFACE_ID_DIGITS as HELP_DIGITS, SURFACE_ID_PATTERN as HELP_PATTERN } from "@intentset/help";
 import type * as Publisher from "@intentset/publisher";
 import { type PublicationRequest, bindReviewPins, publish } from "@intentset/publisher";
 
@@ -31,14 +33,16 @@ const root = resolve(import.meta.dirname, "..");
 const _file = (file: Publisher.HelpFile): Help.Help => file;
 const _knowledge = (entry: Publisher.HelpKnowledge): Help.HelpKnowledge => entry;
 const _tip = (tip: Publisher.HelpTip): Help.HelpTip => tip;
+const _surface = (surface: Publisher.HelpSurface): Help.HelpSurface => surface;
 // A document's publication block carries what servedTo reads, so a retrieval layer tests it with the same function.
 const _block = (meta: Publisher.PublicationMeta): Pick<Help.Help, "projection" | "audience" | "availability"> => meta;
-void [_file, _knowledge, _tip, _block];
+void [_file, _knowledge, _tip, _surface, _block];
 
-test("BEH-HELP-READER, BEH-PUBLISH-UNDER-REVIEW: every help file the publication cases write passes readHelp, kept documents included", () => {
+test("BEH-HELP-READER, BEH-PUBLISH-UNDER-REVIEW, BEH-PUBLISH-SURFACES: every help file the publication cases write passes readHelp, kept documents and surfaces included", () => {
   const cases = JSON.parse(readFileSync(join(root, "tests", "publication.json"), "utf8")) as ConformanceCase[];
   let read = 0;
   let kept = 0;
+  let surfaced = 0;
   for (const testCase of cases) {
     const expanded = expandCase(testCase, { examplesDir: join(root, "examples"), parseYaml });
     const inputs: DocumentInput[] = [];
@@ -58,7 +62,16 @@ test("BEH-HELP-READER, BEH-PUBLISH-UNDER-REVIEW: every help file the publication
     read++;
     // ADR 0027: a document kept under review is in the file, marked, and the reader accepts it.
     if (published.help.knowledge.some((entry) => entry.underReview === true)) kept++;
+    // ADR 0028: a written surface names only articles the file lists, and the reader accepts it.
+    if (Object.keys(published.help.surfaces).length > 0) surfaced++;
   }
   assert.ok(read > 20, `${read} help files read`);
   assert.ok(kept > 5, `${kept} help files with a document kept under review read`);
+  assert.ok(surfaced > 5, `${surfaced} help files with a surface read`);
+});
+
+test("BEH-HELP-SURFACES: the help reader's surface ID rules are core's, copied because the package imports nothing", () => {
+  assert.equal(HELP_PATTERN.source, SURFACE_ID_PATTERN.source);
+  assert.equal(HELP_PATTERN.flags, SURFACE_ID_PATTERN.flags);
+  assert.equal(HELP_DIGITS.source, SURFACE_ID_DIGITS.source);
 });

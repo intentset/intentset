@@ -154,6 +154,13 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
       `Snapshot: ${snapshot.commit === null ? `no commit (${snapshot.commitUnavailable})` : `commit ${snapshot.commit}`}, graph ${snapshot.graphHash}`,
       `Wrote ${[...outputs.keys()].map((name) => join(options.out as string, name)).join(", ")}`,
     );
+    // ADR 0028: for the operator alone, written into no file; only slices this projection may see are named.
+    if (published.omittedSurfaces.length > 0) {
+      lines.push(
+        `Surfaces left out of ${HELP_FILE}, by slice:`,
+        ...published.omittedSurfaces.map((omitted) => `  ${omitted.slice}: ${omitted.reason}`),
+      );
+    }
   }
   io.stdout(`${lines.join("\n")}\n`);
   return published.ok ? 0 : 1;

@@ -432,7 +432,7 @@
     "slice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"],
+      "required": ["kind", "domain", "entrypoints", "layers", "claims", "usesResources", "surfaces"],
       "properties": {
         "kind": {
           "enum": ["product", "technical"]
@@ -486,6 +486,29 @@
             "$ref": "#/$defs/id"
           },
           "uniqueItems": true
+        },
+        "surfaces": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[!#-&(-;=?-\\[\\]-_a-~]{1,200}$",
+            "not": {
+              "anyOf": [{ "pattern": "^[0-9]+$" }, { "const": "__proto__" }]
+            }
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["knowledge"],
+            "properties": {
+              "knowledge": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
         }
       }
     },

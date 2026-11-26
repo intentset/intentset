@@ -289,10 +289,10 @@ members, and no kept document is ever listed in `published`.
 Beside the documents, a publication writes `help.json`: every tip (Core §9) of every document published in the run,
 keyed by the ID it explains, for a product's runtime to show beside the control that delivers that behavior. It is
 one UTF-8 JSON object whose members appear in the table's order, with `knowledge` sorted by `id`, every member
-keyed by ID sorted by key, and `withheldForReview` sorted without repeats. Every member in the table is always
+keyed by ID sorted by key, the keys of `surfaces` sorted by code unit, and `withheldForReview` sorted without repeats. Every member in the table is always
 present, a collection as `[]` or `{}` when it is empty, and `underReview` is present only where it applies. The file is written whenever the request is accepted, so a runtime can rely on it
 being there, and the same bytes for the same inputs. It MUST NOT carry the snapshot it was published from (§6), so
-its bytes change only when a tip, a tip's mark, a published document, the request or `publishedAt` does.
+its bytes change only when a tip, a tip's mark, a written surface, a published document, the request or `publishedAt` does.
 
 | Field | Value |
 |---|---|
@@ -303,6 +303,7 @@ its bytes change only when a tip, a tip's mark, a published document, the reques
 | `availability` | `product`, `release` and `edition` from the request; `role`, the request's roles; and `flags`, the request's flags; each list sorted by code unit without repeats |
 | `publishedAt` | the publication timestamp |
 | `knowledge` | one entry per published document, current or kept under review, sorted by `id`: `id`, `title`, `path` (`<ID>.md`, or `under-review/<ID>.md` for a kept document), and `underReview: true` when the document is kept under review (§3) |
+| `surfaces` | by surface ID (VSA §3), keys sorted: `knowledge`, the IDs of the documents published in the run that lead that surface, in the order its slice declares them; `{}` when no surface is written |
 | `tips` | by explained ID, keys sorted: `text`, the tip as written; `knowledge`, the ID of the document it comes from; and `underReview: true` when that document is kept under review |
 | `withheldForReview` | the rule IDs, sorted, whose tip was held back because its document is kept under review and that no current document tips; `[]` when none |
 
@@ -322,21 +323,52 @@ export: an export withholds a tip whose key is a withheld artifact's ID (export 
 its tips by explained ID whatever that artifact's visibility, because the projection that wrote it already admitted
 the document the tip comes from.
 
+A surface (VSA §3) is written only when all of these hold:
+
+- its slice's status is one at which knowledge may be published (§1), and its slice's effective delivery (Core §7)
+  is `built`;
+- its slice declares `availability`, and the request passes it by the tests §1 applies to knowledge: the request's
+  product, release and edition are each listed, at least one of the request's roles is listed, and every flag the
+  slice names is in the request. A slice without `availability` writes no surface (Core §4);
+- no other slice that is not retired declares the same surface ID (CORE013). A surface declared twice is written from
+  neither slice;
+- its slice is not `restricted`, or the request is authorized for restricted data (Core §9);
+- the surface ID holds, word-bounded, no ID of an artifact whose visibility the projection does not admit, other than
+  the requested product, and no repository path of an artifact not published in the run (§4's tests, applied to the
+  key);
+- at least one knowledge record it lists has a document in this publication, a document kept under review (§3)
+  included.
+
+Its `knowledge` lists those records in declared order and leaves out every other. A surface whose knowledge was all
+left out is absent, not empty, so a reader's file never names a surface it has no article for. The key is the
+surface ID as declared, whatever the slice's visibility below `restricted`, because the product asking for a
+surface's help already holds that ID (as for a tip's key; Core §9 states the exception). The slice's audiences add no
+condition. The file carries nothing else of the slice: never its ID, title, path or status. An author MUST NOT put in
+a surface ID a name that a reader of the slice's availability may not see; a review of a change SHOULD list every
+surface ID added or changed on a slice past draft. `surfaces` is written whenever the file is, as `{}` when no surface
+is written. The publication index counts nothing about surfaces. A generated document, its HTML and its retrieval
+chunks MUST NOT carry surfaces. In a file made for several roles or audiences (§1), a surface may be admitted by one
+of them only; such a file is served only to a reader who holds all of them.
+
 A reader MUST refuse a help file, whole, when its `profile` is not `intentset/help/0.3`; when a member of the table
-is missing, or the file or any object in it (an `availability`, a `knowledge` entry, a tip) has a member the table
+is missing, or the file or any object in it (an `availability`, a `knowledge` entry, a surface entry, a tip) has a member the table
 does not give it; when `audience` or `availability.role` is not a non-empty list of strings in strictly ascending
 code-unit order; when `availability.flags` is not a list of strings in that order; when `knowledge` is not strictly
 ascending by `id`; when a `tips` key is not an ID; when a tip names knowledge the file does not list; when an
 `underReview` is present with any value but `true`; when a tip carries `underReview` and the `knowledge` entry it names
 does not, or the reverse; when a `knowledge` entry carries `underReview` and its `path` does not begin with
-`under-review/`; when `withheldForReview` is not a list of IDs in strictly ascending order; or when it shares an ID
-with `tips`. A member added later to any object in the file therefore makes an older reader refuse the file rather than show too much,
+`under-review/`; when `withheldForReview` is not a list of IDs in strictly ascending order; when it shares an ID
+with `tips`; when a `surfaces` key breaks VSA §3's rules, `__proto__` and digits-only included; or when a surface's
+`knowledge` is empty, repeats an ID, or names an ID the file's `knowledge` does not list. A member added later to any object in the file therefore makes an older reader refuse the file rather than show too much,
 and adding one moves this profile. A help file carries the entitlement it was published for. Like every file of its
 publication, it MUST NOT be served to a reader who lacks any audience, role or flag it names, or whose clearance does
-not include its `projection`, and that holds for every member in it, its under-review marks included (§1).
+not include its `projection`, and that holds for every member in it, its surfaces and under-review marks included (§1).
 
-A runtime that shows a tip or an article marked `underReview` MUST show that it is under review, and MAY leave it
-out. A coverage report MUST NOT count an ID in `withheldForReview` as a tip nobody wrote.
+A runtime that shows a tip, an article or a surface's lead marked `underReview` MUST show that it is under review,
+and MAY leave it out. A coverage report MUST NOT count an ID in `withheldForReview` as a tip nobody wrote. A runtime
+that shows a surface's articles lists them first, in the order given, before any article reached through the tips of
+the controls on the surface, and lists each article once. It inserts a surface ID into markup or a selector only
+escaped.
 
 ## 6. The snapshot file
 

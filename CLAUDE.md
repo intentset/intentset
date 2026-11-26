@@ -107,9 +107,9 @@ learning from questions, and the AWS rules).
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE012`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
+- Diagnostic codes: `CORE001`–`CORE013`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
   of thing to fix, ADR 0024: an unreadable carrier is CORE010, a missing section CORE011, a field CORE001; an outcome
-  with no measure is CORE009 draft, CORE012 past draft), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
+  with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
   `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
@@ -149,8 +149,9 @@ packages/
   architecture/       M2: claims, import graph, layers, resources, exceptions, baseline
   verification/       M3: run records, freshness, reporter adapters, what needs a run (evidence stale)
   publisher/          M4: projection and generated Markset, and the help file (publication §5)
-  help/               reads help.json and binds tips to the controls of a product's interface. No dependencies, runs in
-                      a browser; the binder takes any root with querySelectorAll, so it is tested without a DOM
+  help/               reads help.json, binds tips to the controls of a product's interface and lists a page's lead
+                      articles. No dependencies, runs in a browser; the binder takes any root with querySelectorAll,
+                      so it is tested without a DOM
   atlas/              M4: static review pages over an export
   cli/                `intentset`
   conformance/        private harness
@@ -264,7 +265,7 @@ in `docs/implementation-plan.md` §5.
   #127, #129 and #130, with #49) land after it, then ADR 0029 (#144), ADR 0027 (#142, knowledge kept under review)
   and ADR 0028 (#143). A migration step's per-record rewrites go in `MIGRATIONS` in
   `packages/cli/src/commands/migrate.ts`.
-- Fifty-six records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
+- Sixty-four records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
   verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
   for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive

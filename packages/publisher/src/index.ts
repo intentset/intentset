@@ -30,6 +30,7 @@ export {
   type HelpFile,
   type HelpKnowledge,
   type HelpOptions,
+  type HelpSurface,
   type HelpTip,
   helpFile,
 } from "./help.ts";
@@ -100,5 +101,12 @@ export {
   reviewSources,
   reviewStatus,
 } from "./review.ts";
+export {
+  type HelpSurfaces,
+  OMISSION_REASONS,
+  type OmissionReason,
+  type OmittedSurface,
+  helpSurfaces,
+} from "./surfaces.ts";
 export { SNAPSHOT_FILE, SNAPSHOT_PROFILE, type SnapshotFile, snapshotFile } from "./snapshot.ts";
 export { YamlEmitError, type YamlValue, emitYaml } from "./yaml.ts";

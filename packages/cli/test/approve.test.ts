@@ -449,3 +449,72 @@ test("BEH-PUBLISH-UNDER-REVIEW: publish --keep-under-review writes a kept docume
     /> \[!NOTE\]\n> Under review:/,
   );
 });
+
+const AVAILABILITY_LINES =
+  "  availability:\n    products: [PRD-LANTERN]\n    releases: [pilot-1]\n    roles: [teacher]\n    editions: [standard]\n    flags: []\n  links:\n";
+const surfacesBlock = (entries: Record<string, string[]>) =>
+  `    - RES-ASSESSMENT-DATA\n    surfaces:\n${Object.entries(entries)
+    .map(([key, ids]) => `      ${key}:\n        knowledge: [${ids.join(", ")}]\n`)
+    .join("")}`;
+
+test("BEH-REVIEW-SURFACES: review lists the surfaces a change adds, removes or re-leads on a slice past draft, and no draft's", async (t) => {
+  const dir = await committed(t);
+  edit(dir, "SLICE-ASMT-SCHEDULE", "  links:\n", AVAILABILITY_LINES);
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    "    - RES-ASSESSMENT-DATA\n",
+    surfacesBlock({ "lantern-web:/a": ["KB-ASMT-SCHEDULE"] }),
+  );
+  git(dir, "commit", "-q", "-am", "a draft slice declares a surface");
+  const draft = await run(dir, "review", "--base", "HEAD~1");
+  assert.match(draft.out, /^## Surfaces changed \(0\)$/m, "a draft slice's surfaces are not listed");
+
+  edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: approved");
+  git(dir, "commit", "-q", "-am", "the slice approved");
+  const approved = await run(dir, "review", "--base", "HEAD~1");
+  assert.match(approved.out, /^## Surfaces changed \(0\)$/m, "approving changes no surface");
+
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    / {4}surfaces:\n[\s\S]*?(?=---)/,
+    "    surfaces:\n      lantern-web:/a:\n        knowledge: [KB-ASMT-SCHEDULE, KB-ASMT-OTHER]\n      lantern-web:/b:\n        knowledge: [KB-ASMT-SCHEDULE]\n",
+  );
+  git(dir, "commit", "-q", "-am", "a key added and a list changed");
+  const changed = await run(dir, "review", "--base", "HEAD~1");
+  const section = changed.out.slice(changed.out.indexOf("## Surfaces changed"));
+  assert.match(section, /^## Surfaces changed \(1\)$/m);
+  assert.match(
+    section,
+    /^- SLICE-ASMT-SCHEDULE \(approved\): added `lantern-web:\/b`; leads changed for `lantern-web:\/a`$/m,
+  );
+  const json = JSON.parse((await run(dir, "review", "--base", "HEAD~1", "--json")).out);
+  assert.deepEqual(json.surfaceChanges, [
+    {
+      id: "SLICE-ASMT-SCHEDULE",
+      path: "product/scheduling/SLICE-ASMT-SCHEDULE.md",
+      status: "approved",
+      added: ["lantern-web:/b"],
+      removed: [],
+      changed: ["lantern-web:/a"],
+    },
+  ]);
+});
+
+test("BEH-REVIEW-SURFACES: review reads a base at 0.2 as migrated, so the move adds no surface line", async (t) => {
+  const { dir } = await atEarlier(t, "0.2");
+  edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", "status: approved");
+  edit(dir, "SLICE-ASMT-SCHEDULE", "  links:\n", AVAILABILITY_LINES);
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    "    - RES-ASSESSMENT-DATA\n",
+    surfacesBlock({ "lantern-web:/a": ["KB-ASMT-SCHEDULE"] }),
+  );
+  git(dir, "commit", "-q", "-am", "an approved slice with a surface, at 0.2");
+  assert.equal((await run(dir, "migrate", "--to", "0.3")).code, 0);
+  git(dir, "commit", "-q", "-am", "migrated");
+  const review = await run(dir, "review", "--base", "HEAD~1");
+  assert.match(review.out, /^## Surfaces changed \(0\)$/m);
+});
