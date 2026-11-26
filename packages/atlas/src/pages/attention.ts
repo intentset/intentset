@@ -36,8 +36,7 @@ export function attentionPage(model: Model): PageSource {
     "{.lead}",
     "What is waiting on a person: records to approve, promises with no current pass, code no slice owns, and help held for review.",
     "",
-    "What is waiting on a person, as a list to work through: records still in draft, claims with no current pass and " +
-      "why, code no slice claims, and knowledge held for review. Each group says how many and out of what.",
+    "Each group below says how many it holds and out of what.",
     "",
   ];
 
