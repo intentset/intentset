@@ -33,9 +33,8 @@ export function recordsPage(model: Model): PageSource {
     "{.lead}",
     "Every record, listed by type, each with a page of its own.",
     "",
-    `Every record in this snapshot: ${plural(model.graph.artifacts.size, "record")} of ` +
-      `${plural(present.length, "type")}, each on a page of its own with its text as written, its links and ` +
-      "what the other review pages say about it.",
+    `${plural(model.graph.artifacts.size, "record")} of ${plural(present.length, "type")} in this snapshot. Each ` +
+      "record's page has its text as written, its links and what the other pages say about it.",
     "",
   ];
   if (present.length === 0) body.push("No records are in this snapshot.", "");
