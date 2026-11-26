@@ -8,14 +8,13 @@ A slide deck
 # Introducing Intentset
 
 {.lead}
-What Intentset is, why it exists and how it works, in 14 slides, for anyone deciding whether it is worth a closer look. Parts one to three make the case in plain words and need no setup; part four is for whoever will set it up; part five is how to adopt it and set it up. Each slide's speaker notes are folded beneath it.
+What Intentset is, what it gives a team that builds with coding agents, and how to adopt it, in 10 slides, for anyone considering it. Each slide's speaker notes are folded beneath it.
 
 {.deck-parts}
-1. [Why Intentset exists](#cover): agents write code faster than anyone can read it.
-2. [The idea in plain words](#idea): the product's promises, written down and kept true.
-3. [How a team works with it](#loop): who writes, who decides, and what a reviewer reads.
-4. [Under the hood](#under): records, ownership in the code, and evidence.
-5. [Adopting it](#levels), one capability and one level at a time.
+1. [The problem](#problem): a change can pass every check and still change the product.
+2. [How it works](#idea): the promise written down beside the code, and a check on every change.
+3. [What a team gets](#value): reviews in product language, agents with the right context, and help that stays true.
+4. [Adopting it](#adopt): one feature first, then CI, then the rest of the product.
 
 {.deck-hint}
 On a wide screen, Present shows one slide at a time, filling the screen: the arrow keys, Space and Page Down move between them, N shows the speaker notes, and Esc comes back here. Printed, it is one slide to a page, without the notes.
@@ -33,7 +32,7 @@ For teams shipping with coding agents
 ## Keep control of what your agents build
 
 {.lead}
-What Intentset is, why it exists, and how it works: in plain words first, then under the hood.
+Agents write code faster than anyone can review it. Intentset keeps what your product promises written down beside the code, and checks every change against it.
 
 {.small}
 intentset.org
@@ -42,7 +41,7 @@ intentset.org
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Intentset is a way of writing down what a product promises, and keeping that record true while coding agents change the code. The first half of this deck needs no technical background. The second half shows the files, the checks and the tools.
+> Teams building with coding agents are shipping more than they ever have, and the gain is real. This deck is about what that speed costs once nobody can read every change, and how Intentset gives a team back control of what the product does, without slowing the agents down.
 
 ::::card{#problem .slide}
 
@@ -95,94 +94,39 @@ An online shop's password reset links work for one hour. Customers report that t
 > [!NOTE]- Speaker notes
 > This is the risk in one sentence. If nobody wrote down what the product is supposed to do, nobody can tell whether a change kept it, and review turns into trusting the agent. The faster the changes come, the sooner a team moves from the first column to the third.
 
-::::card{#idea .slide}
+:::::card{#idea .slide}
 
 {.eyebrow}
-The idea
+How it works
 
-## Write the promises down, and keep them true
+## Write the promise down, beside the code
 
-{.lead}
-Five questions about each thing the product does, answered in short files beside the code. The answers here are for the shop's password reset.
+::::columns{ratio="5:6"}
 
-:::grid{cols=4 .promise}
-- ### Why
+```markdown
+# Reset links expire after one hour
 
-  Why build it, and did it work?
+## Constraint
 
-  Locked-out customers get back in without contacting support.
-
-- ### What
-
-  What does it do, and refuse?
-
-  Reset a password from an emailed link; refuse a link older than an hour.
-
-- ### Where
-
-  Which code keeps the promise?
-
-  The password reset code, and nothing else.
-
-- ### Proof
-
-  Is it tested, and passing now?
-
-  A test tries the link just before and just after the hour.
-
-- ### Words
-
-  What is each audience told?
-
-  The help article on resetting a password.
-:::
-
-::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> This is the whole idea on one slide. Take one thing the product does and write down five things about it: why it exists and how you would know it worked; what it does, including what it refuses; which part of the code is accountable for it; the tests that check it, and whether they pass right now; and what each audience is told about it. They live in the repository as short, linked files, so they change in the same commit as the code, and when the code changes and the promise does not, that shows up at review. Agents do the writing. People decide what the promises are.
-
-:::::card{#behavior .slide}
-
-{.eyebrow}
-The heart of it
-
-## A behavior is one promise
-
-::::columns
-
-{.lead}
-One recognizable thing the product does, **including how it fails.**
-
-:::grid{cols=1 .contrast}
-- {.good}
-  A behavior: one thing the product does
-
-  "Reset a forgotten password from an emailed link"
-
-  Small enough to test, and it can pass or fail.
-
-- Not a behavior: a topic
-
-  "Accounts"
-
-  It names an area of the product, not something it does.
-:::
+A password reset link stops working
+one hour after it is sent.
+```
 
 ::col
 
-:::card{.panel}
-{.label}
-A behavior
+:::grid{cols=1 .contrast}
+- {.good}
+  A short file in your repository
 
-### Reset a forgotten password
+  Each promise is a few lines of Markdown under `product/`, reviewed in the same pull request as the code.
 
-**What happens.** A customer who has forgotten their password asks for a reset link, and sets a new password from the link in the email.
+- An agent drafts it, a person approves it
 
-**When it works.** The new password replaces the old one and the link stops working.
+  Often from code you already have. Only a person approves a promise.
 
-**When it fails.** An expired or already used link is refused, and the password is unchanged.
+- It names the code that keeps it
+
+  So Intentset knows which promises a change to that code can affect.
 :::
 
 ::::
@@ -191,66 +135,14 @@ A behavior
 
 {.notes}
 > [!NOTE]- Speaker notes
-> Everything in Intentset is organized around behaviors. "Accounts" is a heading in a roadmap, not a promise: there is nothing in it to test. "Reset a forgotten password from an emailed link" is one. A behavior is small enough to recognize and to test, and it always says what happens when things go wrong, not only when they go right. Something that must stay true across behaviors, such as how long a reset link lasts, is a rule, written once.
-
-::::card{#loop .slide .dense}
-
-{.eyebrow}
-How it fits
-
-## Agents keep the records. You keep control
-
-:::grid{cols=3 .loop}
-- 01
-
-  ### Agree the promise
-
-  Product and an agent draft what comes next, as draft records.
-
-- {.spotlight}
-  02 · people only
-
-  ### Approve it
-
-  A person reads the drafts and approves them. Agents never approve.
-
-- 03
-
-  ### Build it
-
-  An agent changes the code and its records in the same commit.
-
-- 04
-
-  ### Check it
-
-  Automated checks test the model, the boundaries and the test results.
-
-- 05
-
-  ### Review the product
-
-  Before the pull request merges, its reviewer reads which promises it changed, then the code.
-
-- 06
-
-  ### Explain it
-
-  Explanations whose sources changed are held for review before they are published again.
-:::
-
-::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> The division of labor is the point. Agents do the writing: they draft records, change the code and keep the records in step. `intentset init` writes the guide they follow, and one line in CLAUDE.md or AGENTS.md points them at it; it tells them never to approve, publish, or invent an owner, audience or release. People do the deciding: only a person moves a record from draft to approved, and passing every automated check never counts as approval. Step five is the next slide.
+> This is the shop's rule, as the file reads below its header. Each thing the product promises, including how it fails, is written down once like this. Your agents keep these files up to date in the same commit as the code; people approve them. Together, a product's records are its model: a set of files, not an AI model.
 
 :::::card{#review .slide .dense}
 
 {.eyebrow}
-Step 05 · the product review
+The check
 
-## The check stops the change, and says why
+## CI stops the change, and says why
 
 {.lead}
 The agent's fix changed the reset code while the records that describe it stayed the same, so `intentset review --fail-on-drift` fails with code 1:
@@ -283,226 +175,151 @@ Real output, trimmed
 > [!NOTE]- Speaker notes
 > This is the change from the start of the deck. An agent can edit a record as easily as a test, and Intentset lets it. The difference is where the edit shows up: a changed test is one line in a long diff, while a changed rule is one sentence in a file the reviewer reads first, in product language. Either way, a person decides before it merges.
 
-::::card{#honest .slide .key}
+::::card{#value .slide .key}
 
 {.eyebrow}
-Honest numbers
+What a team gets
 
-## Having a test is not passing it
+## Control of the product, at the speed agents work
 
-{.lead}
-A promise can have a test and still have no current pass: the test may not have run since the code changed, or may have been changed with it. Intentset reports two numbers, side by side.
+:::grid{cols=3}
+- ### Reviews in product language
 
-:::grid{cols=2}
-- Linked · 12 of 12 promises
+  A changed promise is one sentence the reviewer reads before the code, not one number in a long diff.
 
-  ### Has a test
+- ### Agents with the right context
 
-  A test is attached to the promise. Nothing yet says it ran, or that it passed.
+  Before it edits a file, an agent loads the promises and rules that code keeps.
+
+- ### Tests tied to promises
+
+  Each promise shows whether its test passes on the code as it stands now. A stale pass is shown as stale.
+
+- ### Help that stays true
+
+  A help article is held for review when a rule it explains changes, so it is not published out of date.
+
+- ### Decisions with a history
+
+  Every change to a promise is a reviewed diff in git, with who approved it and when.
 
 - {.spotlight}
-  Current pass · 7 of 12 promises
+  ### Nothing to host or buy
 
-  ### Passes now
-
-  Its test passed, on code that has not changed since.
-:::
-
-The other five are shown as what they are: stale, skipped, failed, errored or never run. **None of them counts as a pass.**
-
-{.caveat}
-Illustrative · not a measured product
-
-::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> In this example every one of twelve promises has a test, so counting the tests attached would call all twelve covered. Only seven have a test that passed on the code as it stands now. The other five might be fine, but nobody can say so: a test that passed last month, on code that has changed since, proves nothing about today. Intentset keeps the two numbers apart and shows both.
-
-::::card{#under .slide .part}
-
-{.eyebrow}
-Part four
-
-## Under the hood
-
-{.lead}
-The files, who owns what in the code, and how evidence counts.
-
-For the people who set it up. If you came for the idea, you have seen it: skip to [Adopting it](#levels) or [Set it up](#try).
-
-::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> From here on the deck is for the people who will set Intentset up and live with it day to day: engineers, technical product managers and anyone configuring agents.
-
-:::::card{#record .slide .dense}
-
-{.eyebrow}
-Records
-
-## Open files, explicit meaning
-
-::::columns{ratio="5:6"}
-
-```markdown
----
-markset: 0
-intentset:
-  id: RULE-RESET-LINK-EXPIRY
-  type: rule
-  title: Reset links expire after one hour
-  status: draft
-  owner: team-accounts
----
-
-# Reset links expire after one hour
-
-## Constraint
-
-A password reset link stops working
-one hour after it is sent.
-```
-
-::col
-
-:::grid{cols=2}
-- ### One file per record
-
-  Markdown with YAML frontmatter, reviewed with the code.
-
-- ### Frontmatter is for tools
-
-  A stable ID, type, status, owner, audiences and links.
-
-- ### The body is for people
-
-  Each type has required sections. A behavior says who acts, the trigger, success and failure.
-
-- ### The files are the truth
-
-  Graphs, reports and pages are views rebuilt from them.
+  Plain files you own, and an open-source command-line tool, MIT-licensed.
 :::
 
 ::::
 
-:::::
-
 {.notes}
 > [!NOTE]- Speaker notes
-> This is the shop's rule as a file, abridged. The part between the dashes is what the tools read. The part below is what people read. Because it is just a file in the repository, it is reviewed in the same pull request as the code, reads on GitHub with nothing installed, and needs no database or hosted service. There are thirteen record types, but behaviors and rules carry most of the weight day to day. A link is written once, on the record that points, and the tools work out the reverse.
+> This is what the records buy a team. Reviewers stop reading thousands of lines to find out what changed in the product: the records tell them first, in product language. Agents stop guessing, because `intentset context` hands them what the code they are about to change promises. The tests that matter are tied to the promises they hold, and a pass on code that has changed since counts for nothing. Customer help is held back when what it explains changes. None of it needs a service, a database or an account.
 
-:::::card{#slices .slide .dense}
-
-{.eyebrow}
-Ownership · optional, and worth it
-
-## Each behavior has one owner in the code
-
-::::columns
-
-A **slice** is the part of the codebase accountable for a set of behaviors, end to end: interface, logic, backend access, tests and documentation.
-
-It declares the files it owns and its public entrypoints. Other slices collaborate through declared contracts, not by reaching into its files.
-
-::col
-
-:::card{.panel}
-{.label}
-`intentset architecture check` reports
-
-- an import of another slice's private file
-- a dependency nobody declared, or a cycle
-- a layer importing one it may not
-- business logic importing an interface framework
-- two slices claiming the same file
-- product behavior hiding in shared code
-:::
-
-::::
-
-{.band}
-**Adopt by scope.** Today's violations become a baseline that may shrink and may not grow, so debt is a number you can watch fall.
-
-:::::
-
-{.notes}
-> [!NOTE]- Speaker notes
-> Agents follow the shape of the code they are shown. If every behavior has one owning slice, an agent handed that slice's context makes a change that stays inside it. A product can even be modelled before it is built: while a slice is a draft, missing files are warnings, and approving it makes them errors.
-
-::::card{#evidence .slide .dense}
+::::card{#loop .slide}
 
 {.eyebrow}
-Evidence
+How a team works with it
 
-## Verified means passing now
+## Agents keep the records. People keep control
 
 :::grid{cols=4 .flow}
-- In the repository
+- 01
 
-  ### Verification record
+  ### Draft
 
-  How a claim is checked: a named test, or a review procedure.
-
-- In CI
-
-  ### A test run
-
-  Vitest, Playwright or node test reports, imported as run records.
-
-- Kept outside the commit
-
-  ### Run record
-
-  This check, on this code, passed, failed, skipped or errored.
+  An agent drafts the promise, from a plan or from code you already have.
 
 - {.spotlight}
-  The verdict
+  02 · people only
 
-  ### Current pass
+  ### Approve
 
-  Only while its binding holds. Otherwise it is stale.
-:::
+  A person reads the draft and approves it. Agents never approve.
 
-:::grid{cols=2}
-- ### Subject binding, the default
+- 03
 
-  A pass counts while what it is about is unchanged: the behavior, the slices and files that deliver it, the test and what it imports.
+  ### Build
 
-- ### Commit binding, the strict one
+  An agent changes the code and keeps its records in step, in the same commit.
 
-  A repository or a release gate can ask for a pass on the commit under review.
+- 04
+
+  ### Check
+
+  CI checks every pull request, and the reviewer reads the product change first.
 :::
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> A verification record is a definition, not evidence: it says how to check, not that anyone did. Evidence is a run record produced by CI. Run records are never committed, because a record in the commit it assesses is stale the moment it lands. `intentset evidence stale` lists which checks need a run.
+> The division of labor is the point. Agents do the writing: `intentset init` writes the guide they follow, and one line in CLAUDE.md or AGENTS.md points them at it. People do the deciding: only a person approves a promise, and passing every automated check never counts as approval.
 
-::::card{#levels .slide}
+::::card{#fits .slide}
 
 {.eyebrow}
-Adoption
+Beside what you have
 
-## Adopt in levels
+## It replaces nothing you already use
 
-| Level | What it adds | What you can then claim |
-|---|---|---|
-| **L1** Product model | Records parse, link and read correctly | The model is well formed |
-| **L2** Traceable implementation | Ownership and architecture checks | Each behavior has one owner, and the code respects it |
-| **L3** Verified product | Current passing evidence | Each promise has a current pass |
-| **L4** Published knowledge | Reviewed help for each audience | What you publish is authorized and traceable |
-| **L5** Continuous product truth | The L1 to L4 checks required in CI, impact reports and release snapshots | No change merges without passing them |
+:::grid{cols=3}
+- ### Your tests
 
-Each level includes the ones before it. A conformance claim always names its scope and the commit it was made at: one capability passing at L3 is not a repository at L3.
+  Stay as they are. A record says what each test is meant to hold, and Intentset reports whether it passes now.
+
+- ### Your pull requests
+
+  Stay as they are. The review adds what changed in the product, before the code.
+
+- ### Your agents' instructions
+
+  CLAUDE.md or AGENTS.md keep saying how to work in the repository. One line points them at the guide.
+:::
+
+{.band}
+**What it is not.** It is not a test runner, it does not prove the product correct, and it never runs your code or edits your files when it checks them.
 
 ::::
 
 {.notes}
 > [!NOTE]- Speaker notes
-> `intentset validate --level L3` runs every check up to that level. Most teams start at L1 on one capability, add ownership and evidence as they go, and widen the scope from there.
+> A team keeps its tools. Tests check the code; pull request summaries describe the diff; agent instructions say how to work. None of them says what the product promises today, and Intentset ties them to that. It is honest about its limits: a passing test can still assert the wrong thing, and people judge whether a check is adequate.
+
+::::card{#adopt .slide}
+
+{.eyebrow}
+Adopting it
+
+## One feature first, then the rest
+
+:::grid{cols=3 .flow}
+- Minutes
+
+  ### Write down one feature
+
+  An agent writes one feature down from your code and tests. You review about eight short files and see what it finds.
+
+- Once
+
+  ### Add it to CI
+
+  Make the check required, so no change merges while its code and its records disagree.
+
+- Over time
+
+  ### Grow it
+
+  Add features one at a time, as the value shows. Many agents can write down a whole product, with people approving.
+:::
+
+{.band}
+**What each change costs.** The agent updates the records in the same commit, or adds one line saying nothing the product does changed.
+
+::::
+
+{.notes}
+> [!NOTE]- Speaker notes
+> Nobody models a whole product on day one. Start with one feature you already have: on a small TypeScript repository, setting it up and getting the first passing check takes about five minutes. Add the checks to CI next. Then grow it a feature at a time. Checks on how the code is organized, which keep each promise's code in one place, are available for TypeScript today.
 
 :::::card{#try .slide .finale}
 

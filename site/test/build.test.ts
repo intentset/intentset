@@ -331,30 +331,15 @@ test("the only destinations outside the site are the repository, Markset, Coral 
 });
 
 /** The deck's slides, in its order (decided 2026-10-26: published here, in Markset, rather than linked on claude.ai). */
-const DECK = [
-  "cover",
-  "problem",
-  "trust",
-  "idea",
-  "behavior",
-  "loop",
-  "review",
-  "honest",
-  "under",
-  "record",
-  "slices",
-  "evidence",
-  "levels",
-  "try",
-];
+const DECK = ["cover", "problem", "trust", "idea", "review", "value", "loop", "fits", "adopt", "try"];
 
-test("the introduction is a deck of 14 slides in order, each with its notes folded beneath it, on its own theme", async () => {
+test("the introduction is a deck of 10 slides in order, each with its notes folded beneath it, on its own theme", async () => {
   const page = html.get(INTRODUCTION.page) ?? "";
   const body = main(INTRODUCTION.page);
   assert.match(page, /<title>Introducing Intentset · Intentset<\/title>/);
   assert.match(body, /<h1 id="introducing-intentset">Introducing Intentset<\/h1>/);
   const description = /<meta name="description" content="([^"]+)">/.exec(page)?.[1] ?? "";
-  assert.ok(description.startsWith("What Intentset is, why it exists and how it works"), description);
+  assert.ok(description.startsWith("What Intentset is, what it gives a team"), description);
   // A slide is a card carrying .slide, and what follows it is its notes, a folded NOTE callout: in document order
   // the two alternate, a slide and then its notes, once per slide.
   const order = [
@@ -366,8 +351,8 @@ test("the introduction is a deck of 14 slides in order, each with its notes fold
     order,
     DECK.flatMap((id) => [id, "notes"]),
   );
-  // The five parts each open on their first slide.
-  for (const id of ["cover", "idea", "loop", "under", "levels"]) assert.ok(body.includes(`href="#${id}"`), id);
+  // The four parts each open on their first slide.
+  for (const id of ["problem", "idea", "value", "adopt"]) assert.ok(body.includes(`href="#${id}"`), id);
   // The example is Home's password reset (2026-11-26). A pass is never said to
   // count only on this commit (SL-710).
   assert.ok(text(body).includes("A password reset link stops working one hour after it is sent."));

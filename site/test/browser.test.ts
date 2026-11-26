@@ -348,7 +348,7 @@ test("the introduction is a 16:9 slide to a window on a desktop, a column of car
     return { tab, result };
   };
   const desktop = await slides(1440, 900);
-  assert.equal(desktop.result.length, 14);
+  assert.equal(desktop.result.length, 10);
   for (const slide of desktop.result) {
     assert.ok(Math.abs(slide.ratio - 16 / 9) < 0.01, `${slide.id}: 16:9 at 1440 by 900 (${slide.ratio.toFixed(3)})`);
     assert.ok(slide.height <= 900, `${slide.id}: fits the window`);
@@ -428,7 +428,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.presenting);
   assert.deepEqual(s.current, ["cover"]);
   assert.equal(s.top, "cover", "the cover is what the window shows");
-  assert.equal(s.count, "1 / 14");
+  assert.equal(s.count, "1 / 10");
   // The largest 16:9 that fits 1440 by 900 is 1440 by 810.
   assert.ok(
     Math.abs(s.width - 1440) < 1 && Math.abs(s.height - 810) < 1,
@@ -437,14 +437,14 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.inertHeader, "the page behind is out of reach");
   for (const key of ["ArrowRight", "PageDown", " "]) await tab.keyboard.press(key);
   s = await shown();
-  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 14", "#idea"]);
+  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 10", "#idea"]);
   await tab.keyboard.press("ArrowLeft");
   await tab.mouse.click(720, 300);
   s = await shown();
   assert.deepEqual(s.current, ["idea"], "back one by key, on one by a click on the slide");
   await tab.getByRole("button", { name: "Next slide" }).click();
   s = await shown();
-  assert.deepEqual(s.current, ["behavior"]);
+  assert.deepEqual(s.current, ["review"]);
   await tab.keyboard.press("n");
   s = await shown();
   assert.ok(s.notes && s.notesText.length > 40, "N shows the slide's speaker notes");
@@ -456,7 +456,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   );
   await tab.keyboard.press("End");
   s = await shown();
-  assert.deepEqual([s.current, s.count], [["try"], "14 / 14"]);
+  assert.deepEqual([s.current, s.count], [["try"], "10 / 10"]);
   assert.ok(await tab.getByRole("button", { name: "Next slide" }).isDisabled(), "nothing after the last slide");
   await tab.keyboard.press("Escape");
   s = await shown();

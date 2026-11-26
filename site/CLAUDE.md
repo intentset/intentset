@@ -81,6 +81,11 @@ repository-relative.
   coordinates rounded. The map comes first on its page, the legend and instructions below it, and where IDs show no
   ID may overlap another record (a separation pass after the forces, tested on a crowded graph). The script writes text, never markup (a test refuses `innerHTML`, `eval`, `fetch` and
   storage), and adds no dependency.
+- **The slide deck is for a structured presentation** to people interested in learning about Intentset and adopting it,
+  and says the value it brings (Gary, 2026-11-26). Ten slides that follow Home: the problem, why it happens, the
+  promise written down, the check, what a team gets, how a team works, what it replaces (nothing), adopting it one
+  feature at a time, and setting it up. No part dividers, levels table or file-format slides: the detail is How it
+  works'. It is linked only from the footer's row, as "Slides".
 - **The failure excerpts are real output** (2026-11-26): the `intentset review --fail-on-drift` lines on Home and How
   it works were produced by running this repository's CLI on the password reset fixture in a scratch repository, and
   `site/test/content.test.ts` builds that repository again and reruns them: the excerpts must appear in a review that
