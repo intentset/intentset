@@ -107,3 +107,33 @@ test("the status notes are on their pages, as callouts, and none still says the 
     for (const phrase of retired) assert.ok(!body.includes(phrase), `${page} still says "${phrase}"`);
   }
 });
+
+test("Home labels its illustrative change, and its failure excerpt is in the review command's own words", async () => {
+  const html = await readFile(join(dist, "index.html"), "utf8");
+  // The one illustrative change is always said to be invented (2026-11-25, the clarity plan's decision 3).
+  assert.ok(
+    text(html).includes("Illustrative · Lantern, an invented product · not a real event"),
+    "the illustrative change's card keeps its label",
+  );
+  // The excerpt was run, not written (decision 5): each of its lines is one `intentset review` writes, so a change to
+  // the command's words fails here until the excerpt is run again and requoted.
+  const review = await readFile(join(root, "packages", "cli", "src", "commands", "review.ts"), "utf8");
+  const slice = await readFile(join(root, "examples", "scheduling", "SLICE-ASMT-SCHEDULE.md"), "utf8");
+  const title = /^ {2}title: (.+)$/m.exec(slice)?.[1];
+  const excerpt = [...html.matchAll(/<pre><code class="language-text">([\s\S]*?)<\/code><\/pre>/g)]
+    .map((m) => text(m[1]))
+    .find((block) => block.startsWith("## Code changed"));
+  assert.ok(excerpt, "Home quotes the failure");
+  assert.match(review, /`## Code changed, records unchanged \(\$\{drifted\.length\}, \$\{open\} not acknowledged\)`/);
+  assert.match(review, /`### \$\{item\.slice\}: \$\{item\.title\}`/);
+  const notAcknowledged = "- Not acknowledged: update the records below, or say in a commit that no behavior changed.";
+  assert.ok(review.includes(`"${notAcknowledged}"`));
+  assert.equal(
+    excerpt,
+    [
+      "## Code changed, records unchanged (1, 1 not acknowledged)",
+      `### SLICE-ASMT-SCHEDULE: ${title}`,
+      notAcknowledged,
+    ].join(" "),
+  );
+});

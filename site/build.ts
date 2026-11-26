@@ -212,6 +212,7 @@ export const RAILS: Rail[] = [
       ["List contract", "specifications/list/index.html"],
       ["Markset", "markset/index.html"],
       ["Conformance", "conformance/index.html"],
+      ["Glossary", "glossary/index.html"],
     ],
   },
   {
@@ -335,6 +336,7 @@ export const CONTENT_PAGES: Array<[string, string]> = [
   ["tools/readers/index.html", "readers.md"],
   ["specifications/index.html", "specifications.md"],
   ["markset/index.html", "markset.md"],
+  ["glossary/index.html", "glossary.md"],
   ["roadmap/index.html", "roadmap.md"],
   ["about/index.html", "about.md"],
   [NOT_FOUND, "404.md"],

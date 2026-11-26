@@ -34,6 +34,7 @@ const PAGES = [
   "specifications/core/index.html",
   "markset/index.html",
   "conformance/index.html",
+  "glossary/index.html",
   "pilot/index.html",
   "example/index.html",
   "example/BEH-ASMT-SCHEDULE/index.html",
