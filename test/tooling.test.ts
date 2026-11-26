@@ -458,8 +458,8 @@ test("the worked example's knowledge is reviewed against its sources as they are
       pinned,
       current,
       `KB-ASMT-SCHEDULE pins ${id} at ${pinned}, and ${id}.md's content hash is now ${current}: review the knowledge ` +
-        `against it, then set the pin to that hash (\`intentset context ${id} --json\` prints it as contentHash) and ` +
-        "update reviewedAt",
+        `against the change, then have its reviewer run \`intentset approve KB-ASMT-SCHEDULE --renew-review --by <name>\`; ` +
+        "an agent never writes the pins or reviewedAt itself (Core §7)",
     );
   }
 });

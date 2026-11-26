@@ -42,8 +42,7 @@ repository-relative.
   changes a pinned `content-v1` hash: review the knowledge against the change and renew the review, or
   `test/tooling.test.ts` fails and the site build refuses to publish. The reviewer renews it with `intentset approve
   KB-ASMT-SCHEDULE --renew-review --by <name>`, which also writes `self` and `gates`; an agent runs that only when the
-  reviewer says so, and otherwise sets each pin to the source's `contentHash` from `intentset context <ID> --json`
-  and updates `reviewedAt`. A fixture or test that wants the draft the
+  reviewer says so, and never writes the pins, `reviewedBy` or `reviewedAt` itself (Core §7). A fixture or test that wants the draft the
   record used to be patches `status: draft` itself.
 - **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
   drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the

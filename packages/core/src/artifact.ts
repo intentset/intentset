@@ -282,7 +282,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       `${base}/spec`,
       `\`spec\` must be the string "${SPEC_VERSION}".${hint}`,
       typeof s.spec === "string" && EARLIER_SPEC_VERSIONS.includes(s.spec)
-        ? `Write \`spec: '${SPEC_VERSION}'\` and \`profile: intentset/<type>/${SPEC_VERSION}\`, or run \`intentset migrate --to ${SPEC_VERSION}\` to rewrite every record.`
+        ? `Run \`intentset migrate --to ${SPEC_VERSION}\`, which rewrites every record and re-pins the knowledge reviews that pin them. Writing \`spec: '${SPEC_VERSION}'\` and \`profile: intentset/<type>/${SPEC_VERSION}\` by hand leaves each knowledge review that pins the record needing review.`
         : `Write \`spec: '${SPEC_VERSION}'\`.`,
     );
     usable = false;
@@ -460,7 +460,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
           problem(
             `${base}/extensions/${pointerToken(key)}`,
             "`extensions.intentset.org/review` is no longer read: a knowledge record's review is `review` (Core §9, ADR 0025).",
-            "Move it to `review`, writing `hash: file-v1` where it names no hash, or run `intentset migrate --to 0.3` on a record written for 0.2.",
+            "Run `intentset migrate --to 0.3` on a record written for 0.2, which moves it and re-pins the review. Moving it to `review` by hand, writing `hash: file-v1` where it names no hash, re-pins nothing, so the review needs review once its sources move to 0.3.",
           );
         } else if (EXTENSION_KEY.test(key)) extensions[key] = s.extensions[key];
         else
