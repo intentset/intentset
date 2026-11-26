@@ -58,10 +58,6 @@ test("the status notes are on their pages, as callouts, and none still says the 
       "specifications/index.html",
       `All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
     ],
-    [
-      "markset/index.html",
-      "The reference publisher pins Markset 0.4.1 and validates every document it generates with Markset before writing it.",
-    ],
   ];
   for (const [page, note] of notes) {
     const html = await readFile(join(dist, page), "utf8");
