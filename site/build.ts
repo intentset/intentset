@@ -150,7 +150,7 @@ export const NAV: Array<[string, string]> = [
   ["Start", INTRODUCTION.page],
   ["Tools", "tools/index.html"],
   ["Reference", "specifications/index.html"],
-  ["Examples", ATLAS_MAP_PAGE],
+  ["Examples", "example/index.html"],
   ["Roadmap", "roadmap/index.html"],
 ];
 
@@ -174,11 +174,17 @@ export function railLinks(rail: Rail): Array<[string, string]> {
  * a sentence is one most readers never find, so the rest are here. A test
  * requires every page to be in the bar, a rail or the footer's row.
  *
+ * Start is one reading path (2026-11-25): the introduction, How it works and
+ * Try it on your code, then a group for what comes once one capability works.
+ * The agent guide is in Tools, beside what else reads a model.
+ *
  * Examples is one rail for the whole section (2026-10-20): Lantern, the
- * invented example, with its map, the walkthrough and the review pages the
+ * invented example, with the walkthrough, its map and the review pages the
  * Atlas draws from the same records, then the adoption log. Until then the
  * Atlas's pages had a rail of their own that led back to the walkthrough,
- * whose rail led to the Atlas.
+ * whose rail led to the Atlas. The bar's Examples opens on the walkthrough,
+ * the rail's first page (2026-11-25, the user's decision, reversing the map of
+ * 2026-10-20), and the walkthrough links the map at its top.
  */
 export const RAILS: Rail[] = [
   {
@@ -186,10 +192,14 @@ export const RAILS: Rail[] = [
     items: [
       ["Introducing Intentset", INTRODUCTION.page],
       ["How it works", "how-it-works/index.html"],
-      ["Start with one capability", "start/index.html"],
-      ["Run the adoption", "adopt/index.html"],
-      ["Prove the work", "verify/index.html"],
-      ["The agent guide", "guide/index.html"],
+      ["Try it on your code", "start/index.html"],
+      {
+        label: "Once one capability works",
+        items: [
+          ["Model the whole product with many agents", "adopt/index.html"],
+          ["Make agents' work safe to accept", "verify/index.html"],
+        ],
+      },
     ],
   },
   {
@@ -198,6 +208,7 @@ export const RAILS: Rail[] = [
       ["All tools", "tools/index.html"],
       ["The intentset command", "tools/cli/index.html"],
       ["What reads an Intentset model", "tools/readers/index.html"],
+      ["What your agents read", "guide/index.html"],
     ],
   },
   {
@@ -221,8 +232,8 @@ export const RAILS: Rail[] = [
       {
         label: "Lantern, a worked example",
         items: [
-          ["The map", ATLAS_MAP_PAGE],
           ["The walkthrough", "example/index.html"],
+          ["The map", ATLAS_MAP_PAGE],
           { label: "Review pages", items: REVIEW_PAGES },
         ],
       },
@@ -559,8 +570,8 @@ when it exists. The records are Markset documents, so Markset's authoring guide 
 - [Agent guide](${site}/guide.md): before and after a change, the record format, and what an agent never does
 - [Specifications](${site}/specifications/): the source of truth
 - [The intentset command](${site}/tools/cli/): every command, option and exit code
-- [Run the adoption](${site}/adopt/): how one person runs an adoption through many agents, and how to set that up
-- [Prove the work](${site}/verify/): the checks that let a change carry its own proof, and how to set them up
+- [Model the whole product with many agents](${site}/adopt/): how one person runs an adoption through many agents, and how to set that up
+- [Make agents' work safe to accept](${site}/verify/): the checks that let a change carry its own proof, and how to set them up
 - [Markset authoring guide](${EXTERNAL.markset}guide.md): the document syntax the records are written in
 `;
 }
@@ -970,6 +981,8 @@ One capability of Lantern, an invented product, written down the way Intentset a
 
 Every record is open on this page. Read the ${EXAMPLE_ACTS.length} steps in order and the chain closes; open any record to see exactly what a person writes and what an agent reads. [The map](atlas/map/) draws the same ${records.length} records and every link between them in one picture.
 
+[[See every record on the map](atlas/map/)]{.button .primary} [[Open the review pages](atlas/)]{.button}
+
 :::metrics
 | Count | Value |
 |---|---|
@@ -998,7 +1011,7 @@ The records above are what an agent writes and a person approves. [The map](atla
 
 Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in a real product](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
 
-[[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
+[[Try it on your code](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
   return renderPage("example/index.html", source, join(root, EXAMPLE_DIR, "index.md"));
 }

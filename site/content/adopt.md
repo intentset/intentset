@@ -3,14 +3,14 @@ markset: 0
 ---
 
 {.eyebrow}
-Start
+Once one capability works
 
-# Run the adoption with many agents
+# Model the whole product with many agents
 
 {.lead}
-Adopting Intentset in a product that already exists is a team's work for a long time: model every capability, move the code into slices, close the gaps the records expose, put a check behind every claim. One person running many agents in parallel can do it in weeks, if the agents can work unattended inside protections that make a mistake cheap. This page is for that person: how to set up, how to split the work, what to settle before a long run, and what to prove before anything lands.
+For the person who has one capability modelled and wants the rest of the product. Adopting Intentset in a product that already exists is a team's work for a long time: model every capability, move the code into slices, close the gaps the records expose, put a check behind every claim. One person running the adoption with many agents in parallel can do it in weeks, if the agents can work unattended inside protections that make a mistake cheap. This page is how to do that: how to set up, how to split the work, what to settle before a long run, and what to prove before anything lands.
 
-[Start with one capability](../start/) comes first. This page is what to do once the first capability is modelled and you want the rest.
+[Try it on your code](../start/) comes first: one capability, modelled and checked. This page is what to do once that works and you want the rest.
 
 None of it asks you to change a control you already have. Whether a pull request merges on its own or waits for a reviewer, whether main deploys itself or a release is cut by hand, who may approve what: those are your rules, and this page works inside them. What it changes is how much of the work reaches those controls ready, and how little of a person's time it takes to get there.
 
@@ -36,7 +36,7 @@ The amount of automation a product can safely allow is set by the weakest of the
 
 ## Set up for many agents
 
-Everything the [Start](../start/) page does, and then the pieces that let the work run without you.
+Everything [Try it on your code](../start/) sets up, and then the pieces that let the work run without you.
 
 - **The guide, pointed at.** `intentset init` writes `.intentset/agents.md`, and one line in `CLAUDE.md` or `AGENTS.md` points every agent at it. The guide is generated from the toolchain, so what it tells an agent to run cannot disagree with what the gate runs.
 - **The gate, required.** A check on every pull request runs `intentset validate --level L2 --mode migration` against a baseline of the violations that already exist, so only a new one fails, and `intentset review --base origin/main --fail-on-drift`, so a change that touched a slice's code and none of its records is refused unless a commit says why. Give review the baseline too, with `--baseline` and `--fail-on-baseline-growth`, and a change that adds a violation to it is refused until someone decides it should. Make the check required in the branch protection, with the product's own tests beside it. Whatever happens to a green pull request after that, a merge on its own or a reviewer's queue, is your process and stays as it is; the gate means what reaches it is already checked.
@@ -52,7 +52,7 @@ The unit of parallel work is the slice, because that is the unit the architectur
 - **A session, in its own worktree, owns a slice or a capability.** It is the unit a person reviews: it opens a pull request, the gate runs on it, and the records in it are what the person reads. Run as many as there are slices you can review. A session's worktree is a copy of the repository with its own branch, so sessions never share a working tree, and an agent in its own worktree installs there rather than at the root it shares.
 - **A workflow, inside a session, fans out work with a known shape.** Modelling the twelve capabilities of one product area, writing the test each of thirty verification records lacks, verifying every finding a review produced: the orchestrator holds the list, hands each item to a subagent, and collects the results in order. Use a workflow when you can write the loop down before it starts. Use sessions when each item needs a person's judgement at the end.
 - **A subagent, inside a session, does a read or a review the session should not be anchored on.** Searching the repository for every consumer of an entrypoint, reviewing a diff fresh, checking a screen. It costs a handoff each way, so it is for work whose result is a conclusion, not a file dump.
-- **A routine, on a schedule, runs what has to run whether or not anyone is working.** The drift check on main, the check that a locked site is still locked, the dependency updates, the daily count of the baseline. A routine's job is to open a pull request or a report, never to merge one.
+- **A routine, on a schedule, runs what has to run whether or not anyone is working.** The drift check on main, the check that a page that must stay behind sign-in still does, the dependency updates, the daily count of the baseline. A routine's job is to open a pull request or a report, never to merge one.
 
 Three things never split. **Approval** stays with a person, one record at a time; validation passing is not approval, and an agent never moves a record out of draft. **The root install** belongs to whoever owns the root; agents in parallel do not run it there. **Main** takes only what the gate passed.
 
@@ -79,7 +79,7 @@ Intentset makes the decision part of the model. A `decision` is a record type, w
 
 ## Prove it before it lands
 
-A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again. [Prove the work](../verify/) has each layer in full: the tests, the screens in both color schemes and at each width, the rules held by tests, the gate's configuration and the checks that run after a deploy.
+A change that lands unread has to carry its own proof. Each of these is a check the agent runs before it opens the pull request, and the gate runs again. [Make agents' work safe to accept](../verify/) has each layer in full: the tests, the screens in both color schemes and at each width, the rules held by tests, the gate's configuration and the checks that run after a deploy.
 
 - **A test with every claim.** A new behavior ships with the test that checks it and the verification record that names the test. A changed behavior ships with the changed test. The verification records are the list of what the product can prove, and a claim with no record on it is a gap the model reports.
 - **Screens checked in a browser, not in the source.** For a behavior with a surface, the agent opens its own build, performs the behavior and reads the result from the page. A screenshot in the pull request is the record of that.
@@ -103,23 +103,24 @@ What never loosens: a production credential in the working tree, a deploy to a s
 
 ## With Claude Code
 
-The practices above are for any agent. These are the pieces that map to them in Claude Code as of 2026-10-09, where the names are its own and will move. Check its documentation for the current form.
+The practices above are for any agent. Each has a piece of its own in Claude Code. Its names are its own and will move, so check its documentation for the current form.
 
-| The practice | The piece |
-|---|---|
-| The guide, pointed at | `@.intentset/agents.md` in `CLAUDE.md`, which imports the file. |
-| A permissions file in the repository | `.claude/settings.json`, committed: `permissions.allow`, `permissions.deny` and `permissions.ask` name the commands and tools, and `sandbox` limits the files and the network a command can reach. `.claude/settings.local.json` beside it holds what one person allows and is not committed. |
-| A rule that holds whatever the agent decides | A hook in the same file: a command that runs before a tool call and can refuse it, or when the agent stops and can send it back to run the checks. Instructions ask; hooks enforce. |
-| A session in its own worktree | `claude --worktree <name>`, which opens the session on a copy of the repository under its own branch. |
-| A workflow that fans out subagents | Dynamic workflows, asked for with the word `ultracode` in the prompt or saved under `.claude/workflows/`: a script of agent calls whose results stay in the script, not in your context. `/workflows` watches one run. |
-| A subagent for a cold read or review | A definition under `.claude/agents/`, with the model and the tools it gets, run in the background and given the code, not the conclusion. `isolation: worktree` gives it a worktree of its own. |
-| A routine on a schedule | A routine, from `/schedule`, with a cron expression, run in the cloud whether or not a session is open (a research preview as of this date); `/loop` for a repeated check within one session. |
-| Plan before building | Plan mode, from `--permission-mode plan` or Shift+Tab, which reads and plans and changes nothing until you accept it. |
-| Keep the plan as a page | An artifact: a page the session publishes to claude.ai, private to you until you share it, and republishes in place as the work moves. Ask for one for any plan too long for a message, and for the agent to keep it current. |
-| A browser the agent can drive | Claude in Chrome, from `--chrome`, or a Playwright MCP server, pointed at the agent's own build. |
-| Check in from wherever you are | Remote Control, from `/remote-control`, which puts the running session in the Claude app on your phone. |
-| A review the author did not write | `/code-review` on the branch, which runs as a background subagent and can post its findings on the pull request with `--comment`. |
-| A run with no one watching | `claude -p` for a run from a script, and the Claude Code GitHub Action for one that CI starts. |
+> [!NOTE]- If you use Claude Code (as of 2026-10-09)
+> | The practice | The piece |
+> |---|---|
+> | The guide, pointed at | `@.intentset/agents.md` in `CLAUDE.md`, which imports the file. |
+> | A permissions file in the repository | `.claude/settings.json`, committed: `permissions.allow`, `permissions.deny` and `permissions.ask` name the commands and tools, and `sandbox` limits the files and the network a command can reach. `.claude/settings.local.json` beside it holds what one person allows and is not committed. |
+> | A rule that holds whatever the agent decides | A hook in the same file: a command that runs before a tool call and can refuse it, or when the agent stops and can send it back to run the checks. Instructions ask; hooks enforce. |
+> | A session in its own worktree | `claude --worktree <name>`, which opens the session on a copy of the repository under its own branch. |
+> | A workflow that fans out subagents | Dynamic workflows, asked for with the word `ultracode` in the prompt or saved under `.claude/workflows/`: a script of agent calls whose results stay in the script, not in your context. `/workflows` watches one run. |
+> | A subagent for a cold read or review | A definition under `.claude/agents/`, with the model and the tools it gets, run in the background and given the code, not the conclusion. `isolation: worktree` gives it a worktree of its own. |
+> | A routine on a schedule | A routine, from `/schedule`, with a cron expression, run in the cloud whether or not a session is open (a research preview as of this date); `/loop` for a repeated check within one session. |
+> | Plan before building | Plan mode, from `--permission-mode plan` or Shift+Tab, which reads and plans and changes nothing until you accept it. |
+> | Keep the plan as a page | An artifact: a page the session publishes to claude.ai, private to you until you share it, and republishes in place as the work moves. Ask for one for any plan too long for a message, and for the agent to keep it current. |
+> | A browser the agent can drive | Claude in Chrome, from `--chrome`, or a Playwright MCP server, pointed at the agent's own build. |
+> | Check in from wherever you are | Remote Control, from `/remote-control`, which puts the running session in the Claude app on your phone. |
+> | A review the author did not write | `/code-review` on the branch, which runs as a background subagent and can post its findings on the pull request with `--comment`. |
+> | A run with no one watching | `claude -p` for a run from a script, and the Claude Code GitHub Action for one that CI starts. |
 
 Two instructions belong in `CLAUDE.md` for every repository that runs this way, in plain words: that an agent never ends its turn to wait on a check it could poll, and that when it is blocked it says so in one sentence and stops. Everything else the guide already says.
 
@@ -141,4 +142,4 @@ have read it.
 
 The plan is the page's own first step. Read it, answer what it asks, and the rest is the agent's work, one pull request at a time, each through the gate.
 
-[[Prove the work](../verify/)]{.button .primary} [[The agent guide](../guide/)]{.button}
+[[Make agents' work safe to accept](../verify/)]{.button .primary} [[What your agents read](../guide/)]{.button}

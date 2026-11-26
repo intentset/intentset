@@ -2,10 +2,10 @@
 markset: 0
 ---
 
-# A small set of specifications, one shared product model
+# The specifications
 
 {.lead}
-Intentset separates product meaning from implementation architecture and platform choices. Adopt the Core model on its own, or connect it to traceable vertical slices.
+A small set of specifications, one shared product model. Intentset separates product meaning from implementation architecture and platform choices. Adopt the Core model on its own, or connect it to traceable vertical slices.
 
 ::::grid{cols=3}
 - :::card

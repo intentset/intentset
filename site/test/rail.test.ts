@@ -179,26 +179,44 @@ test("a page in a section carries its section's rail, marks itself once, and the
   );
 });
 
-test("Reference holds the specifications, the Markset page and conformance; Tools the command; Start the introduction, the adoption and the guide", () => {
+test("Reference holds the specifications, the Markset page and conformance; Tools the command and the guide; Start one reading path", () => {
   const links = (title: string) => railLinks(RAILS.find((r) => r.title === title) ?? { title, items: [] });
   const reference = links("Reference").map(([, href]) => href);
   for (const page of ["specifications/core/index.html", "markset/index.html", "conformance/index.html"]) {
     assert.ok(reference.includes(page), `Reference lacks ${page}`);
   }
-  assert.ok(links("Tools").some(([, href]) => href === "tools/cli/index.html"));
-  const start = links("Start").map(([, href]) => href);
-  assert.deepEqual(start, [
-    // Understand first, then do (2026-10-27).
-    "introducing/index.html",
-    "how-it-works/index.html",
-    "start/index.html",
-    "adopt/index.html",
-    "verify/index.html",
-    "guide/index.html",
+  // The agent guide is what an agent reads, beside what else reads a model (2026-11-25).
+  assert.deepEqual(
+    links("Tools").map(([, href]) => href),
+    ["tools/index.html", "tools/cli/index.html", "tools/readers/index.html", "guide/index.html"],
+  );
+  // Understand first, then do (2026-10-27), and what is for later is a group of its own, so the first five minutes and
+  // the weeks after them are not one flat list (2026-11-25). Each label is the page's h1.
+  assert.deepEqual(RAILS.find((r) => r.title === "Start")?.items, [
+    ["Introducing Intentset", "introducing/index.html"],
+    ["How it works", "how-it-works/index.html"],
+    ["Try it on your code", "start/index.html"],
+    {
+      label: "Once one capability works",
+      items: [
+        ["Model the whole product with many agents", "adopt/index.html"],
+        ["Make agents' work safe to accept", "verify/index.html"],
+      ],
+    },
   ]);
+  const start = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html.get("adopt/index.html") ?? "")?.[1] ?? "";
+  assert.match(
+    start,
+    /<li class="site-rail-group"><span class="site-rail-label">Once one capability works<\/span>\n<ul>/,
+  );
+  for (const page of ["adopt/index.html", "verify/index.html"]) {
+    const h1 = /<h1[^>]*>([^<]+)<\/h1>/.exec(html.get(page) ?? "")?.[1];
+    const label = railLinks(RAILS[0]).find(([, href]) => href === page)?.[0];
+    assert.equal(h1?.replaceAll("&#x27;", "'").replaceAll("&#39;", "'"), label, `${page}: the rail names its h1`);
+  }
 });
 
-test("Examples is one rail on every page of the section: Lantern's map, the walkthrough and its review pages, then the adoption log (2026-10-20)", () => {
+test("Examples is one rail on every page of the section: Lantern's walkthrough, its map and review pages, then the adoption log (2026-10-20)", () => {
   const examples = RAILS.find((r) => r.title === "Examples");
   assert.ok(examples);
   // Lantern is a group, its review pages a group inside it, so the rail is nested lists and its labels are not links.
@@ -206,8 +224,8 @@ test("Examples is one rail on every page of the section: Lantern's map, the walk
     {
       label: "Lantern, a worked example",
       items: [
-        ["The map", ATLAS_MAP_PAGE],
         ["The walkthrough", "example/index.html"],
+        ["The map", ATLAS_MAP_PAGE],
         { label: "Review pages", items: REVIEW_PAGES },
       ],
     },
@@ -217,11 +235,16 @@ test("Examples is one rail on every page of the section: Lantern's map, the walk
     REVIEW_PAGES.map(([label]) => label),
     ["Overview", "Records", "Ownership", "Verification", "Publication", "Diagnostics"],
   );
-  // The bar's Examples opens on the map, and no rail of the section leads in a circle back to another.
+  // The bar's Examples opens on the walkthrough (2026-11-25, the user's decision, reversing the map of 2026-10-20),
+  // which links the map near its top, and no rail of the section leads in a circle back to another.
   assert.deepEqual(
     NAV.find(([label]) => label === "Examples"),
-    ["Examples", "example/atlas/map/index.html"],
+    ["Examples", "example/index.html"],
   );
+  const walkthrough = /<main[\s\S]*?<\/main>/.exec(html.get("example/index.html") ?? "")?.[0] ?? "";
+  const mapButton = walkthrough.indexOf('<span class="ms-span button primary"><a href="atlas/map/">');
+  assert.ok(mapButton > 0, "the walkthrough's first button opens the map");
+  assert.ok(mapButton < walkthrough.indexOf("<h2"), "the map's button is above the first step");
   const expected = /<nav class="site-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html.get(ATLAS_MAP_PAGE) ?? "")?.[1] ?? "";
   assert.match(
     expected,
