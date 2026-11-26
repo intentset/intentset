@@ -42,6 +42,8 @@ export function diagnosticsPage(model: Model): PageSource {
   const syntax = all.filter((d) => d.origin === "syntax");
   const body: string[] = [
     "{.lead}",
+    "What the checks found wrong or incomplete in the records.",
+    "",
     `${plural(all.length, "diagnostic")} in this snapshot: ${errors} of ${all.length} ${errors === 1 ? "is an error" : "are errors"} ` +
       `and ${all.length - errors} of ${all.length} ${all.length - errors === 1 ? "is a warning" : "are warnings"}. ` +
       "Markset syntax diagnostics are listed apart from Intentset's own, and a document that renders is not " +

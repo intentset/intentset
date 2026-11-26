@@ -21,8 +21,8 @@ export function mapPage(layout: AtlasMapLayout): PageSource {
     title: "Map of the model",
     body: [
       "{.lead}",
-      `The model in the rows people read it in, its purpose on top and its capabilities beneath, each holding its ` +
-        `records until you open it: ${plural(layout.nodes.length, "record")} and ${plural(layout.edges.length, "link")}.`,
+      `How everything connects, with the product's purpose on top and each capability beneath, holding its records ` +
+        `until you open it: ${plural(layout.nodes.length, "record")} and ${plural(layout.edges.length, "link")}.`,
       "",
       ...MAP_SLOT_SOURCE,
       "",

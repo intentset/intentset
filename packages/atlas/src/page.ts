@@ -64,19 +64,18 @@ export function placeHtml(rendered: string, html: string | readonly string[]): s
 }
 
 /**
- * The pages every page's navigation lists, in order. The outline is the landing page and the list to work through is
- * next (#159, 2026-11-26): a reader asks first what the product is and what is waiting on them.
+ * The pages every page's navigation lists, in order (Gary, 2026-11-26): the product as a tree, which says what each
+ * other page is for, then what is waiting on a person, the map and the records, then the specialist pages.
  */
 export const NAV: readonly { path: string; label: string }[] = [
-  { path: "index.html", label: "Outline" },
+  { path: "index.html", label: "Product" },
   { path: "attention.html", label: "Needs attention" },
-  { path: "overview.html", label: "Overview" },
+  { path: "map.html", label: "Map" },
   { path: "records.html", label: "Records" },
   { path: "ownership.html", label: "Ownership" },
   { path: "verification.html", label: "Verification" },
   { path: "publication.html", label: "Publication" },
   { path: "diagnostics.html", label: "Diagnostics" },
-  { path: "map.html", label: "Map" },
 ];
 
 /** The relative prefix from a page back to the Atlas root: "" or "../". */
@@ -107,19 +106,17 @@ export function snapshotLine(snapshot: AtlasSnapshot): string {
   return `Snapshot: ${commit} · graph hash ${text(snapshot.graphHash.slice(0, 12))} · level ${text(snapshot.level)} · ${scope}`;
 }
 
-/** The notice every page opens with: internal unless the records are an invented example's. */
+/** The one line every page opens with: internal unless the records are an invented example's. */
 const NOTICES: Record<AtlasNotice, string[]> = {
   internal: [
-    "> [!WARNING] Internal: not for publication",
-    "> This Atlas is a derived view of the repository's records and may contain internal and restricted ones. " +
-      "Keep it inside the organization. The files are authoritative; published knowledge comes only from the " +
-      "publisher's projection, never from these pages.",
+    "{.small}",
+    "**Internal, not for publication:** these pages are built from this repository's records and may show internal " +
+      "and restricted ones. The files are authoritative.",
   ],
   example: [
-    "> [!NOTE] An invented example",
-    "> This Atlas is drawn from the records of an invented product, so it can be published to show what the Atlas " +
-      "shows. A team's own Atlas may contain internal and restricted records and stays inside the organization. " +
-      "The files are authoritative; these pages are a derived view of them.",
+    "{.small}",
+    "**An invented example:** these pages are drawn from an invented product's records, so they can be published to " +
+      "show what the Atlas shows. A team's own Atlas stays inside its organization.",
   ],
 };
 

@@ -69,7 +69,7 @@ const LINK_LABELS: Record<LinkKind, { written: string; derived: string }> = {
 
 /** The review page that also shows a record of this type, among the others of its kind. */
 const SHOWN_ON: Partial<Record<Artifact["meta"]["type"], { page: string; label: string }>> = {
-  capability: { page: "overview.html", label: "the overview, with its behaviors and their coverage" },
+  capability: { page: "index.html", label: "the product tree, with its behaviors and their state" },
   slice: { page: "ownership.html", label: "the ownership page, with its path claims, layers and shared resources" },
   verification: { page: "verification.html", label: "the verification page, among the claims it covers" },
   knowledge: { page: "publication.html", label: "the publication page, with what each projection would publish" },
@@ -80,6 +80,11 @@ export function recordPage(model: Model, artifact: Artifact, pageLink?: PageLink
   const id = meta.id;
   const ancestry = model.ancestry(id);
   const body: string[] = [
+    "{.lead}",
+    meta.type === "behavior"
+      ? "One behavior: its text as written, then how it traces from why it exists to the tests and help that hold it."
+      : "One record: its text as written, then what it links to and where it stands.",
+    "",
     `${link("Records", "../records.html")} › ${link(TYPE_HEADINGS[meta.type], `../records.html#${meta.type}`)} › ${code(id)}`,
     "",
   ];

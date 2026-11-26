@@ -4,8 +4,8 @@
 
 ## Context
 
-The Atlas shows a model as pages: an overview, ownership, verification, publication readiness, diagnostics and a page
-per behavior. Each page lists links in words, which is what review needs, but no page shows the network itself: which
+The Atlas shows a model as pages: an overview (since 2026-11-26, the product as a tree), ownership, verification,
+publication readiness, diagnostics and a page per behavior. Each page lists links in words, which is what review needs, but no page shows the network itself: which
 records sit together, which capability has drawn the most behaviors, which verification hangs off nothing. Asked
 whether the Atlas needed improving, the maintainer chose a visual tool that shows the network of connections, and
 chose an interactive explorer over a static picture (2026-10-15).

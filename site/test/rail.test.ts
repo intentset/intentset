@@ -232,7 +232,7 @@ test("the one example is on How it works' rail, and its map, review pages and re
   assert.deepEqual(serve?.items, [["The map", ATLAS_MAP_PAGE], ...REVIEW_PAGES]);
   assert.deepEqual(
     REVIEW_PAGES.map(([label]) => label),
-    ["Outline", "Needs attention", "Overview", "Records", "Ownership", "Verification", "Publication", "Diagnostics"],
+    ["Product", "Needs attention", "Records", "Ownership", "Verification", "Publication", "Diagnostics"],
   );
   // The walkthrough links the map near its top.
   const walkthrough = /<main[\s\S]*?<\/main>/.exec(html.get("example/index.html") ?? "")?.[0] ?? "";
