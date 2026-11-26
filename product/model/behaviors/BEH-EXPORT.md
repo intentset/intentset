@@ -34,7 +34,7 @@ A configuration; L2 for the ownership report and L3 for evidence.
 
 ## Outcomes
 
-Success: the envelope on standard output or in `--out`. Failure: restricted artifacts are withheld and counted unless `--include-restricted` is given, and a withheld artifact's ID appears nowhere in the envelope: not in a link, and not as a review pin or a tip key, each of which is left out and counted in `withheldLinks` (export §3, #49).
+Success: the envelope on standard output or in `--out`. Failure: restricted artifacts are withheld and counted unless `--include-restricted` is given, and a withheld artifact's ID appears nowhere in the envelope: not in a link, and not as a review pin or a tip key, each of which is left out and counted in `withheldLinks`, and not in a diagnostic's text or `field`, where it reads "a withheld artifact" (export §3, #49).
 
 ## Sources
 

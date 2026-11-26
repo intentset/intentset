@@ -99,7 +99,9 @@ parent of every exported artifact, from the keys of every knowledge artifact's `
 and a tip name the artifact as a link does), from `registries.resources[].consumers`, and from the lists inside every
 report; and
 a diagnostic whose artifact or path is a withheld artifact's is left out of `validation.diagnostics`, while one that
-names a withheld ID in its text has that ID replaced by "a withheld artifact". Every omission is counted where it
+names a withheld ID in its text or its `field` has that ID replaced by "a withheld artifact" (in `field`, the pointer
+token that was the ID, as in `/intentset/review/sources/a withheld artifact`, so a bad pin or tip keyed by a withheld
+artifact is still reported without naming it). Every omission is counted where it
 happened: `withholding.artifacts` and `withholding.diagnostics` for the envelope, `withheldLinks` per artifact, and a
 `withheld` count beside each report list that was shortened. A short export never reads as a complete one.
 

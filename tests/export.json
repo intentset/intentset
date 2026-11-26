@@ -1016,6 +1016,116 @@
   },
   {
     "section": "export",
+    "name": "export a bad pin and a bad tip keyed by a withheld artifact are reported with the ID replaced in their field",
+    "baseline": "scheduling",
+    "patch": {
+      "RULE-ASMT-FUTURE.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.review.sources.RULE-ASMT-FUTURE": "",
+          "intentset.tips.RULE-ASMT-FUTURE": ""
+        }
+      }
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE001",
+      "CORE001"
+    ],
+    "export": {
+      "withholding": {
+        "visibilities": [
+          "restricted"
+        ],
+        "artifacts": 1,
+        "diagnostics": 0
+      },
+      "validation": {
+        "status": "fail",
+        "errors": 2,
+        "diagnostics": [
+          {
+            "code": "CORE001",
+            "severity": "error",
+            "origin": "profile",
+            "artifact": "KB-ASMT-SCHEDULE",
+            "path": "KB-ASMT-SCHEDULE.md",
+            "field": "/intentset/tips/a withheld artifact"
+          },
+          {
+            "code": "CORE001",
+            "severity": "error",
+            "origin": "profile",
+            "artifact": "KB-ASMT-SCHEDULE",
+            "path": "KB-ASMT-SCHEDULE.md",
+            "field": "/intentset/review/sources/a withheld artifact"
+          }
+        ]
+      },
+      "artifacts": [
+        {
+          "id": "ADR-ASMT-SEAM"
+        },
+        {
+          "id": "BEH-ASMT-SCHEDULE"
+        },
+        {
+          "id": "CAP-ASMT-ASSIGN"
+        },
+        {
+          "id": "CONTRACT-ASMT-SCHEDULE"
+        },
+        {
+          "id": "INT-PREPARE"
+        },
+        {
+          "id": "KB-ASMT-SCHEDULE",
+          "links": {
+            "explains": [
+              "BEH-ASMT-SCHEDULE",
+              "RULE-ASMT-AUTH"
+            ]
+          },
+          "review": null,
+          "tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          },
+          "withheldLinks": 1
+        },
+        {
+          "id": "MEAS-PREPARE-ADOPTION"
+        },
+        {
+          "id": "MEAS-PREPARE-MINUTES"
+        },
+        {
+          "id": "OUT-PREPARE"
+        },
+        {
+          "id": "PRD-LANTERN"
+        },
+        {
+          "id": "RULE-ASMT-AUTH"
+        },
+        {
+          "id": "SCN-ASMT-SCHEDULE"
+        },
+        {
+          "id": "SLICE-ASMT-SCHEDULE"
+        },
+        {
+          "id": "TEST-ASMT-SCHEDULE"
+        }
+      ]
+    },
+    "notes": "Export §3 (ADR 0025, #49): a diagnostic about a pin or a tip keyed by a withheld artifact stays in the export, since its artifact is the knowledge record, and has the ID replaced in its field as in its text, so the restricted rule's ID appears nowhere in the envelope."
+  },
+  {
+    "section": "export",
     "name": "export boundary: a restricted source with a pin and no tip withholds the pin alone",
     "baseline": "scheduling",
     "patch": {

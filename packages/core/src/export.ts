@@ -160,7 +160,10 @@ function redactNote(note: string, withheld: Withheld): string {
   return out;
 }
 
-/** Diagnostics about a withheld artifact are left out; any other that names one has the ID redacted. */
+/**
+ * Diagnostics about a withheld artifact are left out; any other that names one has the ID redacted, in its text and in
+ * its field, whose pointer names a pin's or a tip's key (export §3).
+ */
 function withholdDiagnostics(diagnostics: readonly Diagnostic[], withheld: Withheld): Diagnostic[] {
   const out: Diagnostic[] = [];
   for (const d of diagnostics) {
@@ -172,7 +175,12 @@ function withholdDiagnostics(diagnostics: readonly Diagnostic[], withheld: Withh
       continue;
     }
     const redact = (text: string) => text.replace(pattern, "a withheld artifact");
-    out.push({ ...d, message: redact(d.message), remediation: redact(d.remediation) });
+    out.push({
+      ...d,
+      ...(d.field === null || d.field === undefined ? {} : { field: redact(d.field) }),
+      message: redact(d.message),
+      remediation: redact(d.remediation),
+    });
   }
   return out;
 }

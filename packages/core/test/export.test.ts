@@ -208,6 +208,33 @@ test("a diagnostic about a withheld artifact is counted, not listed; one naming 
   );
 });
 
+test("BEH-EXPORT: a bad pin and a bad tip keyed by a withheld artifact are reported with the ID replaced in their field", () => {
+  const malformed = withRestrictedRule().map((input) =>
+    input.path === "KB-ASMT-SCHEDULE.md"
+      ? plainCarrier(
+          input.path,
+          input.source
+            .replace(/RULE-ASMT-AUTH: d241506c\w+/, "RULE-ASMT-AUTH: ''")
+            .replace(
+              "    RULE-ASMT-FUTURE: The release time",
+              "    RULE-ASMT-AUTH: ''\n    RULE-ASMT-FUTURE: The release time",
+            ),
+        )
+      : input,
+  );
+  const result = validate(malformed, registries);
+  const fields = result.diagnostics.filter((d) => d.artifact === "KB-ASMT-SCHEDULE").map((d) => d.field);
+  assert.deepEqual(fields, ["/intentset/tips/RULE-ASMT-AUTH", "/intentset/review/sources/RULE-ASMT-AUTH"]);
+  const envelope = exportGraph(result, registries, META);
+  assert.deepEqual(
+    envelope.validation.diagnostics.filter((d) => d.artifact === "KB-ASMT-SCHEDULE").map((d) => d.field),
+    ["/intentset/tips/a withheld artifact", "/intentset/review/sources/a withheld artifact"],
+    "export §3: the field's token is replaced as the text's ID is",
+  );
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere");
+  assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
+});
+
 test("reports are withheld inside as the artifacts are, and each omission is counted beside the list it shortened", () => {
   const result = validate(withRestrictedRule(), registries);
   const envelope = exportGraph(result, registries, { ...META, reports: { impact: impactReport(result.graph) } });
