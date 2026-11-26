@@ -76,7 +76,7 @@ A record that explains part of the product to one audience, such as teachers. It
 
 ### Level
 
-How much of the specifications a model meets, each level including the ones before it: L1 the records are well formed, L2 the code respects each slice's ownership, L3 each claim has a current pass, L4 what is published is reviewed and authorized. `intentset validate --level` checks up to L4. L5 is a claim that all of it is kept true on every change, in CI.
+How much of the specifications a model meets, each level including the ones before it: L1 the records are well formed, L2 the code respects each slice's ownership, L3 each claim has a current pass, L4 what is published is reviewed and authorized. `intentset validate --level` checks up to L4. L5 is about how those checks run: they are required in CI, so no change merges without passing them, with an impact report on every pull request and a snapshot of the model at each release.
 
 ### Profile
 

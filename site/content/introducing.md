@@ -494,7 +494,7 @@ Adoption
 | **L2** Traceable implementation | Ownership and architecture checks | Each behavior has one owner, and the code respects it |
 | **L3** Verified product | Current passing evidence | Each promise has a current pass |
 | **L4** Published knowledge | Reviewed help for each audience | What you publish is authorized and traceable |
-| **L5** Continuous product truth | CI checks, impact reports and release automation | All of the above, kept true on every change |
+| **L5** Continuous product truth | The L1 to L4 checks required in CI, impact reports and release snapshots | No change merges without passing them |
 
 Each level includes the ones before it. A conformance claim always names its scope and the commit it was made at: one capability passing at L3 is not a repository at L3.
 

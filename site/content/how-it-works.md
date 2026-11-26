@@ -131,8 +131,8 @@ Start at the first level and stop wherever the value runs out.
 | L2 | Each behavior owned by one slice, and the boundaries in the code checked |
 | L3 | A current passing test for each promise |
 | L4 | Help that is held for review when what it explains changes |
-| L5 | All of it on every pull request |
+| L5 | The checks for L1 to L4 required in CI, so no change merges without passing them, with an impact report on every pull request and a snapshot of the model at each release |
 
-`intentset validate --level L3` runs every check up to that level.
+L1 to L4 say what is true of the model at one commit, and `intentset validate --level L4` checks them. L5 says those checks run on every change, so it describes how your repository works rather than anything `validate` can check.
 
 [[Try it on your code](../start/)]{.button .primary} [[Every term, defined](../glossary/)]{.button}
