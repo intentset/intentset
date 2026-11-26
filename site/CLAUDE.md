@@ -39,8 +39,11 @@ repository-relative.
   approved record** (2026-10-11, #48): reviewed against its three sources with their real hashes pinned, and carrying
   two tips, so the last act ends with what `intentset publish` writes for it, published at build time from a copy of
   the example (`site/example-publication.ts`). Editing `BEH-ASMT-SCHEDULE`, `RULE-ASMT-AUTH` or `RULE-ASMT-FUTURE`
-  changes a pinned hash: review the knowledge against the change, re-pin it (`shasum -a 256`) and update `reviewedAt`,
-  or `test/tooling.test.ts` fails and the site build refuses to publish. A fixture or test that wants the draft the
+  changes a pinned `content-v1` hash: review the knowledge against the change and renew the review, or
+  `test/tooling.test.ts` fails and the site build refuses to publish. The reviewer renews it with `intentset approve
+  KB-ASMT-SCHEDULE --renew-review --by <name>`, which also writes `self` and `gates`; an agent runs that only when the
+  reviewer says so, and otherwise sets each pin to the source's `contentHash` from `intentset context <ID> --json`
+  and updates `reviewedAt`. A fixture or test that wants the draft the
   record used to be patches `status: draft` itself.
 - **The worked example's Atlas** (`site/example-atlas.ts`, 2026-10-15) is the example's records validated at L1 and
   drawn by `@intentset/atlas` with its `example` notice, rendered in the site's shell under `/example/atlas/` in the

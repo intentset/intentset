@@ -482,6 +482,11 @@ export interface RepinResult {
   stale: number;
   /** A record holding a matched pin the line rewrite could not reach (a key written as an escape), and why. */
   problems: { path: string; problem: string }[];
+  /**
+   * A knowledge record whose pins could not be compared, because it or a source it pins does not read as YAML before
+   * the move (a key `0.3` rejects, such as `__proto__`), and why: nothing of them was re-pinned or counted.
+   */
+  unread: { path: string; problem: string }[];
 }
 
 type PinKind = "content-v1" | "file-v1";
@@ -591,6 +596,36 @@ function declaredPinKind(before: string, line: number): PinKind | null {
   return hash === "content-v1" ? "content-v1" : null;
 }
 
+const ID_LINE = /^\s+(['"]?)id\1\s*:\s*(['"]?)([^'"#\s]+)\2\s*(?:#.*)?$/;
+const REVIEW_KEY_LINE = /^\s+(['"]?)(?:review|intentset\.org\/review)\1\s*:/m;
+
+/**
+ * What `repinReviews` reads of a record: its `intentset` mapping as moved, else as written (a rewrite that no longer
+ * reads keeps the pins it had), else, when neither reads as YAML, its `id`, and whether it is knowledge that holds a
+ * review, read line by line, so a pin of it or in it is named rather than skipped.
+ */
+function repinView(
+  record: RepinRecord,
+): { meta: Record<string, unknown>; reads: true } | { id: string | null; reviewed: boolean; reads: false } {
+  const after = intentsetMapping(frontmatterAt(record.after, record.line));
+  if (typeof after !== "string") return { meta: after, reads: true };
+  const span = frontmatterAt(record.before, record.line);
+  const before = intentsetMapping(span);
+  if (typeof before !== "string") {
+    if (declaredSpec(span) === MIGRATE_TO) return { meta: before, reads: true };
+    const extensions = before.extensions;
+    const review =
+      extensions !== null && typeof extensions === "object" && !Array.isArray(extensions)
+        ? (extensions as Record<string, unknown>)["intentset.org/review"]
+        : undefined;
+    return { meta: { ...before, review }, reads: true };
+  }
+  const lines = intentsetLines(record.before.split("\n"), span).map(({ line }) => line);
+  const id = lines.map((line) => ID_LINE.exec(line)?.[3]).find((value) => value !== undefined) ?? null;
+  const knowledge = lines.some((line) => TYPE_LINE.exec(line)?.[3] === "knowledge");
+  return { id, reviewed: knowledge && REVIEW_KEY_LINE.test(span.text), reads: false };
+}
+
 /**
  * How `repinReviews` treats a knowledge record's own pins, read from its text before the move: whether the move
  * rewrites its pins at all (it moves the record, or the record is already at the target), the source pin kind it reads
@@ -625,13 +660,15 @@ export function repinPlan(before: string, line: number): { rewrites: boolean; ki
  * were re-pinned follows it, so the rewrite runs until nothing changes.
  */
 export function repinReviews(records: readonly RepinRecord[]): RepinResult {
-  const metas = records.map((record) => intentsetMapping(frontmatterAt(record.after, record.line)));
+  const views = records.map(repinView);
+  const metas = views.map((view) => (view.reads ? view.meta : null));
   const byId = new Map<string, number>();
   const repeated = new Set<string>();
-  metas.forEach((meta, i) => {
-    if (typeof meta === "string" || typeof meta.id !== "string") return;
-    if (byId.has(meta.id)) repeated.add(meta.id);
-    byId.set(meta.id, i);
+  views.forEach((view, i) => {
+    const id = view.reads ? view.meta.id : view.id;
+    if (typeof id !== "string") return;
+    if (byId.has(id)) repeated.add(id);
+    byId.set(id, i);
   });
   for (const id of repeated) byId.delete(id);
   const isMapping = (value: unknown): value is Record<string, unknown> =>
@@ -645,15 +682,26 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
     value: string;
   }[] = [];
   let stale = 0;
+  const unread: { record: number; problem: string }[] = [];
   metas.forEach((meta, i) => {
-    if (typeof meta === "string" || meta.type !== "knowledge" || !isMapping(meta.review)) return;
-    const { sources } = meta.review;
-    if (!isMapping(sources)) return;
     const record = records[i];
     // Only a record the run moves, or one already at the target, has its pins rewritten; one that declares neither is
     // left byte for byte, as the command reports it.
     const atTarget = declaredSpec(frontmatterAt(record.before, record.line)) === MIGRATE_TO;
     if (!atTarget && record.before === record.after) return;
+    const view = views[i];
+    if (meta === null) {
+      if (!view.reads && view.reviewed) {
+        unread.push({
+          record: i,
+          problem: "does not read as YAML, so none of its review pins could be compared, and none was re-pinned",
+        });
+      }
+      return;
+    }
+    if (meta.type !== "knowledge" || !isMapping(meta.review)) return;
+    const { sources } = meta.review;
+    if (!isMapping(sources)) return;
     const kind = atTarget ? currentPinKind(meta.review.hash) : declaredPinKind(record.before, record.line);
     // ADR 0027: `self` is the record's own content hash whatever the kind; it moves only when the record itself does,
     // and only from a version that read it.
@@ -668,6 +716,13 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
       const source = byId.get(id);
       if (source === undefined || records[source].before === records[source].after) continue;
       const pin = sources[id];
+      if (metas[source] === null) {
+        unread.push({
+          record: i,
+          problem: `its review pin for ${id} could not be compared, since ${id} does not read as YAML, so it was left as written`,
+        });
+        continue;
+      }
       const was = kind === null ? null : recordHash(records[source].before, records[source].line, kind);
       if (kind !== null && typeof pin === "string" && was !== null && pin === was) {
         pins.push({ record: i, source, id, kind, original: pin, value: pin });
@@ -702,6 +757,10 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
     }
     if (!moved) break;
   }
+  const named = (list: { record: number; problem: string }[]) =>
+    list
+      .map(({ record, problem }) => ({ path: records[record].path, problem }))
+      .sort((a, b) => compareStrings(a.path, b.path) || compareStrings(a.problem, b.problem));
   const texts = new Map<string, string>();
   records.forEach((record, i) => {
     if (current[i] !== record.after) texts.set(record.path, current[i]);
@@ -710,9 +769,8 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
     texts,
     repinned: pins.filter((pin) => pin.value !== pin.original).length,
     stale,
-    problems: problems
-      .map(({ record, problem }) => ({ path: records[record].path, problem }))
-      .sort((a, b) => compareStrings(a.path, b.path) || compareStrings(a.problem, b.problem)),
+    problems: named(problems),
+    unread: named(unread),
   };
 }
 
@@ -794,7 +852,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
           .join(""),
     );
   }
-  if (left.length === 0 && repin.problems.length === 0) return 0;
+  if (left.length === 0 && repin.problems.length === 0 && repin.unread.length === 0) return 0;
   if (left.length > 0) {
     io.stderr(
       `intentset migrate: ${left.length} record${left.length === 1 ? "" : "s"} moved to ${MIGRATE_TO} could not be rewritten in full; give each one key per name, a status of approved, delivery: built ` +
@@ -811,6 +869,14 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     io.stderr(
       `intentset migrate: ${pins(repin.problems.length)} that matched before the move could not be re-pinned; write each in block form under review.sources, or have the knowledge reviewed again:\n` +
         repin.problems.map(({ path, problem }) => `  ${path}: ${problem}\n`).join(""),
+    );
+  }
+  if (repin.unread.length > 0) {
+    const unread = new Set(repin.unread.map(({ path }) => path)).size;
+    io.stderr(
+      `intentset migrate: ${unread} knowledge record${unread === 1 ? "'s" : "s'"} review pins could not be compared with their sources, because a record does not read as YAML; ` +
+        "discard this migration (git checkout -- .), make each record read (remove or rename a __proto__ key), commit that, and run migrate again:\n" +
+        repin.unread.map(({ path, problem }) => `  ${path}: ${problem}\n`).join(""),
     );
   }
   return 1;

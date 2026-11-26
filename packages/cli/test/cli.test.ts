@@ -1442,6 +1442,47 @@ test("BEH-MIGRATE: migrate names a matched pin it cannot reach, leaves it as wri
   );
 });
 
+for (const [what, unreadable] of [
+  ["the knowledge", "KB-ASMT-SCHEDULE"],
+  ["a source it pins", "BEH-ASMT-SCHEDULE"],
+] as const) {
+  test(`BEH-MIGRATE: migrate names the review pins it could not compare when ${what} does not read at 0.3, and a run after the key goes re-pins them`, async (t) => {
+    const { dir, files, current } = await atEarlier(t);
+    const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+    writeFileSync(
+      kb,
+      pinEach(kb, (id) => RECORD(dir, id), "content-v1"),
+    );
+    const path = RECORD(dir, unreadable);
+    const reviewed = readFileSync(path, "utf8");
+    // A key a 0.2 reader dropped without a word, so the review read as current, and that 0.3 rejects (CORE010).
+    const withKey = reviewed.replace(/^( {2}revision: \d+\n)/m, "$1  __proto__: 1\n");
+    assert.notEqual(withKey, reviewed);
+    writeFileSync(path, withKey);
+    git(dir, "commit", "-q", "-am", "reviewed at 0.2, with a key 0.3 rejects");
+
+    const moved = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(moved.code, 1);
+    assert.match(
+      moved.err,
+      unreadable === "KB-ASMT-SCHEDULE"
+        ? /1 knowledge record's review pins could not be compared[^\n]*\n {2}product\/scheduling\/KB-ASMT-SCHEDULE\.md: does not read as YAML, so none of its review pins could be compared, and none was re-pinned\n/
+        : /1 knowledge record's review pins could not be compared[^\n]*\n {2}product\/scheduling\/KB-ASMT-SCHEDULE\.md: its review pin for BEH-ASMT-SCHEDULE could not be compared, since BEH-ASMT-SCHEDULE does not read as YAML, so it was left as written\n/,
+    );
+    assert.match(moved.err, /discard this migration \(git checkout -- \.\)/);
+
+    // The recovery docs/consumers.md gives: discard the run, remove the key, commit, and migrate again.
+    git(dir, "checkout", "--", ".");
+    writeFileSync(path, reviewed);
+    git(dir, "commit", "-q", "-am", "the key removed");
+    const again = await run(dir, "migrate", "--to", "0.3");
+    assert.equal(again.code, 0, again.err);
+    assert.match(again.out, new RegExp(`moved ${files.length} records to 0\\.3; re-pinned 3 review pins`));
+    assert.equal(readFileSync(kb, "utf8"), current.get(KB));
+    assert.deepEqual(await currentAtL4(dir), [], "current before the move and after it");
+  });
+}
+
 test("BEH-MIGRATE: migrate keeps current a review of the repository's own model, its records moved from 0.2 in the same run", async (t) => {
   const dir = temp(t);
   cpSync(join(REPO, "product", "model"), join(dir, "product", "model"), { recursive: true });

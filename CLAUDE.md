@@ -264,7 +264,7 @@ in `docs/implementation-plan.md` §5.
   #127, #129, #130 with #49, #142, #143 and #144), and awaits release as 0.18.0 and the maintainer's approval of the
   drafts it added or returned to draft. A migration step's per-record rewrites go in `MIGRATIONS` in
   `packages/cli/src/commands/migrate.ts`.
-- Sixty-four records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
+- Seventy records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
   verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
   for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive

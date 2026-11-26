@@ -6,7 +6,7 @@ intentset:
   id: TEST-EXPORT
   type: verification
   title: Graph prints the export envelope
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]

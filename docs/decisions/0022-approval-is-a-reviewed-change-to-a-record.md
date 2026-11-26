@@ -1,6 +1,9 @@
 # ADR 0022: Approval is a reviewed change to a record, and the tools write it and show it
 
-**Status:** accepted, 2026-11-24. **Amended 2026-11-25: migrate re-pins, and `approve --renew-review` renews a review (decisions).**
+**Status:** accepted, 2026-11-24. **Amended 2026-11-25 (Gary): `approve --renew-review` renews the review of approved knowledge, and `migrate`
+re-pins the pins that matched before a move** (the maintainer's decision for the move to `0.3`, recorded in CLAUDE.md
+design invariant 1 and in ADR 0027's status; the section "Amended 2026-11-25" below says what changed, and the
+earlier text stands where it is not marked superseded).
 
 ## Context
 
@@ -112,7 +115,22 @@ Design invariant 1 names two exceptions instead of one. Invariant 7's list of re
   script writes the pins is the script this decision set out to remove.
 - **Re-sign an approved knowledge record whose sources changed.** The same lines would be written, but it is a
   review of a record already approved, not an approval, and the command changes only drafts. It waits for an adopter
-  who asks.
+  who asks. *Superseded 2026-11-25 by the amendment below: `--renew-review` does this, as a separate mode.*
+
+## Amended 2026-11-25
+
+Two rewrites join the command's, both decided by the maintainer for the move to `0.3` and stated in design
+invariant 1:
+
+- **`intentset approve --renew-review`** renews the review of the approved or deprecated knowledge it is given:
+  `reviewedBy`, `reviewedAt`, a pin of each source at its current hash, `self` and `gates` (publication §3, "Moving
+  and renewing"). It leaves `status` and `approval` as they are and changes no other record. It takes `--by`, refuses
+  a dirty tree unless `--allow-dirty`, and validates first, as an approval does.
+- **`intentset migrate --to <spec>`** re-pins each review pin that matched its source before the move, and leaves a
+  stale pin stale, so a review current before migrating is current after it.
+
+Since ADR 0025 the review is the core field `review`, not `extensions.intentset.org/review`: where the Decision above
+names the extension, `approve` now writes `review`.
 
 ## Consequences
 

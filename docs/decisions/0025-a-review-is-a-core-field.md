@@ -1,7 +1,9 @@
 # ADR 0025: A knowledge review is a core field, pins content by default, and is withheld with its source
 
 **Status:** accepted, 2026-11-25 (issues #130 and #49). Proposed 2026-11-24. Part of the
-move to `0.3`, with ADR 0023, ADR 0024 and ADR 0026. Amends [ADR 0018](0018-a-review-pins-what-a-record-promises.md). **Amended 2026-11-25: migrate re-pins (decisions).**
+move to `0.3`, with ADR 0023, ADR 0024 and ADR 0026. Amends [ADR 0018](0018-a-review-pins-what-a-record-promises.md). **Amended 2026-11-25 (Gary): migrate re-pins the pins that matched before
+the move, and `approve --renew-review` renews a review** (the maintainer's decision for the move to `0.3`, recorded in
+CLAUDE.md design invariant 1; publication §3, "Moving and renewing", states both).
 
 ## Context
 
