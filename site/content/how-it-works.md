@@ -18,7 +18,7 @@ This page walks through it in the order you would meet it: the files, the model 
 1. **Write records.** Each behavior, rule, slice and check is a Markdown file with YAML frontmatter, written by the agent that changes the code and reviewed in the same pull request.
 2. **Link them once.** A record names what it points at. Intentset works out the reverse, so every behavior knows its rules, its owner, its checks and its explanations.
 3. **Give each behavior one owner.** A slice of your code is accountable for it, and an architecture check keeps other code out of that slice's internals.
-4. **Attach evidence.** Test runs from CI are tied to a commit, and only a pass on the commit under review counts.
+4. **Attach evidence.** Test runs from CI are tied to a commit. A pass counts while what it checked is unchanged, and a gate can ask for a pass on the commit under review.
 5. **Review the impact.** Before a change merges, see every behavior, owner, check and explanation it could reach.
 6. **Publish safely.** Reviewed explanations go out for one audience and one release, and nothing internal leaks through.
 7. **Hand it on.** Other tools read the model through one versioned export, with restricted records left out.
@@ -179,7 +179,7 @@ Keep run records in CI or another store you control, never in the commit they as
 
 `intentset graph` writes the model as one JSON export for other tools to import: the graph and, on request, evidence, knowledge, impact and ownership reports. Restricted records are left out by default, and every omission is counted, so a reader knows something was withheld without learning what. The export names the commit and graph it was built from, so importing the same snapshot twice changes nothing.
 
-A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. Driftline reads Streamlane's export to attribute the usage it sees to Streamlane's behaviors. [Read the export contract](../specifications/export/).
+A tool reads it with `readExport` from `@intentset/core`, which rejects an export it cannot trust and says why. The conformance suite carries valid and deliberately broken exports for testing an importer. A usage tool can read a product's export to attribute the usage it sees to that product's behaviors. [Read the export contract](../specifications/export/).
 
 ## Context for agents, with limits
 

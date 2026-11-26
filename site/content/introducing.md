@@ -799,7 +799,7 @@ In practice
 
 ::::columns
 
-### Streamlane, a work management product
+### Streamlane (Product · In development), a work management product
 
 The first capability modelled, from the code, tests and decisions already there, showed what nobody had seen: two of its three rules had no test, and three behaviors were checked only in the browser.
 
@@ -807,11 +807,11 @@ The model is now a required check on every pull request, in strict mode.
 
 ::col
 
-### Driftline
+### Driftline (Product · In planning)
 
 Modelled before any of its code existed; its first package was checked against what had been approved.
 
-It now reads Streamlane back, counting what each of Streamlane's behaviors saw in use.
+That package, not released, counts what each behavior saw in use.
 
 ::::
 
@@ -824,7 +824,7 @@ It now reads Streamlane back, counting what each of Streamlane's behaviors saw i
 :::
 
 {.caveat}
-Streamlane figures as published in the adoption log at [intentset.org/pilot](../pilot/), counted on 19 October 2026
+Figures as published in the adoption log at [intentset.org/pilot](../pilot/), counted on 19 October 2026
 
 :::::
 

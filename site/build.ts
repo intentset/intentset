@@ -370,6 +370,12 @@ export interface Page {
    * Records, marked as where the reader is, with the record named beneath it as the page.
    */
   railPlace?: { under: string; label: string };
+  /**
+   * Where a page is generated from, when it is not the site's own writing: a normative document rendered from spec/,
+   * or the conformance page generated from tests/. The naming rule in CLAUDE.md exempts these by how they are made
+   * (decision of 2026-11-25), and site/test/family.test.ts reads this field rather than a list of addresses.
+   */
+  generatedFrom?: "spec" | "tests";
 }
 
 /**
@@ -492,13 +498,31 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await writeFile(join(out, "llms.txt"), llmsTxt());
   await writeFile(join(out, "robots.txt"), robotsTxt());
 
-  const { specs, records, knowledge, tokens } = await siteInputs(inputs);
-  const publication = await publishExample(join(root, EXAMPLE_DIR));
-  const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR, (path) => `${REPO}/blob/main/${path}`);
   // The map's one script and its styles, beside the Atlas's pages (ADR 0015).
   await mkdir(join(out, ATLAS_ROOT), { recursive: true });
   await writeFile(join(out, ATLAS_MAP_SCRIPT), MAP_SCRIPT);
   await writeFile(join(out, ATLAS_MAP_STYLES), MAP_STYLES);
+  const { pages, rails } = await sitePages(askUrl, inputs);
+
+  const written: string[] = [];
+  for (const page of pages) {
+    const file = join(out, page.path);
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, shell(page, askUrl, rails));
+    written.push(page.path);
+  }
+  await writeFile(join(out, "sitemap.xml"), sitemapXml(written));
+  return written;
+}
+
+/** Every page the site writes, before its shell: what build() writes, for a test that reads each page's <main>. */
+export async function sitePages(
+  askUrl: string | null = ASK_URL,
+  inputs: InputOptions = {},
+): Promise<{ pages: Page[]; rails: typeof RAILS }> {
+  const { specs, records, knowledge, tokens } = await siteInputs(inputs);
+  const publication = await publishExample(join(root, EXAMPLE_DIR));
+  const atlas = await exampleAtlas(join(root, EXAMPLE_DIR), EXAMPLE_DIR, (path) => `${REPO}/blob/main/${path}`);
   const rails = siteRails(knowledge);
   const pages: Page[] = [
     ...(await Promise.all(
@@ -512,16 +536,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
     ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
     ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
   ];
-
-  const written: string[] = [];
-  for (const page of pages) {
-    const file = join(out, page.path);
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, shell(page, askUrl, rails));
-    written.push(page.path);
-  }
-  await writeFile(join(out, "sitemap.xml"), sitemapXml(written));
-  return written;
+  return { pages, rails };
 }
 
 /** /llms.txt: what an agent needs to keep a model, and where the guide is. */
@@ -658,6 +673,7 @@ async function documentPage(path: string, file: string, meta: SpecMeta): Promise
     body: underHeading(renderHtml(ast, { diagrams: false, charts: false }), banner),
     toc: tableOfContents(ast, 2, 3),
     bodyAttributes: bodyAttributes(ast.frontmatter ?? null),
+    generatedFrom: "spec",
   };
 }
 
@@ -776,7 +792,7 @@ ${codeRows.join("\n")}
 
 A tool that imports an export rather than producing one is checked against ${manifest.cases.length} envelopes for \`${manifest.contract}\`: ${accepted} it must accept and ${manifest.cases.length - accepted} it must reject. Every rejected envelope is an accepted one with one deliberate defect, and several are valid against the schema, so a schema validator alone is not a consumer. The [export contract](../specifications/export/) says what a consumer checks.
 `;
-  return renderPage("conformance/index.html", source, join(root, "tests", "index.json"));
+  return renderPage("conformance/index.html", source, join(root, "tests", "index.json"), { generatedFrom: "tests" });
 }
 
 function rank(order: string[], name: string): number {
@@ -976,7 +992,7 @@ The records above are what an agent writes and a person approves. [The map](atla
 
 ## Try the same thing on your own code
 
-Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in Streamlane](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
+Nothing above was written by hand for this site. It is the shape an agent produces when it reads a capability out of a repository that already has the code, the tests and the decisions: the [first capability modelled in a real product](../pilot/) came out this way, and listed two rules with no test and three behaviors checked only in the browser.
 
 [[Start with one capability](../start/)]{.button .primary} [[See how it works](../how-it-works/)]{.button}
 `;
