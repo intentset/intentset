@@ -46,6 +46,9 @@ export function reviewCell(review: ReviewStatus): string {
   if (review.missing.length > 0) reasons.push(`not pinned: ${review.missing.map(code).join(", ")}`);
   if (review.reviewer === null) reasons.push("no reviewer");
   if (review.reviewedAt === null) reasons.push("no review date");
+  if (review.self === "changed") reasons.push("own text changed since review");
+  // ADR 0027: knowledge whose sources changed what they promise, and nothing else, can be kept under review.
+  if (review.keepable) reasons.push("can be published under review (keepUnderReview)");
   return `${badge("needs review", "warn")} ${reasons.join("; ")}`;
 }
 

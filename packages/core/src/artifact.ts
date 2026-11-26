@@ -19,7 +19,7 @@
 import { closingFenceIndex } from "./carrier.ts";
 import type { Diagnostic, Location } from "./diagnostics.ts";
 import { sha256Hex } from "./hash.ts";
-import { contentHashOf } from "./content-hash.ts";
+import { contentHashOf, ownContentHashOf } from "./content-hash.ts";
 import { type Locate, NO_LOCATION, aType, capitalize, compareStrings, isRecord, makeDiagnostic } from "./report.ts";
 import {
   APPROVAL_BASES,
@@ -107,7 +107,7 @@ const AVAILABILITY_KEYS = ["products", "releases", "roles", "editions", "flags"]
 const EXTENSION_KEY = /^[^/]+\/.+$/;
 /** The extension a review was authored under before 0.3 (ADR 0025): CORE001 now, since it would read as no review. */
 export const RETIRED_REVIEW_EXTENSION = "intentset.org/review";
-const REVIEW_KEYS = ["sources", "hash", "snapshot"] as const;
+const REVIEW_KEYS = ["sources", "hash", "snapshot", "self", "gates"] as const;
 
 /**
  * Core §3, §4, §6 and §7 (ADR 0002, ADR 0024): read one document into an Artifact, with origin "profile": CORE010 for a
@@ -233,6 +233,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
       path: input.path,
       sourceHash: sha256Hex(input.source),
       contentHash: contentHashOf(root, bodyOf(input.source)),
+      ownContentHash: ownContentHashOf(root, bodyOf(input.source)),
       body: bodyOf(input.source),
       headings: input.headings,
       foreign,
@@ -755,7 +756,9 @@ function readTips(value: unknown, field: string, problem: Problem): Record<strin
 
 /**
  * Core §9, publication §3 (ADR 0025): a knowledge record's review, a mapping with `sources`, a mapping from a source ID
- * to the hash it had at review, and optionally `hash`, the pin kind, and `snapshot`, informative. Any problem drops the
+ * to the hash it had at review, and optionally `hash`, the pin kind, `snapshot`, informative, and `self` and `gates`,
+ * the knowledge's own content hash and its sources' gate hash at review (ADR 0027). Every pin is a string and no other
+ * shape is checked, so a string that is not the current value reads as changed. Any problem drops the
  * whole review, so the knowledge reads as unreviewed rather than as reviewed against part of what it pinned.
  */
 function readReview(value: unknown, field: string, problem: Problem): ReviewMeta | null {
@@ -810,7 +813,7 @@ function readReview(value: unknown, field: string, problem: Problem): ReviewMeta
     }
   }
   const review: ReviewMeta = { sources };
-  for (const key of ["hash", "snapshot"] as const) {
+  for (const key of ["hash", "snapshot", "self", "gates"] as const) {
     if (!Object.hasOwn(value, key) || value[key] === null) continue;
     const text = value[key];
     if (typeof text === "string" && text !== "") review[key] = text;
@@ -820,7 +823,9 @@ function readReview(value: unknown, field: string, problem: Problem): ReviewMeta
         `\`review.${key}\` must be a non-empty string.`,
         key === "hash"
           ? "Write `content-v1` (the default when absent) or `file-v1` (publication §3)."
-          : "Write the commit or graph hash the review was made at, or leave it out.",
+          : key === "snapshot"
+            ? "Write the commit or graph hash the review was made at, or leave it out."
+            : "Leave it to `intentset approve`, which writes the value a review pins (publication §3, ADR 0027).",
       );
   }
   return ok ? review : null;

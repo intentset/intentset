@@ -35,9 +35,10 @@ const _tip = (tip: Publisher.HelpTip): Help.HelpTip => tip;
 const _block = (meta: Publisher.PublicationMeta): Pick<Help.Help, "projection" | "audience" | "availability"> => meta;
 void [_file, _knowledge, _tip, _block];
 
-test("BEH-HELP-READER: every help file the publication cases write passes readHelp", () => {
+test("BEH-HELP-READER, BEH-PUBLISH-UNDER-REVIEW: every help file the publication cases write passes readHelp, kept documents included", () => {
   const cases = JSON.parse(readFileSync(join(root, "tests", "publication.json"), "utf8")) as ConformanceCase[];
   let read = 0;
+  let kept = 0;
   for (const testCase of cases) {
     const expanded = expandCase(testCase, { examplesDir: join(root, "examples"), parseYaml });
     const inputs: DocumentInput[] = [];
@@ -55,6 +56,9 @@ test("BEH-HELP-READER: every help file the publication cases write passes readHe
     const result = readHelp(`${JSON.stringify(published.help, null, 2)}\n`);
     assert.deepEqual(result.problems, [], testCase.name);
     read++;
+    // ADR 0027: a document kept under review is in the file, marked, and the reader accepts it.
+    if (published.help.knowledge.some((entry) => entry.underReview === true)) kept++;
   }
   assert.ok(read > 20, `${read} help files read`);
+  assert.ok(kept > 5, `${kept} help files with a document kept under review read`);
 });

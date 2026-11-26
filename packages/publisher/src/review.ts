@@ -26,13 +26,31 @@
  * 0.13.0 holds and `intentset migrate --to 0.3` names. Any other `hash` is a
  * kind this version does not know: every pin reads as changed.
  *
+ * A review may also pin the knowledge's own text, `self`, its own content
+ * hash (the content hash without `ending`), and who could see each source,
+ * `gates`, the gate hash of its sources' audiences, visibility and
+ * availability (ADR 0027). A `self` that differs from the record's own content
+ * hash makes the knowledge needs-review: its text changed after review.
+ * `gates` never decides currency. Both decide whether needs-review knowledge
+ * is *keepable*: published, marked under review, when a request names
+ * `keepUnderReview` (publication §3). It is keepable when only what its
+ * sources promise changed, not who may see them, and its own text is the text
+ * the review covered.
+ *
  * A pin of the literal `@current` is a fixture placeholder: `bindReviewPins`
  * replaces it with the source's hash of the record's kind in the snapshot
  * being checked, so a case can say "reviewed against what is there now"
  * without computing a hash. Unbound, it never equals a hash, so it reads as
  * changed.
  */
-import { type Artifact, type Graph, graphHash, type KnowledgeReportSection, type ReviewMeta } from "@intentset/core";
+import {
+  type Artifact,
+  type Graph,
+  gateHashOf,
+  graphHash,
+  type KnowledgeReportSection,
+  type ReviewMeta,
+} from "@intentset/core";
 import { compareStrings, sortedUnique } from "./diagnostic.ts";
 
 export const CURRENT_PIN = "@current";
@@ -57,7 +75,37 @@ export interface ReviewStatus {
   reviewer: string | null;
   /** `reviewedAt`, or null when absent. */
   reviewedAt: string | null;
+  /** Whether the knowledge's own text matches `review.self`: `unpinned` when the review has none (ADR 0027). */
+  self: PinState;
+  /** Whether its sources' gate hash matches `review.gates`: `unpinned` when the review has none (ADR 0027). */
+  gates: PinState;
+  /** Whether the knowledge may be published under review when a request names `keepUnderReview` (publication §3). */
+  keepable: boolean;
+  /** Why it is not keepable, in publication §3's order; empty exactly when `keepable`. */
+  keepBlockers: KeepBlocker[];
 }
+
+/** Whether a review's `self` or `gates` matches what it pins now. */
+export type PinState = "unchanged" | "changed" | "unpinned";
+
+/**
+ * A condition of keepable that fails (publication §3), in the spec's order: `current` when the knowledge needs no
+ * review, then each of the seven conditions.
+ */
+export const KEEP_BLOCKERS = [
+  "current",
+  "no-source-changed",
+  "pin-missing",
+  "unknown-hash",
+  "no-reviewer",
+  "self-unpinned",
+  "self-changed",
+  "gates-unpinned",
+  "gates-changed",
+  "source-gone",
+  "source-retired",
+] as const;
+export type KeepBlocker = (typeof KEEP_BLOCKERS)[number];
 
 /** The sources a review must pin: everything explained, and the rules governing each explained behavior. Sorted. */
 export function reviewSources(graph: Graph, artifact: Artifact): string[] {
@@ -90,8 +138,69 @@ export function reviewStatus(graph: Graph, artifact: Artifact): ReviewStatus {
   }
   const reviewer = nonEmpty(artifact.meta.reviewedBy);
   const reviewedAt = nonEmpty(artifact.meta.reviewedAt);
-  const current = changed.length === 0 && missing.length === 0 && reviewer !== null && reviewedAt !== null;
-  return { status: current ? "current" : "needs-review", changed, missing, unknownHash, reviewer, reviewedAt };
+  const self = pinState(record?.self, artifact.ownContentHash);
+  const gates = pinState(record?.gates, reviewGateHash(graph, artifact));
+  const current =
+    changed.length === 0 &&
+    missing.length === 0 &&
+    unknownHash === null &&
+    reviewer !== null &&
+    reviewedAt !== null &&
+    self !== "changed";
+  const blockers: KeepBlocker[] = [];
+  if (current) blockers.push("current");
+  else {
+    const sources = reviewSources(graph, artifact);
+    if (changed.length === 0) blockers.push("no-source-changed");
+    if (missing.length > 0) blockers.push("pin-missing");
+    if (unknownHash !== null) blockers.push("unknown-hash");
+    if (reviewer === null || reviewedAt === null) blockers.push("no-reviewer");
+    if (self === "unpinned") blockers.push("self-unpinned");
+    if (self === "changed") blockers.push("self-changed");
+    if (gates === "unpinned") blockers.push("gates-unpinned");
+    if (gates === "changed") blockers.push("gates-changed");
+    if (sources.some((id) => !graph.artifacts.has(id))) blockers.push("source-gone");
+    if (sources.some((id) => graph.artifacts.get(id)?.meta.status === "retired")) blockers.push("source-retired");
+  }
+  return {
+    status: current ? "current" : "needs-review",
+    changed,
+    missing,
+    unknownHash,
+    reviewer,
+    reviewedAt,
+    self,
+    gates,
+    keepable: blockers.length === 0,
+    keepBlockers: blockers,
+  };
+}
+
+function pinState(pin: string | undefined, current: string): PinState {
+  if (pin === undefined) return "unpinned";
+  return pin === current ? "unchanged" : "changed";
+}
+
+/**
+ * The gate hash of a knowledge record's review sources (publication §3, ADR 0027): for each source the review must
+ * pin, its audiences, visibility and availability, or null when no record has the ID. What `review.gates` pins.
+ */
+export function reviewGateHash(graph: Graph, artifact: Artifact): string {
+  return gateHashOf(
+    reviewSources(graph, artifact).map((id) => {
+      const source = graph.artifacts.get(id);
+      return [
+        id,
+        source === undefined
+          ? null
+          : {
+              audiences: source.meta.audiences,
+              visibility: source.meta.visibility,
+              availability: source.meta.availability ?? null,
+            },
+      ] as const;
+    }),
+  );
 }
 
 /**
@@ -114,7 +223,12 @@ export function bindReviewPins(graph: Graph): Graph {
   const artifacts = new Map<string, Artifact>();
   for (const [id, artifact] of graph.artifacts) {
     const review = artifact.meta.review;
-    if (review === undefined || !Object.values(review.sources).includes(CURRENT_PIN)) {
+    if (
+      review === undefined ||
+      (!Object.values(review.sources).includes(CURRENT_PIN) &&
+        review.self !== CURRENT_PIN &&
+        review.gates !== CURRENT_PIN)
+    ) {
       artifacts.set(id, artifact);
       continue;
     }
@@ -124,7 +238,11 @@ export function bindReviewPins(graph: Graph): Graph {
       const found = graph.artifacts.get(source);
       sources[source] = pin === CURRENT_PIN && found !== undefined && hashOf !== null ? hashOf(found) : pin;
     }
-    artifacts.set(id, { ...artifact, meta: { ...artifact.meta, review: { ...review, sources } } });
+    const bound: ReviewMeta = { ...review, sources };
+    // `self` and `gates` bind on their own, whether or not any source pin is `@current` (publication §3).
+    if (review.self === CURRENT_PIN) bound.self = artifact.ownContentHash;
+    if (review.gates === CURRENT_PIN) bound.gates = reviewGateHash(graph, artifact);
+    artifacts.set(id, { ...artifact, meta: { ...artifact.meta, review: bound } });
   }
   return { ...graph, artifacts };
 }
@@ -156,6 +274,7 @@ export function knowledgeReport(graph: Graph): KnowledgeReportSection {
         changed: [...status.changed].sort(compareStrings),
         missing: [...status.missing].sort(compareStrings),
         withheld: 0,
+        self: status.self,
       };
     }),
   };

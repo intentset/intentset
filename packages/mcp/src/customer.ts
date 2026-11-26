@@ -15,6 +15,12 @@
  * document's block must name the entitlement the index's request names, so
  * documents published for two readers are never served together.
  *
+ * Documents kept under review (publication §3, ADR 0027) are never served:
+ * they are in neither `PublishResult.documents` nor `index.published`, so a
+ * publication made with `keepUnderReview` serves exactly its current
+ * documents, and a kept document passed in `documents` is refused like any
+ * other document the index does not publish. Answers cite reviewed knowledge.
+ *
  * Results cite the source IDs the publication block names, never the ones it
  * withheld (it counts those), and the snapshot the publication was made from,
  * which the publication names once, apart from its documents and its index
@@ -196,7 +202,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
 }
 
 /** The members publication §4 gives an index; any other refuses it. */
-const INDEX_MEMBERS: readonly string[] = ["profile", "request", "published", "excludedCounts"];
+const INDEX_MEMBERS: readonly string[] = ["profile", "request", "published", "excludedCounts", "keptUnderReview"];
 
 /** The entitlement a document's block names: whole lists, compared with the index's request. */
 function entitlementOf(block: PublicationMeta) {

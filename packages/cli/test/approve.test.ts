@@ -1,6 +1,7 @@
 /** `intentset approve` and the approvals `intentset review` lists (Core §7 and §10, ADR 0022). */
 import assert from "node:assert/strict";
-import { readFileSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
 import { atEarlier, edit, example, git, RECORD, run, snapshot } from "./helpers.ts";
 
@@ -87,7 +88,10 @@ test("BEH-APPROVE: approve gives a knowledge record its review, pinning each sou
 
   const approved = await run(dir, "approve", "KB-ASMT-SCHEDULE", ...BY);
   assert.equal(approved.code, 0, approved.err);
-  assert.match(approved.out, /KB-ASMT-SCHEDULE .*\(reviewed: 3 sources pinned, content-v1\)/);
+  assert.match(
+    approved.out,
+    /KB-ASMT-SCHEDULE .*\(reviewed: 3 sources pinned, content-v1, own text and gates pinned\)/,
+  );
   const after = read(dir, "KB-ASMT-SCHEDULE");
   assert.match(after, / {2}reviewedBy: "ana\.reyes"\n {2}reviewedAt: "2026-11-24"\n/);
   for (const pin of reviewed.matchAll(/^ {6}([A-Z-]+): '?([0-9a-f]{64})'?$/gm)) {
@@ -142,7 +146,7 @@ test("BEH-APPROVE: approve refuses a bare run, a run with no --by, and a tree wi
 test("BEH-REVIEW-APPROVALS: review lists each record whose status or approval differs from the base", async (t) => {
   const dir = await committed(t);
   const none = await run(dir, "review", "--base", "HEAD");
-  assert.match(none.out, /^## Approvals and status changes \(0\)$/m);
+  assert.match(none.out, /^## Approvals, reviews and status changes \(0\)$/m);
 
   assert.equal((await run(dir, "approve", "RULE-ASMT-FUTURE", ...BY)).code, 0);
   // A status moved by hand, with no approval: the report shows it the same way.
@@ -152,8 +156,8 @@ test("BEH-REVIEW-APPROVALS: review lists each record whose status or approval di
   git(dir, "commit", "-q", "-am", "two approvals and an edit");
 
   const review = await run(dir, "review", "--base", "HEAD~1");
-  const section = review.out.slice(review.out.indexOf("## Approvals and status changes"));
-  assert.match(section, /^## Approvals and status changes \(2\)$/m);
+  const section = review.out.slice(review.out.indexOf("## Approvals, reviews and status changes"));
+  assert.match(section, /^## Approvals, reviews and status changes \(2\)$/m);
   assert.match(section, /^- RULE-ASMT-AUTH \(rule\): draft -> approved; no approval stated$/m);
   assert.match(
     section,
@@ -187,8 +191,8 @@ for (const version of ["0.2", "0.1"]) {
 
     const review = await run(dir, "review", "--base", "HEAD~1");
     assert.match(review.out, new RegExp(`^- Changed: ${files.length} files`, "m"), "every record changed");
-    const section = review.out.slice(review.out.indexOf("## Approvals and status changes"));
-    assert.match(section, /^## Approvals and status changes \(1\)$/m);
+    const section = review.out.slice(review.out.indexOf("## Approvals, reviews and status changes"));
+    assert.match(section, /^## Approvals, reviews and status changes \(1\)$/m);
     assert.match(section, /^- RULE-ASMT-AUTH \(rule\): draft -> approved; no approval stated$/m);
     assert.doesNotMatch(section, /new, /, "no record reads as new because the base was at an earlier version");
 
@@ -216,7 +220,10 @@ test("BEH-APPROVE: approve replaces a review left under the extension 0.2 read, 
   assert.equal(approved.code, 0, approved.err);
   const after = read(dir, "KB-ASMT-SCHEDULE");
   assert.doesNotMatch(after, /extensions:|intentset\.org\/review/);
-  assert.match(after, /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3}---/);
+  assert.match(
+    after,
+    /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3} {4}self: "[0-9a-f]{64}"\n {4}gates: "[0-9a-f]{64}"\n---/,
+  );
   const ready = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out);
   assert.deepEqual(
     ready.diagnostics.filter((d: { code: string }) => ["CORE001", "CORE008", "CORE010"].includes(d.code)),
@@ -248,7 +255,7 @@ test("BEH-APPROVE: approve --renew-review rewrites only the review of approved k
   const renewed = await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review", ...BY);
   assert.equal(renewed.code, 0, renewed.err);
   assert.match(renewed.out, /renewed the review of 1 record by ana\.reyes at 2026-11-24, checked at L1/);
-  assert.match(renewed.out, /KB-ASMT-SCHEDULE .*\(reviewed: 3 sources pinned, content-v1\)/);
+  assert.match(renewed.out, /KB-ASMT-SCHEDULE .*\(reviewed: 3 sources pinned, content-v1, own text and gates pinned\)/);
   const after = read(dir, "KB-ASMT-SCHEDULE");
   const strip = (text: string) =>
     text.replace(/^ {2}reviewed(By|At): .*\n/gm, "").replace(/\n {2}review:\n(?: {4,}.*\n)+/, "\n");
@@ -258,7 +265,10 @@ test("BEH-APPROVE: approve --renew-review rewrites only the review of approved k
     / {2}status: approved\n {2}approval:\n {4}at: "2026-10-11"\n {4}basis: direct\n {4}by: "team-lead"\n/,
   );
   assert.match(after, / {2}reviewedBy: "ana\.reyes"\n {2}reviewedAt: "2026-11-24"\n/);
-  assert.match(after, /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3}---/);
+  assert.match(
+    after,
+    /\n {2}review:\n {4}sources:\n(?: {6}[A-Z-]+: "[0-9a-f]{64}"\n){3} {4}self: "[0-9a-f]{64}"\n {4}gates: "[0-9a-f]{64}"\n---/,
+  );
   assert.equal(git(dir, "status", "--porcelain").split("\n").length, 1, "one file changed, and nothing was committed");
   assert.deepEqual(
     JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out).diagnostics.filter(
@@ -267,10 +277,14 @@ test("BEH-APPROVE: approve --renew-review rewrites only the review of approved k
     [],
     "current again",
   );
-  // Neither the status nor the approval changed, so review lists no approval.
+  // Neither the status nor the approval changed, and the review did: review lists it as a review (ADR 0027).
   git(dir, "commit", "-q", "-am", "the review renewed");
   const review = await run(dir, "review", "--base", "HEAD~1");
-  assert.match(review.out, /^## Approvals and status changes \(0\)$/m);
+  assert.match(review.out, /^## Approvals, reviews and status changes \(1\)$/m);
+  assert.match(
+    review.out,
+    /^- KB-ASMT-SCHEDULE \(knowledge\): approved; approval \(unchanged\): direct, by team-lead, at 2026-10-11; review written or changed: ana\.reyes, 2026-11-24$/m,
+  );
 });
 
 test("BEH-APPROVE: approve --renew-review takes deprecated knowledge, and skips drafts and records that are not knowledge", async (t) => {
@@ -338,4 +352,100 @@ test("BEH-APPROVE: approve --renew-review refuses a bare run, a run with no --by
   );
   assert.deepEqual(snapshot(dir), tree);
   assert.equal((await run(dir, "approve", "KB-ASMT-SCHEDULE", "--renew-review", ...BY, "--allow-dirty")).code, 0);
+});
+
+/** The example's knowledge returned to draft and approved by ana.reyes, so its review pins its own text and gates. */
+async function approvedKnowledge(t: Context): Promise<string> {
+  const dir = await committed(t);
+  edit(dir, "KB-ASMT-SCHEDULE", "status: approved", "status: draft");
+  git(dir, "commit", "-q", "-am", "the knowledge back to draft");
+  const approved = await run(dir, "approve", "KB-ASMT-SCHEDULE", ...BY);
+  assert.equal(approved.code, 0, approved.err);
+  git(dir, "commit", "-q", "-am", "the knowledge approved");
+  return dir;
+}
+
+test("BEH-APPROVE: approve writes a self and gates that match, and an edit to the knowledge after it is CORE008 at L4", async (t) => {
+  const dir = await approvedKnowledge(t);
+  const after = read(dir, "KB-ASMT-SCHEDULE");
+  assert.match(after, /\n {4}self: "[0-9a-f]{64}"\n {4}gates: "[0-9a-f]{64}"\n---/);
+  assert.deepEqual(
+    JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out).diagnostics.filter(
+      (d: { code: string }) => d.code === "CORE008",
+    ),
+    [],
+    "what approve writes matches what it pins, its own lines included",
+  );
+  edit(dir, "KB-ASMT-SCHEDULE", "Review the schedule before confirming.", "Check the schedule before confirming.");
+  const edited = JSON.parse((await run(dir, "validate", "--level", "L4", "--json")).out).diagnostics.filter(
+    (d: { code: string }) => d.code === "CORE008",
+  );
+  assert.equal(edited.length, 1);
+  assert.equal(edited[0].field, "/intentset/review/self");
+  assert.match(edited[0].message, /needs review: its own text changed since review/);
+  assert.match(edited[0].remediation, /renew the review with `intentset approve`/);
+});
+
+test("BEH-REVIEW-APPROVALS: a review written by hand is listed, though no status or approval changed", async (t) => {
+  const dir = await approvedKnowledge(t);
+  edit(dir, "KB-ASMT-SCHEDULE", /self: "[0-9a-f]{64}"/, `self: "${"1".repeat(64)}"`);
+  git(dir, "commit", "-q", "-am", "a self copied in by hand");
+  const review = await run(dir, "review", "--base", "HEAD~1");
+  const section = review.out.slice(review.out.indexOf("## Approvals, reviews and status changes"));
+  assert.match(section, /^## Approvals, reviews and status changes \(1\)$/m);
+  assert.match(section, /A review is a claim a person makes, too/);
+  assert.match(
+    section,
+    /^- KB-ASMT-SCHEDULE \(knowledge\): approved; approval \(unchanged\): direct, by ana\.reyes, at 2026-11-24; review written or changed: ana\.reyes, 2026-11-24$/m,
+  );
+});
+
+test("BEH-PUBLISH-UNDER-REVIEW: publish --keep-under-review writes a kept document under under-review/, never at the top level", async (t) => {
+  const dir = await approvedKnowledge(t);
+  edit(dir, "BEH-ASMT-SCHEDULE", "## Outcomes\n", "## Outcomes\n\nA second schedule for the same class is refused.\n");
+  git(dir, "commit", "-q", "-am", "the behavior changed what it promises");
+  const request = [
+    "--visibility",
+    "customer",
+    "--audience",
+    "teacher",
+    "--product",
+    "PRD-LANTERN",
+    "--release",
+    "pilot-1",
+    "--role",
+    "teacher",
+    "--edition",
+    "standard",
+    "--published-at",
+    "2026-10-02T12:00:00Z",
+  ];
+  const without = await run(dir, "publish", ...request, "--out", "plain");
+  assert.equal(without.code, 0, without.err);
+  assert.match(without.out, /Published 0 documents/);
+  assert.doesNotMatch(without.out, /Kept under review/);
+
+  const kept = await run(dir, "publish", ...request, "--keep-under-review", "--html", "--out", "kept");
+  assert.equal(kept.code, 0, kept.out + kept.err);
+  assert.match(kept.out, /^Kept under review \(1\), under under-review\/: KB-ASMT-SCHEDULE$/m);
+  assert.match(kept.out, /^Rule tips held for review \(1\): RULE-ASMT-FUTURE$/m);
+  assert.deepEqual(readdirSync(join(dir, "kept")).sort(), [
+    "chunks.jsonl",
+    "help.json",
+    "index.json",
+    "snapshot.json",
+    "under-review",
+  ]);
+  assert.deepEqual(readdirSync(join(dir, "kept", "under-review")).sort(), [
+    "KB-ASMT-SCHEDULE.html",
+    "KB-ASMT-SCHEDULE.md",
+  ]);
+  assert.equal(readFileSync(join(dir, "kept", "chunks.jsonl"), "utf8"), "", "a kept document is never chunked");
+  const index = JSON.parse(readFileSync(join(dir, "kept", "index.json"), "utf8"));
+  assert.deepEqual([index.published, index.keptUnderReview], [[], ["KB-ASMT-SCHEDULE"]]);
+  assert.equal(index.request.keepUnderReview, true);
+  assert.match(
+    readFileSync(join(dir, "kept", "under-review", "KB-ASMT-SCHEDULE.md"), "utf8"),
+    /> \[!NOTE\]\n> Under review:/,
+  );
 });

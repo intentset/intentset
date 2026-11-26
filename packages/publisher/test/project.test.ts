@@ -26,6 +26,10 @@ const CURRENT: ReviewStatus = {
   unknownHash: null,
   reviewer: "r",
   reviewedAt: "2026-09-30",
+  self: "unpinned",
+  gates: "unpinned",
+  keepable: false,
+  keepBlockers: ["current"],
 };
 
 function knowledge(availability: Availability | undefined, extra: Partial<Artifact["meta"]> = {}): Artifact {
@@ -47,6 +51,7 @@ function knowledge(availability: Availability | undefined, extra: Partial<Artifa
     path: "KB-X.md",
     sourceHash: "0".repeat(64),
     contentHash: "0".repeat(64),
+    ownContentHash: "0".repeat(64),
     body: "\n# Knowledge\n",
     headings: [],
     foreign: {},
@@ -68,6 +73,7 @@ const REQUEST: CheckedRequest = {
   role: ["admin"],
   edition: "district",
   flags: [],
+  keepUnderReview: false,
   authorizedInternal: false,
   authorizedRestricted: false,
 };

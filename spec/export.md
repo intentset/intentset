@@ -2,7 +2,7 @@
 title: Intentset Export Contract v0.7
 id: intentset/export/0.7
 status: draft
-revision: 2026-11-25
+revision: 2026-11-26
 implementation: 0.17.1
 ---
 
@@ -68,7 +68,8 @@ Core §7 does, `built` for a null `delivery` whose `status` is `deprecated`, as
 
 `review` is a knowledge record's review pins (Core §9, ADR 0025), and null on any other type or where the knowledge
 states none: `sources`, the hash pinned for each source by ID, and `hash` and `snapshot` as authored, null where the
-record leaves them out. A null `hash` means `content-v1`, as it does in the record. `tips` is the knowledge's tips by
+record leaves them out. A null `hash` means `content-v1`, as it does in the record. The review's `self` and `gates`
+(ADR 0027) are never exported; `reports.knowledge` says whether `self` still matches (§4.2). `tips` is the knowledge's tips by
 explained ID. A pin, or a tip, whose key is a withheld artifact's ID is left out and counted in `withheldLinks` (§3),
 so a review with a pin withheld cannot be used to recompute whether the knowledge is current; that judgment is the
 producer's, in `reports.knowledge` (§4.2).
@@ -161,10 +162,14 @@ SHOULD show the binding beside a status, since the same word carries a different
 ### 4.2 Knowledge
 
 `reports.knowledge` holds one entry per exported knowledge artifact: its lifecycle, its review `status` (`current`
-only while every source it was reviewed against still has the hash it was pinned at and a reviewer and time are named,
-Core §9; otherwise `needs-review`), the `reviewer` and `reviewedAt`, the `sources` a review must pin (what it explains,
-and the rules governing each explained behavior), and which of them `changed` or are `missing` a pin. The status is
-computed with withheld sources included, so knowledge whose withheld source changed still reads `needs-review`.
+only while every source it was reviewed against still has the hash it was pinned at, a reviewer and time are named,
+and, when the review pins the knowledge's own text, that text is unchanged, Core §9; otherwise `needs-review`), the
+`reviewer` and `reviewedAt`, the `sources` a review must pin (what it explains, and the rules governing each explained
+behavior), and which of them `changed` or are `missing` a pin. `self` says whether the knowledge's own text still
+matches its review: `unchanged`, `changed`, or `unpinned` when the review has no `self`. A `changed` self makes the
+entry `needs-review` even when nothing else changed. The artifact's exported `review` never carries `self` or
+`gates`: both are hashes over content the export may withhold (ADR 0025, ADR 0027). The status is computed with
+withheld sources included, so knowledge whose withheld source changed still reads `needs-review`.
 
 ### 4.3 Impact
 
@@ -200,7 +205,7 @@ they are reported:
 | `identity-mismatch` | has another `repository` than the connection's, or does not contain the connection's product |
 | `mixed-snapshot` | carries a report computed at another commit or graph hash than its own |
 | `forbidden-content` | contains an artifact of a visibility its own `withholding` says it withheld |
-| `inconsistent-report` | contradicts itself: a status disagreeing with its counts, a `current-pass` decided by a run that is not current under the report's binding (§4.1), a `stale` status whose latest record is current under it, a verification judged by another binding than the report's, a subject binding with no subject for a verification that is not `unresolved`, a fallback reason that contradicts the binding, a knowledge entry `current` with changed sources, a report entry for an artifact the export lacks, an impact hit whose path does not end at it |
+| `inconsistent-report` | contradicts itself: a status disagreeing with its counts, a `current-pass` decided by a run that is not current under the report's binding (§4.1), a `stale` status whose latest record is current under it, a verification judged by another binding than the report's, a subject binding with no subject for a verification that is not `unresolved`, a fallback reason that contradicts the binding, a knowledge entry `current` with changed sources or a `changed` self, a report entry for an artifact the export lacks, an impact hit whose path does not end at it |
 
 The first three stop the read: nothing else can be judged in a value of the wrong shape or version. The rest are all
 collected, and the first in the table names the result. A schema validator alone covers `malformed` and part of

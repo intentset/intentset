@@ -15,7 +15,9 @@
  *   product ... edition   the request's value is not in that dimension's list (AND across, OR within); for role,
  *                         none of the request's roles is (OR within the request's list too, ADR 0029)
  *   flag                  the knowledge needs a flag the request does not name (all named flags required)
- *   needs-review          a source changed since review, a pin is missing, or no reviewer (review.ts)
+ *   needs-review          a source changed since review, a pin is missing, no reviewer, or its own text changed
+ *                         since a review that pins it (review.ts); unless the request names keepUnderReview and
+ *                         the knowledge is keepable, when it is eligible and kept under review (ADR 0027)
  *
  * An explicitly requested ID that is not eligible is CORE008. Its message
  * names the reason class, and nothing about the artifact beyond its ID; for
@@ -73,8 +75,10 @@ export interface Exclusion {
 }
 
 export interface Projection {
-  /** Eligible knowledge, sorted by ID. */
+  /** Eligible knowledge, sorted by ID: current knowledge and knowledge kept under review. */
   eligible: Artifact[];
+  /** The eligible knowledge kept under review (publication §3, ADR 0027), sorted by ID. */
+  keptUnderReview: string[];
   /** Every other artifact in the graph with the first check it failed, sorted by ID. Empty when the request was refused. */
   excluded: Exclusion[];
   diagnostics: Diagnostic[];
@@ -106,7 +110,7 @@ export function project(
     );
   }
   if (checked.request === null || diagnostics.length > 0) {
-    return { eligible: [], excluded: [], diagnostics, request: null };
+    return { eligible: [], keptUnderReview: [], excluded: [], diagnostics, request: null };
   }
   const req = checked.request;
   const requested = req.ids === undefined ? null : new Set(req.ids);
@@ -121,6 +125,7 @@ export function project(
   };
 
   const eligible: Artifact[] = [];
+  const keptUnderReview: string[] = [];
   const excluded: Exclusion[] = [];
   const reasons = new Map<string, ExclusionReason>();
   for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
@@ -128,7 +133,11 @@ export function project(
     const reason =
       requested !== null && !requested.has(id) ? "not-requested" : exclusionReason(artifact, req, review, graph);
     if (reason === null) eligible.push(artifact);
-    else {
+    else if (reason === "needs-review" && req.keepUnderReview && review(artifact).keepable) {
+      // Publication §3: every other check of §1 has passed on the record as it is now.
+      eligible.push(artifact);
+      keptUnderReview.push(id);
+    } else {
       excluded.push({ id, reason });
       reasons.set(id, reason);
     }
@@ -142,7 +151,7 @@ export function project(
       refusal(id, artifact, reason ?? null, req, artifact === undefined ? null : review(artifact), graph),
     );
   }
-  return { eligible, excluded, diagnostics, request: req };
+  return { eligible, keptUnderReview, excluded, diagnostics, request: req };
 }
 
 /**
@@ -299,10 +308,45 @@ function refusal(
     }
     default:
       return refuse(
-        review !== null && review.reviewer === null ? "/intentset/reviewedBy" : "/intentset/review",
+        review !== null && review.self === "changed"
+          ? "/intentset/review/self"
+          : review !== null && review.reviewer === null
+            ? "/intentset/reviewedBy"
+            : "/intentset/review",
         `it needs review because ${describeReview(review)}`,
-        "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the pins in review.sources (Core §9).",
+        keepRemediation(review, request),
       );
+  }
+}
+
+/** The CORE008 remediation for needs-review knowledge: which condition of keepable failed (publication §3, §4). */
+function keepRemediation(review: ReviewStatus | null, request: CheckedRequest): string {
+  const renew =
+    "Review the knowledge against its current sources and its own text, then renew the review with `intentset approve` (Core §9)";
+  const first = review?.keepBlockers[0];
+  if (review?.keepable && !request.keepUnderReview) {
+    return `${renew}; until then it could be published under review: set keepUnderReview (publication §3).`;
+  }
+  switch (first) {
+    case "self-changed":
+      return `${renew}: the knowledge's own text changed since it was reviewed, so it cannot be kept under review (publication §3).`;
+    case "self-unpinned":
+      return `${renew}; its review does not pin its own text (review.self), so it cannot be kept under review (publication §3).`;
+    case "gates-unpinned":
+      return `${renew}; its review does not pin who could see its sources (review.gates), so it cannot be kept under review (publication §3).`;
+    case "gates-changed":
+      return `${renew}: a source's audiences, visibility or availability changed since review, so it cannot be kept under review (publication §3).`;
+    case "pin-missing":
+      return `${renew}; a source it must pin has no pin, so it cannot be kept under review (publication §3).`;
+    case "unknown-hash":
+      return `${renew}; its review names a hash kind this version does not read, so it cannot be kept under review (publication §3).`;
+    case "no-reviewer":
+      return `${renew}; it names no reviewer or review date, so it cannot be kept under review (publication §3).`;
+    case "source-gone":
+    case "source-retired":
+      return `${renew}; a source it must pin is gone or retired, so it cannot be kept under review (publication §3).`;
+    default:
+      return `${renew}.`;
   }
 }
 
@@ -313,5 +357,6 @@ function describeReview(review: ReviewStatus | null): string {
   if (review.missing.length > 0) parts.push(`its review pins nothing for ${review.missing.join(", ")}`);
   if (review.reviewer === null) parts.push("it names no reviewer");
   if (review.reviewedAt === null) parts.push("it gives no review date");
+  if (review.self === "changed") parts.push("its own text changed since review");
   return parts.length === 0 ? "its review is not current" : parts.join(", and ");
 }

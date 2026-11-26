@@ -6,7 +6,7 @@ intentset:
   id: BEH-APPROVE
   type: behavior
   title: Approve writes a person's approval into drafts
-  status: approved
+  status: draft
   approval:
     at: "2026-11-25"
     basis: direct
@@ -15,7 +15,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 3
+  revision: 4
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-NEVER-REWRITE]
@@ -31,7 +31,7 @@ intentset:
 
 ## Behavior
 
-A person runs `intentset approve <ID>... --by <person>`, naming records or giving the selector options of `intentset list`. Each matched draft gets `status: approved` and an `approval` block with basis `direct`, the person and the date (`--at`, today when absent), replacing any approval it carried. A knowledge record also gets its review: `reviewedBy`, `reviewedAt` and `review`, the content hash of each source with no `hash`, which means `content-v1` (ADR 0025), in place of any earlier review, one left under the `intentset.org/review` extension included. Those lines change and no other byte does. Matched records that are not drafts are skipped and named. With `--renew-review`, it writes only the review, `reviewedBy`, `reviewedAt` and content-v1 pins of each source as it is now, into each approved or deprecated knowledge record given, leaving `status` and `approval` as they are, and skips and names every other record, a draft or a record that is not knowledge. `--dry-run` reports the same and writes nothing. The command never commits.
+A person runs `intentset approve <ID>... --by <person>`, naming records or giving the selector options of `intentset list`. Each matched draft gets `status: approved` and an `approval` block with basis `direct`, the person and the date (`--at`, today when absent), replacing any approval it carried. A knowledge record also gets its review: `reviewedBy`, `reviewedAt` and `review`, the content hash of each source with no `hash`, which means `content-v1` (ADR 0025), then `self`, its own content hash, and `gates`, the gate hash of its sources (ADR 0027), each the value the edited record has, in place of any earlier review, one left under the `intentset.org/review` extension included. Those lines change and no other byte does. Matched records that are not drafts are skipped and named. With `--renew-review`, it writes only the review, `reviewedBy`, `reviewedAt`, content-v1 pins of each source as it is now, `self` and `gates`, into each approved or deprecated knowledge record given, leaving `status` and `approval` as they are, and skips and names every other record, a draft or a record that is not knowledge. `--dry-run` reports the same and writes nothing. The command never commits.
 
 ## Preconditions
 
@@ -43,4 +43,4 @@ Success: the files are rewritten and the command lists what it approved, or whos
 
 ## Sources
 
-- Core §7 and §9; ADR 0022 (amended 2026-11-25 for `--renew-review`) and ADR 0020 in `docs/decisions/`; the CLI's usage, `intentset --help`.
+- Core §7 and §9; ADR 0022 (amended 2026-11-25 for `--renew-review`), ADR 0020 and ADR 0027 in `docs/decisions/`; the CLI's usage, `intentset --help`.

@@ -743,7 +743,8 @@
             "RULE-ASMT-AUTH"
           ],
           "missing": [],
-          "withheld": 0
+          "withheld": 0,
+          "self": "unpinned"
         }
       ]
     }

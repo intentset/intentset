@@ -13,7 +13,9 @@
  * included, so a request for an unknown release is refused instead of quietly
  * matching nothing (Core §9: abstain when the requested version is unknown).
  * `checkRequest` turns an accepted request into a `CheckedRequest`, with every
- * list sorted and unique, which every later stage reads.
+ * list sorted and unique, which every later stage reads. `keepUnderReview`,
+ * optional and false when absent, asks for keepable knowledge to be published
+ * marked under review (ADR 0027); any value but a boolean refuses the request.
  *
  * Public projection admits public records only; customer admits public and
  * customer. Internal and restricted data need their own explicit
@@ -36,6 +38,11 @@ export interface PublicationRequest {
   flags: string[];
   /** Knowledge IDs requested; omitted means every eligible one. */
   ids?: string[];
+  /**
+   * Publish keepable knowledge, whose sources changed what they promise but not who may see them, marked under
+   * review (publication §3, ADR 0027). Absent means false.
+   */
+  keepUnderReview?: boolean;
   /** Explicit authorization for an internal or restricted projection. */
   authorizedInternal?: boolean;
   /** Explicit authorization for a restricted projection. */
@@ -52,6 +59,7 @@ export interface CheckedRequest {
   edition: string;
   flags: string[];
   ids?: string[];
+  keepUnderReview: boolean;
   authorizedInternal: boolean;
   authorizedRestricted: boolean;
 }
@@ -69,6 +77,8 @@ export interface IndexedRequest {
   edition: string;
   flags: string[];
   ids?: string[];
+  /** Written last, and only when the request named `true` (publication §4). */
+  keepUnderReview?: true;
 }
 
 /** Core §9: the visibilities each projection admits. */
@@ -94,6 +104,7 @@ const REQUEST_KEYS = new Set<string>([
   "edition",
   "flags",
   "ids",
+  "keepUnderReview",
   "authorizedInternal",
   "authorizedRestricted",
 ]);
@@ -115,6 +126,7 @@ export function indexedRequest(request: CheckedRequest): IndexedRequest {
     flags: sortedUnique(request.flags),
   };
   if (request.ids !== undefined) out.ids = sortedUnique(request.ids);
+  if (request.keepUnderReview) out.keepUnderReview = true;
   return out;
 }
 
@@ -221,6 +233,12 @@ export function checkRequest(
       "Pass ids as a list of knowledge IDs, or omit it to publish every eligible one.",
     );
   }
+  if (raw.keepUnderReview !== undefined && typeof raw.keepUnderReview !== "boolean") {
+    refuse(
+      "The request's keepUnderReview is not true or false.",
+      "Set keepUnderReview to true to publish knowledge kept under review, or leave it out (publication §1, §3).",
+    );
+  }
   for (const key of ["authorizedInternal", "authorizedRestricted"] as const) {
     if (raw[key] !== undefined && typeof raw[key] !== "boolean") {
       refuse(
@@ -295,6 +313,7 @@ export function checkRequest(
     role: lists.role as string[],
     edition: raw.edition as string,
     flags: sortedUnique(flags as string[]),
+    keepUnderReview: raw.keepUnderReview === true,
     authorizedInternal: raw.authorizedInternal === true,
     authorizedRestricted: raw.authorizedRestricted === true,
   };

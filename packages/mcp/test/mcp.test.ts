@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import { contextFor, type Graph, graphHash, plainCarrier, readRegistries, validate } from "@intentset/core";
-import { type PublishResult, publish, toChunks } from "@intentset/publisher";
+import { bindReviewPins, type PublishResult, publish, toChunks } from "@intentset/publisher";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -414,10 +414,10 @@ test("BEH-PUBLISH-READER: customer mode refuses an index of another profile or w
     () => createIntentsetServer({ mode: "customer", publication: other as unknown as PublishResult }),
     /profile "intentset\/publication-index\/0\.2", not intentset\/publication-index\/0\.3/,
   );
-  const extra = { ...publication, index: { ...publication.index, keptUnderReview: [] } };
+  const extra = { ...publication, index: { ...publication.index, surfaces: {} } };
   assert.throws(
     () => createIntentsetServer({ mode: "customer", publication: extra as unknown as PublishResult }),
-    /has a member keptUnderReview it does not define/,
+    /has a member surfaces it does not define/,
   );
 });
 
@@ -468,4 +468,45 @@ test("a snapshot that is not the graph's is refused, and the version is the pack
   );
   const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, "..", "package.json"), "utf8"));
   assert.equal(VERSION, manifest.version);
+});
+
+/** The example with its knowledge's behavior pin stale and its own text and gates pinned: keepable (ADR 0027). */
+function keptPublication(): PublishResult {
+  const kept = bindReviewPins(
+    graphOf((name, source) =>
+      name === "KB-ASMT-SCHEDULE.md"
+        ? source
+            .replace(/BEH-ASMT-SCHEDULE: '[0-9a-f]{64}'/, `BEH-ASMT-SCHEDULE: '${"0".repeat(64)}'`)
+            .replace("    sources:\n", "    self: '@current'\n    gates: '@current'\n    sources:\n")
+        : source,
+    ),
+  );
+  return publish(
+    kept,
+    registries,
+    { visibility: "customer", ...REQUEST, keepUnderReview: true },
+    { snapshot: { commit: COMMIT, graphHash: graphHash(kept) }, publishedAt: "2026-10-01T00:00:00Z" },
+  );
+}
+
+test("BEH-PUBLISH-UNDER-REVIEW, BEH-MCP-CONTEXT: customer mode serves a publication made with keepUnderReview and never a kept document", async () => {
+  const publication = keptPublication();
+  assert.deepEqual(publication.index.keptUnderReview, ["KB-ASMT-SCHEDULE"]);
+  assert.deepEqual(publication.index.published, []);
+  const client = await connect(createIntentsetServer({ mode: "customer", publication }));
+  const search = (await call(client, "knowledge_search", { query: "release time" })).json;
+  assert.equal(search.matched, 0);
+  const got = await call(client, "knowledge_get", { id: "KB-ASMT-SCHEDULE" });
+  assert.equal(got.isError, true);
+  assert.equal(got.json.error, NOT_AVAILABLE);
+  await client.close();
+  // Handing the kept documents in as current is refused: the index does not publish them.
+  assert.throws(
+    () =>
+      createIntentsetServer({
+        mode: "customer",
+        publication: { ...publication, documents: [...publication.documents, ...publication.keptUnderReview] },
+      }),
+    /not in the publication index/,
+  );
 });

@@ -110,18 +110,21 @@ commands
         [list's selector options]
                             write a person's approval into the drafts named or matched: status
                             approved and an approval block (basis direct); a knowledge record
-                            also gets its review, reviewedBy, reviewedAt and content-v1 pins of
-                            its sources. Validates with the change applied first and writes
+                            also gets its review, reviewedBy, reviewedAt, content-v1 pins of
+                            its sources, and self and gates, its own text and who could see
+                            each source. Validates with the change applied first and writes
                             nothing if it would add an error. Records that are not drafts are
                             skipped. Refuses a tree with uncommitted changes unless
                             --allow-dirty; --dry-run shows what it would do. Never commits, and
                             cannot know who runs it: the diff is what a reviewer accepts.
-                            With --renew-review: write only reviewedBy, reviewedAt and the
-                            content-v1 pins of the approved or deprecated knowledge given,
+                            With --renew-review: write only reviewedBy, reviewedAt, the
+                            content-v1 pins, self and gates of the approved or deprecated
+                            knowledge given,
                             leaving status and approval as they are; other records are skipped
   publish --visibility <v> --audience <a>... --product <ID> --release <r> --role <r>...
         --edition <e> [--flag <f>]... [--authorized-internal] [--authorized-restricted]
         --out <dir> [--html[=page|fragment]] [--published-at <time>] [--no-snapshot]
+        [--keep-under-review]
                             reviewed knowledge for one reader and release, as Markset with
                             provenance, an index, a help file and chunks, whose bytes do not
                             depend on the commit, and snapshot.json, the one file naming the
@@ -131,7 +134,10 @@ commands
                             content without its title, <ID>.fragment.html, for a product
                             to show inside its own interface. Repeat --audience or --role
                             for a reader who holds more than one; the publication is for a
-                            reader who holds every one, and values are not split on commas
+                            reader who holds every one, and values are not split on commas.
+                            --keep-under-review publishes knowledge whose sources changed what
+                            they promise, as its last reviewed text, marked under review, under
+                            under-review/
   serve [--port <n>] [--host <address>] [--out <dir>]
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
@@ -141,9 +147,10 @@ commands
                             0.2 or 0.1: rewrites intentset.spec and intentset.profile in
                             each record's frontmatter, applies the version's rewrites (a
                             status of implemented or released, a review under the extension),
-                            re-pins each knowledge review pin that matched its source before
-                            the move, leaving a stale one stale, and says how many. Refuses a
-                            tree with uncommitted changes to tracked files unless --allow-dirty
+                            re-pins each knowledge review pin (a source pin, and self) that
+                            matched before the move, leaving a stale one stale, and says how
+                            many. Refuses a tree with uncommitted changes to tracked files
+                            unless --allow-dirty
   mcp --mode engineering [--include-restricted]
   mcp --mode customer --visibility <public|customer> --audience <a>... --product <ID>
         --release <r> --role <r>... --edition <e> [--flag <f>]...
@@ -281,6 +288,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "html",
     "published-at",
     "no-snapshot",
+    "keep-under-review",
   ],
 };
 
@@ -665,6 +673,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
         html: values.html,
         publishedAt: values["published-at"],
         snapshot: !values["no-snapshot"],
+        keepUnderReview: values["keep-under-review"],
       };
       const problem = publishUsageProblem(options);
       if (problem !== null) return usage(problem);
@@ -733,6 +742,7 @@ function parse(argv: string[]) {
       html: { type: "string" },
       "published-at": { type: "string" },
       "no-snapshot": { type: "boolean", default: false },
+      "keep-under-review": { type: "boolean", default: false },
       port: { type: "string" },
       host: { type: "string" },
       to: { type: "string" },

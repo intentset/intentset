@@ -12,6 +12,8 @@ export interface PublicationRequest {
   edition?: string | string[];
   flags?: string[];
   ids?: string[];
+  /** Publish keepable knowledge marked under review (publication §3); a case may hold a non-boolean to pin PUB001. */
+  keepUnderReview?: unknown;
 }
 
 /** How a case's documents are read (ADR 0003): without a Markdown parser, or with Markset's. */

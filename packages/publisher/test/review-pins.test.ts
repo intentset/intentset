@@ -16,7 +16,7 @@ import {
   plainCarrier,
   readArtifact,
 } from "@intentset/core";
-import { bindReviewPins, pinHash, readReviewRecord, reviewStatus } from "../src/index.ts";
+import { bindReviewPins, pinHash, readReviewRecord, reviewGateHash, reviewStatus } from "../src/index.ts";
 import { build, examplesDir } from "./harness.ts";
 
 const RECORD = `---
@@ -247,4 +247,92 @@ test("BEH-REVIEW-PINS: leaving `review` out of the content hash moved no pin tak
     const { artifact } = readArtifact(plainCarrier(name, source));
     assert.equal(artifact?.contentHash, hash, name);
   }
+});
+
+test("BEH-REVIEW-PINS: a self pin holds the knowledge's own text, which deprecating it does not move and editing it does", () => {
+  const approved = build({
+    section: "publication",
+    name: "unit",
+    baseline: "scheduling",
+    valid: true,
+  }).graph.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  const deprecated = build({
+    section: "publication",
+    name: "unit",
+    baseline: "scheduling",
+    patch: { "KB-ASMT-SCHEDULE.md": { frontmatter: { "intentset.status": "deprecated" } } },
+    valid: true,
+  }).graph.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  assert.equal(deprecated.ownContentHash, approved.ownContentHash, "own text leaves ending out");
+  assert.notEqual(deprecated.contentHash, approved.contentHash, "the content hash names ending");
+  const edited = build({
+    section: "publication",
+    name: "unit",
+    baseline: "scheduling",
+    patch: {
+      "KB-ASMT-SCHEDULE.md": {
+        body: "\n# Prepare a scheduled student assessment\n\n## Guidance\n\nChoose a class first.\n",
+      },
+    },
+    valid: true,
+  }).graph.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  assert.notEqual(edited.ownContentHash, approved.ownContentHash);
+});
+
+test("BEH-REVIEW-PINS: an unbound @current self reads as changed, and bound it matches", () => {
+  const patch = {
+    "KB-ASMT-SCHEDULE.md": {
+      frontmatter: {
+        "intentset.review": {
+          sources: { "BEH-ASMT-SCHEDULE": "@current", "RULE-ASMT-AUTH": "@current", "RULE-ASMT-FUTURE": "@current" },
+          self: "@current",
+          gates: "@current",
+        },
+      },
+    },
+  };
+  const built = build({ section: "publication", name: "unit", baseline: "scheduling", patch, valid: true });
+  const bound = built.graph.artifacts.get("KB-ASMT-SCHEDULE") as Artifact;
+  assert.equal(reviewStatus(built.graph, bound).self, "unchanged");
+  assert.equal(reviewStatus(built.graph, bound).gates, "unchanged");
+  const unbound: Artifact = {
+    ...bound,
+    meta: {
+      ...bound.meta,
+      review: { ...(bound.meta.review as NonNullable<Artifact["meta"]["review"]>), self: "@current" },
+    },
+  };
+  const status = reviewStatus(built.graph, unbound);
+  assert.equal(status.self, "changed");
+  assert.equal(status.status, "needs-review");
+});
+
+test("BEH-REVIEW-PINS: the gate hash moves with a source's audiences, visibility or availability, and not with what it promises", () => {
+  const gateOf = (patch: Record<string, { frontmatter: Record<string, unknown> }>) => {
+    const built = build({
+      section: "publication",
+      name: "unit",
+      baseline: "scheduling",
+      patch,
+      registries: undefined,
+      valid: true,
+    });
+    return reviewGateHash(built.graph, built.graph.artifacts.get("KB-ASMT-SCHEDULE") as Artifact);
+  };
+  const base = gateOf({});
+  assert.notEqual(
+    gateOf({ "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.audiences": ["engineering"] } } }),
+    base,
+  );
+  assert.notEqual(gateOf({ "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.visibility": "restricted" } } }), base);
+  assert.notEqual(
+    gateOf({ "RULE-ASMT-AUTH.md": { frontmatter: { "intentset.audiences": ["product"] } } }),
+    base,
+    "a governing rule is a source too",
+  );
+  assert.equal(
+    gateOf({ "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.revision": 7 } } }),
+    base,
+    "what a source promises is not who may see it",
+  );
 });

@@ -22,21 +22,43 @@
  * ADR 0019, ADR 0021), and a document's bytes change only when what it was
  * made from does.
  *
+ * Knowledge kept under review (publication §2, §3, ADR 0027) is generated the
+ * same way and marked: its block carries `underReview: true` and
+ * `changedSinceReview`, it is written at `under-review/<ID>.md`, its body
+ * carries a fixed note right after its title heading, and a relative link to a
+ * document published as current is written with `../` before it, so it
+ * resolves from `under-review/`. Nothing else is added to what was reviewed.
+ *
  * The result is checked as Markset before it is emitted: a Markset error is
  * PUB003, and a `:::` directive outside Markset's vocabulary is PUB004
  * (CLAUDE.md invariant 5: profiles never add a directive).
  */
-import type { Artifact, Diagnostic, Graph, Visibility } from "@intentset/core";
+import { type Artifact, type Diagnostic, type Graph, type Visibility, collectHeadings } from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { BLOCK_DIRECTIVE_NAMES, parseDocument } from "@markset-lang/parser";
 import { bodyLineOffset } from "./body.ts";
 import { publicationDiagnostic, sortedUnique } from "./diagnostic.ts";
+import { resolveTarget } from "./references.ts";
 import { type CheckedRequest, admits } from "./request.ts";
+import type { ReviewStatus } from "./review.ts";
 import { type YamlValue, emitYaml } from "./yaml.ts";
 
 export const PUBLICATION_PROFILE = "intentset/publication/0.3";
 /** The top-level frontmatter key of a generated document. */
 export const PUBLICATION_KEY = "intentset-publication";
+/** The directory a document kept under review is written in, beside the current documents (publication §2). */
+export const UNDER_REVIEW_DIR = "under-review";
+/** The note a document kept under review carries right after its title heading, the same for every one (publication §2). */
+export const UNDER_REVIEW_NOTE =
+  "> [!NOTE]\n> Under review: what this article explains has changed since it was reviewed.\n";
+
+/** What changed since review, on a document kept under review (publication §2): explained sources only. */
+export interface ChangedSinceReview {
+  /** Explained sources whose pins changed and that the projection admits, sorted. */
+  changed: string[];
+  /** How many explained sources whose pins changed the projection does not admit. */
+  withheldChanged: number;
+}
 
 export interface SourceStamp {
   id: string;
@@ -63,6 +85,10 @@ export interface PublicationMeta {
   availability: { product: string; release: string; role: string[]; edition: string; flags: string[] };
   reviewer: string;
   reviewedAt: string;
+  /** Only on a document kept under review (publication §2, §3): never written as false. */
+  underReview?: true;
+  /** Only on a document kept under review. */
+  changedSinceReview?: ChangedSinceReview;
   publishedAt: string;
 }
 
@@ -70,9 +96,16 @@ export interface GenerateOptions {
   publishedAt: string;
 }
 
+/** How to generate a document kept under review: its review status and the documents published as current. */
+export interface KeptOptions {
+  review: ReviewStatus;
+  /** The IDs of the documents published as current in the run, whose links are written with `../` before them. */
+  current: ReadonlySet<string>;
+}
+
 export interface GeneratedDocument {
   id: string;
-  /** `<ID>.md`. */
+  /** `<ID>.md`, or `under-review/<ID>.md` for a document kept under review. */
   path: string;
   markset: string;
   publication: PublicationMeta;
@@ -128,6 +161,91 @@ export function publicationMeta(
   };
 }
 
+/** The provenance block of a document kept under review: the current block, marked, with what changed (publication §2). */
+export function keptPublicationMeta(
+  graph: Graph,
+  artifact: Artifact,
+  request: CheckedRequest,
+  options: GenerateOptions,
+  review: ReviewStatus,
+): PublicationMeta {
+  const { publishedAt, ...rest } = publicationMeta(graph, artifact, request, options);
+  const changed = new Set(review.changed);
+  const admitted: string[] = [];
+  let withheldChanged = 0;
+  for (const id of sortedUnique(artifact.meta.links.explains ?? [])) {
+    if (!changed.has(id)) continue;
+    const explained = graph.artifacts.get(id);
+    if (explained !== undefined && admits(request, explained.meta.visibility)) admitted.push(id);
+    else withheldChanged++;
+  }
+  return { ...rest, underReview: true, changedSinceReview: { changed: admitted, withheldChanged }, publishedAt };
+}
+
+/**
+ * A kept document's body (publication §2): the note right after its title heading (first when it has none), and each
+ * relative link whose target is a document published as current written with `../` before it. Returns the body and
+ * the body line after which the note's three lines were inserted (0 when first).
+ */
+export function keptBody(
+  artifact: Artifact,
+  graph: Graph,
+  current: ReadonlySet<string>,
+): { body: string; noteAfterLine: number } {
+  const linked = prefixCurrentLinks(artifact, graph, current);
+  const lines = linked.split("\n");
+  const title = collectHeadings(lines, 0).find((heading) => heading.depth === 1);
+  const after = title?.line ?? 0;
+  const note = UNDER_REVIEW_NOTE.replace(/\n$/, "").split("\n");
+  const inserted = after === 0 ? [...note, ""] : ["", ...note];
+  return { body: [...lines.slice(0, after), ...inserted, ...lines.slice(after)].join("\n"), noteAfterLine: after };
+}
+
+/** The body with `../` before each Markdown link, image or definition destination that is a current document's file. */
+function prefixCurrentLinks(artifact: Artifact, graph: Graph, current: ReadonlySet<string>): string {
+  const body = artifact.body;
+  const byPath = new Map<string, string>();
+  for (const [id, other] of graph.artifacts) byPath.set(other.path, id);
+  const inserts: number[] = [];
+  const visit = (node: unknown): void => {
+    if (typeof node !== "object" || node === null) return;
+    const n = node as {
+      type?: string;
+      url?: unknown;
+      position?: { start: { offset?: number }; end: { offset?: number } };
+      children?: { position?: { end: { offset?: number } } }[];
+    };
+    if ((n.type === "link" || n.type === "image" || n.type === "definition") && typeof n.url === "string") {
+      const url = n.url.trim();
+      const path = url.startsWith("/") ? null : resolveTarget(url, artifact.path);
+      const id = path === null ? undefined : byPath.get(path);
+      const start = n.position?.start.offset;
+      const end = n.position?.end.offset;
+      if (id !== undefined && current.has(id) && start !== undefined && end !== undefined) {
+        const lastChild = n.children?.[n.children.length - 1]?.position?.end.offset ?? start;
+        const at = destinationOffset(body, n.type, lastChild, end);
+        if (at !== null && body.startsWith(url, at)) inserts.push(at);
+      }
+    }
+    for (const child of (n.children ?? []) as unknown[]) visit(child);
+  };
+  visit(parseDocument(body).ast);
+  let out = body;
+  for (const at of inserts.sort((a, b) => b - a)) out = `${out.slice(0, at)}../${out.slice(at)}`;
+  return out;
+}
+
+/** Where a link's destination starts in the body: after `](` (or `]:` for a definition), spaces and an opening `<`. */
+function destinationOffset(body: string, type: string, from: number, end: number): number | null {
+  const marker = type === "definition" ? "]:" : "](";
+  const found = body.indexOf(marker, from);
+  if (found === -1 || found >= end) return null;
+  let at = found + marker.length;
+  while (at < end && /[ \t\n]/.test(body[at])) at++;
+  if (body[at] === "<") at++;
+  return at;
+}
+
 /** The document text, and the 1-based line the body's first line lands on. */
 export function marksetSource(publication: PublicationMeta, body: string): { source: string; bodyStartLine: number } {
   const yaml = emitYaml({ markset: 0, [PUBLICATION_KEY]: publication as unknown as YamlValue });
@@ -146,14 +264,23 @@ export function generateDocument(
   artifact: Artifact,
   request: CheckedRequest,
   options: GenerateOptions,
+  kept?: KeptOptions,
 ): { document: GeneratedDocument | null; diagnostics: Diagnostic[] } {
   const id = artifact.meta.id;
-  const path = `${id}.md`;
+  const path = kept === undefined ? `${id}.md` : `${UNDER_REVIEW_DIR}/${id}.md`;
   let publication: PublicationMeta;
   let generated: { source: string; bodyStartLine: number };
+  let noteAfterLine: number | undefined;
   try {
-    publication = publicationMeta(graph, artifact, request, options);
-    generated = marksetSource(publication, artifact.body);
+    if (kept === undefined) {
+      publication = publicationMeta(graph, artifact, request, options);
+      generated = marksetSource(publication, artifact.body);
+    } else {
+      publication = keptPublicationMeta(graph, artifact, request, options, kept.review);
+      const body = keptBody(artifact, graph, kept.current);
+      noteAfterLine = body.noteAfterLine;
+      generated = marksetSource(publication, body.body);
+    }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return {
@@ -169,19 +296,31 @@ export function generateDocument(
       ],
     };
   }
-  const diagnostics = checkGenerated(artifact, generated.source, generated.bodyStartLine);
+  const diagnostics = checkGenerated(artifact, generated.source, generated.bodyStartLine, noteAfterLine);
   if (diagnostics.length > 0) return { document: null, diagnostics };
   return { document: { id, path, markset: generated.source, publication }, diagnostics };
 }
 
 /** PUB004 for a directive outside Markset's vocabulary, PUB003 for every other Markset error. */
-export function checkGenerated(artifact: Artifact, source: string, bodyStartLine: number): Diagnostic[] {
+export function checkGenerated(
+  artifact: Artifact,
+  source: string,
+  bodyStartLine: number,
+  noteAfterLine?: number,
+): Diagnostic[] {
   const id = artifact.meta.id;
   const offset = bodyLineOffset(artifact);
-  const locate = (line: number | undefined) =>
-    line === undefined || offset === null || line < bodyStartLine
-      ? undefined
-      : { line: line - bodyStartLine + 1 + offset };
+  // A kept document's note adds three body lines after `noteAfterLine`; a line in it is no line of the record.
+  const noteLines = UNDER_REVIEW_NOTE.split("\n").length;
+  const locate = (line: number | undefined) => {
+    if (line === undefined || offset === null || line < bodyStartLine) return undefined;
+    let bodyLine = line - bodyStartLine + 1;
+    if (noteAfterLine !== undefined && bodyLine > noteAfterLine) {
+      if (bodyLine <= noteAfterLine + noteLines) return undefined;
+      bodyLine -= noteLines;
+    }
+    return { line: bodyLine + offset };
+  };
   const lines = source.split("\n");
   const parsed = parseDocument(source);
   const diagnostics: Diagnostic[] = [];

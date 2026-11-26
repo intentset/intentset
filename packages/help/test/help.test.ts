@@ -17,10 +17,13 @@ import {
   type Reader,
   TIP_ATTRIBUTE,
   type TipObserver,
+  UNDER_REVIEW_ATTRIBUTE,
   type WatchElement,
+  articles,
   bindTips,
   helpForPage,
   readHelp,
+  reviewStateFor,
   servedTo,
   tipFor,
   watchTips,
@@ -245,15 +248,15 @@ test("BEH-HELP-READER: readHelp refuses a member the table does not give, at the
   );
   assert.deepEqual(
     read((v) => {
-      (v.knowledge[0] as unknown as Record<string, unknown>).underReview = true;
+      (v.knowledge[0] as unknown as Record<string, unknown>).lead = true;
     }),
-    ['knowledge[0] has a member "underReview" the help file does not define'],
+    ['knowledge[0] has a member "lead" the help file does not define'],
   );
   assert.deepEqual(
     read((v) => {
-      (v.tips["BEH-ASMT-SCHEDULE"] as unknown as Record<string, unknown>).underReview = true;
+      (v.tips["BEH-ASMT-SCHEDULE"] as unknown as Record<string, unknown>).since = "2026-01-01";
     }),
-    ['tips.BEH-ASMT-SCHEDULE has a member "underReview" the help file does not define'],
+    ['tips.BEH-ASMT-SCHEDULE has a member "since" the help file does not define'],
   );
   assert.deepEqual(
     read((v) => {
@@ -367,7 +370,11 @@ test("BEH-HELP-TIPS: bindTips puts each tip on its control as data, sets no titl
   const host = root([schedule, titled, rule, untipped, empty, plain]);
   const binding = bindTips(host, help);
   assert.deepEqual(host.selectors, ["[data-behavior]"]);
-  assert.deepEqual(binding, { bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"], missing: ["CAP-ASMT-ASSIGN"] });
+  assert.deepEqual(binding, {
+    bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+    missing: ["CAP-ASMT-ASSIGN"],
+    pendingReview: [],
+  });
   assert.deepEqual(schedule.snapshot(), {
     [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE",
     [KNOWLEDGE_ATTRIBUTE]: "KB-ASMT-SCHEDULE",
@@ -450,7 +457,7 @@ test("BEH-HELP-WATCH: watchTips binds at once, observes only its root, and rebin
     target: host,
     options: { subtree: true, childList: true, attributes: true, attributeFilter: [BEHAVIOR_ATTRIBUTE] },
   });
-  assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE"], missing: [] });
+  assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE"], missing: [], pendingReview: [] });
   assert.equal(schedule.getAttribute(TIP_ATTRIBUTE), TIP);
 
   const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
@@ -466,6 +473,7 @@ test("BEH-HELP-WATCH: watchTips binds at once, observes only its root, and rebin
   assert.deepEqual(watch.coverage(), {
     bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
     missing: ["CAP-ASMT-ASSIGN"],
+    pendingReview: [],
   });
   assert.equal(host.selectors.length, 2, "one query to bind, one per frame");
   observer.fire();
@@ -539,7 +547,7 @@ test("BEH-HELP-WATCH: dispose stops watching, cancels a pending pass and leaves 
     before,
     "the default attributes are put back as they were, values set before the watch included, and nothing else is touched",
   );
-  assert.deepEqual(watch.coverage(), { bound: [], missing: [] });
+  assert.deepEqual(watch.coverage(), { bound: [], missing: [], pendingReview: [] });
   watch.dispose();
   frame.run();
   assert.deepEqual(
@@ -629,7 +637,11 @@ test("BEH-HELP-WATCH: a custom requestFrame never gets the default cancelAnimati
     watch.dispose();
     assert.deepEqual(cancelled, []);
     frame.run();
-    assert.deepEqual(watch.coverage(), { bound: [], missing: [] }, "the uncancelled pass does nothing");
+    assert.deepEqual(
+      watch.coverage(),
+      { bound: [], missing: [], pendingReview: [] },
+      "the uncancelled pass does nothing",
+    );
   } finally {
     if (saved === undefined) delete scope.cancelAnimationFrame;
     else scope.cancelAnimationFrame = saved;
@@ -662,10 +674,170 @@ test("bindTips takes another attribute and another renderer", () => {
       element.setAttribute("aria-description", tip.text);
     },
   });
-  assert.deepEqual(binding, { bound: ["RULE-ASMT-FUTURE"], missing: [] });
+  assert.deepEqual(binding, { bound: ["RULE-ASMT-FUTURE"], missing: [], pendingReview: [] });
   assert.deepEqual(rendered, [
     "RULE-ASMT-FUTURE: The release time must be in the future. (Prepare a scheduled student assessment)",
   ]);
   assert.equal(control.getAttribute("aria-description"), RULE_TIP);
   assert.equal(control.hasAttribute("title"), false);
+});
+
+/** The example published with its knowledge kept under review (ADR 0027): its behavior tip marked, its rule tip held. */
+function keptHelp(): Help {
+  const inputs = readdirSync(example)
+    .filter((name) => name.endsWith(".md"))
+    .sort()
+    .map((name) => {
+      let text = readFileSync(join(example, name), "utf8");
+      if (name === "KB-ASMT-SCHEDULE.md") {
+        text = text
+          .replace(/BEH-ASMT-SCHEDULE: '[0-9a-f]{64}'/, `BEH-ASMT-SCHEDULE: '${"0".repeat(64)}'`)
+          .replace("    sources:\n", "    self: '@current'\n    gates: '@current'\n    sources:\n");
+      }
+      return plainCarrier(name, text);
+    });
+  const registries = readRegistries(
+    readFileSync(join(example, "registries.yaml"), "utf8"),
+    "registries.yaml",
+  ).registries;
+  const graph = bindReviewPins(validate(inputs, registries).graph);
+  const published = publish(
+    graph,
+    registries,
+    {
+      visibility: "customer",
+      audience: "teacher",
+      product: "PRD-LANTERN",
+      release: "pilot-1",
+      role: "teacher",
+      edition: "standard",
+      flags: [],
+      keepUnderReview: true,
+    },
+    { snapshot: { commit: null, graphHash: graphHash(graph) }, publishedAt: "2026-01-01T00:00:00Z" },
+  );
+  assert.deepEqual(published.index.keptUnderReview, ["KB-ASMT-SCHEDULE"]);
+  const read = readHelp(`${JSON.stringify(published.help, null, 2)}\n`);
+  assert.deepEqual(read.problems, []);
+  assert.ok(read.ok);
+  return read.help;
+}
+
+test("BEH-HELP-TIPS: a file with help under review is read, and its marks must agree", () => {
+  const help = keptHelp();
+  assert.deepEqual(help.withheldForReview, ["RULE-ASMT-FUTURE"]);
+  assert.deepEqual(help.knowledge[0], {
+    id: "KB-ASMT-SCHEDULE",
+    title: "Prepare a scheduled student assessment",
+    path: "under-review/KB-ASMT-SCHEDULE.md",
+    underReview: true,
+  });
+  const read = (edit: (value: Record<string, unknown> & Help) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  assert.deepEqual(
+    read((v) => {
+      delete (v.tips["BEH-ASMT-SCHEDULE"] as Partial<Help["tips"][string]>).underReview;
+    }),
+    ["tips.BEH-ASMT-SCHEDULE is not under review and knowledge KB-ASMT-SCHEDULE is"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.knowledge[0] as unknown as Record<string, unknown>).underReview = false;
+    }),
+    [
+      "knowledge[0].underReview is present and not true",
+      "tips.BEH-ASMT-SCHEDULE is under review and knowledge KB-ASMT-SCHEDULE is not",
+    ],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.knowledge[0].path = "KB-ASMT-SCHEDULE.md";
+    }),
+    ["knowledge[0] is under review and its path does not begin with under-review/"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.withheldForReview = ["BEH-ASMT-SCHEDULE"];
+    }),
+    ["withheldForReview names BEH-ASMT-SCHEDULE, which is also a key of tips"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      delete (v as Partial<Help>).withheldForReview;
+    }),
+    ["the file has no withheldForReview", "withheldForReview must be a list of strings, sorted, without repeats"],
+  );
+});
+
+test("BEH-HELP-TIPS: help under review is left out by default and returned marked under include, never counted missing", () => {
+  const help = keptHelp();
+  assert.equal(reviewStateFor(help, "BEH-ASMT-SCHEDULE"), "under-review");
+  assert.equal(reviewStateFor(help, "RULE-ASMT-FUTURE"), "held-back");
+  assert.equal(reviewStateFor(help, "CAP-ASMT-ASSIGN"), "none");
+  assert.equal(reviewStateFor(helpFromPublisher(), "BEH-ASMT-SCHEDULE"), "current");
+
+  assert.equal(tipFor(help, "BEH-ASMT-SCHEDULE"), null);
+  assert.equal(tipFor(help, "RULE-ASMT-FUTURE", { underReviewHelp: "include" }), null, "a held-back tip has no text");
+  const included = tipFor(help, "BEH-ASMT-SCHEDULE", { underReviewHelp: "include" });
+  assert.equal(included?.underReview, true);
+  assert.equal(included?.article?.path, "under-review/KB-ASMT-SCHEDULE.md");
+
+  assert.deepEqual(articles(help), { knowledge: [], pendingReview: ["KB-ASMT-SCHEDULE"] });
+  assert.deepEqual(
+    articles(help, { underReviewHelp: "include" }).knowledge.map((k) => k.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+
+  const ids = ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE", "CAP-ASMT-ASSIGN"];
+  const page = helpForPage(help, ids);
+  assert.deepEqual([page.tips, page.knowledge, page.missing], [[], [], ["CAP-ASMT-ASSIGN"]]);
+  assert.deepEqual(page.pendingReview, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  const shown = helpForPage(help, ids, { underReviewHelp: "include" });
+  assert.deepEqual(
+    shown.tips.map((tip) => [tip.id, tip.underReview]),
+    [["BEH-ASMT-SCHEDULE", true]],
+  );
+  assert.deepEqual(shown.pendingReview, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  assert.deepEqual(shown.missing, ["CAP-ASMT-ASSIGN"]);
+
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE", [TIP_ATTRIBUTE]: "authored" });
+  const host = root([schedule, rule]);
+  assert.deepEqual(bindTips(host, help), {
+    bound: [],
+    missing: [],
+    pendingReview: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+  });
+  assert.equal(schedule.attributes.size, 1, "under exclude nothing is rendered");
+  assert.equal(rule.getAttribute(TIP_ATTRIBUTE), "authored", "and nothing is removed");
+  assert.deepEqual(bindTips(host, help, { underReviewHelp: "include" }), {
+    bound: ["BEH-ASMT-SCHEDULE"],
+    missing: [],
+    pendingReview: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+  });
+  assert.deepEqual(schedule.snapshot(), {
+    [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE",
+    [KNOWLEDGE_ATTRIBUTE]: "KB-ASMT-SCHEDULE",
+    [TIP_ATTRIBUTE]: TIP,
+    [UNDER_REVIEW_ATTRIBUTE]: "true",
+  });
+});
+
+test("BEH-HELP-WATCH: a watch renders the under-review mark, restores its prior value on dispose, and copies pendingReview", () => {
+  const help = keptHelp();
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", [UNDER_REVIEW_ATTRIBUTE]: "authored" });
+  const before = schedule.snapshot();
+  const { host, options } = watchHost([schedule]);
+  const watch = watchTips(host, help, { ...options, underReviewHelp: "include" });
+  assert.equal(schedule.getAttribute(UNDER_REVIEW_ATTRIBUTE), "true");
+  const coverage = watch.coverage();
+  assert.deepEqual(coverage, { bound: ["BEH-ASMT-SCHEDULE"], missing: [], pendingReview: ["BEH-ASMT-SCHEDULE"] });
+  coverage.pendingReview.push("X-Y");
+  assert.deepEqual(watch.coverage().pendingReview, ["BEH-ASMT-SCHEDULE"], "coverage is a copy");
+  watch.dispose();
+  assert.deepEqual(schedule.snapshot(), before, "the page is left as the watch found it");
+  assert.deepEqual(watch.coverage(), { bound: [], missing: [], pendingReview: [] });
 });

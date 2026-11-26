@@ -15,6 +15,16 @@
  * over what is still published until a round refuses nothing. A request for
  * several audiences or roles is one run over everything any of them admits.
  *
+ * Knowledge kept under review (publication §3, ADR 0027), when a request names
+ * `keepUnderReview`, is checked in a second phase, after the current documents
+ * are settled: a current document's titles and links count only current
+ * documents, and a kept document's count every document published. So a
+ * current document is never published, or refused, because of a kept one, and
+ * a request with `keepUnderReview` publishes the same current documents, byte
+ * for byte, as without it. Kept documents are returned apart, in
+ * `keptUnderReview`, at `under-review/<ID>.md`, and the index lists them in
+ * its own member: `documents` and `index.published` stay current only.
+ *
  * The help file (help.ts) carries every published document's tips, keyed by
  * the ID each explains, for a product's runtime.
  *
@@ -56,7 +66,7 @@ import {
   admits,
   indexedRequest,
 } from "./request.ts";
-import type { ReviewStatus } from "./review.ts";
+import { type ReviewStatus, reviewStatus } from "./review.ts";
 import { type SnapshotFile, snapshotFile } from "./snapshot.ts";
 import { withSafeUrls } from "./urls.ts";
 
@@ -87,6 +97,9 @@ export interface PublishedDocument extends GeneratedDocument {
   htmlFragment?: string;
 }
 
+/** The attribute that wraps a kept document's HTML fragment, its one mark (publication §2). */
+export const UNDER_REVIEW_FRAGMENT_ATTRIBUTE = "data-intentset-under-review";
+
 /** The index's profile (publication §4): a reader refuses any other, and any member the spec does not list. */
 export const PUBLICATION_INDEX_PROFILE = "intentset/publication-index/0.3";
 
@@ -98,10 +111,18 @@ export interface PublicationIndex {
   published: string[];
   /** Exclusions by reason, keys sorted, zero counts left out. */
   excludedCounts: Record<string, number>;
+  /** The documents kept under review (publication §3), sorted; always written, `[]` when none. */
+  keptUnderReview: string[];
 }
 
 export interface PublishResult {
+  /** The documents published as current, sorted by ID. */
   documents: PublishedDocument[];
+  /**
+   * The documents kept under review (publication §3, ADR 0027), sorted by ID, each at `under-review/<ID>.md`. Never in
+   * `documents`, so a consumer that serves `documents` as current never meets one.
+   */
+  keptUnderReview: PublishedDocument[];
   index: PublicationIndex;
   /** The help file (spec/publication.md §5), or null when the request was refused. */
   help: HelpFile | null;
@@ -134,27 +155,74 @@ export function publish(
   const rendering = htmlRendering(options.renderHtml);
   const req = projection.request;
   const documents: PublishedDocument[] = [];
+  const keptDocuments: PublishedDocument[] = [];
   if (req !== null) {
-    const candidates = projection.eligible;
+    const keptIds = new Set(projection.keptUnderReview);
+    const reviews = new Map<string, ReviewStatus>(options.reviews ?? []);
+    const review = (artifact: Artifact): ReviewStatus => {
+      let status = reviews.get(artifact.meta.id);
+      if (status === undefined) {
+        status = reviewStatus(graph, artifact);
+        reviews.set(artifact.meta.id, status);
+      }
+      return status;
+    };
     const generated = new Map<string, GeneratedDocument>();
-    const unrendered = new Map<string, RefusalReason>();
-    for (const artifact of candidates) {
-      const result = generateDocument(graph, artifact, req, options);
-      diagnostics.push(...result.diagnostics);
-      if (result.document !== null) generated.set(artifact.meta.id, result.document);
-      if (result.diagnostics.some((d) => d.code === "PUB004")) unrendered.set(artifact.meta.id, "directive");
-      else if (result.document === null) unrendered.set(artifact.meta.id, "markset");
-    }
-    const refused = checkPublished(graph, req, candidates, unrendered, diagnostics);
-    const published = new Set(candidates.map((artifact) => artifact.meta.id).filter((id) => !refused.has(id)));
+    const generate = (candidates: readonly Artifact[], current: ReadonlySet<string> | null) => {
+      const unrendered = new Map<string, RefusalReason>();
+      for (const artifact of candidates) {
+        const kept = current === null ? undefined : { review: review(artifact), current };
+        const result = generateDocument(graph, artifact, req, options, kept);
+        diagnostics.push(...result.diagnostics);
+        if (result.document !== null) generated.set(artifact.meta.id, result.document);
+        if (result.diagnostics.some((d) => d.code === "PUB004")) unrendered.set(artifact.meta.id, "directive");
+        else if (result.document === null) unrendered.set(artifact.meta.id, "markset");
+      }
+      return unrendered;
+    };
 
-    for (const reason of refused.values()) count(reason);
-    for (const id of [...published].sort(compareStrings)) {
+    // Phase one: the current documents, checked against the current documents alone.
+    const currentCandidates = projection.eligible.filter((artifact) => !keptIds.has(artifact.meta.id));
+    const currentRefused = checkPublished(
+      graph,
+      req,
+      currentCandidates,
+      generate(currentCandidates, null),
+      diagnostics,
+    );
+    const current = new Set(
+      currentCandidates.map((artifact) => artifact.meta.id).filter((id) => !currentRefused.has(id)),
+    );
+    // Phase two: the kept documents, checked against every document still published; the current set is fixed.
+    const keptCandidates = projection.eligible.filter((artifact) => keptIds.has(artifact.meta.id));
+    const keptRefused =
+      keptCandidates.length === 0
+        ? new Map<string, RefusalReason>()
+        : checkPublished(
+            graph,
+            req,
+            keptCandidates,
+            generate(keptCandidates, current),
+            diagnostics,
+            currentCandidates.filter((artifact) => current.has(artifact.meta.id)),
+          );
+    const kept = new Set(keptCandidates.map((artifact) => artifact.meta.id).filter((id) => !keptRefused.has(id)));
+
+    for (const reason of currentRefused.values()) count(reason);
+    for (const reason of keptRefused.values()) count(reason);
+    const render = (id: string, underReview: boolean): PublishedDocument => {
       const document: PublishedDocument = { ...(generated.get(id) as GeneratedDocument) };
       if (rendering === "page") document.html = renderDocument(document.markset, document.publication);
-      else if (rendering === "fragment") document.htmlFragment = renderFragment(document.markset);
-      documents.push(document);
-    }
+      else if (rendering === "fragment") {
+        const fragment = renderFragment(document.markset);
+        document.htmlFragment = underReview
+          ? `<div ${UNDER_REVIEW_FRAGMENT_ATTRIBUTE}="true">\n${fragment}</div>\n`
+          : fragment;
+      }
+      return document;
+    };
+    for (const id of [...current].sort(compareStrings)) documents.push(render(id, false));
+    for (const id of [...kept].sort(compareStrings)) keptDocuments.push(render(id, true));
   }
 
   const excludedCounts: Record<string, number> = {};
@@ -162,6 +230,7 @@ export function publish(
   const sorted = sortDiagnostics(diagnostics);
   return {
     documents,
+    keptUnderReview: keptDocuments,
     help:
       req === null
         ? null
@@ -170,6 +239,7 @@ export function publish(
             documents.map((document) => document.id),
             req,
             options,
+            keptDocuments.map((document) => document.id),
           ),
     snapshot: snapshotFile(options.snapshot),
     index: {
@@ -177,6 +247,7 @@ export function publish(
       request: req === null ? null : indexedRequest(req),
       published: documents.map((document) => document.id),
       excludedCounts,
+      keptUnderReview: keptDocuments.map((document) => document.id),
     },
     diagnostics: sorted,
     ok: !hasErrors(sorted),
@@ -190,6 +261,8 @@ export function publish(
  * fails, else `reference`. A document whose Markset failed allows no title and is no link target from the first
  * round, in which it is checked once, so a document failing its title and its Markset keeps the reason `title`. A
  * document's own title is always allowed in its own body. The published set only shrinks, so the loop ends, and it iterates sorted IDs, so it is deterministic.
+ * `settled` are documents already published and fixed, the current documents when kept ones are checked: their
+ * titles are allowed and they are link targets, and nothing here refuses them.
  */
 function checkPublished(
   graph: Graph,
@@ -197,21 +270,26 @@ function checkPublished(
   candidates: readonly Artifact[],
   unrendered: ReadonlyMap<string, RefusalReason>,
   diagnostics: Diagnostic[],
+  settled: readonly Artifact[] = [],
 ): Map<string, RefusalReason> {
   const refused = new Map<string, RefusalReason>();
+  const settledIds = settled.map((artifact) => artifact.meta.id);
+  const settledTitles = settled.map((artifact) => artifact.meta.title.trim());
   let published = new Set(candidates.map((artifact) => artifact.meta.id).filter((id) => !unrendered.has(id)));
   let round: readonly Artifact[] = candidates;
   while (round.length > 0) {
-    const allowedTitles = new Set(
-      candidates.filter((artifact) => published.has(artifact.meta.id)).map((artifact) => artifact.meta.title.trim()),
-    );
+    const allowedTitles = new Set([
+      ...settledTitles,
+      ...candidates.filter((artifact) => published.has(artifact.meta.id)).map((artifact) => artifact.meta.title.trim()),
+    ]);
+    const targets = new Set([...settledIds, ...published]);
     const failed = new Set<string>();
     for (const artifact of round) {
       const id = artifact.meta.id;
       const own = artifact.meta.title.trim();
       const allowed = allowedTitles.has(own) ? allowedTitles : new Set([...allowedTitles, own]);
       const titles = checkTitles(artifact, graph, request, allowed);
-      const references = checkReferences(artifact, graph, request, published);
+      const references = checkReferences(artifact, graph, request, targets);
       diagnostics.push(...titles, ...references);
       const reason = titles.length > 0 ? "title" : references.length > 0 ? "reference" : (unrendered.get(id) ?? null);
       if (reason === null) continue;
@@ -236,11 +314,13 @@ function defaultStylesheet(): string {
  * A complete page through render-html, with the provenance block carried into
  * the head, after the charset, as one `<meta name="intentset-publication">`
  * whose content is the block's canonical JSON, so the HTML keeps what the
- * Markset source keeps.
+ * Markset source keeps. A document kept under review also carries
+ * `<meta name="robots" content="noindex">` (publication §2).
  */
 export function renderDocument(markset: string, publication: PublicationMeta): string {
   const page = renderPage(withSafeUrls(parseDocument(markset).ast), { stylesheet: { inline: defaultStylesheet() } });
-  const meta = `<meta name="intentset-publication" content="${escapeAttribute(canonicalJson(publication))}">\n`;
+  const robots = publication.underReview === true ? '<meta name="robots" content="noindex">\n' : "";
+  const meta = `${robots}<meta name="intentset-publication" content="${escapeAttribute(canonicalJson(publication))}">\n`;
   const anchor = '<meta charset="utf-8">\n';
   const at = page.indexOf(anchor);
   if (at === -1) throw new Error("render-html returned a page without a charset declaration");

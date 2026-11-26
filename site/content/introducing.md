@@ -756,7 +756,7 @@ Tips in the product
 
 A knowledge record can carry one sentence per behavior it explains.
 
-Published to `help.json`, then bound by `@intentset/help` to the control that delivers that behavior. A tooltip cannot outlive the behavior it describes.
+Published to `help.json`, then bound by `@intentset/help` to the control that delivers that behavior. A tooltip is never shown as current once the behavior it describes changes: it leaves the product until the knowledge is reviewed again, or stays marked under review when the publication asks for that.
 :::
 
 ::::

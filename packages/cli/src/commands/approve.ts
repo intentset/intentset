@@ -2,7 +2,10 @@
  * `intentset approve` (Core §7, ADR 0022): writes a person's approval into the drafts a selector matches. Each one
  * gets `status: approved` and an `approval` block with basis `direct` (ADR 0020); a knowledge record also gets the
  * review that publication requires of it (publication §3): `reviewedBy`, `reviewedAt` and `review`, the content hash of
- * each source with no `hash`, which means `content-v1` (ADR 0025). Those lines change and no other byte does.
+ * each source with no `hash`, which means `content-v1` (ADR 0025), then `self`, the knowledge's own content hash, and
+ * `gates`, the gate hash of its sources (ADR 0027). Everything an approval writes is left out of both, so the values
+ * written are the values the edited record has. Those lines change and no other byte does. `approve` is the only
+ * command that writes a review: no command prints review values to copy (Core §10).
  *
  * With `--renew-review` it writes only the review, `reviewedBy`, `reviewedAt` and `review`, of the approved or
  * deprecated knowledge it is given, and leaves `status` and `approval` as they are: a person renews a review they made
@@ -24,7 +27,7 @@ import {
   type Selector,
   select,
 } from "@intentset/core";
-import { reviewSources } from "@intentset/publisher";
+import { reviewGateHash, reviewSources } from "@intentset/publisher";
 import { trackedChanges } from "../git.ts";
 import { count, formatDiagnostic, type Io, json, TOOL } from "../output.ts";
 import { findRoot } from "../repository.ts";
@@ -67,6 +70,10 @@ export interface ApprovalEdit {
   at: string;
   /** A knowledge record's review: each source's ID and the content hash to pin. */
   review?: Array<{ id: string; hash: string }>;
+  /** The knowledge's own content hash, `review.self` (ADR 0027); written with `review` when given. */
+  self?: string;
+  /** The gate hash of its sources, `review.gates` (ADR 0027); written with `review` when given. */
+  gates?: string;
   /** Write the review alone, leaving `status` and `approval` as they are (`--renew-review`). */
   reviewOnly?: boolean;
 }
@@ -169,6 +176,8 @@ export function approveText(
       ...(edit.review.length === 0
         ? [`${pad}${pad}sources: {}`]
         : [`${pad}${pad}sources:`, ...edit.review.map((pin) => `${pad}${pad}${pad}${pin.id}: ${quoted(pin.hash)}`)]),
+      ...(edit.self === undefined ? [] : [`${pad}${pad}self: ${quoted(edit.self)}`]),
+      ...(edit.gates === undefined ? [] : [`${pad}${pad}gates: ${quoted(edit.gates)}`]),
     ];
     const existing = find("review", indent, top + 1, end());
     if (existing === -1) region.splice(end(), 0, ...block);
@@ -238,6 +247,8 @@ export function approveCommand(
         .filter((id) => graph.artifacts.has(id))
         .sort(compareStrings)
         .map((id) => ({ id, hash: (graph.artifacts.get(id) as Artifact).contentHash }));
+      edit.self = artifact.ownContentHash;
+      edit.gates = reviewGateHash(graph, artifact);
     }
     const written = approveText(overlay.get(artifact.path) ?? input.source, input.frontmatter, edit);
     if ("problem" in written) return fail(`${row.id} (${artifact.path}): ${written.problem}. Nothing was written.`);
@@ -295,7 +306,7 @@ export function approveCommand(
     `intentset approve: ${verb} ${count(approved.length, "record")} by ${options.by} at ${at}${renew ? "" : " (direct)"}, checked at ${before.level}`,
     ...approved.map(
       (item) =>
-        `  ${item.id}  ${item.path}${item.pinned === null ? "" : `  (reviewed: ${count(item.pinned.length, "source")} pinned, content-v1)`}`,
+        `  ${item.id}  ${item.path}${item.pinned === null ? "" : `  (reviewed: ${count(item.pinned.length, "source")} pinned, content-v1, own text and gates pinned)`}`,
     ),
   ];
   if (skipped.length > 0 && renew) {

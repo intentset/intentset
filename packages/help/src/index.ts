@@ -15,6 +15,15 @@
  * and elements with `getAttribute`/`setAttribute`, which is a document, a
  * shadow root or a test double alike. `watchTips` also observes the root, with
  * a `MutationObserver` and a frame scheduler it can be given.
+ *
+ * A publication may keep knowledge under review (publication §3, ADR 0027):
+ * published from its last reviewed text while what it explains has changed.
+ * Its entry, and each tip it contributes, carries `underReview: true`, and a
+ * rule's tip from it is held back, listed in `withheldForReview`. Every reader
+ * here leaves help under review out unless it is given
+ * `underReviewHelp: "include"`, because a product's own renderer may not show
+ * the mark, and a runtime that shows an item under review MUST show that it
+ * is. Either way the ID goes to `pendingReview`, never to `missing`.
  */
 
 export const HELP_PROFILE = "intentset/help/0.3";
@@ -24,6 +33,10 @@ export const BEHAVIOR_ATTRIBUTE = "data-behavior";
 export const KNOWLEDGE_ATTRIBUTE = "data-help-knowledge";
 /** Set on a bound control by the default render: the tip's text, for a product's own tooltip to read. */
 export const TIP_ATTRIBUTE = "data-help-tip";
+/** Set to `"true"` on a bound control by the default render when its tip is under review, for the product to show. */
+export const UNDER_REVIEW_ATTRIBUTE = "data-help-under-review";
+/** The directory a document kept under review is published in. */
+const UNDER_REVIEW_DIR = "under-review/";
 
 const ID_PATTERN = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/;
 const VISIBILITIES = ["public", "customer", "internal", "restricted"] as const;
@@ -32,8 +45,13 @@ export type Visibility = (typeof VISIBILITIES)[number];
 export interface HelpKnowledge {
   id: string;
   title: string;
-  /** `<ID>.md`, the published document, relative to wherever the publication is served. */
+  /**
+   * `<ID>.md`, the published document, relative to wherever the publication is served, or `under-review/<ID>.md`
+   * for a document kept under review.
+   */
   path: string;
+  /** Present, and `true`, only on a document kept under review. */
+  underReview?: true;
 }
 
 export interface HelpTip {
@@ -41,6 +59,8 @@ export interface HelpTip {
   text: string;
   /** The ID of the knowledge the tip came from; one of `Help.knowledge`. */
   knowledge: string;
+  /** Present, and `true`, exactly when the knowledge it came from is kept under review. */
+  underReview?: true;
 }
 
 /** `help.json` as spec/publication.md §5 defines it. */
@@ -55,7 +75,24 @@ export interface Help {
   publishedAt: string;
   knowledge: HelpKnowledge[];
   tips: Record<string, HelpTip>;
+  /** Rule IDs whose tip was held back because its document is kept under review, sorted: never coverage to write. */
+  withheldForReview: string[];
 }
+
+/** Whether a reader returns help under review, marked (`include`), or leaves it out (`exclude`, the default). */
+export type UnderReviewHelp = "include" | "exclude";
+
+/** How a reader treats help under review. */
+export interface ReviewOptions {
+  /** `exclude` by default: a product whose renderer shows the mark passes `include`. */
+  underReviewHelp?: UnderReviewHelp;
+}
+
+/** The options `helpForPage` takes. */
+export interface PageOptions extends ReviewOptions {}
+
+/** Where a control's help stands: a current tip, a tip under review, a rule tip held back, or none. */
+export type ReviewState = "current" | "under-review" | "held-back" | "none";
 
 export type ReadHelpResult = { ok: true; help: Help; problems: [] } | { ok: false; help: null; problems: string[] };
 
@@ -75,10 +112,20 @@ function sortedList(value: unknown, allowEmpty: boolean): value is string[] {
 
 /** The members publication §5's table gives each object of the file: a reader refuses any other (help/0.3 is closed). */
 const MEMBERS = {
-  file: ["profile", "derived", "projection", "audience", "availability", "publishedAt", "knowledge", "tips"],
+  file: [
+    "profile",
+    "derived",
+    "projection",
+    "audience",
+    "availability",
+    "publishedAt",
+    "knowledge",
+    "tips",
+    "withheldForReview",
+  ],
   availability: ["product", "release", "role", "edition", "flags"],
-  knowledge: ["id", "title", "path"],
-  tip: ["text", "knowledge"],
+  knowledge: ["id", "title", "path", "underReview"],
+  tip: ["text", "knowledge", "underReview"],
 } as const;
 
 function unknownMembers(
@@ -142,6 +189,7 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
   if (!str(value.publishedAt)) problems.push("publishedAt must be a string");
 
   const known = new Set<string>();
+  const marked = new Set<string>();
   if (!Array.isArray(value.knowledge)) problems.push("knowledge must be a list");
   else {
     let previous: string | null = null;
@@ -155,6 +203,15 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
       if (previous !== null && entry.id <= previous) problems.push(`knowledge is not sorted by id at ${entry.id}`);
       previous = entry.id;
       known.add(entry.id);
+      if (Object.hasOwn(entry, "underReview")) {
+        if (entry.underReview !== true) problems.push(`knowledge[${i}].underReview is present and not true`);
+        else {
+          marked.add(entry.id);
+          if (!entry.path.startsWith(UNDER_REVIEW_DIR)) {
+            problems.push(`knowledge[${i}] is under review and its path does not begin with ${UNDER_REVIEW_DIR}`);
+          }
+        }
+      }
     });
   }
   if (!isRecord(value.tips)) problems.push("tips must be an object keyed by ID");
@@ -170,6 +227,25 @@ export function readHelp(input: string | Uint8Array | unknown): ReadHelpResult {
       if (tip.text.trim() === "") problems.push(`tips.${key} has an empty text`);
       if (!known.has(tip.knowledge))
         problems.push(`tips.${key} names knowledge ${tip.knowledge}, which the file does not list`);
+      if (Object.hasOwn(tip, "underReview") && tip.underReview !== true) {
+        problems.push(`tips.${key}.underReview is present and not true`);
+      } else if ((tip.underReview === true) !== marked.has(tip.knowledge)) {
+        problems.push(
+          tip.underReview === true
+            ? `tips.${key} is under review and knowledge ${tip.knowledge} is not`
+            : `tips.${key} is not under review and knowledge ${tip.knowledge} is`,
+        );
+      }
+    }
+  }
+  if (!sortedList(value.withheldForReview, true)) {
+    problems.push("withheldForReview must be a list of strings, sorted, without repeats");
+  } else {
+    for (const id of value.withheldForReview) {
+      if (!ID_PATTERN.test(id)) problems.push(`withheldForReview names ${JSON.stringify(id)}, which is not an ID`);
+      if (isRecord(value.tips) && Object.hasOwn(value.tips, id)) {
+        problems.push(`withheldForReview names ${id}, which is also a key of tips`);
+      }
     }
   }
   if (problems.length > 0) return { ok: false, help: null, problems };
@@ -222,11 +298,37 @@ export interface Tip extends HelpTip {
   article: HelpKnowledge | null;
 }
 
-/** The tip for one behavior, rule or capability, or null when the file has none. */
-export function tipFor(help: Help, id: string): Tip | null {
+/** Where the help for one control ID stands (publication §5): a coverage report counts `held-back` as written. */
+export function reviewStateFor(help: Help, id: string): ReviewState {
+  const tip = Object.hasOwn(help.tips, id) ? help.tips[id] : undefined;
+  if (tip !== undefined) return tip.underReview === true ? "under-review" : "current";
+  return help.withheldForReview.includes(id) ? "held-back" : "none";
+}
+
+function including(options: ReviewOptions | undefined): boolean {
+  return options?.underReviewHelp === "include";
+}
+
+/**
+ * The tip for one behavior, rule or capability, or null when the file has none, when its rule tip was held back, or,
+ * unless `underReviewHelp` is `include`, when it is under review. Null cannot tell those apart: a coverage report
+ * uses `reviewStateFor`, `helpForPage` or a `Binding`, never `tipFor` alone.
+ */
+export function tipFor(help: Help, id: string, options?: ReviewOptions): Tip | null {
   const tip = Object.hasOwn(help.tips, id) ? help.tips[id] : undefined;
   if (tip === undefined) return null;
+  if (tip.underReview === true && !including(options)) return null;
   return { id, ...tip, article: help.knowledge.find((entry) => entry.id === tip.knowledge) ?? null };
+}
+
+/**
+ * The file's articles, honouring `underReviewHelp`: under `exclude` an article under review is left out. Either way
+ * its ID is in `pendingReview`, sorted.
+ */
+export function articles(help: Help, options?: ReviewOptions): { knowledge: HelpKnowledge[]; pendingReview: string[] } {
+  const pendingReview = help.knowledge.filter((entry) => entry.underReview === true).map((entry) => entry.id);
+  const knowledge = including(options) ? [...help.knowledge] : help.knowledge.filter((entry) => !entry.underReview);
+  return { knowledge, pendingReview };
 }
 
 export interface PageHelp {
@@ -234,30 +336,39 @@ export interface PageHelp {
   tips: Tip[];
   /** The knowledge those tips come from, each once, sorted by ID: what a page's help panel lists. */
   knowledge: HelpKnowledge[];
-  /** IDs with no tip, each once, in the order given: the coverage a product has yet to write. */
+  /** IDs with no tip and none pending review, each once, in the order given: the coverage a product has yet to write. */
   missing: string[];
+  /**
+   * IDs whose tip is under review or was held back, each once, in the order given, in either mode: under `include` a
+   * tip under review is in `tips` too, marked. Never in `missing`.
+   */
+  pendingReview: string[];
 }
 
 /** What a page can show for the behaviors on it: its tips, the articles behind them, and what has no tip yet. */
-export function helpForPage(help: Help, ids: Iterable<string>): PageHelp {
+export function helpForPage(help: Help, ids: Iterable<string>, options?: PageOptions): PageHelp {
   const seen = new Set<string>();
   const tips: Tip[] = [];
   const missing: string[] = [];
-  const articles = new Map<string, HelpKnowledge>();
+  const pendingReview: string[] = [];
+  const found = new Map<string, HelpKnowledge>();
   for (const id of ids) {
     if (seen.has(id)) continue;
     seen.add(id);
-    const tip = tipFor(help, id);
-    if (tip === null) missing.push(id);
-    else {
+    const state = reviewStateFor(help, id);
+    if (state === "none") missing.push(id);
+    else if (state !== "current") pendingReview.push(id);
+    const tip = tipFor(help, id, options);
+    if (tip !== null) {
       tips.push(tip);
-      if (tip.article !== null) articles.set(tip.article.id, tip.article);
+      if (tip.article !== null) found.set(tip.article.id, tip.article);
     }
   }
   return {
     tips,
-    knowledge: [...articles.keys()].sort().map((id) => articles.get(id) as HelpKnowledge),
+    knowledge: [...found.keys()].sort().map((id) => found.get(id) as HelpKnowledge),
     missing,
+    pendingReview,
   };
 }
 
@@ -273,12 +384,14 @@ export interface TipRoot {
   querySelectorAll(selectors: string): Iterable<TipElement> | ArrayLike<TipElement>;
 }
 
-export interface BindOptions {
+export interface BindOptions extends ReviewOptions {
   /** The attribute naming each control's behavior; `data-behavior` by default. */
   attribute?: string;
   /**
    * How a tip is put on its control. The default sets `data-help-tip` to the
-   * tip's text and `data-help-knowledge` to the knowledge ID, and nothing a
+   * tip's text and `data-help-knowledge` to the knowledge ID, adds
+   * `data-help-under-review="true"` on a tip under review (rendered only under
+   * `underReviewHelp: "include"`), removes nothing, and sets nothing a
    * browser displays: a `title` shows only on mouse hover, never to keyboard or
    * touch users, and screen readers announce it inconsistently. A product
    * supplies the visible tooltip and the accessible description through
@@ -291,13 +404,19 @@ export interface BindOptions {
 export interface Binding {
   /** The IDs bound, each once, in document order. */
   bound: string[];
-  /** The IDs found on controls that the file has no tip for, each once, in document order. */
+  /** The IDs found on controls that the file has no tip for and none pending review, each once, in document order. */
   missing: string[];
+  /**
+   * The IDs found on controls whose tip is under review or was held back, each once, in document order. Under
+   * `include` an ID under review is in `bound` too.
+   */
+  pendingReview: string[];
 }
 
 function defaultRender(element: TipElement, tip: Tip): void {
   element.setAttribute(TIP_ATTRIBUTE, tip.text);
   element.setAttribute(KNOWLEDGE_ATTRIBUTE, tip.knowledge);
+  if (tip.underReview === true) element.setAttribute(UNDER_REVIEW_ATTRIBUTE, "true");
 }
 
 interface Found<E> {
@@ -310,20 +429,24 @@ function scan<E extends TipElement>(
   root: { querySelectorAll(selectors: string): Iterable<E> | ArrayLike<E> },
   help: Help,
   attribute: string,
+  options?: ReviewOptions,
 ): { found: Found<E>[]; binding: Binding } {
   const found: Found<E>[] = [];
   const bound: string[] = [];
   const missing: string[] = [];
+  const pendingReview: string[] = [];
   for (const element of Array.from(root.querySelectorAll(`[${attribute}]`) as ArrayLike<E>)) {
     const id = element.getAttribute(attribute);
     if (id === null || id === "") continue;
-    const tip = tipFor(help, id);
+    const tip = tipFor(help, id, options);
     found.push({ element, tip });
-    if (tip === null) {
+    const state = reviewStateFor(help, id);
+    if (state === "none") {
       if (!missing.includes(id)) missing.push(id);
-    } else if (!bound.includes(id)) bound.push(id);
+    } else if (state !== "current" && !pendingReview.includes(id)) pendingReview.push(id);
+    if (tip !== null && !bound.includes(id)) bound.push(id);
   }
-  return { found, binding: { bound, missing } };
+  return { found, binding: { bound, missing, pendingReview } };
 }
 
 /**
@@ -335,7 +458,7 @@ function scan<E extends TipElement>(
  */
 export function bindTips(root: TipRoot, help: Help, options: BindOptions = {}): Binding {
   const render = options.render ?? defaultRender;
-  const { found, binding } = scan(root, help, options.attribute ?? BEHAVIOR_ATTRIBUTE);
+  const { found, binding } = scan(root, help, options.attribute ?? BEHAVIOR_ATTRIBUTE, options);
   for (const { element, tip } of found) if (tip !== null) render(element, tip);
   return binding;
 }
@@ -367,8 +490,9 @@ export interface WatchOptions<R = WatchRoot, H = unknown> extends BindOptions {
   /**
    * Undoes `render` for one element: when the element stops naming that
    * behavior, leaves `root`, or the watch is disposed. With the default
-   * render and no `unrender`, `data-help-tip` and `data-help-knowledge` are
-   * put back as they were before the watch set them. With a `render` of the
+   * render and no `unrender`, `data-help-tip`, `data-help-knowledge` and
+   * `data-help-under-review` are put back as they were before the watch set
+   * them. With a `render` of the
    * product's own and no `unrender`, nothing is undone: removing this
    * package's attributes cannot undo what another render did, so a product
    * that needs its page left as it found it passes both.
@@ -390,7 +514,7 @@ export interface WatchOptions<R = WatchRoot, H = unknown> extends BindOptions {
 }
 
 export interface TipWatch {
-  /** What the last pass bound and found no tip for, as `bindTips` reports it; empty after `dispose`. */
+  /** What the last pass bound, found no tip for and found pending review, as `bindTips` reports it; empty after `dispose`. */
   coverage(): Binding;
   /** Stops watching, cancels a pending pass and unrenders every element it bound. Calling it again does nothing. */
   dispose(): void;
@@ -416,7 +540,7 @@ export function watchTips<R extends WatchRoot, H = unknown>(
   options: WatchOptions<NoInfer<R>, H> = {},
 ): TipWatch {
   const attribute = options.attribute ?? BEHAVIOR_ATTRIBUTE;
-  const prior = new Map<TipElement, [string | null, string | null]>();
+  const prior = new Map<TipElement, [string | null, string | null, string | null]>();
   let render: (element: TipElement, tip: Tip) => void;
   let unrender: (element: TipElement, tip: Tip) => void;
   if (options.render !== undefined) {
@@ -429,14 +553,19 @@ export function watchTips<R extends WatchRoot, H = unknown>(
     // The default pair puts back what the element carried before, so neither an authored value nor another watch's is lost.
     render = (element, tip) => {
       if (!prior.has(element))
-        prior.set(element, [element.getAttribute(TIP_ATTRIBUTE), element.getAttribute(KNOWLEDGE_ATTRIBUTE)]);
+        prior.set(element, [
+          element.getAttribute(TIP_ATTRIBUTE),
+          element.getAttribute(KNOWLEDGE_ATTRIBUTE),
+          element.getAttribute(UNDER_REVIEW_ATTRIBUTE),
+        ]);
       defaultRender(element, tip);
     };
     unrender = (element) => {
-      const [text, knowledge] = prior.get(element) ?? [null, null];
+      const [text, knowledge, underReview] = prior.get(element) ?? [null, null, null];
       prior.delete(element);
       restore(element as WatchElement, TIP_ATTRIBUTE, text);
       restore(element as WatchElement, KNOWLEDGE_ATTRIBUTE, knowledge);
+      restore(element as WatchElement, UNDER_REVIEW_ATTRIBUTE, underReview);
     };
   }
   const scope = globalThis as unknown as {
@@ -457,7 +586,7 @@ export function watchTips<R extends WatchRoot, H = unknown>(
   const schedule = requestFrame;
 
   const bound = new Map<WatchElement, Tip>();
-  let coverage: Binding = { bound: [], missing: [] };
+  let coverage: Binding = { bound: [], missing: [], pendingReview: [] };
   let pending = false;
   let handle: H | undefined;
   let disposed = false;
@@ -465,7 +594,7 @@ export function watchTips<R extends WatchRoot, H = unknown>(
   const pass = () => {
     pending = false;
     if (disposed) return;
-    const { found, binding } = scan(root, help, attribute);
+    const { found, binding } = scan(root, help, attribute, options);
     const current = new Map<WatchElement, Tip>();
     for (const { element, tip } of found) if (tip !== null && !current.has(element)) current.set(element, tip);
     for (const [element, tip] of bound) {
@@ -509,7 +638,11 @@ export function watchTips<R extends WatchRoot, H = unknown>(
   observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: [attribute] });
 
   return {
-    coverage: () => ({ bound: [...coverage.bound], missing: [...coverage.missing] }),
+    coverage: () => ({
+      bound: [...coverage.bound],
+      missing: [...coverage.missing],
+      pendingReview: [...coverage.pendingReview],
+    }),
     dispose: () => {
       if (disposed) return;
       disposed = true;
@@ -517,7 +650,7 @@ export function watchTips<R extends WatchRoot, H = unknown>(
       if (pending && cancelFrame !== undefined) cancelFrame(handle as H);
       pending = false;
       unbindAll();
-      coverage = { bound: [], missing: [] };
+      coverage = { bound: [], missing: [], pendingReview: [] };
     },
   };
 }

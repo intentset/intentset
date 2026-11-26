@@ -28,6 +28,10 @@ test("current when every pin matches and a reviewer and date are named", () => {
     unknownHash: null,
     reviewer: "team-assessment",
     reviewedAt: "2026-09-30",
+    self: "unpinned",
+    gates: "unpinned",
+    keepable: false,
+    keepBlockers: ["current"],
   });
 });
 

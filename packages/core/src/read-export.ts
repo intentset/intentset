@@ -773,6 +773,7 @@ class Shape {
           "changed",
           "missing",
           "withheld",
+          "self",
         ]);
         if (e === null) return;
         this.id(e.id, `${p}/id`);
@@ -784,6 +785,7 @@ class Shape {
           this.array(e[key], `${p}/${key}`, (id, q) => this.id(id, q), { sortedBy: String });
         }
         this.integer(e.withheld, `${p}/withheld`);
+        this.oneOf(e.self, `${p}/self`, ["unchanged", "changed", "unpinned"]);
       },
       { sortedBy: (x) => (isRecord(x) && typeof x.id === "string" ? x.id : "") },
     );
@@ -1032,11 +1034,15 @@ function consistency(envelope: ExportEnvelope): ExportProblem[] {
         fail(`${p}/id`, `${entry.id} is not a knowledge artifact in the export.`);
       if (
         entry.status === "current" &&
-        (entry.changed.length > 0 || entry.missing.length > 0 || entry.reviewer === null || entry.reviewedAt === null)
+        (entry.changed.length > 0 ||
+          entry.missing.length > 0 ||
+          entry.reviewer === null ||
+          entry.reviewedAt === null ||
+          entry.self === "changed")
       ) {
         fail(
           `${p}/status`,
-          `${entry.id} is current, but a source changed or is unpinned, or no reviewer or time is named.`,
+          `${entry.id} is current, but a source changed or is unpinned, no reviewer or time is named, or its own text changed since review.`,
         );
       }
     });

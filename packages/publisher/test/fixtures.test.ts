@@ -44,9 +44,6 @@ for (const testCase of cases) {
       );
     }
     const text = outputText(result);
-    for (const required of testCase.published?.mustContain ?? []) {
-      assert.ok(text.includes(required), `output lacks ${JSON.stringify(required)}`);
-    }
     for (const forbidden of testCase.published?.mustNotContain ?? []) {
       assert.ok(!text.includes(forbidden), `output contains ${JSON.stringify(forbidden)}`);
     }
@@ -57,6 +54,10 @@ for (const testCase of cases) {
       result.documents.map((document) => document.id),
     );
     const fragmentText = outputText(fragments);
+    // What is required may be in the page or the fragment, as the conformance driver offers both.
+    for (const required of testCase.published?.mustContain ?? []) {
+      assert.ok(`${text}\n${fragmentText}`.includes(required), `output lacks ${JSON.stringify(required)}`);
+    }
     for (const forbidden of testCase.published?.mustNotContain ?? []) {
       assert.ok(!fragmentText.includes(forbidden), `fragment output contains ${JSON.stringify(forbidden)}`);
     }

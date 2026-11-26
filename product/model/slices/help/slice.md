@@ -39,7 +39,7 @@ The slice is the package `@intentset/help`. Its layers are empty: a package is a
 
 ## Public contract
 
-The exports of `packages/help/src/index.ts`, reached by other packages as `@intentset/help` through the `intentset-source` export condition, among them `servedTo(file, reader)`, which a product calls before serving a help file or a document's publication block to a reader (ADR 0029). No contract record yet.
+The exports of `packages/help/src/index.ts`, reached by other packages as `@intentset/help` through the `intentset-source` export condition, among them `servedTo(file, reader)`, which a product calls before serving a help file or a document's publication block to a reader (ADR 0029), and `underReviewHelp`, `pendingReview`, `reviewStateFor` and `articles` for help kept under review, which every reader leaves out unless told to include it (ADR 0027). No contract record yet.
 
 ## Verification
 

@@ -324,6 +324,27 @@ export function buildConsumerFixtures(): Map<string, string> {
     reports: ["knowledge", "impact"],
   });
   const restricted = build({ level: "L1", commit: COMMIT, reports: ["knowledge"], includeRestricted: true });
+  // ADR 0027: the knowledge's review pins its own text, which has changed since; every source is unchanged.
+  const ownTextChanged = build({
+    level: "L1",
+    commit: COMMIT,
+    patch: {
+      "KB-ASMT-SCHEDULE.md": {
+        frontmatter: {
+          "intentset.review": {
+            hash: "content-v1",
+            sources: {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f",
+            },
+            self: "0".repeat(64),
+          },
+        },
+      },
+    },
+    reports: ["knowledge"],
+  });
   const syntax = build({
     level: "L1",
     commit: COMMIT,
@@ -420,6 +441,12 @@ export function buildConsumerFixtures(): Map<string, string> {
     "restricted-included.json",
     restricted,
     "Nothing is withheld. A consumer that accepts this must enforce restricted visibility itself before any search or display.",
+  );
+  accept(
+    "knowledge whose own text changed since its review",
+    "knowledge-own-text-changed.json",
+    ownTextChanged,
+    "Every source still has the hash it was reviewed against, and KB-ASMT-SCHEDULE needs review because its own text changed since a review that pins it: its reports.knowledge entry says self changed, with empty changed and missing. Show it as needing review for that reason, never as current; the export carries neither self nor gates on the artifact's review.",
   );
   accept(
     "a Markset diagnostic, with Markset's own code",

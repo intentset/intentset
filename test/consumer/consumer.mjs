@@ -91,6 +91,7 @@ const assign = control("CAP-ASMT-ASSIGN");
 assert.deepEqual(bindTips({ querySelectorAll: () => [schedule, assign] }, help.help), {
   bound: ["BEH-ASMT-SCHEDULE"],
   missing: ["CAP-ASMT-ASSIGN"],
+  pendingReview: [],
 });
 assert.equal(schedule.getAttribute("data-help-tip"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
 assert.equal(schedule.getAttribute("data-help-knowledge"), "KB-ASMT-SCHEDULE");
@@ -123,7 +124,11 @@ assert.equal(watched.getAttribute("data-help-tip"), help.help.tips["BEH-ASMT-SCH
 controls.push(later);
 fire();
 for (const callback of queued.splice(0)) callback();
-assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"], missing: [] });
+assert.deepEqual(watch.coverage(), {
+  bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+  missing: [],
+  pendingReview: [],
+});
 watch.dispose();
 assert.equal(fire, null);
 for (const element of [watched, later]) {

@@ -9,7 +9,9 @@
  * `hash: file-v1` where it named no hash, so no review changes what it pins. Then, over the whole tree, `repinReviews`
  * re-pins each knowledge review pin that matched its source before the move (Core §1, publication §3): the move
  * rewrites `spec` and `profile`, which both pin kinds cover, so a pin equal to its source's hash as the source was
- * written becomes the same kind of hash of the source as moved, and a pin that did not match is left as written. Every
+ * written becomes the same kind of hash of the source as moved, and a pin that did not match is left as written. A
+ * knowledge record's `self` (ADR 0027), its own content hash at review, is re-pinned the same way when it matched the
+ * record as written. `gates` covers neither `spec` nor `profile`, so no move changes it. Every
  * other line is left byte for byte, and each rewritten line keeps its quoting, comment and line ending. It reads the same records every other command reads (the files the configured scope matches). A tree with uncommitted
  * changes to tracked files is refused unless `--allow-dirty` says otherwise, so the rewrite is a diff of its own that
  * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
@@ -22,6 +24,7 @@ import {
   compareStrings,
   contentHashOf,
   DELIVERY_TYPES,
+  ownContentHashOf,
   ID_PATTERN,
   parseYaml,
   SPEC_VERSION,
@@ -439,21 +442,24 @@ type PinKind = "content-v1" | "file-v1";
 
 /**
  * A record's hash of one pin kind (publication §3): `file-v1` is the SHA-256 of the whole file, its `sourceHash`, and
- * `content-v1` the content hash of its parsed frontmatter and its body, as core computes `contentHash`. Null when the
+ * `content-v1` the content hash of its parsed frontmatter and its body, as core computes `contentHash`, and `own` that
+ * hash without `ending`, as core computes `ownContentHash` (ADR 0027). Null when the
  * frontmatter does not read, since no pin can match a content hash that cannot be taken.
  */
-function recordHash(source: string, line: number, kind: PinKind): string | null {
+export function recordHash(source: string, line: number, kind: PinKind | "own"): string | null {
   if (kind === "file-v1") return sha256Hex(source);
   const parsed = parseYaml(frontmatterAt(source, line).text);
   if (parsed.value === null) return null;
   const text = source.startsWith("\uFEFF") ? source.slice(1) : source;
   const lines = text.split("\n");
   const close = closingFenceIndex(lines);
-  return contentHashOf(parsed.value, close === -1 ? text : lines.slice(close + 1).join("\n"));
+  const body = close === -1 ? text : lines.slice(close + 1).join("\n");
+  return kind === "own" ? ownContentHashOf(parsed.value, body) : contentHashOf(parsed.value, body);
 }
 
 const REVIEW_LINE = /^\s+(['"]?)review\1\s*:\s*(?:#.*)?$/;
 const SOURCES_LINE = /^\s+(['"]?)sources\1\s*:\s*(?:#.*)?$/;
+const SELF = "@self";
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 
 /**
@@ -487,6 +493,19 @@ function rewritePin(source: string, line: number, id: string, from: string, to: 
     if (!content(text)) continue;
     childIndent ??= indentOf(text);
     if (indentOf(text) === childIndent && SOURCES_LINE.test(text)) sources = i;
+  }
+  if (id === SELF) {
+    // `review.self`: one line directly under `review`, at its child indent.
+    const self = new RegExp(`^(\\s+)(['"]?)self\\2(\\s*:\\s*)(['"]?)${escapeRegExp(from)}\\4(\\s*(?:#.*)?)$`);
+    for (let i = review.index + 1; i < reviewEnd; i++) {
+      const text = strip(lines[i]);
+      const match = self.exec(text);
+      if (match === null || indentOf(text) !== childIndent) continue;
+      lines[i] =
+        `${match[1]}${match[2]}self${match[2]}${match[3]}${match[4]}${to}${match[4]}${match[5]}${lines[i].endsWith("\r") ? "\r" : ""}`;
+      return lines.join("\n");
+    }
+    return null;
   }
   if (sources === -1) return null;
   const pin = new RegExp(
@@ -548,7 +567,14 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
   for (const id of repeated) byId.delete(id);
   const isMapping = (value: unknown): value is Record<string, unknown> =>
     value !== null && typeof value === "object" && !Array.isArray(value);
-  const pins: { record: number; source: number; id: string; kind: PinKind; original: string; value: string }[] = [];
+  const pins: {
+    record: number;
+    source: number;
+    id: string;
+    kind: PinKind | "own";
+    original: string;
+    value: string;
+  }[] = [];
   let stale = 0;
   metas.forEach((meta, i) => {
     if (typeof meta === "string" || meta.type !== "knowledge" || !isMapping(meta.review)) return;
@@ -560,6 +586,13 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
     const atTarget = declaredSpec(frontmatterAt(record.before, record.line)) === MIGRATE_TO;
     if (!atTarget && record.before === record.after) return;
     const kind = atTarget ? currentPinKind(meta.review.hash) : declaredPinKind(record.before, record.line);
+    // ADR 0027: `self` is the record's own content hash whatever the kind; it moves only when the record itself does.
+    const self = meta.review.self;
+    if (typeof self === "string" && record.before !== record.after) {
+      if (self === recordHash(record.before, record.line, "own")) {
+        pins.push({ record: i, source: i, id: SELF, kind: "own", original: self, value: self });
+      } else stale++;
+    }
     for (const id of Object.keys(sources).sort(compareStrings)) {
       const source = byId.get(id);
       if (source === undefined || records[source].before === records[source].after) continue;
@@ -587,8 +620,8 @@ export function repinReviews(records: readonly RepinRecord[]): RepinResult {
           record: pin.record,
           problem:
             now === null
-              ? `its review pin for ${pin.id} matched before the move, and ${pin.id} no longer reads as YAML, so it was left as written`
-              : `its review pin for ${pin.id} matched before the move and is written in a form the rewrite does not read, so it was left as written`,
+              ? `its review pin for ${pin.id === SELF ? "its own text (self)" : pin.id} matched before the move, and ${pin.id === SELF ? "the record" : pin.id} no longer reads as YAML, so it was left as written`
+              : `its review pin for ${pin.id === SELF ? "its own text (self)" : pin.id} matched before the move and is written in a form the rewrite does not read, so it was left as written`,
         });
         continue;
       }

@@ -196,3 +196,21 @@ test("an artifact list out of order or repeated is malformed: a consumer keys on
   const read = readExport(repeated);
   assert.equal(!read.ok && read.category, "malformed");
 });
+
+test("BEH-READ-EXPORT: a knowledge entry says whether its own text still matches its review, and current with a changed self is inconsistent", () => {
+  const own = JSON.parse(fixture("knowledge-own-text-changed.json")) as ExportEnvelope;
+  const read = readExport(own, { repository: "example/scheduling" });
+  assert.ok(read.ok, JSON.stringify(read.ok ? [] : read.problems));
+  const entry = read.envelope.reports.knowledge?.artifacts.find((a) => a.id === "KB-ASMT-SCHEDULE");
+  assert.deepEqual([entry?.status, entry?.self, entry?.changed, entry?.missing], ["needs-review", "changed", [], []]);
+  const artifact = read.envelope.artifacts.find((a) => a.id === "KB-ASMT-SCHEDULE");
+  assert.deepEqual(Object.keys(artifact?.review ?? {}).sort(), ["hash", "snapshot", "sources"], "no self or gates");
+
+  const lying = structuredClone(own) as unknown as { reports: { knowledge: { artifacts: { status: string }[] } } };
+  for (const a of lying.reports.knowledge.artifacts) a.status = "current";
+  const refused = readExport(lying, { repository: "example/scheduling" });
+  assert.equal(refused.ok, false);
+  if (refused.ok) return;
+  assert.equal(refused.category, "inconsistent-report");
+  assert.ok(refused.problems.some((p) => /own text changed since review/.test(p.message)));
+});

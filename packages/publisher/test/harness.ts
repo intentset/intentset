@@ -90,7 +90,11 @@ export function run(
 /** Every byte the publication wrote or reported: documents, pages or fragments, index, help file and diagnostics. */
 export function outputText(result: PublishResult): string {
   return [
-    ...result.documents.flatMap((document) => [document.markset, document.html ?? "", document.htmlFragment ?? ""]),
+    ...[...result.documents, ...result.keptUnderReview].flatMap((document) => [
+      document.markset,
+      document.html ?? "",
+      document.htmlFragment ?? "",
+    ]),
     JSON.stringify(result.index),
     JSON.stringify(result.help),
     JSON.stringify(result.snapshot),

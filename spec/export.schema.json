@@ -558,7 +558,7 @@
     },
     "review": {
       "type": "object",
-      "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID; hash null means content-v1. A pin whose source is withheld is left out and counted in withheldLinks.",
+      "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID; hash null means content-v1. A pin whose source is withheld is left out and counted in withheldLinks. The review's self and gates are never exported: both are hashes over content the export may withhold (ADR 0027).",
       "additionalProperties": false,
       "required": ["sources", "hash", "snapshot"],
       "properties": {
@@ -1656,7 +1656,8 @@
               "sources",
               "changed",
               "missing",
-              "withheld"
+              "withheld",
+              "self"
             ],
             "properties": {
               "id": {
@@ -1687,6 +1688,10 @@
               },
               "withheld": {
                 "$ref": "#/$defs/count"
+              },
+              "self": {
+                "enum": ["unchanged", "changed", "unpinned"],
+                "description": "Whether the knowledge's own text still matches its review (ADR 0027): unpinned when the review has no self. The exported review never carries self or gates."
               }
             }
           }

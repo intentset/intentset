@@ -260,10 +260,12 @@ in `docs/implementation-plan.md` §5.
 
 - The specifications are moving to 0.3 and the export to 0.7 (branch `spec-0.3`): the versions, records, fixtures
   and `migrate --to 0.3` have moved, and the four changes that make it breaking (ADRs 0023 to 0026; issues #126,
-  #127, #129 and #130, with #49) land after it. A migration step's per-record rewrites go in `MIGRATIONS` in
+  #127, #129 and #130, with #49) land after it, then ADR 0029 (#144), ADR 0027 (#142, knowledge kept under review)
+  and ADR 0028 (#143). A migration step's per-record rewrites go in `MIGRATIONS` in
   `packages/cli/src/commands/migrate.ts`.
-- Ten records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure and the nine rules for verifications
-  ("Intentset's own model"). The measures' targets and first readings are a maintainer's.
+- Fifty-six records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
+  verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
+  for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
   weeks.
 - The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).

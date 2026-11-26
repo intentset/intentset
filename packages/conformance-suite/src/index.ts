@@ -28,6 +28,8 @@ export interface PublicationRequest {
   edition?: string | string[];
   flags?: string[];
   ids?: string[];
+  /** Publish keepable knowledge marked under review (publication §3); a case may hold a non-boolean to pin PUB001. */
+  keepUnderReview?: unknown;
 }
 
 /** One expanded case. The fields are spec/conformance.schema.json's, minus the ones expansion consumed. */

@@ -235,6 +235,13 @@ export interface ReviewMeta {
   hash?: string;
   /** The commit or graph hash at review: informative, never compared. */
   snapshot?: string;
+  /**
+   * The knowledge record's own content hash when it was reviewed (publication §3, ADR 0027): its `content-v1` hash
+   * without `ending`, whatever `hash` says. A review that carries it is needs-review once the record's text moves.
+   */
+  self?: string;
+  /** The gate hash of the review's sources when it was reviewed (publication §3, ADR 0027): who could see each. */
+  gates?: string;
 }
 
 /** The `intentset` block of a document's frontmatter after validation, Core §4. */
@@ -305,6 +312,8 @@ export interface Artifact {
   sourceHash: string;
   /** What a `content-v1` review pins: the record without its lifecycle and review fields (publication §3, ADR 0018). */
   contentHash: string;
+  /** What a review's `self` pins: the content hash without `ending` (publication §3, ADR 0027). Never exported. */
+  ownContentHash: string;
   /** The document body: everything after the frontmatter. */
   body: string;
   headings: Heading[];
@@ -624,7 +633,10 @@ export interface KnowledgeReportSection {
 export interface ExportKnowledgeReview {
   id: string;
   lifecycle: Status;
-  /** current only while every source still has the hash it was reviewed against and a reviewer and time are named. */
+  /**
+   * current only while every source still has the hash it was reviewed against, a reviewer and time are named, and,
+   * when the review pins the knowledge's own text, that text is unchanged.
+   */
   status: "current" | "needs-review";
   reviewer: string | null;
   reviewedAt: string | null;
@@ -636,6 +648,8 @@ export interface ExportKnowledgeReview {
   missing: string[];
   /** Entries left out of sources, changed and missing because they are withheld. */
   withheld: number;
+  /** Whether the knowledge's own text still matches its review (export §4.2, ADR 0027); `unpinned` without `self`. */
+  self: "unchanged" | "changed" | "unpinned";
 }
 
 /** One hit in the impact report: the artifact and the path that reached it. Join to `artifacts` by ID. */

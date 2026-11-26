@@ -39,7 +39,7 @@ The slice is the package `@intentset/core`. Its layers are empty: a package is a
 
 ## Public contract
 
-The exports of `packages/core/src/index.ts`, reached by other packages as `@intentset/core` through the `intentset-source` export condition. No contract record yet.
+The exports of `packages/core/src/index.ts`, reached by other packages as `@intentset/core` through the `intentset-source` export condition. A knowledge review's `self` and `gates` are read as strings, CORE001 at `/intentset/review/self` and `/intentset/review/gates` otherwise; every artifact carries `ownContentHash`, and `ownContentHashOf` and `gateHashOf` compute what the two pin; the export's `reports.knowledge` entries carry `self`, and its exported `review` never carries `self` or `gates` (ADR 0027). No contract record yet.
 
 ## Verification
 

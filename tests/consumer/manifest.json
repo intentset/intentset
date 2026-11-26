@@ -214,6 +214,27 @@
       "notes": "Nothing is withheld. A consumer that accepts this must enforce restricted visibility itself before any search or display."
     },
     {
+      "name": "knowledge whose own text changed since its review",
+      "file": "knowledge-own-text-changed.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": true,
+        "snapshot": {
+          "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
+          "graphHash": "e076d964d10f92228520111b16535384953eebd58610e2d2f9e5f81fdecca1a8"
+        },
+        "validation": "pass",
+        "supplied": [
+          "knowledge"
+        ],
+        "withheldArtifacts": 1
+      },
+      "notes": "Every source still has the hash it was reviewed against, and KB-ASMT-SCHEDULE needs review because its own text changed since a review that pins it: its reports.knowledge entry says self changed, with empty changed and missing. Show it as needing review for that reason, never as current; the export carries neither self nor gates on the artifact's review."
+    },
+    {
       "name": "a Markset diagnostic, with Markset's own code",
       "file": "syntax-diagnostic.json",
       "connection": {

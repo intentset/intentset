@@ -4132,5 +4132,1524 @@
       ]
     },
     "notes": "Publication §2: render-html drops raw HTML but checks no URL scheme, so the publisher removes a link, image or definition whose URL has a scheme other than http, https or mailto, before a page or a fragment is rendered, keeping the link text and the image's alt text. A relative URL and a #fragment have no scheme and are kept. The Markset document keeps the body unchanged; only the HTML is held to this."
+  },
+  {
+    "section": "publication",
+    "name": "P04 knowledge whose sources changed is kept under review when the request asks",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "  reviewedAt: '2026-09-30'\n  underReview: true\n  changedSinceReview:\n    changed: []\n    withheldChanged: 1\n  publishedAt:",
+        "\"keepUnderReview\":true",
+        "\"keptUnderReview\":[\"KB-ASMT-SCHEDULE\"]",
+        "\"path\":\"under-review/KB-ASMT-SCHEDULE.md\",\"underReview\":true}"
+      ],
+      "mustNotContain": [
+        "Schedule a student assessment",
+        "Require a future release time",
+        "Require assignment permission",
+        "Student assessment assignment",
+        "Keep backend access behind the slice seam",
+        "Lantern example",
+        "Prepare learning in advance",
+        "Reduce assignment preparation friction",
+        "Student assessment scheduling slice",
+        "ScheduleAssessment contract",
+        "Review student assessment scheduling behavior",
+        "Accept an eligible schedule",
+        "ADR-ASMT-SEAM.md",
+        "BEH-ASMT-SCHEDULE.md",
+        "CAP-ASMT-ASSIGN.md",
+        "CONTRACT-ASMT-SCHEDULE.md",
+        "INT-PREPARE.md",
+        "OUT-PREPARE.md",
+        "PRD-LANTERN.md",
+        "RULE-ASMT-AUTH.md",
+        "RULE-ASMT-FUTURE.md",
+        "SCN-ASMT-SCHEDULE.md",
+        "SLICE-ASMT-SCHEDULE.md",
+        "TEST-ASMT-SCHEDULE.md",
+        "\"needs-review\":"
+      ]
+    },
+    "notes": "Publication §3 (ADR 0027): the behavior's pin is stale, and the review pins the knowledge's own text (self) and who could see each source (gates), both unchanged, so the request's keepUnderReview publishes it from the repository as it is, marked under review, under under-review/. index.published lists current documents only, so ids is empty. The changed behavior is internal: it is counted in withheldChanged, never named."
+  },
+  {
+    "section": "publication",
+    "name": "P04 knowledge whose sources changed is withheld when the request does not ask",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"tips\":{}",
+        "\"keptUnderReview\":[]",
+        "\"withheldForReview\":[]"
+      ],
+      "mustNotContain": [
+        "\"underReview\"",
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "Keeping is opt-in per request (publication §1, §3): without keepUnderReview, keepable knowledge is excluded as needs-review, as before."
+  },
+  {
+    "section": "publication",
+    "name": "P04 an internal projection names the changed source it admits",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "internal",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "authorizedInternal": true,
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "  changedSinceReview:\n    changed:\n      - BEH-ASMT-SCHEDULE\n    withheldChanged: 0\n"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a kept document's behavior tip is marked and its rule tip held back",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\",\"underReview\":true}",
+        "\"withheldForReview\":[\"RULE-ASMT-FUTURE\"]"
+      ],
+      "mustNotContain": [
+        "The release time must be in the future."
+      ]
+    },
+    "notes": "Publication §5: a rule's tip is the reason a product gives for a refusal, so a document kept under review holds it back and the help file lists the rule in withheldForReview; behavior and capability tips are carried, marked."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a changed governing rule the knowledge does not explain is neither named nor counted",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          },
+          "intentset.links.explains": [
+            "BEH-ASMT-SCHEDULE"
+          ],
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "  withheldSources: 1\n",
+        "  changedSinceReview:\n    changed: []\n    withheldChanged: 0\n",
+        "\"keptUnderReview\":[\"KB-ASMT-SCHEDULE\"]"
+      ]
+    },
+    "notes": "changed and withheldChanged count explained sources only, the set sources and withheldSources describe (publication §2): the governing rule changed, made the knowledge needs-review, and is not explained, so it is neither named nor counted."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a current document's tip wins over one kept under review whatever the IDs",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '0000000000000000000000000000000000000000000000000000000000000000'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}",
+        "\"keptUnderReview\":[\"KB-ASMT-CLASSES\"]",
+        "\"withheldForReview\":[]"
+      ],
+      "mustNotContain": [
+        "\"text\":\"Choose the class first.\""
+      ]
+    },
+    "notes": "Publication §5: a current document's tip is written in preference to one from a document kept under review, though KB-ASMT-CLASSES has the lower ID."
+  },
+  {
+    "section": "publication",
+    "name": "P04 boundary: a renewed review publishes as current with no mark",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"keepUnderReview\":true",
+        "\"keptUnderReview\":[]",
+        "\"withheldForReview\":[]"
+      ],
+      "mustNotContain": [
+        "\"underReview\"",
+        "Under review:"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a review without a self pin is never kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"keptUnderReview\":[]"
+      ]
+    },
+    "notes": "Without self nothing proves the knowledge's text is the text the review covered (publication §3)."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a review without a gate pin is never kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"keptUnderReview\":[]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a source made restricted after review is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "930df07c56a2b36c7242148dbf94084cb3b042c692af1465413c25e8b75719c3"
+          }
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.visibility": "restricted"
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"keptUnderReview\":[]"
+      ],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "The behavior's pin and the gate pin are literals of the baseline (computed when the case was written). The behavior is now restricted, so its content hash and the gate hash both moved: whether the prose may stay is a person's call (publication §3, design invariant 4)."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a source taken out of the request's edition after review is not kept under review",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "teacher"
+      ],
+      "editions": [
+        "premium",
+        "standard"
+      ],
+      "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "930df07c56a2b36c7242148dbf94084cb3b042c692af1465413c25e8b75719c3"
+          }
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.availability.editions": [
+            "premium"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"keptUnderReview\":[]"
+      ],
+      "mustNotContain": [
+        "Choose a published assessment"
+      ]
+    },
+    "notes": "The gate pin is the baseline's literal; the behavior's availability moved, so the gate hash moved."
+  },
+  {
+    "section": "publication",
+    "name": "P04 knowledge edited after its review needs review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "0000000000000000000000000000000000000000000000000000000000000000",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": []
+    },
+    "notes": "Publication §3 (ADR 0027): a review that pins the knowledge's own text is needs-review once that text moves, though every source is unchanged."
+  },
+  {
+    "section": "publication",
+    "name": "P04 knowledge edited after its review is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "0000000000000000000000000000000000000000000000000000000000000000",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"keptUnderReview\":[]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 boundary: knowledge whose self pin matches is current",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 boundary: deprecating reviewed knowledge keeps it current",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "deprecated",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "4e127d988ded8e2f86778df6899a6fe92c50955626f9f1bcd00a5253e22fcefd",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "self is the knowledge's own content hash, a literal computed when the case was written: the content hash without ending, so deprecating the knowledge does not count as editing its text."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a missing pin is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"keptUnderReview\":[]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 knowledge with no reviewer is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": null,
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"keptUnderReview\":[]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a review naming an unknown hash kind is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "hash": "content-v9",
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"keptUnderReview\":[]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a self pin of @current binds although no source pin is @current",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ]
+    },
+    "notes": "Every source pin is the baseline's literal content hash; self binds on its own (publication §3). Unbound it would read as changed."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a file-v1 review with a self pin is kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "hash": "file-v1",
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"keptUnderReview\":[\"KB-ASMT-SCHEDULE\"]"
+      ]
+    },
+    "notes": "self is the own content hash whatever the review's hash kind says."
+  },
+  {
+    "section": "publication",
+    "name": "P01 draft knowledge is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "draft",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"draft\":1",
+        "\"keptUnderReview\":[]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "audience mismatch is excluded before review is considered",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          },
+          "intentset.audiences": [
+            "product"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"audience\":1",
+        "\"keptUnderReview\":[]"
+      ],
+      "mustNotContain": [
+        "\"needs-review\""
+      ]
+    },
+    "notes": "Every check of publication §1 runs on the record as it is now before keeping applies."
+  },
+  {
+    "section": "publication",
+    "name": "PUB002 a kept document that repeats a title outside the projection is not written",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        },
+        "body": "# Prepare a scheduled student assessment\n\n## Guidance\n\nChoose a published assessment, a class you can manage, and a future release time. Review the schedule before confirming. If scheduling is rejected, check your class permissions, publication state, and chosen time. Require a future release time.\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB002"
+    ],
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"title\":1",
+        "\"keptUnderReview\":[]"
+      ],
+      "mustNotContain": [
+        "Require a future release time"
+      ]
+    },
+    "notes": "A document kept under review goes through every check a current one does (publication §3, §4). self binds to the edited text."
+  },
+  {
+    "section": "publication",
+    "name": "CORE008 boundary: a requested knowledge record kept under review is not refused",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"ids\":[\"KB-ASMT-SCHEDULE\"],\"keepUnderReview\":true}"
+      ]
+    },
+    "notes": "Knowledge kept under review is published, so a request that names it is not CORE008 (publication §1). The index's request writes keepUnderReview last."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a multi-role request: a current tip wins over a kept one with a lower ID that the other role admitted",
+    "baseline": "scheduling",
+    "registries": {
+      "owners": [
+        "team-assessment",
+        "team-platform"
+      ],
+      "audiences": [
+        "engineering",
+        "product",
+        "teacher"
+      ],
+      "releases": [
+        "pilot-1"
+      ],
+      "roles": [
+        "administrator",
+        "teacher"
+      ],
+      "editions": [
+        "standard"
+      ],
+      "flags": [],
+      "evidenceSources": [
+        "product-analytics",
+        "task-study"
+      ],
+      "resources": [
+        {
+          "id": "RES-ASSESSMENT-DATA",
+          "path": "amplify/data/resource.ts",
+          "owner": "team-platform",
+          "consumers": [
+            "SLICE-ASMT-SCHEDULE"
+          ]
+        }
+      ]
+    },
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '0000000000000000000000000000000000000000000000000000000000000000'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          },
+          "intentset.tips": {
+            "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time."
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": [
+        "teacher",
+        "administrator"
+      ],
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}",
+        "\"keptUnderReview\":[\"KB-ASMT-CLASSES\"]",
+        "\"role\":[\"administrator\",\"teacher\"]"
+      ]
+    },
+    "notes": "Keepability does not depend on the request, and which of its roles admitted each document makes no difference to the tie-break (publication §1, §5)."
+  },
+  {
+    "section": "publication",
+    "name": "PUB001 a keepUnderReview that is not a boolean refuses the request",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": "yes"
+    },
+    "valid": false,
+    "diagnostics": [
+      "PUB001"
+    ],
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"request\":null"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a kept document carries the under-review note after its title",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "# Prepare a scheduled student assessment\n\n> [!NOTE]\n> Under review: what this article explains has changed since it was reviewed.\n",
+        "> [!NOTE]\n> Under review: what this article explains has changed since it was reviewed.\n"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a kept document's HTML page shows the note and is not indexed",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "<meta name=\"robots\" content=\"noindex\">",
+        "Under review: what this article explains has changed since it was reviewed."
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a kept document's fragment is wrapped and begins with the note",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "<div data-intentset-under-review=\"true\">\n<div class=\"ms-callout",
+        "Under review: what this article explains has changed since it was reviewed."
+      ]
+    },
+    "notes": "Publication §2: the fragment carries no block, and its one mark is the wrapping element; it leaves out the title heading, so the note comes first."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a current document that links a kept one is refused, as without keepUnderReview",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n\nSee [schedule](KB-ASMT-SCHEDULE.md).\n"
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": false,
+    "diagnostics": [
+      "CORE008"
+    ],
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"reference\":1",
+        "\"keptUnderReview\":[\"KB-ASMT-SCHEDULE\"]"
+      ]
+    },
+    "notes": "A current document's link targets are the documents published as current (publication §4), so a request with keepUnderReview publishes exactly the current documents the same request without it publishes."
+  },
+  {
+    "section": "publication",
+    "name": "P04 a kept document's link to a current document resolves from under-review",
+    "baseline": "scheduling",
+    "files": {
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+    },
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "@current"
+          }
+        },
+        "body": "# Prepare a scheduled student assessment\n\n## Guidance\n\nChoose a published assessment, a class you can manage, and a future release time. Review the schedule before confirming. If scheduling is rejected, check your class permissions, publication state, and chosen time. See [classes](KB-ASMT-CLASSES.md).\n"
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-CLASSES"
+      ],
+      "mustContain": [
+        "[classes](../KB-ASMT-CLASSES.md)",
+        "\"keptUnderReview\":[\"KB-ASMT-SCHEDULE\"]"
+      ]
+    }
+  },
+  {
+    "section": "publication",
+    "name": "P04 a source whose audiences narrowed after review is not kept under review",
+    "baseline": "scheduling",
+    "patch": {
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "0000000000000000000000000000000000000000000000000000000000000000",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            },
+            "self": "@current",
+            "gates": "930df07c56a2b36c7242148dbf94084cb3b042c692af1465413c25e8b75719c3"
+          }
+        }
+      },
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.audiences": [
+            "engineering"
+          ]
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": [],
+      "keepUnderReview": true
+    },
+    "valid": true,
+    "published": {
+      "ids": [],
+      "mustContain": [
+        "\"needs-review\":1",
+        "\"keptUnderReview\":[]"
+      ]
+    },
+    "notes": "Publication never checks a source's audiences against the knowledge; the gate pin does, so a source narrowed to other audiences takes its knowledge out until it is reviewed again."
   }
 ]

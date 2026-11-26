@@ -149,6 +149,9 @@
             },
             "description": "Knowledge IDs requested; omitted means every eligible one."
           },
+          "keepUnderReview": {
+            "description": "Publish keepable knowledge marked under review (publication \u00a73, ADR 0027); omitted means false. Untyped, so a case may hold a value that is not a boolean to pin its refusal (PUB001)."
+          },
           "authorizedInternal": {
             "type": "boolean",
             "description": "Explicit authorization for an internal projection (Core \u00a79); omitted means not authorized."

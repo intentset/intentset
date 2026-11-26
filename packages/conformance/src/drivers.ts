@@ -205,10 +205,15 @@ export const publicationDriver: Driver = (expanded) => {
   const options = { snapshot: { commit: null, graphHash: graphHash(graph) }, publishedAt: FIXTURE_PUBLISHED_AT };
   const published = publish(graph, registries, request, { ...options, renderHtml: "page" });
   // The fragment (publication §2) is offered to the same checks as the page.
-  const fragments = publish(graph, registries, request, { ...options, renderHtml: "fragment" }).documents;
+  const withFragments = publish(graph, registries, request, { ...options, renderHtml: "fragment" });
+  // Documents kept under review (publication §3) are offered to the same checks; `ids` stays `index.published`.
+  const fragments = [...withFragments.documents, ...withFragments.keptUnderReview];
   const all = [...diagnostics, ...published.diagnostics];
   const text = [
-    ...published.documents.flatMap((document) => [document.markset, document.html ?? ""]),
+    ...[...published.documents, ...published.keptUnderReview].flatMap((document) => [
+      document.markset,
+      document.html ?? "",
+    ]),
     ...fragments.map((document) => document.htmlFragment ?? ""),
     JSON.stringify(published.index),
     JSON.stringify(published.help),

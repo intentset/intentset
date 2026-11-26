@@ -6,14 +6,20 @@
 export { bodyLineOffset } from "./body.ts";
 export { type Chunk, type ChunkOptions, type ChunkSource, toChunks } from "./chunks.ts";
 export {
+  type ChangedSinceReview,
   type GenerateOptions,
   type GeneratedDocument,
+  type KeptOptions,
   PUBLICATION_KEY,
   PUBLICATION_PROFILE,
   type PublicationMeta,
   type SourceStamp,
+  UNDER_REVIEW_DIR,
+  UNDER_REVIEW_NOTE,
   checkGenerated,
   generateDocument,
+  keptBody,
+  keptPublicationMeta,
   markerLine,
   marksetSource,
   publicationMeta,
@@ -49,6 +55,7 @@ export {
   type PublishedDocument,
   REFUSAL_REASONS,
   type RefusalReason,
+  UNDER_REVIEW_FRAGMENT_ATTRIBUTE,
   publish,
   renderDocument,
   renderFragment,
@@ -77,7 +84,10 @@ export {
 } from "./request.ts";
 export {
   CURRENT_PIN,
+  KEEP_BLOCKERS,
+  type KeepBlocker,
   PIN_KINDS,
+  type PinState,
   type PinKind,
   DEFAULT_PIN_KIND,
   type ReviewRecord,
@@ -86,6 +96,7 @@ export {
   knowledgeReport,
   pinHash,
   readReviewRecord,
+  reviewGateHash,
   reviewSources,
   reviewStatus,
 } from "./review.ts";

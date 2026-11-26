@@ -11,7 +11,9 @@
  * graph does not validate. Review pins are read as written: a real pin is a
  * literal hash, and the fixtures' `@current` is never bound here, so an
  * unbound one reads as changed. Writes only into the --out directory, which
- * must be new or empty and outside the documents' scope.
+ * must be new or empty and outside the documents' scope. --keep-under-review
+ * publishes keepable knowledge marked under review (publication §3, ADR 0027),
+ * written under `under-review/` and never chunked.
  */
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -21,6 +23,7 @@ import {
   type HtmlRendering,
   type PublicationRequest,
   SNAPSHOT_FILE,
+  UNDER_REVIEW_DIR,
   publish,
   toChunks,
 } from "@intentset/publisher";
@@ -46,6 +49,8 @@ export interface PublishCliOptions {
   publishedAt?: string;
   /** Write `snapshot.json`; false under --no-snapshot. */
   snapshot: boolean;
+  /** Publish keepable knowledge marked under review, under `under-review/` (publication §3); false when absent. */
+  keepUnderReview?: boolean;
 }
 
 const ISO_8601 = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$/;
@@ -90,6 +95,7 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
     role: options.role,
     edition: options.edition,
     flags: options.flags,
+    ...(options.keepUnderReview === true ? { keepUnderReview: true } : {}),
     authorizedInternal: options.authorizedInternal,
     authorizedRestricted: options.authorizedRestricted,
   } as PublicationRequest;
@@ -101,10 +107,12 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
 
   const outputs = new Map<string, string>();
   if (published.index.request !== null) {
-    for (const document of published.documents) {
-      outputs.set(`${document.id}.md`, document.markset);
-      if (document.html !== undefined) outputs.set(`${document.id}.html`, document.html);
-      if (document.htmlFragment !== undefined) outputs.set(`${document.id}.fragment.html`, document.htmlFragment);
+    // A document kept under review is written under under-review/, never beside the current ones (publication §2).
+    for (const document of [...published.documents, ...published.keptUnderReview]) {
+      const base = document.path.replace(/\.md$/, "");
+      outputs.set(document.path, document.markset);
+      if (document.html !== undefined) outputs.set(`${base}.html`, document.html);
+      if (document.htmlFragment !== undefined) outputs.set(`${base}.fragment.html`, document.htmlFragment);
     }
     outputs.set("index.json", `${JSON.stringify(published.index, null, 2)}\n`);
     outputs.set(HELP_FILE, `${JSON.stringify(published.help, null, 2)}\n`);
@@ -117,6 +125,7 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
     if (problem !== null) return fail(`--out ${options.out}: ${name} ${problem}; nothing was written.`);
   }
   if (outputs.size > 0) mkdirSync(dir, { recursive: true });
+  if (published.keptUnderReview.length > 0) mkdirSync(join(dir, UNDER_REVIEW_DIR), { recursive: true });
   for (const [name, text] of outputs) writeFileSync(join(dir, name), text, { flag: "wx" });
 
   for (const d of sortDiagnostics(published.diagnostics)) io.stdout(formatDiagnostic(d));
@@ -132,6 +141,13 @@ export function publishCommand(session: Session, options: PublishCliOptions, io:
       `Published ${count(index.published.length, "document")} for a ${r.visibility} projection: ${entitlement(r)}, edition ${r.edition}, flags ${r.flags.length === 0 ? "none" : r.flags.join(", ")}`,
       ...index.published.map((id) => `  ${id}`),
     );
+    if (index.keptUnderReview.length > 0) {
+      lines.push(
+        `Kept under review (${index.keptUnderReview.length}), under ${UNDER_REVIEW_DIR}/: ${index.keptUnderReview.join(", ")}`,
+      );
+    }
+    const held = published.help?.withheldForReview ?? [];
+    if (held.length > 0) lines.push(`Rule tips held for review (${held.length}): ${held.join(", ")}`);
     const reasons = Object.keys(index.excludedCounts);
     lines.push(
       `Excluded, among what this projection may see (${reasons.length === 0 ? "none" : reasons.map((reason) => `${reason} ${index.excludedCounts[reason]}`).join(", ")})`,

@@ -838,3 +838,26 @@ test("BEH-ATLAS, BEH-DELIVERY: a deprecated record that states no delivery shows
   );
   assert.match(approved, /Status approved Delivery not stated/, "approval implies nothing about the code");
 });
+
+test("BEH-ATLAS: knowledge whose sources changed and whose own text and gates are pinned reads as keepable, counted with its denominator", () => {
+  // The example's own content hash and gate hash, computed when the test was written (publication §3, ADR 0027).
+  const own = "4e127d988ded8e2f86778df6899a6fe92c50955626f9f1bcd00a5253e22fcefd";
+  const gates = "930df07c56a2b36c7242148dbf94084cb3b042c692af1465413c25e8b75719c3";
+  const pin = (self: string) => (name: string, source: string) =>
+    name !== "KB-ASMT-SCHEDULE.md"
+      ? source
+      : source
+          .replace(/BEH-ASMT-SCHEDULE: '[0-9a-f]{64}'/, `BEH-ASMT-SCHEDULE: '${"0".repeat(64)}'`)
+          .replace("    sources:\n", `    self: '${self}'\n    gates: '${gates}'\n    sources:\n`);
+  const kept = textOf(buildAtlas(example({ edit: pin(own) })).get("publication.html") as string);
+  assert.ok(kept.includes("can be published under review (keepUnderReview)"), kept);
+  assert.ok(
+    kept.includes(
+      "Needing review and keepable, so publishable marked under review when a request sets keepUnderReview: 1 of 1 knowledge artifact.",
+    ),
+  );
+  const edited = textOf(buildAtlas(example({ edit: pin("0".repeat(64)) })).get("publication.html") as string);
+  assert.ok(edited.includes("own text changed since review"));
+  assert.ok(!edited.includes("can be published under review"));
+  assert.ok(edited.includes("keepUnderReview: 0 of 1 knowledge artifact."));
+});

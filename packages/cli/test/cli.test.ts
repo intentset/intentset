@@ -5,8 +5,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { TypeScriptMissingError } from "@intentset/architecture";
-import { contentHashOf, parseYaml } from "@intentset/core";
+import { contentHashOf, ownContentHashOf, parseYaml } from "@intentset/core";
 import { validateSchema } from "../../conformance/src/harness.ts";
+import { repinReviews } from "../src/commands/migrate.ts";
 import { typescriptMissing } from "../src/commands/shared.ts";
 import {
   asEarlier,
@@ -75,6 +76,25 @@ test("BEH-AGENT-GUIDE: init --agents writes only the guide, for the scope the co
   assert.equal(again.code, 2);
   assert.match(again.err, /refusing to overwrite \.intentset\/agents\.md/);
   assert.equal((await run(dir, "init", "--agents", "--example")).code, 2);
+});
+
+test("BEH-AGENT-GUIDE: the guide forbids an agent from writing a knowledge review, and names the command that does", async (t) => {
+  const dir = temp(t);
+  mkdirSync(join(dir, ".intentset"));
+  writeFileSync(
+    join(dir, ".intentset", "config.yaml"),
+    'repository: "acme/app"\nscope:\n  - "docs/model/**/*.md"\nregistries: null\nignore: []\n',
+  );
+  const guide = (await run(dir, "guide")).out;
+  const never = guide.slice(guide.indexOf("## Never"), guide.indexOf("## Before you finish"));
+  assert.match(
+    never,
+    /^- Write or change a knowledge record's review: `reviewedBy`, `reviewedAt` or `review` \(its pins, `self` and\n {2}`gates`\), unless the review workflow you are running gives you every value\./m,
+  );
+  assert.match(
+    never,
+    /`intentset review` lists it\. `intentset approve`, run on a person's\n {2}word, is what writes a review\./,
+  );
 });
 
 test("BEH-AGENT-GUIDE: guide prints the guide init --agents writes, for the config's scope, and writes nothing", async (t) => {
@@ -1111,6 +1131,74 @@ for (const version of ["0.2", "0.1"]) {
     assert.deepEqual(await currentAtL4(dir), [], "current before the move and after it");
   });
 }
+
+test("BEH-REVIEW-APPROVALS: a migration that re-pins a matching review lists no review", async (t) => {
+  const { dir } = await atEarlier(t, "0.2");
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "content-v1"),
+  );
+  git(dir, "commit", "-q", "-am", "the knowledge reviewed at 0.2");
+  const moved = await run(dir, "migrate", "--to", "0.3");
+  assert.match(moved.out, /re-pinned 3 review pins/);
+  git(dir, "commit", "-q", "-am", "migrated");
+  const review = await run(dir, "review", "--base", "HEAD~1");
+  const section = review.out.slice(review.out.indexOf("## Approvals, reviews and status changes"));
+  assert.match(section, /^## Approvals, reviews and status changes \(0\)$/m, section);
+});
+
+test("BEH-REVIEW-APPROVALS: a branch that migrates, edits a source and re-pins it lists the review", async (t) => {
+  const { dir } = await atEarlier(t, "0.2");
+  const kb = RECORD(dir, "KB-ASMT-SCHEDULE");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "content-v1"),
+  );
+  git(dir, "commit", "-q", "-am", "the knowledge reviewed at 0.2");
+  assert.equal((await run(dir, "migrate", "--to", "0.3")).code, 0);
+  // The behavior changes what it promises after the move, and its new hash is copied into the pin by hand.
+  edit(dir, "BEH-ASMT-SCHEDULE", "## Outcomes\n", "## Outcomes\n\nA second schedule for the same class is refused.\n");
+  writeFileSync(
+    kb,
+    pinEach(kb, (id) => RECORD(dir, id), "content-v1"),
+  );
+  git(dir, "commit", "-q", "-am", "migrated, a source edited and its pin copied");
+  const review = await run(dir, "review", "--base", "HEAD~1");
+  const section = review.out.slice(review.out.indexOf("## Approvals, reviews and status changes"));
+  assert.match(section, /^## Approvals, reviews and status changes \(1\)$/m, section);
+  assert.match(section, /^- KB-ASMT-SCHEDULE \(knowledge\): approved; .*review written or changed: /m);
+  const json = JSON.parse((await run(dir, "review", "--base", "HEAD~1", "--json")).out);
+  assert.deepEqual(
+    json.statusChanges.map((item: { id: string; reviewChanged: boolean }) => [item.id, item.reviewChanged]),
+    [["KB-ASMT-SCHEDULE", true]],
+  );
+});
+
+test("BEH-MIGRATE: a move re-pins a review's self that matched the knowledge's own text, and leaves a stale one", () => {
+  const own = (text: string) => {
+    const lines = text.split("\n");
+    const close = lines.indexOf("---", 1);
+    const parsed = parseYaml(lines.slice(1, close).join("\n"));
+    assert.ok(parsed.value !== null);
+    return ownContentHashOf(parsed.value, lines.slice(close + 1).join("\n"));
+  };
+  const at03 = readFileSync(join(REPO, "examples", "scheduling", KB), "utf8");
+  const earlier = at03.replace("spec: '0.3'", "spec: '0.2'").replace("knowledge/0.3", "knowledge/0.2");
+  const withSelf = (text: string, self: string) => text.replace("  review:\n", `  review:\n    self: '${self}'\n`);
+  const matched = repinReviews([
+    { path: KB, line: 2, before: withSelf(earlier, own(earlier)), after: withSelf(at03, own(earlier)) },
+  ]);
+  assert.equal(matched.repinned, 1);
+  assert.equal(matched.texts.get(KB), withSelf(at03, own(at03)), "self is the knowledge's own text as moved");
+  assert.notEqual(own(earlier), own(at03), "spec and profile move the own content hash");
+  const stale = repinReviews([
+    { path: KB, line: 2, before: withSelf(earlier, "0".repeat(64)), after: withSelf(at03, "0".repeat(64)) },
+  ]);
+  assert.equal(stale.repinned, 0);
+  assert.equal(stale.stale, 1);
+  assert.equal(stale.texts.size, 0, "a stale self stays as written");
+});
 
 test("BEH-MIGRATE: migrate re-pins a whole-file review as file-v1, each pin the hash of its source's file as moved", async (t) => {
   const { dir, files } = await atEarlier(t);

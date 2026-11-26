@@ -722,7 +722,8 @@
           ],
           "changed": [],
           "missing": [],
-          "withheld": 2
+          "withheld": 2,
+          "self": "unpinned"
         }
       ]
     },

@@ -120,6 +120,10 @@ of its own above them, it is not read.
 - Write or change \`approval\`, the block that says who approved a record, when and on what basis, unless the
   approval workflow you are running tells you to and gives you every value. It records an approval that happened;
   writing it approves nothing, and one you made up is a false statement about a person.
+- Write or change a knowledge record's review: \`reviewedBy\`, \`reviewedAt\` or \`review\` (its pins, \`self\` and
+  \`gates\`), unless the review workflow you are running gives you every value. A hash copied from a tool's output
+  into a pin claims a review nobody made, and \`intentset review\` lists it. \`intentset approve\`, run on a person's
+  word, is what writes a review.
 - Change an ID or reuse a retired one. Moving or renaming a file keeps its ID; splitting a behavior retires the old
   one with \`replacedBy\`.
 - Name an owner, audience, release, role, edition, flag or evidence source that is not in

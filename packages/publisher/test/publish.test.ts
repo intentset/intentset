@@ -407,7 +407,8 @@ test("BEH-PUBLISH-FRAGMENT: a diagram the renderer draws stays a data:image/svg+
 
 test("the index names the request without authorization and counts exclusions", () => {
   const result = publishOnce(customer({ visibility: "internal", authorizedInternal: true }));
-  assert.deepEqual(Object.keys(result.index), ["profile", "request", "published", "excludedCounts"]);
+  assert.deepEqual(Object.keys(result.index), ["profile", "request", "published", "excludedCounts", "keptUnderReview"]);
+  assert.deepEqual(result.index.keptUnderReview, []);
   assert.equal(result.index.profile, "intentset/publication-index/0.3");
   assert.equal(Object.hasOwn(result.index.request ?? {}, "authorizedInternal"), false);
   assert.deepEqual(result.index.published, ["KB-ASMT-SCHEDULE"]);

@@ -301,7 +301,7 @@
         },
         "review": {
           "type": "object",
-          "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID. hash absent means content-v1; file-v1 is the whole file; any other value matches no pin. snapshot is informative.",
+          "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID. hash absent means content-v1; file-v1 is the whole file; any other value matches no pin. snapshot is informative. self and gates pin the knowledge's own text and who could see each source (ADR 0027).",
           "additionalProperties": false,
           "required": ["sources"],
           "properties": {
@@ -322,6 +322,16 @@
             "snapshot": {
               "type": ["string", "null"],
               "minLength": 1
+            },
+            "self": {
+              "type": ["string", "null"],
+              "minLength": 1,
+              "description": "The knowledge's own content hash when it was reviewed: its content-v1 hash without ending, whatever hash says (publication \u00a73, ADR 0027)."
+            },
+            "gates": {
+              "type": ["string", "null"],
+              "minLength": 1,
+              "description": "The gate hash of the review's sources when it was reviewed: each source's audiences, visibility and availability (publication \u00a73, ADR 0027)."
             }
           }
         },
