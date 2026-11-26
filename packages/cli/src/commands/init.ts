@@ -3,7 +3,7 @@
  * writes `.intentset/config.yaml`, an empty-but-valid
  * `.intentset/registries.yaml` and `.intentset/agents.md`, the guide coding
  * agents follow to keep the model current, and with `--example` the
- * scheduling example's records under `product/scheduling/` and its
+ * shop example's records under `product/shop/` and its
  * registries in place of the empty ones. `--agents` writes the guide alone,
  * for a repository initialized before there was one, with the scope its
  * config already names. Every target is checked before anything is written,
@@ -20,7 +20,7 @@ import { CONFIG_PATH } from "../repository.ts";
 
 export const REGISTRIES_PATH = ".intentset/registries.yaml";
 export const DEFAULT_INIT_SCOPE = "product/**/*.md";
-const EXAMPLE_TARGET = "product/scheduling";
+const EXAMPLE_TARGET = "product/shop";
 
 export interface InitOptions {
   root?: string;
@@ -68,15 +68,15 @@ export const EMPTY_REGISTRIES_TEXT = [
 ].join("\n");
 
 /**
- * The scheduling example: this repository's own copy when running from a
- * checkout, otherwise the one @intentset/conformance-suite ships. Null when
- * neither is present.
+ * The shop example, the invented online shop intentset.org tells (2026-11-26; Lantern's scheduling example until
+ * then, which stays the conformance suite's baseline): this repository's own copy when running from a checkout,
+ * otherwise the one @intentset/conformance-suite ships. Null when neither is present.
  */
 export async function exampleDir(): Promise<string | null> {
-  const candidates = [fileURLToPath(new URL("../../../../examples/scheduling/", import.meta.url))];
+  const candidates = [fileURLToPath(new URL("../../../../examples/shop/", import.meta.url))];
   try {
     const suite = (await import("@intentset/conformance-suite")) as { examplesPath?: string };
-    if (typeof suite.examplesPath === "string") candidates.push(join(suite.examplesPath, "scheduling"));
+    if (typeof suite.examplesPath === "string") candidates.push(join(suite.examplesPath, "shop"));
   } catch {
     // Not installed: the checkout's copy is the only candidate.
   }
@@ -100,8 +100,8 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
     const dir = await exampleDir();
     if (dir === null) {
       io.stderr(
-        "intentset init: --example needs the scheduling example, which is in an Intentset checkout under\n" +
-          "examples/scheduling and in the @intentset/conformance-suite package. Neither was found; install\n" +
+        "intentset init: --example needs the shop example, which is in an Intentset checkout under\n" +
+          "examples/shop and in the @intentset/conformance-suite package. Neither was found; install\n" +
           "@intentset/conformance-suite beside @intentset/cli, or run init without --example.\n",
       );
       return 2;

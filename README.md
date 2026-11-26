@@ -74,8 +74,9 @@ npx intentset validate --level L3
 The last line says `verified: 1 of 1 behavior`: a promise, the code that owns it, and a test that passed on this
 commit. Add `reports/` and `.intentset/evidence/` to `.gitignore`. With pnpm, `pnpm add --save-dev @intentset/cli`,
 then `pnpm exec intentset` wherever `npx intentset` appears; the architecture check needs TypeScript 7, and when the
-repository gives it an older one the command says what to run instead. To see one
-record of each type first, `npx intentset init --example --root <an empty directory>` writes the worked example there.
+repository gives it an older one the command says what to run instead. To see a
+small model first, `npx intentset init --example --root <an empty directory>` writes the example there: an invented
+online shop's accounts, the one intentset.org tells.
 
 **Status: v0.2 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
@@ -87,7 +88,8 @@ Ten packages are published under the `@intentset` scope: `core`, `markset-adapte
   [`spec/profile-typescript-amplify-gen2-0.2.md`](spec/profile-typescript-amplify-gen2-0.2.md),
   [`spec/publication.md`](spec/publication.md), the export contract other tools read,
   [`spec/export.md`](spec/export.md), and the list contract `intentset list` writes, [`spec/list.md`](spec/list.md)
-- Worked example: [`examples/scheduling/`](examples/scheduling/), an invented product
+- Examples: [`examples/shop/`](examples/shop/), an invented online shop, which `init --example` writes and
+  intentset.org shows; [`examples/scheduling/`](examples/scheduling/), Lantern, the conformance suite's baseline
 - Conformance suite: [`tests/`](tests/), one JSON file per area, schema in
   [`spec/conformance.schema.json`](spec/conformance.schema.json); export consumer fixtures in
   [`tests/consumer/`](tests/consumer/)
@@ -101,7 +103,7 @@ From a checkout of this repository, which uses pnpm (pinned in `package.json`; `
 pnpm install
 pnpm run intentset init --repository you/repo --example --root <dir>   # <dir> an empty directory
 pnpm run intentset validate --root <dir>
-pnpm run intentset impact BEH-ASMT-SCHEDULE --root <dir>
+pnpm run intentset impact BEH-RESET-PASSWORD --root <dir>
 ```
 
 Commands: `init`, `validate` (levels L1 to L4), `graph`, `migrate` (records to the next specification version), `approve` (write a person's approval into drafts), `impact`, `context`, `architecture check`,

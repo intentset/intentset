@@ -1,11 +1,11 @@
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.2'
   profile: intentset/rule/0.2
-  id: RULE-RESET-LINK-ONCE
+  id: RULE-RESET-LINK-EXPIRY
   type: rule
-  title: Reset links work once
+  title: Reset links expire after one hour
   status: draft
   owner: team-accounts
   visibility: internal
@@ -15,8 +15,8 @@ intentset:
   revision: 1
 ---
 
-# Reset links work once
+# Reset links expire after one hour
 
 ## Constraint
 
-A password reset link stops working once it has been used to set a new password.
+A password reset link stops working one hour after it is sent.

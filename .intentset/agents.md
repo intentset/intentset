@@ -96,7 +96,7 @@ callouts, tables and other constructs a record may use and the codes `validate` 
 guide at https://markset.org/guide.md, or print it with `pnpm dlx @markset-lang/cli guide`.
 
 An existing record of the same type in this repository is the best template; in a repository with none yet,
-`pnpm exec intentset init --example --root <an empty directory>` writes one record of each type there to read. A capability sits
+`pnpm exec intentset init --example --root <an empty directory>` writes a small example model there to read. A capability sits
 under an outcome, an outcome under an intent, and an intent under the product, so the first capability brings those
 three with it. A new behavior looks like this, one recognizable promise including how it fails:
 

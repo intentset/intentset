@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.2'
   profile: intentset/knowledge/0.2
