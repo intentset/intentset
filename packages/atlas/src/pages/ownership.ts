@@ -19,6 +19,8 @@ export function ownershipPage(model: Model): PageSource {
   const product = slices.filter((s) => s.meta.slice?.kind === "product").length;
   const body: string[] = [
     "{.lead}",
+    "Which slice of the code owns each promise, and which code no slice owns.",
+    "",
     `${plural(slices.length, "slice")} in this snapshot (${product} product, ${slices.length - product} technical). ` +
       `Behaviors with an owning slice: ${ofTotal(behaviors.length - unowned.length, behaviors.length, "behavior")} ` +
       "(links: a slice declares it in `implements`).",

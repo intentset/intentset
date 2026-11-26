@@ -55,7 +55,7 @@ On any other type it is CORE001, as `measure` and `tips` are. When it is absent,
 - **The export carries it, so the export moves to 0.5** (export §7). The export's artifact is closed, so a 0.4 reader
   would reject an artifact that carries `delivery`. Each artifact carries the authored value, or null. A 0.5 reader
   rejects 0.4, as each earlier move did.
-- **The Atlas shows it**, on the overview and on each record's page, as built, planned or not stated, and next to
+- **The Atlas shows it**, on the overview (the product page since 2026-11-26) and on each record's page, as built, planned or not stated, and next to
   the status, never in place of it.
 
 A new optional field changes no existing conformance case, so `intentset.spec` stays `0.2` (Core §1).

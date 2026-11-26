@@ -24,13 +24,13 @@ import {
   type LinkKind,
 } from "@intentset/core";
 import { reviewStatus } from "@intentset/publisher";
-import { type Model, STATUS_WORDS } from "../model.ts";
+import type { Model } from "../model.ts";
 import { MAP_SLOT_SOURCE, type PageSource } from "../page.ts";
 import { type PageLink, recordPath, recordText } from "../record-text.ts";
 import type { SourceUrl } from "../types.ts";
-import { badge, code, fenced, idLink, link, ofTotal, plural, series, table, text } from "../text.ts";
+import { badge, code, fenced, idLink, link, ofTotal, plural, table, text } from "../text.ts";
 import { TYPE_HEADINGS } from "./records.ts";
-import { deliveryWord, evidenceCell, latestRun, reviewCell } from "./shared.ts";
+import { claimBadge, claimEvidence, deliveryWord, evidenceCell, latestRun, reviewBadge, reviewCell } from "./shared.ts";
 
 const ROLE_HEADINGS: Record<Exclude<ContextRole, "start">, string> = {
   owner: "Owning slice",
@@ -68,7 +68,7 @@ const LINK_LABELS: Record<LinkKind, { written: string; derived: string }> = {
 
 /** The review page that also shows a record of this type, among the others of its kind. */
 const SHOWN_ON: Partial<Record<Artifact["meta"]["type"], { page: string; label: string }>> = {
-  capability: { page: "index.html", label: "the overview, with its behaviors and their coverage" },
+  capability: { page: "index.html", label: "the product tree, with its behaviors and their state" },
   slice: { page: "ownership.html", label: "the ownership page, with its path claims, layers and shared resources" },
   verification: { page: "verification.html", label: "the verification page, among the claims it covers" },
   knowledge: { page: "publication.html", label: "the publication page, with what each projection would publish" },
@@ -79,6 +79,11 @@ export function recordPage(model: Model, artifact: Artifact, pageLink?: PageLink
   const id = meta.id;
   const ancestry = model.ancestry(id);
   const body: string[] = [
+    "{.lead}",
+    meta.type === "behavior"
+      ? "One behavior: its text as written, then how it traces from why it exists to the tests and help that hold it."
+      : "One record: its text as written, then what it links to and where it stands.",
+    "",
     `${link("Records", "../records.html")} › ${link(TYPE_HEADINGS[meta.type], `../records.html#${meta.type}`)} › ${code(id)}`,
     "",
   ];
@@ -138,6 +143,7 @@ function behaviorSections(model: Model, behavior: Artifact): string[] {
   // The Atlas is an internal review view over the graph it is given, so the bundle includes restricted records.
   const bundle = contextFor(model.graph, id, { includeRestricted: true });
   const members = bundle?.artifacts.filter((a) => a.role !== "start") ?? [];
+  body.push(...trace(model, behavior));
   body.push(
     "## Context bundle",
     "",
@@ -238,6 +244,60 @@ function behaviorSections(model: Model, behavior: Artifact): string[] {
     );
   }
   return body;
+}
+
+/**
+ * The behavior's trace (#159): one chain from why it exists to what people are told, each step a link to the records
+ * in it with their state. Steps, so it reads left to right on paper and top to bottom on a phone; an empty step says
+ * what is missing rather than disappearing.
+ */
+function trace(model: Model, behavior: Artifact): string[] {
+  const id = behavior.meta.id;
+  const ref = (other: string) => `${idLink(other, `${other}.html`)} ${text(model.get(other)?.meta.title ?? "")}`;
+  const why = model.ancestry(id).filter((a) => {
+    const type = model.get(a)?.meta.type;
+    return type === "intent" || type === "outcome";
+  });
+  const measures = why.flatMap((o) => model.into(o, "parent", "measure"));
+  const rules = model.from(id, "governedBy", "rule");
+  const scenarios = model.into(id, "illustrates", "scenario");
+  const owners = model.owners(id);
+  const decisions = [...new Set(owners.flatMap((o) => model.from(o, "informedBy", "decision")))].sort(compareStrings);
+  const verifications = [...new Set(model.claimsOf(id).flatMap((c) => model.verificationsOf(c)))].sort(compareStrings);
+  const knowledge = model.into(id, "explains", "knowledge");
+  const list = (items: string[], empty: string) => (items.length === 0 ? empty : items.join("; "));
+  const delivery = deliveryWord(behavior.meta)?.word ?? "not stated";
+  return [
+    "{#trace}",
+    "## Trace",
+    "",
+    "From why the behavior exists to what people are told about it, one link at a time.",
+    "",
+    ":::steps",
+    `1. **Why.** ${list(
+      [...why.map((w) => `${ref(w)} · ${model.get(w)?.meta.type}`), ...measures.map((m) => `${ref(m)} · measure`)],
+      "No intent or outcome sits above it, so nothing says why it exists.",
+    )}`,
+    `2. **The behavior.** ${ref(id)} · ${behavior.meta.status} · ${delivery} · ${claimBadge(model, id)}`,
+    `3. **Rules and scenarios.** ${list(
+      [...rules, ...scenarios].map((c) => `${ref(c)} ${claimBadge(model, c)}`),
+      "No rule governs it and no scenario illustrates it.",
+    )}`,
+    `4. **Owning slice.** ${list(
+      [...owners.map(ref), ...decisions.map((d) => `${ref(d)} · decision`)],
+      `${badge("no owner", "warn")} No slice implements it.`,
+    )}`,
+    `5. **Verifications and evidence.** ${list(
+      verifications.map((v) => `${ref(v)} ${evidenceCell(model, v)}`),
+      `${badge("none", "warn")} No verification names it, its rules or its scenarios.`,
+    )}`,
+    `6. **What people are told.** ${list(
+      knowledge.map((k) => `${ref(k)} ${reviewBadge(reviewStatus(model.graph, model.get(k) as Artifact))}`),
+      "No knowledge explains it.",
+    )}`,
+    ":::",
+    "",
+  ];
 }
 
 /** What the Atlas reads about a record of this type: a verification's evidence, a knowledge record's review. */
@@ -414,16 +474,4 @@ function emptyRole(role: ContextRole): string {
     default:
       return "No scenario illustrates this behavior.";
   }
-}
-
-/** A claim's evidence in words: verified or not and why, or "not assessed" without evidence. */
-function claimEvidence(model: Model, claim: string): string {
-  if (!model.hasEvidence) return `${badge("not assessed", "neutral")} no run evidence supplied`;
-  const coverage = model.coverageOf(claim);
-  if (coverage === null) return `${badge("not assessed", "neutral")} not in the coverage report`;
-  if (coverage.verifications.length === 0) return badge("not verified", "warn");
-  const statuses = series(coverage.verifications.map((v) => `${code(v.id)} ${STATUS_WORDS[v.status].word}`));
-  return coverage.verified
-    ? `${badge("verified", "success")} ${statuses}`
-    : `${badge("not verified", "warn")} ${statuses}`;
 }
