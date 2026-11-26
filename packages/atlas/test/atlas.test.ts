@@ -117,6 +117,8 @@ function pages(atlas: Map<string, string>): [string, string][] {
 
 const PAGES = [
   "index.html",
+  "attention.html",
+  "overview.html",
   "records.html",
   "ownership.html",
   "verification.html",
@@ -128,7 +130,7 @@ const PAGES = [
   "atlas-map.js",
 ];
 
-test("BEH-ATLAS: the Atlas of the example has the seven pages, a page per record, and the stylesheet once", () => {
+test("BEH-ATLAS: the Atlas of the example has the nine pages, a page per record, and the stylesheet once", () => {
   const atlas = buildAtlas(example());
   assert.deepEqual([...atlas.keys()], PAGES);
   assert.ok(
@@ -410,12 +412,12 @@ function overviewChart(html: string) {
 
 test("BEH-ATLAS: the overview's chart stays readable at any number of capabilities: a row each, whole labels, bars you can see", () => {
   // A few capabilities: the same 340-unit figure Markset's own engine draws.
-  const few = overviewChart(buildAtlas(largeModel(4, 2).input).get("index.html") ?? "");
+  const few = overviewChart(buildAtlas(largeModel(4, 2).input).get("overview.html") ?? "");
   assert.equal(few.height, 340);
   // 45 capabilities with long, alike IDs: the figure grows, every label is there whole and distinct, no two rows are
   // closer than a line of type, and a bar is at least eight units thick.
   const model = largeModel(45, 4);
-  const chart = overviewChart(buildAtlas(model.input).get("index.html") ?? "");
+  const chart = overviewChart(buildAtlas(model.input).get("overview.html") ?? "");
   assert.equal(chart.labels.length, 45);
   assert.equal(new Set(chart.labels).size, 45, "every label differs from the others");
   assert.deepEqual(
@@ -430,7 +432,7 @@ test("BEH-ATLAS: the overview's chart stays readable at any number of capabiliti
   assert.ok(chart.height >= 45 * 20, `the figure grows to ${chart.height}`);
   assert.equal(barRowHeight(45, 2), 26);
   // And a hundred, still one row each.
-  assert.equal(overviewChart(buildAtlas(largeModel(100, 1).input).get("index.html") ?? "").labels.length, 100);
+  assert.equal(overviewChart(buildAtlas(largeModel(100, 1).input).get("overview.html") ?? "").labels.length, 100);
 });
 
 test("BEH-ATLAS-MAP: every record is a node and every authored link an edge, drawn once", () => {
@@ -641,7 +643,7 @@ test("a current pass verifies every claim it names, and a failing run stays visi
   assert.ok(verification.includes("current pass 1 of 1 verification definition"));
   assert.ok(verification.includes("Verified at this snapshot 1 of 1 2 of 2 1 of 1 evidence"));
   assert.ok(
-    textOf(passing.get("index.html") as string).includes(
+    textOf(passing.get("overview.html") as string).includes(
       "Behaviors with current passing evidence 1 of 1 of behaviors; evidence at this snapshot",
     ),
   );
@@ -801,7 +803,7 @@ test("BEH-ATLAS, BEH-DELIVERY: the overview and a record's page show delivery be
         name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: draft\n  delivery: built") : source,
     }),
   );
-  const overview = textOf(atlas.get("index.html") ?? "");
+  const overview = textOf(atlas.get("overview.html") ?? "");
   assert.match(overview, /Behaviors whose work is built 1 of 1/);
   assert.match(overview, /Behaviors whose work is planned 0 of 1/);
   assert.match(overview, /Status says what a person approved; delivery says whether the code exists/);
@@ -811,4 +813,179 @@ test("BEH-ATLAS, BEH-DELIVERY: the overview and a record's page show delivery be
   assert.match(record, /Status draft Delivery built/);
   const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
   assert.doesNotMatch(knowledge, /Delivery/, "knowledge does not carry delivery");
+});
+
+test("BEH-ATLAS-OUTLINE: the outline is the landing page: product, intent and outcome as headings, each capability folded closed", () => {
+  const atlas = buildAtlas(example());
+  const html = atlas.get("index.html") ?? "";
+  const text = textOf(html);
+  assert.match(html, /<title>Outline · Intentset Atlas<\/title>/);
+  // The hierarchy, in order: product, intent, outcome with its measures, capability, behavior.
+  const order = [
+    "Product · PRD-LANTERN",
+    "Intent · INT-PREPARE",
+    "Outcome · OUT-PREPARE",
+    "CAP-ASMT-ASSIGN · Student assessment assignment · 1 behavior",
+  ];
+  const at = order.map((line) => text.indexOf(line));
+  assert.ok(
+    at.every((i) => i >= 0),
+    `the tree has ${order.join(", ")}`,
+  );
+  assert.deepEqual(
+    [...at].sort((a, b) => a - b),
+    at,
+    "in the hierarchy's order",
+  );
+  assert.ok(text.indexOf("BEH-ASMT-SCHEDULE") > at[3], "the behavior sits inside its capability");
+  assert.match(text, /Measures: MEAS-PREPARE-ADOPTION .*; MEAS-PREPARE-MINUTES/);
+  // The product, intent and outcome are headings; the capability is a fold, closed until a reader opens it.
+  assert.match(html, /<h2[^>]*>Product · PRD-LANTERN: Lantern example<\/h2>/);
+  assert.match(html, /<h3[^>]*>Intent · INT-PREPARE: /);
+  assert.match(html, /<h4[^>]*>Outcome · OUT-PREPARE: /);
+  const folds = [
+    ...html.matchAll(/<details class="ms-callout"[^>]*?( open)?>\s*<summary class="ms-callout-title">([^<]*)/g),
+  ];
+  assert.equal(folds.length, 1, "one fold, the capability");
+  assert.equal(folds[0][1], undefined, "the capability is folded closed");
+  // Each level says its status and its counts, and each count says what it counts.
+  assert.match(
+    text,
+    /draft · 1 behavior: 1 of 1 behavior with an owning slice · 1 of 1 behavior named by a verification \(links\) · verified: not assessed · open its page/,
+  );
+  // Beneath the behavior, its parts, each linked, and a way to its trace.
+  for (const part of [
+    "Rules: RULE-ASMT-AUTH",
+    "Scenarios: SCN-ASMT-SCHEDULE",
+    "Owning slice: SLICE-ASMT-SCHEDULE",
+    "Verifications: TEST-ASMT-SCHEDULE",
+    "Knowledge: KB-ASMT-SCHEDULE",
+  ])
+    assert.ok(text.includes(part), part);
+  assert.ok(html.includes('<a href="records/BEH-ASMT-SCHEDULE.html#trace">trace</a>'));
+  assert.ok(html.includes("review current"), "the knowledge's review is current");
+});
+
+test("BEH-ATLAS-OUTLINE: without evidence nothing on the outline is verified; a current pass is, and a stale one is stale", () => {
+  const noneHtml = buildAtlas(example()).get("index.html") ?? "";
+  const none = textOf(noneHtml);
+  assert.ok(none.includes("No run evidence supplied"));
+  const tree = noneHtml.slice(0, noneHtml.lastIndexOf("States:"));
+  assert.ok(!tree.includes('badge success">verified'), "no claim reads as verified");
+  assert.ok(none.includes("not assessed"));
+  const passing = textOf(
+    buildAtlas(example({ commit: COMMIT, runs: (hash) => [review(hash)] })).get("index.html") ?? "",
+  );
+  assert.match(passing, /BEH-ASMT-SCHEDULE Schedule a student assessment · draft · not stated · verified/);
+  assert.match(passing, /1 of 1 behavior verified \(evidence\)/);
+  const stale = textOf(buildAtlas(example({ commit: COMMIT, runs: () => [review(OLD_HASH)] })).get("index.html") ?? "");
+  assert.match(stale, /BEH-ASMT-SCHEDULE Schedule a student assessment · draft · not stated · stale/);
+});
+
+test("BEH-ATLAS-OUTLINE: on a large model the outline is one closed fold per capability, each with its count", () => {
+  const model = largeModel(45, 4);
+  const html = buildAtlas(model.input).get("index.html") ?? "";
+  const capabilities = [
+    ...html.matchAll(/<details class="ms-callout"[^>]*>\s*<summary class="ms-callout-title">(CAP-[^ ]+)/g),
+  ];
+  assert.equal(capabilities.length, 45);
+  assert.ok(!/<details[^>]* open>/.test(html), "every capability starts closed");
+  assert.match(
+    html,
+    /CAP-CONTENT-GENERATION-AREA-000 · capability CAP-CONTENT-GENERATION-AREA-000 · 4 behaviors<\/summary>[\s\S]*?draft · 4 behaviors: 4 of 4 behaviors with an owning slice · 2 of 4 behaviors named by a verification \(links\)/,
+  );
+});
+
+test("BEH-ATLAS-TRACE: a behavior's page traces it from why it exists to what people are told, one step a link", () => {
+  const atlas = buildAtlas(example());
+  const html = atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "";
+  const trace = html.slice(html.indexOf('id="trace"'), html.indexOf("Context bundle"));
+  assert.ok(trace.length > 0, "the trace comes before the context bundle");
+  const steps = [...trace.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((m) => textOf(m[1]));
+  assert.deepEqual(
+    steps.map((s) => s.split(".")[0]),
+    [
+      "Why",
+      "The behavior",
+      "Rules and scenarios",
+      "Owning slice",
+      "Verifications and evidence",
+      "What people are told",
+    ],
+  );
+  assert.match(steps[0], /INT-PREPARE .* intent; OUT-PREPARE .* outcome; MEAS-PREPARE-ADOPTION .* measure/);
+  assert.match(steps[2], /RULE-ASMT-AUTH .*; RULE-ASMT-FUTURE .*; SCN-ASMT-SCHEDULE/);
+  assert.match(steps[3], /SLICE-ASMT-SCHEDULE .*; ADR-ASMT-SEAM .* decision/);
+  assert.match(steps[4], /TEST-ASMT-SCHEDULE .* not assessed/);
+  assert.match(steps[5], /KB-ASMT-SCHEDULE .* review current/);
+  for (const id of ["INT-PREPARE", "RULE-ASMT-AUTH", "SLICE-ASMT-SCHEDULE", "TEST-ASMT-SCHEDULE", "KB-ASMT-SCHEDULE"])
+    assert.ok(trace.includes(`<a href="${id}.html"><code>${id}</code></a>`), `${id} links its page`);
+  // An empty step says what is missing rather than disappearing.
+  const unowned =
+    buildAtlas(
+      example({
+        edit: (name, source) =>
+          name === "SLICE-ASMT-SCHEDULE.md" ? source.replace(/ {4}- BEH-ASMT-SCHEDULE\n/, "") : source,
+      }),
+    ).get("records/BEH-ASMT-SCHEDULE.html") ?? "";
+  assert.match(textOf(unowned), /Owning slice\. no owner No slice implements it\./);
+});
+
+test("BEH-ATLAS-ATTENTION: needs attention lists drafts by type, claims with no current pass by why, and knowledge held for review", () => {
+  const atlas = buildAtlas(example());
+  const text = textOf(atlas.get("attention.html") ?? "");
+  const records = files.length;
+  assert.match(text, new RegExp(`${records - 1} of ${records} records in this snapshot are drafts`));
+  assert.match(text, /Behaviors: 1 of 1 record in draft\s+BEH-ASMT-SCHEDULE/);
+  // Without evidence only what the graph decides is listed, and the rest is said to be not assessed.
+  assert.ok(text.includes("No run evidence supplied"));
+  assert.ok(!text.includes("Failing:") && !text.includes("Stale:"));
+  assert.match(text, /Named by no verification: 0 of 4 claims/);
+  assert.match(text, /Not assessed: 4 of 4 claims, named by a verification/);
+  assert.match(text, /Not checked: no architecture check was supplied/);
+  assert.match(text, /0 of 1 knowledge record past draft is held/);
+  // A failing run, an unclaimed file and a source changed since review each show up, in their group.
+  const failing = buildAtlas({
+    ...example({
+      commit: COMMIT,
+      edit: (name, source) =>
+        name === "RULE-ASMT-FUTURE.md" ? source.replace("must be earlier than", "must come before") : source,
+      runs: (hash) => [review(hash, { result: "fail" })],
+    }),
+    architecture: {
+      diagnostics: [
+        {
+          code: "VSA009",
+          severity: "error",
+          origin: "architecture",
+          artifact: null,
+          path: "src/orphan.ts",
+          message:
+            "Source file src/orphan.ts is claimed by no slice and lies in no shared, infrastructure or composition region.",
+          remediation: "Claim it.",
+        },
+      ],
+      summary: {},
+    },
+  });
+  const text2 = textOf(failing.get("attention.html") ?? "");
+  assert.match(text2, /Failing: 4 of 4 claims \(a verification failed or errored at this snapshot\)/);
+  assert.match(text2, /Named by no verification: 0 of 4 claims/);
+  assert.match(text2, /1 file in the checked scope is claimed by no slice.*src\/orphan\.ts/);
+  assert.match(
+    text2,
+    /1 of 1 knowledge record past draft is held.*KB-ASMT-SCHEDULE.*changed since review: RULE-ASMT-FUTURE/,
+  );
+});
+
+test("BEH-ATLAS-ATTENTION: on a large model every long group folds closed and says how many it holds", () => {
+  const html = buildAtlas(largeModel(45, 4).input).get("attention.html") ?? "";
+  assert.match(
+    html,
+    /<details class="ms-callout"[^>]*>\s*<summary class="ms-callout-title">Behaviors: 180 of 180 records in draft<\/summary>/,
+  );
+  assert.match(
+    html,
+    /<summary class="ms-callout-title">Named by no verification: 450 of 540 claims \(no verification definition names it\)<\/summary>/,
+  );
 });

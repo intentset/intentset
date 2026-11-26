@@ -56,9 +56,14 @@ export function placeHtml(rendered: string, html: string): string {
   return at === -1 ? rendered + html : rendered.slice(0, at) + html + rendered.slice(at + MAP_SLOT.length);
 }
 
-/** The pages every page's navigation lists, in order. */
+/**
+ * The pages every page's navigation lists, in order. The outline is the landing page and the list to work through is
+ * next (#159, 2026-11-26): a reader asks first what the product is and what is waiting on them.
+ */
 export const NAV: readonly { path: string; label: string }[] = [
-  { path: "index.html", label: "Overview" },
+  { path: "index.html", label: "Outline" },
+  { path: "attention.html", label: "Needs attention" },
+  { path: "overview.html", label: "Overview" },
   { path: "records.html", label: "Records" },
   { path: "ownership.html", label: "Ownership" },
   { path: "verification.html", label: "Verification" },

@@ -1,5 +1,6 @@
 /**
- * index.html: the product and capability overview (Core §10). The navigation
+ * overview.html: the product and capability overview (Core §10), the landing page until the outline took index.html
+ * (#159). The navigation
  * spine from each product down to its capabilities, then each capability's
  * behaviors with their status, delivery (built, planned or not stated, ADR 0017), owning slice, and claim counts: link counts
  * from the graph, current-pass counts only from supplied evidence. Every
@@ -110,7 +111,7 @@ export function overviewPage(model: Model): PageSource {
       "",
     );
   }
-  return { path: "index.html", title: "Product and capability overview", body };
+  return { path: "overview.html", title: "Product and capability overview", body };
 }
 
 /** Every capability as a card: its behaviors, how many a verification names and, with evidence, how many pass. */
