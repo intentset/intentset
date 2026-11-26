@@ -2,12 +2,20 @@
 markset: 0
 ---
 
-# Start with one capability
+# Try it on your code
 
 {.lead}
-From a repository that has never seen Intentset to its first passing check in five minutes: install the toolchain, have an agent write one capability down from the code it already holds, and bind the tests that check it. Every command here is copyable, and nothing on this page needs anyone to ask.
+For a developer with a JavaScript or TypeScript repository and a coding agent. From a repository that has never seen Intentset to its first passing check in five minutes: install the toolchain, have an agent write one capability down from the code it already holds, and bind the tests that check it. Every command here is copyable, and nothing on this page needs an account, a sign-up or anyone's permission.
 
 The steps are the same in the [README](https://github.com/intentset/intentset#try-it-in-five-minutes). The timings are from a fresh TypeScript repository with one feature and three tests; the install is the only step that waits on the network.
+
+> [!NOTE] Before you start
+> - Node 22.18 or later.
+> - A git repository with JavaScript or TypeScript code and its tests.
+> - A coding agent that can run commands in the repository.
+> - Test reports from Vitest, Playwright or node:test (its TAP reporter) for step 5. Jest reports do not import yet.
+> - TypeScript 7 for step 4's second command and for step 7. npm installs it for you; the note at the foot of this page covers pnpm.
+> - Step 5's `<PRD-ID>` is the ID of the product record the agent writes in step 3. `npx intentset list --type product` prints it.
 
 ## 1. Install it (one minute)
 
@@ -125,11 +133,54 @@ After the tests, import their report as in step 5 and validate at L3, so each ru
 - **Let another tool read them.** A tool can read the records from your repository, or from the export. [What reads an Intentset model](../tools/readers/) says what each path needs from your repository.
 - **Publish your run records.** Published from CI, they say outside the repository what passed and whether each pass still holds.
 
+## Run it in CI
+
+Step 7's two commands, as a GitHub Actions job that runs on every pull request:
+
+```yaml
+name: intentset
+on: pull_request
+jobs:
+  intentset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # review compares with origin/main, so it needs the history
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx intentset validate --level L2
+      - run: npx intentset review --base origin/main --fail-on-drift
+```
+
+In a shallow clone of the branch alone, origin/main is not there to compare with, and review stops with exit code 2: `intentset review: --base origin/main names no commit.`
+
+### Code that already breaks the boundaries
+
+If the architecture check finds violations already in the code, write them down as a baseline, commit the file, and give it to both commands. A baseline may shrink and may not grow:
+
+```sh
+npx intentset architecture check --mode migration --write-baseline .intentset/baseline.json
+npx intentset validate --level L2 --mode migration --baseline .intentset/baseline.json
+npx intentset review --base origin/main --fail-on-drift \
+  --baseline .intentset/baseline.json --fail-on-baseline-growth
+```
+
+The first writes the file and still exits with code 1, because the violations are still there. From then on a new violation fails `validate`, and one added to the baseline fails `review`.
+
+## Approve and look around
+
+- **Approve what you have read.** `npx intentset approve <ID>... --by <name>` writes each draft's approval, with that name and the date. It refuses a tree with uncommitted changes and commits nothing, so the approval is a diff for the pull request's reviewer. An agent never runs it on its own account.
+- **Look at the model.** `npx intentset serve` shows the records as the Atlas, the review pages, at http://127.0.0.1:3000/, rebuilt when a file changes.
+- **See what needs a run.** `npx intentset evidence stale` lists the automated checks with no current pass.
+
 ## Starting a new product?
 
-Write the model first. A product manager and an agent draft the behaviors, and a slice for the code that will deliver them, before any of it exists, each with `delivery: planned`. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved, and the change that builds a record's work marks it `delivery: built`.
+Write the model first. Whoever decides what the product does drafts the behaviors with an agent, and a slice for the code that will deliver them, before any of it exists, each with `delivery: planned`. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved, and the change that builds a record's work marks it `delivery: built`.
 
-[[Read the adoption log](../pilot/)]{.button .primary} [[Open Lantern, a worked example](../example/atlas/map/)]{.button}
+[[Model the whole product](../adopt/)]{.button .primary} [[Every command and option](../tools/cli/)]{.button}
 
 > [!NOTE]
 > The reference toolchain is an early release, at {{version}}. The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`, or with npm as `npx -p @intentset/cli -p typescript@7 intentset`.
