@@ -20,7 +20,7 @@ What Intentset is, why it exists and how it works, in 14 slides, for anyone deci
 {.deck-hint}
 On a wide screen, Present shows one slide at a time, filling the screen: the arrow keys, Space and Page Down move between them, N shows the speaker notes, and Esc comes back here. Printed, it is one slide to a page, without the notes.
 
-Already have the idea? [Try it on your code](../start/).
+Already have the idea? [Set up Intentset](../start/).
 
 ::::card{#cover .slide .cover}
 

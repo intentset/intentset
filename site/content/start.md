@@ -2,10 +2,10 @@
 markset: 0
 ---
 
-# Try it on your code
+# Set up Intentset
 
 {.lead}
-From a repository that has never seen Intentset to its first passing check in about five minutes: install the tool, have your agent write down one feature from the code it already has, and connect the tests that check it. Nothing here needs an account.
+From a repository that has never seen Intentset to its first passing check in about five minutes: install the tool, have your agent write down one feature from the code it already has, and connect the tests that check it. Then [add it to your CI](ci/), so every change keeps the records true. Nothing here needs an account.
 
 The timings are from a fresh TypeScript repository with one feature and three tests. The same steps are in the [README](https://github.com/intentset/intentset#try-it-in-five-minutes).
 
@@ -108,62 +108,9 @@ The import says which verification each test matched (`TEST-CART-TOTAL  pass  3 
 
 Read the behaviors as a product reviewer would. Is each one a promise you recognize, including how it fails? Is anything missing? Then look at what the model shows: rules with no test, behaviors checked only by hand, code no slice owns. Those gaps were already there; now they are listed. Approve the records you agree with; an agent never does.
 
-## 7. Keep it current
+## 7. Add it to your CI
 
-Add the checks to CI, so every change keeps the model true:
-
-:::tabs
-### npm
-```sh
-npx intentset validate --level L2
-npx intentset review --base origin/main --fail-on-drift
-```
-
-### pnpm
-```sh
-pnpm exec intentset validate --level L2
-pnpm exec intentset review --base origin/main --fail-on-drift
-```
-:::
-
-After the tests, import their report as in step 5 and validate at L3, so each run records which promises passed on which commit. From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed. Add capabilities one at a time, as the value becomes clear; [Model the whole product with many agents](../adopt/) is for the rest of the product.
-
-## Run it in CI
-
-Step 7's two commands, as a GitHub Actions job that runs on every pull request. [What CI checks](../how-it-works/#what-ci-checks) shows the second one stopping a change:
-
-```yaml
-name: intentset
-on: pull_request
-jobs:
-  intentset:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # review compares with origin/main, so it needs the history
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm ci
-      - run: npx intentset validate --level L2
-      - run: npx intentset review --base origin/main --fail-on-drift
-```
-
-In a shallow clone of the branch alone, origin/main is not there to compare with, and review stops with exit code 2: `intentset review: --base origin/main names no commit.`
-
-### Code that already breaks the boundaries
-
-If the architecture check finds violations already in the code, write them down as a baseline, commit the file, and give it to both commands. A baseline may shrink and may not grow:
-
-```sh
-npx intentset architecture check --mode migration --write-baseline .intentset/baseline.json
-npx intentset validate --level L2 --mode migration --baseline .intentset/baseline.json
-npx intentset review --base origin/main --fail-on-drift \
-  --baseline .intentset/baseline.json --fail-on-baseline-growth
-```
-
-The first writes the file and still exits with code 1, because the violations are still there. From then on a new violation fails `validate`, and one added to the baseline fails `review`.
+Run the same checks on every pull request, so a change cannot merge while its code and its records disagree. [Add Intentset to your CI](ci/) has the whole job, how to make it required, and what to do about code that already breaks the boundaries. From then on, the agent that changes the code updates the records in the same commit, or says in the commit that no behavior changed.
 
 ## Approve and look around
 
@@ -175,7 +122,7 @@ The first writes the file and still exits with code 1, because the violations ar
 
 Write the model first. Whoever decides what the product does drafts the behaviors with an agent, and a slice for the code that will deliver them, before any of it exists, each with `delivery: planned`. While the slice is a draft, the paths it plans are warnings, so the model passes from the first commit. The agent then builds against what was approved, and the change that builds a record's work marks it `delivery: built`.
 
-[[Model the whole product](../adopt/)]{.button .primary} [[Every command and option](../tools/cli/)]{.button}
+[[Add Intentset to your CI](ci/)]{.button .primary} [[Every command and option](../tools/cli/)]{.button}
 
 > [!NOTE] If you use pnpm
 > The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as `pnpm dlx --package=@intentset/cli --package=typescript@7 intentset`, or with npm as `npx -p @intentset/cli -p typescript@7 intentset`.

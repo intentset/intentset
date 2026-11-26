@@ -192,9 +192,10 @@ test("Reference holds the tools and the specifications; Get started is one path 
   ]) {
     assert.ok(reference.includes(page), `Reference lacks ${page}`);
   }
-  // Try it first, then what is for later as a group of its own. Each label is the page's h1.
+  // Set it up, then add it to CI, then what is for later as a group of its own. Each label is the page's h1.
   assert.deepEqual(RAILS.find((r) => r.title === "Get started")?.items, [
-    ["Try it on your code", "start/index.html"],
+    ["Set up Intentset", "start/index.html"],
+    ["Add Intentset to your CI", "start/ci/index.html"],
     {
       label: "Once one capability works",
       items: [
@@ -208,7 +209,7 @@ test("Reference holds the tools and the specifications; Get started is one path 
     start,
     /<li class="site-rail-group"><span class="site-rail-label">Once one capability works<\/span>\n<ul>/,
   );
-  for (const page of ["start/index.html", "adopt/index.html", "verify/index.html"]) {
+  for (const page of ["start/index.html", "start/ci/index.html", "adopt/index.html", "verify/index.html"]) {
     const h1 = /<h1[^>]*>([^<]+)<\/h1>/.exec(html.get(page) ?? "")?.[1];
     const label = railLinks(RAILS[0]).find(([, href]) => href === page)?.[0];
     assert.equal(h1?.replaceAll("&#x27;", "'").replaceAll("&#39;", "'"), label, `${page}: the rail names its h1`);

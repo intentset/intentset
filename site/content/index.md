@@ -10,7 +10,7 @@ For teams shipping with coding agents
 {.lead}
 Agents write code faster than anyone can review it. Intentset writes down what your product is supposed to do, in short files beside the code, and stops a change in CI when the code moves and those files do not.
 
-[[See how it works](how-it-works/)]{.button .primary} [[Try it on your code](start/)]{.button}
+[[See how it works](how-it-works/)]{.button .primary} [[Get started](start/)]{.button}
 
 ***
 
@@ -85,10 +85,10 @@ What it is
 ***
 
 :::card{.closing}
-## Try it on one feature you already have
+## Start with one feature you already have
 
 {.lead}
 An agent writes down one feature from your code and tests. You review what it wrote and see what it finds.
 
-[[Try it on your code](start/)]{.button .primary} [[See how it works](how-it-works/)]{.button}
+[[Get started](start/)]{.button .primary} [[See how it works](how-it-works/)]{.button}
 :::

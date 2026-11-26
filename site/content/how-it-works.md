@@ -56,7 +56,7 @@ Only a person approves a record. `intentset approve <ID> --by <person>` marks it
 
 ## What CI checks
 
-CI runs two commands on every pull request:
+Two commands do the checking on every pull request. [Add Intentset to your CI](../start/ci/) has the whole job, which also runs your tests and records which passed.
 
 ```sh
 npx intentset validate --level L2
@@ -117,7 +117,7 @@ It does not prove the product correct: a passing test can still assert the wrong
 {#cost}
 ## What it costs
 
-- **One feature.** An agent writes it down from your code and tests, and you review about eight files. On a fresh TypeScript repository with one feature and three tests, [Try it on your code](../start/) takes five minutes.
+- **One feature.** An agent writes it down from your code and tests, and you review about eight files. On a fresh TypeScript repository with one feature and three tests, [setting it up](../start/) takes five minutes.
 - **Every change.** The agent updates the records in the same commit, or adds one line to the commit message saying no behavior changed.
 - **A whole product.** Writing down a product that already exists takes time. [Model the whole product](../adopt/) is how one person running many agents does it.
 
@@ -135,4 +135,4 @@ Start at the first level and stop wherever the value runs out.
 
 L1 to L4 say what is true of the model at one commit, and `intentset validate --level L4` checks them. L5 says those checks run on every change, so it describes how your repository works rather than anything `validate` can check.
 
-[[Try it on your code](../start/)]{.button .primary} [[Every term, defined](../glossary/)]{.button}
+[[Set up Intentset](../start/)]{.button .primary} [[Every term, defined](../glossary/)]{.button}

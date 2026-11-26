@@ -25,7 +25,7 @@ pnpm exec intentset init
 ```
 :::
 
-[[Every command and option](cli/)]{.button .primary} [[Try it on your code](../start/)]{.button}
+[[Every command and option](cli/)]{.button .primary} [[Set up Intentset](../start/)]{.button}
 
 ## The MCP server
 

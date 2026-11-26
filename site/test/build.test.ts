@@ -186,6 +186,7 @@ test("the bar is the four sections by what a reader came to do", () => {
       page,
     );
     assert.deepEqual(labels, ["How it works", "Get started", "Examples", "Reference"]);
+    assert.doesNotMatch(doc, /On this page/, `${page} has a contents rail`);
   }
 });
 
@@ -424,19 +425,14 @@ function renderedHeadings(page: string): string[] {
   return [...main(page).matchAll(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/g)].map((m) => text(m[1]));
 }
 
-test("the specification pages carry exactly the headings their source files declare, in order, with a contents rail", async () => {
+test("the specification pages carry exactly the headings their source files declare, in order, with no contents rail", async () => {
   const docs = SPECS.map((s) => [`specifications/${s.slug}/index.html`, join("spec", s.file)]);
   for (const [page, file] of docs) {
     assert.deepEqual(renderedHeadings(page), await sourceHeadings(file), page);
     const doc = html.get(page) ?? "";
     assert.match(doc, /<aside class="site-toc"><nav class="site-rail" aria-label="Reference">/, page);
-    const toc = doc.slice(doc.indexOf('<nav aria-label="Contents">'), doc.indexOf("</aside>"));
-    assert.ok(toc.length > 0, `${page}: no contents rail`);
-    const entries = [...toc.matchAll(/<a href="#([^"]+)">/g)].map((m) => m[1]);
-    // The publication profile is the shortest, at four sections.
-    assert.ok(entries.length >= 4, `${page}: rail has ${entries.length} entries`);
-    for (const id of entries)
-      assert.ok(doc.includes(`<h2 id="${id}">`) || doc.includes(`<h3 id="${id}">`), `${page}: #${id}`);
+    // "On this page" left the whole site on 2026-11-26 (the user's decision).
+    assert.doesNotMatch(doc, /On this page|<nav aria-label="Contents">/, page);
     assert.match(doc, new RegExp(`<a href="${REPO}/blob/main/${file}">`), `${page}: names its source`);
   }
   // Links between the documents are links between their pages.
@@ -626,7 +622,7 @@ test("home is short: the promise, one example, how it works, what it is, and one
   const home = main("index.html");
   assert.match(home, /For teams shipping with coding agents/);
   assert.match(home, /<span class="ms-span button primary"><a href="how-it-works\/">See how it works<\/a>/);
-  assert.match(home, /<span class="ms-span button"><a href="start\/">Try it on your code<\/a>/);
+  assert.match(home, /<span class="ms-span button"><a href="start\/">Get started<\/a>/);
   assert.match(home, /<h2 id="problem">/);
   assert.match(home, /<section class="ms-card example"/);
   // What the user asked to go: the six-record card, the loop, versions and drafts, the status card, the adoption log.

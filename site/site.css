@@ -147,11 +147,9 @@ body { --site-scheme-w: 5.6rem; }
 .site-toc { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; padding-block: 2.5rem; font-size: 0.9rem; }
 .site-toc ul { list-style: none; margin: 0; padding: 0; }
 .site-toc li { margin: 0; }
-.site-toc .toc-3 { padding-left: 1rem; }
 .site-toc a { display: inline-block; padding-block: 0.3rem; color: var(--ms-fg-muted); text-decoration: none; }
 .site-toc a:hover { color: var(--ms-fg); text-decoration: underline; }
 .site-rail-title { margin: 0 0 0.5rem; font-size: 0.72rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ms-fg-muted); }
-.site-toc nav + nav { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--ms-border); }
 .site-rail a[aria-current] { color: var(--ms-fg); font-weight: 650; }
 /* A group in a rail (Examples: Lantern, and its review pages): a label that is not a link, its pages indented under it. */
 .site-rail-label { display: block; padding-block: 0.3rem; color: var(--ms-fg); font-weight: 600; }

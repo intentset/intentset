@@ -9,8 +9,8 @@ repository-relative.
 - **The bar is four sections by what a reader came to do** (the user's decision, 2026-11-26, replacing the five of
   2026-10-05): How it works, Get started, Examples, Reference. Home is the wordmark; the slide deck ("Slides") and
   About are in the footer's row, and no page's body links the deck. `RAILS` in `site/build.ts` lists each section's
-  pages, shown beside every page in it: How it works is one page with no rail; Get started is one path (Try it on your
-  code, then a group "Once one capability works" holding Model the whole product with many agents and Make agents'
+  pages, shown beside every page in it: How it works is one page with no rail; Get started is one path (Set up Intentset,
+  then Add Intentset to your CI at `/start/ci/`, then a group "Once one capability works" holding Model the whole product with many agents and Make agents'
   work safe to accept, each label the page's h1); Examples (one rail on every page of the section, 2026-10-20:
   "Lantern, a worked example", a group holding the walkthrough, the map and "Review pages", a group of the Atlas's
   five other pages); Reference (a Tools group with all tools, the command and the agent guide as "What your agents
@@ -20,8 +20,11 @@ repository-relative.
   map in a button above its first step. The adoption log, the roadmap and the readers page left the site on
   2026-11-26 (the user's decision): their old addresses are pages that send the reader to `docs/adoption/log.md`,
   `docs/roadmap.md` and `docs/consumers.md` on GitHub (`REDIRECTS` in `site/build.ts`), and none is in the sitemap.
-  No page written from `site/content/` or the agent guide has an "On this page" contents rail (2026-11-26); the
-  rendered specifications keep theirs. No URL moved when
+  No page has an "On this page" contents rail (2026-11-26, the user's decision, for the whole site, the rendered
+  specifications included). The setup page was "Try it on your code" until 2026-11-26: it holds the real setup, so
+  it is "Set up Intentset", and the CI job, the required check, other CI systems and the baseline are on a page of
+  their own so the rail shows where they are; every command in that job was run, with the published CLI, in a
+  scratch repository before it was quoted. No URL moved when
   the bar or the rail changed. `site/test/rail.test.ts` requires every page to be named by the bar,
   a rail or the footer's row (a record by the example index) and within three links of home: a new page goes in a
   rail.

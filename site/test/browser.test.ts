@@ -22,6 +22,7 @@ const WIDTHS = [390, 1440];
 const PAGES = [
   "index.html",
   "start/index.html",
+  "start/ci/index.html",
   "how-it-works/index.html",
   "introducing/index.html",
   "adopt/index.html",
