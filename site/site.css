@@ -2,7 +2,7 @@
  * is layered over a Markset document (Markset spec §6). It sets the tokens the
  * default stylesheet reads, styles the shell (skip link, header, nav, contents
  * rail, footer) and the handful of author classes the pages use: the reserved
- * ones from §5 plus .button, .hero, .model, .example, .adopt, .status,
+ * ones from §5 plus .button, .hero, .model, .example, .adopt, .loop, .loop-return, .status,
  * .closing, .record and .site-back. The shell's rail carries the section a page
  * sits in (.site-rail) above its contents.
  *
@@ -282,6 +282,33 @@ p:has(> .ms-span.button) { display: flex; flex-wrap: wrap; gap: 0.75rem; }
   .ms-steps.adopt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem 2.5rem; }
   .ms-steps.adopt .ms-step + .ms-step { margin-top: 0; }
   .ms-steps.adopt .ms-step:not(:last-child)::after { display: none; }
+}
+
+/* The family loop (reef docs/family.md): three parts in order, the first inside the
+ * repository's boundary and accented, an arrow to each next part, and one return
+ * from the last to the first. The list's text is the figure's text alternative, so
+ * the arrows are decoration with empty alternative text. A row on a wide screen, a
+ * column on a narrow one. */
+.ms-steps.loop { margin-top: 1.5rem; }
+.ms-steps.loop .ms-step { border: 1px solid var(--ms-border); border-radius: var(--ms-radius); padding: 0.9rem 1rem 0.9rem 3.25rem; }
+.ms-steps.loop .ms-step::before { left: 0.9rem; top: 0.9rem; background: var(--ms-surface); color: var(--ms-fg); border: 1px solid var(--ms-border); }
+.ms-steps.loop .ms-step:first-child { border: 2px dashed var(--ms-accent); background: var(--ms-surface); }
+.ms-steps.loop .ms-step:first-child::before { background: var(--ms-accent); color: var(--ms-bg); border-color: var(--ms-accent); }
+.ms-steps.loop .ms-step .badge { display: block; width: fit-content; margin-bottom: 0.4rem; }
+.ms-steps.loop .ms-step + .ms-step { margin-top: 1.75rem; }
+.ms-steps.loop .ms-step:not(:last-child)::after {
+  content: "↓" / ""; border: 0; left: 50%; top: auto; bottom: -1.65rem; transform: translateX(-50%);
+  color: var(--ms-fg-muted); font-size: 1.1rem; line-height: 1.5rem;
+}
+.ms-document > p.loop-return { max-width: none; margin-top: 0.75rem; text-align: center; color: var(--ms-fg-muted); }
+.ms-document > p.loop-return::before { content: "↺ " / ""; color: var(--ms-accent); }
+@media (min-width: 47.5rem) {
+  .ms-steps.loop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2.5rem; align-items: stretch; }
+  .ms-steps.loop .ms-step + .ms-step { margin-top: 0; }
+  .ms-steps.loop .ms-step:not(:last-child)::after { content: "→" / ""; left: auto; right: -1.95rem; bottom: auto; top: 50%; transform: translateY(-50%); }
+  /* The return: a line under the row from the third part's middle back to the first's. */
+  .ms-document > p.loop-return { position: relative; margin-top: 0; margin-inline: calc((100% - 5rem) / 6); padding-top: 1.1rem; border: 2px solid var(--ms-border); border-top: 0; border-radius: 0 0 var(--ms-radius) var(--ms-radius); padding-bottom: 0.6rem; }
+  .ms-document > p.loop-return::after { content: "▲" / ""; position: absolute; left: calc(-0.35rem - 1px); top: -0.35rem; font-size: 0.7rem; line-height: 1; color: var(--ms-fg-muted); }
 }
 
 /* The status band: ink ground, paper text, full width. */
