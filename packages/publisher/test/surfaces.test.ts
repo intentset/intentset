@@ -20,6 +20,10 @@ const AVAILABILITY = {
   flags: [],
 };
 
+/** An internal decision whose repository path holds no ID. */
+const RETRY_POLICY =
+  "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n";
+
 /** The example's slice made eligible, with these surfaces and frontmatter edits, and its knowledge reviewed. */
 function eligible(
   surfaces: Record<string, { knowledge: string[] }> = { [PAGE]: { knowledge: ["KB-ASMT-SCHEDULE"] } },
@@ -100,6 +104,47 @@ test("BEH-PUBLISH-SURFACES: each omission reason, by slice ID, once per reason",
   assert.deepEqual(run(eligible({ "PRD-LANTERN:/schedule": { knowledge: ["KB-ASMT-SCHEDULE"] } })).help?.surfaces, {
     "PRD-LANTERN:/schedule": { knowledge: ["KB-ASMT-SCHEDULE"] },
   });
+});
+
+test("BEH-PUBLISH-SURFACES: a key holding an unpublished record's path as whole segments is a reference, after a slash too", () => {
+  const one = [{ slice: "SLICE-ASMT-SCHEDULE", reason: "reference" }];
+  const lead = { knowledge: ["KB-ASMT-SCHEDULE"] };
+  // A customer-visible slice passes the ID test, so only the path test can refuse a key holding its own path.
+  const visible = { "intentset.visibility": "customer" };
+  for (const key of [
+    "lantern-web:/SLICE-ASMT-SCHEDULE.md",
+    "/SLICE-ASMT-SCHEDULE.md",
+    "/SLICE-ASMT-SCHEDULE.md/edit",
+  ]) {
+    const result = run(eligible({ [key]: lead }, visible));
+    assert.deepEqual(result.help?.surfaces, {}, key);
+    assert.deepEqual(result.omittedSurfaces, one, key);
+  }
+  // A nested path that holds no ID: the internal decision at decisions/retry-policy.md is never published.
+  const nested = (key: string) =>
+    run(
+      example({
+        kb: reviewed(),
+        files: { "decisions/retry-policy.md": RETRY_POLICY },
+        patch: {
+          "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.links.informedBy": ["ADR-ASMT-RETRY"] } },
+          [SLICE]: {
+            frontmatter: {
+              "intentset.status": "approved",
+              "intentset.delivery": "built",
+              "intentset.availability": AVAILABILITY,
+              "intentset.slice.surfaces": { [key]: lead },
+            },
+          },
+        },
+      }),
+    ).help?.surfaces;
+  for (const key of ["lantern-web:/decisions/retry-policy.md", "lantern-web:/app/decisions/retry-policy.md#top"]) {
+    assert.deepEqual(nested(key), {}, key);
+  }
+  // The boundary: the same characters inside a longer segment are not the path.
+  const near = "lantern-web:/old-decisions/retry-policy.md";
+  assert.deepEqual(nested(near), { [near]: lead });
 });
 
 test("BEH-PUBLISH-SURFACES: a restricted slice writes its surface only for a request authorized for restricted data", () => {

@@ -12,7 +12,8 @@
  *   declared-twice        another slice that is not retired declares the same surface ID (CORE013): written from neither
  *   restricted            the slice is restricted and the request is not authorized for restricted data (Core §9)
  *   reference             the surface ID holds, word-bounded, the ID of an artifact the projection does not admit
- *                         (other than the requested product), or the repository path of an artifact not published
+ *                         (other than the requested product), or, as whole path segments (after a `/` included),
+ *                         the repository path of an artifact not published
  *   nothing-published     none of its knowledge has a document in this run (a document kept under review counts)
  *
  * The key is written whatever the slice's visibility below `restricted`, as a tip's key is (Core §9), and nothing
@@ -22,7 +23,7 @@
 import { type Artifact, type Graph, type SliceSurface, deliveryOf } from "@intentset/core";
 import { compareStrings } from "./diagnostic.ts";
 import { PUBLISHABLE_STATUSES, availabilityReason } from "./project.ts";
-import { idsInText, pathsInText } from "./references.ts";
+import { idsInText } from "./references.ts";
 import { type CheckedRequest, admits } from "./request.ts";
 
 export const OMISSION_REASONS = [
@@ -112,5 +113,24 @@ function keyRefers(key: string, graph: Graph, published: ReadonlySet<string>, re
     if (artifact === undefined || id === request.product) continue;
     if (!admits(request, artifact.meta.visibility)) return true;
   }
-  return pathsInText(key, graph).some(({ id }) => !published.has(id));
+  for (const [id, artifact] of graph.artifacts) {
+    if (!published.has(id) && holdsPath(key, artifact.path)) return true;
+  }
+  return false;
+}
+
+const SEGMENT_CHARACTER = /[A-Za-z0-9_.~-]/;
+
+/**
+ * Whether a key holds a repository path as a run of whole path segments. A route puts a `/` before the path, and a
+ * knowledge body's bounds (references.ts) would not count it, so a path is bounded here by anything but a character
+ * a segment can hold.
+ */
+function holdsPath(key: string, path: string): boolean {
+  for (let index = key.indexOf(path); index !== -1; index = key.indexOf(path, index + 1)) {
+    const before = index === 0 ? "" : key[index - 1];
+    const after = key[index + path.length] ?? "";
+    if (!SEGMENT_CHARACTER.test(before) && !SEGMENT_CHARACTER.test(after)) return true;
+  }
+  return false;
 }

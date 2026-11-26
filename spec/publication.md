@@ -335,7 +335,8 @@ A surface (VSA §3) is written only when all of these hold:
 - its slice is not `restricted`, or the request is authorized for restricted data (Core §9);
 - the surface ID holds, word-bounded, no ID of an artifact whose visibility the projection does not admit, other than
   the requested product, and no repository path of an artifact not published in the run (§4's tests, applied to the
-  key);
+  key). A path counts wherever it stands as whole path segments, after a route's `/` too: a key holds
+  `decisions/retry-policy.md` in `lantern-web:/decisions/retry-policy.md`, and not in `lantern-web:/old-decisions/retry-policy.md`;
 - at least one knowledge record it lists has a document in this publication, a document kept under review (§3)
   included.
 

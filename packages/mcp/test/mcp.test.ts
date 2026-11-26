@@ -302,6 +302,43 @@ test("restricted artifacts read as absent, are withheld from links and context, 
   await trusted.close();
 });
 
+const AVAILABILITY = [
+  "  availability:",
+  "    products:",
+  "    - PRD-LANTERN",
+  "    releases:",
+  "    - pilot-1",
+  "    roles:",
+  "    - teacher",
+  "    editions:",
+  "    - standard",
+  "    flags: []",
+].join("\n");
+
+test("a slice's restricted surface lead is withheld and counted unless the server was started with it", async () => {
+  const restricted = graphOf((name, source) => {
+    if (name === "KB-ASMT-SCHEDULE.md") return source.replace("visibility: customer", "visibility: restricted");
+    if (name === "SLICE-ASMT-SCHEDULE.md") {
+      return source.replace(
+        "  slice:\n",
+        `${AVAILABILITY}\n  slice:\n    surfaces:\n      /assessments:\n        knowledge:\n        - KB-ASMT-SCHEDULE\n`,
+      );
+    }
+    return source;
+  });
+  const lookup = async (includeRestricted: boolean) => {
+    const client = await engineering({ graph: restricted, includeRestricted });
+    const { json } = await call(client, "intentset_lookup", { id: "SLICE-ASMT-SCHEDULE" });
+    await client.close();
+    return { surfaces: (json.artifact as { slice: { surfaces: unknown } }).slice.surfaces, withheld: json.withheld };
+  };
+  assert.deepEqual(await lookup(false), { surfaces: { "/assessments": { knowledge: [] } }, withheld: 1 });
+  assert.deepEqual(await lookup(true), {
+    surfaces: { "/assessments": { knowledge: ["KB-ASMT-SCHEDULE"] } },
+    withheld: 0,
+  });
+});
+
 test("customer search and get return published knowledge, citing named sources and the snapshot", async () => {
   const { publication } = customerPublication();
   const client = await connect(createIntentsetServer({ mode: "customer", publication }));

@@ -100,6 +100,16 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
         derived[kind] = keep([...new Set(linkedFrom[kind])].sort(compareStrings));
       }
       const parent = meta.parent === undefined ? null : (keep([meta.parent])[0] ?? null);
+      const surfaces = meta.slice?.surfaces;
+      const slice =
+        meta.slice === undefined || surfaces === undefined
+          ? (meta.slice ?? null)
+          : {
+              ...meta.slice,
+              surfaces: Object.fromEntries(
+                Object.keys(surfaces).map((key) => [key, { knowledge: keep(surfaces[key].knowledge) }]),
+              ),
+            };
       return result(
         envelope([artifact.path], {
           tool: "intentset_lookup",
@@ -117,7 +127,7 @@ export function engineeringTools(context: EngineeringContext): Tool[] {
             links,
             linkedFrom: derived,
             availability: meta.availability ?? null,
-            slice: meta.slice ?? null,
+            slice,
             verification: meta.verification ?? null,
             measure: meta.measure ?? null,
             tips: meta.tips ?? null,

@@ -6220,6 +6220,165 @@
   },
   {
     "section": "publication",
+    "name": "P02 a surface ID holding the path of a record not published, after a slash, is not written",
+    "baseline": "scheduling",
+    "files": {
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy": [
+            "ADR-ASMT-RETRY"
+          ]
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/decisions/retry-policy.md": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{}"
+      ],
+      "mustNotContain": [
+        "retry-policy"
+      ]
+    },
+    "notes": "Publication §5 applies §4's path test to the key as whole path segments: a route's slash before the path does not hide it, and the path holds no ID for the ID test to catch."
+  },
+  {
+    "section": "publication",
+    "name": "P02 a surface ID holding an unpublished path's characters inside a longer segment is written",
+    "baseline": "scheduling",
+    "files": {
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+    },
+    "patch": {
+      "BEH-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.links.informedBy": [
+            "ADR-ASMT-RETRY"
+          ]
+        }
+      },
+      "SLICE-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.delivery": "built",
+          "intentset.availability": {
+            "products": [
+              "PRD-LANTERN"
+            ],
+            "releases": [
+              "pilot-1"
+            ],
+            "roles": [
+              "teacher"
+            ],
+            "editions": [
+              "standard"
+            ],
+            "flags": []
+          },
+          "intentset.slice.surfaces": {
+            "lantern-web:/old-decisions/retry-policy.md": {
+              "knowledge": [
+                "KB-ASMT-SCHEDULE"
+              ]
+            }
+          }
+        }
+      },
+      "KB-ASMT-SCHEDULE.md": {
+        "frontmatter": {
+          "intentset.status": "approved",
+          "intentset.reviewedBy": "team-assessment",
+          "intentset.reviewedAt": "2026-09-30",
+          "intentset.review": {
+            "sources": {
+              "BEH-ASMT-SCHEDULE": "@current",
+              "RULE-ASMT-AUTH": "@current",
+              "RULE-ASMT-FUTURE": "@current"
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "visibility": "customer",
+      "audience": "teacher",
+      "product": "PRD-LANTERN",
+      "release": "pilot-1",
+      "role": "teacher",
+      "edition": "standard",
+      "flags": []
+    },
+    "valid": true,
+    "published": {
+      "ids": [
+        "KB-ASMT-SCHEDULE"
+      ],
+      "mustContain": [
+        "\"surfaces\":{\"lantern-web:/old-decisions/retry-policy.md\":{\"knowledge\":[\"KB-ASMT-SCHEDULE\"]}}"
+      ]
+    },
+    "notes": "The boundary of the path test: old-decisions is not the segment decisions, so the key does not hold the decision's path."
+  },
+  {
+    "section": "publication",
     "name": "P01 a draft slice's surfaces are not in the help file",
     "baseline": "scheduling",
     "patch": {
