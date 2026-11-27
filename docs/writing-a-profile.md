@@ -12,7 +12,7 @@ Extend a shipped profile and state only what differs. For a TypeScript codebase 
 
 ```yaml
 id: acme/web/1
-extends: intentset/typescript/0.3
+extends: intentset/typescript/0.4
 layers: [ui, app, domain, adapters]
 roles:
   seam: adapters      # the one layer that may reach a backend or an outside service

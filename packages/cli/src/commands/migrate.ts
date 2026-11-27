@@ -1,6 +1,8 @@
 /**
- * `intentset migrate --to 0.3` (Core §1): moves the records the model reads to the specifications' current version,
- * `0.3`, from `0.2` or from `0.1`. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
+ * `intentset migrate --to 0.4` (Core §1): moves the records the model reads to the specifications' current version,
+ * `0.4`, from `0.3`, `0.2` or `0.1`. The step to `0.4` rewrites no record beyond its `spec` and `profile`; it renames
+ * the code TS007 to VSA016 where a repository wrote it (ADR 0030): the `rule` of each exception record, the `code` of
+ * each entry of the baseline `--baseline` names, and the shipped profile `.intentset/profile.yaml` extends. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
  * values in the record's frontmatter, `intentset.spec` and `intentset.profile`, which Core §4 requires to agree with
  * it, and then applies the per-record transforms that version lists, in order. The step to `0.3` has two:
  * `statusToReviewLifecycle` (ADR 0023), by which a `status` of `implemented` or `released` becomes `approved`, and a
@@ -19,8 +21,9 @@
  * git can undo. Other files (`.intentset/agents.md`, which carries an example record) are not records and are left to
  * their author.
  */
-import { writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { EXCEPTIONS_PATTERNS, PROFILE_PATH } from "@intentset/architecture";
 import {
   closingFenceIndex,
   compareStrings,
@@ -32,6 +35,7 @@ import {
   SPEC_VERSION,
   sha256Hex,
   sortDiagnostics,
+  matchAny,
 } from "@intentset/core";
 import { trackedChanges } from "../git.ts";
 import { formatDiagnostic, type Io } from "../output.ts";
@@ -56,6 +60,8 @@ export interface MigrationStep {
   to: string;
   /** Applied in order after `spec` and `profile` are rewritten. */
   transforms: readonly RecordTransform[];
+  /** The diagnostic codes this step renames, old to new, wherever a repository wrote one. */
+  codes?: Readonly<Record<string, string>>;
 }
 
 // Each key is read as YAML reads a plain block key: bare, single- or double-quoted, with optional spaces before the colon.
@@ -271,7 +277,7 @@ const REMOVED_STATUSES: readonly unknown[] = ["implemented", "released"];
 export function migrationProblem(before: FrontmatterSpan, after: FrontmatterSpan): string | null {
   const moved = intentsetMapping(after);
   if (typeof moved === "string") return `no longer reads as YAML (${moved})`;
-  if (REMOVED_STATUSES.includes(moved.status)) return "still declares a status 0.3 does not list";
+  if (REMOVED_STATUSES.includes(moved.status)) return `still declares a status ${MIGRATE_TO} does not list`;
   const original = intentsetMapping(before);
   const review = reviewProblem(typeof original === "string" ? {} : original, moved);
   if (review !== null) return review;
@@ -302,14 +308,14 @@ function reviewProblem(original: Record<string, unknown>, moved: Record<string, 
   if (ext(moved) !== undefined) {
     if (moved.type !== "knowledge") {
       const type = typeof moved.type === "string" ? `a ${moved.type}` : "a record of no type";
-      return `carries the intentset.org/review extension on ${type}, which 0.3 rejects (only knowledge is reviewed)`;
+      return `carries the intentset.org/review extension on ${type}, which ${MIGRATE_TO} rejects (only knowledge is reviewed)`;
     }
-    return "still carries the intentset.org/review extension 0.3 does not read";
+    return `still carries the intentset.org/review extension ${MIGRATE_TO} does not read`;
   }
   const before = ext(original);
   if (before === undefined) return null;
   const shape = reviewShapeProblem(moved.review);
-  if (shape !== null) return `its review holds ${shape}, which 0.3 does not read`;
+  if (shape !== null) return `its review holds ${shape}, which ${MIGRATE_TO} does not read`;
   // Before, a null `hash` was a kind no pin matched; after, core reads a null as absent, which is content-v1.
   const kind = (review: unknown, absent: string, nullKind: string) => {
     if (review === null || typeof review !== "object" || Array.isArray(review)) return null;
@@ -362,11 +368,84 @@ export function unreadReviewKeys(before: FrontmatterSpan, after: FrontmatterSpan
   return UNREAD_BEFORE_0_3.filter((key) => key in review && !(key in now));
 }
 
+const unique = (value: string, at: number, all: string[]) => all.indexOf(value) === at;
+
 /** Every move this command knows, oldest first; each step's `to` is the next step's `from`. */
 export const MIGRATIONS: readonly MigrationStep[] = [
   { from: "0.1", to: "0.2", transforms: [] },
   { from: "0.2", to: "0.3", transforms: [statusToReviewLifecycle, reviewToCoreField] },
+  // ADR 0030: the package policy is a rule every profile has, so its code is VSA's. No record changes but in its
+  // `spec` and `profile`; the code is renamed where a repository wrote it (`renameCodes`).
+  { from: "0.3", to: "0.4", transforms: [], codes: { TS007: "VSA016" } },
 ];
+
+/** Every code a move renamed, old to new. A renamed code is retired and never reused (VSA §2). */
+export const RENAMED_CODES: Readonly<Record<string, string>> = Object.assign(
+  {},
+  ...MIGRATIONS.map((step) => step.codes ?? {}),
+);
+
+const SHIPPED_PROFILE_LINE = /^(extends\s*:\s*)(['"]?)intentset\/([a-z0-9-]+)\/(\d+\.\d+)\2(\s*(?:#.*)?)$/;
+
+/**
+ * A repository's profile file with the shipped profile it extends moved to `to` (profile contract §4, §8): a
+ * shipped profile's ID carries the specifications' version, so a file that extends one at an earlier version names a
+ * profile this release does not ship. Only the top-level `extends` line is rewritten, keeping its quoting and
+ * comment; null when there is nothing to move.
+ */
+export function migrateProfile(text: string, to: string = MIGRATE_TO): string | null {
+  const earlier = MIGRATIONS.map((step) => step.from);
+  let changed = false;
+  const lines = text.split("\n").map((raw) => {
+    const eol = raw.endsWith("\r") ? "\r" : "";
+    const line = eol === "" ? raw : raw.slice(0, -1);
+    const found = SHIPPED_PROFILE_LINE.exec(line);
+    if (found === null || !earlier.includes(found[4])) return raw;
+    changed = true;
+    return `${found[1]}${found[2]}intentset/${found[3]}/${to}${found[2]}${found[5]}${eol}`;
+  });
+  return changed ? lines.join("\n") : null;
+}
+
+const EXCEPTION_RULE_LINE = /^(\s*(['"]?)rule\2\s*:\s*)(['"]?)([A-Z]+[0-9]{3})\3(\s*(?:#.*)?)$/;
+
+/**
+ * An exception record with a renamed code in its `rule` written as the code is now (VSA §9): the one line, keeping
+ * its quoting and comment. Null when its rule is not a renamed code.
+ */
+export function migrateException(text: string): string | null {
+  let changed = false;
+  const lines = text.split("\n").map((raw) => {
+    const eol = raw.endsWith("\r") ? "\r" : "";
+    const line = eol === "" ? raw : raw.slice(0, -1);
+    const found = EXCEPTION_RULE_LINE.exec(line);
+    const now = found === null ? undefined : RENAMED_CODES[found[4]];
+    if (found === null || now === undefined) return raw;
+    changed = true;
+    return `${found[1]}${found[3]}${now}${found[3]}${found[5]}${eol}`;
+  });
+  return changed ? lines.join("\n") : null;
+}
+
+/**
+ * A baseline file with a renamed code in each entry's `code` written as the code is now, and how many entries that
+ * was. Nothing else in an entry changes: an entry is matched by its fingerprint, and the architecture check
+ * fingerprints a renamed rule's finding under the code its entries were first written with, so every entry still
+ * holds what it held (VSA §9). Null when no entry names a renamed code.
+ */
+export function migrateBaseline(text: string): { text: string; entries: number } | null {
+  let entries = 0;
+  const moved = text.replace(
+    /("code"\s*:\s*")([A-Z]+[0-9]{3})(")/g,
+    (whole, open: string, code: string, close: string) => {
+      const now = RENAMED_CODES[code];
+      if (now === undefined) return whole;
+      entries++;
+      return `${open}${now}${close}`;
+    },
+  );
+  return entries === 0 ? null : { text: moved, entries };
+}
 
 /** The one target: the version this reader reads. */
 export const MIGRATE_TO = SPEC_VERSION;
@@ -378,12 +457,14 @@ export interface MigrateOptions {
   root?: string;
   to?: string;
   allowDirty?: boolean;
+  /** The baseline file whose entries' renamed codes are rewritten; no file is found by guessing. */
+  baseline?: string;
   carrier: CarrierName;
 }
 
 /** A message when the options cannot be run, before anything is read; null when they can. */
 export function migrateUsageProblem(options: Pick<MigrateOptions, "to">): string | null {
-  const from = MIGRATE_FROM.join(" or ");
+  const from = `${MIGRATE_FROM.slice(0, -1).join(", ")} or ${MIGRATE_FROM.at(-1)}`;
   if (options.to === undefined) return `--to is required: the only target is ${MIGRATE_TO}, from ${from}`;
   if (options.to !== MIGRATE_TO) {
     return `--to ${options.to}: the only target is ${MIGRATE_TO}, which moves records written for ${from}`;
@@ -580,13 +661,20 @@ function currentPinKind(hash: unknown): PinKind | null {
 
 /**
  * The pin kind the review of a record the run moves had at the version it declared, read from the record as written:
- * before `0.3` the `intentset.org/review` extension with no `hash` pinned the whole file (`file-v1` after the move) and
+ * from `0.3` on, the kind its `review` names, content hashes unless it says `file-v1`; before `0.3` the `intentset.org/review` extension with no `hash` pinned the whole file (`file-v1` after the move) and
  * `hash: content-v1` pinned content; any other `hash`, `file-v1` and null included, was a kind that reader did not know,
  * so no pin matched and the review stays stale. Null too when the record carried no such extension.
  */
 function declaredPinKind(before: string, line: number): PinKind | null {
-  const meta = intentsetMapping(frontmatterAt(before, line));
+  const span = frontmatterAt(before, line);
+  const meta = intentsetMapping(span);
   if (typeof meta === "string") return null;
+  // From `0.3` on the review is the core field (ADR 0025), and its kind is read as the current reader reads it.
+  if (readsSelf(declaredSpec(span))) {
+    const review = meta.review;
+    if (review === null || typeof review !== "object" || Array.isArray(review)) return null;
+    return currentPinKind((review as Record<string, unknown>).hash);
+  }
   const extensions = meta.extensions;
   if (extensions === null || typeof extensions !== "object" || Array.isArray(extensions)) return null;
   const review = (extensions as Record<string, unknown>)["intentset.org/review"];
@@ -832,6 +920,56 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
     const text = repin.texts.get(record.path) ?? record.after;
     if (text !== record.before) writeFileSync(join(root, record.path), text);
   }
+  // What a repository wrote besides its records: the rule of each exception record, the shipped profile its own
+  // profile extends, and the baseline it names (ADR 0030).
+  const also: string[] = [];
+  let exceptions = 0;
+  for (const directory of EXCEPTIONS_PATTERNS.map((pattern) => dirname(pattern)).filter(unique)) {
+    let names: string[] = [];
+    try {
+      names = readdirSync(join(root, directory)).sort(compareStrings);
+    } catch {
+      // No exception records.
+    }
+    for (const name of names) {
+      const path = `${directory}/${name}`;
+      if (!matchAny(EXCEPTIONS_PATTERNS, path)) continue;
+      const text = migrateException(readFileSync(join(root, path), "utf8"));
+      if (text === null) continue;
+      writeFileSync(join(root, path), text);
+      exceptions++;
+    }
+  }
+  if (exceptions > 0) also.push(`the rule of ${exceptions} exception record${exceptions === 1 ? "" : "s"}`);
+  if (options.baseline !== undefined) {
+    const file = resolve(io.cwd, options.baseline);
+    let text: string;
+    try {
+      text = readFileSync(file, "utf8");
+    } catch {
+      io.stderr(`intentset migrate: --baseline ${options.baseline}: the file could not be read.\n`);
+      return 2;
+    }
+    const moved = migrateBaseline(text);
+    if (moved !== null) {
+      writeFileSync(file, moved.text);
+      also.push(`the code of ${moved.entries} baseline entr${moved.entries === 1 ? "y" : "ies"}`);
+    }
+  }
+  const renames = Object.entries(RENAMED_CODES)
+    .map(([was, now]) => `${was} to ${now}`)
+    .join(", ");
+  let profile = "";
+  try {
+    const text = migrateProfile(readFileSync(join(root, PROFILE_PATH), "utf8"));
+    if (text !== null) {
+      writeFileSync(join(root, PROFILE_PATH), text);
+      profile = `; moved the shipped profile ${PROFILE_PATH} extends to ${MIGRATE_TO}`;
+    }
+  } catch {
+    // No profile file: the reference profile applies.
+  }
+  const renamed = also.length > 0 ? `; renamed ${renames} in ${also.join(" and ")}` : "";
   const pins = (n: number) => `${n} review pin${n === 1 ? "" : "s"}`;
   const repinned =
     repin.repinned > 0 || repin.stale > 0
@@ -840,7 +978,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
       : "";
   io.stdout(
     `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} to ${MIGRATE_TO}` +
-      `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}${repinned}.\n`,
+      `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}${repinned}${renamed}${profile}.\n`,
   );
   if (unread.length > 0) {
     io.stderr(

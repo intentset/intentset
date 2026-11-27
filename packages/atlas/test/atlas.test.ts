@@ -553,7 +553,7 @@ test("every page declares Markset, with the derived atlas block, and parses with
       assert.equal(parsed.frontmatter?.markset, true, path);
       assert.match(
         source,
-        /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.3\n {2}derived: true\n {2}snapshot:\n/,
+        /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.4\n {2}derived: true\n {2}snapshot:\n/,
         path,
       );
       assert.ok(!/^intentset:/m.test(source), `${path} must never read as a canonical record`);
@@ -790,7 +790,7 @@ test("BEH-ATLAS, BEH-DELIVERY: a deprecated record that states no delivery shows
 
 test("BEH-ATLAS: knowledge whose sources changed and whose own text and gates are pinned reads as keepable, counted with its denominator", () => {
   // The example's own content hash and gate hash, computed when the test was written (publication §3, ADR 0027).
-  const own = "4e127d988ded8e2f86778df6899a6fe92c50955626f9f1bcd00a5253e22fcefd";
+  const own = "f504e61ca1d8f90208bc27b59e84bf43f4037f30b6370ea87d06c44e8e201ccd";
   const gates = "930df07c56a2b36c7242148dbf94084cb3b042c692af1465413c25e8b75719c3";
   const pin = (self: string) => (name: string, source: string) =>
     name !== "KB-ASMT-SCHEDULE.md"

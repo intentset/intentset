@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-EXPORT
   type: behavior
   title: Graph prints the model as the export envelope

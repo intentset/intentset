@@ -73,11 +73,20 @@ export function plainMessage(message: string): string {
   return out;
 }
 
+/**
+ * The code a renamed rule's finding is fingerprinted under: the one its baseline entries were first written with
+ * (ADR 0030). A fingerprint hashes the code, and an entry keeps too little to hash it again, so the rename leaves
+ * the fingerprint where it was and every entry written before it still holds what it held. `intentset migrate`
+ * rewrites the code an entry shows.
+ */
+const FINGERPRINTED_AS: Readonly<Record<string, string>> = { VSA016: "TS007" };
+const fingerprintCode = (code: string): string => FINGERPRINTED_AS[code] ?? code;
+
 /** The fingerprint before 0.9: the whole message. Kept so a baseline written then still matches. */
 export function fingerprint(diagnostic: Diagnostic): string {
   return sha256Hex(
     canonicalJson({
-      code: diagnostic.code,
+      code: fingerprintCode(diagnostic.code),
       path: diagnostic.path,
       artifact: diagnostic.artifact,
       field: diagnostic.field ?? null,
@@ -99,7 +108,7 @@ export function baselineKeys(
   subject?: BaselineSubject,
 ): { name: string | null; fingerprint: string }[] {
   const place = {
-    code: diagnostic.code,
+    code: fingerprintCode(diagnostic.code),
     path: diagnostic.path,
     artifact: diagnostic.artifact,
     field: diagnostic.field ?? null,

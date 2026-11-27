@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://intentset.org/spec/export.schema.json",
-  "title": "Intentset export envelope, intentset/export/0.7",
+  "title": "Intentset export envelope, intentset/export/0.8",
   "description": "The export contract of spec/export.md: the normalized JSON graph of Core §12 and the minimum graph exchange of the integration contract. Artifacts are sorted by id and every list inside the envelope is sorted, so the same validation with the same generatedAt is the same bytes. Restricted artifacts are withheld unless asked for, and every omission is counted. Optional report sections are absent when not supplied, which means not supplied, never zero or pass. Some requirements are beyond a schema and are checked by a consumer's reader (spec/export.md §5): identity, snapshot agreement between the reports and the envelope, withholding, and consistency.",
   "type": "object",
   "additionalProperties": false,
@@ -22,11 +22,11 @@
   ],
   "properties": {
     "contract": {
-      "const": "intentset/export/0.7",
+      "const": "intentset/export/0.8",
       "description": "A consumer rejects any other value (spec/export.md §5)."
     },
     "spec": {
-      "const": "0.3"
+      "const": "0.4"
     },
     "generatedAt": {
       "type": "string",
@@ -749,7 +749,7 @@
         },
         "profile": {
           "type": "string",
-          "pattern": "^intentset/[a-z]+/0\\.3$"
+          "pattern": "^intentset/[a-z]+/0\\.4$"
         },
         "revision": {
           "anyOf": [
@@ -1078,7 +1078,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/product/0.3"
+                "const": "intentset/product/0.4"
               }
             }
           }
@@ -1094,7 +1094,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/intent/0.3"
+                "const": "intentset/intent/0.4"
               }
             }
           }
@@ -1110,7 +1110,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/outcome/0.3"
+                "const": "intentset/outcome/0.4"
               }
             }
           }
@@ -1126,7 +1126,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/measure/0.3"
+                "const": "intentset/measure/0.4"
               }
             }
           }
@@ -1142,7 +1142,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/capability/0.3"
+                "const": "intentset/capability/0.4"
               }
             }
           }
@@ -1158,7 +1158,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/behavior/0.3"
+                "const": "intentset/behavior/0.4"
               }
             }
           }
@@ -1174,7 +1174,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/rule/0.3"
+                "const": "intentset/rule/0.4"
               }
             }
           }
@@ -1190,7 +1190,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/scenario/0.3"
+                "const": "intentset/scenario/0.4"
               }
             }
           }
@@ -1206,7 +1206,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/slice/0.3"
+                "const": "intentset/slice/0.4"
               }
             }
           }
@@ -1222,7 +1222,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/contract/0.3"
+                "const": "intentset/contract/0.4"
               }
             }
           }
@@ -1238,7 +1238,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/verification/0.3"
+                "const": "intentset/verification/0.4"
               }
             }
           }
@@ -1254,7 +1254,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/knowledge/0.3"
+                "const": "intentset/knowledge/0.4"
               }
             }
           }
@@ -1270,7 +1270,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/decision/0.3"
+                "const": "intentset/decision/0.4"
               }
             }
           }

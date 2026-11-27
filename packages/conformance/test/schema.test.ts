@@ -194,8 +194,8 @@ test("the three normative schemas are within the subset, and the example documen
   const good = {
     markset: 0,
     intentset: {
-      spec: "0.3",
-      profile: "intentset/rule/0.3",
+      spec: "0.4",
+      profile: "intentset/rule/0.4",
       id: "RULE-ASMT-AUTH",
       type: "rule",
       title: "Require assignment permission",
@@ -208,7 +208,7 @@ test("the three normative schemas are within the subset, and the example documen
   };
   assert.deepEqual(validateSchema(frontmatter, good), []);
   const bad = structuredClone(good);
-  bad.intentset.profile = "intentset/behavior/0.3";
+  bad.intentset.profile = "intentset/behavior/0.4";
   bad.intentset.type = "behavior";
   assert.deepEqual(errors(frontmatter, bad), [
     '/intentset: missing required property "availability"',

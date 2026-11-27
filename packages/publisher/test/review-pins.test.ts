@@ -22,8 +22,8 @@ import { build, examplesDir } from "./harness.ts";
 const RECORD = `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/rule/0.3
+  spec: '0.4'
+  profile: intentset/rule/0.4
   id: RULE-X
   type: rule
   title: Keep it short
@@ -245,9 +245,9 @@ test("BEH-REVIEW-PINS: leaving `review` out of the content hash moved no pin tak
   // These are the content-v1 pins the example's knowledge held under the extension before the review became a core
   // field: the sources' content hashes are what they were, so no review moved by migrate needs review (ADR 0025).
   const pinned: Record<string, string> = {
-    "BEH-ASMT-SCHEDULE.md": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-    "RULE-ASMT-AUTH.md": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-    "RULE-ASMT-FUTURE.md": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f",
+    "BEH-ASMT-SCHEDULE.md": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+    "RULE-ASMT-AUTH.md": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+    "RULE-ASMT-FUTURE.md": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd",
   };
   for (const [name, hash] of Object.entries(pinned)) {
     const source = readFileSync(join(examplesDir, "scheduling", name), "utf8");

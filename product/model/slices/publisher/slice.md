@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-PUBLISHER
   type: slice
   title: The publisher package

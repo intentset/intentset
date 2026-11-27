@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-HELP-READER
   type: verification
   title: servedTo holds all-of, and readHelp reads sorted lists in a closed file

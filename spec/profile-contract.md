@@ -8,7 +8,7 @@ implementation: 0.18.0
 
 # Intentset Profile Contract v0.1
 
-Implements [Traceable VSA](vsa-0.3.md) §5, which says a profile MUST provide a concrete allowed matrix, and follows [Core](core-0.3.md) §1's change policy. This contract says what a profile is, what a team may write in one, and what a checker does with it. [The reference profile](profile-typescript-amplify-gen2-0.3.md) is one profile under this contract. The decision is [ADR 0030](https://github.com/intentset/intentset/blob/main/docs/decisions/0030-a-profile-is-data-and-the-readers-are-built-in.md).
+Implements [Traceable VSA](vsa-0.4.md) §5, which says a profile MUST provide a concrete allowed matrix, and follows [Core](core-0.4.md) §1's change policy. This contract says what a profile is, what a team may write in one, and what a checker does with it. [The reference profile](profile-typescript-amplify-gen2-0.4.md) is one profile under this contract. The decision is [ADR 0030](https://github.com/intentset/intentset/blob/main/docs/decisions/0030-a-profile-is-data-and-the-readers-are-built-in.md).
 
 ## 1. What a profile is
 
@@ -98,7 +98,7 @@ This version defines one rule set:
 
 | Rule set | Language | Rules |
 |---|---|---|
-| `amplify` | `typescript` | AMP001 to AMP013, [reference profile](profile-typescript-amplify-gen2-0.3.md) §4, §6 and §9 |
+| `amplify` | `typescript` | AMP001 to AMP013, [reference profile](profile-typescript-amplify-gen2-0.4.md) §4, §6 and §9 |
 
 This rule set reads the seam and pure roles (AMP001, AMP002, AMP006) for the packages in `backendSdks` and the files under `backendRoots`. Under a profile with no rule set, VSA015 checks the packages the profile lists in `outsidePackages`. What no import shows stays VSA010, a review assertion: unresolved until a reviewer asserts it, and never a pass.
 
@@ -112,7 +112,7 @@ A reader is the part of a checker that knows one language. For a tree of files i
 
 A reader reads source files and the data files that configure resolution. It MUST NOT run the repository's code, its build scripts or its tools. A reference it cannot follow MUST be returned as unresolved with the reason, and a checker MUST report it as not checked; it is never dropped and never passed (VSA §2).
 
-The rules only one language has belong to its reader and run whenever that reader does. For `typescript` they are TS001 to TS008 (reference profile §2 and §3), and TS008 reads the rendering role.
+The rules only one language has belong to its reader and run whenever that reader does. For `typescript` they are TS001 to TS006 and TS008 (reference profile §2 and §3; TS007 is retired, VSA §2), and TS008 reads the rendering role.
 
 A profile whose language a checker has no reader for is an error that names the languages the checker reads, and it stops the check as any error in the file does (§2): nothing else is checked, and no pass is reported.
 
@@ -120,7 +120,7 @@ This version names one language: `typescript`, which covers TypeScript and JavaS
 
 ## 7. Codes
 
-A profile file defines no diagnostic code. Under every profile a violation of its matrix is VSA006, and of its list of outside packages VSA015.
+A profile file defines no diagnostic code. Under every profile a violation of its matrix is VSA006, of its list of outside packages VSA015, and of its package policy VSA016.
 
 Each specification owns the prefixes of the codes it defines, and a prefix belongs to one owner:
 
@@ -140,8 +140,8 @@ A checker ships profiles under `intentset/`, each complete when shipped. This ve
 
 | ID | What it is |
 |---|---|
-| `intentset/typescript/0.3` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set and no outside package listed |
-| `intentset/typescript-amplify-gen2/0.3` | The reference profile: the plain TypeScript profile with the `amplify` rule set, the backend root `amplify/**` and the Amplify and AWS SDKs as `backendSdks` |
+| `intentset/typescript/0.4` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set and no outside package listed |
+| `intentset/typescript-amplify-gen2/0.4` | The reference profile: the plain TypeScript profile with the `amplify` rule set, the backend root `amplify/**` and the Amplify and AWS SDKs as `backendSdks` |
 
 The reference profile applies to a repository with no profile file, so a repository that had none is checked exactly as before this contract.
 

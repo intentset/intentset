@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-ASK-LIMITS
   type: verification
   title: The chat refuses past its limits without a model call

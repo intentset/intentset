@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-EVIDENCE-IMPORT
   type: verification
   title: Evidence import binds a test report to the commit

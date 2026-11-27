@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-SURFACES
   type: behavior
   title: A slice says which knowledge leads each surface of the product, and validation checks it

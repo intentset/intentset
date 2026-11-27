@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/rule/0.3
+  spec: '0.4'
+  profile: intentset/rule/0.4
   id: RULE-RESET-LINK-ONCE
   type: rule
   title: Reset links work once

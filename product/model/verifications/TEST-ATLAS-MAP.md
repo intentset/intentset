@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-ATLAS-MAP
   type: verification
   title: The map draws the model and its script explores it

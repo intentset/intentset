@@ -55,7 +55,7 @@ export interface ArchitectureConfig {
   layerMatrix: Record<string, string[]>;
   /**
    * Packages a layer may not import, by layer name: specifier patterns matched, as backendSdks are, against the
-   * specifier as written with `node:` removed (TS007). A layer not named may import any package.
+   * specifier as written with `node:` removed (VSA016). A layer not named may import any package.
    */
   forbiddenPackages: Record<string, string[]>;
   /** Export conditions tried first when resolving a workspace package's entry, before types, import and default. */
@@ -102,7 +102,7 @@ export interface LayerRoles {
 export const RULE_SETS: Readonly<Record<string, { language: string }>> = { amplify: { language: "typescript" } };
 
 /** The ID of the reference profile, which applies when a repository names none. */
-export const REFERENCE_PROFILE = "intentset/typescript-amplify-gen2/0.3";
+export const REFERENCE_PROFILE = "intentset/typescript-amplify-gen2/0.4";
 
 /**
  * The UI frameworks profile §3 keeps out of policies, models and the client seam by default. A repository adds its

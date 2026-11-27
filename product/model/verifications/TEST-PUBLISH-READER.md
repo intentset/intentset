@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-PUBLISH-READER
   type: verification
   title: A request for several audiences and roles is one run, and every file names the whole entitlement

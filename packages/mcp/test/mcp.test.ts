@@ -481,7 +481,7 @@ test("BEH-PUBLISH-READER: customer mode refuses an index of another profile or w
   const other = { ...publication, index: { ...publication.index, profile: "intentset/publication-index/0.2" } };
   assert.throws(
     () => createIntentsetServer({ mode: "customer", publication: other as unknown as PublishResult }),
-    /profile "intentset\/publication-index\/0\.2", not intentset\/publication-index\/0\.3/,
+    /profile "intentset\/publication-index\/0\.2", not intentset\/publication-index\/0\.4/,
   );
   const extra = { ...publication, index: { ...publication.index, surfaces: {} } };
   assert.throws(

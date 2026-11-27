@@ -956,8 +956,8 @@ function slice(id: string, root: string, extra = ""): string {
   return `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: ${id}
   type: slice
   title: ${id}
@@ -1191,7 +1191,7 @@ describe("BEH-ARCH-LAYER-PACKAGES: what a layer may import from packages, and wh
       { today: "2026-10-02", config },
     ).diagnostics.filter((d) => d.code !== "VSA006");
 
-  test("a UI framework in a policy, a model or the client seam is TS007, by the specifier as written", () => {
+  test("a UI framework in a policy, a model or the client seam is VSA016, by the specifier as written", () => {
     const diagnostics = run([
       ["src/a/domain/policies/p.ts", 'import { useMemo } from "react";\nexport const p = useMemo;\n'],
       ["src/a/domain/models/m.ts", 'import type { ReactNode } from "react";\nexport type M = ReactNode;\n'],
@@ -1200,7 +1200,7 @@ describe("BEH-ARCH-LAYER-PACKAGES: what a layer may import from packages, and wh
     ]);
     assert.deepEqual(
       diagnostics.map((d) => `${d.code} ${d.path}:${d.location?.line}`),
-      ["TS007 src/a/client/c.ts:1", "TS007 src/a/domain/models/m.ts:1", "TS007 src/a/domain/policies/p.ts:1"],
+      ["VSA016 src/a/client/c.ts:1", "VSA016 src/a/domain/models/m.ts:1", "VSA016 src/a/domain/policies/p.ts:1"],
     );
     assert.equal(
       diagnostics[2].message,
@@ -1216,7 +1216,7 @@ describe("BEH-ARCH-LAYER-PACKAGES: what a layer may import from packages, and wh
     const diagnostics = run(files, { forbiddenPackages: { policy: ["@mui/**"], model: ["@aws-amplify/**"] } });
     assert.deepEqual(
       diagnostics.map((d) => `${d.code} ${d.path}:${d.location?.line}`),
-      ["AMP006 src/a/domain/models/m.ts:1", "TS007 src/a/domain/policies/p.ts:2"],
+      ["AMP006 src/a/domain/models/m.ts:1", "VSA016 src/a/domain/policies/p.ts:2"],
     );
   });
 
@@ -1237,8 +1237,8 @@ describe("a slice with an entrypoint in each package it spans (VSA §3)", () => 
   const record = `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-M
   type: slice
   title: SLICE-M
@@ -1358,8 +1358,8 @@ test("a verification claim resolves against test files, and a source claim does 
   const slice = `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-X
   type: slice
   title: X slice
@@ -1591,7 +1591,7 @@ describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
     assert.deepEqual(SHIPPED_PROFILES, [TYPESCRIPT_PROFILE, REFERENCE_PROFILE].sort());
     assert.deepEqual(shippedProfile(REFERENCE_PROFILE), DEFAULT_ARCHITECTURE_CONFIG);
     assert.deepEqual(resolveConfig(), DEFAULT_ARCHITECTURE_CONFIG);
-    assert.equal(shippedProfile("intentset/none/0.3"), null);
+    assert.equal(shippedProfile("intentset/none/0.4"), null);
   });
 
   test("the plain TypeScript profile is the reference profile without the Amplify rule set and its backend", () => {
@@ -1670,27 +1670,31 @@ describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
     assert.match(read.diagnostics[0].message, /language is python, which this release does not read/);
     assert.match(read.diagnostics[0].remediation, /This release reads typescript/);
 
-    // A caller that hands the language in gets a reader that reads nothing, and the check says so.
+    // A caller that hands the language in is refused with the same error, and the check stops on it the same way.
     const loaded = loadConfig(new Map(), { language: "python" });
     assert.equal(loaded.read, false);
-    assert.equal(loaded.reader.isSource("src/a.py"), false);
+    assert.equal(loaded.profileFailed, true);
     const result = checkArchitecture(
       graphOf({}),
       EMPTY_REGISTRIES,
-      { files: new Map() },
+      { files: new Map([["src/a.ts", 'import { gone } from "./gone";\n']]) },
       { config: { language: "python" } },
     );
-    assert.deepEqual(result.summary.unresolved, [
-      ".intentset/profile.yaml: this release has no reader for python, so no file's imports were checked",
-    ]);
+    assert.deepEqual(
+      result.diagnostics.map((d) => `${d.code} ${d.path} ${d.field}: ${d.message}`),
+      [`CFG001 null /language: ${read.diagnostics[0].message}`],
+      "the same CFG001 as for a profile file, and nothing else",
+    );
+    assert.equal(result.diagnostics[0].remediation, read.diagnostics[0].remediation);
+    assert.equal(result.summary.edges, 0);
   });
 
   test("BEH-ARCH-OUTSIDE-PACKAGES: a package that reaches outside is the seam's to import, and never a pure layer's (VSA015)", () => {
     const slice = `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-O
   type: slice
   title: Outside
@@ -1755,8 +1759,8 @@ None.
     const record = `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-R
   type: slice
   title: Roles
@@ -1813,5 +1817,33 @@ None.
     assert.equal(isPure(slice, "src/r/core/a.ts", own), true);
     assert.equal(isPure(slice, "src/r/core/a.ts"), false, "`domain` is no layer of the reference profile");
     assert.deepEqual(seamPatterns(slice, undefined, { ...own, roles: { ...own.roles, seam: null } }), []);
+  });
+});
+
+describe("a renamed code (ADR 0030)", () => {
+  const about = (code: string): Diagnostic => ({
+    code,
+    severity: "error",
+    origin: "architecture",
+    artifact: "SLICE-A",
+    path: "src/a/domain/policies/p.ts",
+    message:
+      'src/a/domain/policies/p.ts is in the policy layer of SLICE-A and imports "react", a package the policy layer may not import (forbiddenPackages: react/**).',
+    remediation: "",
+  });
+  const subject = { edges: [], taken: { kind: "import" as const, to: "react", names: ["useMemo"] } };
+
+  test("BEH-ARCH-BASELINE-IDENTITY: a baseline entry written for TS007 still holds the finding now reported as VSA016", () => {
+    assert.deepEqual(baselineKeys(about("VSA016"), subject), baselineKeys(about("TS007"), subject));
+    assert.equal(fingerprint(about("VSA016")), fingerprint(about("TS007")), "an entry from before 0.9 too");
+    assert.notDeepEqual(baselineKeys(about("VSA016"), subject), baselineKeys(about("VSA006"), subject));
+
+    const [key] = baselineKeys(about("TS007"), subject);
+    const written: BaselineEntry[] = [
+      { code: "TS007", path: about("TS007").path, name: "useMemo", fingerprint: key.fingerprint },
+    ];
+    const applied = applyBaseline([about("VSA016")], written, "migration", () => subject);
+    assert.equal(applied.baselined, 1);
+    assert.deepEqual(applied.stale, [], "the entry is not stale, so the rename raises no VSA014");
   });
 });

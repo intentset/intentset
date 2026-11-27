@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-ATLAS-OUTLINE
   type: verification
   title: The product page says what each page is for and renders the hierarchy with each state

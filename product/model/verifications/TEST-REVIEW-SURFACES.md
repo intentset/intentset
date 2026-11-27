@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-REVIEW-SURFACES
   type: verification
   title: Review lists surface changes on slices past draft, and not a draft's or a migration's

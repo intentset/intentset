@@ -104,7 +104,7 @@ export interface PublishedDocument extends GeneratedDocument {
 export const UNDER_REVIEW_FRAGMENT_ATTRIBUTE = "data-intentset-under-review";
 
 /** The index's profile (publication §4): a reader refuses any other, and any member the spec does not list. */
-export const PUBLICATION_INDEX_PROFILE = "intentset/publication-index/0.3";
+export const PUBLICATION_INDEX_PROFILE = "intentset/publication-index/0.4";
 
 /** The index, in the order it is written. */
 export interface PublicationIndex {

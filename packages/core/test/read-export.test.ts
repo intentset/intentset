@@ -72,7 +72,7 @@ test("BEH-READ-EXPORT: the reader's shape checks agree with spec/export.schema.j
         if (target === null || typeof target !== "object" || Array.isArray(target)) continue;
         (target as Record<string, unknown>).zz = "x";
       }
-      if (pointer === "/contract") continue; // a contract that is not 0.7's is unsupported-contract, by design before shape
+      if (pointer === "/contract") continue; // a contract that is not 0.8's is unsupported-contract, by design before shape
       const schemaSays = validateSchema(schema, mutant).length > 0;
       const read = readExport(mutant);
       const readerSays = !read.ok && read.category === "malformed";
@@ -159,8 +159,9 @@ test("BEH-READ-EXPORT: a missing or unknown contract is unsupported-contract bef
     "intentset/export/0.4",
     "intentset/export/0.5",
     "intentset/export/0.6",
-    "intentset/export/0.8",
-    "other/export/0.7",
+    "intentset/export/0.7",
+    "intentset/export/0.9",
+    "other/export/0.8",
   ]) {
     const value = { ...full, contract };
     const read = readExport(value);

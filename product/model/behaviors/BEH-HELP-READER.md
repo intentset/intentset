@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-HELP-READER
   type: behavior
   title: A help file is served only to a reader who holds everything it names

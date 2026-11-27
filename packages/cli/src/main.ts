@@ -64,7 +64,7 @@ commands
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
-                            print the intentset/export/0.7 envelope, or write it to --out;
+                            print the intentset/export/0.8 envelope, or write it to --out;
                             each --report adds a section (ownership needs L2, evidence L3; all
                             is every one the level reads). Restricted artifacts are withheld
                             and counted unless --include-restricted
@@ -143,15 +143,18 @@ commands
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
                             L3 with run records
-  migrate --to 0.3 [--allow-dirty]
-                            move the records the model reads to specifications 0.3, from
-                            0.2 or 0.1: rewrites intentset.spec and intentset.profile in
-                            each record's frontmatter, applies the version's rewrites (a
-                            status of implemented or released, a review under the extension),
-                            re-pins each knowledge review pin (a source pin, and self) that
-                            matched before the move, leaving a stale one stale, and says how
-                            many. Refuses a tree with uncommitted changes to tracked files
-                            unless --allow-dirty
+  migrate --to 0.4 [--baseline <file>] [--allow-dirty]
+                            move the records the model reads to specifications 0.4, from
+                            0.3, 0.2 or 0.1: rewrites intentset.spec and intentset.profile in
+                            each record's frontmatter, applies each version's rewrites (to
+                            0.3, a status of implemented or released and a review under the
+                            extension), re-pins each knowledge review pin (a source pin, and
+                            self) that matched before the move, leaving a stale one stale, and
+                            says how many. To 0.4 it also renames the code TS007 to VSA016 in
+                            the rule of each exception record and in the entries of the
+                            baseline --baseline names, and moves the shipped profile
+                            .intentset/profile.yaml extends. Refuses a tree with uncommitted
+                            changes to tracked files unless --allow-dirty
   mcp --mode engineering [--include-restricted]
   mcp --mode customer --visibility <public|customer> --audience <a>... --product <ID>
         --release <r> --role <r>... --edition <e> [--flag <f>]...
@@ -211,7 +214,7 @@ const LEVEL_OPTIONS = ["evidence", "product", "release", "mode", "baseline", "bi
 const COMMAND_OPTIONS: Record<string, string[]> = {
   init: ["repository", "example", "agents"],
   guide: [],
-  migrate: ["to", "allow-dirty"],
+  migrate: ["to", "allow-dirty", "baseline"],
   validate: LEVEL_OPTIONS,
   graph: [
     "format",
@@ -416,7 +419,13 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
     const problem = migrateUsageProblem({ to: values.to });
     if (problem !== null) return usage(problem);
     return migrateCommand(
-      { root: values.root, to: values.to, allowDirty: values["allow-dirty"], carrier: carrier as CarrierName },
+      {
+        root: values.root,
+        to: values.to,
+        allowDirty: values["allow-dirty"],
+        baseline: values.baseline,
+        carrier: carrier as CarrierName,
+      },
       io,
     );
   }

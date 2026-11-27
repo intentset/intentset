@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-EVIDENCE-STALE
   type: behavior
   title: Evidence stale lists what needs a run, in a test runner's own arguments

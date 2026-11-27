@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/outcome/0.3
+  spec: '0.4'
+  profile: intentset/outcome/0.4
   id: OUT-MODEL-STAYS-TRUE
   type: outcome
   title: The model stays true as the code changes

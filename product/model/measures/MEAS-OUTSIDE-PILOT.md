@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/measure/0.3
+  spec: '0.4'
+  profile: intentset/measure/0.4
   id: MEAS-OUTSIDE-PILOT
   type: measure
   title: Outside codebases that complete the pilot

@@ -367,10 +367,10 @@ export const CARD_ALT = `${SITE_NAME}: ${FOOTER.statement}`;
 
 /** The normative documents, each rendered from its single source under /specifications/. */
 export const SPECS: Array<{ slug: string; file: string }> = [
-  { slug: "core", file: "core-0.3.md" },
-  { slug: "vsa", file: "vsa-0.3.md" },
+  { slug: "core", file: "core-0.4.md" },
+  { slug: "vsa", file: "vsa-0.4.md" },
   { slug: "profile-contract", file: "profile-contract.md" },
-  { slug: "profile-typescript-amplify-gen2", file: "profile-typescript-amplify-gen2-0.3.md" },
+  { slug: "profile-typescript-amplify-gen2", file: "profile-typescript-amplify-gen2-0.4.md" },
   { slug: "publication", file: "publication.md" },
   { slug: "export", file: "export.md" },
   { slug: "list", file: "list.md" },

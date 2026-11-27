@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ATLAS-MAP
   type: behavior
   title: The Atlas maps every record and link, and lets a reader explore it

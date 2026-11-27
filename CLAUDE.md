@@ -5,9 +5,9 @@ connected, as readable Markdown files with YAML frontmatter in a repository. The
 knowledge are derived views; the files are authoritative. This repository is the v0.3 specifications, the conformance
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
-**`spec/` is the source of truth**: `core-0.3.md`, `vsa-0.3.md`, `profile-contract.md` (what a profile is and what a team may write in
-`.intentset/profile.yaml`, `intentset/profile-contract/0.1`; ADR 0030), `profile-typescript-amplify-gen2-0.3.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.7`), `list.md` (the result `intentset list`
+**`spec/` is the source of truth**: `core-0.4.md`, `vsa-0.4.md`, `profile-contract.md` (what a profile is and what a team may write in
+`.intentset/profile.yaml`, `intentset/profile-contract/0.1`; ADR 0030), `profile-typescript-amplify-gen2-0.4.md`,
+`export.md` (the export contract other tools pin, `intentset/export/0.8`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.

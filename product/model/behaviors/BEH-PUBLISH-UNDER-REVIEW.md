@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-PUBLISH-UNDER-REVIEW
   type: behavior
   title: Knowledge whose sources changed can be published marked under review, from the text its review covered

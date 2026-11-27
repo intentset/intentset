@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ARCH-BASELINE-STALE
   type: behavior
   title: A baseline entry whose violation is gone is an error

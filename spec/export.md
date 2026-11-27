@@ -1,14 +1,14 @@
 ---
-title: Intentset Export Contract v0.7
-id: intentset/export/0.7
+title: Intentset Export Contract v0.8
+id: intentset/export/0.8
 status: draft
-revision: 2026-11-26
+revision: 2026-11-27
 implementation: 0.18.0
 ---
 
-# Intentset Export Contract v0.7
+# Intentset Export Contract v0.8
 
-**Extends:** [Core §12](core-0.3.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
+**Extends:** [Core §12](core-0.4.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
 behaviors, a usage product attributing errors to slices, a second implementation comparing graphs. This document fixes
@@ -27,8 +27,8 @@ hit's `path` from the start, and a surface's `knowledge` in the order its slice 
 
 | Field | Meaning |
 |---|---|
-| `contract` | `intentset/export/0.7`. A consumer MUST reject any other value (§5). |
-| `spec` | The Core version the model is written against: `0.3`. |
+| `contract` | `intentset/export/0.8`. A consumer MUST reject any other value (§5). |
+| `spec` | The Core version the model is written against: `0.4`. |
 | `generatedAt` | ISO 8601 time of generation. Outside every hash; two exports of one snapshot differ only here. |
 | `repository` | The stable repository identity from `.intentset/config.yaml`. |
 | `products` | The exported product artifact IDs. |
@@ -249,7 +249,7 @@ report slots and exported restricted artifacts by default, and no consumer was b
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
 unannounced. 0.4 carries the evidence binding (ADR 0014), 0.5 each artifact's `delivery` (ADR 0017), 0.6 its `approval` and
-`formalizes` (ADR 0020), and 0.7 the specifications' `0.3`, below.
+`formalizes` (ADR 0020), 0.7 the specifications' `0.3` and 0.8 their `0.4`, below.
 
 Keying the code's shape on the origin (§1, 2026-10-05) was a defect fix inside 0.3, not a new version. A 0.3 producer
 already wrote Markset's codes under origin `syntax`, since the adapter passes them through unchanged, while the schema
@@ -289,6 +289,12 @@ on its `spec` alone. A 0.7 reader rejects a 0.6 envelope as `unsupported-contrac
 version it supports in the message, because it cannot read a 0.2 model as one written against 0.3. Each knowledge
 artifact carries `review` (ADR 0025), its pins as a field and no longer an extension, and the export withholds a pin
 and a tip with the artifact each names (§3). Each slice carries `surfaces` (ADR 0028), `{}` when it declares none.
+
+0.8 (2026-11-27) carries the specifications' third move. `spec` in the envelope moves from `0.3` to `0.4` with Core's
+(Core §1, ADR 0030), and each artifact's `profile` with it. Nothing else in the envelope changes shape. A diagnostic in
+`validation` or in a report that was TS007 is VSA016, so a consumer that filters on the code reads the new one. A 0.8
+reader rejects a 0.7 envelope as `unsupported-contract`, as each earlier move did, with the version it supports in the
+message.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ARCH-PROFILE
   type: behavior
   title: A repository's own profile says its layers, their roles and which rule sets run

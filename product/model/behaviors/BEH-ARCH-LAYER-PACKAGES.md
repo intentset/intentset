@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ARCH-LAYER-PACKAGES
   type: behavior
   title: A layer imports only the packages its policy allows, and only presentation renders

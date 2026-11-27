@@ -601,7 +601,7 @@
     "name": "P02 a link to an internal file whose path carries no ID",
     "baseline": "scheduling",
     "files": {
-      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/decision/0.4\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -947,9 +947,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -994,9 +994,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1041,9 +1041,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1089,9 +1089,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1138,9 +1138,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1192,9 +1192,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1282,9 +1282,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1334,9 +1334,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1385,9 +1385,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1441,9 +1441,9 @@
           "intentset.review": {
             "hash": "content-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1493,9 +1493,9 @@
           "intentset.review": {
             "hash": "file-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
+              "BEH-ASMT-SCHEDULE": "998d237a0db465053f02250e2ff6f86c999b166b3ea40fbb5bd48f160acb54e9",
+              "RULE-ASMT-AUTH": "514f4d65c44029a90fb91d2923c01c66f6c3b82d9e869f5acd6df71f794b50a6",
+              "RULE-ASMT-FUTURE": "ec18c45a843a9b82e7ac9d089fd0aa84689be7d2f41ba30ab144f3c5e857d422"
             }
           },
           "intentset.tips": null
@@ -1544,9 +1544,9 @@
           "intentset.review": {
             "hash": "file-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
+              "BEH-ASMT-SCHEDULE": "998d237a0db465053f02250e2ff6f86c999b166b3ea40fbb5bd48f160acb54e9",
+              "RULE-ASMT-AUTH": "514f4d65c44029a90fb91d2923c01c66f6c3b82d9e869f5acd6df71f794b50a6",
+              "RULE-ASMT-FUTURE": "ec18c45a843a9b82e7ac9d089fd0aa84689be7d2f41ba30ab144f3c5e857d422"
             }
           },
           "intentset.tips": null
@@ -1599,9 +1599,9 @@
           "intentset.review": {
             "hash": "file-v1",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
+              "BEH-ASMT-SCHEDULE": "998d237a0db465053f02250e2ff6f86c999b166b3ea40fbb5bd48f160acb54e9",
+              "RULE-ASMT-AUTH": "514f4d65c44029a90fb91d2923c01c66f6c3b82d9e869f5acd6df71f794b50a6",
+              "RULE-ASMT-FUTURE": "ec18c45a843a9b82e7ac9d089fd0aa84689be7d2f41ba30ab144f3c5e857d422"
             }
           },
           "intentset.tips": null
@@ -1641,9 +1641,9 @@
           "intentset.review": {
             "hash": "content-v9",
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1686,9 +1686,9 @@
           "intentset.reviewedAt": "2026-09-30",
           "intentset.review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1732,9 +1732,9 @@
           "intentset.reviewedAt": "2026-09-30",
           "intentset.review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           },
           "intentset.tips": null
@@ -1780,9 +1780,9 @@
           "intentset.reviewedAt": "2026-09-30",
           "intentset.review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "73315a50e1843328fcc2e38266152b5ec86b0ee3ebae6a29bc33812f0f86bfa5",
-              "RULE-ASMT-AUTH": "2a37d1df64d0876624b08f2465c04db39d88ae4893db387f5c12a31116d26115",
-              "RULE-ASMT-FUTURE": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539"
+              "BEH-ASMT-SCHEDULE": "998d237a0db465053f02250e2ff6f86c999b166b3ea40fbb5bd48f160acb54e9",
+              "RULE-ASMT-AUTH": "514f4d65c44029a90fb91d2923c01c66f6c3b82d9e869f5acd6df71f794b50a6",
+              "RULE-ASMT-FUTURE": "ec18c45a843a9b82e7ac9d089fd0aa84689be7d2f41ba30ab144f3c5e857d422"
             }
           },
           "intentset.tips": null
@@ -2636,7 +2636,7 @@
         "KB-ASMT-SCHEDULE"
       ],
       "mustContain": [
-        "\"profile\":\"intentset/help/0.3\"",
+        "\"profile\":\"intentset/help/0.4\"",
         "\"knowledge\":[{\"id\":\"KB-ASMT-SCHEDULE\",\"title\":\"Prepare a scheduled student assessment\",\"path\":\"KB-ASMT-SCHEDULE.md\"}]",
         "\"tips\":{\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"},\"RULE-ASMT-FUTURE\":{\"text\":\"The release time must be in the future.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}}"
       ],
@@ -2691,7 +2691,7 @@
       "mustContain": [
         "  withheldSources: 3\n  audience:\n    - teacher\n  availability:\n",
         "\"derived\":true,\"projection\":\"customer\",\"audience\":[\"teacher\"]",
-        "{\"profile\":\"intentset/snapshot/0.3\",\"derived\":true,\"commit\":null,\"graphHash\":\""
+        "{\"profile\":\"intentset/snapshot/0.4\",\"derived\":true,\"commit\":null,\"graphHash\":\""
       ],
       "mustNotContain": [
         "\"snapshot\":",
@@ -2788,7 +2788,7 @@
     "name": "two published documents tip one ID: the lower knowledge ID wins",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -2875,7 +2875,7 @@
       ]
     },
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3066,7 +3066,7 @@
     "name": "P03 a request for two audiences publishes knowledge written for either",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - product\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - product\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3488,7 +3488,7 @@
       ]
     },
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3568,7 +3568,7 @@
       ]
     },
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3614,7 +3614,7 @@
     "name": "PUB002 a title is allowed only by a document still published",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-ACCEPT.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-ACCEPT\n  type: knowledge\n  title: Accept an eligible schedule\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Accept an eligible schedule\n\n## Guidance\n\nCheck the class and the time, then see [the seam](ADR-ASMT-SEAM.md).\n"
+      "KB-ASMT-ACCEPT.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-ACCEPT\n  type: knowledge\n  title: Accept an eligible schedule\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Accept an eligible schedule\n\n## Guidance\n\nCheck the class and the time, then see [the seam](ADR-ASMT-SEAM.md).\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3700,7 +3700,7 @@
       ]
     },
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3789,7 +3789,7 @@
       ]
     },
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -3874,9 +3874,9 @@
       ]
     },
     "files": {
-      "KB-ASMT-ROSTER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-ROSTER\n  type: knowledge\n  title: Manage a class roster\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Manage a class roster\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n",
-      "KB-ASMT-SEATING.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-SEATING\n  type: knowledge\n  title: Arrange class seating\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Arrange class seating\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n",
-      "KB-ASMT-AUDIT.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-AUDIT\n  type: knowledge\n  title: Audit assessment schedules\n  status: approved\n  owner: team-assessment\n  visibility: restricted\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Audit assessment schedules\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-ROSTER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-ROSTER\n  type: knowledge\n  title: Manage a class roster\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Manage a class roster\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n",
+      "KB-ASMT-SEATING.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-SEATING\n  type: knowledge\n  title: Arrange class seating\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Arrange class seating\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n",
+      "KB-ASMT-AUDIT.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-AUDIT\n  type: knowledge\n  title: Audit assessment schedules\n  status: approved\n  owner: team-assessment\n  visibility: restricted\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Audit assessment schedules\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -4079,7 +4079,7 @@
         "KB-ASMT-SCHEDULE"
       ],
       "mustContain": [
-        "{\"profile\":\"intentset/publication-index/0.3\",\"request\":{\"visibility\":\"customer\"",
+        "{\"profile\":\"intentset/publication-index/0.4\",\"request\":{\"visibility\":\"customer\"",
         "],\"excludedCounts\":{"
       ]
     }
@@ -4391,7 +4391,7 @@
     "name": "P04 a current document's tip wins over one kept under review whatever the IDs",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '0000000000000000000000000000000000000000000000000000000000000000'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '0000000000000000000000000000000000000000000000000000000000000000'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -4581,7 +4581,7 @@
           "intentset.reviewedAt": "2026-09-30",
           "intentset.review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
               "RULE-ASMT-AUTH": "@current",
               "RULE-ASMT-FUTURE": "@current"
             },
@@ -4845,7 +4845,7 @@
               "RULE-ASMT-AUTH": "@current",
               "RULE-ASMT-FUTURE": "@current"
             },
-            "self": "4e127d988ded8e2f86778df6899a6fe92c50955626f9f1bcd00a5253e22fcefd",
+            "self": "f504e61ca1d8f90208bc27b59e84bf43f4037f30b6370ea87d06c44e8e201ccd",
             "gates": "@current"
           }
         }
@@ -5000,9 +5000,9 @@
           "intentset.reviewedAt": "2026-09-30",
           "intentset.review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             },
             "self": "@current",
             "gates": "@current"
@@ -5292,7 +5292,7 @@
       ]
     },
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '0000000000000000000000000000000000000000000000000000000000000000'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - administrator\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '0000000000000000000000000000000000000000000000000000000000000000'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -5513,7 +5513,7 @@
     "name": "P04 a current document that links a kept one is refused, as without keepUnderReview",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n\nSee [schedule](KB-ASMT-SCHEDULE.md).\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  tips:\n    BEH-ASMT-SCHEDULE: Choose the class first.\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n\nSee [schedule](KB-ASMT-SCHEDULE.md).\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -5561,7 +5561,7 @@
     "name": "P04 a kept document's link to a current document resolves from under-review",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n    self: '@current'\n    gates: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose the class first; only classes you manage are offered.\n"
     },
     "patch": {
       "KB-ASMT-SCHEDULE.md": {
@@ -5657,7 +5657,7 @@
     "name": "the help file maps each surface to the published knowledge that leads it, in declared order",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -5735,7 +5735,7 @@
     "name": "a surface leaves out knowledge this publication did not publish",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -5809,7 +5809,7 @@
     "name": "P02 a lead outside the projection is left out of its surface and not named",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -5883,7 +5883,7 @@
     "name": "a surface whose knowledge was all left out is not in the help file",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -6223,7 +6223,7 @@
     "name": "P02 a surface ID holding the path of a record not published, after a slash, is not written",
     "baseline": "scheduling",
     "files": {
-      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/decision/0.4\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -6304,7 +6304,7 @@
     "name": "P02 a surface ID holding an unpublished path's characters inside a longer segment is written",
     "baseline": "scheduling",
     "files": {
-      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
+      "decisions/retry-policy.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/decision/0.4\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n"
     },
     "patch": {
       "BEH-ASMT-SCHEDULE.md": {
@@ -6809,7 +6809,7 @@
       ]
     },
     "files": {
-      "PRD-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/product/0.3\n  id: PRD-OTHER\n  type: product\n  title: Other example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Other example\n\n## Scope\n\nA second invented product.\n"
+      "PRD-OTHER.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/product/0.4\n  id: PRD-OTHER\n  type: product\n  title: Other example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Other example\n\n## Scope\n\nA second invented product.\n"
     }
   },
   {
@@ -7030,7 +7030,7 @@
     "name": "a surface declared by two slices is written from neither",
     "baseline": "scheduling",
     "files": {
-      "SLICE-ASMT-HELP.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-HELP\n  type: slice\n  title: Assessment help wiring\n  status: approved\n  delivery: built\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  slice:\n    kind: technical\n    rationale: Shared help wiring for the assessment pages.\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/help/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/help/**\n    usesResources: []\n    surfaces:\n      'lantern-web:/assessments/schedule':\n        knowledge:\n        - KB-ASMT-SCHEDULE\n---\n\n# Assessment help wiring\n\n## Responsibility\n\nOwns assessment help wiring.\n\n## Public contract\n\nNone beyond its entrypoint.\n\n## Verification\n\nNone yet.\n"
+      "SLICE-ASMT-HELP.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-HELP\n  type: slice\n  title: Assessment help wiring\n  status: approved\n  delivery: built\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  slice:\n    kind: technical\n    rationale: Shared help wiring for the assessment pages.\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/help/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/help/**\n    usesResources: []\n    surfaces:\n      'lantern-web:/assessments/schedule':\n        knowledge:\n        - KB-ASMT-SCHEDULE\n---\n\n# Assessment help wiring\n\n## Responsibility\n\nOwns assessment help wiring.\n\n## Public contract\n\nNone beyond its entrypoint.\n\n## Verification\n\nNone yet.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -7108,7 +7108,7 @@
     "name": "a surface declared by an approved slice and a draft slice is written from neither",
     "baseline": "scheduling",
     "files": {
-      "SLICE-ASMT-HELP.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-HELP\n  type: slice\n  title: Assessment help wiring\n  status: draft\n  delivery: built\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  slice:\n    kind: technical\n    rationale: Shared help wiring for the assessment pages.\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/help/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/help/**\n    usesResources: []\n    surfaces:\n      'lantern-web:/assessments/schedule':\n        knowledge:\n        - KB-ASMT-SCHEDULE\n---\n\n# Assessment help wiring\n\n## Responsibility\n\nOwns assessment help wiring.\n\n## Public contract\n\nNone beyond its entrypoint.\n\n## Verification\n\nNone yet.\n"
+      "SLICE-ASMT-HELP.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-HELP\n  type: slice\n  title: Assessment help wiring\n  status: draft\n  delivery: built\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  slice:\n    kind: technical\n    rationale: Shared help wiring for the assessment pages.\n    domain: assessment\n    entrypoints:\n    - src/features/assessment/help/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/features/assessment/help/**\n    usesResources: []\n    surfaces:\n      'lantern-web:/assessments/schedule':\n        knowledge:\n        - KB-ASMT-SCHEDULE\n---\n\n# Assessment help wiring\n\n## Responsibility\n\nOwns assessment help wiring.\n\n## Public contract\n\nNone beyond its entrypoint.\n\n## Verification\n\nNone yet.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -7185,7 +7185,7 @@
     "name": "a publication restricted by ids lists only the requested articles in its surfaces",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -7447,7 +7447,7 @@
     "name": "no generated document, page or fragment carries surfaces",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  review:\n    sources:\n      BEH-ASMT-SCHEDULE: '@current'\n      RULE-ASMT-AUTH: '@current'\n      RULE-ASMT-FUTURE: '@current'\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
