@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-REVIEW-PINS
   type: verification
   title: A content-v1 review ignores lifecycle edits and catches every edit to the promise

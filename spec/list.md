@@ -2,13 +2,13 @@
 title: Intentset List Contract v0.1
 id: intentset/list/0.1
 status: draft
-revision: 2026-11-25
+revision: 2026-11-27
 implementation: 0.18.0
 ---
 
 # Intentset List Contract v0.1
 
-**Extends:** [Core §10](core-0.3.md#10-human-review-impact-and-agent-context) • **Reads:** [the export contract](export.md)
+**Extends:** [Core §10](core-0.4.md#10-human-review-impact-and-agent-context) • **Reads:** [the export contract](export.md)
 
 A list answers one question about a product model: which records match these conditions. This document fixes the
 selector that states the conditions, how a record is matched against it, what is done where the source withheld part
@@ -116,7 +116,7 @@ A list is made over one snapshot, read from the repository's tree or from an exp
 
 The two MUST give the same answer for the same snapshot and the same withholding: the same counts, the same matched
 IDs and the same undetermined IDs. A field the source does not carry is `not-supplied` in a row (§5), never null or
-empty: export 0.7 does not carry Core §4's `reviewedBy` and `reviewedAt`.
+empty: export 0.8 does not carry Core §4's `reviewedBy` and `reviewedAt`.
 
 A list is made whether or not the validation passed. A failed validation may leave records out of the graph, so the
 result names the validation's status and totals beside the answer.

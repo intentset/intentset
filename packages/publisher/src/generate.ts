@@ -4,7 +4,7 @@
  *
  * The document is the knowledge body, unchanged, under frontmatter that
  * carries `markset: true` and a top-level `intentset-publication` block: the
- * generated profile `intentset/publication/0.3`, marked derived, with the
+ * generated profile `intentset/publication/0.4`, marked derived, with the
  * provenance Core §9 requires. It is a top-level key, not `intentset:`, so
  * nothing reads a generated document as a canonical record. A comment line
  * after the frontmatter says the same to a person opening the file.
@@ -43,7 +43,7 @@ import { type CheckedRequest, type PublicationRequest, admits, asList } from "./
 import type { ReviewStatus } from "./review.ts";
 import { type YamlValue, emitYaml } from "./yaml.ts";
 
-export const PUBLICATION_PROFILE = "intentset/publication/0.3";
+export const PUBLICATION_PROFILE = "intentset/publication/0.4";
 /** The top-level frontmatter key of a generated document. */
 export const PUBLICATION_KEY = "intentset-publication";
 /** The directory a document kept under review is written in, beside the current documents (publication §2). */

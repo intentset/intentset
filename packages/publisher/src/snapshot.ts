@@ -12,7 +12,7 @@
  */
 import type { Snapshot } from "./project.ts";
 
-export const SNAPSHOT_PROFILE = "intentset/snapshot/0.3";
+export const SNAPSHOT_PROFILE = "intentset/snapshot/0.4";
 /** The file's name beside the published documents. */
 export const SNAPSHOT_FILE = "snapshot.json";
 

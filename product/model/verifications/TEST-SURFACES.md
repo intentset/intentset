@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-SURFACES
   type: verification
   title: Surfaces are read in order, every malformed form is refused, and the export carries them

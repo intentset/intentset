@@ -353,9 +353,9 @@ export function buildConsumerFixtures(): Map<string, string> {
           "intentset.review": {
             hash: "content-v1",
             sources: {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f",
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd",
             },
             self: "0".repeat(64),
           },
@@ -605,10 +605,23 @@ export function buildConsumerFixtures(): Map<string, string> {
     }),
   );
   reject(
-    "the previous contract version",
+    "the contract two versions back",
     "unsupported-contract-0.6.json",
     "unsupported-contract",
     "0.6 carried a model written against the specifications' 0.2, and a 0.7 reader reads one written against 0.3. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
+  );
+  files.set(
+    "unsupported-contract-0.7.json",
+    mutate(full, (e) => {
+      e.contract = "intentset/export/0.7";
+      atSpec(e, "0.3");
+    }),
+  );
+  reject(
+    "the previous contract version",
+    "unsupported-contract-0.7.json",
+    "unsupported-contract",
+    "0.7 carried a model written against the specifications' 0.3, in which the package policy's code was TS007, and a 0.8 reader reads one written against 0.4, where it is VSA016. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
   );
   files.set(
     "unsupported-contract-future.json",

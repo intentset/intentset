@@ -21,7 +21,7 @@ test("the carrier subset reads into JSON-compatible values", () => {
       "markset: 0",
       "# a comment line",
       "intentset:",
-      "  spec: '0.3'",
+      "  spec: '0.4'",
       '  title: "Schedule \\"an\\" assessment"',
       "  revision: 1  # trailing comment",
       "  ratio: 0.5",
@@ -50,7 +50,7 @@ test("the carrier subset reads into JSON-compatible values", () => {
   assert.deepEqual(value, {
     markset: 0,
     intentset: {
-      spec: "0.3",
+      spec: "0.4",
       title: 'Schedule "an" assessment',
       revision: 1,
       ratio: 0.5,

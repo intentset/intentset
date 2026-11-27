@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-HELP-SURFACES
   type: verification
   title: Leads are read in order, under review left out by default, and a bad surfaces map refuses the file

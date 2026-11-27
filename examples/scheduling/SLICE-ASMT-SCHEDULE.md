@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-ASMT-SCHEDULE
   type: slice
   title: Student assessment scheduling slice

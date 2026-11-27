@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/measure/0.3
+  spec: '0.4'
+  profile: intentset/measure/0.4
   id: MEAS-QUESTIONS-ANSWERED
   type: measure
   title: Share of the chat's questions answered with a cited source

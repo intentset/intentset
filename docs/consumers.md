@@ -94,6 +94,22 @@ part of 0.7; Core §8 names the shape an outcome evidence record will take (meas
 time, URI, target met). Until it exists, Driftline-specific fields go in namespaced `extensions`, which the export carries as
 authored.
 
+## Moving a pin: export 0.8 and specifications 0.4 (the release after 0.18.0)
+
+`intentset.spec` moves from `0.3` to `0.4` and the export from 0.7 to 0.8. One thing changed: the diagnostic code
+TS007, the package policy, is VSA016, because every profile has the rule whatever its language (ADR 0030). The check,
+its message and what it reports are the same. The generated profiles moved with the specifications, as at each
+earlier move: `intentset/help/0.4`, `intentset/publication/0.4`, `intentset/publication-index/0.4`,
+`intentset/snapshot/0.4` and `intentset/atlas/0.4`.
+
+| Who | What to do |
+|---|---|
+| The repository that produces the export | Run `intentset migrate --to 0.4`, with `--baseline <file>` if it keeps an architecture baseline, and commit the result. It rewrites `spec` and `profile` in every record, re-pins the knowledge reviews that were current, writes VSA016 for TS007 in the `rule` of each exception record and the `code` of each baseline entry, and moves the shipped profile `.intentset/profile.yaml` extends. Until then every record is CORE001, an exception for TS007 covers nothing, and a profile that extends `intentset/typescript/0.3` is refused. A baseline entry written for TS007 still holds its finding without the rewrite. |
+| A reader of the export | Support `intentset/export/0.8` and drop 0.7, which a 0.8 reader rejects as `unsupported-contract`. Expect `spec` `0.4` and profiles ending in `/0.4`. Nothing else in the envelope changed shape. |
+| A gate, script or filter that names a code | Read VSA016 where it read TS007. TS007 is retired and never reused. |
+| A reader of a publication (`help.json`, a document's `intentset-publication` block, `index.json`, `snapshot.json`) | Each names its `0.4` profile, and `readHelp` refuses a `0.3` file whole; publish again with the new release and move the reader with it. No member changed. |
+| A consumer's own tests | Run the importer over the fixtures again: every envelope names 0.8 and spec `0.4`, and `unsupported-contract-0.7.json` is new. |
+
 ## Moving a pin: export 0.7 and specifications 0.3 (0.18.0)
 
 0.18.0 moves `intentset.spec` from `0.2` to `0.3` and the export from 0.6 to 0.7: `spec` in the envelope is

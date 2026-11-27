@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ASK-KEEP-QUESTION
   type: behavior
   title: A question and its answer are kept, scrubbed, for 90 days

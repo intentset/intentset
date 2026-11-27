@@ -83,7 +83,7 @@ test("BEH-APPROVE: approve gives a knowledge record its review, pinning each sou
   const reviewed = read(dir, "KB-ASMT-SCHEDULE");
   // A draft whose review names another reviewer and a pin that no longer holds.
   edit(dir, "KB-ASMT-SCHEDULE", "status: approved", "status: draft");
-  edit(dir, "KB-ASMT-SCHEDULE", "'4fede99f", "'00000000");
+  edit(dir, "KB-ASMT-SCHEDULE", "'1437fa81", "'00000000");
   git(dir, "commit", "-q", "-am", "the knowledge as a draft");
 
   const approved = await run(dir, "approve", "KB-ASMT-SCHEDULE", ...BY);
@@ -183,7 +183,7 @@ test("BEH-REVIEW-APPROVALS: review lists each record whose status or approval di
 for (const version of ["0.2", "0.1"]) {
   test(`BEH-REVIEW-APPROVALS: review reads a base at ${version} as migrated, so a record the move changed in no other way is not listed`, async (t) => {
     const { dir, files } = await atEarlier(t, version);
-    assert.equal((await run(dir, "migrate", "--to", "0.3")).code, 0);
+    assert.equal((await run(dir, "migrate", "--to", "0.4")).code, 0);
     // In the same change as the move, one status moved and one other edit.
     edit(dir, "RULE-ASMT-AUTH", "status: draft", "status: approved");
     edit(dir, "BEH-ASMT-SCHEDULE", "revision: 1", "revision: 2");
@@ -214,7 +214,7 @@ test("BEH-APPROVE: approve replaces a review left under the extension 0.2 read, 
     "\n  extensions:\n    intentset.org/review:\n      sources: {}\n",
   );
   git(dir, "commit", "-q", "-am", "a draft whose review is the retired extension");
-  assert.equal((await run(dir, "validate")).code, 1, "the extension is CORE001 at 0.3");
+  assert.equal((await run(dir, "validate")).code, 1, "the extension is CORE001 at 0.4");
 
   const approved = await run(dir, "approve", "KB-ASMT-SCHEDULE", ...BY);
   assert.equal(approved.code, 0, approved.err);
@@ -513,7 +513,7 @@ test("BEH-REVIEW-SURFACES: review reads a base at 0.2 as migrated, so the move a
     surfacesBlock({ "lantern-web:/a": ["KB-ASMT-SCHEDULE"] }),
   );
   git(dir, "commit", "-q", "-am", "an approved slice with a surface, at 0.2");
-  assert.equal((await run(dir, "migrate", "--to", "0.3")).code, 0);
+  assert.equal((await run(dir, "migrate", "--to", "0.4")).code, 0);
   git(dir, "commit", "-q", "-am", "migrated");
   const review = await run(dir, "review", "--base", "HEAD~1");
   assert.match(review.out, /^## Surfaces changed \(0\)$/m);

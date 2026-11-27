@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/outcome/0.3
+  spec: '0.4'
+  profile: intentset/outcome/0.4
   id: OUT-PREPARE
   type: outcome
   title: Reduce assignment preparation friction

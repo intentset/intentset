@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-APPROVAL-BASIS
   type: verification
   title: An approval is shape-checked, left out of the content hash and carried by the export

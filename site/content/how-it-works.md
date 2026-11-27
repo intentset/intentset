@@ -18,8 +18,8 @@ Each promise is a record: one Markdown file under `product/`, reviewed in the sa
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/rule/0.3
+  spec: '0.4'
+  profile: intentset/rule/0.4
   id: RULE-RESET-LINK-EXPIRY
   type: rule
   title: Reset links expire after one hour

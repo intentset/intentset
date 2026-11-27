@@ -22,7 +22,7 @@ const AVAILABILITY = {
 
 /** An internal decision whose repository path holds no ID. */
 const RETRY_POLICY =
-  "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n";
+  "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/decision/0.4\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed schedule deliveries twice\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n---\n\n# Retry failed schedule deliveries twice\n\n## Context\n\nDelivery to a class can fail while the release job runs.\n\n## Decision\n\nRetry a failed delivery twice before reporting it.\n\n## Consequences\n\nA delivery can arrive up to two retry intervals late.\n";
 
 /** The example's slice made eligible, with these surfaces and frontmatter edits, and its knowledge reviewed. */
 function eligible(
@@ -222,8 +222,8 @@ test("BEH-PUBLISH-SURFACES: a surface declared by two slices is written from nei
       "---",
       "markset: 0",
       "intentset:",
-      "  spec: '0.3'",
-      "  profile: intentset/slice/0.3",
+      "  spec: '0.4'",
+      "  profile: intentset/slice/0.4",
       "  id: SLICE-ASMT-HELP",
       "  type: slice",
       "  title: Assessment help wiring",

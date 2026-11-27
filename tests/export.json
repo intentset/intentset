@@ -6,8 +6,8 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "contract": "intentset/export/0.7",
-      "spec": "0.3",
+      "contract": "intentset/export/0.8",
+      "spec": "0.4",
       "generatedAt": "2026-01-01T00:00:00Z",
       "repository": "example/scheduling",
       "products": [
@@ -84,7 +84,7 @@
     "valid": true,
     "diagnostics": [],
     "export": {
-      "graphHash": "facc505b59d0be12861ec0d05aebe1ac9bcbdb5d7cef90abc39f959ce83b7647"
+      "graphHash": "ede09800d185f08f7b0dde7aa8bd3a68d5fd65dc89bdc1a861bf00069133e9b2"
     },
     "notes": "ADR 0005: SHA-256 of the canonical sorted list of id, type, sourceHash and authored links. A change to any baseline byte changes it."
   },
@@ -290,9 +290,9 @@
         "frontmatter": {
           "intentset.review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             }
           }
         }
@@ -322,9 +322,9 @@
           "id": "KB-ASMT-SCHEDULE",
           "review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             },
             "hash": null,
             "snapshot": null
@@ -766,7 +766,7 @@
     "name": "export a duplicate ID keeps one record, the first by path",
     "baseline": "scheduling",
     "files": {
-      "BEH-ASMT-SCHEDULE-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/behavior/0.3\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule a student assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule a student assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
+      "BEH-ASMT-SCHEDULE-COPY.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/behavior/0.4\n  id: BEH-ASMT-SCHEDULE\n  type: behavior\n  title: Schedule a student assessment\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n  - product\n  revision: 1\n  parent: CAP-ASMT-ASSIGN\n  links:\n    governedBy:\n    - RULE-ASMT-FUTURE\n    - RULE-ASMT-AUTH\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Schedule a student assessment\n\n## Behavior\n\nA teacher submits a future release time for a published assessment and a class.\n\n## Preconditions\n\nThe teacher is authorized to assign to the class. The assessment is published and the requested time is in the future.\n\n## Outcomes\n\nSuccess: the schedule is recorded and students gain access at the release time under the eventual implementation tolerance. Failure: invalid time, unauthorized class, or unpublished assessment is rejected without creating a schedule. Delivery tolerance, cancellation, and retry semantics remain draft decisions.\n"
     },
     "valid": false,
     "diagnostics": [
@@ -805,7 +805,7 @@
     "name": "export products lists every product, sorted",
     "baseline": "scheduling",
     "files": {
-      "PRD-ABACUS.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/product/0.3\n  id: PRD-ABACUS\n  type: product\n  title: Abacus example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Abacus example\n\n## Scope\n\nA second invented product.\n"
+      "PRD-ABACUS.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/product/0.4\n  id: PRD-ABACUS\n  type: product\n  title: Abacus example\n  status: draft\n  owner: team-assessment\n  visibility: internal\n  audiences: [engineering]\n---\n\n# Abacus example\n\n## Scope\n\nA second invented product.\n"
     },
     "valid": true,
     "diagnostics": [],
@@ -975,8 +975,8 @@
           },
           "review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-AUTH": "05ad205fe050e7065ec2cac56021d53e5c51eedddced655105d3285e34ef51e7"
             },
             "hash": "content-v1",
             "snapshot": null
@@ -1172,8 +1172,8 @@
           },
           "review": {
             "sources": {
-              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
-              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+              "BEH-ASMT-SCHEDULE": "1437fa81be5a7ad08abc356672089796329cd5a5274680aa2e41b8372f16fc14",
+              "RULE-ASMT-FUTURE": "267c13cb402e345ddf97bb9f7319ec5de4135c213fc557ed89577740a8eacbfd"
             },
             "hash": "content-v1",
             "snapshot": null
@@ -1268,8 +1268,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -1305,7 +1305,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "c1753228322a3740798cc52566ed05c87466e413b0f3ff6d2f675fde38ebcfae"
+        "subjectHash": "2f96c244f5bd6ec134f7c2b202fe2162ddc24c3910a73e5f2775e06d77c2429d"
       }
     ],
     "valid": true,
@@ -1321,11 +1321,11 @@
               "id": "TEST-ASMT-SCHEDULE",
               "status": "current-pass",
               "binding": "subject",
-              "subject": "c1753228322a3740798cc52566ed05c87466e413b0f3ff6d2f675fde38ebcfae",
+              "subject": "2f96c244f5bd6ec134f7c2b202fe2162ddc24c3910a73e5f2775e06d77c2429d",
               "latest": {
                 "evidenceId": "EV-SUBJECT-01",
                 "binding": "subject",
-                "subjectHash": "c1753228322a3740798cc52566ed05c87466e413b0f3ff6d2f675fde38ebcfae"
+                "subjectHash": "2f96c244f5bd6ec134f7c2b202fe2162ddc24c3910a73e5f2775e06d77c2429d"
               }
             }
           ]
@@ -1389,8 +1389,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 2;\n",
@@ -1426,7 +1426,7 @@
         "result": "pass",
         "uri": "https://ci.example/lantern/runs/42#EV-SUBJECT-01",
         "binding": "subject",
-        "subjectHash": "c1753228322a3740798cc52566ed05c87466e413b0f3ff6d2f675fde38ebcfae"
+        "subjectHash": "2f96c244f5bd6ec134f7c2b202fe2162ddc24c3910a73e5f2775e06d77c2429d"
       }
     ],
     "valid": false,
@@ -1452,12 +1452,12 @@
               "id": "TEST-ASMT-SCHEDULE",
               "status": "stale",
               "binding": "subject",
-              "subject": "62044f10e8bfe2df77660b6afe1d5d0420bf6d6802230e96478e60093414a51e",
+              "subject": "01f2568ff6f7f2bfa8d5af3f8072415fe052cb8500c6d3ba66cbdb1a843be82e",
               "note": "the subject changed since the run at commit bbbbbbbbb: slice-file src/features/assessment/schedule/index.ts (SLICE-ASMT-SCHEDULE)",
               "latest": {
                 "evidenceId": "EV-SUBJECT-01",
                 "binding": "subject",
-                "subjectHash": "c1753228322a3740798cc52566ed05c87466e413b0f3ff6d2f675fde38ebcfae"
+                "subjectHash": "2f96c244f5bd6ec134f7c2b202fe2162ddc24c3910a73e5f2775e06d77c2429d"
               }
             }
           ]
@@ -1519,8 +1519,8 @@
       }
     },
     "files": {
-      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
-      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/slice/0.3\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
+      "SLICE-ASMT-CORE.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-CORE\n  type: slice\n  title: Assessment platform core slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/core/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/core/**\n    usesResources: []\n---\n\n# Assessment platform core slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n",
+      "SLICE-ASMT-EXERCISED.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/slice/0.4\n  id: SLICE-ASMT-EXERCISED\n  type: slice\n  title: Assessment exercised slice\n  status: draft\n  owner: team-platform\n  visibility: internal\n  audiences:\n  - engineering\n  revision: 1\n  slice:\n    kind: technical\n    rationale: Shared platform code the scheduling slice builds on.\n    domain: platform\n    entrypoints:\n    - src/platform/exercised/index.ts\n    layers: {}\n    claims:\n    - kind: source\n      path: src/platform/exercised/**\n    usesResources: []\n---\n\n# Assessment exercised slice\n\n## Responsibility\n\nA technical slice the scheduling slice depends on or the check drives.\n\n## Public contract\n\nIts index module.\n\n## Verification\n\nExercised through the scheduling verification.\n"
     },
     "sources": {
       "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n",
@@ -1698,7 +1698,7 @@
     "name": "export a slice's surfaces as authored: keys in code-unit order, each surface's knowledge in declared order",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {
@@ -1871,7 +1871,7 @@
     "name": "export withholds restricted knowledge from a surface, keeps the key and counts it",
     "baseline": "scheduling",
     "files": {
-      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: restricted\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
+      "KB-ASMT-CLASSES.md": "---\nmarkset: 0\nintentset:\n  spec: '0.4'\n  profile: intentset/knowledge/0.4\n  id: KB-ASMT-CLASSES\n  type: knowledge\n  title: Choose a class\n  status: draft\n  owner: team-assessment\n  visibility: restricted\n  audiences:\n  - teacher\n  revision: 1\n  links:\n    explains:\n    - BEH-ASMT-SCHEDULE\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n---\n\n# Choose a class\n\n## Guidance\n\nChoose a class, for teachers.\n"
     },
     "patch": {
       "SLICE-ASMT-SCHEDULE.md": {

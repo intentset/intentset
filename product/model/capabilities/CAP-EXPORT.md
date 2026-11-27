@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/capability/0.3
+  spec: '0.4'
+  profile: intentset/capability/0.4
   id: CAP-EXPORT
   type: capability
   title: Hand the model to other tools under a contract

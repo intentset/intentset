@@ -126,7 +126,7 @@ test("BEH-LIST: --from reads an export alone and gives the tree's answer, with r
   const level = await run(elsewhere, "list", "--from", out, "--level", "L2");
   assert.equal(level.code, 2);
   assert.match(level.err, /--level reads the tree/);
-  writeFileSync(join(elsewhere, "bad.json"), '{"contract":"intentset/export/0.3"}');
+  writeFileSync(join(elsewhere, "bad.json"), '{"contract":"intentset/export/0.4"}');
   const bad = await run(elsewhere, "list", "--from", "bad.json");
   assert.equal(bad.code, 2);
   assert.match(bad.err, /unsupported-contract/);

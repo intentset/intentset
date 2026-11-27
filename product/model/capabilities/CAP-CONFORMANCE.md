@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/capability/0.3
+  spec: '0.4'
+  profile: intentset/capability/0.4
   id: CAP-CONFORMANCE
   type: capability
   title: Check an implementation against the suite

@@ -78,16 +78,16 @@ repository gives it an older one the command says what to run instead. To see a
 small model first, `npx intentset init --example --root <an empty directory>` writes the example there: an invented
 online shop's accounts, the one intentset.org tells.
 
-**Status: v0.3 draft.** The specifications are ready for review, and the reference implementation is on npm as
+**Status: v0.4 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
 release changed, and whether the specifications, the conformance suite or the export contract moved.
 
 Ten packages are published under the `@intentset` scope: `core`, `markset-adapter`, `architecture`, `verification`, `publisher`, `help`, `atlas`, `mcp`, `conformance-suite` and `cli`.
 
-- Specifications: [`spec/core-0.3.md`](spec/core-0.3.md), [`spec/vsa-0.3.md`](spec/vsa-0.3.md),
+- Specifications: [`spec/core-0.4.md`](spec/core-0.4.md), [`spec/vsa-0.4.md`](spec/vsa-0.4.md),
   the profile contract a team's own profile follows, [`spec/profile-contract.md`](spec/profile-contract.md)
   ([how to write one](docs/writing-a-profile.md)), the reference profile
-  [`spec/profile-typescript-amplify-gen2-0.3.md`](spec/profile-typescript-amplify-gen2-0.3.md),
+  [`spec/profile-typescript-amplify-gen2-0.4.md`](spec/profile-typescript-amplify-gen2-0.4.md),
   [`spec/publication.md`](spec/publication.md), the export contract other tools read,
   [`spec/export.md`](spec/export.md), and the list contract `intentset list` writes, [`spec/list.md`](spec/list.md)
 - Examples: [`examples/shop/`](examples/shop/), an invented online shop, which `init --example` writes and

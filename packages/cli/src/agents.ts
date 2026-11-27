@@ -167,8 +167,8 @@ three with it. A new behavior looks like this, one recognizable promise includin
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-AREA-NAME
   type: behavior
   title: The promise in a few words, such as Schedule a student assessment
@@ -212,8 +212,8 @@ otherwise presentation, application, policy, model and external:
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/slice/0.3
+  spec: '0.4'
+  profile: intentset/slice/0.4
   id: SLICE-AREA-NAME
   type: slice
   title: The code's job in a few words, such as Assessment scheduling
@@ -261,8 +261,8 @@ matches a run to it:
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-AREA-NAME
   type: verification
   title: What the check proves, such as Unit test of scheduling an assessment

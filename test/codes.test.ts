@@ -24,6 +24,12 @@ const root = resolve(import.meta.dirname, "..");
  */
 const REVIEW_ONLY = ["AMP003", "AMP005", "AMP012", "AMP013", "TS005", "VSA007", "VSA008", "VSA010", "VSA011", "VSA012"];
 
+/**
+ * Codes that were renamed: each is retired and never reused (VSA §2). The specifications still name one, where they
+ * say what it became, so it is in their text and in no case and no check.
+ */
+const RETIRED = ["TS007"];
+
 /** Intentset's own code shape (Core §11). Markset's codes, origin `syntax`, are Markset's to specify. */
 const CODE = /\b[A-Z]{2,5}[0-9]{3}\b/gu;
 
@@ -75,7 +81,8 @@ test("the codes the specifications name are the codes the suite exercises, plus 
   const spec = await specCodes();
   const fixtures = await fixtureCodes();
   assert.ok(spec.size > 40, `found only ${spec.size} codes in spec/`);
-  assert.deepEqual(sorted(spec), sorted(new Set([...fixtures, ...REVIEW_ONLY])));
+  assert.deepEqual(sorted(spec), sorted(new Set([...fixtures, ...REVIEW_ONLY, ...RETIRED])));
+  for (const code of RETIRED) assert.ok(!fixtures.has(code), `${code} is retired, so no case expects it`);
   for (const code of REVIEW_ONLY) assert.ok(!fixtures.has(code), `${code} has cases, so it is not review-only`);
 });
 
@@ -85,6 +92,8 @@ test("every code the implementation reports is specified, and none of the review
   assert.ok(implemented.size > 30, `found only ${implemented.size} codes in packages/*/src`);
   for (const code of implemented) assert.ok(spec.has(code), `${code} is reported but no specification names it`);
   for (const code of REVIEW_ONLY) assert.ok(!implemented.has(code), `${code} is reported, so it is not review-only`);
+  for (const code of RETIRED)
+    assert.ok(!implemented.has(code), `${code} is retired, and a retired code is never reused`);
 });
 
 test("each review assertion is called one where the specification defines it", async () => {
@@ -94,8 +103,19 @@ test("each review assertion is called one where the specification defines it", a
   for (const code of REVIEW_ONLY) {
     const paragraphs = [...texts.values()].flatMap((t) => t.split(/\n\s*\n/u));
     const said = paragraphs.some(
-      (p) => p.includes(code) && /review assertions? in v0\.3|are review assertions/u.test(p),
+      (p) => p.includes(code) && /review assertions? in v0\.4|are review assertions/u.test(p),
     );
     assert.ok(said, `no paragraph that names ${code} says it is a review assertion`);
+  }
+});
+
+test("each retired code is called retired where the specifications name what it became", async () => {
+  const texts = await specTexts();
+  const paragraphs = [...texts.values()].flatMap((t) => t.split(/\n\s*\n/u));
+  for (const code of RETIRED) {
+    assert.ok(
+      paragraphs.some((p) => p.includes(code) && /is retired/u.test(p)),
+      `no paragraph that names ${code} says it is retired`,
+    );
   }
 });

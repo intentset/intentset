@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ARCH-OUTSIDE-PACKAGES
   type: behavior
   title: A package that reaches outside is imported only from the seam, and never from a pure layer
@@ -39,4 +39,4 @@ Success: an import from the seam layer passes. Failure: an import from a pure la
 
 ## Sources
 
-- `spec/vsa-0.3.md` §2 and §5, `spec/profile-contract.md` §2 and §3, and ADR 0030.
+- `spec/vsa-0.4.md` §2 and §5, `spec/profile-contract.md` §2 and §3, and ADR 0030.

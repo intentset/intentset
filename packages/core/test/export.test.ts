@@ -84,11 +84,11 @@ test("the schema rejects what a consumer must reject", () => {
     "the earlier contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.6")),
+    bad((e) => (e.contract = "intentset/export/0.7")),
     "the previous contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.8")),
+    bad((e) => (e.contract = "intentset/export/0.9")),
     "a later contract version",
   );
   assert.ok(
@@ -108,7 +108,7 @@ test("the schema rejects what a consumer must reject", () => {
     "invalid artifact ID",
   );
   assert.ok(
-    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.3")),
+    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.4")),
     "profile mismatching type",
   );
   assert.ok(
@@ -214,7 +214,7 @@ test("BEH-EXPORT: a bad pin and a bad tip keyed by a withheld artifact are repor
       ? plainCarrier(
           input.path,
           input.source
-            .replace(/RULE-ASMT-AUTH: d241506c\w+/, "RULE-ASMT-AUTH: ''")
+            .replace(/RULE-ASMT-AUTH: '?05ad205f\w+'?/, "RULE-ASMT-AUTH: ''")
             .replace(
               "    RULE-ASMT-FUTURE: The release time",
               "    RULE-ASMT-AUTH: ''\n    RULE-ASMT-FUTURE: The release time",

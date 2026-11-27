@@ -612,7 +612,7 @@ test("BEH-REVIEW-BASELINE: review lists the baseline entries the base did not ho
   assert.match(review.out, /^## Baseline \(baseline\.json: 2 entries, 1 at the base\)$/m);
   const added = review.out.slice(review.out.indexOf("### Added since the base"), review.out.indexOf("### Retired"));
   assert.match(added, /^### Added since the base \(1\)$/m);
-  assert.match(added, new RegExp(`^- TS007 ${POLICY.replaceAll(".", "\\.")} \\[useMemo\\]: .* imports "react"`, "m"));
+  assert.match(added, new RegExp(`^- VSA016 ${POLICY.replaceAll(".", "\\.")} \\[useMemo\\]: .* imports "react"`, "m"));
   const failed = await run(
     dir,
     "review",
@@ -730,7 +730,7 @@ test("BEH-PUBLISH: publish from the example with its knowledge demoted to a draf
     "snapshot.json",
   ]);
   const help = JSON.parse(readFileSync(join(dir, "published", "help.json"), "utf8"));
-  assert.equal(help.profile, "intentset/help/0.3");
+  assert.equal(help.profile, "intentset/help/0.4");
   assert.deepEqual(help.tips, {});
 });
 
@@ -749,7 +749,7 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
     "snapshot.json",
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");
-  assert.match(markset, /intentset\/publication\/0\.3/);
+  assert.match(markset, /intentset\/publication\/0\.4/);
   for (const internal of ["Schedule a student assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
     for (const file of readdirSync(out))
       assert.ok(!readFileSync(join(out, file), "utf8").includes(internal), `${file}: ${internal}`);
@@ -801,7 +801,7 @@ test("BEH-PUBLISH: publishing the same knowledge at two commits writes the same 
   const before = JSON.parse(read("first", "snapshot.json"));
   const after = JSON.parse(read("second", "snapshot.json"));
   assert.deepEqual(Object.keys(before), ["profile", "derived", "commit", "graphHash"]);
-  assert.equal(before.profile, "intentset/snapshot/0.3");
+  assert.equal(before.profile, "intentset/snapshot/0.4");
   assert.equal(before.commit, head);
   assert.match(first.out, new RegExp(`^Snapshot: commit ${head}, graph ${before.graphHash}$`, "m"));
   assert.notEqual(after.commit, before.commit);
@@ -896,7 +896,7 @@ test("BEH-PUBLISH-READER: a repeated --role publishes for the reader holding eve
   assert.equal(both.code, 0, both.out + both.err);
   assert.match(both.out, /audience teacher, PRD-LANTERN pilot-1, roles \[administrator, teacher\], edition standard/);
   const index = JSON.parse(readFileSync(join(dir, "both", "index.json"), "utf8"));
-  assert.equal(index.profile, "intentset/publication-index/0.3");
+  assert.equal(index.profile, "intentset/publication-index/0.4");
   assert.deepEqual(index.request.role, ["administrator", "teacher"]);
   const help = JSON.parse(readFileSync(join(dir, "both", "help.json"), "utf8"));
   assert.deepEqual(help.availability.role, ["administrator", "teacher"]);

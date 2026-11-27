@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-ARCH-LAYER-PACKAGES
   type: behavior
   title: A layer imports only the packages its policy allows, and only presentation renders
@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-ARCHITECTURE
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC]
@@ -34,8 +34,8 @@ A slice that declares its layers, or uses the reference layout's `client/`, `dom
 
 ## Outcomes
 
-Success: a package the layer's policy does not name, and JSX in the presentation layer, composition, shared code or a test, pass. Failure: a forbidden package is TS007, naming the layer and the pattern it matched; JSX in the application, policy, model or external layer is TS008 at the first element; a `forbiddenPackages` that is not a mapping of layers to valid patterns is CFG001, and the default stays.
+Success: a package the layer's policy does not name, and JSX in the presentation layer, composition, shared code or a test, pass. Failure: a forbidden package is VSA016, naming the layer and the pattern it matched; JSX in the application, policy, model or external layer is TS008 at the first element; a `forbiddenPackages` that is not a mapping of layers to valid patterns is CFG001, and the default stays.
 
 ## Sources
 
-- `spec/profile-typescript-amplify-gen2-0.3.md` §3.
+- `spec/profile-typescript-amplify-gen2-0.4.md` §3.

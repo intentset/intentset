@@ -1,5 +1,5 @@
 {
-  "contract": "intentset/export/0.7",
+  "contract": "intentset/export/0.8",
   "cases": [
     {
       "name": "full: every report, one restricted artifact withheld",
@@ -12,7 +12,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [
@@ -39,7 +39,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [
@@ -66,7 +66,7 @@
         "accept": true,
         "snapshot": {
           "commit": null,
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [],
@@ -85,7 +85,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [
@@ -109,7 +109,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [
@@ -133,7 +133,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [
@@ -157,7 +157,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "10ac4fd040bef66edfcf92e4dc69bca4b9a8f589d131a5406843c5152d00a2af"
+          "graphHash": "890f891c6766115f26a8352b25e715e12effbdca7ea8973dddd97bb6ce3c2eb6"
         },
         "validation": "fail",
         "supplied": [
@@ -181,7 +181,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "ead25c2e71b091cbc7f349916f9e142ed7ea6fd5c66209067d886e87e3524167"
+          "graphHash": "20916f7bd900deb816b6f5d5a72a0892f33bd43148d2fb186664e67194c679f2"
         },
         "validation": "fail",
         "supplied": [
@@ -203,7 +203,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424"
+          "graphHash": "d7f0de0de82fc26f2599f631a8d93ae8c68552bc3941dd1b17a8b9ac3c9e9339"
         },
         "validation": "pass",
         "supplied": [
@@ -224,7 +224,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "a1effba38ea9e78fdcbd5de6fe563f68c8096d2fca52844ab44e59019c48c59b"
+          "graphHash": "5c335955dd8fff6f1778fa5844475799a081131e7a74e1c2d8270d638f56b361"
         },
         "validation": "pass",
         "supplied": [
@@ -245,7 +245,7 @@
         "accept": true,
         "snapshot": {
           "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-          "graphHash": "13110193cd53402eb1f48cbf3d8dee9a37fc9836455069abee75e6663c4b6f2f"
+          "graphHash": "e715fe3d566b29a4d315cbc98136f5abae89423cb5ea44174fd5361c7abdf026"
         },
         "validation": "pass",
         "supplied": [],
@@ -319,7 +319,7 @@
       "notes": "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
     },
     {
-      "name": "the previous contract version",
+      "name": "the contract two versions back",
       "file": "unsupported-contract-0.6.json",
       "connection": {
         "repository": "example/scheduling",
@@ -330,6 +330,19 @@
         "category": "unsupported-contract"
       },
       "notes": "0.6 carried a model written against the specifications' 0.2, and a 0.7 reader reads one written against 0.3. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
+    },
+    {
+      "name": "the previous contract version",
+      "file": "unsupported-contract-0.7.json",
+      "connection": {
+        "repository": "example/scheduling",
+        "product": "PRD-LANTERN"
+      },
+      "expect": {
+        "accept": false,
+        "category": "unsupported-contract"
+      },
+      "notes": "0.7 carried a model written against the specifications' 0.3, in which the package policy's code was TS007, and a 0.8 reader reads one written against 0.4, where it is VSA016. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together."
     },
     {
       "name": "a later contract version",

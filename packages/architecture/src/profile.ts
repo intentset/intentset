@@ -30,7 +30,7 @@ import { READERS, type Reader } from "./reader.ts";
 export const PROFILE_PATH = ".intentset/profile.yaml";
 
 /** The plain TypeScript profile: the layers, their matrix and the layout, and no stack's rules. */
-export const TYPESCRIPT_PROFILE = "intentset/typescript/0.3";
+export const TYPESCRIPT_PROFILE = "intentset/typescript/0.4";
 
 /**
  * The profiles this release ships, as profile files. The reference profile is the TypeScript one with the Amplify
@@ -386,14 +386,18 @@ export function readProfile(
   }
 
   if (config.language !== "" && !READERS.some((reader) => reader.language === config.language)) {
-    report(
-      fieldOf("language"),
-      lineOf("language"),
-      `The profile's language is ${config.language}, which this release does not read, so no file's imports were checked.`,
-      `This release reads ${READERS.map((reader) => reader.language).join(", ")}; use a profile of one of those (profile contract §6).`,
-    );
+    const said = unreadLanguage(config.language);
+    report(fieldOf("language"), lineOf("language"), said.message, said.remediation);
   }
   return { config: diagnostics.length > 0 ? null : config, diagnostics };
+}
+
+/** What is said of a language this release has no reader for, wherever the language was stated (profile contract §6). */
+function unreadLanguage(language: string): { message: string; remediation: string } {
+  return {
+    message: `The profile's language is ${language}, which this release does not read, so no file's imports were checked.`,
+    remediation: `This release reads ${READERS.map((reader) => reader.language).join(", ")}; use a profile of one of those (profile contract §6).`,
+  };
 }
 
 /** `roles` as LayerRoles, or why it is not one. A role left out is played by no layer. */
@@ -440,8 +444,9 @@ export interface LoadedConfig {
   /** False when the profile's language has no reader: nothing was checked, which is never a pass. */
   read: boolean;
   /**
-   * True when the repository's profile file has an error. `diagnostics` then holds only the file's errors, and a
-   * check stops with them: no other profile stands in for it, and nothing else is checked (profile contract §2).
+   * True when the repository's profile file has an error, or the caller handed in a language this release does not
+   * read. `diagnostics` then holds only those errors, and a check stops with them: no other profile stands in, and
+   * nothing else is checked (profile contract §2, §6).
    */
   profileFailed: boolean;
 }
@@ -476,11 +481,27 @@ export function loadConfig(files: ReadonlyMap<string, string>, override?: Partia
   }
   const config = resolveConfigFrom(base, fileConfig, override);
   const reader = READERS.find((candidate) => candidate.language === config.language);
-  return {
-    config,
-    diagnostics,
-    reader: reader ?? NO_READER(config.language),
-    read: reader !== undefined,
-    profileFailed: false,
-  };
+  if (reader === undefined) {
+    // The language came from the caller, not from a file: the same error, and the check stops on it the same way.
+    const said = unreadLanguage(config.language);
+    return {
+      config,
+      diagnostics: [
+        {
+          code: "CFG001",
+          severity: "error",
+          origin: "architecture",
+          artifact: null,
+          path: null,
+          field: "/language",
+          message: said.message,
+          remediation: said.remediation,
+        },
+      ],
+      reader: NO_READER(config.language),
+      read: false,
+      profileFailed: true,
+    };
+  }
+  return { config, diagnostics, reader, read: true, profileFailed: false };
 }

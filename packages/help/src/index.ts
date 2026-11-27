@@ -31,7 +31,7 @@
  * `surface` option read it; a surface the file does not list has no lead.
  */
 
-export const HELP_PROFILE = "intentset/help/0.3";
+export const HELP_PROFILE = "intentset/help/0.4";
 /** The attribute a control carries to name the behavior it delivers. */
 export const BEHAVIOR_ATTRIBUTE = "data-behavior";
 /** Set on a bound control: the ID of the knowledge the tip came from, for a "learn more" link. */

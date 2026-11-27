@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-ARCH-BASELINE-IDENTITY
   type: verification
   title: A baseline entry holds what a finding is about, one imported name at a time
@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-ARCH-BASELINE-IDENTITY]
   verification:
@@ -26,6 +26,8 @@ intentset:
 `pnpm test` runs these tests with node:test. They show that a reworded message with a field keeps its keys (#20), that an import is one key per name with type-only names apart, that a baselined import taking another name is an error naming it while a dropped name retires its entry, that an entry written before 0.9 still matches, that an old entry written again reads as a rewrite rather than growth, and, through the whole check, that a swapped import is a new error and a stale entry. The selector is the behavior's ID, which each test's title, or the title of the group it is in, carries.
 
 - `packages/architecture/test/units.test.ts`: the group "an entry holds what a finding is about, one imported name at a time"
+
+The group "a renamed code (ADR 0030)" holds an entry written for TS007 to the finding reported as VSA016, with no stale entry.
 
 ## Expected result
 

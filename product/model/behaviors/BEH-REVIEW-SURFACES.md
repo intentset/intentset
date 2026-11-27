@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-REVIEW-SURFACES
   type: behavior
   title: Review lists the surfaces a change adds or rewords on a slice past draft

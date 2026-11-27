@@ -32,7 +32,7 @@
  *
  * Beside those: TS002 (warning) when one slice reaches another's entrypoint
  * by relative path although an alias for it is configured; AMP002 when a
- * slice file outside its client seam imports a backend SDK; TS007 when a
+ * slice file outside its client seam imports a backend SDK; VSA016 when a
  * slice file imports a package its layer's `forbiddenPackages` names, such as
  * a UI framework in a policy, a model or the client seam; TS001 (warning)
  * when an entrypoint re-exports with `export *`. TS008, a slice file outside
@@ -393,7 +393,7 @@ export function checkBoundaries(
       if (source !== undefined && layer !== null && pattern !== undefined) {
         findings.push(
           finding({
-            code: "TS007",
+            code: "VSA016",
             artifact,
             path: from,
             location,
@@ -653,10 +653,10 @@ function forbiddenRemediation(config: ArchitectureConfig, layer: string, specifi
             ? `The ${layer} layer stays free of UI and transport`
             : `The ${layer} layer is the seam, and the seam is transport`;
     return pure
-      ? `${subject}: keep what needs "${specifier}" in ${renderingLayer(config)} and pass plain values in (profile §3, TS007).`
-      : `${subject}: return plain values from it, and let a hook in ${renderingLayer(config)} hold the state "${specifier}" provides (profile §3, TS007).`;
+      ? `${subject}: keep what needs "${specifier}" in ${renderingLayer(config)} and pass plain values in (profile §3, VSA016).`
+      : `${subject}: return plain values from it, and let a hook in ${renderingLayer(config)} hold the state "${specifier}" provides (profile §3, VSA016).`;
   }
-  return `Move what needs "${specifier}" to a layer that may import it, or change forbiddenPackages in .intentset/architecture.yaml if the policy is wrong (TS007).`;
+  return `Move what needs "${specifier}" to a layer that may import it, or change forbiddenPackages in .intentset/architecture.yaml if the policy is wrong (VSA016).`;
 }
 
 /**

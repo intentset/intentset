@@ -39,7 +39,7 @@ function folders(profile: LayerProfile, layers: readonly string[]): string[] {
 }
 
 /**
- * The layer a file is in for the package and JSX rules (TS007, TS008): the one layer it is declared in, or, for a
+ * The layer a file is in for the package and JSX rules (VSA016, TS008): the one layer it is declared in, or, for a
  * slice that declares no layers, its client/, domain/policies/ or domain/models/ folder under the entrypoint
  * directory above it. Null when it is in none, or in more than one.
  */

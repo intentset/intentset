@@ -65,7 +65,7 @@ export interface ExportMeta {
   reports?: ExportReports;
 }
 
-/** spec/export.md: the `intentset/export/0.7` envelope over a validation result. */
+/** spec/export.md: the `intentset/export/0.8` envelope over a validation result. */
 export function exportGraph(result: ValidationResult, registries: Registries, meta: ExportMeta): ExportEnvelope {
   const { graph } = result;
   const withheld = withheldIds(graph, meta.includeRestricted === true);

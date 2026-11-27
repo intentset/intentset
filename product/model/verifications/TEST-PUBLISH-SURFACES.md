@@ -1,8 +1,8 @@
 ---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/verification/0.3
+  spec: '0.4'
+  profile: intentset/verification/0.4
   id: TEST-PUBLISH-SURFACES
   type: verification
   title: A surface is written only from an eligible slice, with only published leads, and omissions name only admitted slices

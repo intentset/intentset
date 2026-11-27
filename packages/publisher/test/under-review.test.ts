@@ -174,8 +174,8 @@ test("BEH-PUBLISH-UNDER-REVIEW: a request with keepUnderReview publishes the sam
   const other = `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/knowledge/0.3
+  spec: '0.4'
+  profile: intentset/knowledge/0.4
   id: KB-ASMT-CLASSES
   type: knowledge
   title: Choose a class
@@ -346,8 +346,8 @@ test("BEH-PUBLISH-UNDER-REVIEW: in a run for two roles a kept document may link 
   const knowledge = (id: string, title: string, role: string, pins: string, body: string) => `---
 markset: 0
 intentset:
-  spec: '0.3'
-  profile: intentset/knowledge/0.3
+  spec: '0.4'
+  profile: intentset/knowledge/0.4
   id: ${id}
   type: knowledge
   title: ${title}

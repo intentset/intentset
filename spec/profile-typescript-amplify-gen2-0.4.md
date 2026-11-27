@@ -1,14 +1,14 @@
 ---
-title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.3
-id: intentset/typescript-amplify-gen2/0.3
+title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.4
+id: intentset/typescript-amplify-gen2/0.4
 status: draft
-revision: 2026-11-25
+revision: 2026-11-27
 implementation: 0.18.0
 ---
 
-# TypeScript + AWS Amplify Gen 2 Reference Profile v0.3
+# TypeScript + AWS Amplify Gen 2 Reference Profile v0.4
 
-Implements [Core](core-0.3.md) and [Traceable VSA](vsa-0.3.md), and follows Core §1's change policy. Rules below are Intentset decisions, not requirements imposed by AWS. This profile says what `intentset architecture check` checks in a TypeScript and Amplify Gen 2 repository; it is not an Amplify starter, and it does not install or configure one.
+Implements [Core](core-0.4.md) and [Traceable VSA](vsa-0.4.md), and follows Core §1's change policy. Rules below are Intentset decisions, not requirements imposed by AWS. This profile says what `intentset architecture check` checks in a TypeScript and Amplify Gen 2 repository; it is not an Amplify starter, and it does not install or configure one.
 
 ## 1. Reference layout
 
@@ -49,7 +49,7 @@ This is a reference mapping; directory migrations are not a prerequisite to firs
 | TS005 | Runtime resolver/bundler and type-checker MUST agree on alias resolution |
 | TS006 | Wildcard aliases opening another slice's internals MUST NOT be permitted |
 
-TS005 is a review assertion in v0.3: the reference check resolves imports one way, from the TypeScript configuration, and cannot compare that with a bundler's. A reviewer asserts it, and until then it is unresolved, never passed.
+TS005 is a review assertion in v0.4: the reference check resolves imports one way, from the TypeScript configuration, and cannot compare that with a bundler's. A reviewer asserts it, and until then it is unresolved, never passed.
 
 Example alias: `@assessment/schedule` → `src/features/assessment/schedule/index.ts`. A slice that spans packages, its logic in a library package and its UI in an app, has an `index.ts` in each, and a consumer normally imports the one in its own package. A repository that lets its router import screens directly MUST name that one file (for example `src/app/routes/Router.tsx`) and MUST NOT widen the exemption to all application files. A separate composition entrypoint is an optional future design requiring an ADR, not the inherited convention. An alias is convenience, not an access-control boundary: the checker must resolve relative and transitive re-export paths too. TypeScript `paths` does not rewrite emitted imports, so bundler/runtime configuration must match it. [TypeScript paths documentation](https://www.typescriptlang.org/tsconfig/paths.html)
 
@@ -73,14 +73,13 @@ The matrix judges the file that defines each name an import takes, however the i
 
 UI MUST NOT call the backend directly. Policies/models MUST NOT import UI, clients, or cloud SDKs. Client code MAY use technical infrastructure. Use-cases MAY orchestrate declared foreign slice contracts. Shared neutral types/utilities are available to each layer. Features may import neutral infrastructure; backend operations remain restricted to client seams. Shared MUST NOT import infrastructure; infrastructure MAY import shared. Application initialization may configure technical clients but MUST NOT perform product service calls or own stores. The UI matrix encodes a downward flow and one responsibility per folder; type-only dependencies still count for cycle analysis. Pure exported policies MAY be called through another slice's public contract when dependency direction remains valid. Avoid a use-case importing a client that imports the use-case back.
 
-The client seam is transport: it calls the backend, adapts its types to the slice's models and normalizes errors (VSA §7). It does not import UI frameworks or render JSX, and neither do policies and models; a hook in the presentation layer holds the state. The matrix above names layers, so two rules carry it to packages and to rendering:
+The client seam is transport: it calls the backend, adapts its types to the slice's models and normalizes errors (VSA §7). It does not import UI frameworks or render JSX, and neither do policies and models; a hook in the presentation layer holds the state. The matrix above names layers, so two rules carry it to packages and to rendering. The package policy is VSA016 (VSA §5), a rule every profile has; until `0.4` this profile defined it as TS007, a code that is retired. Rendering is this profile's own:
 
 | Rule | Requirement |
 |---|---|
-| TS007 | A slice file MUST NOT import a package its layer's package policy forbids |
 | TS008 | Only the presentation layer renders: a slice file in the application, policy, model or external layer MUST NOT contain a JSX element |
 
-The package policy is `forbiddenPackages` in `.intentset/architecture.yaml`, a mapping from a layer to the patterns of the packages it may not import, matched against the specifier as written with `node:` removed: `react/**` matches `react` and `react/jsx-runtime` and not `react-dom`. It is the specifier and not the resolved path, because a resolved path under a package manager's store carries versions and changes on every upgrade. The default names the UI frameworks (`react`, `react-dom`, `react-native`, `preact`, `vue`, `svelte`, `solid-js` and `@angular/*`, each with its subpaths) for the `policy`, `model` and `external` layers; a repository adds its own UI kit and data-fetching hooks, such as `@mui/**` or `@tanstack/react-query/**`, and a mapping it gives replaces the default whole. A layer it does not name may import any package. Type-only imports count (TS004). A backend SDK is AMP002's and AMP006's question, and a workspace package that resolves to a file in the repository is judged by that file's region and layer. A slice that declares no layers has the reference layout's `client/`, `domain/policies/` and `domain/models/` folders as its external, policy and model layers for both rules. TS008 reads the file itself, because under the automatic JSX runtime a file that renders needs no import; composition, shared code and tests may render, and a layer a repository names itself is not judged.
+This profile's package policy is `forbiddenPackages`, in the profile or in `.intentset/architecture.yaml`, a mapping from a layer to the patterns of the packages it may not import, matched against the specifier as written with `node:` removed: `react/**` matches `react` and `react/jsx-runtime` and not `react-dom`. It is the specifier and not the resolved path, because a resolved path under a package manager's store carries versions and changes on every upgrade. The default names the UI frameworks (`react`, `react-dom`, `react-native`, `preact`, `vue`, `svelte`, `solid-js` and `@angular/*`, each with its subpaths) for the `policy`, `model` and `external` layers; a repository adds its own UI kit and data-fetching hooks, such as `@mui/**` or `@tanstack/react-query/**`, and a mapping it gives replaces the default whole. A layer it does not name may import any package. Type-only imports count (TS004). A backend SDK is AMP002's and AMP006's question, and a workspace package that resolves to a file in the repository is judged by that file's region and layer. A slice that declares no layers has the reference layout's `client/`, `domain/policies/` and `domain/models/` folders as its external, policy and model layers for both rules. TS008 reads the file itself, because under the automatic JSX runtime a file that renders needs no import; composition, shared code and tests may render, and a layer a repository names itself is not judged.
 
 ## 4. Amplify boundary and schema bridge
 
@@ -97,7 +96,7 @@ Intentset imposes the following additional constraints:
 | AMP005 | Backend authorization and product invariants MUST be verified independently of frontend validation |
 | AMP006 | Generated client/configuration and runtime SDK types MUST NOT leak into domain policy/model layers |
 
-AMP003 and AMP005 are review assertions in v0.3: whether two definitions describe one contract, and whether authorization is verified independently of the frontend, are not visible in an import graph. No reference check reports them. AMP007 to AMP013 apply only to a repository split into areas (§9).
+AMP003 and AMP005 are review assertions in v0.4: whether two definitions describe one contract, and whether authorization is verified independently of the frontend, are not visible in an import graph. No reference check reports them. AMP007 to AMP013 apply only to a repository split into areas (§9).
 
 **Inherited exception — response envelope only:** feature `client/` modules MAY import `parseResolverResponse` from `@/amplify/shared/lambda-core/`. A repository adopting this profile names that one module explicitly. Treat it as a narrow named exception, not permission to import handlers or resource definitions. Preserve one authoritative backend contract; do not manually copy transport types.
 

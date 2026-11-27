@@ -120,24 +120,26 @@ export function git(cwd: string, ...args: string[]): string {
 }
 
 /**
- * A record at 0.3 as an earlier version wrote it: `spec` and `profile`, and a knowledge record's `review` under the
+ * A record at 0.4 as an earlier version wrote it: `spec` and `profile`, and a knowledge record's `review` under the
  * extension 0.2 read it from (ADR 0025), the example's being `hash: content-v1` and so meaning the same at both.
  */
 export function asEarlier(text: string, version: string): string {
-  return text
-    .replace("spec: '0.3'", `spec: '${version}'`)
-    .replace(/(profile: intentset\/[a-z]+\/)0\.3/, `$1${version}`)
-    .replace(
-      /^ {2}review:\n((?: {4,}.*\n)+)/m,
-      (_, block: string) =>
-        `  extensions:\n    intentset.org/review:\n${block
-          .split("\n")
-          .map((line) => (line === "" ? line : `  ${line}`))
-          .join("\n")}`,
-    );
+  const moved = text
+    .replace("spec: '0.4'", `spec: '${version}'`)
+    .replace(/(profile: intentset\/[a-z]+\/)0\.4/, `$1${version}`);
+  // From 0.3 on the review is the core field, so a record at 0.3 differs from one at 0.4 in those two lines alone.
+  if (version !== "0.1" && version !== "0.2") return moved;
+  return moved.replace(
+    /^ {2}review:\n((?: {4,}.*\n)+)/m,
+    (_, block: string) =>
+      `  extensions:\n    intentset.org/review:\n${block
+        .split("\n")
+        .map((line) => (line === "" ? line : `  ${line}`))
+        .join("\n")}`,
+  );
 }
 
-/** The scheduling example as a git repository whose records declare an earlier version, and the same records at 0.3. */
+/** The scheduling example as a git repository whose records declare an earlier version, and the same records at 0.4. */
 export async function atEarlier(t: Context, version = "0.2") {
   const dir = await example(t);
   const files = readdirSync(join(dir, "product", "scheduling")).filter((name) => name.endsWith(".md"));

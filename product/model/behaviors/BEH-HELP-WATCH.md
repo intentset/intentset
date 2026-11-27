@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.3'
-  profile: intentset/behavior/0.3
+  spec: '0.4'
+  profile: intentset/behavior/0.4
   id: BEH-HELP-WATCH
   type: behavior
   title: Tips stay bound while the interface changes, and unbinding leaves the page as it was

@@ -138,12 +138,6 @@ export function checkArchitecture(
   const config = loaded.config;
   const model = buildModel(graph, registries, tree.files, config, loaded.reader);
   const unresolved: string[] = [];
-  if (!loaded.read) {
-    // Nothing was read, so nothing is passed (profile contract §6, design invariant 6).
-    unresolved.push(
-      `${PROFILE_PATH}: this release has no reader for ${config.language || "a profile that states no language"}, so no file's imports were checked`,
-    );
-  }
 
   for (const slice of model.slices) {
     for (const i of slice.invalidClaims) {
@@ -276,7 +270,9 @@ function profileRefused(errors: Diagnostic[], level: Level, mode: Mode): Archite
       baselined: 0,
       baselineStale: 0,
       unresolved: [
-        `${PROFILE_PATH}: the profile has ${errors.length === 1 ? "an error" : "errors"}, so nothing was checked`,
+        errors.every((error) => error.path === null)
+          ? "the language the check was given has no reader, so nothing was checked"
+          : `${PROFILE_PATH}: the profile has ${errors.length === 1 ? "an error" : "errors"}, so nothing was checked`,
       ],
       reviewRequired: [...REVIEW_REQUIRED],
     },
