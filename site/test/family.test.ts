@@ -40,10 +40,7 @@ test("the exemption is by how a page is made: rendered from spec/ or generated f
     "the specifications are rendered from spec/",
   );
   for (const page of generated)
-    assert.ok(
-      page.path.startsWith("specifications/") || page.path === "conformance/index.html",
-      page.path,
-    );
+    assert.ok(page.path.startsWith("specifications/") || page.path === "conformance/index.html", page.path);
 });
 
 test("no page links to either product", async () => {
