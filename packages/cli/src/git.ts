@@ -67,9 +67,23 @@ export function chooseBase(root: string, given: string | undefined): Base | null
   return { unavailable: "HEAD has no parent and no merge-base with main differs from it" };
 }
 
-export function changedFiles(root: string, base: Base | null): Omit<Changes, "base" | "baseUnavailable"> {
-  const committed =
-    base === null ? [] : paths(git(root, ["diff", "--relative", "--name-only", "-z", `${base.commit}...HEAD`]));
+/**
+ * Whether `commit` and HEAD have a common ancestor. A shallow fetch can leave a base that resolves and shares no
+ * history with HEAD; git then cannot say what changed since it, which is not the same as nothing having changed.
+ */
+export function sharesHistory(root: string, commit: string): boolean {
+  const out = git(root, ["merge-base", "HEAD", commit]);
+  return out !== null && out.trim() !== "";
+}
+
+/**
+ * The changed files, or null when there is a base and git could not compare it with HEAD: a caller must refuse
+ * rather than read "git could not say" as "nothing changed".
+ */
+export function changedFiles(root: string, base: Base | null): Omit<Changes, "base" | "baseUnavailable"> | null {
+  const diff = base === null ? "" : git(root, ["diff", "--relative", "--name-only", "-z", `${base.commit}...HEAD`]);
+  if (diff === null) return null;
+  const committed = paths(diff);
   const uncommitted = [
     ...paths(git(root, ["diff", "--relative", "--name-only", "-z", "HEAD"])),
     ...paths(git(root, ["ls-files", "-z", "--others", "--exclude-standard"])),
@@ -90,6 +104,7 @@ export const UNCHANGED_TRAILER = "Intentset-Unchanged";
 /** The slice IDs named in an Intentset-Unchanged trailer of any commit after the base, sorted. */
 export function acknowledgedSlices(root: string, base: Base | null): string[] {
   if (base === null) return [];
+  // A base with no history in common is refused before this is asked (`sharesHistory`), so null here is "no trailers".
   const out = git(root, ["log", `--format=%(trailers:key=${UNCHANGED_TRAILER},valueonly)`, `${base.commit}..HEAD`]);
   if (out === null) return [];
   return [...new Set(out.split(/[\s,]+/).filter((id) => id !== ""))].sort(compareStrings);

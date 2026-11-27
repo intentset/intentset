@@ -55,7 +55,7 @@ Any CI that runs Node works. It needs:
 
 - Node 22.18 or later.
 - The full git history, with main as `origin/main`. A checkout of the branch alone does not have it, and review stops with exit code 2: `intentset review: --base origin/main names no commit.` Fetch main before the review with `git fetch origin main:refs/remotes/origin/main`.
-- Not a shallow clone. With too little history, review can find nothing to compare, and pass.
+- Not a shallow clone. When main was fetched without its history, review stops with exit code 2 and says the base shares no history with HEAD.
 - The same commands, in the same order.
 
 ## Code that already breaks the boundaries

@@ -575,6 +575,23 @@ test("BEH-REVIEW-DRIFT: review lists a slice whose code changed while none of it
   assert.match(acknowledged.out, /- Acknowledged: a commit since the base says this changes no behavior/);
 });
 
+test("BEH-REVIEW-DRIFT: a base that shares no history with HEAD is refused, never read as nothing changed (#156)", async (t) => {
+  const dir = await committed(t);
+  write(dir, { [POLICY]: STRICTER });
+  git(dir, "commit", "-q", "-am", "stricter release time");
+  assert.equal((await run(dir, "review", "--base", "HEAD~1", "--fail-on-drift")).code, 1, "with history, drift fails");
+
+  // What a shallow fetch of main leaves: a commit that resolves and has no ancestor in common with HEAD.
+  const rootless = git(dir, "commit-tree", "HEAD~1^{tree}", "-m", "main, fetched with no history");
+  for (const flags of [[], ["--fail-on-drift"], ["--json"]]) {
+    const review = await run(dir, "review", "--base", rootless, ...flags);
+    assert.equal(review.code, 2, review.out + review.err);
+    assert.equal(review.out, "", "no report is written from a comparison git could not make");
+    assert.match(review.err, /^intentset review: the base [0-9a-f]{40} shares no history with HEAD/);
+    assert.match(review.err, /shallow clone or fetch: fetch the full history \(`fetch-depth: 0`/);
+  }
+});
+
 const HOOK = "src/features/assessment/schedule/ui/hooks/use-schedule.ts";
 const HOOK_CALLS_CLIENT = vsaCase("VSA006 a UI hook calls the client directly").sources?.[HOOK] as string;
 

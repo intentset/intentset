@@ -269,6 +269,32 @@ test("a scope or ignore pattern the matcher cannot honour is CFG001, not silentl
   );
 });
 
+test("a slice missing layers or usesResources is told what to write when there are none, and the empty values validate (VSA §3)", () => {
+  const slice = baseline.find((input) => input.path === "SLICE-ASMT-SCHEDULE.md")!;
+  const layers = /^ {4}layers:\n(?: {6,}.*\n)+/m;
+  const resources = /^ {4}usesResources:.*\n(?: {4}- .*\n)*/m;
+  assert.match(slice.source, layers);
+  assert.match(slice.source, resources);
+
+  const without = readArtifact(plainCarrier(slice.path, slice.source.replace(layers, "").replace(resources, "")));
+  assert.deepEqual(
+    without.diagnostics.map((d) => `${d.code} ${d.field}`),
+    ["CORE001 /intentset/slice/layers", "CORE001 /intentset/slice/usesResources"],
+  );
+  assert.match(without.diagnostics[0].remediation, /write `layers: \{\}`.*never invent a layer/);
+  assert.match(without.diagnostics[1].remediation, /write `usesResources: \[\]`/);
+
+  const empty = readArtifact(
+    plainCarrier(
+      slice.path,
+      slice.source.replace(layers, "    layers: {}\n").replace(resources, "    usesResources: []\n"),
+    ),
+  );
+  assert.deepEqual(empty.diagnostics, []);
+  assert.deepEqual(empty.artifact?.meta.slice?.layers, {});
+  assert.deepEqual(empty.artifact?.meta.slice?.usesResources, []);
+});
+
 test("a slice's entrypoints are a list; the earlier single key is unknown, and each entry is checked as a path", () => {
   const slice = baseline.find((input) => input.path === "SLICE-ASMT-SCHEDULE.md")!;
   const entry = "src/features/assessment/schedule/index.ts";

@@ -14,6 +14,21 @@ Earlier entries have only that detail. `pnpm run release:prepare` refuses an Unr
 another `###` heading, `pnpm run release:notes <version>` prints an entry's body, the release workflow uses it for the
 GitHub Release, and intentset.org's Changelog page and feed are built from this file.
 
+## Unreleased
+
+### Added
+
+- **The agent guide shows a slice's frontmatter**, with every required key, beside the behavior's (#169).
+
+### Fixed
+
+- **`intentset review` refuses a base that shares no history with HEAD**, as a shallow fetch leaves it, with exit 2, where it reported nothing changed and passed (#156).
+- **A slice missing `layers` or `usesResources` is told to write `layers: {}` or `usesResources: []` where there are none**, and never to invent a layer (#170).
+
+### Details
+
+**`intentset review` exits 2 when its base shares no history with HEAD, and a first slice can be written from the agent guide (#156, #169, #170).** Patch: no specification, conformance case or export moved. `review` ran `git diff <base>...HEAD`, which fails when the two have no common ancestor, and read the failure as no committed change, so `--fail-on-drift` passed a shallow CI checkout whatever it changed; it now stops before writing a review and says to fetch the full history. The guide `intentset init` writes gains a slice template whose six required keys include `layers: {}` and `usesResources: []`, which VSA §3 already allowed, and CORE001's remediation for either key missing says so; neither the check nor its message changed.
+
 ## 0.18.0 — 2026-11-27
 
 ### Breaking

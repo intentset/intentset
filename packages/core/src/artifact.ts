@@ -1089,6 +1089,18 @@ function readFormalizes(value: unknown, field: string, problem: Problem): Formal
   return out.length === 0 ? null : out;
 }
 
+/**
+ * What to write for a slice key that is missing. `layers` and `usesResources` are required even when there are none
+ * (VSA §3), and the empty value is the true statement: a layer invented to satisfy the check reads as the code's design.
+ */
+function missingSliceKey(key: string): string {
+  if (key === "layers")
+    return "Add `layers` under slice. Where the code has no layers, write `layers: {}` and say so in Responsibility; never invent a layer the code does not have (VSA §3).";
+  if (key === "usesResources")
+    return "Add `usesResources` under slice. Where the slice uses no shared resource, write `usesResources: []` (VSA §3).";
+  return `Add \`${key}\` under slice (VSA §3).`;
+}
+
 function readSlice(value: unknown, field: string, problem: Problem): SliceMeta | null {
   if (!isRecord(value)) {
     problem(
@@ -1114,7 +1126,7 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
   }
   for (const key of ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"]) {
     if (!Object.hasOwn(value, key) || value[key] === null) {
-      problem(`${field}/${key}`, `Slice field \`${key}\` is missing.`, `Add \`${key}\` under slice (VSA §3).`);
+      problem(`${field}/${key}`, `Slice field \`${key}\` is missing.`, missingSliceKey(key));
       ok = false;
     }
   }
