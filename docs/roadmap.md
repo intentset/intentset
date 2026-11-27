@@ -30,6 +30,7 @@ Nothing is announced beyond the current release. What comes next is decided by w
 
 Recent releases, with the reasons for each in the changelog:
 
+- **0.18.0** moved the specifications to 0.3 and the export to 0.7. A record's status now says only where its review stands, and whether its work exists is said apart. A help article whose sources changed can still be published, marked as under review, and a slice can say which articles lead each page of the product. `intentset migrate --to 0.3` moves a repository across.
 - **0.17.0** added `intentset approve`, which writes a person's approval into the drafts they name and checks the model still validates with it, and made `intentset review` list every record whose status or approval changed, so an approval is read by the pull request's reviewer like any other change.
 - **0.16.0** lets a record say who approved it, when and on what basis: a person read it, it was derived from something a person approved, or an agent attested it. A behavior, rule or scenario can also name the outside requirement it formalizes.
 - **0.15.0** gave a publication's snapshot a file of its own, so every other published file changes only when the knowledge does.

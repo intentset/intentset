@@ -3,7 +3,7 @@ title: TypeScript + AWS Amplify Gen 2 Reference Profile v0.3
 id: intentset/typescript-amplify-gen2/0.3
 status: draft
 revision: 2026-11-25
-implementation: 0.17.1
+implementation: 0.18.0
 ---
 
 # TypeScript + AWS Amplify Gen 2 Reference Profile v0.3

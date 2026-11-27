@@ -258,9 +258,8 @@ from source (the installed bin points at `dist/`, which only the build writes).
 Open work only. What shipped is in `CHANGELOG.md`, why in `docs/decisions/`, and the milestones (M0 to M5, all done)
 in `docs/implementation-plan.md` §5.
 
-- Branch `spec-0.3` holds the whole move to specifications 0.3 and export 0.7, ADRs 0023 to 0029 (issues #126,
-  #127, #129, #130 with #49, #142, #143 and #144), and awaits release as 0.18.0 and the maintainer's approval of the
-  drafts it added or returned to draft. A migration step's per-record rewrites go in `MIGRATIONS` in
+- 0.18.0 moved the specifications to 0.3 and the export to 0.7, ADRs 0023 to 0029 (issues #126, #127, #129, #130
+  with #49, #142, #143 and #144). The drafts it added or returned to draft await the maintainer's approval. A migration step's per-record rewrites go in `MIGRATIONS` in
   `packages/cli/src/commands/migrate.ts`.
 - Seventy records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
   verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
