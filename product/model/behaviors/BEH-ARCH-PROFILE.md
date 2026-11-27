@@ -11,7 +11,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   parent: CAP-ARCHITECTURE
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC, RULE-UNRESOLVED-NOT-PASS]
@@ -35,7 +35,7 @@ A repository checked at L2 or above. With no profile file, the reference profile
 
 ## Outcomes
 
-Success: the tree is checked against the repository's profile. Failure: a profile file that is wrong in any way is CFG001 for each thing wrong, and stops the check: the file is never applied in part, no other profile stands in for it, and the result holds the profile's errors and nothing else. A repository-specific key in the file is such an error, and so is a language the release does not read, which names the languages it reads. The check loads and runs no code a profile names.
+Success: the tree is checked against the repository's profile. Failure: a profile file that is wrong in any way is CFG001 for each thing wrong, and stops the check: the file is never applied in part, no other profile stands in for it, and the result holds the profile's errors and nothing else. A repository-specific key in the file is such an error, and so is a language the release does not read, which names the languages it reads; a caller that hands such a language in is refused with the same error, and the check stops the same way. The check loads and runs no code a profile names.
 
 ## Sources
 

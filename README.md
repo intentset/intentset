@@ -78,7 +78,7 @@ repository gives it an older one the command says what to run instead. To see a
 small model first, `npx intentset init --example --root <an empty directory>` writes the example there: an invented
 online shop's accounts, the one intentset.org tells.
 
-**Status: v0.3 draft.** The specifications are ready for review, and the reference implementation is on npm as
+**Status: v0.4 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
 release changed, and whether the specifications, the conformance suite or the export contract moved.
 

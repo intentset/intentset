@@ -2,7 +2,8 @@
 
 **Status:** accepted, 2026-11-27 (issue #158). Proposed 2026-11-27. The thirteen decisions under "Decided" were made
 by the maintainers the same day. The contract it describes is `spec/profile-contract.md`, which arrived with its cases
-and its implementation; the rename of TS007, the Next.js profile and the Python reader are the steps still to come.
+and its implementation. TS007 was renamed VSA016 the same day, which moved the specifications to `0.4` and the export
+to 0.8; the Next.js profile and the Python reader are the steps still to come.
 
 ## Context
 

@@ -38,4 +38,4 @@ Success: the review lists the comparison and exits 0. Failure: with `--fail-on-b
 
 ## Sources
 
-- `spec/vsa-0.3.md` §9.
+- `spec/vsa-0.4.md` §9.

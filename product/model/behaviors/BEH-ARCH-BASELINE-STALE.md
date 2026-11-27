@@ -38,4 +38,4 @@ Success: every entry matches a current violation, and the run passes on the base
 
 ## Sources
 
-- `spec/vsa-0.3.md` §9.
+- `spec/vsa-0.4.md` §9.

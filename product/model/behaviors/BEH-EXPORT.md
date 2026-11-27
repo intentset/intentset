@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 4
+  revision: 5
   parent: CAP-EXPORT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.7` envelope: the artifacts, each with its `delivery` as written (ADR 0017), the basis of its approval and the outside requirements it formalizes (ADR 0020), a knowledge record's review pins (ADR 0025), the edges, the diagnostics and the snapshot.
+Someone runs `intentset graph`, with the reports they ask for, and gets the `intentset/export/0.8` envelope: the artifacts, each with its `delivery` as written (ADR 0017), the basis of its approval and the outside requirements it formalizes (ADR 0020), a knowledge record's review pins (ADR 0025), the edges, the diagnostics and the snapshot.
 
 ## Preconditions
 

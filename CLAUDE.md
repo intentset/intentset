@@ -2,7 +2,7 @@
 
 Intentset keeps product intent, observable behavior, implementation ownership, verification and published knowledge
 connected, as readable Markdown files with YAML frontmatter in a repository. The graph, reports, Atlas and published
-knowledge are derived views; the files are authoritative. This repository is the v0.3 specifications, the conformance
+knowledge are derived views; the files are authoritative. This repository is the v0.4 specifications, the conformance
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.4.md`, `vsa-0.4.md`, `profile-contract.md` (what a profile is and what a team may write in
@@ -23,7 +23,9 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
    duplicate records and never rewrite files, with two exceptions, each only when asked and each refusing a tree with
    uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate
    --to <spec>` rewrites `spec` and `profile`, applies that version's transforms (for `0.3`, ADR 0023's status rewrite
-   and ADR 0025's move of the review), and re-pins the review pins that matched before the move; and `intentset approve`
+   and ADR 0025's move of the review), re-pins the review pins that matched before the move, and, for `0.4`, writes
+   VSA016 for TS007 in each exception record's `rule` and in the entries of the baseline `--baseline` names, and moves
+   the shipped profile `.intentset/profile.yaml` extends (ADR 0030); and `intentset approve`
    (ADR 0022) rewrites `status` and `approval` in the drafts it is given, and the review of a knowledge record among
    them, and, with `--renew-review`, only the review of the approved or deprecated knowledge it is given. Unknown keys inside
    `intentset` are errors except under `extensions`; unknown top-level keys are preserved and never interpreted.
@@ -107,7 +109,7 @@ learning from questions, and the AWS rules).
 
 - Diagnostic codes: `CORE001`–`CORE013`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
   of thing to fix, ADR 0024: an unreadable carrier is CORE010, a missing section CORE011, a field CORE001; an outcome
-  with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA015` and `REG001` (VSA §2, §5, §9; VSA015 is the portable rule for the packages a profile lists as reaching outside, ADR 0030), `TS001`–`TS008` and
+  with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA016` and `REG001` (VSA §2, §5, §9; VSA015 is the portable rule for the packages a profile lists as reaching outside and VSA016 the package policy, ADR 0030), `TS001`–`TS006` and `TS008` (TS007 is retired: it was the package policy until `0.4`, and a retired code is never reused) and
   `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
@@ -263,6 +265,10 @@ from source (the installed bin points at `dist/`, which only the build writes).
 Open work only. What shipped is in `CHANGELOG.md`, why in `docs/decisions/`, and the milestones (M0 to M5, all done)
 in `docs/implementation-plan.md` §5.
 
+- The specifications are 0.4 and the export 0.8 on main, not yet released (ADR 0030, #158): the one breaking change
+  is the renamed code, and the release that carries it says so first in its entry. A new step goes in `MIGRATIONS`
+  with the codes it renames (`codes`), and a renamed code joins `RETIRED` in `test/codes.test.ts` and
+  `FINGERPRINTED_AS` in `packages/architecture/src/baseline.ts`, so a baseline written before the rename still holds.
 - 0.18.0 moved the specifications to 0.3 and the export to 0.7, ADRs 0023 to 0029 (issues #126, #127, #129, #130
   with #49, #142, #143 and #144). The drafts it added or returned to draft await the maintainer's approval. A migration step's per-record rewrites go in `MIGRATIONS` in
   `packages/cli/src/commands/migrate.ts`.
@@ -272,8 +278,8 @@ in `docs/implementation-plan.md` §5.
 - Architecture profiles for other stacks (#158): ADR 0030, accepted 2026-11-27, makes a profile a data file and keeps
   the language readers built in, so the check still runs no code. Done: the reader interface, and the contract
   (`spec/profile-contract.md`) with the reference profile as data and `.intentset/profile.yaml` for a team's own.
-  Next, in this order: TS007 renamed to VSA016 (which moves the specifications to 0.4), TypeScript with Next.js, then
-  Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
+  TS007 is VSA016, which moved the specifications to 0.4 and the export to 0.8 (unreleased; `intentset migrate --to
+  0.4` moves a repository). Next, in this order: TypeScript with Next.js, then Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
   from the profile); the Amplify checks run only where the profile names the `amplify` rule set; a profile file with
   an error stops the check with its errors and nothing else; a profile holds policy and layout, and `scope`, `areas`,
   `routerFiles`, `responseParserModules`, `schemaBridge`, `sharedBackend` and `conditions` stay in

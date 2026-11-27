@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 6
+  revision: 7
   links:
     verifies: [BEH-MIGRATE]
   verification:
@@ -34,6 +34,8 @@ intentset:
 - `packages/cli/test/cli.test.ts`: the tests "migrate --to 0.3 from 0.2 (and from 0.1) re-pins each content-v1 pin that matched its source, so a review current before the move is current after it with no manual step", over the example with its knowledge pinned at the earlier version, which after the move equals the example byte for byte and is current at L4; "migrate re-pins a whole-file review as file-v1, each pin the hash of its source's file as moved"; "migrate leaves a pin that did not match before the move as written, so a stale review stays stale", over a rule changed after the review, which L4 then names; "migrate leaves a 0.2 review that named hash: file-v1, a kind its reader did not know, stale after the move", whose whole-file pins are left and which L4 names; "migrate leaves a knowledge record that declares neither version byte for byte, its matched pins included", over knowledge at `0.4` whose review pins the sources at `0.2`; "migrate re-pins a knowledge record already at 0.3 whose sources the same run moves"; "migrate names a matched pin it cannot reach, leaves it as written, re-pins the others, and exits 1", over a pin key written as an escape; "migrate names the review pins it could not compare when the knowledge (or a source it pins) does not read at 0.3, and a run after the key goes re-pins them", over a `__proto__` key in the knowledge and in a behavior it pins, each naming the pins, exiting 1, and then, discarded, fixed and migrated again, current at L4; and "migrate keeps current a review of the repository's own model, its records moved from 0.2 in the same run", over a copy of `product/model` at `0.2` with two articles added, one pinning content and one whole files, each current at L4 after the move while every model record returns to its bytes
 - `packages/cli/test/cli.test.ts`: the test "a move from 0.2, which did not read a review's self, never re-pins one, matched or not", over `repinReviews` given a knowledge record at `0.2` and as moved (ADR 0027)
 - `packages/cli/test/cli.test.ts`: the test "migrate refuses a tree with uncommitted changes, and a target it does not know, and writes nothing"
+
+Two more tests cover the move to `0.4`: from `0.3`, where a record is refused until it is moved and the review found current is re-pinned; and the rename of TS007 to VSA016 in an exception's rule and a baseline's entries with the profile's `extends`, leaving another rule, another code, a file that is not a record and a second run alone.
 
 ## Expected result
 

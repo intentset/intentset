@@ -39,4 +39,4 @@ Success: a reader of the records, the export or the context can tell a record a 
 
 ## Sources
 
-- `spec/core-0.3.md` §7, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.
+- `spec/core-0.4.md` §7, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.

@@ -38,4 +38,4 @@ Success: a name defined in a layer the importer may import passes, however it wa
 
 ## Sources
 
-- `spec/vsa-0.3.md` §5 and `spec/profile-typescript-amplify-gen2-0.3.md` §3.
+- `spec/vsa-0.4.md` §5 and `spec/profile-typescript-amplify-gen2-0.4.md` §3.

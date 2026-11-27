@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-ARCHITECTURE
   links:
     governedBy: [RULE-DETERMINISTIC]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-`intentset architecture check --write-baseline` writes one entry per violation at the size a change fixes it: for a finding about an import, one entry per name the import takes, keyed by how it imports, its target and the name; for another finding, by its file and slice edges, its field, or, with neither, its message. A migration run holds an error when an entry holds each of its keys (VSA §9).
+`intentset architecture check --write-baseline` writes one entry per violation at the size a change fixes it: for a finding about an import, one entry per name the import takes, keyed by how it imports, its target and the name; for another finding, by its file and slice edges, its field, or, with neither, its message. A migration run holds an error when an entry holds each of its keys (VSA §9). A finding of a rule whose code was renamed is keyed under the code its entries were first written with, so an entry written for TS007 holds the same finding now reported as VSA016 (ADR 0030).
 
 ## Preconditions
 
@@ -38,4 +38,4 @@ Success: rewording a message, such as one that lists the declared areas, leaves 
 
 ## Sources
 
-- `spec/vsa-0.3.md` §9.
+- `spec/vsa-0.4.md` §9.

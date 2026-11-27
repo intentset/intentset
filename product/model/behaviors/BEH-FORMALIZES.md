@@ -39,4 +39,4 @@ Success: a record states which outside requirement it formalizes, in a place eve
 
 ## Sources
 
-- `spec/core-0.3.md` §5, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.
+- `spec/core-0.4.md` §5, `spec/publication.md` §3 and `spec/export.md` §2, and ADR 0020.

@@ -39,4 +39,4 @@ Success: a draft written from existing code is told apart from a proposal, in th
 
 ## Sources
 
-- `spec/core-0.3.md` §7, VSA §3, `spec/publication.md` §1, `spec/list.md` §1 and `spec/export.md` §2, ADR 0017 and ADR 0023.
+- `spec/core-0.4.md` §7, VSA §3, `spec/publication.md` §1, `spec/list.md` §1 and `spec/export.md` §2, ADR 0017 and ADR 0023.

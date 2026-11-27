@@ -16,6 +16,14 @@ GitHub Release, and intentset.org's Changelog page and feed are built from this 
 
 ## Unreleased
 
+### Breaking
+
+- **Every record moves to specifications `0.4`, and the export to `0.8`.** Run `intentset migrate --to 0.4` in each repository (from `0.3`, `0.2` or `0.1`), with `--baseline <file>` if it keeps an architecture baseline, and commit the result (ADR 0030, #158).
+- **The diagnostic code TS007 is VSA016, and TS007 is retired.** The package policy is a rule every profile has; the check and its message are the same. `migrate` writes the new code in each exception record's `rule` and each baseline entry; change it yourself in a CI filter or a script that names it.
+- **The shipped profiles are `intentset/typescript/0.4` and `intentset/typescript-amplify-gen2/0.4`**; `migrate` moves the one `.intentset/profile.yaml` extends.
+- **`help.json` is `intentset/help/0.4`, and the publication, publication index, snapshot and Atlas profiles are `0.4`**; `readHelp` refuses a `0.3` file, so publish again and move the reader with it. No member changed.
+- **A reader refuses an `intentset/export/0.7` envelope** as `unsupported-contract`; `spec` in the envelope is `0.4`.
+
 ### Added
 
 - **The agent guide shows a slice's frontmatter**, with every required key, beside the behavior's (#169).
@@ -30,6 +38,8 @@ GitHub Release, and intentset.org's Changelog page and feed are built from this 
 - **A slice missing `layers` or `usesResources` is told to write `layers: {}` or `usesResources: []` where there are none**, and never to invent a layer (#170).
 
 ### Details
+
+**The specifications move to `0.4` and the export to `0.8`: the package policy's code is VSA016, a rule of Traceable VSA that every profile has, and TS007 is retired (ADR 0030, #158).** Breaking: Core, VSA and the reference profile are `0.4`, the suite's four TS007 cases are VSA016 cases with their expectations otherwise as they were, and the export contract is `intentset/export/0.8`, whose `spec` is `0.4`. Nothing else changes shape: the check, its message and its remediation differ only in the code they name. A record at `0.3`, `0.2` or `0.1` is CORE001 with a remediation naming `intentset migrate --to 0.4`, which rewrites `spec` and `profile`, re-pins each knowledge review pin that matched before the move, and writes VSA016 for TS007 where a repository wrote the code: the `rule` of each exception record under `architecture/exceptions/` and the `code` of each entry of the baseline `--baseline` names. A baseline entry written for TS007 keeps holding its finding without that rewrite, because a renamed rule's finding is fingerprinted under the code its entries were first written with. An exception for TS007 that is not migrated covers nothing. A shipped profile's ID carries the version, so `migrate` also moves the `extends` of `.intentset/profile.yaml`. The generated profiles move with the specifications, as at each earlier move. `migrate` now reads a review at `0.3` or later by the kind its `review` names; before this a move from `0.3` would have left every matching pin as stale. A caller that hands the architecture check a language it does not read is refused with the same CFG001 as a profile file, and nothing else is checked. The consumer fixtures are rebuilt, with `unsupported-contract-0.7.json` new, and the pinned hashes of the example's records, subjects and graph are recomputed for the new bytes.
 
 **`intentset review` exits 2 when its base shares no history with HEAD, and a first slice can be written from the agent guide (#156, #169, #170).** Patch: no specification, conformance case or export moved. `review` ran `git diff <base>...HEAD`, which fails when the two have no common ancestor, and read the failure as no committed change, so `--fail-on-drift` passed a shallow CI checkout whatever it changed; it now stops before writing a review and says to fetch the full history. The guide `intentset init` writes gains a slice template whose six required keys include `layers: {}` and `usesResources: []`, which VSA §3 already allowed, and CORE001's remediation for either key missing says so; neither the check nor its message changed.
 
