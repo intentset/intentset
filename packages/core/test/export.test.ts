@@ -84,11 +84,11 @@ test("the schema rejects what a consumer must reject", () => {
     "the earlier contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.5")),
+    bad((e) => (e.contract = "intentset/export/0.6")),
     "the previous contract version",
   );
   assert.ok(
-    bad((e) => (e.contract = "intentset/export/0.7")),
+    bad((e) => (e.contract = "intentset/export/0.8")),
     "a later contract version",
   );
   assert.ok(
@@ -108,7 +108,7 @@ test("the schema rejects what a consumer must reject", () => {
     "invalid artifact ID",
   );
   assert.ok(
-    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.2")),
+    bad((e) => ((e.artifacts as Record<string, unknown>[])[0].profile = "intentset/rule/0.3")),
     "profile mismatching type",
   );
   assert.ok(
@@ -157,25 +157,20 @@ function withRestrictedRule() {
   );
 }
 
-/**
- * The envelope as text, less each artifact's `extensions`. The example's knowledge is reviewed, and a review pins every
- * source it explains and every rule governing them (publication §3), so its pins name the restricted rule; export §2
- * carries extensions as authored. Whether a pin of a withheld artifact should itself be withheld is issue #49.
- */
-function outsideReviewPins(envelope: ReturnType<typeof exportGraph>): string {
-  return JSON.stringify({ ...envelope, artifacts: envelope.artifacts.map((a) => ({ ...a, extensions: null })) });
-}
-
 test("BEH-EXPORT: a restricted artifact is withheld by default: absent, unlinked, counted, and still in the graph hash", () => {
   const result = validate(withRestrictedRule(), registries);
   const envelope = exportGraph(result, registries, META);
   assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
   assert.deepEqual(envelope.withholding, { visibilities: ["restricted"], artifacts: 1, diagnostics: 0 });
   assert.ok(!envelope.artifacts.some((a) => a.id === "RULE-ASMT-AUTH"));
-  assert.ok(!outsideReviewPins(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere but the review pins");
+  // The example's knowledge pins the rule, as a review must (publication §3); the pin is withheld with it (ADR 0025, #49).
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere");
   const behavior = envelope.artifacts.find((a) => a.id === "BEH-ASMT-SCHEDULE");
   assert.deepEqual(behavior?.links.governedBy, ["RULE-ASMT-FUTURE"]);
   assert.equal(behavior?.withheldLinks, 1);
+  const knowledge = envelope.artifacts.find((a) => a.id === "KB-ASMT-SCHEDULE");
+  assert.deepEqual(Object.keys(knowledge?.review?.sources ?? {}), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  assert.equal(knowledge?.withheldLinks, 2, "the explains link and the pin");
   assert.equal(envelope.graphHash, graphHash(result.graph));
   const everything = exportGraph(result, registries, { ...META, includeRestricted: true });
   assert.deepEqual(everything.withholding, { visibilities: [], artifacts: 0, diagnostics: 0 });
@@ -213,6 +208,33 @@ test("a diagnostic about a withheld artifact is counted, not listed; one naming 
   );
 });
 
+test("BEH-EXPORT: a bad pin and a bad tip keyed by a withheld artifact are reported with the ID replaced in their field", () => {
+  const malformed = withRestrictedRule().map((input) =>
+    input.path === "KB-ASMT-SCHEDULE.md"
+      ? plainCarrier(
+          input.path,
+          input.source
+            .replace(/RULE-ASMT-AUTH: d241506c\w+/, "RULE-ASMT-AUTH: ''")
+            .replace(
+              "    RULE-ASMT-FUTURE: The release time",
+              "    RULE-ASMT-AUTH: ''\n    RULE-ASMT-FUTURE: The release time",
+            ),
+        )
+      : input,
+  );
+  const result = validate(malformed, registries);
+  const fields = result.diagnostics.filter((d) => d.artifact === "KB-ASMT-SCHEDULE").map((d) => d.field);
+  assert.deepEqual(fields, ["/intentset/tips/RULE-ASMT-AUTH", "/intentset/review/sources/RULE-ASMT-AUTH"]);
+  const envelope = exportGraph(result, registries, META);
+  assert.deepEqual(
+    envelope.validation.diagnostics.filter((d) => d.artifact === "KB-ASMT-SCHEDULE").map((d) => d.field),
+    ["/intentset/tips/a withheld artifact", "/intentset/review/sources/a withheld artifact"],
+    "export §3: the field's token is replaced as the text's ID is",
+  );
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"), "the ID appears nowhere");
+  assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
+});
+
 test("reports are withheld inside as the artifacts are, and each omission is counted beside the list it shortened", () => {
   const result = validate(withRestrictedRule(), registries);
   const envelope = exportGraph(result, registries, { ...META, reports: { impact: impactReport(result.graph) } });
@@ -221,7 +243,7 @@ test("reports are withheld inside as the artifacts are, and each omission is cou
   assert.ok(!impact.starts.some((entry) => entry.start === "RULE-ASMT-AUTH"));
   const fromBehavior = impact.starts.find((entry) => entry.start === "BEH-ASMT-SCHEDULE");
   assert.equal(fromBehavior?.withheld, 1, "the governing rule left the review context");
-  assert.ok(!outsideReviewPins(envelope).includes("RULE-ASMT-AUTH"));
+  assert.ok(!JSON.stringify(envelope).includes("RULE-ASMT-AUTH"));
   assert.equal(impact.note, IMPACT_NOTE);
   assert.deepEqual(validateSchema(exportSchema, plain(envelope)), []);
 });

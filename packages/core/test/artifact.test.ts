@@ -26,16 +26,16 @@ function verdict(path: string, source: string): Verdict | null {
   const { diagnostics } = readArtifact(input);
   if (input.frontmatter === null) {
     assert.ok(
-      diagnostics.some((d) => d.code === "CORE001"),
-      `${path}: no frontmatter must be CORE001`,
+      diagnostics.some((d) => d.code === "CORE010"),
+      `${path}: no frontmatter must be CORE010`,
     );
     return null;
   }
   const parsed = parseYaml(input.frontmatter.text);
   if (parsed.error) {
     assert.ok(
-      diagnostics.some((d) => d.code === "CORE001"),
-      `${path}: a rejected YAML must be CORE001`,
+      diagnostics.some((d) => d.code === "CORE010"),
+      `${path}: a rejected YAML must be CORE010`,
     );
     return null;
   }
@@ -100,7 +100,7 @@ test("the schema and readArtifact agree on every fixture document", () => {
 
 test("an artifact keeps its foreign keys, its body and the hash of its bytes", () => {
   const source =
-    "---\nmarkset: 0\nx-editor:\n  theme: dark\nintentset:\n  spec: '0.2'\n  profile: intentset/product/0.2\n  id: PRD-X\n  type: product\n  title: X\n  status: draft\n  owner: o\n  visibility: internal\n  audiences: [a]\n---\n\n# X\n\n## Scope\n\nText.\n";
+    "---\nmarkset: 0\nx-editor:\n  theme: dark\nintentset:\n  spec: '0.3'\n  profile: intentset/product/0.3\n  id: PRD-X\n  type: product\n  title: X\n  status: draft\n  owner: o\n  visibility: internal\n  audiences: [a]\n---\n\n# X\n\n## Scope\n\nText.\n";
   const { artifact, diagnostics } = readArtifact(plainCarrier("PRD-X.md", source));
   assert.deepEqual(diagnostics, []);
   assert.ok(artifact !== null);

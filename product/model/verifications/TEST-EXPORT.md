@@ -1,16 +1,16 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-EXPORT
   type: verification
   title: Graph prints the export envelope
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-EXPORT]
   verification:
@@ -33,4 +33,4 @@ intentset:
 
 ## Expected result
 
-Every test whose title carries `BEH-EXPORT` passes. The envelope matches spec/export.schema.json; a failing repository still exports, marked fail, and exits 1; every report asked for is written at the commit and a consumer's reader accepts the result; a report the level does not read is refused; a restricted artifact is withheld and counted unless included.
+Every test whose title carries `BEH-EXPORT` passes. The envelope matches spec/export.schema.json; a failing repository still exports, marked fail, and exits 1; every report asked for is written at the commit and a consumer's reader accepts the result; a report the level does not read is refused; a restricted artifact is withheld and counted unless included, and its ID appears nowhere in the envelope, the knowledge's review pins and tips included.

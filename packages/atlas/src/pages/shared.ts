@@ -47,13 +47,17 @@ export function reviewCell(review: ReviewStatus): string {
   if (review.missing.length > 0) reasons.push(`not pinned: ${review.missing.map(code).join(", ")}`);
   if (review.reviewer === null) reasons.push("no reviewer");
   if (review.reviewedAt === null) reasons.push("no review date");
+  if (review.self === "changed") reasons.push("own text changed since review");
+  // ADR 0027: knowledge whose sources changed what they promise, and nothing else, can be kept under review.
+  if (review.keepable) reasons.push("can be published under review (keepUnderReview)");
   return `${badge("needs review", "warn")} ${reasons.join("; ")}`;
 }
 
 /**
  * Whether a record's work exists (Core §7, ADR 0017), in words beside its status, never in place of it: `built`,
  * `planned`, or `not stated`; null for a type that does not carry delivery. `derived` says when the word comes from
- * a status that claims an implementation rather than from the record's own `delivery`.
+ * the record being deprecated (ADR 0023: a deprecated record describes something that existed) rather than from its
+ * own `delivery`.
  */
 export function deliveryWord(meta: ArtifactMeta): { word: string; derived: boolean } | null {
   if (!(DELIVERY_TYPES as readonly string[]).includes(meta.type)) return null;

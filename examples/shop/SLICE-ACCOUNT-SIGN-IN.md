@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-ACCOUNT-SIGN-IN
   type: slice
   title: Sign-in
@@ -17,7 +17,17 @@ intentset:
   audiences:
   - engineering
   - product
-  revision: 1
+  revision: 2
+  availability:
+    products:
+    - PRD-SHOP
+    releases:
+    - v1
+    roles:
+    - customer
+    editions:
+    - standard
+    flags: []
   links:
     implements:
     - BEH-SIGN-IN
@@ -33,6 +43,10 @@ intentset:
     - kind: source
       path: src/features/accounts/sign-in/**
     usesResources: []
+    surfaces:
+      /sign-in:
+        knowledge:
+        - KB-RESET-PASSWORD
 ---
 
 # Sign-in

@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/intent/0.2
+  spec: '0.3'
+  profile: intentset/intent/0.3
   id: INT-SELF-SERVE
   type: intent
   title: Customers get back into their own accounts

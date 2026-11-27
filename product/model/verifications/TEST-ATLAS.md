@@ -1,16 +1,16 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-ATLAS
   type: verification
   title: Serve renders the Atlas over the export
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   links:
     verifies: [BEH-ATLAS]
   verification:
@@ -27,6 +27,7 @@ intentset:
 
 - `packages/atlas/test/atlas.test.ts`: the test "the Atlas of the example has the six pages, a page per behavior, and the stylesheet once"
 - `packages/atlas/test/atlas.test.ts`: the test "every page states the snapshot and the internal banner"
+- `packages/atlas/test/atlas.test.ts`: the test "knowledge whose sources changed and whose own text and gates are pinned reads as keepable, counted with its denominator" (ADR 0027)
 - `packages/cli/test/serve.test.ts`: the test "serve prints the URL, the snapshot and the warning, serves the Atlas, and refuses everything else"
 - `packages/cli/test/serve.test.ts`: the test "serve rebuilds when a record changes, so a reload shows the edit, and writes nothing"
 - `packages/cli/test/serve.test.ts`: the test "serve --out writes the Atlas and exits, the same bytes twice, never into scope or over files"

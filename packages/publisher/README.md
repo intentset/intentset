@@ -1,6 +1,7 @@
 # @intentset/publisher
 
-Publishes reviewed knowledge for one audience and release (`spec/publication.md`): it projects the graph deny by
+Publishes reviewed knowledge for one reader, in one or more audiences and roles, on one release
+(`spec/publication.md`): it projects the graph deny by
 default, checks that no excluded record's title or path leaks, and writes Markset documents with their provenance,
 an index, retrieval chunks, `help.json`, the tips a product shows beside its controls, and `snapshot.json`, the one
 file that names the commit and graph hash it was published from.
@@ -25,9 +26,16 @@ With pnpm, `pnpm dlx --package=@intentset/cli intentset …`, or `pnpm exec inte
 installed. The command is always `@intentset/cli`'s: this package has no `intentset` binary, and npx asked
 for `intentset` alone would fetch an unrelated unscoped package from the registry.
 
-From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the index, the help
-file, the snapshot file and the diagnostics, and refuses the whole request when any field is missing or undeclared
-(PUB001). The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
+From code, `publish(graph, registries, request, { snapshot, publishedAt })` returns the documents, the documents kept
+under review (`keptUnderReview`), the index, the help file, the snapshot file and the diagnostics, and refuses the whole request when any field is missing or undeclared
+(PUB001). A request is for one reader: `audience` and `role` are each one value or a list of every one the reader holds
+(the CLI repeats `--audience` and `--role`), read as a set, while `product`, `release` and `edition` are one value
+each. Every file names the request's audiences, roles and flags as sorted lists, and they are held all-of: serve the
+publication only to a reader who holds every value it names, and publish once for each combination you serve. The
+index's `request` is the request in canonical form, so key any cache on `canonicalJson(index.request)`. `checkRequest`
+returns that canonical request, and `exclusionReason`, `indexedRequest`, `publicationMeta`, `keptPublicationMeta`,
+`generateDocument` and `helpFile` take it; given one `audience` or `role`, they read it as a list of one, and check
+nothing else. The snapshot, the commit and graph hash the run read, is named in `snapshot.json` and nowhere else; each
 document pins what it was made from by its sources' hashes. So publishing the same knowledge at two commits writes
 the same bytes in every file but that one.
 
@@ -39,6 +47,27 @@ keeps its URL only when the scheme is `http`, `https` or `mailto`, or there is n
 (`//host/x`) has none, and resolves against the scheme of the page that shows it. A diagram drawn from a captioned
 figure is embedded as a `data:image/svg+xml` image that Markset's renderer builds, with the source's text escaped: a
 product whose Content Security Policy restricts `img-src` must allow `data:` to show it.
+
+**Knowledge kept under review.** Knowledge whose sources changed what they promise is needs-review and is not
+published as current. When the request sets `keepUnderReview` (the CLI's `--keep-under-review`; off by default),
+knowledge that is keepable is published anyway, from the text its last review covered, which the review's `self` pin
+proves, and only when no source changed who may see it, which its `gates` pin proves (publication §3, ADR 0027). Such
+a document is written at `under-review/<ID>.md`, apart from the current documents, listed in `keptUnderReview` and the
+index's `keptUnderReview`, never in `documents` or `index.published`, and never chunked for retrieval. It is marked:
+its `intentset-publication` block carries `underReview: true` and `changedSinceReview` (the admitted sources that
+changed, and a count of the others), its body carries the fixed note `UNDER_REVIEW_NOTE` right after its title, and its
+HTML page carries `noindex`. In the help file its entry and tips carry `underReview: true`, and a tip keyed to a rule is
+held back, listed in `withheldForReview`. Anything that shows such a document or tip must show that it is under review.
+Knowledge that is not keepable stays excluded, with a CORE008 that says which condition failed.
+
+**Surfaces.** A slice may say which knowledge leads each surface of the product, in `surfaces` (VSA §3). The help file
+maps each surface ID to the documents published in the run that lead it, in the slice's order, as `surfaces` (`{}`
+when none is written; publication §5, ADR 0028). A surface is written only from an approved or deprecated slice that
+says `delivery: built`, declares `availability` the request passes, is not restricted unless the request is authorized
+for restricted data, and is the only slice that is not retired to declare the ID; only for a key that holds no ID the
+projection does not admit and no path of a record not published; and only when one of its leads was published, a
+document kept under review included. Nothing else of the slice is written. `publish` returns the slices the projection
+admits whose surfaces were left out in `omittedSurfaces`, with the reason, for the operator; no file carries them.
 
 **When the output is committed.** Publish with `--no-snapshot`, or ignore `snapshot.json` in version control. The
 commit it names is the one checked out when the command ran, which is never the commit that will contain the output,

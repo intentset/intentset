@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-REVIEW-BASELINE
   type: verification
   title: Review lists the baseline entries the base did not hold

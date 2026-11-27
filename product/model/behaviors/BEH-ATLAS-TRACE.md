@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-ATLAS-TRACE
   type: behavior
   title: A behavior's page traces it from why it exists to what people are told

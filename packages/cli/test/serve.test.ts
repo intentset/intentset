@@ -7,7 +7,7 @@
  */
 import assert from "node:assert/strict";
 import { request } from "node:http";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -198,10 +198,10 @@ function build(dir: string, options: Partial<McpOptions>): { server: McpServer |
 
 const REQUEST = {
   visibility: "customer",
-  audience: "teacher",
+  audience: ["teacher"],
   product: "PRD-LANTERN",
   release: "pilot-1",
-  role: "teacher",
+  role: ["teacher"],
   edition: "standard",
 };
 
@@ -233,7 +233,10 @@ test("BEH-MCP-CONTEXT: mcp customer serves only the two knowledge tools over one
   const built = build(dir, { mode: "customer", ...REQUEST });
   assert.notEqual(typeof built.server, "number", built.err);
   assert.equal(built.out, "");
-  assert.match(built.err, /customer knowledge over stdio: 1 published document for a customer projection/);
+  assert.match(
+    built.err,
+    /customer knowledge over stdio: 1 published document for a customer projection, audience teacher, PRD-LANTERN pilot-1\. /,
+  );
   const client = await connect(built.server as McpServer);
   t.after(() => client.close());
   const tools = (await client.listTools()).tools.map((tool) => tool.name);
@@ -245,9 +248,25 @@ test("BEH-MCP-CONTEXT: mcp customer serves only the two knowledge tools over one
   }
 });
 
+test("BEH-PUBLISH-READER: mcp customer serves one publication for a reader who holds two roles", async (t) => {
+  const dir = await example(t);
+  const file = join(dir, ".intentset", "registries.yaml");
+  writeFileSync(file, readFileSync(file, "utf8").replace(/^roles:\n- teacher$/m, "roles:\n- administrator\n- teacher"));
+  const built = build(dir, { mode: "customer", ...REQUEST, role: ["teacher", "administrator"] });
+  assert.notEqual(typeof built.server, "number", built.err);
+  assert.match(built.err, /audience teacher, PRD-LANTERN pilot-1, roles \[administrator, teacher\]\./);
+  const client = await connect(built.server as McpServer);
+  t.after(() => client.close());
+  const found = JSON.parse(
+    text(await client.callTool({ name: "knowledge_search", arguments: { query: "release time" } })),
+  );
+  assert.deepEqual(found.audience, ["teacher"]);
+  assert.deepEqual(found.availability.role, ["administrator", "teacher"]);
+});
+
 test("BEH-MCP-CONTEXT: mcp customer refuses before any server starts: a refused request, a failing graph, the wrong mode's options", async (t) => {
   const dir = await example(t);
-  const partial = build(dir, { mode: "customer", visibility: "customer", audience: "teacher" });
+  const partial = build(dir, { mode: "customer", visibility: "customer", audience: ["teacher"] });
   assert.equal(partial.server, 1);
   assert.equal(partial.out, "");
   assert.match(partial.err, /PUB001/);

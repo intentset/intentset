@@ -72,7 +72,7 @@ The model as one versioned JSON file, written by `intentset graph`, for other to
 
 ### Knowledge
 
-A record that explains part of the product to one audience, such as teachers. It is reviewed against the records it explains and held for review when one of them changes. `intentset publish` releases what one audience may see for one release.
+A record that explains part of the product to one audience, such as teachers. It is reviewed against the records it explains and held for review when one of them changes. `intentset publish` releases what one reader, in every audience and role they hold, may see for one release.
 
 ### Level
 
@@ -80,7 +80,7 @@ How much of the specifications a model meets, each level including the ones befo
 
 ### Profile
 
-Two senses. A record's profile, such as `intentset/rule/0.2` in its frontmatter, says what that type of record must contain. A reference profile maps the slice rules onto one stack: the specifications include one for TypeScript and AWS Amplify Gen 2.
+Two senses. A record's profile, such as `intentset/rule/0.3` in its frontmatter, says what that type of record must contain. A reference profile maps the slice rules onto one stack: the specifications include one for TypeScript and AWS Amplify Gen 2.
 
 ### Run record
 

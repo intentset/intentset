@@ -6,7 +6,7 @@
  * ownership, verification status, publication readiness and diagnostics.
  *
  * Every page is generated as Markset source, with `markset: true` and a derived
- * `intentset/atlas/0.2` block in its frontmatter, then parsed back and
+ * `intentset/atlas/0.3` block in its frontmatter, then parsed back and
  * rendered by render-html, the way Markset's own site builds its generated
  * pages. A page that does not parse cleanly throws: that is a bug here, not
  * something a record can cause, because every value from a record is escaped

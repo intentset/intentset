@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-ASK-ANSWER
   type: behavior
   title: The chat answers a question from the documentation, with its sources

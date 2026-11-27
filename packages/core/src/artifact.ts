@@ -2,7 +2,8 @@
  * Reading one document into an Artifact (Core §3, §4, §6, §7; ADR 0002).
  *
  * `readArtifact` checks, in typed code, every constraint of
- * spec/frontmatter.schema.json plus the required narrative sections. Each
+ * spec/frontmatter.schema.json plus the required narrative sections (CORE011);
+ * a document it cannot read at all is CORE010 (ADR 0024). Each
  * schema constraint is CORE001 with a JSON pointer, except two that the
  * schema also states and Core assigns elsewhere: a missing navigation parent
  * is CORE004 (Core §5, the chain does not reach a product) and a missing
@@ -18,7 +19,7 @@
 import { closingFenceIndex } from "./carrier.ts";
 import type { Diagnostic, Location } from "./diagnostics.ts";
 import { sha256Hex } from "./hash.ts";
-import { contentHashOf } from "./content-hash.ts";
+import { contentHashOf, ownContentHashOf } from "./content-hash.ts";
 import { type Locate, NO_LOCATION, aType, capitalize, compareStrings, isRecord, makeDiagnostic } from "./report.ts";
 import {
   APPROVAL_BASES,
@@ -40,6 +41,7 @@ import {
   FORMALIZES_TYPES,
   type Formalized,
   ID_PATTERN,
+  isSurfaceId,
   LINK_KINDS,
   type LinkKind,
   MEASURE_DIRECTIONS,
@@ -48,12 +50,14 @@ import {
   type MeasureMeta,
   PARENT_TARGETS,
   REQUIRED_SECTIONS,
-  PREVIOUS_SPEC_VERSION,
+  EARLIER_SPEC_VERSIONS,
   SPEC_VERSION,
   STATUSES,
   TIP_MAX_LENGTH,
   TIP_PATTERN,
+  type ReviewMeta,
   type SliceMeta,
+  type SliceSurface,
   VISIBILITIES,
   type VerificationMeta,
 } from "./types.ts";
@@ -94,6 +98,7 @@ const OPTIONAL_COMMON = [
   "formalizes",
   "extensions",
   "tips",
+  "review",
   "slice",
   "verification",
   "measure",
@@ -102,8 +107,15 @@ const KNOWN_KEYS = new Set<string>([...REQUIRED_COMMON, ...OPTIONAL_COMMON]);
 const LINK_FIELDS = LINK_KINDS.filter((kind) => kind !== "parent") as Exclude<LinkKind, "parent">[];
 const AVAILABILITY_KEYS = ["products", "releases", "roles", "editions", "flags"] as const;
 const EXTENSION_KEY = /^[^/]+\/.+$/;
+/** The extension a review was authored under before 0.3 (ADR 0025): CORE001 now, since it would read as no review. */
+export const RETIRED_REVIEW_EXTENSION = "intentset.org/review";
+const REVIEW_KEYS = ["sources", "hash", "snapshot", "self", "gates"] as const;
 
-/** Core §3, §4, §6 and §7 (ADR 0002): read one document into an Artifact, reporting CORE001 and its kin with origin "profile". */
+/**
+ * Core §3, §4, §6 and §7 (ADR 0002, ADR 0024): read one document into an Artifact, with origin "profile": CORE010 for a
+ * carrier that cannot be read, CORE011 for a missing heading or section, CORE001 for a field's shape, CORE003 for a
+ * repeated relationship entry.
+ */
 export function readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] } {
   const { artifact, diagnostics } = readDocument(input);
   return { artifact, diagnostics };
@@ -140,6 +152,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const bytes = Buffer.byteLength(input.source, "utf8");
   if (bytes > DOCUMENT_MAX_BYTES) {
     report({
+      code: "CORE010",
       artifact: null,
       message: `The document is ${bytes} bytes, more than the ${DOCUMENT_MAX_BYTES / 1024 / 1024} MiB a record may be.`,
       remediation: "Split the record, or move large material such as data or images out of the document and link it.",
@@ -150,6 +163,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const frontmatter = input.frontmatter;
   if (frontmatter === null) {
     report({
+      code: "CORE010",
       artifact: null,
       location: { line: 1 },
       message: "The document has no frontmatter block between `---` lines at the top of the file.",
@@ -161,6 +175,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
   const parsed = parseYamlDetailed(frontmatter.text);
   if (parsed.error) {
     report({
+      code: "CORE010",
       artifact: null,
       location: { line: frontmatter.line + parsed.error.line - 1 },
       message: `The frontmatter is not accepted: ${parsed.error.message}`,
@@ -222,6 +237,7 @@ export function readDocument(input: DocumentInput): ReadDocument {
       path: input.path,
       sourceHash: sha256Hex(input.source),
       contentHash: contentHashOf(root, bodyOf(input.source)),
+      ownContentHash: ownContentHashOf(root, bodyOf(input.source)),
       body: bodyOf(input.source),
       headings: input.headings,
       foreign,
@@ -244,7 +260,9 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       problem(
         `${base}/${pointerToken(key)}`,
         `Unknown key \`${key}\` under intentset.`,
-        "Remove it, or move it under `extensions` with a namespaced key such as `org.example/change`.",
+        key === "surfaces"
+          ? "Write `surfaces` under `slice:`, on the slice that owns the surfaces (VSA §3)."
+          : "Remove it, or move it under `extensions` with a namespaced key such as `org.example/change`.",
       );
     }
   }
@@ -265,8 +283,8 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
     problem(
       `${base}/spec`,
       `\`spec\` must be the string "${SPEC_VERSION}".${hint}`,
-      s.spec === PREVIOUS_SPEC_VERSION
-        ? `Write \`spec: '${SPEC_VERSION}'\` and \`profile: intentset/<type>/${SPEC_VERSION}\`, or run \`intentset migrate --to ${SPEC_VERSION}\` to rewrite every record.`
+      typeof s.spec === "string" && EARLIER_SPEC_VERSIONS.includes(s.spec)
+        ? `Run \`intentset migrate --to ${SPEC_VERSION}\`, which rewrites every record and re-pins the knowledge reviews that pin them. Writing \`spec: '${SPEC_VERSION}'\` and \`profile: intentset/<type>/${SPEC_VERSION}\` by hand leaves each knowledge review that pins the record needing review.`
         : `Write \`spec: '${SPEC_VERSION}'\`.`,
     );
     usable = false;
@@ -440,7 +458,13 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
     } else {
       extensions = {};
       for (const key of Object.keys(s.extensions).sort(compareStrings)) {
-        if (EXTENSION_KEY.test(key)) extensions[key] = s.extensions[key];
+        if (key === RETIRED_REVIEW_EXTENSION) {
+          problem(
+            `${base}/extensions/${pointerToken(key)}`,
+            "`extensions.intentset.org/review` is no longer read: a knowledge record's review is `review` (Core §9, ADR 0025).",
+            "Run `intentset migrate --to 0.3` on a record written for 0.2, which moves it and re-pins the review. Moving it to `review` by hand, writing `hash: file-v1` where it names no hash, re-pins nothing, so the review needs review once its sources move to 0.3.",
+          );
+        } else if (EXTENSION_KEY.test(key)) extensions[key] = s.extensions[key];
         else
           problem(
             `${base}/extensions/${pointerToken(key)}`,
@@ -461,6 +485,13 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       "Add `slice:` with kind, domain, entrypoints, layers, claims and usesResources (VSA §3).",
     );
   }
+  if (slice?.surfaces !== undefined && Object.keys(slice.surfaces).length > 0 && !Object.hasOwn(s, "availability")) {
+    problem(
+      `${base}/availability`,
+      "A slice that declares surfaces must declare `availability`.",
+      "A slice that declares surfaces says who may see them: add `availability` (VSA §3).",
+    );
+  }
   let tips: Record<string, string> | undefined;
   if (Object.hasOwn(s, "tips") && s.tips !== null) {
     if (type !== null && type !== "knowledge") {
@@ -471,6 +502,18 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
       );
     } else {
       tips = readTips(s.tips, `${base}/tips`, problem) ?? undefined;
+    }
+  }
+  let review: ReviewMeta | undefined;
+  if (Object.hasOwn(s, "review") && s.review !== null) {
+    if (type !== null && type !== "knowledge") {
+      problem(
+        `${base}/review`,
+        `\`review\` is written on ${aType(type)}; only knowledge is reviewed against its sources.`,
+        "Remove it; a review pins the sources a knowledge record explains (Core §9).",
+      );
+    } else {
+      review = readReview(s.review, `${base}/review`, problem) ?? undefined;
     }
   }
   let verification: VerificationMeta | undefined;
@@ -517,6 +560,7 @@ function readMeta(s: Record<string, unknown>, problem: Problem): ArtifactMeta | 
   if (formalizes !== undefined) meta.formalizes = formalizes;
   if (extensions !== undefined) meta.extensions = extensions;
   if (tips !== undefined) meta.tips = tips;
+  if (review !== undefined) meta.review = review;
   if (slice !== undefined) meta.slice = slice;
   if (verification !== undefined) meta.verification = verification;
   if (measure !== undefined) meta.measure = measure;
@@ -721,6 +765,84 @@ function readTips(value: unknown, field: string, problem: Problem): Record<strin
     tips[key] = text;
   }
   return tips;
+}
+
+/**
+ * Core §9, publication §3 (ADR 0025): a knowledge record's review, a mapping with `sources`, a mapping from a source ID
+ * to the hash it had at review, and optionally `hash`, the pin kind, `snapshot`, informative, and `self` and `gates`,
+ * the knowledge's own content hash and its sources' gate hash at review (ADR 0027). Every pin is a string and no other
+ * shape is checked, so a string that is not the current value reads as changed. Any problem drops the
+ * whole review, so the knowledge reads as unreviewed rather than as reviewed against part of what it pinned.
+ */
+function readReview(value: unknown, field: string, problem: Problem): ReviewMeta | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`review` must be a mapping with `sources`.",
+      "Write `sources:` under `review:`, one `ID: hash` line per source the knowledge was reviewed against (Core §9).",
+    );
+    return null;
+  }
+  let ok = true;
+  const fail = (at: string, message: string, remediation: string) => {
+    problem(at, message, remediation);
+    ok = false;
+  };
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    if (!(REVIEW_KEYS as readonly string[]).includes(key)) {
+      fail(
+        `${field}/${pointerToken(key)}`,
+        `Unknown review key \`${key}\`.`,
+        `The keys are ${REVIEW_KEYS.join(", ")} (Core §9).`,
+      );
+    }
+  }
+  const sources: Record<string, string> = {};
+  if (!Object.hasOwn(value, "sources") || value.sources === null) {
+    fail(
+      `${field}/sources`,
+      "`review.sources` is missing.",
+      "Pin each source the knowledge was reviewed against, by ID.",
+    );
+  } else if (!isRecord(value.sources)) {
+    fail(
+      `${field}/sources`,
+      "`review.sources` must be a mapping from a source ID to its hash.",
+      "Write one `ID: hash` line per source.",
+    );
+  } else {
+    for (const key of Object.keys(value.sources).sort(compareStrings)) {
+      const at = `${field}/sources/${pointerToken(key)}`;
+      const pin = value.sources[key];
+      if (!ID_PATTERN.test(key))
+        fail(at, `Review pin key \`${key}\` is not an ID.`, "Key each pin by the ID of a source.");
+      else if (typeof pin !== "string" || pin === "") {
+        fail(
+          at,
+          `The pin for ${key} must be a non-empty string.`,
+          "Write the source's hash of the review's kind, quoted.",
+        );
+      } else sources[key] = pin;
+    }
+  }
+  const review: ReviewMeta = { sources };
+  for (const key of ["hash", "snapshot", "self", "gates"] as const) {
+    // Core §9: a null `hash` or `snapshot` is absent; a null `self` or `gates` is not a string, so CORE001.
+    if (!Object.hasOwn(value, key) || (value[key] === null && (key === "hash" || key === "snapshot"))) continue;
+    const text = value[key];
+    if (typeof text === "string" && text !== "") review[key] = text;
+    else
+      fail(
+        `${field}/${key}`,
+        `\`review.${key}\` must be a non-empty string.`,
+        key === "hash"
+          ? "Write `content-v1` (the default when absent) or `file-v1` (publication §3)."
+          : key === "snapshot"
+            ? "Write the commit or graph hash the review was made at, or leave it out."
+            : "Leave it to `intentset approve`, which writes the value a review pins (publication §3, ADR 0027).",
+      );
+  }
+  return ok ? review : null;
 }
 
 const APPROVAL_KEYS = ["by", "at", "basis", "source", "attestedBy"] as const;
@@ -977,14 +1099,14 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     return null;
   }
   let ok = true;
-  const known = ["kind", "rationale", "domain", "entrypoints", "layers", "claims", "usesResources"];
+  const known = ["kind", "rationale", "domain", "entrypoints", "layers", "claims", "usesResources", "surfaces"];
   for (const key of Object.keys(value).sort(compareStrings)) {
     if (!known.includes(key)) {
       problem(
         `${field}/${pointerToken(key)}`,
         `Unknown slice key \`${key}\`.`,
         key === "entrypoint"
-          ? "A slice lists its public surfaces, one per package it spans: write `entrypoints: [path]` (VSA §3)."
+          ? "A slice lists its public contract surfaces, one per package it spans: write `entrypoints: [path]` (VSA §3)."
           : `The slice keys are ${known.join(", ")} (VSA §3).`,
       );
       ok = false;
@@ -1080,6 +1202,12 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     if (list === null) ok = false;
     else usesResources = list;
   }
+  let surfaces: Record<string, SliceSurface> | undefined;
+  if (Object.hasOwn(value, "surfaces") && value.surfaces !== null) {
+    const read = readSurfaces(value.surfaces, `${field}/surfaces`, problem);
+    if (read === null) ok = false;
+    else surfaces = read;
+  }
   if (!ok) return null;
   const slice: SliceMeta = {
     kind: value.kind as SliceMeta["kind"],
@@ -1090,7 +1218,77 @@ function readSlice(value: unknown, field: string, problem: Problem): SliceMeta |
     usesResources,
   };
   if (rationale !== undefined) slice.rationale = rationale;
+  if (surfaces !== undefined) slice.surfaces = surfaces;
   return slice;
+}
+
+/**
+ * VSA §3, ADR 0028: `surfaces` maps a surface ID to `{ knowledge }`, a non-empty list of unique IDs in the order a
+ * reader is shown them, and nothing else. Every problem is CORE001; the map is built in code-unit key order.
+ */
+function readSurfaces(value: unknown, field: string, problem: Problem): Record<string, SliceSurface> | null {
+  if (!isRecord(value)) {
+    problem(
+      field,
+      "`slice.surfaces` must be a mapping of surface IDs to `{ knowledge: [...] }`.",
+      "Write each surface as `<surface ID>:` with `knowledge: [KB-...]` under it; `{}` declares none (VSA §3).",
+    );
+    return null;
+  }
+  let ok = true;
+  const out: Record<string, SliceSurface> = {};
+  for (const key of Object.keys(value).sort(compareStrings)) {
+    const keyField = `${field}/${pointerToken(key)}`;
+    if (!isSurfaceId(key)) {
+      problem(
+        keyField,
+        `Surface ID \`${key}\` is not one VSA §3 accepts.`,
+        "Use 1 to 200 printable ASCII characters other than \" ' < > \\ and the backtick, not digits only; write a non-ASCII route percent-encoded (VSA §3).",
+      );
+      ok = false;
+      continue;
+    }
+    const entry = value[key];
+    if (!isRecord(entry)) {
+      problem(
+        keyField,
+        `Surface \`${key}\` must be a mapping with \`knowledge\`.`,
+        "Write `knowledge: [KB-...]` under the surface ID.",
+      );
+      ok = false;
+      continue;
+    }
+    for (const member of Object.keys(entry).sort(compareStrings)) {
+      if (member !== "knowledge") {
+        problem(
+          `${keyField}/${pointerToken(member)}`,
+          `Unknown surface key \`${member}\`.`,
+          "A surface entry has one member, `knowledge` (VSA §3).",
+        );
+        ok = false;
+      }
+    }
+    if (!Object.hasOwn(entry, "knowledge") || entry.knowledge === null) {
+      problem(
+        `${keyField}/knowledge`,
+        `Surface \`${key}\` names no \`knowledge\`.`,
+        "List the knowledge that leads the surface, in order.",
+      );
+      ok = false;
+      continue;
+    }
+    const list = stringList(entry.knowledge, `${keyField}/knowledge`, "knowledge", problem, {
+      pattern: ID_PATTERN,
+      minItems: 1,
+      minItemsRemediation: "List at least one knowledge record, or remove the surface.",
+    });
+    if (list === null || list.length !== (entry.knowledge as unknown[]).length) {
+      ok = false;
+      continue;
+    }
+    out[key] = { knowledge: list };
+  }
+  return ok ? out : null;
 }
 
 function readClaim(value: unknown, field: string, problem: Problem): Claim | null {
@@ -1252,13 +1450,20 @@ function checkSections(
   input: DocumentInput,
   meta: ArtifactMeta,
   id: string | null,
-  report: (fields: { artifact: string | null; location?: Location; message: string; remediation: string }) => void,
+  report: (fields: {
+    code: string;
+    artifact: string | null;
+    location?: Location;
+    message: string;
+    remediation: string;
+  }) => void,
 ): void {
   const title = meta.title.replace(/\s+/g, " ").trim();
   const level1 = input.headings.filter((h) => h.depth === 1);
   if (!level1.some((h) => h.text === title)) {
     const first = level1[0];
     report({
+      code: "CORE011",
       artifact: id,
       location: first === undefined ? undefined : { line: first.line },
       message:
@@ -1272,6 +1477,7 @@ function checkSections(
   for (const section of REQUIRED_SECTIONS[meta.type]) {
     if (level2.has(section)) continue;
     report({
+      code: "CORE011",
       artifact: id,
       message: `Required section "${section}" is missing from ${aType(meta.type)} document.`,
       remediation: `Add a level-two heading \`## ${section}\` with substantive prose (Core §6).`,

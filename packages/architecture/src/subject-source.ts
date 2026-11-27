@@ -3,18 +3,11 @@
  * (Core §8, ADR 0013): the files each slice's claims resolve to, the files of
  * each registry resource, the local files a test imports (resolved with the
  * same TypeScript-aware resolver as the import graph, and stopping at a
- * package boundary), the global inputs expanded to paths, which resource files a
- * subject hashes (`evidence.resources`, Core §8) and which files can move any
- * subject at all. Pure: it reads the tree it is given and the file
+ * package boundary), the global inputs expanded to paths, and which files can
+ * move any subject at all. Pure: it reads the tree it is given and the file
  * contents through the function it is given.
  */
-import {
-  DEFAULT_EVIDENCE_DEPENDENCIES,
-  type EvidenceDependencies,
-  type EvidenceResources,
-  type Graph,
-  type Registries,
-} from "@intentset/core";
+import type { Graph, Registries } from "@intentset/core";
 import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
 import { extractImports } from "./extract.ts";
 import { isCode } from "./paths.ts";
@@ -27,10 +20,6 @@ export interface SubjectSourceOptions {
   config?: Partial<ArchitectureConfig>;
   /** `evidence.globalInputs`: paths, or patterns expanded over the tree. */
   globalInputs: readonly string[];
-  /** `evidence.resources`: `exercised` (the default) or `used`; the evidence package's subject reads it from the source this returns. */
-  resources?: EvidenceResources;
-  /** `evidence.dependencies`: what a dependency slice contributes; the subject reads it from the source this returns. */
-  dependencies?: EvidenceDependencies;
   /** The bytes of a repository-relative file, or undefined when it does not exist. */
   readFile: (path: string) => Uint8Array | undefined;
 }
@@ -42,8 +31,6 @@ export interface ArchitectureSubjectSource {
   resources: Map<string, { record: unknown; files: string[] }>;
   localImports: (path: string) => string[];
   globalInputs: string[];
-  resourceMode: EvidenceResources;
-  dependencyMode: EvidenceDependencies;
   covers: (path: string) => boolean;
 }
 
@@ -113,20 +100,18 @@ export function subjectSource(
 
   const globalInputs = expandGlobalInputs(options.globalInputs, tree.files.keys());
 
-  const resourceMode = options.resources ?? "exercised";
   let covered: Set<string> | null = null;
   const covers = (path: string): boolean => {
     if (covered === null) {
       covered = new Set<string>(globalInputs);
       for (const files of sliceFiles.values()) for (const file of files) covered.add(file);
-      // The resources some subject hashes: under `used`, every one a slice lists; under `exercised`, the ones a slice
-      // that implements a behavior lists and also claims a file of (its own), and the ones a verification exercises.
+      // The resources some subject hashes: the ones a slice that implements a behavior lists and also claims a file of
+      // (its own), and the ones a verification exercises (Core §8).
       const used = new Set<string>();
       for (const slice of model.slices) {
         const implementing = (graph.artifacts.get(slice.id)?.meta.links.implements ?? []).length > 0;
         for (const id of slice.meta.usesResources) {
-          if (resourceMode === "used") used.add(id);
-          else if (implementing) {
+          if (implementing) {
             const files = new Set(resources.get(id)?.files ?? []);
             if ((sliceFiles.get(slice.id) ?? []).some((file) => files.has(file))) used.add(id);
           }
@@ -145,15 +130,12 @@ export function subjectSource(
     return covered.has(path);
   };
 
-  const dependencyMode = options.dependencies ?? DEFAULT_EVIDENCE_DEPENDENCIES;
   return {
     readFile: options.readFile,
     sliceFiles,
     resources,
     localImports,
     globalInputs,
-    resourceMode,
-    dependencyMode,
     covers,
   };
 }

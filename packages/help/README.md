@@ -17,8 +17,8 @@ import { bindTips, readHelp } from "@intentset/help";
 
 const read = readHelp(await (await fetch("/help/help.json")).text());
 if (read.ok) {
-  const { bound, missing } = bindTips(document, read.help); // every element with data-behavior="BEH-..." gets its tip
-  console.log(`${bound.length} tips bound; no tip yet for`, missing);
+  const { bound, missing, pendingReview } = bindTips(document, read.help); // every element with data-behavior="BEH-..." gets its tip
+  console.log(`${bound.length} tips bound; no tip yet for`, missing, "; help under review for", pendingReview);
 }
 ```
 
@@ -44,12 +44,77 @@ const watch = watchTips(container, read.help, {
   render: (element, tip) => myTooltip.attach(element, tip.text),
   unrender: (element) => myTooltip.detach(element), // with your own render and no unrender, nothing is undone
 });
-watch.coverage(); // { bound, missing } as of the last pass
+watch.coverage(); // { bound, missing, pendingReview } as of the last pass
 watch.dispose(); // stop observing and unrender every element it bound
 ```
 
-The file was published for one audience, release, role, edition and set of flags, so a product serves each person
-the one published for their entitlement.
+**Help under review.** A publication may keep knowledge under review (publication §3, ADR 0027): published from the
+text its last review covered while what it explains has changed. Its entry in `knowledge`, and each tip it contributes,
+carries `underReview: true`; a tip keyed to a rule is held back instead and its ID listed in `withheldForReview`,
+because a rule's tip is the reason a product gives for a refusal. Every reader here leaves help under review out by
+default (`underReviewHelp: "exclude"`), since your renderer may not show that it is under review; pass
+`underReviewHelp: "include"` to `tipFor`, `helpForPage`, `articles`, `bindTips` or `watchTips` once it does, and show
+the mark wherever you show the item. Either way the ID goes to `pendingReview`, never to `missing`, and a bound element
+under review also gets `data-help-under-review`.
+
+`tipFor` returns null for no tip, a held-back rule tip and, under `exclude`, a tip
+under review alike, so it cannot measure coverage on its own. Count coverage from a `Binding` (`bound`, `missing`,
+`pendingReview`), from `helpForPage`, or from `reviewStateFor(help, id)`, which answers `current`, `under-review`,
+`held-back` or `none`; a coverage report counts `held-back` as written. `articles(help, options)` gives the file's
+articles honouring `underReviewHelp`, with the IDs under review in `pendingReview`:
+
+```ts
+import { articles, reviewStateFor, tipFor } from "@intentset/help";
+
+tipFor(read.help, "BEH-ASMT-SCHEDULE", { underReviewHelp: "include" }); // the tip, with tip.underReview when it is
+reviewStateFor(read.help, "RULE-ASMT-AUTH"); // "held-back" while its knowledge is under review
+const { knowledge, pendingReview } = articles(read.help); // current articles; under-review IDs in pendingReview
+```
+
+## Lead articles for a page
+
+A slice may say which knowledge leads each surface of the product, a page, route, panel or module named by an ID the
+product chooses (VSA §3, ADR 0028), and the help file maps each surface to the articles published for its reader.
+`leadFor` returns a surface's articles in order, and `helpForPage` with a `surface` lists them first, then the articles
+its controls' tips reach, each once:
+
+```ts
+import { helpForPage, leadFor, surfaceHelp } from "@intentset/help";
+
+leadFor(read.help, "lantern-web:/assessments/schedule"); // the lead articles, in order, or []
+const page = helpForPage(read.help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" });
+page.knowledge; // the lead first, then the tips' articles
+page.leadPendingReview; // the leads under review, which are left out unless underReviewHelp is "include"
+surfaceHelp(read.help, "lantern-web:/assessments/schedule"); // { lead, pendingReview }
+```
+
+`leadFor` returns `[]` both for a surface the file does not list and for one whose leads are all under review, so a
+coverage report uses `surfaceHelp` or `helpForPage`, never `leadFor` alone. A surface ID is the product's own text:
+insert it into markup or a selector only escaped.
+
+## Serving the file
+
+The file was published for one reader: every audience, role and flag it names, on one product, release and edition.
+Those lists are held all-of, never read as "any of", so serve the file only where `servedTo` holds for the person:
+
+```ts
+import { type Reader, servedTo } from "@intentset/help";
+
+const reader: Reader = {
+  visibilities: ["public", "customer"],
+  audiences: ["teacher"],
+  roles: ["administrator", "teacher"],
+  product: "PRD-LANTERN",
+  release: "pilot-1",
+  edition: "standard",
+  flags: [],
+};
+if (read.ok && servedTo(read.help, reader)) bindTips(document, read.help);
+```
+
+The same test applies to a published document's `intentset-publication` block, which names the same entitlement. A
+reader refuses a file holding any member publication §5 does not give it, so a newer file is refused rather than shown
+in part.
 
 ## Learn more
 

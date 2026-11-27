@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import { contextFor, type Graph, graphHash, plainCarrier, readRegistries, validate } from "@intentset/core";
-import { type PublishResult, publish, toChunks } from "@intentset/publisher";
+import { bindReviewPins, type PublishResult, publish, toChunks } from "@intentset/publisher";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -302,6 +302,75 @@ test("restricted artifacts read as absent, are withheld from links and context, 
   await trusted.close();
 });
 
+test("a restricted ID in a knowledge record's tips or a verification's exercises is withheld and counted", async () => {
+  const restricted = graphOf((name, source) => {
+    if (name === "RULE-ASMT-FUTURE.md" || name === "SLICE-ASMT-SCHEDULE.md") {
+      return source.replace("visibility: internal", "visibility: restricted");
+    }
+    if (name === "TEST-ASMT-SCHEDULE.md") {
+      return source.replace(
+        "    selector: schedule-review-v1\n",
+        "    selector: schedule-review-v1\n    exercises:\n    - SLICE-ASMT-SCHEDULE\n",
+      );
+    }
+    return source;
+  });
+  const client = await engineering({ graph: restricted });
+  const knowledge = (await call(client, "intentset_lookup", { id: "KB-ASMT-SCHEDULE" })).json;
+  assert.deepEqual(Object.keys((knowledge.artifact as { tips: object }).tips), ["BEH-ASMT-SCHEDULE"]);
+  assert.equal(knowledge.withheld, 2);
+  const verification = (await call(client, "intentset_lookup", { id: "TEST-ASMT-SCHEDULE" })).json;
+  assert.deepEqual((verification.artifact as { verification: { exercises: string[] } }).verification.exercises, []);
+  for (const json of [knowledge, verification]) {
+    assert.ok(!JSON.stringify(json).includes("RULE-ASMT-FUTURE"));
+    assert.ok(!JSON.stringify(json).includes("SLICE-ASMT-SCHEDULE"));
+  }
+  await client.close();
+
+  const trusted = await engineering({ graph: restricted, includeRestricted: true });
+  const all = (await call(trusted, "intentset_lookup", { id: "KB-ASMT-SCHEDULE" })).json;
+  assert.deepEqual(Object.keys((all.artifact as { tips: object }).tips), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  assert.equal(all.withheld, 0);
+  await trusted.close();
+});
+
+const AVAILABILITY = [
+  "  availability:",
+  "    products:",
+  "    - PRD-LANTERN",
+  "    releases:",
+  "    - pilot-1",
+  "    roles:",
+  "    - teacher",
+  "    editions:",
+  "    - standard",
+  "    flags: []",
+].join("\n");
+
+test("a slice's restricted surface lead is withheld and counted unless the server was started with it", async () => {
+  const restricted = graphOf((name, source) => {
+    if (name === "KB-ASMT-SCHEDULE.md") return source.replace("visibility: customer", "visibility: restricted");
+    if (name === "SLICE-ASMT-SCHEDULE.md") {
+      return source.replace(
+        "  slice:\n",
+        `${AVAILABILITY}\n  slice:\n    surfaces:\n      /assessments:\n        knowledge:\n        - KB-ASMT-SCHEDULE\n`,
+      );
+    }
+    return source;
+  });
+  const lookup = async (includeRestricted: boolean) => {
+    const client = await engineering({ graph: restricted, includeRestricted });
+    const { json } = await call(client, "intentset_lookup", { id: "SLICE-ASMT-SCHEDULE" });
+    await client.close();
+    return { surfaces: (json.artifact as { slice: { surfaces: unknown } }).slice.surfaces, withheld: json.withheld };
+  };
+  assert.deepEqual(await lookup(false), { surfaces: { "/assessments": { knowledge: [] } }, withheld: 1 });
+  assert.deepEqual(await lookup(true), {
+    surfaces: { "/assessments": { knowledge: ["KB-ASMT-SCHEDULE"] } },
+    withheld: 0,
+  });
+});
+
 test("customer search and get return published knowledge, citing named sources and the snapshot", async () => {
   const { publication } = customerPublication();
   const client = await connect(createIntentsetServer({ mode: "customer", publication }));
@@ -392,6 +461,65 @@ test("customer mode refuses a publication that is not a public or customer proje
   );
 });
 
+test("BEH-PUBLISH-READER: customer results name the reader's audiences and roles as lists", async () => {
+  const { publication } = customerPublication();
+  const client = await connect(createIntentsetServer({ mode: "customer", publication }));
+  const search = (await call(client, "knowledge_search", { query: "release time" })).json;
+  assert.deepEqual(search.audience, ["teacher"]);
+  assert.deepEqual(search.availability, {
+    product: "PRD-LANTERN",
+    release: "pilot-1",
+    role: ["teacher"],
+    edition: "standard",
+    flags: [],
+  });
+  await client.close();
+});
+
+test("BEH-PUBLISH-READER: customer mode refuses an index of another profile or with a member the spec does not give", () => {
+  const { publication } = customerPublication();
+  const other = { ...publication, index: { ...publication.index, profile: "intentset/publication-index/0.2" } };
+  assert.throws(
+    () => createIntentsetServer({ mode: "customer", publication: other as unknown as PublishResult }),
+    /profile "intentset\/publication-index\/0\.2", not intentset\/publication-index\/0\.3/,
+  );
+  const extra = { ...publication, index: { ...publication.index, surfaces: {} } };
+  assert.throws(
+    () => createIntentsetServer({ mode: "customer", publication: extra as unknown as PublishResult }),
+    /has a member surfaces it does not define/,
+  );
+});
+
+test("BEH-PUBLISH-READER: customer mode refuses a document published for another reader than its index", () => {
+  const { publication } = customerPublication();
+  const [document] = publication.documents;
+  const mixed = (availability: Partial<typeof document.publication.availability>, audience?: string[]) => ({
+    ...publication,
+    documents: [
+      {
+        ...document,
+        publication: {
+          ...document.publication,
+          ...(audience === undefined ? {} : { audience }),
+          availability: { ...document.publication.availability, ...availability },
+        },
+      },
+    ],
+  });
+  for (const [label, changed] of [
+    ["another role", mixed({ role: ["administrator", "teacher"] })],
+    ["another audience", mixed({}, ["product", "teacher"])],
+    ["another flag", mixed({ flags: ["beta"] })],
+    ["another edition", mixed({ edition: "district" })],
+  ] as const) {
+    assert.throws(
+      () => createIntentsetServer({ mode: "customer", publication: changed }),
+      /document KB-ASMT-SCHEDULE was published for another reader than its index/,
+      label,
+    );
+  }
+});
+
 test("an unknown tool is an error in both modes", async () => {
   const eng = await engineering();
   await assert.rejects(eng.callTool({ name: "intentset_write", arguments: {} }), /Unknown tool: intentset_write/);
@@ -409,4 +537,45 @@ test("a snapshot that is not the graph's is refused, and the version is the pack
   );
   const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, "..", "package.json"), "utf8"));
   assert.equal(VERSION, manifest.version);
+});
+
+/** The example with its knowledge's behavior pin stale and its own text and gates pinned: keepable (ADR 0027). */
+function keptPublication(): PublishResult {
+  const kept = bindReviewPins(
+    graphOf((name, source) =>
+      name === "KB-ASMT-SCHEDULE.md"
+        ? source
+            .replace(/BEH-ASMT-SCHEDULE: '[0-9a-f]{64}'/, `BEH-ASMT-SCHEDULE: '${"0".repeat(64)}'`)
+            .replace("    sources:\n", "    self: '@current'\n    gates: '@current'\n    sources:\n")
+        : source,
+    ),
+  );
+  return publish(
+    kept,
+    registries,
+    { visibility: "customer", ...REQUEST, keepUnderReview: true },
+    { snapshot: { commit: COMMIT, graphHash: graphHash(kept) }, publishedAt: "2026-10-01T00:00:00Z" },
+  );
+}
+
+test("BEH-PUBLISH-UNDER-REVIEW, BEH-MCP-CONTEXT: customer mode serves a publication made with keepUnderReview and never a kept document", async () => {
+  const publication = keptPublication();
+  assert.deepEqual(publication.index.keptUnderReview, ["KB-ASMT-SCHEDULE"]);
+  assert.deepEqual(publication.index.published, []);
+  const client = await connect(createIntentsetServer({ mode: "customer", publication }));
+  const search = (await call(client, "knowledge_search", { query: "release time" })).json;
+  assert.equal(search.matched, 0);
+  const got = await call(client, "knowledge_get", { id: "KB-ASMT-SCHEDULE" });
+  assert.equal(got.isError, true);
+  assert.equal(got.json.error, NOT_AVAILABLE);
+  await client.close();
+  // Handing the kept documents in as current is refused: the index does not publish them.
+  assert.throws(
+    () =>
+      createIntentsetServer({
+        mode: "customer",
+        publication: { ...publication, documents: [...publication.documents, ...publication.keptUnderReview] },
+      }),
+    /not in the publication index/,
+  );
 });

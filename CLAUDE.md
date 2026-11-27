@@ -2,11 +2,11 @@
 
 Intentset keeps product intent, observable behavior, implementation ownership, verification and published knowledge
 connected, as readable Markdown files with YAML frontmatter in a repository. The graph, reports, Atlas and published
-knowledge are derived views; the files are authoritative. This repository is the v0.2 specifications, the conformance
+knowledge are derived views; the files are authoritative. This repository is the v0.3 specifications, the conformance
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
-**`spec/` is the source of truth**: `core-0.2.md`, `vsa-0.2.md`, `profile-typescript-amplify-gen2-0.2.md`,
-`export.md` (the export contract other tools pin, `intentset/export/0.6`), `list.md` (the result `intentset list`
+**`spec/` is the source of truth**: `core-0.3.md`, `vsa-0.3.md`, `profile-typescript-amplify-gen2-0.3.md`,
+`export.md` (the export contract other tools pin, `intentset/export/0.7`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
 frontmatter (`title`, `id`, `status`, `revision`, `implementation`) that the site renders; Core §1 is the change policy.
@@ -20,19 +20,19 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
 
 1. **One carrier, one record per artifact.** Markdown with YAML frontmatter under `intentset:`. Tools never merge
    duplicate records and never rewrite files, with two exceptions, each only when asked and each refusing a tree with
-   uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate --to 0.2` rewrites
-   `spec` and `profile` in each record's frontmatter, and `intentset approve` (ADR 0022) rewrites `status` and
-   `approval` in the drafts it is given, and the review of a knowledge record among them. Unknown keys inside
+   uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate
+   --to <spec>` rewrites `spec` and `profile`, applies that version's transforms (for `0.3`, ADR 0023's status rewrite
+   and ADR 0025's move of the review), and re-pins the review pins that matched before the move; and `intentset approve`
+   (ADR 0022) rewrites `status` and `approval` in the drafts it is given, and the review of a knowledge record among
+   them, and, with `--renew-review`, only the review of the approved or deprecated knowledge it is given. Unknown keys inside
    `intentset` are errors except under `extensions`; unknown top-level keys are preserved and never interpreted.
 2. **Authored forward edges only.** Relationships are written once in the Core §5 direction; every inverse is
    derived and marked derived. A reverse edge in a file is a mistake, not a convenience.
 3. **Definitions are not evidence.** A verification record says how a claim is checked. Only a `pass` whose binding
    holds is current: under subject binding (the default wherever slices claim files, ADR 0013) while the subject its
    check is about is unchanged (a resource's files are in the subject only where the verification exercises the
-   resource or an implementing slice owns it; `evidence.resources: used` hashes every resource a slice lists; a slice reached
-   only through `dependsOn` contributes every claimed file unless `evidence.dependencies: entrypoint` limits it to its binding
-   fields, entrypoint files and contract records, an opt-in because the measured gain on Streamlane's store was under the bar;
-   ADR 0013, amended 2026-10-15 twice), under commit binding (`evidence.binding: commit`, or `--binding commit`) at the assessed
+   resource or an implementing slice owns it, and a slice reached only through `dependsOn` contributes every claimed file;
+   ADR 0013, amended 2026-10-15 twice, and ADR 0026, which made that the one rule), under commit binding (`evidence.binding: commit`, or `--binding commit`) at the assessed
    commit and graph hash. Stale, skip, error, fail and missing never count as pass, and link coverage and current-pass
    coverage are always reported separately.
 4. **Publication fails closed.** Deny by default, intersect every availability dimension, exclude draft and retired,
@@ -103,8 +103,9 @@ learning from questions, and the AWS rules).
 
 ## Conventions
 
-- Diagnostic codes: `CORE001`–`CORE009`, `CFG001`–`CFG002` and `EVID001`–`EVID007` (Core §11; an outcome with no
-  measure is CORE009 draft, CORE003 active), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
+- Diagnostic codes: `CORE001`–`CORE013`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
+  of thing to fix, ADR 0024: an unreadable carrier is CORE010, a missing section CORE011, a field CORE001; an outcome
+  with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
   `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
@@ -146,8 +147,9 @@ packages/
   architecture/       M2: claims, import graph, layers, resources, exceptions, baseline
   verification/       M3: run records, freshness, reporter adapters, what needs a run (evidence stale)
   publisher/          M4: projection and generated Markset, and the help file (publication §5)
-  help/               reads help.json and binds tips to the controls of a product's interface. No dependencies, runs in
-                      a browser; the binder takes any root with querySelectorAll, so it is tested without a DOM
+  help/               reads help.json, binds tips to the controls of a product's interface and lists a page's lead
+                      articles. No dependencies, runs in a browser; the binder takes any root with querySelectorAll,
+                      so it is tested without a DOM
   atlas/              M4: static review pages over an export
   cli/                `intentset`
   conformance/        private harness
@@ -246,19 +248,23 @@ from source (the installed bin points at `dist/`, which only the build writes).
   model:review` (`--fail-on-drift` against the base). There is no architecture baseline: the last one, 17 VSA003
   errors of tests reaching into the conformance harness's modules, was retired on 2026-10-10, so any new violation is
   an error. A refactor answers drift with an `Intentset-Unchanged: SLICE-…` trailer.
-- **Approved by a maintainer on 2026-10-15**, all but ten records: OUT-DOCS-IMPROVE waits for a measure (CORE003
+- **Approved by a maintainer on 2026-10-15**, all but ten records: OUT-DOCS-IMPROVE waits for a measure (CORE012
   refuses an approved outcome nothing measures), and the nine rules have no verification (CORE007 refuses an approved
-  rule at L3 without one). A new record is a draft until a maintainer approves it; an agent never approves one.
+  rule at L3 without one). The behaviors and verifications the 0.3 changes added or revised are drafts again,
+  awaiting a maintainer. A new record is a draft until a maintainer approves it; an agent never approves one.
 
 ## Status
 
 Open work only. What shipped is in `CHANGELOG.md`, why in `docs/decisions/`, and the milestones (M0 to M5, all done)
 in `docs/implementation-plan.md` §5.
 
-- The specifications are 0.2 and the export is 0.6. The next breaking change to any spec moves `intentset.spec` to
-  `0.3`, and the changes waiting for that one move are issues #126, #127, #129 and #130 (with #49).
-- Ten records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure and the nine rules for verifications
-  ("Intentset's own model"). The measures' targets and first readings are a maintainer's.
+- Branch `spec-0.3` holds the whole move to specifications 0.3 and export 0.7, ADRs 0023 to 0029 (issues #126,
+  #127, #129, #130 with #49, #142, #143 and #144), and awaits release as 0.18.0 and the maintainer's approval of the
+  drafts it added or returned to draft. A migration step's per-record rewrites go in `MIGRATIONS` in
+  `packages/cli/src/commands/migrate.ts`.
+- Seventy records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
+  verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
+  for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
   weeks.
 - The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).

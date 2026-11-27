@@ -1,16 +1,16 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-VALIDATE-REPORTS
   type: behavior
   title: Validate reports every problem in the model as a diagnostic
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-VALIDATE
   links:
     governedBy: [RULE-READ-ONLY-CHECKS, RULE-DETERMINISTIC, RULE-UNRESOLVED-NOT-PASS]
@@ -26,7 +26,7 @@ intentset:
 
 ## Behavior
 
-A developer or an agent runs `intentset validate`. Every record in the configured scope is read and checked at the configured level, and each problem is reported with its code, severity, origin, artifact, path, location when known, field and remediation, sorted, with a count of artifacts, errors and warnings.
+A developer or an agent runs `intentset validate`. Every record in the configured scope is read and checked at the configured level, and each problem is reported with its code, severity, origin, artifact, path, location when known, field and remediation, sorted, with a count of artifacts, errors and warnings. A code names one kind of thing to fix (Core §11, ADR 0024): CORE010 a document that cannot be read, CORE011 a missing heading or section, CORE001 a field, CORE003 a link that does not resolve, CORE012 a record past draft that lacks a relationship it must have; the field pointer says which field.
 
 ## Preconditions
 

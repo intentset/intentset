@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DELIVERY_TYPES, deliveryOf, readExport } from "../src/index.ts";
+import { BUILT_STATUSES, DELIVERY_TYPES, deliveryOf, readExport, STATUSES } from "../src/index.ts";
 import { expandCase, runCase } from "./cases.ts";
 
 type Patch = Record<string, { frontmatter: Record<string, unknown> }>;
@@ -26,16 +26,24 @@ const set = (fields: Record<string, unknown>) => ({
 const BEH = "BEH-ASMT-SCHEDULE.md";
 const SLICE = "SLICE-ASMT-SCHEDULE.md";
 
-test("BEH-DELIVERY: the effective delivery is the field, then a status that claims an implementation, then not stated", () => {
+test("BEH-DELIVERY: the effective delivery is the field, then built for a deprecated record, then not stated", () => {
   assert.equal(deliveryOf({ status: "draft", delivery: "built" }), "built");
   assert.equal(deliveryOf({ status: "approved", delivery: "planned" }), "planned");
   assert.equal(deliveryOf({ status: "draft" }), null);
   assert.equal(deliveryOf({ status: "approved" }), null, "approval claims nothing about the code");
-  for (const status of ["implemented", "released", "deprecated"] as const) {
-    assert.equal(deliveryOf({ status }), "built", status);
-  }
+  assert.equal(deliveryOf({ status: "deprecated" }), "built", "a deprecated record describes something that existed");
+  assert.deepEqual(BUILT_STATUSES, ["deprecated"]);
   assert.equal(deliveryOf({ status: "retired" }), null);
   assert.equal(deliveryOf({ status: "draft", delivery: null }), null, "an export's null is not stated");
+});
+
+test("BEH-DELIVERY: status is the review lifecycle, and implemented and released are CORE001", () => {
+  assert.deepEqual(STATUSES, ["draft", "approved", "deprecated", "retired"]);
+  for (const status of ["implemented", "released"]) {
+    const found = lantern({ [BEH]: set({ status }) }).diagnostics.find((d) => d.code === "CORE001");
+    assert.equal(found?.field, "/intentset/status", status);
+    assert.match(found?.message ?? "", /must be one of draft, approved, deprecated, retired/);
+  }
 });
 
 test("BEH-DELIVERY: a record reads delivery on the types that carry it, and CORE001 elsewhere or for another value", () => {
@@ -52,12 +60,12 @@ test("BEH-DELIVERY: a record reads delivery on the types that carry it, and CORE
   assert.match(value?.message ?? "", /must be planned or built/);
 });
 
-test("BEH-DELIVERY: planned with a status that claims an implementation, and a built behavior with a planned slice, are CORE005", () => {
-  const planned = lantern({ [BEH]: set({ status: "implemented", delivery: "planned" }) });
+test("BEH-DELIVERY: planned on a deprecated record, and a built behavior with a planned slice, are CORE005", () => {
+  const planned = lantern({ [BEH]: set({ status: "deprecated", delivery: "planned" }) });
   const status = planned.diagnostics.filter((d) => d.code === "CORE005");
   assert.equal(status.length, 1);
   assert.equal(status[0].severity, "error");
-  assert.match(status[0].message, /planned while its status, implemented, claims an implementation/);
+  assert.match(status[0].message, /planned while it is deprecated, which says the work existed/);
 
   const slice = lantern({ [BEH]: set({ delivery: "built" }), [SLICE]: set({ delivery: "planned" }) });
   const contradiction = slice.diagnostics.filter((d) => d.code === "CORE005");
@@ -99,7 +107,7 @@ test("BEH-DELIVERY: at L2 a draft behavior that says built and that no product s
 test("BEH-DELIVERY: the export carries delivery as written, and readExport refuses it on a type that does not carry it", () => {
   const { envelope } = lantern({
     [BEH]: set({ delivery: "built" }),
-    "RULE-ASMT-AUTH.md": set({ status: "implemented" }),
+    "RULE-ASMT-AUTH.md": set({ status: "deprecated" }),
   });
   const plain = JSON.parse(JSON.stringify(envelope));
   const byId = new Map(plain.artifacts.map((a: { id: string }) => [a.id, a]));
@@ -107,7 +115,7 @@ test("BEH-DELIVERY: the export carries delivery as written, and readExport refus
   assert.equal(
     (byId.get("RULE-ASMT-AUTH") as { delivery: unknown }).delivery,
     null,
-    "the field as written; implemented makes it built only when read",
+    "the field as written; deprecated makes it built only when read",
   );
   assert.ok(readExport(plain).ok);
 

@@ -1,6 +1,6 @@
 {
-  "contract": "intentset/export/0.6",
-  "spec": "0.2",
+  "contract": "intentset/export/0.7",
+  "spec": "0.3",
   "generatedAt": "2026-10-03T12:00:00Z",
   "repository": "example/scheduling",
   "products": [
@@ -10,7 +10,7 @@
     "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
     "uncommitted": false
   },
-  "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
+  "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
   "release": {
     "product": "PRD-LANTERN",
     "label": "pilot-1"
@@ -82,10 +82,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/decision/0.2",
+      "profile": "intentset/decision/0.3",
       "revision": 1,
       "path": "ADR-ASMT-SEAM.md",
-      "sourceHash": "3f83a229b04748a59fd8b010444dae78b3d647b8bdeb68fd4170e80eff456be3",
+      "sourceHash": "989ab06aa18de33f8e83ad3287c1dab0a3b929af7fae12552a6b48255fa4b5d1",
       "parent": null,
       "links": {},
       "derived": {
@@ -99,6 +99,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -124,10 +125,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/behavior/0.2",
+      "profile": "intentset/behavior/0.3",
       "revision": 1,
       "path": "BEH-ASMT-SCHEDULE.md",
-      "sourceHash": "1a7e1fc3bccbc7969631194de771bd1f95bdec90a1df7079a4354b43d2b806f9",
+      "sourceHash": "6c48ebf7d62a3abcf5454fdf8f9abe435ae78e274d698c5e33be27c090287711",
       "parent": "CAP-ASMT-ASSIGN",
       "links": {
         "governedBy": [
@@ -168,6 +169,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -184,10 +186,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/capability/0.2",
+      "profile": "intentset/capability/0.3",
       "revision": 1,
       "path": "CAP-ASMT-ASSIGN.md",
-      "sourceHash": "ba31f2d6c661405d1dd0e02d2f0d22042e3db04639b4e688b9be9209a88d4377",
+      "sourceHash": "b95d03ce2db6b4d734d4e3d3dc8dbd857872e6dbbd980732ab48bb6c5c0a491f",
       "parent": "OUT-PREPARE",
       "links": {},
       "derived": {
@@ -201,6 +203,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -217,10 +220,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/contract/0.2",
+      "profile": "intentset/contract/0.3",
       "revision": 1,
       "path": "CONTRACT-ASMT-SCHEDULE.md",
-      "sourceHash": "bfba2f210578b09bec589ee330840dd8cf8d5d4cfe7379d70130fb905c73bb49",
+      "sourceHash": "db9d861f7475b0e6d09c0fb0c1113e5a39d7230f45b8a2baddf1ebc3ecc0e9a5",
       "parent": null,
       "links": {},
       "derived": {
@@ -234,6 +237,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -250,10 +254,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/intent/0.2",
+      "profile": "intentset/intent/0.3",
       "revision": 1,
       "path": "INT-PREPARE.md",
-      "sourceHash": "77808e4361be73aaca3b19c346fd94574d9b9739fd7bcd37984fdfe307dcd912",
+      "sourceHash": "9f2c54cbb72dc29bcf8cff2d6975d46f158ddf8f14cbabb0e0465ace9acacb1d",
       "parent": "PRD-LANTERN",
       "links": {},
       "derived": {
@@ -267,6 +271,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -292,10 +297,10 @@
       "audiences": [
         "teacher"
       ],
-      "profile": "intentset/knowledge/0.2",
+      "profile": "intentset/knowledge/0.3",
       "revision": 1,
       "path": "KB-ASMT-SCHEDULE.md",
-      "sourceHash": "99fb27595e0b9249164cd36601f0b1a423fa90e005ab756c68d47ea6d4ec68e7",
+      "sourceHash": "3b1c6f1de6f76df8f208a164ba302e37ac4679e8c38e0946c4825a9cccb69730",
       "parent": null,
       "links": {
         "explains": [
@@ -304,7 +309,7 @@
         ]
       },
       "derived": {},
-      "withheldLinks": 1,
+      "withheldLinks": 2,
       "availability": {
         "products": [
           "PRD-LANTERN"
@@ -327,16 +332,15 @@
         "BEH-ASMT-SCHEDULE": "Pick a published assessment, a class you manage and a future release time.",
         "RULE-ASMT-FUTURE": "The release time must be in the future."
       },
-      "extensions": {
-        "intentset.org/review": {
-          "hash": "content-v1",
-          "sources": {
-            "BEH-ASMT-SCHEDULE": "6d6d30d8dc134427566aad8f240ff93a6d4c0f844b6fc26657f69d0e861bd1c7",
-            "RULE-ASMT-AUTH": "949105cd53a1490858a81513dd98f8aee815c4552721627e1345cc636b8d45bb",
-            "RULE-ASMT-FUTURE": "daea07d3681b6369a65ad7c23b88b52633ec126d5be48af1e68c610df22773ed"
-          }
-        }
-      }
+      "review": {
+        "sources": {
+          "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+          "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f"
+        },
+        "hash": "content-v1",
+        "snapshot": null
+      },
+      "extensions": null
     },
     {
       "id": "MEAS-PREPARE-ADOPTION",
@@ -352,10 +356,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/measure/0.2",
+      "profile": "intentset/measure/0.3",
       "revision": 1,
       "path": "MEAS-PREPARE-ADOPTION.md",
-      "sourceHash": "7b69a35995e4b60f0a6f80aaab307c7cf2f00072d223b3efedff3fecd780e982",
+      "sourceHash": "3742ed7ed90b9fe4524cb63e6c9f74526c45d3286eab4c624c58a6a260005d93",
       "parent": "OUT-PREPARE",
       "links": {},
       "derived": {},
@@ -372,6 +376,7 @@
         "direction": "increase"
       },
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -388,10 +393,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/measure/0.2",
+      "profile": "intentset/measure/0.3",
       "revision": 1,
       "path": "MEAS-PREPARE-MINUTES.md",
-      "sourceHash": "866b88513cc809f8326410e95e103ae4b6659b5ead1b902d26f38baa70a0966d",
+      "sourceHash": "394b41d3171106da5cf9a2d81daa5cb7b0b2ded427a7394ebdf6664af8ad3485",
       "parent": "OUT-PREPARE",
       "links": {},
       "derived": {},
@@ -408,6 +413,7 @@
         "direction": "decrease"
       },
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -424,10 +430,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/outcome/0.2",
+      "profile": "intentset/outcome/0.3",
       "revision": 1,
       "path": "OUT-PREPARE.md",
-      "sourceHash": "98a8319c145316db6373032d1c48d564a527d2f095dc516d19299be9492e325f",
+      "sourceHash": "6fe22c839167dc61ebc8be313edd53f3ccec175fe38194c609d4da042605400c",
       "parent": "INT-PREPARE",
       "links": {},
       "derived": {
@@ -443,6 +449,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -459,10 +466,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/product/0.2",
+      "profile": "intentset/product/0.3",
       "revision": 1,
       "path": "PRD-LANTERN.md",
-      "sourceHash": "17e8a8c8c1c04079053d25744e8ffb74be0268efb8dc4d6d05ebe06cce06a977",
+      "sourceHash": "1a37d9386e0d222dd64bf654104c8b67077429570f0c46c07c898b7faa6f3afe",
       "parent": null,
       "links": {},
       "derived": {
@@ -476,6 +483,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -492,10 +500,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/rule/0.2",
+      "profile": "intentset/rule/0.3",
       "revision": 1,
       "path": "RULE-ASMT-FUTURE.md",
-      "sourceHash": "9b3666830eaec17681f8725125bfeb588c53a38f3ebad710f19427ecd07db05e",
+      "sourceHash": "bce68f0fd90b2c7834c3dc8c09a34326c08e1c68dc74421c8653104502041539",
       "parent": null,
       "links": {},
       "derived": {
@@ -515,6 +523,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -531,10 +540,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/scenario/0.2",
+      "profile": "intentset/scenario/0.3",
       "revision": 1,
       "path": "SCN-ASMT-SCHEDULE.md",
-      "sourceHash": "cf4ad4cfe961d7fb0530b60e997c97b000f27abeb9f178f6c9417a8fcf808e9a",
+      "sourceHash": "9552b0ec455d667dfacad23ee79739414f46d59568d9d5ea3f18fe13b65b293e",
       "parent": null,
       "links": {
         "illustrates": [
@@ -552,6 +561,7 @@
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -568,10 +578,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/slice/0.2",
+      "profile": "intentset/slice/0.3",
       "revision": 1,
       "path": "SLICE-ASMT-SCHEDULE.md",
-      "sourceHash": "f0422d48e6c5cff122f396e3fa2b04c7cdf79ade28e6defabb7a6a40f25c4f46",
+      "sourceHash": "6cd60542b69d12157849904780bfb891c92e8b4daae4b0dc5c736ead931ceb9e",
       "parent": null,
       "links": {
         "implements": [
@@ -586,7 +596,21 @@
       },
       "derived": {},
       "withheldLinks": 0,
-      "availability": null,
+      "availability": {
+        "products": [
+          "PRD-LANTERN"
+        ],
+        "releases": [
+          "pilot-1"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "editions": [
+          "standard"
+        ],
+        "flags": []
+      },
       "slice": {
         "kind": "product",
         "domain": "assessment",
@@ -622,11 +646,19 @@
         ],
         "usesResources": [
           "RES-ASSESSMENT-DATA"
-        ]
+        ],
+        "surfaces": {
+          "lantern-web:/assessments/schedule": {
+            "knowledge": [
+              "KB-ASMT-SCHEDULE"
+            ]
+          }
+        }
       },
       "verification": null,
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     },
     {
@@ -643,10 +675,10 @@
         "engineering",
         "product"
       ],
-      "profile": "intentset/verification/0.2",
+      "profile": "intentset/verification/0.3",
       "revision": 1,
       "path": "TEST-ASMT-SCHEDULE.md",
-      "sourceHash": "29380720f60d53341a0a7e1c058baf3b02f8a6716888bf49765f2db5e492a14f",
+      "sourceHash": "e46598e588acd1b4c88d23a0592d0acc99ac48f358aa6926987420ee6d97bfe9",
       "parent": null,
       "links": {
         "verifies": [
@@ -667,13 +699,14 @@
       },
       "measure": null,
       "tips": null,
+      "review": null,
       "extensions": null
     }
   ],
   "reports": {
     "evidence": {
       "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-      "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
+      "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
       "scope": {
         "product": "PRD-LANTERN",
         "release": "pilot-1"
@@ -693,7 +726,7 @@
             "evidenceId": "review-0002",
             "verificationId": "TEST-ASMT-SCHEDULE",
             "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-            "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
+            "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
             "environment": "staging",
             "scope": {
               "product": "PRD-LANTERN",
@@ -757,7 +790,7 @@
       ]
     },
     "knowledge": {
-      "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
+      "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
       "artifacts": [
         {
           "id": "KB-ASMT-SCHEDULE",
@@ -771,12 +804,13 @@
           ],
           "changed": [],
           "missing": [],
-          "withheld": 2
+          "withheld": 2,
+          "self": "unpinned"
         }
       ]
     },
     "impact": {
-      "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
+      "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
       "note": "Reachability through authored links marks an artifact for review; it is not proof that runtime behavior changed (Core §10).",
       "starts": [
         {
@@ -1693,7 +1727,7 @@
     },
     "ownership": {
       "commit": "4f2c0b1d9e8a7f6b5c4d3e2f1a0b9c8d7e6f5a4b",
-      "graphHash": "3e4cde206fbb1d6609cab76cdb66a6b43950d49874ac24c3d7c3fb576d2c913a",
+      "graphHash": "d069efe966b5231fa3d2ef5cb8a2549f66fad4faffc89bc5065c34b850785424",
       "files": [
         {
           "path": "amplify/data/resource.ts",

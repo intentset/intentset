@@ -1,14 +1,14 @@
 ---
-title: Intentset Export Contract v0.6
-id: intentset/export/0.6
+title: Intentset Export Contract v0.7
+id: intentset/export/0.7
 status: draft
-revision: 2026-11-14
+revision: 2026-11-26
 implementation: 0.17.1
 ---
 
-# Intentset Export Contract v0.6
+# Intentset Export Contract v0.7
 
-**Extends:** [Core §12](core-0.2.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
+**Extends:** [Core §12](core-0.3.md#12-portability-and-exclusions) • **Schema:** [export.schema.json](export.schema.json)
 
 The export is how a tool outside the repository reads a product model: a work tracker linking work items to
 behaviors, a usage product attributing errors to slices, a second implementation comparing graphs. This document fixes
@@ -22,13 +22,13 @@ knowledge by writing to it.
 ## 1. The envelope
 
 An export is one UTF-8 JSON object. Its lists are sorted (artifacts by `id`, report entries by their ID or path, ID
-lists by code point) except where order is the meaning: an impact entry's `ancestors` run from parent to root, and a
-hit's `path` from the start. The same validation with the same `generatedAt` is the same bytes.
+lists by code point) except where order is the meaning: an impact entry's `ancestors` run from parent to root, a
+hit's `path` from the start, and a surface's `knowledge` in the order its slice declares it. The same validation with the same `generatedAt` is the same bytes.
 
 | Field | Meaning |
 |---|---|
-| `contract` | `intentset/export/0.6`. A consumer MUST reject any other value (§5). |
-| `spec` | The Core version the model is written against: `0.2`. |
+| `contract` | `intentset/export/0.7`. A consumer MUST reject any other value (§5). |
+| `spec` | The Core version the model is written against: `0.3`. |
 | `generatedAt` | ISO 8601 time of generation. Outside every hash; two exports of one snapshot differ only here. |
 | `repository` | The stable repository identity from `.intentset/config.yaml`. |
 | `products` | The exported product artifact IDs. |
@@ -53,18 +53,29 @@ second import of it as the same snapshot rather than a new one.
 ## 2. Artifacts
 
 Each artifact carries its metadata as Core §4 defines it (`id`, `type`, `title`, `status`, `delivery`, `approval`, `formalizes`, `owner`,
-`visibility`, `audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `extensions`), its source `path` and
+`visibility`, `audiences`, `profile`, `revision`, `availability`, `slice`, `verification`, `measure`, `tips`, `review`, `extensions`), its source `path` and
 `sourceHash`, its `parent`, its authored `links` by kind, and `derived`: the inverse edges by the authored kind, so
 `derived.governedBy` on a rule lists the behaviors that name it. Derived edges are never authored (Core §5).
 `withheldLinks` counts the link targets and sources left out because the artifact at the other end is withheld. A
 verification's metadata carries `exercises`, the slice and resource IDs it declares it drives beyond its behaviors' slices
 (Core §8): as authored and sorted, an empty list when it declares none, less the IDs of withheld artifacts, which
-`withheldLinks` counts.
+`withheldLinks` counts. A slice's metadata carries `surfaces` (VSA §3, ADR 0028): by surface ID, keys in code-unit
+order, each with `knowledge` as authored and in declared order, less the IDs of withheld artifacts, which
+`withheldLinks` counts. A surface whose every ID was withheld keeps its key with an empty `knowledge`. A slice that
+declares none carries `{}`.
 
 `delivery` is the record's field as authored, `planned` or `built`, and null when the record states none or its type
 never carries one (Core §7). It is not the effective delivery: a consumer that wants "is this built" computes it as
-Core §7 does, `built` for a null `delivery` whose `status` is `implemented`, `released` or `deprecated`, as
+Core §7 does, `built` for a null `delivery` whose `status` is `deprecated`, as
 `deliveryOf` in `@intentset/core` does.
+
+`review` is a knowledge record's review pins (Core §9, ADR 0025), and null on any other type or where the knowledge
+states none: `sources`, the hash pinned for each source by ID, and `hash` and `snapshot` as authored, null where the
+record leaves them out. A null `hash` means `content-v1`, as it does in the record. The review's `self` and `gates`
+(ADR 0027) are never exported; `reports.knowledge` says whether `self` still matches (§4.2). `tips` is the knowledge's tips by
+explained ID. A pin, or a tip, whose key is a withheld artifact's ID is left out and counted in `withheldLinks` (§3),
+so a review with a pin withheld cannot be used to recompute whether the knowledge is current; that judgment is the
+producer's, in `reports.knowledge` (§4.2).
 
 `approval` is the basis the record states for its approval (Core §7), and null when it states none: `at`, `basis`
 (`direct`, `derived` or `attested`), and `by`, `source` and `attestedBy`, each null where the basis does not carry it.
@@ -88,9 +99,13 @@ as unresolved rather than drop it.
 
 A producer MUST withhold `restricted` artifacts unless the export was explicitly asked to include them. A withheld
 artifact is absent from `artifacts`, `products` and every report; its ID is removed from the links, derived edges and
-parent of every exported artifact, from `registries.resources[].consumers`, and from the lists inside every report; and
+parent of every exported artifact, from the keys of every knowledge artifact's `tips` and `review.sources` (§2: a pin
+and a tip name the artifact as a link does), from every slice's surfaces' `knowledge`, from `registries.resources[].consumers`, and from the lists inside every
+report; and
 a diagnostic whose artifact or path is a withheld artifact's is left out of `validation.diagnostics`, while one that
-names a withheld ID in its text has that ID replaced by "a withheld artifact". Every omission is counted where it
+names a withheld ID in its text or its `field` has that ID replaced by "a withheld artifact" (in `field`, the pointer
+token that was the ID, as in `/intentset/review/sources/a withheld artifact`, so a bad pin or tip keyed by a withheld
+artifact is still reported without naming it). Every omission is counted where it
 happened: `withholding.artifacts` and `withholding.diagnostics` for the envelope, `withheldLinks` per artifact, and a
 `withheld` count beside each report list that was shortened. A short export never reads as a complete one.
 
@@ -150,10 +165,14 @@ SHOULD show the binding beside a status, since the same word carries a different
 ### 4.2 Knowledge
 
 `reports.knowledge` holds one entry per exported knowledge artifact: its lifecycle, its review `status` (`current`
-only while every source it was reviewed against still has the hash it was pinned at and a reviewer and time are named,
-Core §9; otherwise `needs-review`), the `reviewer` and `reviewedAt`, the `sources` a review must pin (what it explains,
-and the rules governing each explained behavior), and which of them `changed` or are `missing` a pin. The status is
-computed with withheld sources included, so knowledge whose withheld source changed still reads `needs-review`.
+only while every source it was reviewed against still has the hash it was pinned at, a reviewer and time are named,
+and, when the review pins the knowledge's own text, that text is unchanged, Core §9; otherwise `needs-review`), the
+`reviewer` and `reviewedAt`, the `sources` a review must pin (what it explains, and the rules governing each explained
+behavior), and which of them `changed` or are `missing` a pin. `self` says whether the knowledge's own text still
+matches its review: `unchanged`, `changed`, or `unpinned` when the review has no `self`. A `changed` self makes the
+entry `needs-review` even when nothing else changed. The artifact's exported `review` never carries `self` or
+`gates`: both are hashes over content the export may withhold (ADR 0025, ADR 0027). The status is computed with
+withheld sources included, so knowledge whose withheld source changed still reads `needs-review`.
 
 ### 4.3 Impact
 
@@ -185,11 +204,11 @@ they are reported:
 |---|---|
 | `not-json` | is not UTF-8 JSON, or is over the consumer's size limit |
 | `unsupported-contract` | has no `contract`, or one this consumer does not support |
-| `malformed` | does not satisfy spec/export.schema.json, or a list of artifacts or report entries is out of order or repeats its key |
+| `malformed` | does not satisfy spec/export.schema.json, or a list of artifacts or report entries is out of order or repeats its key; a slice whose `surfaces` is missing, or whose surface key breaks VSA §3's rules, is malformed |
 | `identity-mismatch` | has another `repository` than the connection's, or does not contain the connection's product |
 | `mixed-snapshot` | carries a report computed at another commit or graph hash than its own |
 | `forbidden-content` | contains an artifact of a visibility its own `withholding` says it withheld |
-| `inconsistent-report` | contradicts itself: a status disagreeing with its counts, a `current-pass` decided by a run that is not current under the report's binding (§4.1), a `stale` status whose latest record is current under it, a verification judged by another binding than the report's, a subject binding with no subject for a verification that is not `unresolved`, a fallback reason that contradicts the binding, a knowledge entry `current` with changed sources, a report entry for an artifact the export lacks, an impact hit whose path does not end at it |
+| `inconsistent-report` | contradicts itself: a status disagreeing with its counts, a `current-pass` decided by a run that is not current under the report's binding (§4.1), a `stale` status whose latest record is current under it, a verification judged by another binding than the report's, a subject binding with no subject for a verification that is not `unresolved`, a fallback reason that contradicts the binding, a knowledge entry `current` with changed sources or a `changed` self, a report entry for an artifact the export lacks, an impact hit whose path does not end at it |
 
 The first three stop the read: nothing else can be judged in a value of the wrong shape or version. The rest are all
 collected, and the first in the table names the result. A schema validator alone covers `malformed` and part of
@@ -229,8 +248,8 @@ versions it supports and rejects the rest (§5). 0.2 was the first version a con
 report slots and exported restricted artifacts by default, and no consumer was built against it (ADR 0008). 0.3 added
 the `measure` artifact type, the `evidenceSources` registry, and `measure` and `tips` on every artifact (ADR 0012); a
 0.2 reader would reject an envelope naming a type it did not know, so the version moved rather than the type arriving
-unannounced. 0.4 carries the evidence binding (ADR 0014), 0.5 each artifact's `delivery` (ADR 0017), and 0.6 its
-`approval` and `formalizes` (ADR 0020), below.
+unannounced. 0.4 carries the evidence binding (ADR 0014), 0.5 each artifact's `delivery` (ADR 0017), 0.6 its `approval` and
+`formalizes` (ADR 0020), and 0.7 the specifications' `0.3`, below.
 
 Keying the code's shape on the origin (§1, 2026-10-05) was a defect fix inside 0.3, not a new version. A 0.3 producer
 already wrote Markset's codes under origin `syntax`, since the adapter passes them through unchanged, while the schema
@@ -263,6 +282,13 @@ so a 0.5 reader would reject an artifact that carried either: 0.6 adds `approval
 0.5 envelope as `unsupported-contract`, as each earlier move did, because a 0.5 envelope cannot say whether an absent
 basis means "not stated" or "not exported". `spec` stays `0.2`: both fields are optional, and no conformance case
 changed.
+
+0.7 (2026-11-25) carries the specifications' second move. `spec` in the envelope moves from `0.2` to `0.3` with Core's
+(Core §1, ADR 0023 to ADR 0026), and each artifact's `profile` with it, so a 0.6 reader would reject every 0.7 envelope
+on its `spec` alone. A 0.7 reader rejects a 0.6 envelope as `unsupported-contract`, as each earlier move did, with the
+version it supports in the message, because it cannot read a 0.2 model as one written against 0.3. Each knowledge
+artifact carries `review` (ADR 0025), its pins as a field and no longer an extension, and the export withholds a pin
+and a tip with the artifact each names (§3). Each slice carries `surfaces` (ADR 0028), `{}` when it declares none.
 
 The contract version and Core's `intentset.spec` move separately. While the specifications are drafts, the next change
 that invalidates an existing conformance case, in any section of the suite and against any specification, moves

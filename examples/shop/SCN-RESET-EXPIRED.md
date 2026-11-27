@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/scenario/0.2
+  spec: '0.3'
+  profile: intentset/scenario/0.3
   id: SCN-RESET-EXPIRED
   type: scenario
   title: Refuse an expired reset link

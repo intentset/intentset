@@ -18,6 +18,7 @@ import {
   type Availability,
   EXPORT_CONTRACT,
   type ExportApproval,
+  type ExportReview,
   type ExportArtifact,
   type ExportFormalized,
   type Formalized,
@@ -30,7 +31,9 @@ import {
   type LinkKind,
   type Registries,
   SPEC_VERSION,
+  type ExportSlice,
   type SliceMeta,
+  type SliceSurface,
   type ValidationResult,
   type Visibility,
 } from "./types.ts";
@@ -62,7 +65,7 @@ export interface ExportMeta {
   reports?: ExportReports;
 }
 
-/** spec/export.md: the `intentset/export/0.3` envelope over a validation result. */
+/** spec/export.md: the `intentset/export/0.7` envelope over a validation result. */
 export function exportGraph(result: ValidationResult, registries: Registries, meta: ExportMeta): ExportEnvelope {
   const { graph } = result;
   const withheld = withheldIds(graph, meta.includeRestricted === true);
@@ -159,7 +162,10 @@ function redactNote(note: string, withheld: Withheld): string {
   return out;
 }
 
-/** Diagnostics about a withheld artifact are left out; any other that names one has the ID redacted. */
+/**
+ * Diagnostics about a withheld artifact are left out; any other that names one has the ID redacted, in its text and in
+ * its field, whose pointer names a pin's or a tip's key (export §3).
+ */
 function withholdDiagnostics(diagnostics: readonly Diagnostic[], withheld: Withheld): Diagnostic[] {
   const out: Diagnostic[] = [];
   for (const d of diagnostics) {
@@ -171,7 +177,12 @@ function withholdDiagnostics(diagnostics: readonly Diagnostic[], withheld: Withh
       continue;
     }
     const redact = (text: string) => text.replace(pattern, "a withheld artifact");
-    out.push({ ...d, message: redact(d.message), remediation: redact(d.remediation) });
+    out.push({
+      ...d,
+      ...(d.field === null || d.field === undefined ? {} : { field: redact(d.field) }),
+      message: redact(d.message),
+      remediation: redact(d.remediation),
+    });
   }
   return out;
 }
@@ -217,6 +228,34 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
   }
 
   const exercises = keep(meta.verification?.exercises ?? []);
+  // Export §2 (ADR 0028): a surface's knowledge keeps its declared order, less withheld IDs; an emptied key stays.
+  const surfaces: Record<string, SliceSurface> = {};
+  for (const key of Object.keys(meta.slice?.surfaces ?? {}).sort(compareStrings)) {
+    const knowledge: string[] = [];
+    for (const target of meta.slice?.surfaces?.[key].knowledge ?? []) {
+      if (withheld.has(target)) withheldLinks++;
+      else knowledge.push(target);
+    }
+    surfaces[key] = { knowledge };
+  }
+  // Export §2, §3 (ADR 0025): a tip and a review pin name an artifact as a link does, so each is withheld with it.
+  const keepKeys = <T>(map: Record<string, T>): Record<string, T> => {
+    const out: Record<string, T> = {};
+    for (const key of Object.keys(map).sort(compareStrings)) {
+      if (withheld.has(key)) withheldLinks++;
+      else out[key] = map[key];
+    }
+    return out;
+  };
+  const tips = meta.tips === undefined ? null : (sortKeysDeep(keepKeys(meta.tips)) as Record<string, string>);
+  const review: ExportReview | null =
+    meta.review === undefined
+      ? null
+      : {
+          sources: keepKeys(meta.review.sources),
+          hash: meta.review.hash ?? null,
+          snapshot: meta.review.snapshot ?? null,
+        };
 
   const exported: ExportArtifact = {
     id,
@@ -238,7 +277,7 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
     derived,
     withheldLinks,
     availability: meta.availability === undefined ? null : sortedAvailability(meta.availability),
-    slice: meta.slice === undefined ? null : sortedSlice(meta.slice),
+    slice: meta.slice === undefined ? null : sortedSlice(meta.slice, surfaces),
     verification:
       meta.verification === undefined
         ? null
@@ -259,7 +298,8 @@ function exportArtifact(graph: Graph, id: string, includeBody: boolean, withheld
             source: meta.measure.source,
             direction: meta.measure.direction ?? null,
           },
-    tips: meta.tips === undefined ? null : (sortKeysDeep(meta.tips) as Record<string, string>),
+    tips,
+    review,
     extensions: meta.extensions === undefined ? null : (sortKeysDeep(meta.extensions) as Record<string, unknown>),
   };
   if (includeBody) exported.body = artifact.body;
@@ -375,12 +415,12 @@ function sortedAvailability(availability: Availability): Availability {
   };
 }
 
-function sortedSlice(slice: SliceMeta): SliceMeta {
+function sortedSlice(slice: SliceMeta, surfaces: Record<string, SliceSurface>): ExportSlice {
   const layers: Record<string, string[]> = {};
   for (const layer of Object.keys(slice.layers).sort(compareStrings)) {
     layers[layer] = [...slice.layers[layer]].sort(compareStrings);
   }
-  const out: SliceMeta = {
+  const out: ExportSlice = {
     kind: slice.kind,
     domain: slice.domain,
     entrypoints: [...slice.entrypoints].sort(compareStrings),
@@ -389,6 +429,7 @@ function sortedSlice(slice: SliceMeta): SliceMeta {
       .map((claim) => ({ kind: claim.kind, path: claim.path }))
       .sort((a, b) => compareStrings(a.kind, b.kind) || compareStrings(a.path, b.path)),
     usesResources: [...slice.usesResources].sort(compareStrings),
+    surfaces,
   };
   if (slice.rationale !== undefined) out.rationale = slice.rationale;
   return out;

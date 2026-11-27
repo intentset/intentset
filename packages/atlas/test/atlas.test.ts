@@ -553,7 +553,7 @@ test("every page declares Markset, with the derived atlas block, and parses with
       assert.equal(parsed.frontmatter?.markset, true, path);
       assert.match(
         source,
-        /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.2\n {2}derived: true\n {2}snapshot:\n/,
+        /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.3\n {2}derived: true\n {2}snapshot:\n/,
         path,
       );
       assert.ok(!/^intentset:/m.test(source), `${path} must never read as a canonical record`);
@@ -648,7 +648,7 @@ test("publication readiness runs the projection per visibility with the knowledg
       : source
           .replace("  status: approved", "  status: draft")
           .replace(/\n {2}reviewedBy: .*\n {2}reviewedAt: .*\n/, "\n")
-          .replace(/\n {2}extensions:\n(?: {4,}.*\n)+/, "\n");
+          .replace(/\n {2}review:\n(?: {4,}.*\n)+/, "\n");
   const draft = textOf(buildAtlas(example({ edit: unreview })).get("publication.html") as string);
   assert.ok(draft.includes("public public excluded draft"));
   assert.ok(
@@ -760,6 +760,55 @@ test("BEH-ATLAS, BEH-DELIVERY: the product page counts delivery, and a record's 
   assert.match(record, /Status draft Delivery built/);
   const knowledge = textOf(atlas.get("records/KB-ASMT-SCHEDULE.html") ?? "");
   assert.doesNotMatch(knowledge, /Delivery/, "knowledge does not carry delivery");
+});
+
+test("BEH-ATLAS, BEH-DELIVERY: a deprecated record that states no delivery shows built because it is deprecated, the one status that implies it", () => {
+  const atlas = buildAtlas(
+    example({
+      edit: (name, source) =>
+        name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: deprecated") : source,
+    }),
+  );
+  const record = textOf(atlas.get("records/BEH-ASMT-SCHEDULE.html") ?? "");
+  assert.match(record, /Status deprecated Delivery built, because it is deprecated/);
+  assert.doesNotMatch(record, /claims an implementation/);
+  const overview = textOf(atlas.get("index.html") ?? "");
+  assert.match(
+    overview,
+    /Behaviors whose work is built 1 of 1 of behaviors; delivery as written, or built for a deprecated record/,
+  );
+  const approved = textOf(
+    buildAtlas(
+      example({
+        edit: (name, source) =>
+          name === "BEH-ASMT-SCHEDULE.md" ? source.replace("status: draft", "status: approved") : source,
+      }),
+    ).get("records/BEH-ASMT-SCHEDULE.html") ?? "",
+  );
+  assert.match(approved, /Status approved Delivery not stated/, "approval implies nothing about the code");
+});
+
+test("BEH-ATLAS: knowledge whose sources changed and whose own text and gates are pinned reads as keepable, counted with its denominator", () => {
+  // The example's own content hash and gate hash, computed when the test was written (publication §3, ADR 0027).
+  const own = "4e127d988ded8e2f86778df6899a6fe92c50955626f9f1bcd00a5253e22fcefd";
+  const gates = "930df07c56a2b36c7242148dbf94084cb3b042c692af1465413c25e8b75719c3";
+  const pin = (self: string) => (name: string, source: string) =>
+    name !== "KB-ASMT-SCHEDULE.md"
+      ? source
+      : source
+          .replace(/BEH-ASMT-SCHEDULE: '[0-9a-f]{64}'/, `BEH-ASMT-SCHEDULE: '${"0".repeat(64)}'`)
+          .replace("    sources:\n", `    self: '${self}'\n    gates: '${gates}'\n    sources:\n`);
+  const kept = textOf(buildAtlas(example({ edit: pin(own) })).get("publication.html") as string);
+  assert.ok(kept.includes("can be published under review (keepUnderReview)"), kept);
+  assert.ok(
+    kept.includes(
+      "Needing review and keepable, so publishable marked under review when a request sets keepUnderReview: 1 of 1 knowledge artifact.",
+    ),
+  );
+  const edited = textOf(buildAtlas(example({ edit: pin("0".repeat(64)) })).get("publication.html") as string);
+  assert.ok(edited.includes("own text changed since review"));
+  assert.ok(!edited.includes("can be published under review"));
+  assert.ok(edited.includes("keepUnderReview: 0 of 1 knowledge artifact."));
 });
 
 test("BEH-ATLAS-OUTLINE: the product page is the landing page: it says what the Atlas is and what each page answers, then the tree, each capability folded closed", () => {

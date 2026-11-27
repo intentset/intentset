@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/decision/0.2
+  spec: '0.3'
+  profile: intentset/decision/0.3
   id: ADR-RESET-LINK-LIFETIME
   type: decision
   title: Keep reset links short-lived

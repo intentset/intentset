@@ -22,7 +22,7 @@ function* nodes(
     }
   } else if (value !== null && typeof value === "object") {
     for (const key of Object.keys(value)) {
-      // RFC 6901: `intentset.org/review`, the review extension's key, is `intentset.org~1review` in a pointer.
+      // RFC 6901: an extension key such as `example.org/name` is `example.org~1name` in a pointer.
       const token = key.replace(/~/g, "~0").replace(/\//g, "~1");
       yield [`${pointer}/${token}`, value as Record<string, unknown>, key];
       yield* nodes((value as Record<string, unknown>)[key], `${pointer}/${token}`);
@@ -72,7 +72,7 @@ test("BEH-READ-EXPORT: the reader's shape checks agree with spec/export.schema.j
         if (target === null || typeof target !== "object" || Array.isArray(target)) continue;
         (target as Record<string, unknown>).zz = "x";
       }
-      if (pointer === "/contract") continue; // a contract that is not 0.2's is unsupported-contract, by design before shape
+      if (pointer === "/contract") continue; // a contract that is not 0.7's is unsupported-contract, by design before shape
       const schemaSays = validateSchema(schema, mutant).length > 0;
       const read = readExport(mutant);
       const readerSays = !read.ok && read.category === "malformed";
@@ -158,8 +158,9 @@ test("BEH-READ-EXPORT: a missing or unknown contract is unsupported-contract bef
     "intentset/export/0.3",
     "intentset/export/0.4",
     "intentset/export/0.5",
-    "intentset/export/0.7",
-    "other/export/0.6",
+    "intentset/export/0.6",
+    "intentset/export/0.8",
+    "other/export/0.7",
   ]) {
     const value = { ...full, contract };
     const read = readExport(value);
@@ -194,4 +195,22 @@ test("an artifact list out of order or repeated is malformed: a consumer keys on
   repeated.artifacts[1] = repeated.artifacts[0];
   const read = readExport(repeated);
   assert.equal(!read.ok && read.category, "malformed");
+});
+
+test("BEH-READ-EXPORT: a knowledge entry says whether its own text still matches its review, and current with a changed self is inconsistent", () => {
+  const own = JSON.parse(fixture("knowledge-own-text-changed.json")) as ExportEnvelope;
+  const read = readExport(own, { repository: "example/scheduling" });
+  assert.ok(read.ok, JSON.stringify(read.ok ? [] : read.problems));
+  const entry = read.envelope.reports.knowledge?.artifacts.find((a) => a.id === "KB-ASMT-SCHEDULE");
+  assert.deepEqual([entry?.status, entry?.self, entry?.changed, entry?.missing], ["needs-review", "changed", [], []]);
+  const artifact = read.envelope.artifacts.find((a) => a.id === "KB-ASMT-SCHEDULE");
+  assert.deepEqual(Object.keys(artifact?.review ?? {}).sort(), ["hash", "snapshot", "sources"], "no self or gates");
+
+  const lying = structuredClone(own) as unknown as { reports: { knowledge: { artifacts: { status: string }[] } } };
+  for (const a of lying.reports.knowledge.artifacts) a.status = "current";
+  const refused = readExport(lying, { repository: "example/scheduling" });
+  assert.equal(refused.ok, false);
+  if (refused.ok) return;
+  assert.equal(refused.category, "inconsistent-report");
+  assert.ok(refused.problems.some((p) => /own text changed since review/.test(p.message)));
 });

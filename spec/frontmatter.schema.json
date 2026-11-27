@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Intentset v0.2 authoring frontmatter",
+  "title": "Intentset v0.3 authoring frontmatter",
   "description": "Structural schema; semantic graph, narrative, path, lifecycle and evidence checks are additional requirements.",
   "type": "object",
   "required": ["markset", "intentset"],
@@ -15,7 +15,7 @@
       "required": ["spec", "profile", "id", "type", "title", "status", "owner", "visibility", "audiences"],
       "properties": {
         "spec": {
-          "const": "0.2"
+          "const": "0.3"
         },
         "profile": {
           "type": "string"
@@ -46,7 +46,7 @@
           "minLength": 1
         },
         "status": {
-          "enum": ["draft", "approved", "implemented", "released", "deprecated", "retired"]
+          "enum": ["draft", "approved", "deprecated", "retired"]
         },
         "owner": {
           "type": "string",
@@ -292,8 +292,48 @@
         },
         "extensions": {
           "type": "object",
+          "description": "Namespaced keys, preserved and never interpreted. intentset.org/review is no longer read: a knowledge record's review is review (ADR 0025).",
           "propertyNames": {
-            "pattern": "^[^/]+/.+$"
+            "pattern": "^[^/]+/.+$",
+            "not": {
+              "const": "intentset.org/review"
+            }
+          }
+        },
+        "review": {
+          "type": "object",
+          "description": "Knowledge only (Core \u00a79, publication \u00a73, ADR 0025): the hash each source had at review, by source ID. hash absent means content-v1; file-v1 is the whole file; any other value matches no pin. snapshot is informative. self and gates pin the knowledge's own text and who could see each source (ADR 0027).",
+          "additionalProperties": false,
+          "required": ["sources"],
+          "properties": {
+            "sources": {
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "hash": {
+              "type": ["string", "null"],
+              "minLength": 1
+            },
+            "snapshot": {
+              "type": ["string", "null"],
+              "minLength": 1
+            },
+            "self": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The knowledge's own content hash when it was reviewed: its content-v1 hash without ending, whatever hash says (publication \u00a73, ADR 0027)."
+            },
+            "gates": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The gate hash of the review's sources when it was reviewed: each source's audiences, visibility and availability (publication \u00a73, ADR 0027)."
+            }
           }
         },
         "slice": {
@@ -354,6 +394,32 @@
                 "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
               },
               "uniqueItems": true
+            },
+            "surfaces": {
+              "description": "VSA §3, ADR 0028: by surface ID, the knowledge that leads the surface, in order. Not a binding field.",
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[!#-&(-;=?-\\[\\]-_a-~]{1,200}$",
+                "not": {
+                  "anyOf": [{ "pattern": "^[0-9]+$" }, { "const": "__proto__" }]
+                }
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["knowledge"],
+                "properties": {
+                  "knowledge": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+                    }
+                  }
+                }
+              }
             }
           }
         },
@@ -441,7 +507,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/product/0.2"
+                "const": "intentset/product/0.3"
               }
             }
           }
@@ -457,7 +523,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/intent/0.2"
+                "const": "intentset/intent/0.3"
               }
             }
           }
@@ -473,7 +539,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/outcome/0.2"
+                "const": "intentset/outcome/0.3"
               }
             }
           }
@@ -489,7 +555,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/measure/0.2"
+                "const": "intentset/measure/0.3"
               }
             }
           }
@@ -505,7 +571,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/capability/0.2"
+                "const": "intentset/capability/0.3"
               }
             }
           }
@@ -521,7 +587,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/behavior/0.2"
+                "const": "intentset/behavior/0.3"
               }
             }
           }
@@ -537,7 +603,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/rule/0.2"
+                "const": "intentset/rule/0.3"
               }
             }
           }
@@ -553,7 +619,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/scenario/0.2"
+                "const": "intentset/scenario/0.3"
               }
             }
           }
@@ -569,7 +635,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/slice/0.2"
+                "const": "intentset/slice/0.3"
               }
             }
           }
@@ -585,7 +651,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/contract/0.2"
+                "const": "intentset/contract/0.3"
               }
             }
           }
@@ -601,7 +667,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/verification/0.2"
+                "const": "intentset/verification/0.3"
               }
             }
           }
@@ -617,7 +683,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/knowledge/0.2"
+                "const": "intentset/knowledge/0.3"
               }
             }
           }
@@ -633,7 +699,7 @@
           "then": {
             "properties": {
               "profile": {
-                "const": "intentset/decision/0.2"
+                "const": "intentset/decision/0.3"
               }
             }
           }
@@ -764,6 +830,18 @@
         },
         {
           "if": {
+            "required": ["review"]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "knowledge"
+              }
+            }
+          }
+        },
+        {
+          "if": {
             "required": ["tips"]
           },
           "then": {
@@ -772,6 +850,20 @@
                 "const": "knowledge"
               }
             }
+          }
+        },
+        {
+          "if": {
+            "required": ["slice"],
+            "properties": {
+              "slice": {
+                "required": ["surfaces"],
+                "properties": { "surfaces": { "not": { "const": {} } } }
+              }
+            }
+          },
+          "then": {
+            "required": ["availability"]
           }
         }
       ]

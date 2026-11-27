@@ -9,15 +9,15 @@ repository-relative.
 // @intentset/core
 parseYaml(text): { value: Record<string, unknown>; error: null } | { value: null; error: { message; line } }  // strict, ADR 0001
 plainCarrier(path, source): DocumentInput                     // plain-Markdown fallback, ADR 0003
-readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE001, origin "profile"
+readArtifact(input: DocumentInput): { artifact: Artifact | null; diagnostics: Diagnostic[] }   // CORE010, CORE011, CORE001, origin "profile"
 readRegistries(text, path): { registries: Registries; diagnostics: Diagnostic[] }
-readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[], resources: "exercised"|"used", dependencies: "files"|"entrypoint" } }
+readConfig(text, path): { config: Config; diagnostics: Diagnostic[] }   // Config = { repository, scope[], registries|null, ignore[], evidence: { binding: "subject"|"commit"|null, globalInputs[] } }
 validate(inputs: DocumentInput[], registries: Registries, options?: { level }): ValidationResult   // the whole L1 pipeline
 impact(graph: Graph, id: string): ImpactReport
 readSelector(value): { ok, selector } | { ok: false, problems }   // spec/list.md §1: closed, AND across fields, OR within
 select(graph | checkedExport, selector, { includeRestricted?, registries? }): Selection   // throws on a rejected selector
 listOutput(selection, { source, snapshot, validation }, countBy?): ListOutput   // intentset/list/0.1; exportListMeta(envelope)
-deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017: the field, else built for implemented/released/deprecated
+deliveryOf(meta): "planned" | "built" | null   // Core §7, ADR 0017, ADR 0023: the field, else built for deprecated, else null
 activeSlices, claimingSlices(graph, path), isSliceCode, describingRecords(graph, slice), matchGlob, matchAny
 // Core §10's slice definitions, moved from the CLI in 0.11.0 (ADR 0016)
 impactReport(graph, starts?): ImpactReportSection           // reports.impact: every artifact's impact, hits as ID + path
@@ -27,6 +27,7 @@ readExport(text | bytes | value, { repository?, product?, maxBytes? }): { ok, en
 // report builders live with their checks: evidenceReport (verification), knowledgeReport (publisher), ownershipReport (architecture)
 graphHash(graph): string; canonicalJson(value): string; sha256Hex(input): string
 contentHashOf(frontmatter, body): string   // publication §3, ADR 0018: what a content-v1 pin holds; every Artifact carries contentHash
+ownContentHashOf(frontmatter, body); gateHashOf(entries)   // ADR 0027: what review.self and review.gates pin; every Artifact carries ownContentHash
 exportApproval(meta.approval): ExportApproval | null; exportFormalizes(meta.formalizes ?? []): ExportFormalized[]
 // Core §7 and §5, ADR 0020: the two fields as the export, `context --json` and the MCP tools carry them;
 // approvalSummary, formalizedSummary are the one-line text the CLI and the Atlas show
@@ -39,23 +40,35 @@ readRunRecords(json, path); classifyEvidence(graph, records, snapshot); checkEvi
 // snapshot = { commit, graphHash, scope?, binding?, bindingReason?, subjects?, changedSince?, covers? }: commit binding unless it says subject
 resolveBinding(configured, hasSlices): { binding, reason }; hasSliceClaims(graph); subjectsFor(graph, source)
 staleReport(graph, classification): { needRun, manual, counts }; runnerArguments(format, entries)   // `intentset evidence stale`: what needs a run
-computeSubject(input): { hash, parts, unexercised, dependencyInternals }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
+computeSubject(input): { hash, parts, unexercised }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
 // @intentset/architecture
-subjectSource(graph, registries, tree, { globalInputs, resources?, dependencies?, readFile })   // claimed files, resources, resourceMode, dependencyMode, a test's local imports, covers(path)
+subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed files, resources, a test's local imports, covers(path); a subject is computed one way (ADR 0026)
 ```
 
 ```ts
 // @intentset/publisher
-publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, index, help, snapshot, diagnostics, ok }
+publish(graph, registries, request, { snapshot, publishedAt, renderHtml? }): { documents, keptUnderReview, index, help, snapshot, omittedSurfaces, diagnostics, ok }
+// request.keepUnderReview (ADR 0027): keepable knowledge is published under under-review/, marked underReview, in
+// keptUnderReview and index.keptUnderReview, never in documents or index.published; never chunked; rule tips held in help.withheldForReview
+// a request is for one reader (ADR 0029): audience and role a value or a list, read as a set; checkRequest gives a CheckedRequest
+// with sorted lists, and every file names them, with the flags, as sorted lists held all-of; the index names its profile first
 // renderHtml: true | "page" sets each document's html, "fragment" its htmlFragment (publication §2), renderFragment(markset)
 // help is spec/publication.md §5: every published document's tips by explained ID, or null when the request was refused
+// help.surfaces (ADR 0028): helpSurfaces(graph, documentIds, checkedRequest) maps each surface of an approved or deprecated
+// built slice available to the request to its published leads; omittedSurfaces names, by slice and reason, only slices the
+// projection admits, and is written into no file
 // snapshot is spec/publication.md §6, the one part that names the commit and graph hash (ADR 0021); snapshotFile(snapshot)
-reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency; pinHash(undefined) is sourceHash, ("content-v1") contentHash, else null
+reviewStatus(graph, knowledge), pinHash(kind)   // Core §9 currency over meta.review (ADR 0025); pinHash(undefined) and ("content-v1") are contentHash, ("file-v1") sourceHash, else null
+// reviewStatus also gives self and gates ("unchanged" | "changed" | "unpinned"), keepable and keepBlockers (ADR 0027); reviewGateHash(graph, knowledge)
 
 // @intentset/help  (no dependencies; a browser runtime)
 readHelp(text | bytes | value): { ok, help, problems }      // refuses a file with any problem, whole
-tipFor(help, id); helpForPage(help, ids)                    // one control, or one page: tips, their articles, what has no tip
-bindTips(root, help, { attribute?, render? }): { bound, missing }   // data-behavior="BEH-..." by default; data-help-tip + data-help-knowledge, no title
+tipFor(help, id, { underReviewHelp? }); helpForPage(help, ids, options?)   // one control, or one page: tips, their articles, what has no tip, what is pendingReview
+reviewStateFor(help, id); articles(help, options?)          // ADR 0027: help under review is left out unless underReviewHelp: "include"; never counted missing
+leadFor(help, surface, options?); surfaceHelp(help, surface, options?)   // ADR 0028: a surface's lead articles in order; surfaceHelp also names those pendingReview
+helpForPage(help, ids, { surface?, underReviewHelp? })      // with a surface: lead first, then the tips' articles, each once; leadPendingReview
+servedTo(file, reader): boolean                             // ADR 0029: the file's projection cleared, product/release/edition equal, every audience, role and flag held
+bindTips(root, help, { attribute?, render?, underReviewHelp? }): { bound, missing, pendingReview }   // data-behavior="BEH-..." by default; data-help-tip + data-help-knowledge (+ data-help-under-review), no title
 watchTips(root, help, { render?, unrender?, attribute?, MutationObserver?, requestFrame?, cancelFrame? }): { coverage(), dispose() }   // rebinds once per frame; dispose undoes it
 ```
 

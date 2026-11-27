@@ -41,6 +41,10 @@ Update the records in the same change as the code.
   as a work item or one of its acceptance criteria, names it in `formalizes`, as a `source` (a URL or the
   tool's key for the item) and an optional `anchor` for the part that is meant. Validation checks its form and
   never opens it.
+- Which articles lead a page, route or panel: `surfaces` on the slice that owns it (VSA §3), with
+  `availability` on that slice. A surface ID is written into every eligible reader's help file once the slice is
+  approved, so never put a name in it that some reader may not see, such as an internal record's ID or path.
+  Quote a surface ID that contains `:` as a YAML key, such as `"lantern-web:/assessments/schedule":`.
 
 Write each link once, on the record that points: a behavior is `governedBy` its rules, a scenario `illustrates`
 a behavior, a slice `implements` behaviors, a verification `verifies` what it checks. Never write the reverse.
@@ -60,13 +64,18 @@ of its own above them, it is not read.
 
 ## Never
 
-- Set a status to approved, implemented or released, or publish knowledge. People approve, and validation passing
-  is not approval.
-- Run `intentset approve` unless the person approving tells you to in so many words. It writes their approval for
-  them, so `--by` is the name they give, never your own.
+- Set a status past `draft`, or publish knowledge. People approve, and validation passing is not approval;
+  `delivery` is the fact you may write.
+- Run `intentset approve` unless the person approving tells you to in so many words, or
+  `intentset approve --renew-review` unless the person reviewing the knowledge does. Each writes that person's
+  approval or review for them, so `--by` is the name they give, never your own.
 - Write or change `approval`, the block that says who approved a record, when and on what basis, unless the
   approval workflow you are running tells you to and gives you every value. It records an approval that happened;
   writing it approves nothing, and one you made up is a false statement about a person.
+- Write or change a knowledge record's review: `reviewedBy`, `reviewedAt` or `review` (its pins, `self` and
+  `gates`), unless the review workflow you are running gives you every value. A hash copied from a tool's output
+  into a pin claims a review nobody made, and `intentset review` lists it. `intentset approve`, run on a person's
+  word, is what writes a review.
 - Change an ID or reuse a retired one. Moving or renaming a file keeps its ID; splitting a behavior retires the old
   one with `replacedBy`.
 - Name an owner, audience, release, role, edition, flag or evidence source that is not in
@@ -104,8 +113,8 @@ three with it. A new behavior looks like this, one recognizable promise includin
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-AREA-NAME
   type: behavior
   title: The promise in a few words, such as Schedule a student assessment
@@ -145,8 +154,8 @@ matches a run to it:
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-AREA-NAME
   type: verification
   title: What the check proves, such as Unit test of scheduling an assessment

@@ -1,16 +1,16 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-VALIDATE-REPORTS
   type: verification
   title: Validate reports every problem as a sorted diagnostic
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-VALIDATE-REPORTS]
   verification:
@@ -31,7 +31,8 @@ intentset:
 - `packages/cli/test/cli.test.ts`: the test "validate --json parses, counts warnings apart from errors, and is the same bytes twice"
 - `packages/core/test/validate.test.ts`: the test "diagnostics are sorted and identical whatever order the files arrive in"
 - `packages/core/test/validate.test.ts`: the test "every diagnostic has the contract's shape: one-sentence message and remediation"
+- `packages/core/test/validate.test.ts`: the test "a code names one kind of thing to fix (Core §11, ADR 0024)"
 
 ## Expected result
 
-Every test whose title carries `BEH-VALIDATE-REPORTS` passes. A broken record exits 1 with its code, location, artifact, fix and field; `--json` counts warnings apart from errors and is the same bytes twice; diagnostics are sorted and identical whatever order the files arrive in, each with a one-sentence message and remediation; no configuration, or a wrong invocation, exits 2, naming `init` where there is no configuration.
+Every test whose title carries `BEH-VALIDATE-REPORTS` passes. A broken record exits 1 with its code, location, artifact, fix and field; `--json` counts warnings apart from errors and is the same bytes twice; diagnostics are sorted and identical whatever order the files arrive in, each with a one-sentence message and remediation; an unreadable carrier, a missing section, a field, a wrong-type link and an approved rule nothing governs are each reported under their own code; no configuration, or a wrong invocation, exits 2, naming `init` where there is no configuration.

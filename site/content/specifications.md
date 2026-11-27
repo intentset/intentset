@@ -44,7 +44,7 @@ This profile is for TypeScript and AWS Amplify Gen 2, and it is the one `intents
 :::card
 ### {{spec.publication.title}}
 
-**Help that cannot go out of date unnoticed.** How reviewed explanations become customer documentation and in-app tips for one audience and one release. Publication leaves out anything that audience may not see, and holds back any explanation whose sources changed since a person reviewed it, so a help article is not published again after a rule it explains has changed until someone has checked it.
+**Help that cannot go out of date unnoticed.** How reviewed explanations become customer documentation and in-app tips for one reader, in every audience and role they hold, and one release. Publication leaves out anything that reader may not see, and holds back any explanation whose sources changed since a person reviewed it, so a help article is not published again after a rule it explains has changed until someone has checked it.
 
 [[Read the publication profile](publication/)]{.button}
 :::

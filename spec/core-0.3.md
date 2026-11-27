@@ -1,0 +1,329 @@
+---
+title: Intentset Core Specification v0.3
+id: intentset/core/0.3
+status: draft
+revision: 2026-11-26
+implementation: 0.17.1
+---
+
+# Intentset Core Specification v0.3
+
+## 1. Purpose and scope
+
+Intentset is an open framework for keeping product intent, observable behavior, implementation, verification, and published knowledge connected. Repository files are authoritative; the graph, Atlas, reports, and customer knowledge are derived views. A graph database is not required.
+
+This specification defines product semantics and interchange. The [VSA specification](vsa-0.3.md) adds implementation ownership and architecture constraints. The [reference profile](profile-typescript-amplify-gen2-0.3.md) maps those constraints to TypeScript and Amplify Gen 2. Core adoption does not require either architecture or platform.
+
+MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY express requirements in this draft. SHOULD departures require a recorded reason. Examples are informative unless a rule explicitly makes them normative. The CLI, Atlas, publisher, and MCP server named here ship in the TypeScript reference implementation (`@intentset/*` on npm), whose conformance suite is published for other implementations; this specification, not that implementation, is normative.
+
+**Change policy.** The six Intentset specifications are drafts. Each opens with its `id`, `status`, `revision` (the date its text last changed) and `implementation` (the reference release that implements that revision), and every change is recorded in the repository's CHANGELOG. The conformance suite decides what kind of change a revision is, in every section of it (`core`, `vsa`, `evidence`, `publication`, `export` and `list`), whichever specification the case belongs to: one that invalidates an existing case, changing its `valid` or `diagnostics` so that a repository which conformed before no longer does, is breaking; one that leaves every existing case as it was, such as a new optional field, a new check with cases of its own, or a clarification, is not, and neither is one that only relaxes a case so that nothing which conformed stops conforming, as 0.2.0 did when VSA §3 made two errors warnings for draft slices. `intentset.spec` is the one version a record declares, so it answers for all of them: while the specifications are drafts, the next breaking change to any specification, VSA, the reference profile and the publication profile as much as Core, moves `intentset.spec` to the next value, and documents declare it. The first move was on 2026-10-14, from `0.1` to `0.2`, and the second on 2026-11-25, from `0.2` to `0.3`; until 2026-10-05 breaking changes stayed inside `0.1`, and two did before the move. The export envelope versions separately ([export contract §7](export.md#7-versioning)).
+
+**What a move means for a record.** `spec` is the string `0.3` and `profile` equals `intentset/<type>/0.3` (§4). A reader of one value rejects a record that declares another, as an error that makes the record unusable, so a repository moves all of its records together, and the move rewrites those two fields and no other, except where a version removes a value a record could declare: the move to `0.3` rewrites a `status` of `implemented` or `released` to `approved` and, on a type that carries `delivery` (§7) and states none, writes `delivery: built`, which is what the status claimed (ADR 0023); and it moves a knowledge record's `extensions.intentset.org/review` to `review` (§9), writing `hash: file-v1` where the extension named no hash, so no review changes what it pins (ADR 0025); the extension on any other type, and a review holding a key, pin key or value §9 rejects, which the extension's reader ignored, are named for their author to correct rather than counted as moved, since either would read at `0.3` as CORE001 and the knowledge as unreviewed; the extension stays on a type other than knowledge. A `self` or `gates` in a review extension written before `0.3`, keys §9 accepts but no earlier reader read and no earlier tool could have computed, is left out of `review` with every line nested under it, and the record is named and still counts as moved: carried over, either would read as a pin, and a review current before the move would need review after it (ADR 0027). The move also re-pins each knowledge review pin that matched before it: a pin equal to the hash, of the review's kind as the knowledge record's own version read it, of its source as the source was written at the version it declared becomes the same kind of hash of the source as moved, so a review current before the move is current after it with no step of its own; a pin that did not match is left as written, so a stale review stays stale, the move writes no pin that was not there, and it re-pins only knowledge it moves or that already declares the new `spec` ([publication §3](publication.md#3-review-record-and-needs-review)). A review's `self` (§9), the knowledge's own content hash, is re-pinned the same way when it equals that hash of the knowledge as written and the knowledge's own version read `self` (`0.3` or later), so the move to `0.3` re-pins none, and `gates` covers neither `spec` nor `profile`, so no move changes it (ADR 0027).
+
+Revisions that changed what a reader who conformed earlier sees (the breaking ones, and those that changed a default or added a field without invalidating any case). Each row names the change; the CHANGELOG entry of that date says what it replaced and what a repository does about it, and the ADR it names says why:
+
+| Revision | Change |
+|---|---|
+| 2026-10-04 (`0.1`) | An active outcome MUST have a measure (§5, CORE003; ADR 0012). |
+| 2026-10-14 (`0.1`) | Run evidence is judged by subject binding by default wherever slices claim files (§8, ADR 0013); the commit rule is `binding: commit`. |
+| 2026-10-14 (`0.2`) | **`intentset.spec` moves from `0.1` to `0.2`** (ADR 0013, ADR 0014). |
+| 2026-10-15 (`0.2`, no move) | **A resource's files are in a subject only where a verification exercises it** (§8, ADR 0013 amended 2026-10-15). |
+| 2026-10-15 (`0.2`, no move, second) | **A dependency slice can count through its contract** (§8, ADR 0013 amended 2026-10-15, second). |
+| 2026-10-21 (`0.2`, no move) | **VSA006 judges a name by the layer of the file that defines it** (VSA §5, profile §3). |
+| 2026-10-21 (`0.2`, no move, second) | **Policies, models and the client seam do not import UI frameworks or render JSX by default** (profile §3, TS007, TS008). |
+| 2026-10-21 (`0.2`, no move, third) | **A baseline entry that matches nothing is an error** (VSA §9, VSA014). |
+| 2026-11-14 (`0.2`, no move) | **A published document no longer carries the snapshot it was published from** (§9, [publication §2](publication.md#2-the-generated-document), ADR 0019). |
+| 2026-11-14 (`0.2`, no move, second) | **A record can say on what basis it was approved, and which outside requirement it formalizes** (§5, §7, ADR 0020). |
+| 2026-11-15 (`0.2`, no move) | **A publication names its snapshot in a file of its own, and nowhere else** (§9, [publication §5, §6](publication.md#6-the-snapshot-file), ADR 0021, amending ADR 0019). |
+| 2026-11-24 (`0.2`, no move) | **Approval is a reviewed change to a record, and a review lists it** (§7, §10, ADR 0022). |
+| 2026-11-25 (`0.3`) | **`intentset.spec` moves from `0.2` to `0.3`** (ADR 0023, ADR 0024, ADR 0025, ADR 0026, ADR 0027, ADR 0028, ADR 0029). |
+| 2026-11-26 (`0.3`, no move) | **`markset: true` declares a record, and the original `markset: 0` stays valid and means the same** (§3; [publication §2, §3](publication.md#3-review-record-and-needs-review)), following Markset 0.6.0. A `content-v1` pin hashes `true` as `0`, so a source moved from one form to the other keeps the pins on it. |
+
+## 2. Semantic model and granularity
+
+| Type | Meaning | Review question |
+|---|---|---|
+| `product` | Product identity and scope | What system are we describing? |
+| `intent` | Strategic purpose | Why should this product exist or change? |
+| `outcome` | Desired measurable change | What improvement will show success? |
+| `measure` | How one outcome is judged: metric, baseline, target, window, source | What reading will tell us the outcome was achieved? |
+| `capability` | Stable product ability | What can a user accomplish? |
+| `behavior` | Observable action or response under stated conditions | What exactly does the system do? |
+| `rule` | Constraint governing behavior | What must remain true? |
+| `scenario` | Concrete conditions, action, and expected result | What example would demonstrate the promise? |
+| `slice` | Implementation owner of a cohesive set of behaviors | Where is the behavior delivered? |
+| `contract` | Maintained interface between implementation owners | What may another component rely on? |
+| `verification` | Definition of an executable check or review procedure | How is a claim assessed? |
+| `knowledge` | Audience-specific explanation grounded in product artifacts | What may we tell this audience? |
+| `decision` | Architecture/product decision and rationale | Why was this design selected? |
+
+A capability MAY contain many behaviors and map to several slices. A behavior SHOULD contain one recognizable promise, including its failure response. Split it when release, ownership, availability, or independent review differ. A rule MAY govern many behaviors; it MUST NOT be duplicated solely to appear in multiple capability pages. A scenario is an example, not proof that all cases work.
+
+Recommended human decomposition is product → intent → outcome → capability → behavior, with each outcome's measures beside it. This is a navigation spine in a typed graph, not a demand that reality form one tree. Technical detail belongs in rules, scenarios, decisions, and implementation views; strategic reviewers should start at capabilities and drill down.
+
+## 3. Authoritative representation
+
+Each artifact MUST have exactly one authoritative UTF-8 Markdown document with YAML frontmatter in the declared repository scope. Slice documents are named `slice.md` in this profile; other filenames are not identity. Markdown with frontmatter is the one v0.3 carrier, so records and their explanation travel together. A later standalone YAML binding MAY be specified; v0.3 tools MUST NOT silently merge duplicate records.
+
+Frontmatter MUST be the first block between `---` delimiters. It MUST decode to a JSON-compatible object. Reject duplicate keys, the mapping key `__proto__`, custom YAML tags, merge keys, aliases, and non-finite numbers. `__proto__` is refused because a common object model cannot hold it as an ordinary key, and a reader that dropped it would lose data without saying so. Quote dates and version strings. Implementations MUST limit file size, nesting, and parser resource use. Document bodies MUST NOT execute code or templates. Ordinary code fences remain inert text.
+
+```yaml
+---
+markset: true
+intentset:
+  spec: "0.3"
+  profile: intentset/behavior/0.3
+  id: BEH-ASMT-SCHEDULE
+  type: behavior
+  title: Schedule a student assessment
+  status: approved
+  owner: team-assessment
+  visibility: internal
+  audiences: [engineering, product]
+  parent: CAP-ASMT-ASSIGN
+  links:
+    governedBy: [RULE-ASMT-FUTURE]
+  availability:
+    products: [PRD-LANTERN]
+    releases: ["pilot-1"]
+    roles: [teacher]
+    editions: [standard]
+    flags: []
+---
+```
+
+`markset` is required by the Intentset Markset binding, not by language-neutral graph interchange. It declares the document Markset: it MUST be the YAML boolean `true`, or the number `0`, the form Markset documents used before Markset 0.6.0, which means the same; any other value, a quoted one included, is CORE001. Tools that write records write `true`. `intentset.profile` is an Intentset-owned semantic profile identifier; it is not a claim that Markset has registered a profile API. Unknown top-level frontmatter is preserved, but cannot alter Intentset semantics. Unknown keys inside `intentset` are errors except under `extensions`.
+
+## 4. Common fields and identity
+
+Required common fields are `spec`, `profile`, `id`, `type`, `title`, `status`, `owner`, `visibility`, and `audiences`. `spec` is the string `0.3`. `profile` MUST equal `intentset/<type>/0.3`. `id` MUST match `^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$` and be unique within the product graph. IDs are case-sensitive, immutable, independent of title/path, and MUST never be reused. Recommended prefixes are PRD, INT, OUT, MEAS, CAP, BEH, RULE, SCN, SLICE, CONTRACT, TEST, KB, ADR. Prefixes aid humans; `type` determines semantics.
+
+`owner` is one accountable team/role identifier from the repository's owner registry. `audiences` is a nonempty array from its audience registry. These are documentation audiences, not runtime authorization. `visibility` is `public`, `customer`, `internal`, or `restricted`. Missing access information MUST fail closed for publication.
+
+Optional common fields: `parent`, `links`, `availability`, `revision`, `reviewedAt`, `reviewedBy`, `delivery` (§7), `approval` (§7), `formalizes` (§5, on a behavior, rule or scenario), `tips` and `review` (§9, on knowledge), `extensions`. `revision` is a positive integer incremented for semantic changes. Review fields identify a review record, not automated proof. Extensions MUST be namespaced (for example `org.example/change`) and cannot redefine core fields; `intentset.org/review`, where a review was authored before `0.3`, is CORE001 (§9, ADR 0025). Source hashes and commit IDs are computed externally, not manually maintained in every document.
+
+Moving a file or correcting wording does not change identity. Splitting a behavior creates new IDs and preserves the old artifact as retired with `replacedBy` links. Merging works similarly. Historical release snapshots keep the earlier meaning.
+
+## 5. Relationships and cardinality
+
+Relationships are authored once, in the direction below. Reverse edges are derived and MUST NOT be separately maintained. References MUST resolve in the same graph snapshot. A requirement outside the model that a record formalizes is named in `formalizes`, below; other external issue/PR URLs belong in `extensions`; neither is ever written as a dangling internal ID.
+
+| Field / relationship | Source → target | Cardinality and meaning |
+|---|---|---|
+| `parent` | intent → product; outcome → intent; measure → outcome; capability → outcome or capability; behavior → capability | Exactly one except product; navigation parent |
+| `governedBy` | behavior → rule | Zero or more constraints |
+| `illustrates` | scenario → behavior | One or more behaviors exemplified |
+| `implements` | slice → behavior | One or more for product slices; authoritative ownership |
+| `dependsOn` | slice → slice | Zero or more implementation dependencies |
+| `exposes` | slice → contract | Zero or more public contracts |
+| `consumes` | slice → contract | Zero or more consumed contracts |
+| `verifies` | verification → behavior, rule, or scenario | One or more assessed claims |
+| `explains` | knowledge → behavior, rule, or capability | One or more sources of knowledge |
+| `informedBy` | slice, contract, or behavior → decision | Zero or more supporting decisions |
+| `requires` | behavior → behavior | Zero or more functional prerequisites |
+| `supports` | outcome → intent; capability → outcome | Additional associations beyond the navigation parent |
+| `replacedBy` | retired artifact → same type | One or more successors when applicable |
+
+All arrays contain unique IDs. Self-edges, duplicate edges, invalid endpoint types, cycles in `parent`, cycles in `replacedBy`, and cycles in `requires` are errors. Other cycles are evaluated by the relevant profile; `dependsOn` is governed by VSA. Each non-root navigation chain MUST reach a product. An artifact without a navigation parent is reached through its typed relationships. Active rules MUST have an incoming `governedBy`; active scenarios, verifications, and knowledge MUST have their corresponding outgoing links. An active outcome MUST have at least one measure whose `parent` it is: an outcome past draft says how it will be judged, and the capabilities under it do not say that. Draft unattached artifacts, and a draft outcome with no measure, produce warnings.
+
+At VSA adoption, an approved or deprecated behavior MUST have exactly one accountable product slice through `implements`. Other collaborating slices appear through slice dependencies and contracts. Exactly one owner keeps accountability unambiguous while still allowing multi-slice implementations. A slice MUST NOT implement a behavior already owned elsewhere.
+
+**Outside requirements.** Every relationship above points at another record. A behavior, rule or scenario MAY also name the requirements outside the model that it formalizes, such as a work tracker's item or one acceptance criterion of it, in `formalizes` (ADR 0020): a list of at least one entry, each with `source`, a URL or a tool's key for the item, and optionally `anchor`, which identifies the part of the source that is meant, such as `criterion-3`. Both are non-empty strings, an entry has no other key, and no two entries have the same `source` and `anchor`.
+
+```yaml
+  formalizes:
+    - source: https://tracker.example/LAN-12
+      anchor: criterion-3
+```
+
+`formalizes` is not a relationship: it makes no edge, it has no inverse, and nothing is derived from it. A validator checks that it is well formed, CORE001, as it is on any other type, and MUST NOT resolve it: it never fetches a source, and never judges whether the source exists or still says what it said (§11). It says where a promise came from, not what the promise is, so a record's content hash leaves it out ([publication §3](publication.md#3-review-record-and-needs-review)): adding the reference to a record, or a tool renumbering its criteria, does not send the knowledge that explains the record back to review.
+
+## 6. Required narrative by artifact type
+
+Every document MUST contain a level-one heading matching its title and substantive prose. Validators can check section presence; reviewers determine semantic adequacy.
+
+| Type | Required level-two headings |
+|---|---|
+| product | Scope |
+| intent | Rationale |
+| outcome | Measure |
+| measure | Method |
+| capability | Overview |
+| behavior | Behavior; Preconditions; Outcomes |
+| rule | Constraint |
+| scenario | Given; When; Then |
+| slice | Responsibility; Public contract; Verification |
+| contract | Interface; Compatibility |
+| verification | Procedure; Expected result |
+| knowledge | Guidance |
+| decision | Context; Decision; Consequences |
+
+A behavior MUST identify actor, trigger, observable success response, and meaningful failure response in these sections. An intent's Rationale MUST name the problem or opportunity the change answers: the reason a reader would start the work at all, not a restatement of the title. An outcome's Measure summarizes how the outcome will be judged and which measures judge it; the metric, baseline, target, window and source live in the outcome's measure records, below. A measure's Method MUST say how the reading is taken, by whom or by what, and what would make it untrustworthy. A verification's Procedure MUST identify automation or a reproducible manual review; neither a filename nor a test count is sufficient.
+
+A measure judges one outcome, its `parent`, and carries a `measure` metadata block: `metric`, an identifier in lower case with words joined by `_` or `-`, named the way the evidence source names it; `baseline`, the value before the change or the literal `unknown` when none has been taken, never omitted; `target`, the value or threshold that would show the outcome was achieved; `window`, when the reading is taken, relative to a release or a date; `source`, an entry in the repository's `evidenceSources` registry naming where the evidence is expected to come from (an analytics product, a study, a survey); and optionally `direction`, `increase` or `decrease`, which way the metric moves when the outcome is achieved. Values other than `metric` and `direction` are prose, not parsed: a target of `under 2 days` and a window of `90 days after pilot-1` are complete. A `measure` block on any other type is an error, as a `verification` block is (§8). Intentset defines what success means; it does not collect telemetry, run queries or compute a metric, which belong to the systems the registry names.
+
+Verification (§8) and measurement answer different questions and neither stands in for the other. Verification asks whether the behavior was built as described; a measure asks whether building it produced the outcome. A behavior can be implemented correctly, pass every check and ship, and the outcome above it can still fail; the model MUST be able to say so, which is why an outcome's measures are records of their own rather than a sentence in the outcome.
+
+## 7. Lifecycle, release, and version semantics
+
+`status` is the review lifecycle, what a person has accepted (ADR 0023): `draft`, `approved`, `deprecated`, or `retired`. Default progression follows that order. Drafts may be retired without being approved. Returning to draft requires a review note and MUST NOT rewrite immutable release snapshots. An artifact in a release snapshot is changed through a new snapshot; its ID remains stable only when meaning remains recognizably continuous. Any other value is CORE001, `implemented` and `released` included, which earlier versions listed; `intentset migrate --to 0.3` rewrites each to `approved` (§1).
+
+Status is an editorial claim, not a test result, and it says nothing about the code. `approved` records that a person accepted the record's promise; `deprecated` remains available until the stated removal; `retired` is excluded from current publication and retained for history. Whether the work exists is `delivery`, below, and nothing else says it. Whether a release has shipped is not a status: `availability.releases` names labels from the registry, and what a label means is the adopter's.
+
+**Delivery** states whether the work a record describes exists, apart from its approval (ADR 0017). `delivery` is `planned`, the work does not exist yet, or `built`, the code the record describes exists. It is optional, and is written only on a capability, behavior, rule, scenario, slice or contract; on any other type it is CORE001. A record's **effective delivery** is its `delivery` when present; otherwise `built` when its status is `deprecated`, since a deprecated record describes something that existed, so deprecating a record needs no second edit; otherwise not stated. `approved` claims nothing about the code, so an approved record without the field is not stated. Delivery is a statement of fact, not a review: whoever writes a record sets it when it is true, an agent included, as `built` on a record written from existing code and `planned` on a proposal, and the change that builds planned work changes it to `built`. A draft that says `built` is still a draft, and nothing in delivery approves or publishes a record.
+
+Delivery and status contradict each other, CORE005, when a record says `delivery: planned` while its status is `deprecated`, and when a behavior whose effective delivery is `built` is implemented by a slice that says `delivery: planned`. A slice that is not retired naming retired knowledge in `surfaces` is CORE005 too (VSA §3). At L2, a draft behavior that says `built` and that no product slice implements is a CORE006 warning, so built code without an owner shows before anyone approves the record, and a draft slice that says `built`, or implements a behavior whose effective delivery is `built`, has no planned paths (VSA §3). Release labels are opaque, so a validator cannot tell whether a planned record's release has shipped. Knowledge that explains a record whose `delivery` is `planned` is not published as current ([publication profile](publication.md) §4).
+
+**Approval basis** states how a record came to be approved (ADR 0020). `status: approved` reads the same whether a person read the record or it was derived from something a person approved, so a record of any type MAY carry `approval`, with `at`, when it was approved, a date or a date and time written as a quoted string as `reviewedAt` is, and `basis`, one of:
+
+| `basis` | Meaning | `by` | `source` | `attestedBy` |
+|---|---|---|---|---|
+| `direct` | A person read this record and approved it | required: the person | not written | not written |
+| `derived` | The record is approved because a named source that a person approved covers it | required: the person who approved the source | required | optional: the agent that attested the record matches the source |
+| `attested` | An agent attested the record; no person approved it or a source of it | not written | not written | required: the agent |
+
+`by` always names a person and `attestedBy` always names an agent, each by a name or an identifier the repository chooses. `source` names what was approved: `ref`, a URL or a tool's key for the item, and at least one of `revision` and `digest` (such as `sha256:…`), which say which state of it. Every value is a non-empty string, and neither block has any other key.
+
+```yaml
+  approval:
+    by: ana.reyes
+    at: "2026-11-14"
+    basis: derived
+    source:
+      ref: https://tracker.example/LAN-12
+      revision: "7"
+    attestedBy: drafting-agent
+```
+
+A validator checks this shape, CORE001, and nothing else. It never resolves `ref`; it never decides who may approve, whether a basis is acceptable or whether a person is required, which are the adopting organization's workflow and not Intentset's; and it does not compare `approval` with `status`. `approval` is not required on an approved record, and a record without it says nothing about how it was approved. It concerns the record's own promise, which makes it a different statement from `reviewedBy`, `reviewedAt` and `review`: those record that a knowledge article was reviewed against the sources it pins (§9). Like `status`, `approval` is left out of a record's content hash ([publication §3](publication.md#3-review-record-and-needs-review)), so writing or changing it never makes knowledge need review.
+
+An approval is made by changing the record: its `status`, and `approval` where the repository records the basis. No approval exists outside the files, so the record of who accepted it is the repository's own history and review of that change. A tool MAY write an approval on a person's instruction, as it would write any other edit; it MUST NOT infer who that person is, MUST NOT write one that would make a valid tree invalid, and writing one authenticates nobody (ADR 0022). When the record approved is knowledge, the approval is not its review: the tool that writes one SHOULD write the other (§9), since approved knowledge with no current review cannot be published. A review is renewed the same way, by changing the knowledge on the instruction of the person reviewing: a tool MAY rewrite the review alone, `reviewedBy`, `reviewedAt` and `review`, of approved or deprecated knowledge, leaving `status` and `approval` as they are, under the same rules (`intentset approve --renew-review` in the reference implementation).
+
+A release snapshot records product ID, exact release label, source commit, graph hash, specification/profile versions, and build time. Release labels are opaque strings: v0.3 performs exact matching, not inferred SemVer ordering. `availability`, required on behaviors and knowledge, contains nonempty `products`, `releases`, `roles`, and `editions` arrays plus a `flags` array. All named flags are required; empty means no flags. No implicit wildcard is allowed. Applicability is AND across dimensions and OR within an array. The repository registries define valid dimension values.
+
+A release may include deprecated behavior; prospective documentation MAY describe future work only in a separately labeled roadmap projection. A status, or inclusion in a release snapshot, MUST NOT by itself make a feature available to all customers.
+
+## 8. Verification definitions and run evidence
+
+Verification nodes identify checks. Evidence is a separate run record, since runs change more frequently than product semantics. `verification` metadata contains `method` (`automated` or `manual`), `locator` (repository-relative path), `selector` (stable test or review case identifier) and optionally `exercises`: unique IDs of slices or registry resources the check drives beyond what the slices implementing its behaviors reach, as an end-to-end test drives code its behavior's slices do not import. Each MUST name a slice in the graph or a resource in the registries (CORE003).
+
+A run record MUST include evidence ID, verification ID, source commit, graph hash, environment, exact product/release scope, tool/version or reviewer identity, start/end UTC timestamps, result (`pass`, `fail`, `skip`, `error`), and an evidence URI. A manual record also MUST identify reviewer and review rationale. A record MAY carry `binding` (`subject` or `commit`) and `subjectHash`, a SHA-256 in lowercase hex; a record with `binding: subject` MUST carry `subjectHash`, and one without `binding` is a commit-binding record, so every record written before the field existed means what it meant. URI presence is not proof of trustworthy execution; evidence producers and stores must be controlled by the adopting organization. A run record with a problem is EVID001 and never counts; the evidence codes are in §11.
+
+A verification's `status` says where the definition stands in its own lifecycle, and nothing in this specification reads an approval from it (ADR 0020). The runs of a verification that is not retired count whatever its status, a draft's included; whether evidence is required follows the status of the claim, not of the verification (§11, CORE007); and the only checks that read a verification's status are the ones every type shares: a retired one is set aside, and one that verifies nothing is CORE012 once it is past draft and a CORE009 warning while it is a draft (§5). A tool MAY therefore treat a verification's standing as that of the behaviors, rules and scenarios it verifies, and need not ask for an approval of the verification itself. A validator derives no such standing: a verification of several claims whose statuses differ has no single one, and choosing among them would be a workflow rule.
+
+Only a `pass` whose binding holds counts as current passing evidence. There are two bindings:
+
+- `commit`: the record was made at the assessed commit and graph hash. This is deliberately conservative: no change-impact analysis, so no pretending that a change elsewhere is safe. A gate that needs "this commit was tested at this commit", such as a release, asks for it.
+- `subject`: the record carries the hash of the verification's **subject**, and is current while that hash equals the subject at the assessed snapshot, whatever the commit or graph hash. Its commit and graph hash stay as provenance. A current record then says that what the check is about is unchanged since it passed, not that the commit as a whole was tested.
+
+The binding in force is the one the repository asks for, as `evidence.binding` in `.intentset/config.yaml` (§11) or as a gate requires; otherwise `subject` wherever a slice that is not retired has claims, and `commit` where none does. A repository with no slice claims has no subject to hash, so it is judged by commit even when it asks for subject, and every report says so (EVID004): it never falls back silently. Under subject binding a commit-binding record is stale, with a note that it is bound to a commit and can be imported again; under commit binding a subject-binding record is stale, with a note that it is bound to a subject. The status vocabulary does not change. A report says which binding judged each verification and, for a stale subject-binding record, which parts of the subject changed since the record's commit when that can be known.
+
+**The subject** is a SHA-256, over the canonical JSON (ADR 0005) of a list of entries `{kind, id, hash, why, owner}` sorted by kind, then `id`, then `owner` (`why` and `owner` are omitted where they do not apply), of:
+
+- `verification` and `verified`: the verification record, and each behavior it verifies, directly or through a rule it verifies that governs it or a scenario it verifies that illustrates it, with those rules and scenarios: each by the source hash of its whole record, since its prose is its promise;
+- `slice`: each slice that implements a verified behavior, each slice those `dependsOn` transitively, and each slice `exercises` names, by the hash of the canonical JSON of its binding fields only (`implements`, `dependsOn`, `claims`, `usesResources` and `entrypoints`, each sorted; `surfaces` (VSA §3) is not a binding field), so a prose edit to a slice does not move a subject; `why` lists the reasons (`implements`, `dependsOn`, `exercises`);
+- `slice-file`: each file those slices' claims resolve to, by its content hash, with the slice as `owner`. A slice reached only through `dependsOn` contributes every file its claims resolve to, as a slice that implements a verified behavior or that `exercises` names does, so a change to a dependency's internals moves every subject that depends on it (ADR 0026);
+- `resource` and `resource-file`: each registry resource the verification exercises, by its registry entry, and the files its path matches by content hash, with the resource as `owner`. A resource is exercised when `exercises` names it, or when a slice that implements a verified behavior lists it in `usesResources` and also claims a file its path matches (the slice's own resource, whose files count as its claims do). A slice that only lists a resource it talks to, as a web slice lists the backend it calls, does not put that resource's files in the subject; its `usesResources` is still one of its binding fields, so listing or unlisting a resource moves the subject. `why` is `exercises`, `usesResources` or both. This is the one rule: no configuration widens or narrows what a subject holds (ADR 0026);
+- `test` and `test-import`: the `locator` file and the local files it imports, transitively, resolved as the architecture check resolves imports (VSA §3) and not followed out of the locator's package;
+- `global-input`: each file `evidence.globalInputs` lists or its patterns match.
+
+A file's hash is the SHA-256 of its bytes, and `absent` when the file does not exist, so a deleted file moves a subject and is told apart from an empty one. What no file holds, such as a deployed environment or a service's version, stays outside the binding; a record's `environment` says which it ran in.
+
+Claims and what a verification exercises therefore decide whether evidence is current. A file that changed between the commit of a subject-bound current record and the assessed commit and that no slice claims, no exercised resource names, no global input lists and no record or test names cannot move any subject; when that commit is an ancestor of the assessed one a report lists such files, the first twenty and a count (EVID005), and otherwise says it could not. Run records under `.intentset/evidence/`, the directory a tool reads them from by default, are the assessment's own input and are never listed. A file of a resource that a current record's slices list and its verification does not exercise cannot move that record's subject either: when the file changed since the record's commit the report says how many verifications are current though a resource they use changed, and names the resource, its changed files and those verifications (EVID006), so a repository can add `exercises` where a check does depend on the resource. Neither is an error, and neither makes a record stale. Skip, error, absence, and stale runs MUST NOT count as pass. Link coverage and current passing coverage MUST be displayed separately. A failing current run MUST remain visible even if a prior run passed.
+
+*Informative: where run records live.* Under commit binding a run record committed to the repository it assesses describes a commit that is no longer the latest the moment it lands, and reads as stale; under subject binding it still goes stale whenever the commit it lands in changes the subject, so the advice is the same. Keep run records in CI artifacts or another store the adopting organization controls, never in the commit under assessment.
+
+*Outcome evidence.* A measure's reading is evidence of a different kind from a run record, and no v0.3 tool reads one. When a later version or an external system such as a usage product supplies it, an outcome evidence record names the measure ID, the window it was read in, the observed value, the source it came from, the time of the reading and an evidence URI, and it says whether the target was met. It is never current in the sense a run record is: a reading is bound to a window, not to a commit and graph hash, and an outcome met in one window may be missed in the next. Until that record is specified, such evidence travels in namespaced `extensions`, which every tool preserves and none interprets.
+
+A claim is “verified in snapshot” only if every applicable required verification linked to it passes. Scenarios and governing rules require their own coverage; a parent behavior pass does not silently satisfy them. Manual and automated coverage MUST be separately countable. Structural validation cannot prove that tests adequately assert the documented behavior.
+
+## 9. Markset profiles and document publication
+
+Intentset owns metadata, required sections, semantic validation, graph resolution, and publication policy. Markset owns document syntax and rendering. The reference implementation MUST accept Markdown + YAML frontmatter and support Markset validation/rendering through a version-pinned adapter. Plain Markdown fallback MUST remain readable. Profiles MUST NOT introduce `:::behavior`, `:::rule`, or any other new Markset directive.
+
+The profiles are `intentset/<type>/0.3`, plus generated `intentset/atlas/0.3` and `intentset/publication/0.3`. Generated profiles are publication outputs, not canonical graph nodes. Metadata validation and Markset validation MUST produce separately identifiable diagnostics. A successful render MUST NOT imply semantic conformance.
+
+Use ordinary Markdown links with repository-relative paths for authored cross-references. ID resolution is an Intentset graph function. Symbolic-reference syntax and a Markset-native profile registry are deferred; no new syntax is assumed in v0.3. Bodies MAY use any construct in Markset's closed vocabulary, which Markset validates; the records in the worked example are plain Markdown. The reference implementation pins Markset's parser and renderer to one exact version, named by its adapter, and moves the pin deliberately, so two packages never read one document with two parsers. Markset's own guide for writing its syntax is [markset.org/guide.md](https://markset.org/guide.md).
+
+Publication pipeline:
+
+```text
+Canonical files → validated graph → exact release snapshot
+                → authorized audience projection → reviewed knowledge
+                → generated Markset → HTML / portable text / retrieval chunks
+```
+
+A publisher MUST select authorized artifacts before sending text to a renderer or language model. It MUST deny by default, intersect product/release/role/edition/flag availability, restrict visibility and audience, and exclude draft/retired material. Public projection allows public records only. Customer projection allows public and customer records, with authenticated entitlements; internal/restricted data require separate explicit authorization. Knowledge bodies are curated audience-safe text, not automatically copied engineering prose.
+
+A knowledge record MAY carry `tips`: a mapping from an ID in its `links.explains` to one sentence of plain text, on one line and at most 160 characters, for a product to show beside the control that delivers that behavior or enforces that rule. A tip is the knowledge at its shortest, so it is written on the knowledge record and reviewed, projected and published with it; it is never copied from the explained record, whose prose is written for another audience. A key that is not in `links.explains` is CORE003. A tip that is not a string, is empty, begins or ends with whitespace, breaks a line or exceeds the limit is CORE001, as is `tips` on any other type. The [publication profile](publication.md) says how tips reach a product.
+
+A slice MAY say which knowledge leads each surface of the product's interface, in `surfaces` (VSA §3). A surface is never published from its slice alone: the help file maps a surface to the knowledge published for its reader, and only then ([publication §5](publication.md#5-the-help-file)). A surface ID of an `internal` slice is written into a customer help file without separate authorization, as an explained ID is written as a tip's key: it is a name the product's interface holds, and nothing else of the slice is written. A `restricted` slice's surface ID is written only under explicit authorization for restricted data.
+
+Each published knowledge document MUST retain source IDs, source revisions/hashes, audience, availability, reviewer, and publication timestamp. The audience and availability it retains name the reader the publication was made for, and every list in them is held all-of: §7's OR within an array reads a record's availability, never a publication's ([publication §1](publication.md#1-request-and-projection); ADR 0029). The snapshot ID is the same for every document in a publication, so the publication names it once, in a file of its own beside its documents, and neither a document nor any other file of the publication carries it ([publication §2, §6](publication.md#6-the-snapshot-file); ADR 0019, ADR 0021). A publication committed to the repository it was published from may leave that file out. If a source changes, dependent knowledge becomes `needs-review` and MUST NOT be republished as current until reviewed. When the request asks for it, a publisher MAY publish knowledge whose sources changed what they promise, but not who may see them, marked under review and never as current. It publishes the text its last review covered, which the review's `self` pin proves ([publication §3](publication.md#3-review-record-and-needs-review); ADR 0027). It MUST NOT publish text no review covered, and MUST NOT read it from an earlier publication. A consumer that shows such a document or tip MUST show that it is under review. Answers MUST NOT cite it: it is never chunked for retrieval. What counts as a change is what the review pinned ([publication §3](publication.md#3-review-record-and-needs-review)): a review that pins content hashes is not disturbed by a source's approval, implementation or delivery, and is by any edit to what the source promises and by its deprecation or retirement.
+
+A knowledge record's review is `reviewedBy`, `reviewedAt` and `review`, a mapping that pins each source it was reviewed against (ADR 0025): `sources`, from a source ID to the hash that source had at review, each a non-empty string; optionally `hash`, the kind of hash every pin holds; optionally `snapshot`, the commit or graph hash at review, which is informative and never compared; optionally `self`, the knowledge record's own content hash when it was reviewed, its `content-v1` hash taken without `ending`, whatever `hash` says; and optionally `gates`, the gate hash of the review's sources when it was reviewed, who could see each of them ([publication §3](publication.md#3-review-record-and-needs-review); ADR 0027). `hash` absent means `content-v1`, the content hash; `file-v1` is the hash of the source's whole file; any other value is a kind no pin matches ([publication §3](publication.md#3-review-record-and-needs-review)). `review` on any other type, a key other than those five, a pin key that is not an ID, or a pin, `hash`, `snapshot`, `self` or `gates` that is not a non-empty string is CORE001 (a `hash` or `snapshot` that is null is absent), as is `extensions.intentset.org/review`, which `0.2` read as the review and which would otherwise read as none. No other shape of a pin, `self` or `gates` is checked: a string that is not the current value reads as changed. `review` is left out of the record's content hash, as that extension was, so writing a review never changes what `self` pins. A tool MUST NOT write a `self` or `gates` for a review it did not record, and `intentset migrate` never creates one. A review is written by the person who reviewed, or by a tool on their instruction, and renewed the same way against the sources as they now are (§7); the move to a new `spec` re-pins the pins that matched before it (§1), which renews no review, since it changes no source's promise. Generated files MUST be marked derived and MUST NOT be edited as canonical truth. A reference to an excluded source MUST fail publication or be replaced with an explicitly reviewed safe explanation; it MUST NOT leak the source title or internal path.
+
+Retrieval chunks MUST inherit the same access filters and provenance. Authorization must occur before retrieval and again before response assembly; filtering only the final answer is insufficient. Answers MUST cite eligible knowledge, disclose unavailable evidence, and abstain when the requested version is unknown. Documentation metadata MUST NOT be used to grant runtime product access. Generated prose needs review; graph connectivity alone cannot establish that it is accurate.
+
+## 10. Human review, impact, and agent context
+
+An Atlas SHOULD provide: product/capability overview; behavior detail; engineering ownership; verification status; publication readiness. Summary counts MUST disclose snapshot, denominator, scope, and whether they measure links or current pass evidence. The UI MUST expose missing/stale evidence rather than replace it with a generic green status.
+
+Impact reports MUST show direct changes separately from candidate downstream effects. Starting at an ID, traverse reverse relationships to dependent behaviors, owners, verifications, and knowledge; include outgoing rules, contracts, and decisions as review context. Traverse reverse slice dependencies transitively, with a visited set. Include parent ancestors for navigation. Record each path/reason; do not label reachability as proof that runtime behavior changed.
+
+Before an agent edits implementation it SHOULD load the owning slice, behaviors, rules, scenarios, contracts, and decisions. Afterward it SHOULD update affected semantics and checks in the same review. Agents MUST NOT self-approve release/publication simply because validation passes. A knowledge review is a person's claim in the same way. An agent MUST NOT write or change `reviewedBy`, `reviewedAt` or `review`, its pins, `self` and `gates` included, unless the review workflow it runs gives it every value. A hash copied from a tool's output into a pin claims a review nobody made. An agent MUST NOT write an approval or a knowledge review on its own account: a tool that writes either for a person, an approval or a renewed review (§7), runs only when that person says so, with the name they give. MCP and CLI context results MUST identify snapshot and source paths; customer tools MUST use the restricted publication index, never raw engineering context.
+
+A review of a change SHOULD list each slice whose implementation changed while none of the records describing it did. A slice's implementation is what its `source`, `backend`, and `contract` claims match, record files excepted. The records describing it are the slice, the behaviors it implements, the rules governing them, the scenarios illustrating them, the verifications of any of those, the contracts it exposes, and the decisions informing the slice, its behaviors, or its contracts. The list is a prompt for review, not a failure: a change that alters no behavior MAY say so for named slices where its reviewer reads it, such as a commit trailer, and a tool MAY then treat those slices as acknowledged, but MUST still list them.
+
+A review of a change SHOULD also list each record whose `status` or `approval` differs from the base's copy, each new record that arrives past draft or carrying an approval, with the approval it now states (ADR 0022), and each knowledge record whose `reviewedBy`, `reviewedAt` or `review` differs from the base's copy, or that arrives with a review (ADR 0027). An approval is a claim made by editing a file, and a reviewer who is not shown it has to find it in a diff. The list is a report, not a failure: who may approve is the repository's workflow (§7). A base copy that declares an earlier `spec` is compared as the move to the current one (§1) would write it, without writing anything, so a change that moves records lists only those whose `status`, `approval` or review it changed besides. A review pin is compared as the move would write it only when the base pin matched the pinned record's base copy and the pinned record changed only by the move: a head pin equal to the same kind of hash of that base copy as migrated, on a record whose head hash is that value, is not a change of review. Every other difference is, a renewed review included.
+
+## 11. Conformance and diagnostics
+
+Conformance is a claim about a declared repository scope and snapshot, not a universal product certification. Publish the spec/profile versions, scope, exclusions, waiver count, checker version, and report hash.
+
+| Level | Required conditions |
+|---|---|
+| L1 Product model | Parse, identity, fields, typed links, hierarchy, lifecycle, narrative checks pass |
+| L2 Traceable implementation | L1 + VSA ownership and path attribution for adopted behavior scope |
+| L3 Verified product | L2 + applicable behavior/rule/scenario verification definitions and current passing evidence |
+| L4 Published knowledge | L3 + reviewed audience projections with availability and provenance checks |
+| L5 Continuous product truth | L4 + required CI checks, architecture enforcement, impact reports, release snapshot automation and versioned agent context |
+
+A partial adoption MUST name included capabilities/IDs and show out-of-scope counts; it MUST NOT advertise repository-wide L3 when only a pilot passed. A waiver does not erase a failed MUST: report “with exceptions,” not unqualified conformance. Recommended checks, one code for each kind of thing an author has to fix; the `field` pointer says which field (ADR 0024):
+
+| Code | Condition | Default |
+|---|---|---|
+| CORE001 | A field under `intentset`, or the `markset` key or `intentset` block it sits in, is missing, unknown or the wrong shape (§4, the frontmatter schema), a review's `self` or `gates` among them (§9) | Error |
+| CORE002 | Duplicate/reused ID | Error |
+| CORE003 | A link, or a key that must name a linked ID (§9 `tips`), names an ID that does not resolve, a target of the wrong type, the record itself, or the same ID twice (§5) | Error |
+| CORE004 | Invalid/cyclic decomposition or replacement | Error |
+| CORE005 | Lifecycle inconsistency: `delivery: planned` on a `deprecated` record; a behavior whose effective delivery is `built` implemented by a slice that says `planned` (§7); or a slice that is not retired naming retired knowledge in `surfaces` (VSA §3) | Error |
+| CORE006 | Missing applicable ownership (L2+) | Error; a warning for a draft behavior that says `delivery: built` (§7) |
+| CORE007 | Missing/failing/stale required evidence (L3+) | Error; a warning for a draft behavior, rule or scenario that no verification definition names |
+| CORE008 | Unauthorized/stale publication (L4+) | Error |
+| CORE009 | Draft unattached artifact, or draft outcome with no measure | Warning |
+| CORE010 | The carrier cannot be read: the document has no frontmatter, its frontmatter does not parse in the strict subset (§3), it repeats a key, it holds the mapping key `__proto__` (§3), or it exceeds the size limit (§3) | Error |
+| CORE011 | A heading the record requires is missing: the level-one heading equal to its title, or a level-two section its type requires (§6) | Error |
+| CORE012 | A record past draft lacks a relationship it must have, the error form of CORE009: an outcome no measure judges, a rule nothing governs, a scenario that illustrates nothing, a verification that verifies nothing, knowledge that explains nothing, a product slice that implements nothing (§5, §6, VSA §3) | Error |
+| CORE013 | A surface ID is declared by more than one slice that is not retired (VSA §3) | Error |
+
+Configuration and run records have codes of their own, reported before or beside the checks above. A configuration error stops the run it configures; a run record with a problem is never evidence.
+
+| Code | Condition | Default |
+|---|---|---|
+| CFG001 | `.intentset/config.yaml` (origin `profile`) or `.intentset/architecture.yaml` (origin `architecture`) does not parse, names an unknown key, or gives a key the wrong shape or an invalid pattern; in `config.yaml`, `evidence` takes `binding` (`subject` or `commit`), and `globalInputs` (paths or patterns), each optional; `resources` and `dependencies`, which earlier versions took, are unknown keys (ADR 0026) | Error |
+| CFG002 | The registries file does not parse, names an unknown registry, or a registry is not a list of unique non-empty strings (`resources`: a list of resource records with known keys and unique IDs) | Error |
+| EVID001 | A run record is malformed (§8: a required field missing or of the wrong type, the file not an array of records, an evidence ID repeated, a `binding` other than `subject` or `commit`, a `subjectHash` that is not 64 lowercase hex, `binding: subject` with no `subjectHash`), or a manual run names no reviewer or rationale | Error |
+| EVID002 | A run record names an ID that is not a verification in the graph, so it is evidence for nothing | Warning |
+| EVID003 | A verification's `locator` is not a file in the repository tree | Warning |
+| EVID004 | The repository has no slice claims and did not choose commit binding, so evidence is judged by commit binding for want of a subject (§8) | Warning |
+| EVID005 | Files changed since the commit of a subject-bound current record that no slice claims, no exercised resource names, no global input lists and no record or test names, so they cannot make evidence stale, other than run records under `.intentset/evidence/`; the first twenty are listed, with a count (§8) | Warning |
+| EVID006 | Verifications whose subject-bound record is current though a resource their slices list and they do not exercise has a file changed since the record's commit, so the subject cannot see it; the resource, its first five changed files and the first twenty verifications are listed, with a count (§8) | Warning |
+
+Diagnostics MUST identify code, severity, origin, artifact, path, field/location, explanation, and remediation. `origin` names the stage that reported it, and keeps Markset's diagnostics apart from Intentset's: `syntax` (Markset, §9), `profile` (the carrier, frontmatter, required sections, configuration and registries), `graph` (identity, relationships and lifecycle across records), `architecture` (VSA and its profiles), `evidence` (run records, §8), `publication` (the [publication profile](publication.md)), and `render` (a renderer, reserved: no v0.3 check reports it). No other value is valid. Intentset codes are AREA###, Markset's are AREA_NAME; a host never renames the other's. A diagnostic with origin `syntax` is Markset's (§9) and keeps Markset's own code, such as `DIRECTIVE_UNKNOWN_NAME`; every other origin carries an Intentset code from the tables here and in the profiles. Sort by path, artifact ID, code. Validation MUST be deterministic for identical inputs and MUST NOT silently rewrite files. CLI exits are 0 pass, 1 validation failure, 2 invocation/tool failure (ADR 0004). JSON reports MUST preserve warnings separately.
+
+## 12. Portability and exclusions
+
+A normalized JSON graph MUST retain metadata, body, source path, source hash, and explicit edges; serialization MUST preserve unknown namespaced extensions. The interchange form is the [export contract](export.md): its envelope, its optional evidence, knowledge, impact and ownership reports, what it withholds, and what a consumer checks before importing it. Round trips MUST preserve semantics, not YAML formatting. Generated inverses MUST be marked derived. Importers for issue trackers/ReqIF/OSLC are later adapters and MUST report lossy mappings. Tickets describe changes; product artifacts describe ongoing behavior.
+
+v0.3 does not mandate a database, hosted service, test framework, cloud, commercial product, or universal AI correctness score. It does not assert that documented intent and production reality can be equated by static validation.

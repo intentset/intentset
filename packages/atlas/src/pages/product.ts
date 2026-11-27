@@ -58,7 +58,7 @@ export function productPage(model: Model): PageSource {
         [
           "Behaviors whose work is built",
           `${behaviors.filter((b) => deliveryWord(b.meta)?.word === "built").length} of ${behaviors.length}`,
-          "of behaviors; delivery as written, or a status that claims an implementation",
+          "of behaviors; delivery as written, or built for a deprecated record",
         ],
         [
           "Behaviors whose work is planned",

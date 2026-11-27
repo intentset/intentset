@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-HELP-WATCH
   type: verification
   title: Watching rebinds once per frame and dispose undoes every binding
@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-HELP-WATCH]
   verification:
@@ -32,6 +32,7 @@ intentset:
 - `packages/help/test/help.test.ts`: the test "a dispose from inside render stops the pass, and a first pass that throws undoes what it rendered"
 - `packages/help/test/help.test.ts`: the test "a custom requestFrame never gets the default cancelAnimationFrame"
 - `packages/help/test/help.test.ts`: the test "watchTips without a MutationObserver or a frame scheduler says which it needs, and binds nothing"
+- `packages/help/test/help.test.ts`: the test "a watch renders the under-review mark, restores its prior value on dispose, and copies pendingReview" (ADR 0027)
 
 `packages/help/test/dom-types.ts` is a type-level check that `pnpm run typecheck` holds: the browser's `MutationObserver`, `requestAnimationFrame` and `cancelAnimationFrame`, and `setTimeout` and `clearTimeout`, are accepted as options. `test/consumer/consumer.mjs` runs `watchTips` from the installed package in the smoke test.
 

@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/rule/0.2
+  spec: '0.3'
+  profile: intentset/rule/0.3
   id: RULE-ASK-NO-IDENTITY
   type: rule
   title: Nothing kept identifies a visitor

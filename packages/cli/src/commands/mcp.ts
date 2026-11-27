@@ -16,6 +16,7 @@ import { type Visibility, sortDiagnostics } from "@intentset/core";
 import { createIntentsetServer, runStdio } from "@intentset/mcp";
 import { type PublicationRequest, publish, toChunks } from "@intentset/publisher";
 import { count, formatDiagnostic, type Io, snapshotLine } from "../output.ts";
+import { commaHint, entitlement } from "./publish.ts";
 import { openSession, type SessionOptions } from "../session.ts";
 
 export type McpServer = ReturnType<typeof createIntentsetServer>;
@@ -24,10 +25,12 @@ export interface McpOptions {
   mode?: string;
   includeRestricted: boolean;
   visibility?: string;
-  audience?: string;
+  /** Every --audience given. */
+  audience?: string[];
   product?: string;
   release?: string;
-  role?: string;
+  /** Every --role given. */
+  role?: string[];
   edition?: string;
   flags: string[];
   authorizedInternal: boolean;
@@ -114,6 +117,8 @@ export function buildMcpServer(options: McpOptions, sessionOptions: SessionOptio
   for (const d of sortDiagnostics(published.diagnostics)) io.stderr(formatDiagnostic(d));
   if (published.index.request === null) {
     io.stderr("intentset mcp: refused: the publisher refused the request, so there is nothing to serve.\n");
+    const hint = commaHint(options);
+    if (hint !== null) io.stderr(`intentset mcp: ${hint}\n`);
     return 1;
   }
   try {
@@ -125,7 +130,7 @@ export function buildMcpServer(options: McpOptions, sessionOptions: SessionOptio
     });
     const r = published.index.request;
     io.stderr(
-      `intentset mcp: customer knowledge over stdio: ${count(documents.length, "published document")} for a ${r.visibility} projection, audience ${r.audience}, ${r.product} ${r.release}. ${snapshotLine(snapshot)}\n`,
+      `intentset mcp: customer knowledge over stdio: ${count(documents.length, "published document")} for a ${r.visibility} projection, ${mcpEntitlement(r)}. ${snapshotLine(snapshot)}\n`,
     );
     return server;
   } catch (error) {
@@ -140,4 +145,20 @@ export async function mcpCommand(options: McpOptions, sessionOptions: SessionOpt
   io.signal?.addEventListener("abort", () => void server.close(), { once: true });
   await runStdio(server);
   return 0;
+}
+
+/**
+ * The summary's entitlement: "audience teacher, PRD-X r1" for one role, as before ADR 0029, and the roles only when
+ * the reader holds more than one ("..., roles [administrator, teacher]").
+ */
+function mcpEntitlement(request: {
+  audience: readonly string[];
+  product: string;
+  release: string;
+  role: readonly string[];
+}): string {
+  if (request.role.length > 1) return entitlement(request);
+  const audience =
+    request.audience.length === 1 ? `audience ${request.audience[0]}` : `audiences [${request.audience.join(", ")}]`;
+  return `${audience}, ${request.product} ${request.release}`;
 }

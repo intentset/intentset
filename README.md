@@ -78,14 +78,14 @@ repository gives it an older one the command says what to run instead. To see a
 small model first, `npx intentset init --example --root <an empty directory>` writes the example there: an invented
 online shop's accounts, the one intentset.org tells.
 
-**Status: v0.2 draft.** The specifications are ready for review, and the reference implementation is on npm as
+**Status: v0.3 draft.** The specifications are ready for review, and the reference implementation is on npm as
 `@intentset/*`, early releases to try against one real capability. [`CHANGELOG.md`](CHANGELOG.md) says what each
 release changed, and whether the specifications, the conformance suite or the export contract moved.
 
 Ten packages are published under the `@intentset` scope: `core`, `markset-adapter`, `architecture`, `verification`, `publisher`, `help`, `atlas`, `mcp`, `conformance-suite` and `cli`.
 
-- Specifications: [`spec/core-0.2.md`](spec/core-0.2.md), [`spec/vsa-0.2.md`](spec/vsa-0.2.md),
-  [`spec/profile-typescript-amplify-gen2-0.2.md`](spec/profile-typescript-amplify-gen2-0.2.md),
+- Specifications: [`spec/core-0.3.md`](spec/core-0.3.md), [`spec/vsa-0.3.md`](spec/vsa-0.3.md),
+  [`spec/profile-typescript-amplify-gen2-0.3.md`](spec/profile-typescript-amplify-gen2-0.3.md),
   [`spec/publication.md`](spec/publication.md), the export contract other tools read,
   [`spec/export.md`](spec/export.md), and the list contract `intentset list` writes, [`spec/list.md`](spec/list.md)
 - Examples: [`examples/shop/`](examples/shop/), an invented online shop, which `init --example` writes and
@@ -159,8 +159,20 @@ if (read.ok) {
 Without `render`, a bound control gets `data-help-tip` and `data-help-knowledge` and nothing a browser displays: a
 `title` shows only on mouse hover, never to keyboard or touch users. `bindTips` binds once and reports the behaviors on
 the page that have no tip yet; `watchTips` binds again as the page changes and undoes its binding when disposed. The
-file was published for one audience, release, role, edition and set of flags, so a product serves each person the one
-published for their entitlement.
+file was published for one reader: every audience, role and flag it names, on one product, release and edition. Those
+lists are held all-of, so a product serves the file only to a person who holds every one, which `servedTo(file,
+reader)` checks.
+
+A slice may also say which knowledge leads each surface of the product, a page, route or panel named by an ID the
+product chooses, in `surfaces` (VSA §3). The help file maps each surface to the articles published for its reader, and
+`helpForPage` lists them first:
+
+```ts
+import { helpForPage, leadFor } from "@intentset/help";
+
+leadFor(read.help, "lantern-web:/assessments/schedule"); // the page's lead articles, in order
+helpForPage(read.help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" }).knowledge; // lead first
+```
 
 ## Develop
 

@@ -42,7 +42,7 @@ test("links, images, definitions and raw HTML targets resolve against the docume
     ),
     files: {
       "decisions/retry-policy.md":
-        "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/decision/0.2\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed deliveries twice\n  status: approved\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n---\n\n# Retry failed deliveries twice\n\n## Context\n\nx\n\n## Decision\n\ny\n\n## Consequences\n\nz\n",
+        "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/decision/0.3\n  id: ADR-ASMT-RETRY\n  type: decision\n  title: Retry failed deliveries twice\n  status: approved\n  owner: team-assessment\n  visibility: internal\n  audiences:\n  - engineering\n---\n\n# Retry failed deliveries twice\n\n## Context\n\nx\n\n## Decision\n\ny\n\n## Consequences\n\nz\n",
     },
   });
   const found = findReferences(kb(graph), graph).filter((r) => r.via === "link");
@@ -133,11 +133,11 @@ test("BEH-PUBLISH: no reference diagnostic carries the referenced title or path"
 
 test("a document linking to one refused in the same run is refused in turn", () => {
   const second =
-    "---\nmarkset: 0\nintentset:\n  spec: '0.2'\n  profile: intentset/knowledge/0.2\n  id: KB-ASMT-REVIEW\n  type: knowledge\n" +
+    "---\nmarkset: 0\nintentset:\n  spec: '0.3'\n  profile: intentset/knowledge/0.3\n  id: KB-ASMT-REVIEW\n  type: knowledge\n" +
     "  title: Review a schedule\n  status: approved\n  owner: team-assessment\n  visibility: customer\n  audiences:\n  - teacher\n" +
     "  links:\n    explains:\n    - CAP-ASMT-ASSIGN\n  availability:\n    products:\n    - PRD-LANTERN\n    releases:\n    - pilot-1\n" +
     "    roles:\n    - teacher\n    editions:\n    - standard\n    flags: []\n  reviewedBy: team-assessment\n  reviewedAt: '2026-09-30'\n" +
-    "  extensions:\n    intentset.org/review:\n      sources:\n        CAP-ASMT-ASSIGN: '@current'\n---\n\n# Review a schedule\n\n" +
+    "  review:\n    sources:\n      CAP-ASMT-ASSIGN: '@current'\n---\n\n# Review a schedule\n\n" +
     "## Guidance\n\nBefore confirming, read [how to prepare one](KB-ASMT-SCHEDULE.md).\n";
   const clean = example({ kb: reviewed(), files: { "KB-ASMT-REVIEW.md": second } });
   const ok = publish(clean.graph, clean.registries, customer(), {

@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-ARCH-BASELINE-IDENTITY
   type: behavior
   title: A baseline entry holds what a finding is about, one imported name at a time
@@ -38,4 +38,4 @@ Success: rewording a message, such as one that lists the declared areas, leaves 
 
 ## Sources
 
-- `spec/vsa-0.2.md` §9.
+- `spec/vsa-0.3.md` §9.

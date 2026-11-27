@@ -9,8 +9,10 @@
  * review, evidence stale, serve, mcp and guide never write; graph --out, architecture
  * check --write-baseline, evidence import --out, publish --out and serve
  * --out write only what they name; init only creates; migrate rewrites the
- * two version values of each record's frontmatter and nothing else; approve
- * rewrites the status, approval and review of the drafts it is given.
+ * two version values of each record's frontmatter, applies that version's
+ * transforms and re-pins the review pins that matched before the move; approve
+ * rewrites the status, approval and review of the drafts it is given, and with
+ * --renew-review only the review of the approved or deprecated knowledge.
  */
 import { parseArgs } from "node:util";
 import { type Mode, TypeScriptMissingError } from "@intentset/architecture";
@@ -62,7 +64,7 @@ commands
   graph [--format json] [--include-bodies] [--release <product>:<label>] [--out <file>]
         [--generated-at <time>] [--report evidence|knowledge|impact|ownership|all]...
         [--include-restricted]
-                            print the intentset/export/0.6 envelope, or write it to --out;
+                            print the intentset/export/0.7 envelope, or write it to --out;
                             each --report adds a section (ownership needs L2, evidence L3; all
                             is every one the level reads). Restricted artifacts are withheld
                             and counted unless --include-restricted
@@ -105,39 +107,54 @@ commands
                             acknowledged with an Intentset-Unchanged trailer. With --baseline,
                             the entries the base's copy did not hold and those it retired;
                             --fail-on-baseline-growth exits 1 for any it did not hold
-  approve <ID>... --by <person> [--at <date>] [--dry-run] [--allow-dirty]
+  approve <ID>... --by <person> [--at <date>] [--dry-run] [--allow-dirty] [--renew-review]
         [list's selector options]
                             write a person's approval into the drafts named or matched: status
                             approved and an approval block (basis direct); a knowledge record
-                            also gets its review, reviewedBy, reviewedAt and content-v1 pins of
-                            its sources. Validates with the change applied first and writes
+                            also gets its review, reviewedBy, reviewedAt, content-v1 pins of
+                            its sources, and self and gates, its own text and who could see
+                            each source. Validates with the change applied first and writes
                             nothing if it would add an error. Records that are not drafts are
                             skipped. Refuses a tree with uncommitted changes unless
                             --allow-dirty; --dry-run shows what it would do. Never commits, and
-                            cannot know who runs it: the diff is what a reviewer accepts
-  publish --visibility <v> --audience <a> --product <ID> --release <r> --role <r> --edition <e>
-        [--flag <f>]... [--authorized-internal] [--authorized-restricted] --out <dir>
-        [--html[=page|fragment]] [--published-at <time>] [--no-snapshot]
-                            reviewed knowledge for one audience and release, as Markset with
+                            cannot know who runs it: the diff is what a reviewer accepts.
+                            With --renew-review: write only reviewedBy, reviewedAt, the
+                            content-v1 pins, self and gates of the approved or deprecated
+                            knowledge given,
+                            leaving status and approval as they are; other records are skipped
+  publish --visibility <v> --audience <a>... --product <ID> --release <r> --role <r>...
+        --edition <e> [--flag <f>]... [--authorized-internal] [--authorized-restricted]
+        --out <dir> [--html[=page|fragment]] [--published-at <time>] [--no-snapshot]
+        [--keep-under-review]
+                            reviewed knowledge for one reader and release, as Markset with
                             provenance, an index, a help file and chunks, whose bytes do not
                             depend on the commit, and snapshot.json, the one file naming the
                             commit and graph hash published from; --no-snapshot leaves that
                             file out, for output that is committed. --html adds each
                             document as a page, <ID>.html; --html=fragment as the page's
                             content without its title, <ID>.fragment.html, for a product
-                            to show inside its own interface
+                            to show inside its own interface. Repeat --audience or --role
+                            for a reader who holds more than one; the publication is for a
+                            reader who holds every one, and values are not split on commas.
+                            --keep-under-review publishes knowledge whose sources changed what
+                            they promise, as its last reviewed text, marked under review, under
+                            under-review/
   serve [--port <n>] [--host <address>] [--out <dir>]
                             the Atlas, the internal review pages, on http://127.0.0.1:3000/
                             (rebuilt when a file changes), or written to --out; runs at L2, or
                             L3 with run records
-  migrate --to 0.2 [--allow-dirty]
-                            move the records the model reads from specifications 0.1 to 0.2:
-                            rewrites intentset.spec and intentset.profile in each record's
-                            frontmatter and nothing else, and says how many. Refuses a tree
-                            with uncommitted changes to tracked files unless --allow-dirty
+  migrate --to 0.3 [--allow-dirty]
+                            move the records the model reads to specifications 0.3, from
+                            0.2 or 0.1: rewrites intentset.spec and intentset.profile in
+                            each record's frontmatter, applies the version's rewrites (a
+                            status of implemented or released, a review under the extension),
+                            re-pins each knowledge review pin (a source pin, and self) that
+                            matched before the move, leaving a stale one stale, and says how
+                            many. Refuses a tree with uncommitted changes to tracked files
+                            unless --allow-dirty
   mcp --mode engineering [--include-restricted]
-  mcp --mode customer --visibility <public|customer> --audience <a> --product <ID>
-        --release <r> --role <r> --edition <e> [--flag <f>]...
+  mcp --mode customer --visibility <public|customer> --audience <a>... --product <ID>
+        --release <r> --role <r>... --edition <e> [--flag <f>]...
                             the read-only MCP server on stdio: the engineering graph, or one
                             publication made in memory as publish makes it, and nothing else
 
@@ -236,6 +253,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "by",
     "at",
     "dry-run",
+    "renew-review",
     "allow-dirty",
     "evidence",
     "mode",
@@ -271,6 +289,7 @@ const COMMAND_OPTIONS: Record<string, string[]> = {
     "html",
     "published-at",
     "no-snapshot",
+    "keep-under-review",
   ],
 };
 
@@ -549,6 +568,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
         dryRun: values["dry-run"],
         allowDirty: values["allow-dirty"],
         json: values.json,
+        renewReview: values["renew-review"],
         selected: given.length > 0 || values.where !== undefined,
       };
       const problem = approveUsageProblem(options);
@@ -654,6 +674,7 @@ async function dispatch(argv: string[], io: Io): Promise<number> {
         html: values.html,
         publishedAt: values["published-at"],
         snapshot: !values["no-snapshot"],
+        keepUnderReview: values["keep-under-review"],
       };
       const problem = publishUsageProblem(options);
       if (problem !== null) return usage(problem);
@@ -713,8 +734,8 @@ function parse(argv: string[]) {
       "tool-version": { type: "string" },
       base: { type: "string" },
       visibility: { type: "string" },
-      audience: { type: "string" },
-      role: { type: "string" },
+      audience: { type: "string", multiple: true },
+      role: { type: "string", multiple: true },
       edition: { type: "string" },
       flag: { type: "string", multiple: true },
       "authorized-internal": { type: "boolean", default: false },
@@ -722,6 +743,7 @@ function parse(argv: string[]) {
       html: { type: "string" },
       "published-at": { type: "string" },
       "no-snapshot": { type: "boolean", default: false },
+      "keep-under-review": { type: "boolean", default: false },
       port: { type: "string" },
       host: { type: "string" },
       to: { type: "string" },
@@ -729,6 +751,7 @@ function parse(argv: string[]) {
       by: { type: "string" },
       at: { type: "string" },
       "dry-run": { type: "boolean", default: false },
+      "renew-review": { type: "boolean", default: false },
       id: { type: "string", multiple: true },
       type: { type: "string", multiple: true },
       status: { type: "string", multiple: true },

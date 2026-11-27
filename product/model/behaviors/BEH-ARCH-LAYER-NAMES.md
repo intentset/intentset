@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-ARCH-LAYER-NAMES
   type: behavior
   title: A name is judged by the layer of the file that defines it
@@ -38,4 +38,4 @@ Success: a name defined in a layer the importer may import passes, however it wa
 
 ## Sources
 
-- `spec/vsa-0.2.md` §5 and `spec/profile-typescript-amplify-gen2-0.2.md` §3.
+- `spec/vsa-0.3.md` §5 and `spec/profile-typescript-amplify-gen2-0.3.md` §3.

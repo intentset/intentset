@@ -18,14 +18,16 @@ import { reviewCell } from "./shared.ts";
 interface Readiness {
   /** Per projection: null when it would admit the knowledge, else the reason it would not. */
   results: Record<Visibility, string | null>;
-  /** The request each projection was checked with, or null when none could be built. */
-  request: Omit<PublicationRequest, "visibility"> | null;
+  /** The request each projection was checked with, one value per dimension, or null when none could be built. */
+  request: (Omit<PublicationRequest, "visibility" | "audience" | "role"> & { audience: string; role: string }) | null;
 }
 
 export function publicationPage(model: Model): PageSource {
   const knowledge = model.ofType("knowledge");
   const readiness = new Map(knowledge.map((k) => [k.meta.id, readinessOf(model, k)]));
-  const current = knowledge.filter((k) => reviewStatus(model.graph, k).status === "current").length;
+  const reviews = knowledge.map((k) => reviewStatus(model.graph, k));
+  const current = reviews.filter((review) => review.status === "current").length;
+  const keepable = reviews.filter((review) => review.keepable).length;
   const admitted = knowledge.filter((k) =>
     VISIBILITIES.some((v) => readiness.get(k.meta.id)?.results[v] === null),
   ).length;
@@ -40,6 +42,7 @@ export function publicationPage(model: Model): PageSource {
       "documents are generated, so a projection that admits a record here can still refuse its document.",
     "",
     `Knowledge artifacts: ${knowledge.length}. Review current: ${ofTotal(current, knowledge.length, "knowledge artifact")}. ` +
+      `Needing review and keepable, so publishable marked under review when a request sets keepUnderReview: ${ofTotal(keepable, knowledge.length, "knowledge artifact")}. ` +
       `Admitted by at least one projection: ${ofTotal(admitted, knowledge.length, "knowledge artifact")}.`,
     "",
     ...table(

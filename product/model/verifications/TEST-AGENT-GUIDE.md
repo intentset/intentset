@@ -1,16 +1,16 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-AGENT-GUIDE
   type: verification
   title: Init and guide write the agent guide and overwrite nothing
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   links:
     verifies: [BEH-AGENT-GUIDE]
   verification:
@@ -29,6 +29,8 @@ intentset:
 - `packages/cli/test/cli.test.ts`: the test "init refuses to overwrite, and writes nothing when it refuses"
 - `packages/cli/test/cli.test.ts`: the test "init --agents writes only the guide, for the scope the config names, and never over an existing one"
 - `packages/cli/test/cli.test.ts`: the test "guide prints the guide init --agents writes, for the config's scope, and writes nothing"
+- `packages/cli/test/cli.test.ts`: the test "the guide forbids an agent from writing a knowledge review, and names the command that does" (ADR 0027)
+- `packages/cli/test/cli.test.ts`: the test "the guide says which field leads a page, that a surface ID must name nothing some reader may not see, and that one holding a colon is quoted" (ADR 0028)
 
 ## Expected result
 

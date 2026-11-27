@@ -90,7 +90,11 @@ export function run(
 /** Every byte the publication wrote or reported: documents, pages or fragments, index, help file and diagnostics. */
 export function outputText(result: PublishResult): string {
   return [
-    ...result.documents.flatMap((document) => [document.markset, document.html ?? "", document.htmlFragment ?? ""]),
+    ...[...result.documents, ...result.keptUnderReview].flatMap((document) => [
+      document.markset,
+      document.html ?? "",
+      document.htmlFragment ?? "",
+    ]),
     JSON.stringify(result.index),
     JSON.stringify(result.help),
     JSON.stringify(result.snapshot),
@@ -114,7 +118,7 @@ export function reviewed(
     "intentset.status": "approved",
     "intentset.reviewedBy": "team-assessment",
     "intentset.reviewedAt": "2026-09-30",
-    "intentset.extensions": { "intentset.org/review": { sources: pins } },
+    "intentset.review": { sources: pins },
     ...extra,
   };
 }
@@ -156,6 +160,13 @@ export function example(
     registries: fields.registries,
     valid: true,
   });
+}
+
+/** The example's registries with these keys replaced, for a case's `registries`. */
+export function registriesWith(changes: Record<string, unknown>): Record<string, unknown> {
+  const read = parseYaml(readFileSync(join(examplesDir, "scheduling", "registries.yaml"), "utf8"));
+  if (read.value === null) throw new Error("the example's registries do not parse");
+  return { ...read.value, ...changes };
 }
 
 /** A knowledge body with the example's heading and section around the given guidance. */

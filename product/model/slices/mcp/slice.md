@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-MCP
   type: slice
   title: The mcp package
@@ -40,7 +40,7 @@ The slice is the package `@intentset/mcp`. Its layers are empty: a package is a 
 
 ## Public contract
 
-The exports of `packages/mcp/src/index.ts`, reached by other packages as `@intentset/mcp` through the `intentset-source` export condition. No contract record yet.
+The exports of `packages/mcp/src/index.ts`, reached by other packages as `@intentset/mcp` through the `intentset-source` export condition. Customer mode refuses an index whose profile is not `intentset/publication-index/0.3` or that holds a member the spec does not give, and a document whose block names another entitlement than its index, so documents published for two readers are never served together (ADR 0029). A publication made with `keepUnderReview` is served with its current documents only; a document kept under review is never in `documents` or `index.published`, so it is never served (ADR 0027). No contract record yet.
 
 ## Verification
 

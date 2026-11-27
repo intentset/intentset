@@ -7,7 +7,7 @@
  * produces the same shape from the Markset AST; a test holds the two equal.
  * This carrier emits no syntax diagnostics: plain Markdown has no grammar to
  * fail, and an unclosed fence or missing frontmatter is reported by
- * `readArtifact` as CORE001.
+ * `readArtifact` as CORE010.
  */
 import type { DocumentInput, Heading } from "./types.ts";
 

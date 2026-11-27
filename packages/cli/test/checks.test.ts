@@ -76,7 +76,7 @@ const IMPORT = ["--product", "PRD-LANTERN", "--release", "pilot-1"];
  * nothing to say what it was reviewed against; and the approval, leaving the draft it used to be.
  */
 function unpinKnowledge(dir: string): void {
-  edit(dir, "KB-ASMT-SCHEDULE", /\n {2}extensions:\n(?: {4,}.*\n)+/, "\n");
+  edit(dir, "KB-ASMT-SCHEDULE", /\n {2}review:\n(?: {4,}.*\n)+/, "\n");
 }
 function draftKnowledge(dir: string): void {
   edit(dir, "KB-ASMT-SCHEDULE", "  status: approved\n", "  status: draft\n");
@@ -713,7 +713,7 @@ test("BEH-PUBLISH: publish from the example with its knowledge demoted to a draf
     "snapshot.json",
   ]);
   const help = JSON.parse(readFileSync(join(dir, "published", "help.json"), "utf8"));
-  assert.equal(help.profile, "intentset/help/0.2");
+  assert.equal(help.profile, "intentset/help/0.3");
   assert.deepEqual(help.tips, {});
 });
 
@@ -732,7 +732,7 @@ test("BEH-PUBLISH: publish writes reviewed knowledge with provenance, HTML, an i
     "snapshot.json",
   ]);
   const markset = readFileSync(join(out, "KB-ASMT-SCHEDULE.md"), "utf8");
-  assert.match(markset, /intentset\/publication\/0\.2/);
+  assert.match(markset, /intentset\/publication\/0\.3/);
   for (const internal of ["Schedule a student assessment", "Require a future release time", "BEH-ASMT-SCHEDULE.md"]) {
     for (const file of readdirSync(out))
       assert.ok(!readFileSync(join(out, file), "utf8").includes(internal), `${file}: ${internal}`);
@@ -784,7 +784,7 @@ test("BEH-PUBLISH: publishing the same knowledge at two commits writes the same 
   const before = JSON.parse(read("first", "snapshot.json"));
   const after = JSON.parse(read("second", "snapshot.json"));
   assert.deepEqual(Object.keys(before), ["profile", "derived", "commit", "graphHash"]);
-  assert.equal(before.profile, "intentset/snapshot/0.2");
+  assert.equal(before.profile, "intentset/snapshot/0.3");
   assert.equal(before.commit, head);
   assert.match(first.out, new RegExp(`^Snapshot: commit ${head}, graph ${before.graphHash}$`, "m"));
   assert.notEqual(after.commit, before.commit);
@@ -851,6 +851,70 @@ test("BEH-PUBLISH: publish refuses a graph that does not validate, and a request
   assert.equal(broken.code, 1);
   assert.match(broken.err, /refused: validation at L1 has 1 error/);
   assert.equal(existsSync(join(dir, "broken")), false);
+});
+
+/** The example's registries with the administrator role declared beside the teacher. */
+function withAdministrator(dir: string): void {
+  const file = join(dir, ".intentset", "registries.yaml");
+  const before = readFileSync(file, "utf8");
+  const after = before.replace(/^roles:\n- teacher$/m, "roles:\n- administrator\n- teacher");
+  assert.notEqual(after, before, "the example's registries list roles as expected");
+  writeFileSync(file, after);
+}
+
+test("BEH-PUBLISH-READER: a repeated --role publishes for the reader holding every one, and the summary names the set", async (t) => {
+  const dir = await example(t);
+  withAdministrator(dir);
+  const one = await run(dir, "publish", ...REQUEST, "--out", "one");
+  assert.equal(one.code, 0, one.out + one.err);
+  assert.match(
+    one.out,
+    /^Published 1 document for a customer projection: audience teacher, PRD-LANTERN pilot-1, role teacher, edition standard, flags none$/m,
+  );
+  const oneIndex = JSON.parse(readFileSync(join(dir, "one", "index.json"), "utf8"));
+  assert.deepEqual(oneIndex.request.role, ["teacher"]);
+  assert.deepEqual(oneIndex.request.audience, ["teacher"]);
+
+  const both = await run(dir, "publish", ...REQUEST, "--role", "administrator", "--out", "both");
+  assert.equal(both.code, 0, both.out + both.err);
+  assert.match(both.out, /audience teacher, PRD-LANTERN pilot-1, roles \[administrator, teacher\], edition standard/);
+  const index = JSON.parse(readFileSync(join(dir, "both", "index.json"), "utf8"));
+  assert.equal(index.profile, "intentset/publication-index/0.3");
+  assert.deepEqual(index.request.role, ["administrator", "teacher"]);
+  const help = JSON.parse(readFileSync(join(dir, "both", "help.json"), "utf8"));
+  assert.deepEqual(help.availability.role, ["administrator", "teacher"]);
+  assert.match(
+    readFileSync(join(dir, "both", "KB-ASMT-SCHEDULE.md"), "utf8"),
+    /\n {4}role:\n {6}- administrator\n {6}- teacher\n/,
+  );
+
+  const audiences = await run(dir, "publish", ...REQUEST, "--audience", "product", "--out", "audiences");
+  assert.equal(audiences.code, 0, audiences.out + audiences.err);
+  assert.match(audiences.out, /audiences \[product, teacher\], PRD-LANTERN pilot-1, role teacher/);
+});
+
+test("BEH-PUBLISH-READER: a --role value holding a comma is one unknown role, and the refusal says to repeat --role", async (t) => {
+  const dir = await example(t);
+  withAdministrator(dir);
+  const refused = await run(
+    dir,
+    "publish",
+    ...REQUEST.map((arg, i) => (REQUEST[i - 1] === "--role" ? "teacher,administrator" : arg)),
+    "--out",
+    "refused",
+  );
+  assert.equal(refused.code, 1);
+  assert.match(refused.out, /error PUB001 .*role teacher,administrator, which the registries do not declare/);
+  assert.match(refused.err, /repeat --role for each role; values are not split on commas/);
+  assert.equal(existsSync(join(dir, "refused")), false);
+});
+
+test("BEH-PUBLISH-READER: list reads a repeated --role as before, as a selector token for each", async (t) => {
+  const dir = await example(t);
+  withAdministrator(dir);
+  const listed = await run(dir, "list", "--type", "knowledge", "--role", "administrator", "--role", "teacher");
+  assert.equal(listed.code, 0, listed.out + listed.err);
+  assert.match(listed.out, /KB-ASMT-SCHEDULE/);
 });
 
 test("validate --level L5 is refused as a claim one run cannot check", async (t) => {
@@ -923,12 +987,8 @@ test("BEH-EXPORT, BEH-READ-EXPORT: graph --report all at L3 writes every report 
     ),
   );
   assert.ok(envelope.reports.ownership?.files.some((f) => f.path === TEST_FILE && f.region === "test"));
-  // The knowledge's review pins name the rule, as publication §3 requires and export §2 carries (issue #49).
-  const outsidePins = JSON.stringify({
-    ...envelope,
-    artifacts: envelope.artifacts.map((artifact) => ({ ...artifact, extensions: null })),
-  });
-  assert.ok(!outsidePins.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere but the review pins");
+  // The knowledge's review pins the rule, as publication §3 requires; export §3 withholds the pin with it (ADR 0025, #49).
+  assert.ok(!text.includes("RULE-ASMT-AUTH"), "the restricted rule appears nowhere");
 
   const everything = await run(dir, "graph", "--report", "knowledge", "--include-restricted");
   assert.equal(everything.code, 0, everything.err);
@@ -1100,12 +1160,13 @@ test("BEH-EVIDENCE-CURRENT: a resource a slice lists is not in the subject unles
   );
   assert.doesNotMatch(unexercised.out, /EVID005/, "EVID006 already lists the file");
 
-  // evidence.resources: used hashes every resource a slice lists, so the same change makes the record stale, and says which file.
+  // ADR 0026: no key widens the subject to every resource a slice lists; `evidence.resources` is an unknown key.
   const config = join(dir, ".intentset", "config.yaml");
   const before = readFileSync(config, "utf8");
   writeFileSync(config, `${before}evidence:\n  resources: used\n`);
   const used = await run(dir, "validate", "--level", "L3", ...IMPORT);
-  assert.match(verificationLine(used.out), /stale {2}\[subject\]/, "the record was made under the default");
+  assert.notEqual(used.code, 0);
+  assert.match(`${used.out}${used.err}`, /CFG001 .*Unknown evidence key `resources`/);
   writeFileSync(config, before);
 
   // Exercising the resource puts its files in the subject: a change then makes the record stale, and names the file.
@@ -1428,4 +1489,50 @@ test("BEH-ARCH-CHECK: without TypeScript, init and validate at L1 still run, and
     );
     assert.match(result.err, new RegExp(`intentset ${argv.join(" ")}\``));
   }
+});
+
+/** The example's slice given availability and one surface, with any other frontmatter edits, by line. */
+function surfacedSlice(dir: string, status = "draft"): void {
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    "  links:\n",
+    "  availability:\n    products: [PRD-LANTERN]\n    releases: [pilot-1]\n    roles: [teacher]\n    editions: [standard]\n    flags: []\n  links:\n",
+  );
+  edit(
+    dir,
+    "SLICE-ASMT-SCHEDULE",
+    "    - RES-ASSESSMENT-DATA\n",
+    "    - RES-ASSESSMENT-DATA\n    surfaces:\n      lantern-web:/assessments/schedule:\n        knowledge: [KB-ASMT-SCHEDULE]\n",
+  );
+  if (status !== "draft") edit(dir, "SLICE-ASMT-SCHEDULE", "status: draft", `status: ${status}\n  delivery: built`);
+}
+
+test("BEH-PUBLISH-SURFACES: publish names the slices the projection admits whose surfaces it left out, and says nothing of the others", async (t) => {
+  const dir = await example(t);
+  surfacedSlice(dir);
+  // The slice is internal: a customer projection does not admit it, so the run names and counts nothing of it.
+  const customer = await run(dir, "publish", ...REQUEST, "--out", "customer");
+  assert.equal(customer.code, 0, customer.out + customer.err);
+  assert.doesNotMatch(customer.out, /Surfaces left out|SLICE-ASMT-SCHEDULE/);
+  const internal = REQUEST.map((value) => (value === "customer" ? "internal" : value));
+  const named = await run(dir, "publish", ...internal, "--authorized-internal", "--out", "internal");
+  assert.equal(named.code, 0, named.out + named.err);
+  assert.match(named.out, /^Surfaces left out of help\.json, by slice:\n {2}SLICE-ASMT-SCHEDULE: draft$/m);
+  for (const out of ["customer", "internal"]) {
+    for (const name of readdirSync(join(dir, out))) {
+      assert.doesNotMatch(readFileSync(join(dir, out, name), "utf8"), /SLICE-ASMT-SCHEDULE/, `${out}/${name}`);
+    }
+    assert.deepEqual(JSON.parse(readFileSync(join(dir, out, "help.json"), "utf8")).surfaces, {});
+  }
+
+  // Approved and built, the slice writes its surface into the customer file, and no line is printed.
+  const approved = await example(t);
+  surfacedSlice(approved, "approved");
+  const written = await run(approved, "publish", ...REQUEST, "--out", "customer");
+  assert.equal(written.code, 0, written.out + written.err);
+  assert.doesNotMatch(written.out, /Surfaces left out/);
+  assert.deepEqual(JSON.parse(readFileSync(join(approved, "customer", "help.json"), "utf8")).surfaces, {
+    "lantern-web:/assessments/schedule": { knowledge: ["KB-ASMT-SCHEDULE"] },
+  });
 });

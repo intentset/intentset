@@ -28,6 +28,7 @@ import {
   DELIVERY_TYPES,
   FORMALIZES_TYPES,
   type ExportEnvelope,
+  isSurfaceId,
   type ExportReportName,
   ID_PATTERN,
   LEVELS,
@@ -92,7 +93,7 @@ const CODE = /^[A-Z]+[0-9]{3}$/;
 /** Markset's own codes, which a diagnostic with origin syntax carries unchanged (§1): a host never renames them. */
 const MARKSET_CODE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
 const POINTER = /^(?:\/.*)?$/;
-const PROFILE = /^intentset\/[a-z]+\/0\.2$/;
+const PROFILE = /^intentset\/[a-z]+\/0\.3$/;
 const EXTENSION_KEY = /^[^/]+\/.+$/;
 const TOKEN = /^\S+$/;
 const TEXT = /\S/;
@@ -284,7 +285,7 @@ class Shape {
       "reports",
     ]);
     if (v === null) return;
-    if (v.spec !== "0.2") this.fail("/spec", "Expected 0.2.");
+    if (v.spec !== "0.3") this.fail("/spec", "Expected 0.3.");
     this.string(v.generatedAt, "/generatedAt", GENERATED_AT, "an ISO 8601 time");
     this.string(v.repository, "/repository");
     this.array(v.products, "/products", (p, at) => this.id(p, at), { sortedBy: String });
@@ -437,6 +438,7 @@ class Shape {
         "verification",
         "measure",
         "tips",
+        "review",
         "extensions",
       ],
       ["body"],
@@ -471,7 +473,7 @@ class Shape {
     this.string(a.owner, `${at}/owner`);
     this.oneOf(a.visibility, `${at}/visibility`, VISIBILITIES);
     this.strings(a.audiences, `${at}/audiences`, { minItems: 1 });
-    this.string(a.profile, `${at}/profile`, PROFILE, "a profile such as intentset/behavior/0.2");
+    this.string(a.profile, `${at}/profile`, PROFILE, "a profile such as intentset/behavior/0.3");
     this.nullable(a.revision, `${at}/revision`, (r, p) => this.integer(r, p, 1));
     this.string(a.path, `${at}/path`);
     this.string(a.sourceHash, `${at}/sourceHash`, SHA256, "a SHA-256 in lowercase hex");
@@ -524,6 +526,21 @@ class Shape {
         }
       }
     });
+    this.nullable(a.review, `${at}/review`, (x, p) => {
+      const r = this.object(x, p, ["sources", "hash", "snapshot"]);
+      if (r === null) return;
+      if (!isRecord(r.sources)) this.fail(`${p}/sources`, "Expected an object of pins by source ID.");
+      else {
+        for (const key of Object.keys(r.sources).sort(compareStrings)) {
+          const q = `${p}/sources/${key}`;
+          if (!ID_PATTERN.test(key)) this.fail(q, "Expected an artifact ID as the key.");
+          const pin = r.sources[key];
+          if (typeof pin !== "string" || pin === "") this.fail(q, "Expected a non-empty string.");
+        }
+      }
+      this.nullable(r.hash, `${p}/hash`, (h, q) => this.string(h, q));
+      this.nullable(r.snapshot, `${p}/snapshot`, (h, q) => this.string(h, q));
+    });
     this.nullable(a.extensions, `${at}/extensions`, (x, p) => this.extensions(x, p));
     if (Object.hasOwn(a, "body") && typeof a.body !== "string") this.fail(`${at}/body`, "Expected a string.");
   }
@@ -564,7 +581,7 @@ class Shape {
     const s = this.object(
       value,
       at,
-      ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"],
+      ["kind", "domain", "entrypoints", "layers", "claims", "usesResources", "surfaces"],
       ["rationale"],
     );
     if (s === null) return;
@@ -585,6 +602,17 @@ class Shape {
       this.string(c.path, `${p}/path`);
     });
     this.ids(s.usesResources, `${at}/usesResources`);
+    // Export §2, §5 (ADR 0028): keys by VSA §3's rules; a list may be emptied by withholding.
+    if (isRecord(s.surfaces)) {
+      for (const [key, entry] of Object.entries(s.surfaces)) {
+        const p = `${at}/surfaces/${pointerToken(key)}`;
+        if (!isSurfaceId(key)) this.fail(p, "Expected a surface ID (VSA §3).");
+        const e = this.object(entry, p, ["knowledge"]);
+        if (e !== null) this.ids(e.knowledge, `${p}/knowledge`);
+      }
+    } else if (Object.hasOwn(s, "surfaces")) {
+      this.fail(`${at}/surfaces`, "Expected an object.");
+    }
   }
 
   reports(value: unknown): void {
@@ -757,6 +785,7 @@ class Shape {
           "changed",
           "missing",
           "withheld",
+          "self",
         ]);
         if (e === null) return;
         this.id(e.id, `${p}/id`);
@@ -768,6 +797,7 @@ class Shape {
           this.array(e[key], `${p}/${key}`, (id, q) => this.id(id, q), { sortedBy: String });
         }
         this.integer(e.withheld, `${p}/withheld`);
+        this.oneOf(e.self, `${p}/self`, ["unchanged", "changed", "unpinned"]);
       },
       { sortedBy: (x) => (isRecord(x) && typeof x.id === "string" ? x.id : "") },
     );
@@ -1016,11 +1046,15 @@ function consistency(envelope: ExportEnvelope): ExportProblem[] {
         fail(`${p}/id`, `${entry.id} is not a knowledge artifact in the export.`);
       if (
         entry.status === "current" &&
-        (entry.changed.length > 0 || entry.missing.length > 0 || entry.reviewer === null || entry.reviewedAt === null)
+        (entry.changed.length > 0 ||
+          entry.missing.length > 0 ||
+          entry.reviewer === null ||
+          entry.reviewedAt === null ||
+          entry.self === "changed")
       ) {
         fail(
           `${p}/status`,
-          `${entry.id} is current, but a source changed or is unpinned, or no reviewer or time is named.`,
+          `${entry.id} is current, but a source changed or is unpinned, no reviewer or time is named, or its own text changed since review.`,
         );
       }
     });

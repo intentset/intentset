@@ -1,17 +1,16 @@
 /**
  * Behavior ownership and contract surfaces (VSA001, VSA002; Core §5).
  *
- * VSA001 at L2 and above: an approved, implemented, released or deprecated
- * behavior has exactly one incoming `implements` from a product slice. A
- * draft behavior that says its work is built and that no product slice
- * implements is a warning (ADR 0017). Core
- * reports the same condition as CORE006 from the graph alone; VSA001 is the
- * architecture's own statement of it, so a VSA report stands by itself.
+ * VSA001 at L2 and above: an approved or deprecated behavior has exactly one
+ * incoming `implements` from a product slice. A draft behavior that says its
+ * work is built and that no product slice implements is a warning (ADR 0017).
+ * Core reports the same condition as CORE006 from the graph alone; VSA001 is
+ * the architecture's own statement of it, so a VSA report stands by itself.
  *
  * VSA002: each of a slice's entrypoints is a file in the repository and lies
  * inside one of the slice's own source claims, and no two lie in the same
  * package (the nearest directory above holding a package.json, or the
- * repository root): a slice has one public surface per package it spans. An
+ * repository root): a slice has one public contract surface per package it spans. An
  * empty entrypoint module is allowed for a leaf. While the slice is draft, an
  * entrypoint that is not a file yet is a warning: planned, not yet owned
  * (VSA §3), unless the slice or a behavior it implements says its work is
@@ -30,7 +29,7 @@ import { type Finding, finding } from "./finding.ts";
 import { compareStrings, matchPattern, validatePattern } from "./patterns.ts";
 import { describePackage, type Model } from "./regions.ts";
 
-const OWNED_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+const OWNED_STATUSES = new Set(["approved", "deprecated"]);
 
 export function checkOwnership(model: Model, graph: Graph, level: Level): Finding[] {
   const findings: Finding[] = [];
@@ -119,7 +118,7 @@ export function checkOwnership(model: Model, graph: Graph, level: Level): Findin
             artifact: slice.id,
             path: slice.path,
             field,
-            message: `${slice.id} declares two entrypoints in ${describePackage(pkg)}, ${first} and ${entrypoint}; a slice has one public surface per package it spans.`,
+            message: `${slice.id} declares two entrypoints in ${describePackage(pkg)}, ${first} and ${entrypoint}; a slice has one public contract surface per package it spans.`,
             remediation: `Export what ${entrypoint} offers from ${first} and remove it from entrypoints, or move it into the package it serves (VSA002).`,
             paths: [first, entrypoint],
           }),

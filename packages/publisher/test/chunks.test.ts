@@ -83,13 +83,13 @@ test("a paragraph longer than the bound is cut at whitespace, and a word longer 
   );
 });
 
-test("every chunk carries its document's publication block: the same access filters and provenance", () => {
+test("BEH-PUBLISH-READER: every chunk carries its document's publication block: the same access filters and provenance", () => {
   const documents = published(BODY);
   for (const chunk of toChunks(documents, { maxChars: 80 })) {
     assert.equal(chunk.document, "KB-ASMT-SCHEDULE");
     assert.deepEqual(chunk.publication, documents[0].publication);
     assert.equal(chunk.publication.projection, "customer");
-    assert.equal(chunk.publication.audience, "teacher");
+    assert.deepEqual(chunk.publication.audience, ["teacher"]);
     assert.equal(chunk.publication.availability.release, "pilot-1");
   }
 });

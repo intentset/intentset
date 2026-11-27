@@ -71,6 +71,16 @@ const APPROVAL = {
   source: { ref: "https://tracker.example/LAN-12", revision: "7" },
   attestedBy: "drafting-agent",
 };
+/** Who the slice is for, which a slice that declares surfaces says (VSA §3). */
+const SLICE_AVAILABILITY = {
+  products: ["PRD-LANTERN"],
+  releases: ["pilot-1"],
+  roles: ["teacher"],
+  editions: ["standard"],
+  flags: [],
+};
+/** The slice's surfaces in every fixture: one page, led by the example's knowledge. */
+const SURFACES = { "lantern-web:/assessments/schedule": { knowledge: ["KB-ASMT-SCHEDULE"] } };
 /** What the behavior formalizes in every fixture: the item, and one criterion of it. */
 const FORMALIZES = [
   { source: "https://tracker.example/LAN-12" },
@@ -154,6 +164,15 @@ function build(options: BuildOptions): ExportEnvelope {
         "KB-ASMT-SCHEDULE.md": { frontmatter: { "intentset.approval": APPROVAL } },
         "BEH-ASMT-SCHEDULE.md": { frontmatter: { "intentset.formalizes": FORMALIZES } },
         ...options.patch,
+        // What 0.7 added (ADR 0028), so every fixture's slice declares one surface, beside any patch of its own.
+        "SLICE-ASMT-SCHEDULE.md": {
+          ...options.patch?.["SLICE-ASMT-SCHEDULE.md"],
+          frontmatter: {
+            "intentset.availability": SLICE_AVAILABILITY,
+            "intentset.slice.surfaces": SURFACES,
+            ...options.patch?.["SLICE-ASMT-SCHEDULE.md"]?.frontmatter,
+          },
+        },
       },
     },
     { examplesDir: join(repoRoot, "examples"), parseYaml },
@@ -324,6 +343,27 @@ export function buildConsumerFixtures(): Map<string, string> {
     reports: ["knowledge", "impact"],
   });
   const restricted = build({ level: "L1", commit: COMMIT, reports: ["knowledge"], includeRestricted: true });
+  // ADR 0027: the knowledge's review pins its own text, which has changed since; every source is unchanged.
+  const ownTextChanged = build({
+    level: "L1",
+    commit: COMMIT,
+    patch: {
+      "KB-ASMT-SCHEDULE.md": {
+        frontmatter: {
+          "intentset.review": {
+            hash: "content-v1",
+            sources: {
+              "BEH-ASMT-SCHEDULE": "4fede99f81c782d216d698ad8d7785ee56f65ac5de0754c77c8269188a2617f4",
+              "RULE-ASMT-AUTH": "d241506c14c5347535248974217d10661d9f006a8f706e8a41428c1fef7afc10",
+              "RULE-ASMT-FUTURE": "a89cf09ddc011a8b0d4cd9548af70cd095fd3042d5324e77a7dca01797e07d3f",
+            },
+            self: "0".repeat(64),
+          },
+        },
+      },
+    },
+    reports: ["knowledge"],
+  });
   const syntax = build({
     level: "L1",
     commit: COMMIT,
@@ -422,6 +462,12 @@ export function buildConsumerFixtures(): Map<string, string> {
     "Nothing is withheld. A consumer that accepts this must enforce restricted visibility itself before any search or display.",
   );
   accept(
+    "knowledge whose own text changed since its review",
+    "knowledge-own-text-changed.json",
+    ownTextChanged,
+    "Every source still has the hash it was reviewed against, and KB-ASMT-SCHEDULE needs review because its own text changed since a review that pins it: its reports.knowledge entry says self changed, with empty changed and missing. Show it as needing review for that reason, never as current; the export carries neither self nor gates on the artifact's review.",
+  );
+  accept(
     "a Markset diagnostic, with Markset's own code",
     "syntax-diagnostic.json",
     syntax,
@@ -429,6 +475,11 @@ export function buildConsumerFixtures(): Map<string, string> {
   );
 
   /** What 0.3 added (ADR 0012), taken back out so an earlier envelope is what its reader would have written. */
+  /** The specifications' version an earlier envelope was written against: `spec`, and each artifact's `profile` with it. */
+  const atSpec = (e: Json, version: string) => {
+    e.spec = version;
+    for (const artifact of e.artifacts) artifact.profile = artifact.profile.replace(/\/[^/]+$/, `/${version}`);
+  };
   const before03 = (e: Json) => {
     delete e.registries.evidenceSources;
     const measures = new Set(e.artifacts.filter((a: Json) => a.type === "measure").map((a: Json) => a.id));
@@ -448,6 +499,7 @@ export function buildConsumerFixtures(): Map<string, string> {
   const v01 = mutate(minimal, (e) => {
     e.contract = "intentset/export/0.1";
     before03(e);
+    atSpec(e, "0.1");
     delete e.withholding;
     delete e.reports;
     delete e.source.uncommitted;
@@ -465,6 +517,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(minimal, (e) => {
       e.contract = "intentset/export/0.2";
       before03(e);
+      atSpec(e, "0.1");
     }),
   );
   reject(
@@ -507,6 +560,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(full, (e) => {
       e.contract = "intentset/export/0.3";
       before04(e);
+      atSpec(e, "0.1");
     }),
   );
   reject(
@@ -520,6 +574,7 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(full, (e) => {
       e.contract = "intentset/export/0.4";
       before05(e);
+      atSpec(e, "0.2");
     }),
   );
   reject(
@@ -533,13 +588,27 @@ export function buildConsumerFixtures(): Map<string, string> {
     mutate(full, (e) => {
       e.contract = "intentset/export/0.5";
       before06(e);
+      atSpec(e, "0.2");
+    }),
+  );
+  reject(
+    "the contract before approval",
+    "unsupported-contract-0.5.json",
+    "unsupported-contract",
+    "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
+  );
+  files.set(
+    "unsupported-contract-0.6.json",
+    mutate(full, (e) => {
+      e.contract = "intentset/export/0.6";
+      atSpec(e, "0.2");
     }),
   );
   reject(
     "the previous contract version",
-    "unsupported-contract-0.5.json",
+    "unsupported-contract-0.6.json",
     "unsupported-contract",
-    "0.5 carried no approval and no formalizes, so it cannot say on what basis a record was approved or which outside requirement it formalizes. A 0.6 reader rejects it, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
+    "0.6 carried a model written against the specifications' 0.2, and a 0.7 reader reads one written against 0.3. It rejects the envelope, with the version it supports in the message, and keeps the prior snapshot; the consumer upgrades its pin and its reader together.",
   );
   files.set(
     "unsupported-contract-future.json",

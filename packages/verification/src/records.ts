@@ -25,7 +25,7 @@ export const CURRENT = "@current";
 export interface RunScope {
   /** The product's artifact ID. */
   product: string;
-  /** The exact release label; v0.2 matches release labels exactly (Core §7). */
+  /** The exact release label; v0.3 matches release labels exactly (Core §7). */
   release: string;
 }
 

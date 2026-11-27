@@ -940,8 +940,8 @@ function slice(id: string, root: string, extra = ""): string {
   return `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: ${id}
   type: slice
   title: ${id}
@@ -1039,7 +1039,7 @@ describe("checkArchitecture: declared scope and modes", () => {
     );
     assert.match(
       leak[0].message,
-      /^legacy\/src\/new\.ts lies outside the declared scope and imports "\.\.\/\.\.\/packages\/a\/src\/internal", a private file of SLICE-A .*; its public surface is packages\/a\/src\/index\.ts\.$/,
+      /^legacy\/src\/new\.ts lies outside the declared scope and imports "\.\.\/\.\.\/packages\/a\/src\/internal", a private file of SLICE-A .*; its public contract surface is packages\/a\/src\/index\.ts\.$/,
     );
     assert.equal(after.summary.edges, before.summary.edges);
     assert.equal(after.summary.crossSliceEdges, before.summary.crossSliceEdges);
@@ -1221,8 +1221,8 @@ describe("a slice with an entrypoint in each package it spans (VSA §3)", () => 
   const record = `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-M
   type: slice
   title: SLICE-M
@@ -1319,7 +1319,7 @@ Test.
     assert.deepEqual(
       vsa002.map((d) => `${d.field} ${d.message}`),
       [
-        "/intentset/slice/entrypoints/2 SLICE-M declares two entrypoints in the package at apps/web, apps/web/src/index.ts and apps/web/src/ui.ts; a slice has one public surface per package it spans.",
+        "/intentset/slice/entrypoints/2 SLICE-M declares two entrypoints in the package at apps/web, apps/web/src/index.ts and apps/web/src/ui.ts; a slice has one public contract surface per package it spans.",
       ],
     );
   });
@@ -1342,8 +1342,8 @@ test("a verification claim resolves against test files, and a source claim does 
   const slice = `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-X
   type: slice
   title: X slice

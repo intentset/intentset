@@ -92,7 +92,7 @@ test("VSA003 names the entrypoint in the importer's own package first, since tha
   const [d] = architecture.diagnostics.filter((x) => x.code === "VSA003");
   assert.match(
     d.message,
-    /; its public surface in the package at apps\/web is apps\/web\/src\/features\/results\/index\.ts, and elsewhere src\/features\/assessment\/results\/index\.ts\.$/,
+    /; its public contract surface in the package at apps\/web is apps\/web\/src\/features\/results\/index\.ts, and elsewhere src\/features\/assessment\/results\/index\.ts\.$/,
   );
   assert.match(d.remediation, /^Import apps\/web\/src\/features\/results\/index\.ts and /);
 });

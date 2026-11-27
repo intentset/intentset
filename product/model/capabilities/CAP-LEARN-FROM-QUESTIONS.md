@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/capability/0.2
+  spec: '0.3'
+  profile: intentset/capability/0.3
   id: CAP-LEARN-FROM-QUESTIONS
   type: capability
   title: Learn from the questions visitors ask

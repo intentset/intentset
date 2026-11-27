@@ -9,7 +9,6 @@ import {
   type DocumentInput,
   EMPTY_REGISTRIES,
   type Config,
-  DEFAULT_EVIDENCE_DEPENDENCIES,
   type Diagnostic,
   type Registries,
   type ValidationResult,
@@ -75,12 +74,7 @@ function validateTree(expanded: ExpandedCase, reverse = false): Validated {
   if (reverse) inputs.reverse();
 
   const extra: Diagnostic[] = [];
-  let evidence: Config["evidence"] = {
-    binding: null,
-    globalInputs: [],
-    resources: "exercised",
-    dependencies: DEFAULT_EVIDENCE_DEPENDENCIES,
-  };
+  let evidence: Config["evidence"] = { binding: null, globalInputs: [] };
   let registries: Registries = EMPTY_REGISTRIES;
   if (expanded.registriesText !== null) {
     const read = readRegistries(expanded.registriesText, REGISTRIES_PATH);
@@ -124,8 +118,6 @@ function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvide
           { files },
           {
             globalInputs: evidence.globalInputs,
-            resources: evidence.resources,
-            dependencies: evidence.dependencies,
             readFile: (path) => (files.has(path) ? Buffer.from(files.get(path) as string) : undefined),
           },
         )
@@ -134,13 +126,19 @@ function evidenceRun(expanded: ExpandedCase, validated: Validated): FixtureEvide
     graph: result.graph,
     level: expanded.level,
     evidence: expanded.evidence,
-    request: expanded.request,
+    request: scalarScope(expanded.request),
     documents: expanded.files.keys(),
     sources: expanded.sources.keys(),
     configuredBinding: evidence.binding,
     changedSince: expanded.changedSince,
     ...(subject === undefined ? {} : { subjectSource: subject }),
   });
+}
+
+/** The case's product and release, when both are single values; a list in either names no scope (publication §1). */
+function scalarScope(request: ExpandedCase["request"]): { product: string; release: string } | null {
+  if (request === null || typeof request.product !== "string" || typeof request.release !== "string") return null;
+  return { product: request.product, release: request.release };
 }
 
 /**
@@ -159,7 +157,7 @@ export const exportDriver: Driver = (expanded) => {
     diagnostics = sortDiagnostics([...diagnostics, ...run.diagnostics]);
     exported = { ...result, diagnostics, ok: !hasErrors(diagnostics) };
     const { commitUnavailable: _unavailable, ...rest } = FIXTURE_META;
-    const scope = requestedScope(expanded.request);
+    const scope = requestedScope(scalarScope(expanded.request));
     meta = {
       ...rest,
       commit: FIXTURE_COMMIT,
@@ -207,10 +205,15 @@ export const publicationDriver: Driver = (expanded) => {
   const options = { snapshot: { commit: null, graphHash: graphHash(graph) }, publishedAt: FIXTURE_PUBLISHED_AT };
   const published = publish(graph, registries, request, { ...options, renderHtml: "page" });
   // The fragment (publication §2) is offered to the same checks as the page.
-  const fragments = publish(graph, registries, request, { ...options, renderHtml: "fragment" }).documents;
+  const withFragments = publish(graph, registries, request, { ...options, renderHtml: "fragment" });
+  // Documents kept under review (publication §3) are offered to the same checks; `ids` stays `index.published`.
+  const fragments = [...withFragments.documents, ...withFragments.keptUnderReview];
   const all = [...diagnostics, ...published.diagnostics];
   const text = [
-    ...published.documents.flatMap((document) => [document.markset, document.html ?? ""]),
+    ...[...published.documents, ...published.keptUnderReview].flatMap((document) => [
+      document.markset,
+      document.html ?? "",
+    ]),
     ...fragments.map((document) => document.htmlFragment ?? ""),
     JSON.stringify(published.index),
     JSON.stringify(published.help),

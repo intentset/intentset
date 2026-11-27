@@ -6,7 +6,7 @@
  *
  * Two choices keep diagnostics at their cause. A record that could not be
  * read is remembered by the ID it declared, and references to that ID are not
- * reported as unresolved: the CORE001 on the record already says what to fix.
+ * reported as unresolved: the CORE010 or CORE001 on the record already says what to fix.
  * Of two records with one ID, the first by path stays in the graph and both
  * are reported as CORE002; neither is merged with the other.
  */
@@ -29,6 +29,7 @@ import {
   type ValidationOptions,
   type ValidationResult,
 } from "./types.ts";
+import { pointerToken } from "./yaml.ts";
 
 /**
  * Core §5 pairs `supports` sources with targets (outcome → intent,
@@ -118,6 +119,7 @@ export function validate(
   checkLifecycle(context);
   checkAttachment(context);
   checkSlices(context);
+  checkSurfaces(context);
   if (context.levelIndex >= 1) checkOwnership(context);
 
   const all = sortDiagnostics(diagnostics);
@@ -259,6 +261,79 @@ function checkRelationships(context: Context): void {
             remediation: `Point ${kind} at ${describeTypes(allowed)}, or use the relationship that fits.`,
           });
         }
+      });
+    }
+  }
+}
+
+/**
+ * VSA §3, ADR 0028: each ID in a slice's `surfaces` names knowledge (CORE003); a slice that is not retired names no
+ * retired knowledge (CORE005); and a surface ID is declared by one slice that is not retired, drafts included (CORE013,
+ * reported on each).
+ */
+function checkSurfaces(context: Context): void {
+  const { graph, unreadable } = context;
+  const declaredBy = new Map<string, Artifact[]>();
+  for (const artifact of sortedArtifacts(graph)) {
+    const { meta } = artifact;
+    const surfaces = meta.slice?.surfaces;
+    if (surfaces === undefined) continue;
+    const retired = meta.status === "retired";
+    for (const key of Object.keys(surfaces)) {
+      const base = `/intentset/slice/surfaces/${pointerToken(key)}`;
+      surfaces[key].knowledge.forEach((target, i) => {
+        const field = `${base}/knowledge/${i}`;
+        const found = graph.artifacts.get(target);
+        if (found === undefined) {
+          if (!unreadable.has(target)) {
+            reportOn(context, artifact, {
+              code: "CORE003",
+              field,
+              message: `Surface \`${key}\` names ${target}, which is not in the graph.`,
+              remediation: `Create ${target}, or correct the ID to a knowledge record in the same snapshot.`,
+            });
+          }
+          return;
+        }
+        if (found.meta.type !== "knowledge") {
+          reportOn(context, artifact, {
+            code: "CORE003",
+            field,
+            message: `Surface \`${key}\` must be led by knowledge, but ${target} is ${aType(found.meta.type)}.`,
+            remediation: "Name the knowledge records that lead the surface (VSA §3).",
+          });
+          return;
+        }
+        if (!retired && found.meta.status === "retired") {
+          const successors = found.meta.links.replacedBy ?? [];
+          reportOn(context, artifact, {
+            code: "CORE005",
+            field,
+            message: `Surface \`${key}\` is led by ${target}, which is retired.`,
+            remediation:
+              successors.length > 0
+                ? `Name its successor, ${successors.join(" or ")}, in place of ${target} (VSA §3).`
+                : `Remove ${target} from the surface, or name the knowledge that replaces it (VSA §3).`,
+          });
+        }
+      });
+      if (retired) continue;
+      const list = declaredBy.get(key);
+      if (list === undefined) declaredBy.set(key, [artifact]);
+      else list.push(artifact);
+    }
+  }
+  for (const key of [...declaredBy.keys()].sort(compareStrings)) {
+    const slices = declaredBy.get(key) ?? [];
+    if (slices.length < 2) continue;
+    const ids = slices.map((slice) => slice.meta.id);
+    for (const slice of slices) {
+      reportOn(context, slice, {
+        code: "CORE013",
+        field: `/intentset/slice/surfaces/${pointerToken(key)}`,
+        message: `Surface \`${key}\` is declared by ${slices.length} slices that are not retired: ${ids.join(", ")}.`,
+        remediation:
+          "Keep the surface on one slice; when a slice replaces another, move its surfaces in the commit that retires the old one (VSA §3).",
       });
     }
   }
@@ -454,9 +529,9 @@ function checkLifecycle(context: Context): void {
       reportOn(context, artifact, {
         code: "CORE005",
         field: "/intentset/delivery",
-        message: `${meta.id} says its work is planned while its status, ${meta.status}, claims an implementation.`,
+        message: `${meta.id} says its work is planned while it is deprecated, which says the work existed.`,
         remediation:
-          "Write `delivery: built`, or remove `delivery`, when the code exists; return the record to an earlier status, with a review note, when it does not (Core §7).",
+          "Write `delivery: built`, or remove `delivery`, when the code existed; return the record to an earlier status, with a review note, when it never did (Core §7).",
       });
     }
     if (meta.type === "behavior" && deliveryOf(meta) === "built") {
@@ -585,7 +660,8 @@ function requirement(artifact: Artifact): Requirement | null {
 
 /**
  * Core §5, §6 and VSA §3: active rules, scenarios, verifications, knowledge and
- * product slices are attached, and an active outcome has a measure (CORE003).
+ * product slices are attached, and an active outcome has a measure (CORE012,
+ * ADR 0024).
  * Their drafts, and draft contracts and decisions nothing refers to, are
  * unattached drafts (CORE009, warning).
  */
@@ -617,7 +693,7 @@ function checkAttachment(context: Context): void {
       });
     } else if (need.draftOnly !== true) {
       reportOn(context, artifact, {
-        code: "CORE003",
+        code: "CORE012",
         field,
         message: `${capitalize(artifact.meta.status)} ${artifact.meta.type} ${artifact.meta.id} is unattached: ${need.message}.`,
         remediation: need.remediation,
@@ -716,7 +792,7 @@ function checkSlices(context: Context): void {
   }
 }
 
-const OWNED_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+const OWNED_STATUSES = new Set(["approved", "deprecated"]);
 
 /** Core §5 at L2 and above: an active behavior has exactly one accountable product slice through `implements`. */
 function checkOwnership(context: Context): void {

@@ -37,7 +37,7 @@ pnpm exec intentset init
 
 ## The publisher and the help runtime
 
-`@intentset/publisher` is what `intentset publish` runs: the reviewed knowledge one audience may see for one release, as Markset documents that carry their sources, and a help file of tips for the product's own interface. It denies by default and never names what it left out.
+`@intentset/publisher` is what `intentset publish` runs: the reviewed knowledge one reader, in every audience and role they hold, may see for one release, as Markset documents that carry their sources, and a help file of tips for the product's own interface. It denies by default and never names what it left out.
 
 `@intentset/help` reads that help file in the browser and binds each tip to the control that delivers the behavior it explains. It has no dependencies.
 

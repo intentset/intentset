@@ -10,6 +10,17 @@
  * chunk considered must belong to a document the index published under a
  * public or customer projection, with that document's provenance unchanged;
  * and again before the response is assembled, over the hits themselves.
+ * A publication is for one reader (publication §1, ADR 0029): the index must
+ * carry the 0.3 index profile and no member the spec does not list, and every
+ * document's block must name the entitlement the index's request names, so
+ * documents published for two readers are never served together.
+ *
+ * Documents kept under review (publication §3, ADR 0027) are never served:
+ * they are in neither `PublishResult.documents` nor `index.published`, so a
+ * publication made with `keepUnderReview` serves exactly its current
+ * documents, and a kept document passed in `documents` is refused like any
+ * other document the index does not publish. Answers cite reviewed knowledge.
+ *
  * Results cite the source IDs the publication block names, never the ones it
  * withheld (it counts those), and the snapshot the publication was made from,
  * which the publication names once, apart from its documents and its index
@@ -18,6 +29,7 @@
 import { canonicalJson, compareStrings } from "@intentset/core";
 import {
   type Chunk,
+  PUBLICATION_INDEX_PROFILE,
   type PublicationIndex,
   type PublicationMeta,
   type PublishedDocument,
@@ -41,6 +53,15 @@ export const NOT_AVAILABLE = "No published knowledge with that ID is available."
 
 export function customerTools(publication: CustomerPublication, suppliedChunks?: readonly Chunk[]): Tool[] {
   const { index, snapshot } = publication;
+  if (index.profile !== PUBLICATION_INDEX_PROFILE) {
+    throw new Error(
+      `mcp: the publication index has profile ${JSON.stringify(index.profile)}, not ${PUBLICATION_INDEX_PROFILE}`,
+    );
+  }
+  for (const key of Object.keys(index).sort(compareStrings)) {
+    if (!INDEX_MEMBERS.includes(key))
+      throw new Error(`mcp: the publication index has a member ${key} it does not define`);
+  }
   const request = index.request;
   if (request === null) throw new Error("mcp: customer mode needs a publication whose request was not refused");
   if (!CUSTOMER_PROJECTIONS.includes(request.visibility)) {
@@ -49,10 +70,23 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
     );
   }
   const published = new Set(index.published);
+  const entitlement = canonicalJson({
+    audience: request.audience,
+    availability: {
+      product: request.product,
+      release: request.release,
+      role: request.role,
+      edition: request.edition,
+      flags: request.flags,
+    },
+  });
   const documents = new Map<string, PublishedDocument>();
   for (const document of publication.documents) {
     if (!published.has(document.id) || document.publication.projection !== request.visibility) {
       throw new Error(`mcp: document ${document.id} is not in the publication index under its projection`);
+    }
+    if (canonicalJson(entitlementOf(document.publication)) !== entitlement) {
+      throw new Error(`mcp: document ${document.id} was published for another reader than its index`);
     }
     documents.set(document.id, document);
   }
@@ -89,7 +123,7 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
       name: "knowledge_search",
       title: "Search published knowledge",
       description:
-        "Passages of published knowledge for this audience and release. Every word of the query must appear. " +
+        "Passages of published knowledge for one reader: every audience and role listed, on one release. Every word of the query must appear. " +
         `At most ${RESULT_LIMIT} passages, each citing the sources its document names and the snapshot it was ` +
         "published from. An empty result means there is no published answer; say so rather than guess.",
       inputSchema: {
@@ -165,6 +199,24 @@ export function customerTools(publication: CustomerPublication, suppliedChunks?:
   };
 
   return [get, search];
+}
+
+/** The members publication §4 gives an index; any other refuses it. */
+const INDEX_MEMBERS: readonly string[] = ["profile", "request", "published", "excludedCounts", "keptUnderReview"];
+
+/** The entitlement a document's block names: whole lists, compared with the index's request. */
+function entitlementOf(block: PublicationMeta) {
+  const { audience, availability } = block;
+  return {
+    audience,
+    availability: {
+      product: availability.product,
+      release: availability.release,
+      role: availability.role,
+      edition: availability.edition,
+      flags: availability.flags,
+    },
+  };
 }
 
 /**

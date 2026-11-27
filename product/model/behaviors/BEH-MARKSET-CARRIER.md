@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/behavior/0.2
+  spec: '0.3'
+  profile: intentset/behavior/0.3
   id: BEH-MARKSET-CARRIER
   type: behavior
   title: A record written in Markset is read with Markset's own diagnostics

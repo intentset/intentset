@@ -1,16 +1,16 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-HELP-TIPS
   type: verification
   title: The help file is read and its tips bound to controls
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 2
+  revision: 3
   links:
     verifies: [BEH-HELP-TIPS]
   verification:
@@ -28,6 +28,8 @@ intentset:
 - `packages/help/test/help.test.ts`: the test "the file the publisher writes reads back, as text and as bytes, and carries the tips"
 - `packages/help/test/help.test.ts`: the test "a file with any problem is refused whole, and every problem is named"
 - `packages/help/test/help.test.ts`: the test "bindTips puts each tip on its control as data, sets no title, and reports the IDs with no tip"
+- `packages/help/test/help.test.ts`: the test "a file with help under review is read, and its marks must agree", over the example published with its knowledge kept under review (ADR 0027): its entry and behavior tip marked, its rule tip held back in `withheldForReview`, and a mark missing, false, outside `under-review/` or shared with a tip's key refused
+- `packages/help/test/help.test.ts`: the test "help under review is left out by default and returned marked under include, never counted missing", over `reviewStateFor`, `tipFor`, `articles`, `helpForPage` and `bindTips` in both modes, `data-help-under-review` set under `include` and nothing removed under `exclude`
 
 ## Expected result
 

@@ -297,14 +297,19 @@ export function publicationReadiness(graph: Graph): { checked: string[]; diagnos
     if (review.missing.length > 0) reasons.push(`no review pin for ${review.missing.join(", ")}`);
     if (review.reviewer === null) reasons.push("it names no reviewer");
     if (review.reviewedAt === null) reasons.push("it gives no review date");
+    if (review.self === "changed") reasons.push("its own text changed since review");
     report(
       review.reviewer === null
         ? "/intentset/reviewedBy"
         : review.reviewedAt === null
           ? "/intentset/reviewedAt"
-          : "/intentset/extensions/intentset.org~1review",
+          : reasons.length === 1 && review.self === "changed"
+            ? "/intentset/review/self"
+            : "/intentset/review",
       `${meta.status} knowledge ${id} needs review: ${reasons.join("; ")} (Core §9).`,
-      "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the intentset.org/review pins (Core §9).",
+      review.self === "changed"
+        ? "Review the knowledge against its current sources and its own text, then renew the review with `intentset approve` (Core §9)."
+        : "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the pins in review.sources (Core §9).",
     );
   }
   return { checked, diagnostics };

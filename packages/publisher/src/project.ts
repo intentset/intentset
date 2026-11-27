@@ -10,21 +10,33 @@
  *   draft, retired        Core §7: neither is current publication
  *   planned               it explains a record whose delivery is planned: work that does not exist yet (ADR 0017)
  *   visibility            outside what the projection admits
- *   audience              the request's audience is not one the knowledge is written for
+ *   audience              none of the request's audiences is one the knowledge is written for
  *   availability-missing  no availability block: fails closed (Core §4, §7)
- *   product ... edition   the request's value is not in that dimension's list (AND across, OR within)
+ *   product ... edition   the request's value is not in that dimension's list (AND across, OR within); for role,
+ *                         none of the request's roles is (OR within the request's list too, ADR 0029)
  *   flag                  the knowledge needs a flag the request does not name (all named flags required)
- *   needs-review          a source changed since review, a pin is missing, or no reviewer (review.ts)
+ *   needs-review          a source changed since review, a pin is missing, no reviewer, or its own text changed
+ *                         since a review that pins it (review.ts); unless the request names keepUnderReview and
+ *                         the knowledge is keepable, when it is eligible and kept under review (ADR 0027)
  *
  * An explicitly requested ID that is not eligible is CORE008. Its message
- * names the reason class, and nothing about the artifact beyond its ID. When
+ * names the reason class, and nothing about the artifact beyond its ID; for
+ * an audience or role it names only the request's values, never the
+ * knowledge's lists. When
  * the artifact's visibility is outside the projection, or no artifact has the
  * ID, the message is the same in both cases and carries no path: a caller
  * without the authorization cannot learn whether an internal ID exists.
  */
-import { type Artifact, type Diagnostic, type Graph, type Registries, graphHash } from "@intentset/core";
+import {
+  type Artifact,
+  type Availability,
+  type Diagnostic,
+  type Graph,
+  type Registries,
+  graphHash,
+} from "@intentset/core";
 import { compareStrings, publicationDiagnostic } from "./diagnostic.ts";
-import { type PublicationRequest, admits, checkRequest } from "./request.ts";
+import { type CheckedRequest, type PublicationRequest, admits, asList, checkRequest } from "./request.ts";
 import { type ReviewStatus, reviewStatus } from "./review.ts";
 
 export const EXCLUSION_REASONS = [
@@ -63,16 +75,19 @@ export interface Exclusion {
 }
 
 export interface Projection {
-  /** Eligible knowledge, sorted by ID. */
+  /** Eligible knowledge, sorted by ID: current knowledge and knowledge kept under review. */
   eligible: Artifact[];
+  /** The eligible knowledge kept under review (publication §3, ADR 0027), sorted by ID. */
+  keptUnderReview: string[];
   /** Every other artifact in the graph with the first check it failed, sorted by ID. Empty when the request was refused. */
   excluded: Exclusion[];
   diagnostics: Diagnostic[];
   /** The checked request, or null when it was refused (PUB001). */
-  request: PublicationRequest | null;
+  request: CheckedRequest | null;
 }
 
-const PUBLISHABLE_STATUSES = new Set(["approved", "implemented", "released", "deprecated"]);
+/** The statuses at which a record may be published (Core §7): an allow-list, so a status added later is not admitted. Used for knowledge and, in surfaces.ts, for slices (ADR 0028). Not exported from the package. */
+export const PUBLISHABLE_STATUSES: ReadonlySet<string> = new Set(["approved", "deprecated"]);
 
 /** Core §9: select what this request may publish, before any text is sent to a renderer. */
 export function project(
@@ -96,7 +111,7 @@ export function project(
     );
   }
   if (checked.request === null || diagnostics.length > 0) {
-    return { eligible: [], excluded: [], diagnostics, request: null };
+    return { eligible: [], keptUnderReview: [], excluded: [], diagnostics, request: null };
   }
   const req = checked.request;
   const requested = req.ids === undefined ? null : new Set(req.ids);
@@ -111,6 +126,7 @@ export function project(
   };
 
   const eligible: Artifact[] = [];
+  const keptUnderReview: string[] = [];
   const excluded: Exclusion[] = [];
   const reasons = new Map<string, ExclusionReason>();
   for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
@@ -118,7 +134,11 @@ export function project(
     const reason =
       requested !== null && !requested.has(id) ? "not-requested" : exclusionReason(artifact, req, review, graph);
     if (reason === null) eligible.push(artifact);
-    else {
+    else if (reason === "needs-review" && req.keepUnderReview && review(artifact).keepable) {
+      // Publication §3: every other check of §1 has passed on the record as it is now.
+      eligible.push(artifact);
+      keptUnderReview.push(id);
+    } else {
       excluded.push({ id, reason });
       reasons.set(id, reason);
     }
@@ -132,16 +152,18 @@ export function project(
       refusal(id, artifact, reason ?? null, req, artifact === undefined ? null : review(artifact), graph),
     );
   }
-  return { eligible, excluded, diagnostics, request: req };
+  return { eligible, keptUnderReview, excluded, diagnostics, request: req };
 }
 
 /**
  * The first check an artifact fails for this request, or null when it is eligible. Requested-ness is the caller's.
- * Without the graph, the explained records cannot be read, so `planned` is not checked.
+ * Without the graph, the explained records cannot be read, so `planned` is not checked. A request written as
+ * `PublicationRequest` allows, with one `audience` or `role`, reads it as a list of one; nothing else of it is checked
+ * here, so a caller with a request from outside passes the one `checkRequest` returns.
  */
 export function exclusionReason(
   artifact: Artifact,
-  request: PublicationRequest,
+  request: Pick<PublicationRequest, "visibility" | "audience" | "product" | "release" | "role" | "edition" | "flags">,
   review: (artifact: Artifact) => ReviewStatus,
   graph?: Graph,
 ): Exclude<ExclusionReason, "not-requested"> | null {
@@ -152,15 +174,35 @@ export function exclusionReason(
   if (!PUBLISHABLE_STATUSES.has(meta.status)) return "draft";
   if (graph !== undefined && plannedSources(graph, artifact).length > 0) return "planned";
   if (!admits(request, meta.visibility)) return "visibility";
-  if (!meta.audiences.includes(request.audience)) return "audience";
-  const availability = meta.availability;
+  const dimension = audienceReason(meta.audiences, request) ?? availabilityReason(meta.availability, request);
+  if (dimension !== null) return dimension;
+  if (review(artifact).status !== "current") return "needs-review";
+  return null;
+}
+
+/** `audience` when none of the request's audiences (one is a list of one) is in the record's `audiences`, else null. */
+export function audienceReason(
+  audiences: readonly string[],
+  request: Pick<PublicationRequest, "audience">,
+): "audience" | null {
+  return asList(request.audience).some((audience) => audiences.includes(audience)) ? null : "audience";
+}
+
+/**
+ * The first availability dimension a record fails for this request, or null when it passes: AND across dimensions,
+ * OR within each list, and for role at least one of the request's roles listed. A record with no availability block
+ * is `availability-missing`, so a caller that treats any non-null result as excluded fails closed (Core §4, §7).
+ */
+export function availabilityReason(
+  availability: Availability | undefined,
+  request: Pick<PublicationRequest, "product" | "release" | "role" | "edition" | "flags">,
+): "availability-missing" | "product" | "release" | "role" | "edition" | "flag" | null {
   if (availability === undefined) return "availability-missing";
   if (!availability.products.includes(request.product)) return "product";
   if (!availability.releases.includes(request.release)) return "release";
-  if (!availability.roles.includes(request.role)) return "role";
+  if (!asList(request.role).some((role) => availability.roles.includes(role))) return "role";
   if (!availability.editions.includes(request.edition)) return "edition";
   if (!availability.flags.every((flag) => request.flags.includes(flag))) return "flag";
-  if (review(artifact).status !== "current") return "needs-review";
   return null;
 }
 
@@ -176,7 +218,7 @@ function refusal(
   id: string,
   artifact: Artifact | undefined,
   reason: ExclusionReason | null,
-  request: PublicationRequest,
+  request: CheckedRequest,
   review: ReviewStatus | null,
   graph: Graph,
 ): Diagnostic {
@@ -230,7 +272,9 @@ function refusal(
     case "audience":
       return refuse(
         "/intentset/audiences",
-        `it is not written for the ${request.audience} audience`,
+        request.audience.length === 1
+          ? `it is not written for the ${request.audience[0]} audience`
+          : `it is written for none of the audiences ${request.audience.join(", ")}`,
         "Request an audience the knowledge lists, or add this one after reviewing the text for it (Core §9).",
       );
     case "availability-missing":
@@ -239,9 +283,16 @@ function refusal(
         "it declares no availability, so publication fails closed",
         "Add availability with products, releases, roles, editions and flags (Core §7).",
       );
+    case "role":
+      return refuse(
+        "/intentset/availability/roles",
+        request.role.length === 1
+          ? `it is not available for role ${request.role[0]}`
+          : `it is available for none of the roles ${request.role.join(", ")}`,
+        "Request a role the knowledge lists, or extend its availability after review; values match exactly (Core §7).",
+      );
     case "product":
     case "release":
-    case "role":
     case "edition":
       return refuse(
         `/intentset/availability/${reason}s`,
@@ -260,12 +311,50 @@ function refusal(
     }
     default:
       return refuse(
-        review !== null && review.reviewer === null
-          ? "/intentset/reviewedBy"
-          : `/intentset/extensions/intentset.org~1review`,
+        review !== null && review.self === "changed"
+          ? "/intentset/review/self"
+          : review !== null && review.reviewer === null
+            ? "/intentset/reviewedBy"
+            : "/intentset/review",
         `it needs review because ${describeReview(review)}`,
-        "Review the knowledge against its current sources, then update reviewedBy, reviewedAt and the intentset.org/review pins (Core §9).",
+        keepRemediation(review, request),
       );
+  }
+}
+
+/** The CORE008 remediation for needs-review knowledge: which condition of keepable failed (publication §3, §4). */
+function keepRemediation(review: ReviewStatus | null, request: CheckedRequest): string {
+  const renew =
+    "Review the knowledge against its current sources and its own text, then renew the review with `intentset approve` (Core §9)";
+  // The own-text case is worded apart wherever it holds; otherwise name the first blocker that says more than
+  // "no source changed", which is the usual company of an edit to the knowledge itself.
+  const blockers = review?.keepBlockers ?? [];
+  const first = blockers.includes("self-changed")
+    ? "self-changed"
+    : blockers.find((blocker) => blocker !== "no-source-changed");
+  if (review?.keepable && !request.keepUnderReview) {
+    return `${renew}; until then it could be published under review: set keepUnderReview (publication §3).`;
+  }
+  switch (first) {
+    case "self-changed":
+      return `${renew}: the knowledge's own text changed since it was reviewed, so it cannot be kept under review (publication §3).`;
+    case "self-unpinned":
+      return `${renew}; its review does not pin its own text (review.self), so it cannot be kept under review (publication §3).`;
+    case "gates-unpinned":
+      return `${renew}; its review does not pin who could see its sources (review.gates), so it cannot be kept under review (publication §3).`;
+    case "gates-changed":
+      return `${renew}: a source's audiences, visibility or availability changed since review, so it cannot be kept under review (publication §3).`;
+    case "pin-missing":
+      return `${renew}; a source it must pin has no pin, so it cannot be kept under review (publication §3).`;
+    case "unknown-hash":
+      return `${renew}; its review names a hash kind this version does not read, so it cannot be kept under review (publication §3).`;
+    case "no-reviewer":
+      return `${renew}; it names no reviewer or review date, so it cannot be kept under review (publication §3).`;
+    case "source-gone":
+    case "source-retired":
+      return `${renew}; a source it must pin is gone or retired, so it cannot be kept under review (publication §3).`;
+    default:
+      return `${renew}.`;
   }
 }
 
@@ -276,5 +365,6 @@ function describeReview(review: ReviewStatus | null): string {
   if (review.missing.length > 0) parts.push(`its review pins nothing for ${review.missing.join(", ")}`);
   if (review.reviewer === null) parts.push("it names no reviewer");
   if (review.reviewedAt === null) parts.push("it gives no review date");
+  if (review.self === "changed") parts.push("its own text changed since review");
   return parts.length === 0 ? "its review is not current" : parts.join(", and ");
 }

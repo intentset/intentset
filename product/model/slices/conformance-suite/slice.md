@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/slice/0.2
+  spec: '0.3'
+  profile: intentset/slice/0.3
   id: SLICE-CONFORMANCE-SUITE
   type: slice
   title: The conformance-suite package

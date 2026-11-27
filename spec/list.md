@@ -2,13 +2,13 @@
 title: Intentset List Contract v0.1
 id: intentset/list/0.1
 status: draft
-revision: 2026-11-14
+revision: 2026-11-25
 implementation: 0.17.1
 ---
 
 # Intentset List Contract v0.1
 
-**Extends:** [Core §10](core-0.2.md#10-human-review-impact-and-agent-context) • **Reads:** [the export contract](export.md)
+**Extends:** [Core §10](core-0.3.md#10-human-review-impact-and-agent-context) • **Reads:** [the export contract](export.md)
 
 A list answers one question about a product model: which records match these conditions. This document fixes the
 selector that states the conditions, how a record is matched against it, what is done where the source withheld part
@@ -65,7 +65,7 @@ Status and availability are authored claims. A result whose selector names `avai
 reviewed release snapshot (§5).
 
 `deliveries` matches the effective delivery, not only the field as written: a record that says `delivery: built`, and
-one whose status is `implemented`, `released` or `deprecated` without the field, are both `built`, so
+one whose status is `deprecated` without the field, are both `built`, so
 `deliveries: ["built"]` answers "which records describe code that exists". A record of a type that never carries
 delivery is `unstated`. An export carries the field as written (export §2), and the effective value is computed from it
 and the status, so the tree and its export give the same answer.
@@ -116,7 +116,7 @@ A list is made over one snapshot, read from the repository's tree or from an exp
 
 The two MUST give the same answer for the same snapshot and the same withholding: the same counts, the same matched
 IDs and the same undetermined IDs. A field the source does not carry is `not-supplied` in a row (§5), never null or
-empty: export 0.6 does not carry Core §4's `reviewedBy` and `reviewedAt`.
+empty: export 0.7 does not carry Core §4's `reviewedBy` and `reviewedAt`.
 
 A list is made whether or not the validation passed. A failed validation may leave records out of the graph, so the
 result names the validation's status and totals beside the answer.
@@ -217,7 +217,7 @@ of the result that must match (a deep partial, as an export case's `export` is).
 | L09 | An unknown key is rejected, at any depth |
 | L10 | The same input gives the same bytes |
 | L11 | Counting by a field |
-| L12 | `deliveries` matches the effective delivery: as written, from a status that claims an implementation, or `unstated` |
+| L12 | `deliveries` matches the effective delivery: as written, `built` for a deprecated record without the field, or `unstated` |
 
 A conforming driver also checks, for every case, that the list from the tree and the list from the tree's export
 agree (§2), and that reading the documents in reverse order gives the same bytes.

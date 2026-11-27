@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/measure/0.2
+  spec: '0.3'
+  profile: intentset/measure/0.3
   id: MEAS-MODEL-STAYS-TRUE
   type: measure
   title: Changes to a slice's code that leave its records behind

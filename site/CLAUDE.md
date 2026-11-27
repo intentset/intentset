@@ -53,7 +53,9 @@ repository-relative.
   tips, so the last act ends with what `intentset publish` writes for it, published at build time from a copy of the
   example (`site/example-publication.ts`). Editing `BEH-RESET-PASSWORD`, `RULE-RESET-LINK-EXPIRY` or
   `RULE-RESET-LINK-ONCE` changes a pinned hash and the build refuses to publish: review the article against the
-  change and approve it again.
+  change and renew the review with `intentset approve KB-RESET-PASSWORD --renew-review --by <name>`, which also
+  writes `self` and `gates`; an agent runs that only when the reviewer says so, and never writes the pins,
+  `reviewedBy` or `reviewedAt` itself (Core §7).
 - **The example is told one way** (2026-11-26, the user's decision, replacing Lantern's release-time change): an online
   shop's password reset links work for one hour (`RULE-RESET-LINK-EXPIRY`); customers report links that have expired
   by the time they click them, and the agent asked to fix it raises the limit to 24 hours and changes the test that

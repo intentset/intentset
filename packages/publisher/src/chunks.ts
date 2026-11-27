@@ -6,7 +6,9 @@
  * and a retriever filters on the same fields before anything is assembled.
  *
  * Only published documents are chunked: chunks are made from the output of
- * `publish`, never from canonical files.
+ * `publish`, never from canonical files. A document kept under review is
+ * never chunked, whatever it is given (publication §2, ADR 0027): answers cite
+ * eligible, reviewed knowledge, and text waiting for review is not that.
  */
 import { collectHeadings } from "@intentset/core";
 import type { PublicationMeta } from "./generate.ts";
@@ -39,7 +41,8 @@ export function toChunks(documents: readonly ChunkSource[], options: ChunkOption
   const maxChars = options.maxChars ?? 1200;
   if (!Number.isInteger(maxChars) || maxChars < 1) throw new RangeError("maxChars must be a positive integer");
   const chunks: Chunk[] = [];
-  for (const document of [...documents].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
+  const chunkable = documents.filter((document) => document.publication.underReview !== true);
+  for (const document of [...chunkable].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
     const lines = bodyLines(document.markset);
     const headings = collectHeadings(lines, 0);
     const title = headings.find((h) => h.depth === 1)?.text ?? document.id;

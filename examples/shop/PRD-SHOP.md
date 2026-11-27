@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/product/0.2
+  spec: '0.3'
+  profile: intentset/product/0.3
   id: PRD-SHOP
   type: product
   title: An online shop

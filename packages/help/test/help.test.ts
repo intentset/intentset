@@ -14,12 +14,19 @@ import {
   HELP_PROFILE,
   type Help,
   KNOWLEDGE_ATTRIBUTE,
+  type Reader,
   TIP_ATTRIBUTE,
   type TipObserver,
+  UNDER_REVIEW_ATTRIBUTE,
   type WatchElement,
+  articles,
   bindTips,
   helpForPage,
+  leadFor,
   readHelp,
+  reviewStateFor,
+  servedTo,
+  surfaceHelp,
   tipFor,
   watchTips,
 } from "../src/index.ts";
@@ -72,13 +79,13 @@ function helpFromPublisher(): Help {
   return read.help;
 }
 
-test("BEH-HELP-TIPS: a help file carries no snapshot, and one written before 0.15.0 with a snapshot still reads", () => {
+test("BEH-HELP-READER: a help file carries no snapshot, and a file with one is refused as a member the table does not give", () => {
   const written = JSON.parse(JSON.stringify(publishExample().help)) as Record<string, unknown>;
   assert.equal(Object.hasOwn(written, "snapshot"), false);
   assert.ok(readHelp(written).ok);
-  assert.ok(readHelp({ ...written, snapshot: { commit: null, graphHash: "a".repeat(64) } }).ok);
-  const malformed = readHelp({ ...written, snapshot: { commit: 7 } });
-  assert.deepEqual(malformed.problems, ["snapshot, when present, must carry commit (a string or null) and graphHash"]);
+  assert.deepEqual(readHelp({ ...written, snapshot: { commit: null, graphHash: "a".repeat(64) } }).problems, [
+    'the file has a member "snapshot" the help file does not define',
+  ]);
 });
 
 test("BEH-HELP-TIPS: the file the publisher writes reads back, as text and as bytes, and carries the tips", () => {
@@ -124,9 +131,9 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
   assert.deepEqual(readHelp("{").ok, false);
   assert.deepEqual(readHelp("[]").problems, ["the help file is not a JSON object"]);
   const profile = broken((v) => {
-    v.profile = "intentset/publication/0.2";
+    v.profile = "intentset/publication/0.3";
   });
-  assert.deepEqual(profile.problems, ['profile is "intentset/publication/0.2", not intentset/help/0.2']);
+  assert.deepEqual(profile.problems, ['profile is "intentset/publication/0.3", not intentset/help/0.3']);
   const orphan = broken((v) => {
     (v.tips as Record<string, unknown>)["BEH-ASMT-SCHEDULE"] = { text: TIP, knowledge: "KB-ELSEWHERE" };
   });
@@ -141,7 +148,7 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
   assert.equal(several.ok, false);
   assert.deepEqual(several.problems, [
     "derived is not true",
-    "audience must be a string",
+    "audience must be a non-empty list of strings, sorted, without repeats",
     'tips key "lowercase" is not an ID',
     "tips.lowercase has an empty text",
   ]);
@@ -149,6 +156,176 @@ test("BEH-HELP-TIPS: a file with any problem is refused whole, and every problem
     (v.knowledge as unknown[]).unshift({ id: "KB-ZZZ-LAST", title: "Z", path: "KB-ZZZ-LAST.md" });
   });
   assert.deepEqual(unsorted.problems, ["knowledge is not sorted by id at KB-ASMT-SCHEDULE"]);
+});
+
+test("BEH-HELP-READER: readHelp reads audience, roles and flags as sorted lists and refuses any other form", () => {
+  const help = helpFromPublisher();
+  assert.deepEqual(help.audience, ["teacher"]);
+  assert.deepEqual(help.availability.role, ["teacher"]);
+  assert.deepEqual(help.availability.flags, []);
+  const read = (edit: (value: Record<string, unknown> & { availability: Record<string, unknown> }) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  const AUDIENCE = "audience must be a non-empty list of strings, sorted, without repeats";
+  const AVAILABILITY =
+    "availability must carry product, release and edition, a non-empty sorted list of roles without repeats, and a sorted list of flags without repeats";
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["product", "teacher"];
+      v.availability.role = ["administrator", "teacher"];
+      v.availability.flags = ["alpha", "beta"];
+    }),
+    [],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = "teacher";
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = [];
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["teacher", "product"];
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["teacher", "teacher"];
+    }),
+    [AUDIENCE],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.audience = ["teacher", 3];
+    }),
+    [AUDIENCE],
+  );
+  for (const role of ["teacher", [], ["teacher", "administrator"], ["teacher", "teacher"], [null]]) {
+    assert.deepEqual(
+      read((v) => {
+        v.availability.role = role;
+      }),
+      [AVAILABILITY],
+      JSON.stringify(role),
+    );
+  }
+  for (const flags of [["beta", "alpha"], ["beta", "beta"], "beta", [7]]) {
+    assert.deepEqual(
+      read((v) => {
+        v.availability.flags = flags;
+      }),
+      [AVAILABILITY],
+      JSON.stringify(flags),
+    );
+  }
+});
+
+test("BEH-HELP-READER: readHelp refuses a member the table does not give, at the top, in availability, a knowledge entry or a tip", () => {
+  const help = helpFromPublisher();
+  const read = (edit: (value: Record<string, unknown> & Help) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  assert.deepEqual(
+    read((v) => {
+      (v as Record<string, unknown>).pages = {};
+    }),
+    ['the file has a member "pages" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.availability as Record<string, unknown>).region = "eu";
+    }),
+    ['availability has a member "region" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.knowledge[0] as unknown as Record<string, unknown>).lead = true;
+    }),
+    ['knowledge[0] has a member "lead" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.tips["BEH-ASMT-SCHEDULE"] as unknown as Record<string, unknown>).since = "2026-01-01";
+    }),
+    ['tips.BEH-ASMT-SCHEDULE has a member "since" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      delete (v as Partial<Help>).tips;
+    }),
+    ["the file has no tips", "tips must be an object keyed by ID"],
+  );
+});
+
+test("BEH-HELP-READER: servedTo holds only for a reader cleared for the projection who holds everything the file names", () => {
+  const help: Pick<Help, "projection" | "audience" | "availability"> = {
+    projection: "customer",
+    audience: ["product", "teacher"],
+    availability: {
+      product: "PRD-LANTERN",
+      release: "pilot-1",
+      role: ["administrator", "teacher"],
+      edition: "standard",
+      flags: ["beta"],
+    },
+  };
+  const reader: Reader = {
+    visibilities: ["public", "customer"],
+    audiences: ["product", "teacher"],
+    roles: ["administrator", "teacher"],
+    product: "PRD-LANTERN",
+    release: "pilot-1",
+    edition: "standard",
+    flags: ["beta"],
+  };
+  assert.equal(servedTo(help, reader), true);
+  assert.equal(
+    servedTo(help, {
+      ...reader,
+      roles: ["teacher", "student", "administrator"],
+      audiences: ["teacher", "product", "x"],
+    }),
+    true,
+    "a reader who holds more than the file names",
+  );
+  assert.equal(servedTo(help, { ...reader, roles: ["teacher"] }), false, "one role missing");
+  assert.equal(servedTo(help, { ...reader, audiences: ["teacher"] }), false, "one audience missing");
+  assert.equal(servedTo(help, { ...reader, flags: [] }), false, "one flag missing");
+  assert.equal(
+    servedTo({ ...help, audience: [] }, { ...reader, audiences: [], roles: [] }),
+    false,
+    "an empty audience list is malformed and serves no one",
+  );
+  assert.equal(
+    servedTo({ ...help, availability: { ...help.availability, role: [] } }, { ...reader, audiences: [], roles: [] }),
+    false,
+    "an empty role list is malformed and serves no one",
+  );
+  assert.equal(
+    servedTo({ ...help, availability: { ...help.availability, flags: [] } }, { ...reader, flags: [] }),
+    true,
+    "an empty flag list names no flag to hold",
+  );
+  assert.equal(servedTo(help, { ...reader, product: "PRD-OTHER" }), false, "another product");
+  assert.equal(servedTo(help, { ...reader, release: "pilot-2" }), false, "another release");
+  assert.equal(servedTo(help, { ...reader, edition: "district" }), false, "another edition");
+  assert.equal(servedTo(help, { ...reader, visibilities: ["public"] }), false, "not cleared for the projection");
+  assert.equal(
+    servedTo({ ...help, projection: "internal" }, reader),
+    false,
+    "an internal file whose other values match a customer",
+  );
 });
 
 /** A test double for the part of a DOM element the binder touches. */
@@ -195,7 +372,11 @@ test("BEH-HELP-TIPS: bindTips puts each tip on its control as data, sets no titl
   const host = root([schedule, titled, rule, untipped, empty, plain]);
   const binding = bindTips(host, help);
   assert.deepEqual(host.selectors, ["[data-behavior]"]);
-  assert.deepEqual(binding, { bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"], missing: ["CAP-ASMT-ASSIGN"] });
+  assert.deepEqual(binding, {
+    bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+    missing: ["CAP-ASMT-ASSIGN"],
+    pendingReview: [],
+  });
   assert.deepEqual(schedule.snapshot(), {
     [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE",
     [KNOWLEDGE_ATTRIBUTE]: "KB-ASMT-SCHEDULE",
@@ -278,7 +459,7 @@ test("BEH-HELP-WATCH: watchTips binds at once, observes only its root, and rebin
     target: host,
     options: { subtree: true, childList: true, attributes: true, attributeFilter: [BEHAVIOR_ATTRIBUTE] },
   });
-  assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE"], missing: [] });
+  assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE"], missing: [], pendingReview: [] });
   assert.equal(schedule.getAttribute(TIP_ATTRIBUTE), TIP);
 
   const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE" });
@@ -294,6 +475,7 @@ test("BEH-HELP-WATCH: watchTips binds at once, observes only its root, and rebin
   assert.deepEqual(watch.coverage(), {
     bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
     missing: ["CAP-ASMT-ASSIGN"],
+    pendingReview: [],
   });
   assert.equal(host.selectors.length, 2, "one query to bind, one per frame");
   observer.fire();
@@ -367,7 +549,7 @@ test("BEH-HELP-WATCH: dispose stops watching, cancels a pending pass and leaves 
     before,
     "the default attributes are put back as they were, values set before the watch included, and nothing else is touched",
   );
-  assert.deepEqual(watch.coverage(), { bound: [], missing: [] });
+  assert.deepEqual(watch.coverage(), { bound: [], missing: [], pendingReview: [] });
   watch.dispose();
   frame.run();
   assert.deepEqual(
@@ -457,7 +639,11 @@ test("BEH-HELP-WATCH: a custom requestFrame never gets the default cancelAnimati
     watch.dispose();
     assert.deepEqual(cancelled, []);
     frame.run();
-    assert.deepEqual(watch.coverage(), { bound: [], missing: [] }, "the uncancelled pass does nothing");
+    assert.deepEqual(
+      watch.coverage(),
+      { bound: [], missing: [], pendingReview: [] },
+      "the uncancelled pass does nothing",
+    );
   } finally {
     if (saved === undefined) delete scope.cancelAnimationFrame;
     else scope.cancelAnimationFrame = saved;
@@ -490,10 +676,309 @@ test("bindTips takes another attribute and another renderer", () => {
       element.setAttribute("aria-description", tip.text);
     },
   });
-  assert.deepEqual(binding, { bound: ["RULE-ASMT-FUTURE"], missing: [] });
+  assert.deepEqual(binding, { bound: ["RULE-ASMT-FUTURE"], missing: [], pendingReview: [] });
   assert.deepEqual(rendered, [
     "RULE-ASMT-FUTURE: The release time must be in the future. (Prepare a scheduled student assessment)",
   ]);
   assert.equal(control.getAttribute("aria-description"), RULE_TIP);
   assert.equal(control.hasAttribute("title"), false);
+});
+
+/** The example published with its knowledge kept under review (ADR 0027): its behavior tip marked, its rule tip held. */
+function keptHelp(): Help {
+  const inputs = readdirSync(example)
+    .filter((name) => name.endsWith(".md"))
+    .sort()
+    .map((name) => {
+      let text = readFileSync(join(example, name), "utf8");
+      if (name === "KB-ASMT-SCHEDULE.md") {
+        text = text
+          .replace(/BEH-ASMT-SCHEDULE: '[0-9a-f]{64}'/, `BEH-ASMT-SCHEDULE: '${"0".repeat(64)}'`)
+          .replace("    sources:\n", "    self: '@current'\n    gates: '@current'\n    sources:\n");
+      }
+      return plainCarrier(name, text);
+    });
+  const registries = readRegistries(
+    readFileSync(join(example, "registries.yaml"), "utf8"),
+    "registries.yaml",
+  ).registries;
+  const graph = bindReviewPins(validate(inputs, registries).graph);
+  const published = publish(
+    graph,
+    registries,
+    {
+      visibility: "customer",
+      audience: "teacher",
+      product: "PRD-LANTERN",
+      release: "pilot-1",
+      role: "teacher",
+      edition: "standard",
+      flags: [],
+      keepUnderReview: true,
+    },
+    { snapshot: { commit: null, graphHash: graphHash(graph) }, publishedAt: "2026-01-01T00:00:00Z" },
+  );
+  assert.deepEqual(published.index.keptUnderReview, ["KB-ASMT-SCHEDULE"]);
+  const read = readHelp(`${JSON.stringify(published.help, null, 2)}\n`);
+  assert.deepEqual(read.problems, []);
+  assert.ok(read.ok);
+  return read.help;
+}
+
+test("BEH-HELP-TIPS: a file with help under review is read, and its marks must agree", () => {
+  const help = keptHelp();
+  assert.deepEqual(help.withheldForReview, ["RULE-ASMT-FUTURE"]);
+  assert.deepEqual(help.knowledge[0], {
+    id: "KB-ASMT-SCHEDULE",
+    title: "Prepare a scheduled student assessment",
+    path: "under-review/KB-ASMT-SCHEDULE.md",
+    underReview: true,
+  });
+  const read = (edit: (value: Record<string, unknown> & Help) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  assert.deepEqual(
+    read((v) => {
+      delete (v.tips["BEH-ASMT-SCHEDULE"] as Partial<Help["tips"][string]>).underReview;
+    }),
+    ["tips.BEH-ASMT-SCHEDULE is not under review and knowledge KB-ASMT-SCHEDULE is"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.knowledge[0] as unknown as Record<string, unknown>).underReview = false;
+    }),
+    [
+      "knowledge[0].underReview is present and not true",
+      "tips.BEH-ASMT-SCHEDULE is under review and knowledge KB-ASMT-SCHEDULE is not",
+    ],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.knowledge[0].path = "KB-ASMT-SCHEDULE.md";
+    }),
+    ["knowledge[0] is under review and its path does not begin with under-review/"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.withheldForReview = ["BEH-ASMT-SCHEDULE"];
+    }),
+    ["withheldForReview names BEH-ASMT-SCHEDULE, which is also a key of tips"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      delete (v as Partial<Help>).withheldForReview;
+    }),
+    ["the file has no withheldForReview", "withheldForReview must be a list of strings, sorted, without repeats"],
+  );
+});
+
+test("BEH-HELP-TIPS: help under review is left out by default and returned marked under include, never counted missing", () => {
+  const help = keptHelp();
+  assert.equal(reviewStateFor(help, "BEH-ASMT-SCHEDULE"), "under-review");
+  assert.equal(reviewStateFor(help, "RULE-ASMT-FUTURE"), "held-back");
+  assert.equal(reviewStateFor(help, "CAP-ASMT-ASSIGN"), "none");
+  assert.equal(reviewStateFor(helpFromPublisher(), "BEH-ASMT-SCHEDULE"), "current");
+
+  assert.equal(tipFor(help, "BEH-ASMT-SCHEDULE"), null);
+  assert.equal(tipFor(help, "RULE-ASMT-FUTURE", { underReviewHelp: "include" }), null, "a held-back tip has no text");
+  const included = tipFor(help, "BEH-ASMT-SCHEDULE", { underReviewHelp: "include" });
+  assert.equal(included?.underReview, true);
+  assert.equal(included?.article?.path, "under-review/KB-ASMT-SCHEDULE.md");
+
+  assert.deepEqual(articles(help), { knowledge: [], pendingReview: ["KB-ASMT-SCHEDULE"] });
+  assert.deepEqual(
+    articles(help, { underReviewHelp: "include" }).knowledge.map((k) => k.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+
+  const ids = ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE", "CAP-ASMT-ASSIGN"];
+  const page = helpForPage(help, ids);
+  assert.deepEqual([page.tips, page.knowledge, page.missing], [[], [], ["CAP-ASMT-ASSIGN"]]);
+  assert.deepEqual(page.pendingReview, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  const shown = helpForPage(help, ids, { underReviewHelp: "include" });
+  assert.deepEqual(
+    shown.tips.map((tip) => [tip.id, tip.underReview]),
+    [["BEH-ASMT-SCHEDULE", true]],
+  );
+  assert.deepEqual(shown.pendingReview, ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+  assert.deepEqual(shown.missing, ["CAP-ASMT-ASSIGN"]);
+
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE" });
+  const rule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "RULE-ASMT-FUTURE", [TIP_ATTRIBUTE]: "authored" });
+  const host = root([schedule, rule]);
+  assert.deepEqual(bindTips(host, help), {
+    bound: [],
+    missing: [],
+    pendingReview: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+  });
+  assert.equal(schedule.attributes.size, 1, "under exclude nothing is rendered");
+  assert.equal(rule.getAttribute(TIP_ATTRIBUTE), "authored", "and nothing is removed");
+  assert.deepEqual(bindTips(host, help, { underReviewHelp: "include" }), {
+    bound: ["BEH-ASMT-SCHEDULE"],
+    missing: [],
+    pendingReview: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+  });
+  assert.deepEqual(schedule.snapshot(), {
+    [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE",
+    [KNOWLEDGE_ATTRIBUTE]: "KB-ASMT-SCHEDULE",
+    [TIP_ATTRIBUTE]: TIP,
+    [UNDER_REVIEW_ATTRIBUTE]: "true",
+  });
+});
+
+test("BEH-HELP-WATCH: a watch renders the under-review mark, restores its prior value on dispose, and copies pendingReview", () => {
+  const help = keptHelp();
+  const schedule = new Fake({ [BEHAVIOR_ATTRIBUTE]: "BEH-ASMT-SCHEDULE", [UNDER_REVIEW_ATTRIBUTE]: "authored" });
+  const before = schedule.snapshot();
+  const { host, options } = watchHost([schedule]);
+  const watch = watchTips(host, help, { ...options, underReviewHelp: "include" });
+  assert.equal(schedule.getAttribute(UNDER_REVIEW_ATTRIBUTE), "true");
+  const coverage = watch.coverage();
+  assert.deepEqual(coverage, { bound: ["BEH-ASMT-SCHEDULE"], missing: [], pendingReview: ["BEH-ASMT-SCHEDULE"] });
+  coverage.pendingReview.push("X-Y");
+  assert.deepEqual(watch.coverage().pendingReview, ["BEH-ASMT-SCHEDULE"], "coverage is a copy");
+  watch.dispose();
+  assert.deepEqual(schedule.snapshot(), before, "the page is left as the watch found it");
+  assert.deepEqual(watch.coverage(), { bound: [], missing: [], pendingReview: [] });
+});
+
+/** A file with two articles, one kept under review, and two surfaces: one led by both, one by the kept one alone. */
+function surfacedHelp(): Help {
+  const help = JSON.parse(JSON.stringify(helpFromPublisher())) as Help;
+  help.knowledge = [
+    { id: "KB-ASMT-CLASSES", title: "Choose a class", path: "under-review/KB-ASMT-CLASSES.md", underReview: true },
+    ...help.knowledge,
+  ];
+  help.surfaces = {
+    "@lantern/assessments#/review": { knowledge: ["KB-ASMT-CLASSES"] },
+    "lantern-web:/assessments/schedule": { knowledge: ["KB-ASMT-CLASSES", "KB-ASMT-SCHEDULE"] },
+  };
+  const read = readHelp(help);
+  assert.deepEqual(read.problems, []);
+  return help;
+}
+
+test("BEH-HELP-SURFACES: the file the publisher writes carries surfaces, {} when no slice writes one", () => {
+  assert.deepEqual(helpFromPublisher().surfaces, {});
+});
+
+test("BEH-HELP-SURFACES: leadFor and surfaceHelp give a surface's leads in order, leaving one under review out by default", () => {
+  const help = surfacedHelp();
+  const page = "lantern-web:/assessments/schedule";
+  assert.deepEqual(
+    leadFor(help, page).map((entry) => entry.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(
+    leadFor(help, page, { underReviewHelp: "include" }).map((entry) => [entry.id, entry.underReview]),
+    [
+      ["KB-ASMT-CLASSES", true],
+      ["KB-ASMT-SCHEDULE", undefined],
+    ],
+  );
+  assert.deepEqual(surfaceHelp(help, page).pendingReview, ["KB-ASMT-CLASSES"]);
+  assert.deepEqual(surfaceHelp(help, page, { underReviewHelp: "include" }).pendingReview, ["KB-ASMT-CLASSES"]);
+  // A surface whose leads are all under review, and one the file does not list: leadFor cannot tell them apart.
+  assert.deepEqual(leadFor(help, "@lantern/assessments#/review"), []);
+  assert.deepEqual(leadFor(help, "lantern-web:/nowhere"), []);
+  assert.deepEqual(surfaceHelp(help, "@lantern/assessments#/review"), { lead: [], pendingReview: ["KB-ASMT-CLASSES"] });
+  assert.deepEqual(surfaceHelp(help, "lantern-web:/nowhere"), { lead: [], pendingReview: [] });
+  assert.deepEqual(leadFor(help, "__proto__"), [], "a prototype name is not a surface");
+  assert.deepEqual(leadFor(help, "constructor"), []);
+});
+
+test("BEH-HELP-SURFACES: helpForPage lists a surface's leads first, then the tips' articles, each once", () => {
+  const help = surfacedHelp();
+  const plain = helpForPage(help, ["BEH-ASMT-SCHEDULE"]);
+  assert.equal(plain.surface, null);
+  assert.deepEqual([plain.lead, plain.leadPendingReview], [[], []]);
+  const page = helpForPage(help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" });
+  assert.equal(page.surface, "lantern-web:/assessments/schedule");
+  assert.deepEqual(
+    page.lead.map((entry) => entry.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(
+    page.knowledge.map((entry) => entry.id),
+    ["KB-ASMT-SCHEDULE"],
+  );
+  assert.deepEqual(page.leadPendingReview, ["KB-ASMT-CLASSES"]);
+  assert.deepEqual(page.pendingReview, [], "pendingReview holds control IDs only");
+  const shown = helpForPage(help, ["BEH-ASMT-SCHEDULE"], {
+    surface: "lantern-web:/assessments/schedule",
+    underReviewHelp: "include",
+  });
+  assert.deepEqual(
+    shown.knowledge.map((entry) => entry.id),
+    ["KB-ASMT-CLASSES", "KB-ASMT-SCHEDULE"],
+  );
+  const kept = helpForPage(help, [], { surface: "@lantern/assessments#/review" });
+  assert.deepEqual([kept.lead, kept.knowledge, kept.leadPendingReview], [[], [], ["KB-ASMT-CLASSES"]]);
+});
+
+test("BEH-HELP-SURFACES: readHelp refuses a file whose surfaces break the rules", () => {
+  const help = surfacedHelp();
+  const read = (edit: (value: Record<string, unknown> & Help) => void) => {
+    const value = JSON.parse(JSON.stringify(help));
+    edit(value);
+    return readHelp(value).problems;
+  };
+  assert.deepEqual(
+    read((v) => {
+      delete (v as Partial<Help>).surfaces;
+    }),
+    ["the file has no surfaces", "surfaces must be an object keyed by surface ID"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v as Record<string, unknown>).surfaces = [];
+    }),
+    ["surfaces must be an object keyed by surface ID"],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["404"] = { knowledge: ["KB-ASMT-SCHEDULE"] };
+    }),
+    ['surfaces key "404" is not a surface ID'],
+  );
+  assert.deepEqual(
+    readHelp(
+      `{${JSON.stringify(help)
+        .slice(1, -1)
+        .replace('"surfaces":{', '"surfaces":{"__proto__":{"knowledge":["KB-ASMT-SCHEDULE"]},')}}`,
+    ).problems,
+    ['surfaces key "__proto__" is not a surface ID'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["a<b"] = { knowledge: ["KB-ASMT-SCHEDULE"] };
+    }),
+    ['surfaces key "a<b" is not a surface ID'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      (v.surfaces["lantern-web:/assessments/schedule"] as unknown as Record<string, unknown>).feature = "beta";
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"] has a member "feature" the help file does not define'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["lantern-web:/assessments/schedule"].knowledge = [];
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"].knowledge must be a non-empty list of IDs'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["lantern-web:/assessments/schedule"].knowledge = ["KB-ASMT-SCHEDULE", "KB-ASMT-SCHEDULE"];
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"].knowledge repeats an ID'],
+  );
+  assert.deepEqual(
+    read((v) => {
+      v.surfaces["lantern-web:/assessments/schedule"].knowledge = ["KB-ASMT-OTHER"];
+    }),
+    ['surfaces["lantern-web:/assessments/schedule"] names knowledge KB-ASMT-OTHER, which the file does not list'],
+  );
 });

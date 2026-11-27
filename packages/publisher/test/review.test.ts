@@ -6,14 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { type Artifact, graphHash } from "@intentset/core";
-import {
-  CURRENT_PIN,
-  REVIEW_EXTENSION,
-  bindReviewPins,
-  readReviewRecord,
-  reviewSources,
-  reviewStatus,
-} from "../src/index.ts";
+import { CURRENT_PIN, bindReviewPins, readReviewRecord, reviewSources, reviewStatus } from "../src/index.ts";
 import { ALL_CURRENT, KB_PATH, build, example, reviewed } from "./harness.ts";
 
 const kb = (built: { graph: { artifacts: Map<string, Artifact> } }) =>
@@ -35,6 +28,10 @@ test("current when every pin matches and a reviewer and date are named", () => {
     unknownHash: null,
     reviewer: "team-assessment",
     reviewedAt: "2026-09-30",
+    self: "unpinned",
+    gates: "unpinned",
+    keepable: false,
+    keepBlockers: ["current"],
   });
 });
 
@@ -76,7 +73,7 @@ test("a missing pin, a missing reviewer or a missing date each need review", () 
   assert.equal(status.reviewer, null);
   const noDate = example({ kb: reviewed({ "intentset.reviewedAt": null }) });
   assert.equal(reviewStatus(noDate.graph, kb(noDate)).status, "needs-review");
-  const noRecord = example({ kb: reviewed({ "intentset.extensions": null }) });
+  const noRecord = example({ kb: reviewed({ "intentset.review": null }) });
   assert.deepEqual(reviewStatus(noRecord.graph, kb(noRecord)).missing, [
     "BEH-ASMT-SCHEDULE",
     "RULE-ASMT-AUTH",
@@ -97,12 +94,13 @@ test("bindReviewPins replaces @current with the source's hash and leaves the inp
   const original = kb(built);
   unbound.artifacts.set("KB-ASMT-SCHEDULE", {
     ...original,
-    meta: { ...original.meta, extensions: { [REVIEW_EXTENSION]: { sources: { ...ALL_CURRENT } } } },
+    meta: { ...original.meta, review: { sources: { ...ALL_CURRENT } } },
   });
   assert.equal(reviewStatus(unbound, kb({ graph: unbound })).status, "needs-review");
   const bound = bindReviewPins(unbound);
   const sources = readReviewRecord(kb({ graph: bound }))?.sources ?? {};
-  for (const id of Object.keys(ALL_CURRENT)) assert.equal(sources[id], unbound.artifacts.get(id)?.sourceHash);
+  // A review with no hash pins content-v1 (ADR 0025), so @current binds each source's content hash.
+  for (const id of Object.keys(ALL_CURRENT)) assert.equal(sources[id], unbound.artifacts.get(id)?.contentHash);
   assert.equal(readReviewRecord(kb({ graph: unbound }))?.sources["BEH-ASMT-SCHEDULE"], CURRENT_PIN);
   assert.equal(graphHash(bound), graphHash(unbound));
   assert.equal(reviewStatus(bound, kb({ graph: bound })).status, "current");

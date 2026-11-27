@@ -1,13 +1,16 @@
 /**
- * The vocabulary of Core v0.2 (spec/core-0.2.md §2, §4, §5, §7) and the shapes
+ * The vocabulary of Core v0.3 (spec/core-0.3.md §2, §4, §5, §7) and the shapes
  * the packages exchange. This file is the contract; it carries no logic.
  */
 import type { Diagnostic } from "./diagnostics.ts";
 
-export const SPEC_VERSION = "0.2";
+export const SPEC_VERSION = "0.3";
 
 /** The version `SPEC_VERSION` followed (Core §1), named so the error for a record still at it can point to `intentset migrate`. */
-export const PREVIOUS_SPEC_VERSION = "0.1";
+export const PREVIOUS_SPEC_VERSION = "0.2";
+
+/** Every version before `SPEC_VERSION`, oldest first; a record at any of them is one `intentset migrate` can move. */
+export const EARLIER_SPEC_VERSIONS: readonly string[] = ["0.1", PREVIOUS_SPEC_VERSION];
 
 export const ARTIFACT_TYPES = [
   "product",
@@ -26,7 +29,11 @@ export const ARTIFACT_TYPES = [
 ] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 
-export const STATUSES = ["draft", "approved", "implemented", "released", "deprecated", "retired"] as const;
+/**
+ * Core §7, ADR 0023: the review lifecycle, what a person has accepted. Whether the work exists is `delivery`, and
+ * nothing here says it.
+ */
+export const STATUSES = ["draft", "approved", "deprecated", "retired"] as const;
 export type Status = (typeof STATUSES)[number];
 
 /**
@@ -37,8 +44,11 @@ export const DELIVERIES = ["planned", "built"] as const;
 export type Delivery = (typeof DELIVERIES)[number];
 /** The types that describe work code delivers, and so may carry `delivery`. */
 export const DELIVERY_TYPES = ["capability", "behavior", "rule", "scenario", "slice", "contract"] as const;
-/** The statuses that claim an implementation, and so make delivery `built` when the field is absent (Core §7). */
-export const BUILT_STATUSES = ["implemented", "released", "deprecated"] as const;
+/**
+ * The statuses that make delivery `built` when the field is absent (Core §7, ADR 0023): a deprecated record describes
+ * something that existed, so deprecating it needs no second edit.
+ */
+export const BUILT_STATUSES = ["deprecated"] as const;
 
 /**
  * Core §7, ADR 0020: on what basis a record was approved. `direct`: a person read the record; `derived`: a named
@@ -172,6 +182,25 @@ export interface Claim {
   path: string;
 }
 
+/**
+ * VSA §3, ADR 0028: a surface ID is 1 to 200 printable ASCII characters other than `"`, `'`, `<`, `>`, `\` and the
+ * backtick, and is never digits only (`SURFACE_ID_DIGITS`) nor `__proto__`. `@intentset/help` copies both patterns,
+ * and a test holds their sources equal.
+ */
+// biome-ignore lint/complexity/noUselessEscapeInRegex: the pattern is VSA §3's, character for character.
+export const SURFACE_ID_PATTERN = /^[!#-&(-;=?-\[\]-_a-~]{1,200}$/;
+export const SURFACE_ID_DIGITS = /^[0-9]+$/;
+
+/** VSA §3: whether a string is a surface ID. */
+export function isSurfaceId(key: string): boolean {
+  return SURFACE_ID_PATTERN.test(key) && !SURFACE_ID_DIGITS.test(key) && key !== "__proto__";
+}
+
+/** VSA §3, ADR 0028: the knowledge that leads one surface, in the order a reader is shown it. */
+export interface SliceSurface {
+  knowledge: string[];
+}
+
 /** VSA §3 slice metadata. */
 export interface SliceMeta {
   kind: "product" | "technical";
@@ -182,7 +211,12 @@ export interface SliceMeta {
   layers: Record<string, string[]>;
   claims: Claim[];
   usesResources: string[];
+  /** VSA §3, ADR 0028: by surface ID, keys in code-unit order; absent when the record writes none. Not a binding field. */
+  surfaces?: Record<string, SliceSurface>;
 }
+
+/** Export §2, ADR 0028: a slice's metadata as the export carries it, `surfaces` always present (`{}` when none). */
+export type ExportSlice = Omit<SliceMeta, "surfaces"> & { surfaces: Record<string, SliceSurface> };
 
 /** Core §8 verification metadata. */
 export interface VerificationMeta {
@@ -215,6 +249,25 @@ export interface MeasureMeta {
   direction?: MeasureDirection;
 }
 
+/**
+ * Core §9, publication §3, ADR 0025: a knowledge record's review pins, by source ID, each the hash of the kind `hash`
+ * names. `hash` absent means `content-v1`; `file-v1` is the whole file; any other value is a kind no pin matches.
+ */
+export interface ReviewMeta {
+  /** Source ID -> the hash it had at review, keys sorted. */
+  sources: Record<string, string>;
+  hash?: string;
+  /** The commit or graph hash at review: informative, never compared. */
+  snapshot?: string;
+  /**
+   * The knowledge record's own content hash when it was reviewed (publication §3, ADR 0027): its `content-v1` hash
+   * without `ending`, whatever `hash` says. A review that carries it is needs-review once the record's text moves.
+   */
+  self?: string;
+  /** The gate hash of the review's sources when it was reviewed (publication §3, ADR 0027): who could see each. */
+  gates?: string;
+}
+
 /** The `intentset` block of a document's frontmatter after validation, Core §4. */
 export interface ArtifactMeta {
   spec: typeof SPEC_VERSION;
@@ -242,6 +295,8 @@ export interface ArtifactMeta {
   extensions?: Record<string, unknown>;
   /** Knowledge only (Core §9): one sentence per explained ID, keys sorted. */
   tips?: Record<string, string>;
+  /** Knowledge only (Core §9, publication §3, ADR 0025): the pins of the sources it was reviewed against. */
+  review?: ReviewMeta;
   slice?: SliceMeta;
   verification?: VerificationMeta;
   measure?: MeasureMeta;
@@ -281,6 +336,8 @@ export interface Artifact {
   sourceHash: string;
   /** What a `content-v1` review pins: the record without its lifecycle and review fields (publication §3, ADR 0018). */
   contentHash: string;
+  /** What a review's `self` pins: the content hash without `ending` (publication §3, ADR 0027). Never exported. */
+  ownContentHash: string;
   /** The document body: everything after the frontmatter. */
   body: string;
   headings: Heading[];
@@ -358,35 +415,14 @@ export const EVIDENCE_BINDINGS = ["subject", "commit"] as const;
 export type EvidenceBinding = (typeof EVIDENCE_BINDINGS)[number];
 
 /**
- * Which resource files a subject hashes (Core §8, ADR 0013 as amended 2026-10-15): `exercised` (the default) counts a
- * resource's files where the verification names the resource in `exercises` or an implementing slice owns it; `used`
- * counts the files of every resource an included slice lists in `usesResources`.
+ * `evidence:` in `.intentset/config.yaml`; every member optional. What a subject holds is not configurable: a subject
+ * is computed one way (Core §8, ADR 0026), and `resources` and `dependencies` are unknown keys.
  */
-export const EVIDENCE_RESOURCES = ["exercised", "used"] as const;
-export type EvidenceResources = (typeof EVIDENCE_RESOURCES)[number];
-
-/**
- * What a slice reached only through `dependsOn` contributes to a subject (Core §8, ADR 0013 as amended 2026-10-15, second):
- * `entrypoint` its binding fields, its entrypoint files and its contract records, not its other claimed files; `files`
- * every file its claims resolve to, as release 0.7.0 did. Slices that implement a verified behavior and slices a
- * verification exercises always contribute every file.
- */
-export const EVIDENCE_DEPENDENCIES = ["entrypoint", "files"] as const;
-export type EvidenceDependencies = (typeof EVIDENCE_DEPENDENCIES)[number];
-
-/** The rule a repository gets when its configuration says nothing (the one place the default is written). */
-export const DEFAULT_EVIDENCE_DEPENDENCIES: EvidenceDependencies = "files";
-
-/** `evidence:` in `.intentset/config.yaml`; every member optional. */
 export interface EvidenceConfig {
   /** The binding a repository asks for; null leaves the default (subject where slices exist, else commit). */
   binding: EvidenceBinding | null;
   /** Files whose change affects every check and that belong to no slice: paths or patterns, mixed into every subject. */
   globalInputs: string[];
-  /** Which resource files a subject hashes; `exercised` unless the repository asks for `used`. */
-  resources: EvidenceResources;
-  /** What a dependency slice contributes to a subject; `DEFAULT_EVIDENCE_DEPENDENCIES` unless the repository says otherwise. */
-  dependencies: EvidenceDependencies;
 }
 
 /** Conformance levels, Core §11. Checks above the requested level do not run. */
@@ -440,9 +476,10 @@ export interface ImpactReport {
  * 0.4 carries the evidence binding: which binding judged each verification, the
  * subject it was judged at, each record's binding and subject hash, and a
  * verification's `exercises` (ADR 0014). 0.5 carries each artifact's `delivery`
- * (ADR 0017), and 0.6 its `approval` and `formalizes` (ADR 0020).
+ * (ADR 0017), 0.6 its `approval` and `formalizes` (ADR 0020), and 0.7 the
+ * specifications' 0.3 (Core §1, ADR 0023 to ADR 0026).
  */
-export const EXPORT_CONTRACT = "intentset/export/0.6";
+export const EXPORT_CONTRACT = "intentset/export/0.7";
 
 /** The contracts this implementation reads. A consumer rejects every other value (spec/export.md §5). */
 export const SUPPORTED_EXPORT_CONTRACTS: readonly string[] = [EXPORT_CONTRACT];
@@ -477,16 +514,28 @@ export interface ExportArtifact {
   /** Link targets and sources left out because the artifact at the other end is withheld: authored, derived and parent. */
   withheldLinks: number;
   availability: Availability | null;
-  slice: SliceMeta | null;
+  slice: ExportSlice | null;
   /** `exercises` is the list as authored, less withheld IDs (counted in `withheldLinks`); empty when the record names none. */
   verification: (Omit<VerificationMeta, "exercises"> & { exercises: string[] }) | null;
   /** Null unless the artifact is a measure; `direction` is null when the author set none. */
   measure: (Omit<MeasureMeta, "direction"> & { direction: MeasureDirection | null }) | null;
-  /** Null unless the artifact is knowledge with tips (Core §9). */
+  /** Null unless the artifact is knowledge with tips (Core §9); a tip whose key is withheld is left out and counted in `withheldLinks`. */
   tips: Record<string, string> | null;
+  /**
+   * Null unless the artifact is knowledge with a review (Core §9, ADR 0025): `hash` and `snapshot` as authored, null
+   * where absent; a pin whose source is withheld is left out and counted in `withheldLinks`.
+   */
+  review: ExportReview | null;
   extensions: Record<string, unknown> | null;
   /** Present only when the export was asked to include bodies. */
   body?: string;
+}
+
+/** A knowledge record's review as the export carries it (export §2): `hash` null means `content-v1`. */
+export interface ExportReview {
+  sources: Record<string, string>;
+  hash: string | null;
+  snapshot: string | null;
 }
 
 /** An approval as the export carries it: every member present, null where the basis does not carry it. */
@@ -608,7 +657,10 @@ export interface KnowledgeReportSection {
 export interface ExportKnowledgeReview {
   id: string;
   lifecycle: Status;
-  /** current only while every source still has the hash it was reviewed against and a reviewer and time are named. */
+  /**
+   * current only while every source still has the hash it was reviewed against, a reviewer and time are named, and,
+   * when the review pins the knowledge's own text, that text is unchanged.
+   */
   status: "current" | "needs-review";
   reviewer: string | null;
   reviewedAt: string | null;
@@ -620,6 +672,8 @@ export interface ExportKnowledgeReview {
   missing: string[];
   /** Entries left out of sources, changed and missing because they are withheld. */
   withheld: number;
+  /** Whether the knowledge's own text still matches its review (export §4.2, ADR 0027); `unpinned` without `self`. */
+  self: "unchanged" | "changed" | "unpinned";
 }
 
 /** One hit in the impact report: the artifact and the path that reached it. Join to `artifacts` by ID. */

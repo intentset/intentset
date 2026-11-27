@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/outcome/0.2
+  spec: '0.3'
+  profile: intentset/outcome/0.3
   id: OUT-QUESTIONS-ANSWERED
   type: outcome
   title: A visitor's question is answered from the published documentation

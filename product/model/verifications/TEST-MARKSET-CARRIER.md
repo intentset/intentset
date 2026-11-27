@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/verification/0.2
+  spec: '0.3'
+  profile: intentset/verification/0.3
   id: TEST-MARKSET-CARRIER
   type: verification
   title: Records are read as Markset with Markset's own diagnostics

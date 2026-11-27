@@ -17,8 +17,9 @@
  *
  * Separately, the text may not contain the title of an artifact the
  * projection does not admit (three or more words, case-sensitive, any run of
- * whitespace between words), unless that title is also the title of
- * something being published. That is PUB002.
+ * whitespace between words), unless that title is also the title of a
+ * document still published in this run: a document refused for any reason
+ * allows no title (publication §4, ADR 0029). That is PUB002.
  *
  * Every message names the referencing document and the referenced ID, and
  * never the referenced artifact's title or path.
@@ -28,7 +29,7 @@ import { type Artifact, type Diagnostic, type Graph, ID_PATTERN } from "@intents
 import { parseDocument } from "@markset-lang/parser";
 import { bodyLineOffset, fileLocation, lineAt } from "./body.ts";
 import { compareStrings, publicationDiagnostic } from "./diagnostic.ts";
-import { type PublicationRequest, admits } from "./request.ts";
+import { type CheckedRequest, admits } from "./request.ts";
 
 export type ReferenceKind = "id" | "link" | "path";
 
@@ -51,6 +52,31 @@ function listing(words: readonly string[]): string {
 const ID_IN_TEXT = new RegExp(`(?<![A-Za-z0-9_-])${ID_PATTERN.source.slice(1, -1)}(?![A-Za-z0-9_-])`, "g");
 const HTML_TARGET = /\b(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
 
+/** Each bare artifact ID in a text, word-bounded, with its offset; whether the graph holds it is the caller's. */
+export function idsInText(text: string): { id: string; index: number }[] {
+  return [...text.matchAll(ID_IN_TEXT)].map((match) => ({ id: match[0], index: match.index }));
+}
+
+/** Each artifact whose repository path a text writes out, bounded so it is not part of a longer path, at its first offset. */
+export function pathsInText(text: string, graph: Graph): { id: string; index: number }[] {
+  const found: { id: string; index: number }[] = [];
+  for (const [id, other] of graph.artifacts) {
+    let from = 0;
+    for (;;) {
+      const index = text.indexOf(other.path, from);
+      if (index === -1) break;
+      const before = index === 0 ? "" : text[index - 1];
+      const after = text[index + other.path.length] ?? "";
+      if (!/[A-Za-z0-9_./-]/.test(before) && !/[A-Za-z0-9_/-]/.test(after)) {
+        found.push({ id, index });
+        break;
+      }
+      from = index + 1;
+    }
+  }
+  return found;
+}
+
 /** Every reference from a knowledge body to another artifact in the graph, sorted by ID, kind, line. */
 export function findReferences(artifact: Artifact, graph: Graph): Reference[] {
   const self = artifact.meta.id;
@@ -60,7 +86,7 @@ export function findReferences(artifact: Artifact, graph: Graph): Reference[] {
     if (id !== self && graph.artifacts.has(id)) found.push({ id, via, line });
   };
 
-  for (const match of body.matchAll(ID_IN_TEXT)) add(match[0], "id", lineAt(body, match.index));
+  for (const found of idsInText(body)) add(found.id, "id", lineAt(body, found.index));
 
   const byPath = new Map<string, string>();
   for (const [id, other] of graph.artifacts) byPath.set(other.path, id);
@@ -89,20 +115,7 @@ export function findReferences(artifact: Artifact, graph: Graph): Reference[] {
   };
   visit(parseDocument(body).ast);
 
-  for (const [id, other] of graph.artifacts) {
-    let from = 0;
-    for (;;) {
-      const index = body.indexOf(other.path, from);
-      if (index === -1) break;
-      const before = index === 0 ? "" : body[index - 1];
-      const after = body[index + other.path.length] ?? "";
-      if (!/[A-Za-z0-9_./-]/.test(before) && !/[A-Za-z0-9_/-]/.test(after)) {
-        add(id, "path", lineAt(body, index));
-        break;
-      }
-      from = index + 1;
-    }
-  }
+  for (const found of pathsInText(body, graph)) add(found.id, "path", lineAt(body, found.index));
 
   return found.sort((a, b) => compareStrings(a.id, b.id) || compareStrings(a.via, b.via) || a.line - b.line);
 }
@@ -142,7 +155,7 @@ export function resolveTarget(url: string, fromPath: string): string | null {
 export function checkReferences(
   artifact: Artifact,
   graph: Graph,
-  request: PublicationRequest,
+  request: Pick<CheckedRequest, "visibility" | "product">,
   published: ReadonlySet<string>,
 ): Diagnostic[] {
   const offset = bodyLineOffset(artifact);
@@ -181,12 +194,13 @@ export function checkReferences(
 /**
  * PUB002 for each artifact outside the projection whose title (three or more
  * words) the body contains, unless that title is in `allowedTitles` (the
- * document's own and those of what is being published).
+ * titles of the documents still published in this run, the document's own
+ * among them).
  */
 export function checkTitles(
   artifact: Artifact,
   graph: Graph,
-  request: PublicationRequest,
+  request: Pick<CheckedRequest, "visibility">,
   allowedTitles: ReadonlySet<string>,
 ): Diagnostic[] {
   const offset = bodyLineOffset(artifact);

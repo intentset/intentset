@@ -20,7 +20,7 @@ import {
 } from "@intentset/core";
 import { marksetCarrier } from "@intentset/markset-adapter";
 import { createIntentsetServer } from "@intentset/mcp";
-import { bindTips, readHelp, watchTips } from "@intentset/help";
+import { bindTips, helpForPage, leadFor, readHelp, watchTips } from "@intentset/help";
 import { knowledgeReport, publish } from "@intentset/publisher";
 import { checkEvidence, evidenceReport, readRunRecords } from "@intentset/verification";
 
@@ -77,6 +77,15 @@ assert.deepEqual(published.index.published, ["KB-ASMT-SCHEDULE"]);
 const help = readHelp(JSON.stringify(published.help));
 assert.equal(help.ok, true, help.problems.join("; "));
 assert.deepEqual(Object.keys(help.help.tips), ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"]);
+// The example's slice is a draft, so it writes no surface (ADR 0028): a page has no lead articles, only its tips'.
+assert.deepEqual(help.help.surfaces, {});
+assert.deepEqual(leadFor(help.help, "lantern-web:/assessments/schedule"), []);
+assert.deepEqual(
+  helpForPage(help.help, ["BEH-ASMT-SCHEDULE"], { surface: "lantern-web:/assessments/schedule" }).knowledge.map(
+    (entry) => entry.id,
+  ),
+  ["KB-ASMT-SCHEDULE"],
+);
 const control = (behavior) => {
   const attributes = new Map([["data-behavior", behavior]]);
   return {
@@ -91,6 +100,7 @@ const assign = control("CAP-ASMT-ASSIGN");
 assert.deepEqual(bindTips({ querySelectorAll: () => [schedule, assign] }, help.help), {
   bound: ["BEH-ASMT-SCHEDULE"],
   missing: ["CAP-ASMT-ASSIGN"],
+  pendingReview: [],
 });
 assert.equal(schedule.getAttribute("data-help-tip"), help.help.tips["BEH-ASMT-SCHEDULE"].text);
 assert.equal(schedule.getAttribute("data-help-knowledge"), "KB-ASMT-SCHEDULE");
@@ -123,7 +133,11 @@ assert.equal(watched.getAttribute("data-help-tip"), help.help.tips["BEH-ASMT-SCH
 controls.push(later);
 fire();
 for (const callback of queued.splice(0)) callback();
-assert.deepEqual(watch.coverage(), { bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"], missing: [] });
+assert.deepEqual(watch.coverage(), {
+  bound: ["BEH-ASMT-SCHEDULE", "RULE-ASMT-FUTURE"],
+  missing: [],
+  pendingReview: [],
+});
 watch.dispose();
 assert.equal(fire, null);
 for (const element of [watched, later]) {

@@ -1,8 +1,8 @@
 ---
 markset: true
 intentset:
-  spec: '0.2'
-  profile: intentset/outcome/0.2
+  spec: '0.3'
+  profile: intentset/outcome/0.3
   id: OUT-DOCS-IMPROVE
   type: outcome
   title: What visitors ask improves the documentation

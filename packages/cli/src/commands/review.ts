@@ -22,8 +22,21 @@
  * entry the base did not hold; a deliberate addition is the caller's call.
  *
  * It lists every record whose status or approval differs from the base's copy
- * (Core §10, ADR 0022), so a reviewer sees each approval a change makes
- * without reading frontmatter. A report, never a failure.
+ * (Core §10, ADR 0022), and every knowledge record whose review (`reviewedBy`,
+ * `reviewedAt` or `review`) does, or that arrives with one (ADR 0027), so a
+ * reviewer sees each approval and each review a change makes without reading
+ * frontmatter. A review pin that differs only as `intentset migrate` re-pins
+ * it is not a change of review: the base pin matched the pinned record's base
+ * copy, the head pin is the same kind of hash of that copy as migrated, and the
+ * pinned record's head hash is that value, so it changed only by migrating. A report, never a failure. A base copy that
+ * declares an earlier version is read as `intentset migrate` would move it, in
+ * memory, so a change that only migrates records lists none of them.
+ *
+ * It lists every slice past draft whose `surfaces` (VSA §3, ADR 0028) gained or
+ * lost a key, or changed a key's list, against the base's copy read the same
+ * way: a surface ID reaches every eligible reader's help file once its slice is
+ * approved, so this is where a reviewer sees the key text first. A report,
+ * never a failure.
  */
 import {
   type BaselineComparison,
@@ -59,6 +72,7 @@ import { type CarrierName, CARRIERS } from "../repository.ts";
 import type { Session } from "../session.ts";
 import { activeSlices, claimingSlices, describingRecords, isSliceCode } from "@intentset/core";
 import { pathText, REACHABILITY_NOTE } from "./impact.ts";
+import { migrateRecord, recordHash, repinPlan } from "./migrate.ts";
 
 export interface Attribution {
   /** The artifact impact starts from. */
@@ -190,13 +204,33 @@ export interface StatusChange {
   approval: ExportApproval | null;
   /** True when the approval differs from the base's copy, whether or not the status does. */
   approvalChanged: boolean;
+  /**
+   * Knowledge only (ADR 0027): true when `reviewedBy`, `reviewedAt` or `review` differs from the base's copy as
+   * migrated, re-pins a migration would write aside, or the record arrives with a review.
+   */
+  reviewChanged: boolean;
+  /** The reviewer and date the record names now, null when it names none. */
+  reviewedBy: string | null;
+  reviewedAt: string | null;
 }
 
 export const STATUS_NOTE =
-  "Records whose status or approval differs from the base's copy, and new records that arrive past draft or with an " +
-  "approval. A status is a claim a person makes (Core §7): check that each one here was made by whoever may make it.";
+  "Records whose status or approval differs from the base's copy, new records that arrive past draft or with an " +
+  "approval, and knowledge whose review was written or changed. A status is a claim a person makes (Core §7): check " +
+  "that each one here was made by whoever may make it. A review is a claim a person makes, too (Core §10).";
 
-/** Each changed record whose status or approval is not what the base's copy says, sorted by ID. */
+/**
+ * The base's copy of a record as this reader reads it: moved to the current version through `migrateRecord` when it
+ * declares an earlier one (Core §10), so the comparison sees what the change did and not what the migration did.
+ * Nothing is written; a copy at the current version, or at one no step leads from, is read as it is.
+ */
+export function readBaseCopy(path: string, text: string, carrier: CarrierName): Artifact | null {
+  const input = CARRIERS[carrier](path, text);
+  const moved = input.frontmatter === null ? null : migrateRecord(text, input.frontmatter);
+  return readArtifact(moved === null ? input : CARRIERS[carrier](path, moved)).artifact;
+}
+
+/** Each changed record whose status, approval or review is not what the base's copy says, sorted by ID. */
 export function statusChanges(
   graph: Graph,
   changed: readonly string[],
@@ -206,16 +240,158 @@ export function statusChanges(
   const touched = new Set(changed);
   const out: StatusChange[] = [];
   for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
-    const { path, meta } = graph.artifacts.get(id) as Artifact;
+    const artifact = graph.artifacts.get(id) as Artifact;
+    const { path, meta } = artifact;
     if (!touched.has(path)) continue;
     const text = atBase(path);
-    const before = text === null ? null : readArtifact(CARRIERS[carrier](path, text)).artifact;
+    const before = text === null ? null : readBaseCopy(path, text, carrier);
     const from = before?.meta.status ?? null;
     const approval = exportApproval(meta.approval);
     const approvalChanged = canonicalJson(approval) !== canonicalJson(exportApproval(before?.meta.approval));
-    if (from === null ? meta.status === "draft" && approval === null : from === meta.status && !approvalChanged)
-      continue;
-    out.push({ id, type: meta.type, path, from, to: meta.status, approval, approvalChanged });
+    const reviewChanged =
+      meta.type === "knowledge" &&
+      (before === null
+        ? hasReview(artifact)
+        : reviewOf(artifact) !== replayedReview(graph, artifact, before, text as string, atBase, carrier));
+    const statusQuiet =
+      from === null ? meta.status === "draft" && approval === null : from === meta.status && !approvalChanged;
+    if (statusQuiet && !reviewChanged) continue;
+    out.push({
+      id,
+      type: meta.type,
+      path,
+      from,
+      to: meta.status,
+      approval,
+      approvalChanged,
+      reviewChanged,
+      reviewedBy: meta.reviewedBy ?? null,
+      reviewedAt: meta.reviewedAt ?? null,
+    });
+  }
+  return out;
+}
+
+function hasReview(artifact: Artifact): boolean {
+  const { meta } = artifact;
+  return meta.review !== undefined || meta.reviewedBy !== undefined || meta.reviewedAt !== undefined;
+}
+
+/** What a knowledge record says of its review, as one comparable string. */
+function reviewOf(artifact: Artifact, review = artifact.meta.review): string {
+  return canonicalJson({
+    reviewedBy: artifact.meta.reviewedBy ?? null,
+    reviewedAt: artifact.meta.reviewedAt ?? null,
+    review: review ?? null,
+  });
+}
+
+/**
+ * The base copy's review as `intentset migrate` would leave it beside this head (Core §10, ADR 0027): each pin, a
+ * source pin or `self`, that differs from the head's is taken as the head's only when it exactly replays the move's
+ * re-pin. The base pin equals the pinned record's base copy's hash of the kind the move reads the review by (`repinPlan`), the head pin equals the same
+ * kind of hash of that copy as migrated, and the pinned record's head hash equals that value, so the pinned record
+ * changed only by migrating. A head pin copied from a record edited after the move is not that value, and is listed.
+ */
+function replayedReview(
+  graph: Graph,
+  head: Artifact,
+  before: Artifact,
+  baseText: string,
+  atBase: (path: string) => string | null,
+  carrier: CarrierName,
+): string {
+  const review = before.meta.review;
+  const now = head.meta.review;
+  if (review === undefined || now === undefined) return reviewOf(before);
+  // The move's own plan for this record, read from the base text as written: a record it would not rewrite, a pin kind
+  // its declared version did not read (a 0.2 `hash: file-v1` among them) and a `self` of a record it does not move are
+  // never replays.
+  const own = CARRIERS[carrier](head.path, baseText).frontmatter;
+  if (own === null) return reviewOf(before);
+  const plan = repinPlan(baseText, own.line);
+  if (!plan.rewrites) return reviewOf(before);
+  const kind = plan.kind;
+  const replays = (
+    pin: string,
+    headPin: string | undefined,
+    path: string,
+    text: string | null,
+    pinKind: "content-v1" | "file-v1" | "own",
+    headHash: string,
+  ) => {
+    if (headPin === undefined || text === null) return false;
+    const input = CARRIERS[carrier](path, text);
+    if (input.frontmatter === null) return false;
+    if (recordHash(text, input.frontmatter.line, pinKind) !== pin) return false;
+    const moved = migrateRecord(text, input.frontmatter);
+    if (moved === null) return false;
+    const after = recordHash(moved, input.frontmatter.line, pinKind);
+    return after !== null && headPin === after && headHash === after;
+  };
+  const sources: Record<string, string> = { ...review.sources };
+  if (kind === "content-v1" || kind === "file-v1") {
+    for (const [id, pin] of Object.entries(review.sources)) {
+      const headPin = now.sources[id];
+      const source = graph.artifacts.get(id);
+      if (headPin === pin || source === undefined) continue;
+      const headHash = kind === "file-v1" ? source.sourceHash : source.contentHash;
+      if (replays(pin, headPin, source.path, atBase(source.path), kind, headHash)) sources[id] = headPin;
+    }
+  }
+  const replayed = { ...review, sources };
+  if (
+    plan.self &&
+    review.self !== undefined &&
+    now.self !== review.self &&
+    replays(review.self, now.self, head.path, baseText, "own", head.ownContentHash)
+  ) {
+    replayed.self = now.self;
+  }
+  return reviewOf(before, replayed);
+}
+
+export interface SurfaceChange {
+  id: string;
+  path: string;
+  status: string;
+  /** Surface IDs the head declares and the base's copy does not, sorted. */
+  added: string[];
+  /** Surface IDs the base's copy declares and the head does not, sorted. */
+  removed: string[];
+  /** Surface IDs both declare whose list of leading knowledge differs, sorted. */
+  changed: string[];
+}
+
+export const SURFACES_NOTE =
+  "Slices past draft whose surfaces (VSA §3) gained or lost a surface ID, or changed which knowledge leads one. A " +
+  "surface ID is written into the help file of every reader the slice is available to once the slice is approved: " +
+  "check that no ID below names something one of those readers may not see.";
+
+/** Each changed slice past draft whose surfaces differ from the base's copy as migrated, sorted by ID. */
+export function surfaceChanges(
+  graph: Graph,
+  changed: readonly string[],
+  atBase: (path: string) => string | null,
+  carrier: CarrierName,
+): SurfaceChange[] {
+  const touched = new Set(changed);
+  const out: SurfaceChange[] = [];
+  for (const id of [...graph.artifacts.keys()].sort(compareStrings)) {
+    const { path, meta } = graph.artifacts.get(id) as Artifact;
+    if (meta.type !== "slice" || meta.status === "draft" || !touched.has(path)) continue;
+    const text = atBase(path);
+    const before = text === null ? null : readBaseCopy(path, text, carrier);
+    const now = meta.slice?.surfaces ?? {};
+    const then = before?.meta.slice?.surfaces ?? {};
+    const keys = (map: object) => Object.keys(map).sort(compareStrings);
+    const added = keys(now).filter((key) => !Object.hasOwn(then, key));
+    const removed = keys(then).filter((key) => !Object.hasOwn(now, key));
+    const listChanged = keys(now).filter(
+      (key) => Object.hasOwn(then, key) && canonicalJson(now[key].knowledge) !== canonicalJson(then[key].knowledge),
+    );
+    if (added.length + removed.length + listChanged.length === 0) continue;
+    out.push({ id, path, status: meta.status, added, removed, changed: listChanged });
   }
   return out;
 }
@@ -259,6 +435,15 @@ export function reviewCommand(
           (path) => fileAt(repo.root, base.commit, movedFrom.get(path) ?? path),
           options.carrier,
         );
+  const surfaces =
+    base === null
+      ? []
+      : surfaceChanges(
+          graph,
+          changed,
+          (path) => fileAt(repo.root, base.commit, movedFrom.get(path) ?? path),
+          options.carrier,
+        );
   const failing =
     (options.failOnDrift === true && drifted.some((item) => !item.acknowledged)) ||
     (options.failOnBaselineGrowth === true && (baseline?.added?.length ?? 0) > 0);
@@ -293,6 +478,7 @@ export function reviewCommand(
         impact: impacts,
         drift: drifted,
         statusChanges: statuses,
+        surfaceChanges: surfaces,
         ...(baseline === null ? {} : { baseline }),
         unattributed,
       }),
@@ -346,7 +532,7 @@ export function reviewCommand(
     out.push(...item.code.map((path) => `- Code changed: ${path}`));
     out.push(`- Records describing it, none changed: ${item.records.join(", ")}`);
   }
-  out.push("", `## Approvals and status changes (${statuses.length})`, "", STATUS_NOTE, "");
+  out.push("", `## Approvals, reviews and status changes (${statuses.length})`, "", STATUS_NOTE, "");
   if (base === null) out.push("There is no base, so nothing was compared.");
   else if (statuses.length === 0) out.push("None.");
   for (const item of statuses) {
@@ -356,7 +542,21 @@ export function reviewCommand(
       item.approval === null
         ? "no approval stated"
         : `approval${item.approvalChanged ? "" : " (unchanged)"}: ${approvalSummary(item.approval)}`;
-    out.push(`- ${item.id} (${item.type}): ${status}; ${approval}`);
+    const review = item.reviewChanged
+      ? `; review written or changed: ${item.reviewedBy ?? "no reviewer"}, ${item.reviewedAt ?? "no date"}`
+      : "";
+    out.push(`- ${item.id} (${item.type}): ${status}; ${approval}${review}`);
+  }
+  out.push("", `## Surfaces changed (${surfaces.length})`, "", SURFACES_NOTE, "");
+  if (base === null) out.push("There is no base, so nothing was compared.");
+  else if (surfaces.length === 0) out.push("None.");
+  for (const item of surfaces) {
+    const parts = [
+      ...item.added.map((key) => `added \`${key}\``),
+      ...item.removed.map((key) => `removed \`${key}\``),
+      ...item.changed.map((key) => `leads changed for \`${key}\``),
+    ];
+    out.push(`- ${item.id} (${item.status}): ${parts.join("; ")}`);
   }
   if (baseline !== null) out.push("", ...baselineSection(baseline));
   out.push("", `## Changed files no artifact accounts for (${unattributed.length})`, "");

@@ -22,8 +22,8 @@ const REGISTRIES: Registries = {
 const frontmatter = (id: string, type: string, extra: string) => `---
 markset: 0
 intentset:
-  spec: '0.2'
-  profile: intentset/${type}/0.2
+  spec: '0.3'
+  profile: intentset/${type}/0.3
   id: ${id}
   type: ${type}
   title: ${id}

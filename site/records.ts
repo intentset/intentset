@@ -132,7 +132,7 @@ export interface ExampleRecord {
   links: Array<[string, string[]]>;
   /** A knowledge record's `tips`, explained id to sentence, in source order; empty on every other type. */
   tips: Array<[string, string]>;
-  /** A knowledge record's review: who, when, and the ids its `intentset.org/review` pins name. Null when unreviewed. */
+  /** A knowledge record's review: who, when, and the ids its `review` pins name. Null when unreviewed. */
   review: { by: string; at: string; pins: string[] } | null;
   /** The file's name, e.g. BEH-ASMT-SCHEDULE.md. */
   file: string;
@@ -199,8 +199,7 @@ export function readRecord(file: string, source: string): ExampleRecord {
   }
   let review: ExampleRecord["review"] = null;
   if (typeof meta.reviewedBy === "string" && typeof meta.reviewedAt === "string") {
-    const pinned = isMap(meta.extensions) ? meta.extensions["intentset.org/review"] : undefined;
-    const sources = isMap(pinned) ? pinned.sources : undefined;
+    const sources = isMap(meta.review) ? meta.review.sources : undefined;
     review = { by: meta.reviewedBy, at: meta.reviewedAt, pins: isMap(sources) ? Object.keys(sources) : [] };
   }
   return {

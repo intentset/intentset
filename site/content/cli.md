@@ -56,7 +56,9 @@ intentset approve BEH-ASMT-SCHEDULE RULE-ASMT-FUTURE --by ana.reyes
 
 It changes only drafts, writing each one's status and who approved it and when, and for a knowledge record the review that publication requires. It validates the model with the approvals applied and writes nothing if that adds an error, and `--dry-run` shows what it would write. It never commits: the approval is a diff, and `review` lists it for whoever reviews the pull request.
 
-`publish` writes reviewed knowledge for one audience and release as Markset documents. `--html` adds each one as a complete page, `<ID>.html`, for a static site. A product that shows the article inside its own interface, in a help drawer or a panel, asks for `--html=fragment` instead and gets `<ID>.fragment.html`: the page's content without its title heading, sanitized the same way, with no stylesheet and no provenance, which stays in the Markset document.
+A person who reviews approved knowledge again, after a source it explains changed, renews its review without returning it to draft: `approve KB-ASMT-SCHEDULE --renew-review --by ana.reyes` writes who reviewed it, when, and the sources as they are now, and leaves its status and approval alone. A move to a new specification version needs no renewal: `migrate` re-pins each review that was current before the move.
+
+`publish` writes reviewed knowledge for one reader and release as Markset documents; repeat `--audience` or `--role` for a reader who holds more than one, and the publication is for a reader who holds every one. `--html` adds each one as a complete page, `<ID>.html`, for a static site. A product that shows the article inside its own interface, in a help drawer or a panel, asks for `--html=fragment` instead and gets `<ID>.fragment.html`: the page's content without its title heading, sanitized the same way, with no stylesheet and no provenance, which stays in the Markset document.
 
 ## Every command
 

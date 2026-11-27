@@ -127,19 +127,25 @@ function input(
     resources: RESOURCES,
     localImports: (path) => IMPORTS[path] ?? [],
     globalInputs: ["pnpm-lock.yaml", "tsconfig.json"],
-    dependencyMode: "files",
     ...overrides,
   };
 }
 
 const hashOf = (overrides?: Parameters<typeof input>[0]) => computeSubject(input(overrides)).hash;
 
+/** TEST-A naming RES-DATA, which SLICE-A lists without owning, in `exercises`: its files count. */
+const EXERCISING_DATA: Record<string, Node> = {
+  "TEST-A": {
+    ...BASE["TEST-A"],
+    verification: { ...(BASE["TEST-A"].verification as Node["verification"] & object), exercises: ["RES-DATA"] },
+  },
+};
+
 /**
  * SLICE-B is a dependency of the implementing SLICE-A with a public surface (b/index.ts), a contract it exposes and the
  * decision that contract names, and a file of its own (b/internal.ts) that nothing public imports.
  */
-const ENTRYPOINT = {
-  dependencyMode: "entrypoint" as const,
+const DEPENDENCY = {
   nodes: {
     "SLICE-B": {
       type: "slice",
@@ -154,109 +160,39 @@ const ENTRYPOINT = {
   files: { "b/index.ts": "public", "b/internal.ts": "private" },
 };
 
-describe("BEH-EVIDENCE-CURRENT: a dependency counts through its contract (dependencies: entrypoint)", () => {
-  test("a change to a dependency's internal file does not move the subject, and files mode does", () => {
-    const base = hashOf(ENTRYPOINT);
-    assert.equal(hashOf({ ...ENTRYPOINT, files: { ...ENTRYPOINT.files, "b/internal.ts": "private!" } }), base);
-    const files = (extra: Record<string, string> = {}) =>
-      hashOf({ ...ENTRYPOINT, dependencyMode: "files", files: { ...ENTRYPOINT.files, ...extra } });
-    assert.notEqual(files({ "b/internal.ts": "private!" }), files());
-  });
-
-  test("an entrypoint file, a contract record, a decision it names or the dependency's own binding fields move it", () => {
-    const base = hashOf(ENTRYPOINT);
-    assert.notEqual(hashOf({ ...ENTRYPOINT, files: { ...ENTRYPOINT.files, "b/index.ts": "public!" } }), base);
-    const changed = (id: string) =>
-      hashOf({
-        ...ENTRYPOINT,
-        nodes: { ...ENTRYPOINT.nodes, [id]: { ...ENTRYPOINT.nodes[id as "CON-B"], version: "2" } },
-      });
-    assert.notEqual(changed("CON-B"), base);
-    assert.notEqual(changed("ADR-B2"), base);
-    const withSlice = (slice: Node) => hashOf({ ...ENTRYPOINT, nodes: { ...ENTRYPOINT.nodes, "SLICE-B": slice } });
-    const sliceB = ENTRYPOINT.nodes["SLICE-B"];
-    assert.notEqual(withSlice({ ...sliceB, links: { ...sliceB.links, dependsOn: [] } }), base, "its dependsOn");
+describe("BEH-EVIDENCE-CURRENT: a dependency contributes every file it claims (ADR 0026)", () => {
+  test("a change to a dependency's internal file moves the subject, as a change to its entrypoint does", () => {
+    const base = hashOf(DEPENDENCY);
+    assert.notEqual(hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "b/internal.ts": "private!" } }), base);
+    assert.notEqual(hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "b/index.ts": "public!" } }), base);
     assert.notEqual(
-      withSlice({
-        ...sliceB,
-        slice: {
-          ...sliceB.slice,
-          claims: [
-            { kind: "source", path: "b/**" },
-            { kind: "source", path: "x/**" },
-          ],
-        },
-      }),
+      hashOf({ ...DEPENDENCY, files: { ...DEPENDENCY.files, "c/c.ts": "c!" } }),
       base,
-      "its claims",
-    );
-    assert.notEqual(
-      withSlice({ ...sliceB, slice: { ...sliceB.slice, usesResources: ["RES-OTHER"] } }),
-      base,
-      "its resources",
-    );
-    assert.notEqual(
-      withSlice({ ...sliceB, slice: { ...sliceB.slice, entrypoints: ["b/internal.ts"] } }),
-      base,
-      "its entrypoints",
+      "a dependency of a dependency",
     );
   });
 
-  test("the contract and decision records are parts, owned by none, and the dependency's internals are listed", () => {
-    const subject = computeSubject(input(ENTRYPOINT));
-    const kinds = (kind: string) => subject.parts.filter((p) => p.kind === kind).map((p) => p.id);
-    assert.deepEqual(kinds("contract"), ["CON-B"]);
-    assert.deepEqual(kinds("decision"), ["ADR-B2"]);
+  test("its files are parts it owns, and no contract or decision record is a part", () => {
+    const subject = computeSubject(input(DEPENDENCY));
     assert.deepEqual(
       subject.parts.filter((p) => p.kind === "slice-file" && p.owner === "SLICE-B").map((p) => p.id),
-      ["b/index.ts"],
+      ["b/index.ts", "b/internal.ts"],
     );
-    assert.deepEqual(subject.dependencyInternals, [
-      { id: "SLICE-B", files: ["b/internal.ts"] },
-      { id: "SLICE-C", files: ["c/c.ts"] },
-    ]);
-    assert.deepEqual(computeSubject(input({ ...ENTRYPOINT, dependencyMode: "files" })).dependencyInternals, []);
-  });
-
-  test("the implementing slice's own files, and an exercised slice's, count fully", () => {
-    const base = hashOf(ENTRYPOINT);
-    assert.notEqual(hashOf({ ...ENTRYPOINT, files: { ...ENTRYPOINT.files, "a/two.ts": "two!" } }), base);
-    const exercising = {
-      "TEST-A": {
-        type: "verification",
-        links: { verifies: ["BEH-A"] },
-        verification: {
-          method: "automated" as const,
-          locator: "tests/a.test.ts",
-          selector: "a",
-          exercises: ["SLICE-B"],
-        },
-      },
-    };
-    const exercised = { ...ENTRYPOINT, nodes: { ...ENTRYPOINT.nodes, ...exercising } };
-    const before = hashOf(exercised);
-    assert.notEqual(hashOf({ ...exercised, files: { ...exercised.files, "b/internal.ts": "private!" } }), before);
-    assert.deepEqual(computeSubject(input(exercised)).dependencyInternals, [{ id: "SLICE-C", files: ["c/c.ts"] }]);
-  });
-
-  test("a dependency file another part hashes is not reported as unseen", () => {
-    const nodes = {
-      ...ENTRYPOINT.nodes,
-      "SLICE-C": {
-        type: "slice",
-        slice: { claims: [{ kind: "source", path: "c/**" }], entrypoints: ["b/internal.ts"] },
-      },
-    };
-    const subject = computeSubject(input({ ...ENTRYPOINT, nodes }));
-    assert.deepEqual(subject.dependencyInternals, [{ id: "SLICE-C", files: ["c/c.ts"] }]);
-  });
-
-  test("a dependency of a dependency is a dependency too", () => {
-    const subject = computeSubject(input(ENTRYPOINT));
     assert.deepEqual(
-      subject.parts.filter((p) => p.kind === "slice-file" && p.owner === "SLICE-C"),
-      [],
+      subject.parts.filter((p) => p.kind === "slice-file" && p.owner === "SLICE-C").map((p) => p.id),
+      ["c/c.ts"],
     );
+    assert.ok(!(SUBJECT_PART_KINDS as readonly string[]).includes("contract"));
+    assert.ok(!(SUBJECT_PART_KINDS as readonly string[]).includes("decision"));
+    const changed = (id: "CON-B" | "ADR-B2") =>
+      hashOf({ ...DEPENDENCY, nodes: { ...DEPENDENCY.nodes, [id]: { ...DEPENDENCY.nodes[id], version: "2" } } });
+    assert.equal(changed("CON-B"), hashOf(DEPENDENCY), "a contract record a dependency exposes is not in the subject");
+    assert.equal(changed("ADR-B2"), hashOf(DEPENDENCY));
+  });
+
+  test("the hash of a dependency with a contract is what `dependencies: files` gave before 0.3, so no default subject moved", () => {
+    // Computed by the code of 948c42d under `dependencies: files`, the default it removed (ADR 0026).
+    assert.equal(hashOf(DEPENDENCY), "84ac612849b2a7b8d6ede359ffae115ea7134fea1872d1016cb2d3e799b2fda7");
   });
 });
 
@@ -276,9 +212,8 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
   });
 
   test("the hash of a fixed input is pinned, so a change to the format is a decision", () => {
+    // The same value before and after ADR 0026: the rule it kept is the default this input was hashed under.
     assert.equal(hashOf(), "d7b2dd72267041ba689fbd2ee9f57dd457bf624b3ccdc0709c2989d8b88cf103");
-    // `used` is the rule of 0.7.0, and hashes this input as 0.7.0 did.
-    assert.equal(hashOf({ resourceMode: "used" }), "6ca38ac8b3f2e2a9aa7a485463e71b8e66972e0625985672ebc2f35b2c977a9d");
   });
 
   test("it includes the implementing slice, its dependsOn closure and no other slice", () => {
@@ -418,14 +353,6 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
       subject.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
       [["RES-OTHER", "exercises"]],
     );
-    const used = computeSubject(input({ nodes: exercising, resourceMode: "used" }));
-    assert.deepEqual(
-      used.parts.filter((p) => p.kind === "resource").map((p) => [p.id, p.why]),
-      [
-        ["RES-DATA", "usesResources"],
-        ["RES-OTHER", "exercises"],
-      ],
-    );
   });
 
   test("a resource named in exercises counts whether or not a slice lists it, and says so with exercises", () => {
@@ -455,7 +382,6 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
       [],
     );
     assert.deepEqual(subject.unexercised, [{ id: "RES-DATA", files: ["data/table.ts"] }]);
-    assert.deepEqual(computeSubject(input({ resourceMode: "used" })).unexercised, []);
   });
 
   test("the slice's usesResources is a binding field, so listing or unlisting a resource still moves the subject", () => {
@@ -503,12 +429,13 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     ]);
   });
 
-  test("used mode hashes the files of every resource an included slice lists", () => {
-    const base = hashOf({ resourceMode: "used" });
-    assert.notEqual(hashOf({ resourceMode: "used", files: { "data/table.ts": "table!" } }), base);
+  test("an exercised resource is hashed by its registry entry and every file its path matches", () => {
+    const nodes = EXERCISING_DATA;
+    const base = hashOf({ nodes });
+    assert.notEqual(hashOf({ nodes, files: { "data/table.ts": "table!" } }), base);
     assert.notEqual(
       hashOf({
-        resourceMode: "used",
+        nodes,
         resources: new Map([
           ...RESOURCES,
           ["RES-DATA", { record: { id: "RES-DATA", path: "data/**" }, files: ["data/table.ts"] }],
@@ -519,7 +446,7 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     );
     assert.notEqual(
       hashOf({
-        resourceMode: "used",
+        nodes,
         resources: new Map([
           ...RESOURCES,
           ["RES-DATA", { ...(RESOURCES.get("RES-DATA") as object), files: ["data/table.ts", "data/new.ts"] } as never],
@@ -528,7 +455,7 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
       base,
       "a file added to the resource",
     );
-    assert.equal(hashOf({ resourceMode: "used", files: { "data/other.ts": "other!" } }), base, "an unlisted resource");
+    assert.equal(hashOf({ nodes, files: { "data/other.ts": "other!" } }), base, "a resource it does not exercise");
     assert.notEqual(base, hashOf());
   });
 
@@ -573,7 +500,8 @@ describe("BEH-EVIDENCE-CURRENT: the subject hash", () => {
     const after = computeSubject(input({ files: { "b/b.ts": "b!", "pnpm-lock.yaml": "lock!" } }));
     assert.deepEqual(movedParts(before, after), ["global-input pnpm-lock.yaml", "slice-file b/b.ts (SLICE-B)"]);
     assert.deepEqual(movedParts(before, before), []);
-    const kinds = new Set(computeSubject(input({ resourceMode: "used", ...ENTRYPOINT })).parts.map((p) => p.kind));
+    const every = { ...DEPENDENCY, nodes: { ...DEPENDENCY.nodes, ...EXERCISING_DATA } };
+    const kinds = new Set(computeSubject(input(every)).parts.map((p) => p.kind));
     for (const kind of SUBJECT_PART_KINDS) assert.ok(kinds.has(kind), kind);
   });
 
