@@ -84,12 +84,14 @@ of its own above them, it is not read.
   says whether building it produced the outcome, and only evidence read in its window answers that.
 - Commit run evidence (`.intentset/evidence/`) or an export. They describe one run and go stale as the code it checks changes.
 - Edit generated output: an export, the Atlas, published pages.
+- Change `.intentset/profile.yaml` or `.intentset/architecture.yaml` so that the architecture check passes. They
+  are the team's architecture policy: fix the code, or ask a person whether the policy should change.
 
 ## Before you finish
 
 ```sh
 pnpm exec intentset validate
-pnpm exec intentset architecture check     # when .intentset/architecture.yaml exists
+pnpm exec intentset architecture check     # when .intentset/architecture.yaml or .intentset/profile.yaml exists
 pnpm exec intentset review --base main
 ```
 
@@ -150,7 +152,9 @@ A slice record says which code delivers behaviors. Modeling code that already ex
 the code as it is: `claims` are the paths it owns, `entrypoints` the files other code may import, and
 `delivery: built` says the code exists. All six keys under `slice` are required. Write `layers: {}` where the
 code has no layers and `usesResources: []` where it uses no shared resource, and say so in Responsibility; never
-invent a layer the code does not have, since a reviewer reads it as the design:
+invent a layer the code does not have, since a reviewer reads it as the design. A layer's name is one the
+repository's profile lists: `layers` in `.intentset/profile.yaml` when the repository has that file, and
+otherwise presentation, application, policy, model and external:
 
 ```markdown
 ---
