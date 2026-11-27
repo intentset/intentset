@@ -9,14 +9,17 @@
  * `{ body, frontmatter, ending }`:
  *
  * - `frontmatter` is the whole parsed frontmatter, `markset` and unknown
- *   top-level keys included, without `status`, `delivery`, `reviewedBy`,
- *   `reviewedAt`, `approval`, `formalizes` and `review` under `intentset`,
- *   and without the `intentset.org/review` extension (and `extensions` itself
- *   when nothing else is in it). `approval` says how the record was approved
- *   and `formalizes` where its promise came from (ADR 0020); neither is the
- *   promise. `review` is a knowledge record's own pins, which 0.3 moved out of
- *   that extension (ADR 0025); both are left out, so no hash taken before the
- *   move differs from the one taken after it over the same record;
+ *   top-level keys included, with `markset: true` hashed as `markset: 0`, the
+ *   two declaring the same thing since Markset 0.6.0, so a file moved from one
+ *   form to the other keeps every pin on it; without `status`, `delivery`,
+ *   `reviewedBy`, `reviewedAt`, `approval`, `formalizes` and `review` under
+ *   `intentset`, and without the `intentset.org/review` extension (and
+ *   `extensions` itself when nothing else is in it). `approval` says how the
+ *   record was approved and `formalizes` where its promise came from (ADR
+ *   0020); neither is the promise. `review` is a knowledge record's own pins,
+ *   which 0.3 moved out of that extension (ADR 0025); both are left out, so no
+ *   hash taken before the move differs from the one taken after it over the
+ *   same record;
  * - `body` is everything after the frontmatter, as written;
  * - `ending` is the status when it is `deprecated` or `retired`, and absent
  *   otherwise, so a record that is going away still moves the hash: what a
@@ -55,6 +58,8 @@ export function contentHashOf(
   options: { ending?: boolean } = {},
 ): string {
   const copy: Record<string, unknown> = { ...frontmatter };
+  // `markset: true` and `markset: 0` are one declaration (Markset 0.6.0); hashing both as 0 keeps every pin taken before.
+  if (copy.markset === true) copy.markset = 0;
   const section = frontmatter.intentset;
   let ending: string | undefined;
   if (isRecord(section)) {

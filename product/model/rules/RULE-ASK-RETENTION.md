@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.3'
   profile: intentset/rule/0.3

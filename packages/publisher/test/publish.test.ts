@@ -75,10 +75,10 @@ test("the generated frontmatter reads back, through core and through Markset, as
   const yaml = lines.slice(1, close).join("\n");
   const read = parseYaml(yaml);
   assert.equal(read.error, null);
-  assert.deepEqual(read.value, { markset: 0, [PUBLICATION_KEY]: JSON.parse(JSON.stringify(document.publication)) });
+  assert.deepEqual(read.value, { markset: true, [PUBLICATION_KEY]: JSON.parse(JSON.stringify(document.publication)) });
   assert.equal(Object.hasOwn(read.value ?? {}, "intentset"), false, "a generated document is never a canonical record");
   const parsed = parseDocument(document.markset);
-  assert.equal(parsed.frontmatter?.markset, 0);
+  assert.equal(parsed.frontmatter?.markset, true);
   assert.deepEqual(parsed.diagnostics, []);
   assert.equal(lines[close + 1], markerLine("KB-ASMT-SCHEDULE"));
 });

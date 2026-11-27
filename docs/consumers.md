@@ -3,7 +3,10 @@
 Driftline reads Intentset models through the export (`spec/export.md`). Streamlane does not: it reads the repository's
 records at a commit through its GitHub App and the run records published as assets of the repository's
 `evidence-records` release (Streamlane ADRs 0103 and 0104, which rejected reading the export), and writes the export
-only as a producer. intentset.org's `/tools/readers/` says which reads by which path. This note maps what a reader of
+only as a producer. A tool that reads the repository needs read access to its contents and its published run
+records; a tool that reads the export needs the JSON document CI writes with `intentset graph`, checked with
+`readExport` from `@intentset/core` (intentset.org's `/tools/readers/`, which said so until 2026-11-26, now redirects
+here). There are no conformance cases for the repository path yet. This note maps what a reader of
 the export needs to the field, report or fixture that supplies it, so implementation starts from the contract rather
 than from this one's code. The rules a consumer follows are spec/export.md §5; what is below is
 where to find things.

@@ -74,7 +74,7 @@ watchTips(root, help, { render?, unrender?, attribute?, MutationObserver?, reque
 
 ```ts
 // @intentset/markset-adapter
-MARKSET_VERSION = "0.4.1"
+MARKSET_VERSION = "0.6.0"
 MARKSET_GUIDE_URL = "https://markset.org/guide.md"   // the agent guide and every syntax remediation point at it
 marksetCarrier(path, source): DocumentInput      // same shape as plainCarrier; a test asserts they agree on every example
 ```

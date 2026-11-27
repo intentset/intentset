@@ -5,7 +5,16 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { Schema } from "../../conformance/src/harness.ts";
@@ -35,11 +44,20 @@ export function temp(t: Context): string {
   return dir;
 }
 
-/** A temporary repository holding the scheduling example, made by `init --example`. */
+/**
+ * A temporary repository holding Lantern's scheduling example, the conformance suite's baseline: `init`, then its
+ * records and registries copied in, as `init --example` wrote them until it moved to the shop (2026-11-26).
+ */
 export async function example(t: Context): Promise<string> {
   const dir = temp(t);
-  const init = await run(dir, "init", "--example", "--repository", "example/lantern");
+  const init = await run(dir, "init", "--repository", "example/lantern");
   assert.equal(init.code, 0, init.err);
+  const lantern = join(import.meta.dirname, "..", "..", "..", "examples", "scheduling");
+  copyFileSync(join(lantern, "registries.yaml"), join(dir, ".intentset", "registries.yaml"));
+  mkdirSync(join(dir, "product", "scheduling"), { recursive: true });
+  for (const name of readdirSync(lantern).filter((n) => n.endsWith(".md"))) {
+    copyFileSync(join(lantern, name), join(dir, "product", "scheduling", name));
+  }
   return dir;
 }
 

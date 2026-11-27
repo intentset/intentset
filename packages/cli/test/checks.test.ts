@@ -1465,13 +1465,13 @@ test("BEH-ARCH-CHECK: without TypeScript, init and validate at L1 still run, and
       return { code: failed.status ?? -1, out: failed.stdout, err: failed.stderr };
     }
   };
-  const init = cli("init", "--example", "--repository", "example/lantern");
+  const init = cli("init", "--example", "--repository", "example/shop");
   assert.equal(init.code, 0, init.err);
   const l1 = cli("validate");
   assert.equal(l1.code, 0, l1.err);
   assert.match(l1.out, /artifacts, 0 errors/);
   // The scanner is first needed for a file a slice claims; the example plans its paths, so one is written.
-  write(dir, { "src/features/assessment/schedule/index.ts": "export const schedule = 1;\n" });
+  write(dir, { "src/features/accounts/reset/index.ts": "export const reset = 1;\n" });
   for (const argv of [
     ["architecture", "check"],
     ["validate", "--level", "L2"],

@@ -1,11 +1,11 @@
 ---
-markset: 0
+markset: true
 ---
 
 # The tools
 
 {.lead}
-One command does the work in a repository. The rest are what it is built from, and what other tools read the model through. Every package is at {{version}} on npm.
+One command does the work in a repository. The rest are what it is built from, and what other tools read the model through. Every package is on npm.
 
 ## The intentset command
 
@@ -25,7 +25,7 @@ pnpm exec intentset init
 ```
 :::
 
-[[Every command and option](cli/)]{.button .primary} [[Start with one capability](../start/)]{.button}
+[[Every command and option](cli/)]{.button .primary} [[Set up Intentset](../start/)]{.button}
 
 ## The MCP server
 
@@ -33,7 +33,7 @@ pnpm exec intentset init
 
 ## The Product Atlas
 
-`@intentset/atlas` draws a model as static review pages: every record on a page of its own with its text and its links, products and capabilities, each behavior with its rules, ownership, verification and publication readiness, and the diagnostics. `intentset serve` shows them while you work and `--out` writes them to a folder. The Atlas is internal: every page says it may hold restricted records and names the snapshot it describes. [Lantern's map and review pages](../example/atlas/map/) are the one exception, public because Lantern is invented.
+`@intentset/atlas` draws a model as static review pages: the product as a tree, from each product down to each behavior's rules, owner, checks and help; a list of what needs a person; every record on a page of its own with its text, its links and, for a behavior, its trace; products and capabilities, each behavior with its rules, ownership, verification and publication readiness, and the diagnostics. `intentset serve` shows them while you work and `--out` writes them to a folder. The Atlas is internal: every page says it may hold restricted records and names the snapshot it describes. The shop's Atlas is the one exception, public because the shop is invented: [see your model in a browser](serve/) says how to run `intentset serve` and opens it.
 
 ## The publisher and the help runtime
 

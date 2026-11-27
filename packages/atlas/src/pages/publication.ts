@@ -33,6 +33,8 @@ export function publicationPage(model: Model): PageSource {
   ).length;
   const body: string[] = [
     "{.lead}",
+    "Which help articles a publication would release, and which are held back and why.",
+    "",
     "Which projection would publish each knowledge artifact, checked by the publisher's own projection: deny by " +
       "default, every availability dimension intersected, drafts and retired records excluded, and review " +
       "current against the sources it explains. Each projection is checked with one request built from the " +

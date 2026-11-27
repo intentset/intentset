@@ -1,10 +1,11 @@
 /**
  * @intentset/atlas: static review pages over a validated graph (Core §10,
- * milestone M4). Product and capability overview, every record on a page of
+ * milestone M4). The product as a tree (the landing page, which says what each other page is for), what needs a
+ * person, the map, every record on a page of
  * its own with its text first (a behavior's with its detail), engineering
  * ownership, verification status, publication readiness and diagnostics.
  *
- * Every page is generated as Markset source, with `markset: 0` and a derived
+ * Every page is generated as Markset source, with `markset: true` and a derived
  * `intentset/atlas/0.3` block in its frontmatter, then parsed back and
  * rendered by render-html, the way Markset's own site builds its generated
  * pages. A page that does not parse cleanly throws: that is a bug here, not
@@ -28,9 +29,10 @@ import { Model } from "./model.ts";
 import { type AtlasMapLayout, layoutMap, MAP_STYLES, mapHtml } from "./map.ts";
 import { MAP_SCRIPT } from "./map-script.ts";
 import { atlasMeta, type PageSource, pageSource, STYLESHEET, shell } from "./page.ts";
+import { attentionPage } from "./pages/attention.ts";
 import { diagnosticsPage } from "./pages/diagnostics.ts";
 import { mapPage } from "./pages/map.ts";
-import { overviewPage } from "./pages/overview.ts";
+import { productPage } from "./pages/product.ts";
 import { ownershipPage } from "./pages/ownership.ts";
 import { publicationPage } from "./pages/publication.ts";
 import { recordPage } from "./pages/record.ts";
@@ -70,13 +72,14 @@ function pages(input: AtlasInput, pageLink: PageLink = relativeLink, source?: So
   const model = new Model(input);
   const layout = layoutMap(model);
   return [
-    overviewPage(model),
+    productPage(model),
+    attentionPage(model),
+    { ...mapPage(layout), html: mapHtml(layout) },
     recordsPage(model),
     ownershipPage(model),
     verificationPage(model),
     publicationPage(model),
     diagnosticsPage(model),
-    { ...mapPage(layout), html: mapHtml(layout) },
     ...[...model.graph.artifacts.keys()]
       .sort(compareStrings)
       .map((id) => recordPage(model, model.get(id) as Artifact, pageLink, source)),
@@ -97,8 +100,8 @@ export function buildAtlasSources(input: AtlasInput, options: AtlasOptions = {})
 export interface AtlasPage {
   path: string;
   source: string;
-  /** HTML for the source's slot (`placeHtml`): a record's text. The map's comes from `mapHtml`. */
-  html?: string;
+  /** HTML for the source's slots (`placeHtml`), in order: a record's text and its neighborhood. The map's comes from `mapHtml`. */
+  html?: string | readonly string[];
 }
 
 /**

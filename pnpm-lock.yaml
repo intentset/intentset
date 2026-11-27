@@ -114,11 +114,11 @@ importers:
         specifier: ^0.17.1
         version: link:../publisher
       '@markset-lang/parser':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
       '@markset-lang/render-html':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
 
   packages/cli:
     dependencies:
@@ -181,8 +181,8 @@ importers:
         specifier: ^0.17.1
         version: link:../core
       '@markset-lang/parser':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4
@@ -208,11 +208,11 @@ importers:
         specifier: ^0.17.1
         version: link:../markset-adapter
       '@markset-lang/parser':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
       '@markset-lang/render-html':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
 
   packages/verification:
     dependencies:
@@ -226,11 +226,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/cli
       '@markset-lang/parser':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
       '@markset-lang/render-html':
-        specifier: 0.4.1
-        version: 0.4.1(supports-color@7.2.0)
+        specifier: 0.6.0
+        version: 0.6.0(supports-color@7.2.0)
 
 packages:
 
@@ -1811,20 +1811,20 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@markset-lang/chart-table@0.4.1':
-    resolution: {integrity: sha512-v2/zgM/izqVT5CHzXYnNwFn6ZraJRx9SSc6LOI98Y6Z2toz6bwIW7iKlRFqkEZfnXIpUjRN2T7fgtuf175t+ng==}
+  '@markset-lang/chart-table@0.6.0':
+    resolution: {integrity: sha512-/+E3h0lCbCWhifmatCq4/tgArX/zGDfMN3mxg2YMEOmr3EIgaefUFCBjehLvXZje/8ayWzIdymrIs3lxZIV6JQ==}
     engines: {node: '>=22.18'}
 
-  '@markset-lang/diagram-ascii@0.4.1':
-    resolution: {integrity: sha512-vsSDb6M3RwwCGXYDjk7M4gmXO1VP2IEAQk5WpVGawv1d23bhjhpd/B/qZeFSnzkaVMuCvEhBSaAao+T/Q1HuWg==}
+  '@markset-lang/diagram-ascii@0.6.0':
+    resolution: {integrity: sha512-5eOMYRDiGZBRrCYe/cbZZyuG9+5UR6KrwKtCYdFrurOYxSnT+7yMCrbQvuT0MZo6T9XcT8zRfoAWCTb76j4EbA==}
     engines: {node: '>=22.18'}
 
-  '@markset-lang/parser@0.4.1':
-    resolution: {integrity: sha512-ucQStwt1hPYCDcvC/hCW3rbE/BJeKkingHoLt3aoRnAGca+m/tW73lSS6C6Q5b0RjoKkllIHdi7ukw08Czxq+A==}
+  '@markset-lang/parser@0.6.0':
+    resolution: {integrity: sha512-pcueELNMu4XGdS0ExKoj0lbMH2U+VAxPsdAHDh9PTL3ojuX0Vc/LwEHiXa4HaVLzLIFl0jcSDo9i6bBDd8/Riw==}
     engines: {node: '>=22.18'}
 
-  '@markset-lang/render-html@0.4.1':
-    resolution: {integrity: sha512-FEMqd/tpbAWYJ1RAZjne7zRWJvxtoj4lxDzWvkXae+9ynANJ5sIUCdEKKnFUrKb8C3f54RiY1OgVE8aeFNSdMg==}
+  '@markset-lang/render-html@0.6.0':
+    resolution: {integrity: sha512-U+ylRmcxJP2KUszMFDkAkJI/t4qRyZB0QihYk/BTkzjRUWbXVNB0uSOp0dpnvKrn9EcNuImEkJM+RG+9CACDow==}
     engines: {node: '>=22.18'}
 
   '@modelcontextprotocol/sdk@1.32.0':
@@ -3637,9 +3637,6 @@ packages:
 
   mdast-util-to-hast@13.2.1:
     resolution: {integrity: sha512-cctsq2wp5vTsLIcaymblUriiTcZd0CwWtCbLvrOzYCDZoWyMNV8sZ7krj09FSnsiJi3WVsHLM4k6Dq/yaPyCXA==}
-
-  mdast-util-to-markdown@2.1.3:
-    resolution: {integrity: sha512-wgyJtgUkUcdU7zci7uuwc/tzoAhm0TswWhaXuvnWolqug+8jY7bgNkBBL0dYBnHgc/tHL7lCzRdPsdUxUKKBqw==}
 
   mdast-util-to-markdown@2.2.0:
     resolution: {integrity: sha512-2Jn/ADrHFFyyniBMi0bncTbJqU78K3/TEYvzvwrWWzD9MYPUa/Gm4r3nOeKFQg/PDM5BsbDYdc8ackW4NTY6NA==}
@@ -6841,11 +6838,11 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@markset-lang/chart-table@0.4.1': {}
+  '@markset-lang/chart-table@0.6.0': {}
 
-  '@markset-lang/diagram-ascii@0.4.1': {}
+  '@markset-lang/diagram-ascii@0.6.0': {}
 
-  '@markset-lang/parser@0.4.1(supports-color@7.2.0)':
+  '@markset-lang/parser@0.6.0(supports-color@7.2.0)':
     dependencies:
       '@types/mdast': 4.0.4
       mdast-util-from-markdown: 2.0.3(supports-color@7.2.0)
@@ -6862,11 +6859,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@markset-lang/render-html@0.4.1(supports-color@7.2.0)':
+  '@markset-lang/render-html@0.6.0(supports-color@7.2.0)':
     dependencies:
-      '@markset-lang/chart-table': 0.4.1
-      '@markset-lang/diagram-ascii': 0.4.1
-      '@markset-lang/parser': 0.4.1(supports-color@7.2.0)
+      '@markset-lang/chart-table': 0.6.0
+      '@markset-lang/diagram-ascii': 0.6.0
+      '@markset-lang/parser': 0.6.0(supports-color@7.2.0)
       '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
       hast-util-to-html: 9.0.5
@@ -8816,7 +8813,7 @@ snapshots:
       devlop: 1.1.0
       escape-string-regexp: 5.0.0
       mdast-util-from-markdown: 2.0.3(supports-color@7.2.0)
-      mdast-util-to-markdown: 2.1.3
+      mdast-util-to-markdown: 2.2.0
       micromark-extension-frontmatter: 2.0.0
     transitivePeerDependencies:
       - supports-color
@@ -8827,7 +8824,7 @@ snapshots:
       devlop: 1.1.0
       markdown-table: 3.0.4
       mdast-util-from-markdown: 2.0.3(supports-color@7.2.0)
-      mdast-util-to-markdown: 2.1.3
+      mdast-util-to-markdown: 2.2.0
     transitivePeerDependencies:
       - supports-color
 
@@ -8847,20 +8844,6 @@ snapshots:
       unist-util-position: 5.0.0
       unist-util-visit: 5.1.0
       vfile: 6.0.3
-
-  mdast-util-to-markdown@2.1.3:
-    dependencies:
-      '@types/mdast': 4.0.4
-      '@types/unist': 3.0.3
-      longest-streak: 3.1.0
-      mdast-util-phrasing: 4.1.0
-      mdast-util-to-string: 4.0.0
-      micromark-util-character: 2.1.1
-      micromark-util-classify-character: 2.0.1
-      micromark-util-decode-string: 2.0.1
-      micromark-util-html-tag-name: 2.0.1
-      unist-util-visit: 5.1.0
-      zwitch: 2.0.4
 
   mdast-util-to-markdown@2.2.0:
     dependencies:

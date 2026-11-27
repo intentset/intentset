@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 ---
 
 # The intentset command
@@ -8,6 +8,8 @@ markset: 0
 `intentset` reads the records in a repository and reports on them. `validate`, `graph`, `architecture check`, `evidence stale`, `impact`, `context`, `list` and `review` execute nothing, reach no network and never change a record; publishing, serving and approving are separate commands you run on purpose.
 
 ## Install
+
+Needs Node 22.18 or later.
 
 :::tabs
 ### npm
@@ -43,6 +45,8 @@ intentset list --type behavior --status draft --delivery built
 ```
 
 `--count-by` counts the matches by one field instead, and `--from` reads an export rather than the repository, with the same answer.
+
+To bind test results, `evidence import` reads a report from Vitest, Playwright or node:test (TAP reporter), given as `--from vitest`, `--from playwright` or `--from node-tap`, and writes run records bound to the commit, the graph and, where slices claim files, each verification's subject, so a pass stays current while what it checked is unchanged.
 
 To approve what you have read, `approve` takes record IDs or the same fields as `list`, and the name the record is to give for its approver:
 

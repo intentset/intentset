@@ -19,8 +19,8 @@
         "sources": [
           "/specifications/core/",
           "/how-it-works/",
-          "/example/CAP-ASMT-ASSIGN/",
-          "/example/BEH-ASMT-SCHEDULE/"
+          "/example/atlas/records/CAP-ACCOUNTS.html",
+          "/example/atlas/records/BEH-RESET-PASSWORD.html"
         ]
       }
     },
@@ -36,7 +36,12 @@
       "question": "Does having a verification record mean a behavior is verified?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/specifications/core/", "/how-it-works/", "/guide/", "/example/TEST-ASMT-SCHEDULE/"]
+        "sources": [
+          "/specifications/core/",
+          "/how-it-works/",
+          "/guide/",
+          "/example/atlas/records/TEST-RESET-LINK-EXPIRY.html"
+        ]
       }
     },
     {
@@ -49,7 +54,7 @@
           "/specifications/core/",
           "/specifications/publication/",
           "/how-it-works/",
-          "/example/KB-ASMT-SCHEDULE/"
+          "/example/atlas/records/KB-RESET-PASSWORD.html"
         ]
       }
     },
@@ -57,15 +62,20 @@
       "id": "core-markset",
       "topic": "core concepts",
       "question": "What is Markset and why do Intentset records use it?",
-      "expect": { "outcome": "answered", "sources": ["/markset/", "/specifications/core/", "/how-it-works/"] }
+      "expect": { "outcome": "answered", "sources": ["/glossary/", "/specifications/core/", "/how-it-works/"] }
     },
     {
-      "id": "core-lantern",
+      "id": "core-example-shop",
       "topic": "core concepts",
-      "question": "What is Lantern? Is it a real product I can use?",
+      "question": "Is the online shop in the examples a real product I can use?",
       "expect": {
         "outcome": "answered",
-        "sources": ["/example/PRD-LANTERN/", "/example/INT-PREPARE/", "/how-it-works/", "/start/"],
+        "sources": [
+          "/example/atlas/records/PRD-SHOP.html",
+          "/example/atlas/records/INT-SELF-SERVE.html",
+          "/how-it-works/",
+          "/start/"
+        ],
         "includes": ["invent|fiction|not a real|example"]
       }
     },

@@ -151,19 +151,19 @@ or with the trailer. The architecture check needs TypeScript 7; on an earlier Ty
 
 ## Record format
 
-A record is a Markset document: Markdown with YAML frontmatter under \`intentset:\` beside \`markset: 0\`, and its
+A record is a Markset document: Markdown with YAML frontmatter under \`intentset:\` beside \`markset: true\`, and its
 level-one heading repeats its title. Plain Markdown is valid Markset. For the rest of Markset's syntax, the cards,
 callouts, tables and other constructs a record may use and the codes \`validate\` reports for them, read Markset's
 guide at ${MARKSET_GUIDE_URL}, or print it with \`${markset}\`.
 
 An existing record of the same type in this repository is the best template; in a repository with none yet,
-\`${run} init --example --root <an empty directory>\` writes one record of each type there to read. A capability sits
+\`${run} init --example --root <an empty directory>\` writes a small example model there to read. A capability sits
 under an outcome, an outcome under an intent, and an intent under the product, so the first capability brings those
 three with it. A new behavior looks like this, one recognizable promise including how it fails:
 
 \`\`\`markdown
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.3'
   profile: intentset/behavior/0.3
@@ -204,7 +204,7 @@ matches a run to it:
 
 \`\`\`markdown
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.3'
   profile: intentset/verification/0.3

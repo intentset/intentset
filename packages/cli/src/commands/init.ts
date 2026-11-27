@@ -3,7 +3,7 @@
  * writes `.intentset/config.yaml`, an empty-but-valid
  * `.intentset/registries.yaml` and `.intentset/agents.md`, the guide coding
  * agents follow to keep the model current, and with `--example` the
- * scheduling example's records under `product/scheduling/` and its
+ * shop example's records under `product/shop/`, its code and tests under `src/`, and its
  * registries in place of the empty ones. `--agents` writes the guide alone,
  * for a repository initialized before there was one, with the scope its
  * config already names. Every target is checked before anything is written,
@@ -11,7 +11,7 @@
  * overwritten, not even by a race.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareStrings, DEFAULT_IGNORE, readConfig, readRegistries } from "@intentset/core";
 import { AGENT_GUIDE_PATH, AGENT_POINTERS, agentGuide, detectPackageManager } from "../agents.ts";
@@ -20,7 +20,7 @@ import { CONFIG_PATH } from "../repository.ts";
 
 export const REGISTRIES_PATH = ".intentset/registries.yaml";
 export const DEFAULT_INIT_SCOPE = "product/**/*.md";
-const EXAMPLE_TARGET = "product/scheduling";
+const EXAMPLE_TARGET = "product/shop";
 
 export interface InitOptions {
   root?: string;
@@ -68,19 +68,29 @@ export const EMPTY_REGISTRIES_TEXT = [
 ].join("\n");
 
 /**
- * The scheduling example: this repository's own copy when running from a
- * checkout, otherwise the one @intentset/conformance-suite ships. Null when
- * neither is present.
+ * The shop example, the invented online shop intentset.org tells (2026-11-26; Lantern's scheduling example until
+ * then, which stays the conformance suite's baseline): this repository's own copy when running from a checkout,
+ * otherwise the one @intentset/conformance-suite ships. Null when neither is present.
  */
 export async function exampleDir(): Promise<string | null> {
-  const candidates = [fileURLToPath(new URL("../../../../examples/scheduling/", import.meta.url))];
+  const candidates = [fileURLToPath(new URL("../../../../examples/shop/", import.meta.url))];
   try {
     const suite = (await import("@intentset/conformance-suite")) as { examplesPath?: string };
-    if (typeof suite.examplesPath === "string") candidates.push(join(suite.examplesPath, "scheduling"));
+    if (typeof suite.examplesPath === "string") candidates.push(join(suite.examplesPath, "shop"));
   } catch {
     // Not installed: the checkout's copy is the only candidate.
   }
   return candidates.find((dir) => existsSync(join(dir, "registries.yaml"))) ?? null;
+}
+
+/** The example's code and tests: every file under its src/, as repository-relative paths, sorted. */
+function exampleCode(dir: string): string[] {
+  const src = join(dir, "src");
+  if (!existsSync(src)) return [];
+  return readdirSync(src, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => relative(dir, join(entry.parentPath, entry.name)).split(sep).join("/"))
+    .sort(compareStrings);
 }
 
 export async function initCommand(options: InitOptions, io: Io): Promise<number> {
@@ -95,13 +105,14 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
 
   // Everything to write, decided before anything is written.
   const files = new Map<string, string>([[CONFIG_PATH, configText(repository)]]);
+  let records = 0;
   let registries = EMPTY_REGISTRIES_TEXT;
   if (options.example) {
     const dir = await exampleDir();
     if (dir === null) {
       io.stderr(
-        "intentset init: --example needs the scheduling example, which is in an Intentset checkout under\n" +
-          "examples/scheduling and in the @intentset/conformance-suite package. Neither was found; install\n" +
+        "intentset init: --example needs the shop example, which is in an Intentset checkout under\n" +
+          "examples/shop and in the @intentset/conformance-suite package. Neither was found; install\n" +
           "@intentset/conformance-suite beside @intentset/cli, or run init without --example.\n",
       );
       return 2;
@@ -112,6 +123,10 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
       .sort(compareStrings)) {
       files.set(`${EXAMPLE_TARGET}/${name}`, readFileSync(join(dir, name), "utf8"));
     }
+    // The example's code and tests, which its slices claim and its verifications name (2026-11-26), at the paths the
+    // records give them, so the checks above L1 and the example's own tests run as they would in a real repository.
+    records = files.size - 1;
+    for (const path of exampleCode(dir)) files.set(path, readFileSync(join(dir, path), "utf8"));
   }
   files.set(REGISTRIES_PATH, registries);
   files.set(AGENT_GUIDE_PATH, agentGuide([DEFAULT_INIT_SCOPE], managerAt(root)));
@@ -125,7 +140,7 @@ export async function initCommand(options: InitOptions, io: Io): Promise<number>
   }
 
   if (!create(root, files, io)) return 2;
-  const scope = options.example ? `${files.size - 3} example records in scope` : "an empty scope";
+  const scope = options.example ? `${records} example records in scope` : "an empty scope";
   io.stdout(`Initialized ${quote(repository)} with ${scope}. Next: intentset validate\n`);
   pointers(io);
   return 0;

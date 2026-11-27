@@ -12,7 +12,7 @@ function escapeRegExp(text: string): string {
 const root = resolve(import.meta.dirname, "..");
 
 /** The Markset version every package that renders or parses is pinned to (CLAUDE.md). */
-const MARKSET_VERSION = "0.4.1";
+const MARKSET_VERSION = "0.6.0";
 
 interface Manifest {
   name: string;

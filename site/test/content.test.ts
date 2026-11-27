@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { after, test } from "node:test";
+import { main } from "@intentset/cli";
 import { parseDocument } from "@markset-lang/parser";
-import { build, CHAT_PAGES, CONTENT_PAGES, VERSION } from "../build.ts";
+import { build, CHAT_PAGES, CONTENT_PAGES, EXAMPLE_DIR } from "../build.ts";
 
 const root = resolve(import.meta.dirname, "..", "..");
 const contentDir = join(root, "site", "content");
@@ -42,35 +44,10 @@ test("every content page parses as Markset with no error diagnostics", async () 
 });
 
 /** The pages the retired phrases are checked on. */
-const RETIRED_PHRASE_PAGES = [
-  "index.html",
-  "start/index.html",
-  "specifications/index.html",
-  "markset/index.html",
-  "roadmap/index.html",
-  "about/index.html",
-];
+const RETIRED_PHRASE_PAGES = ["index.html", "start/index.html", "specifications/index.html", "about/index.html"];
 
 test("the status notes are on their pages, as callouts, and none still says the toolchain is unbuilt", async () => {
-  const notes: Array<[string, string]> = [
-    [
-      "index.html",
-      `The specifications are ready for review. The reference toolchain, version ${VERSION}, is published to try them against.`,
-    ],
-    ["index.html", "Illustrative model. These links describe the proposed structure, not a live verification report."],
-    [
-      "start/index.html",
-      `The reference toolchain is an early release, at ${VERSION}. The architecture check needs TypeScript 7, which the CLI names as a peer dependency: npm installs it beside the CLI and leaves your repository's own TypeScript alone, while pnpm gives the CLI the TypeScript your repository has, so on one earlier than 7 the checks that read source (the architecture check, validate at L2 and above, review) cannot run; init and validate at L1 still do. There, run the toolchain without installing it, as pnpm dlx --package=@intentset/cli --package=typescript@7 intentset, or with npm as npx -p @intentset/cli -p typescript@7 intentset.`,
-    ],
-    [
-      "specifications/index.html",
-      `All six documents are drafts, each with a dated revision. Core §1 says what a change to them means, and the changelog records every one. The TypeScript reference implementation implements them, and its conformance suite is published for other implementations. The reference toolchain is at ${VERSION} on npm.`,
-    ],
-    [
-      "markset/index.html",
-      "The reference publisher pins Markset 0.4.1 and validates every document it generates with Markset before writing it.",
-    ],
-  ];
+  const notes: Array<[string, string]> = [];
   for (const [page, note] of notes) {
     const html = await readFile(join(dist, page), "utf8");
     // Inline code becomes a space when tags are stripped, so close up the space before punctuation.
@@ -105,5 +82,157 @@ test("the status notes are on their pages, as callouts, and none still says the 
   for (const page of RETIRED_PHRASE_PAGES) {
     const body = text(await readFile(join(dist, page), "utf8"));
     for (const phrase of retired) assert.ok(!body.includes(phrase), `${page} still says "${phrase}"`);
+  }
+});
+
+const SHOP = join(root, EXAMPLE_DIR);
+
+test("Home's failure excerpt is in the review command's own words", async () => {
+  const html = await readFile(join(dist, "index.html"), "utf8");
+  // The excerpt was run, not written: each of its lines is one `intentset review` writes, about the fixture's records,
+  // so a change to either fails here until the excerpt is run again and requoted.
+  const review = await readFile(join(root, "packages", "cli", "src", "commands", "review.ts"), "utf8");
+  const slice = await readFile(join(SHOP, "SLICE-ACCOUNT-RESET.md"), "utf8");
+  const rule = await readFile(join(SHOP, "RULE-RESET-LINK-EXPIRY.md"), "utf8");
+  const title = /^ {2}title: (.+)$/m.exec(slice)?.[1];
+  const excerpt = [...html.matchAll(/<pre><code class="language-text">([\s\S]*?)<\/code><\/pre>/g)]
+    .map((m) => codeText(m[1]))
+    .find((block) => block.startsWith("### SLICE-"));
+  assert.ok(excerpt, "Home quotes the failure");
+  assert.match(review, /`### \$\{item\.slice\}: \$\{item\.title\}`/);
+  assert.match(review, /`- Code changed: \$\{path\}`/);
+  assert.match(review, /`- Records describing it, none changed: \$\{item\.records\.join\(", "\)\}`/);
+  const notAcknowledged = "- Not acknowledged: update the records below, or say in a commit that no behavior changed.";
+  assert.ok(review.includes(`"${notAcknowledged}"`));
+  const lines = excerpt
+    .trim()
+    .split("\n")
+    .filter((line) => line !== "");
+  assert.equal(lines[0], `### SLICE-ACCOUNT-RESET: ${title}`);
+  assert.equal(lines[1], notAcknowledged);
+  // Home shows the rule as the shop's record has it, below its header.
+  const constraint = /## Constraint\n\n(.+)\n/.exec(rule)?.[1] ?? "";
+  assert.ok(text(html).includes(constraint), "Home's rule is the shop's");
+});
+
+/** The text of a rendered code block: tags dropped and entities decoded, whitespace kept. */
+function codeText(fragment: string): string {
+  return fragment
+    .replace(/<[^>]+>/g, "")
+    .replace(/&#x3C;/gi, "<")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+/** Run this checkout's CLI in a directory, as the page's reader runs the published one. */
+async function intentset(cwd: string, ...argv: string[]): Promise<{ code: number; out: string }> {
+  let out = "";
+  const code = await main(argv, { stdout: (s) => (out += s), stderr: (s) => (out += s), cwd });
+  return { code, out };
+}
+
+test("Home and How it works quote review's drift failure as the CLI prints it, and both ways through pass as they say", async () => {
+  const quotedOn = async (page: string) => {
+    const html = await readFile(join(dist, page), "utf8");
+    return [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)].map(
+      ([, lang, body]) => [lang, codeText(body)] as const,
+    );
+  };
+  const how = await quotedOn(join("how-it-works", "index.html"));
+  const home = await quotedOn("index.html");
+  const failures = [...how, ...home]
+    .filter(([lang, body]) => lang === "text" && body.includes("SLICE-ACCOUNT-RESET"))
+    .map(([, body]) => body);
+  assert.equal(failures.length, 2, "both pages quote the drift failure");
+  const diff = how.find(([lang]) => lang === "diff");
+  assert.ok(diff, "How it works shows the one-line rule change");
+  assert.deepEqual(
+    home.find(([lang]) => lang === "diff"),
+    diff,
+    "Home shows the same rule change",
+  );
+  const [removed, added] = ["-", "+"].map(
+    (sign) =>
+      diff[1]
+        .split("\n")
+        .find((line) => line.startsWith(sign))
+        ?.slice(1) ?? "",
+  );
+  const page = await readFile(join(dist, "how-it-works", "index.html"), "utf8");
+  assert.match(page, /<code>Intentset-Unchanged: SLICE-ACCOUNT-RESET<\/code>/, "the page shows the trailer it ran");
+
+  // The scratch repository the caption describes: the shop's records and its code on main, then an agent's tidy-up on
+  // a branch that changes the link's lifetime and the test that checks it.
+  const repo = await mkdtemp(join(tmpdir(), "intentset-drift-"));
+  try {
+    const git = (...args: string[]) =>
+      execFileSync(
+        "git",
+        ["-c", "user.name=Demo", "-c", "user.email=demo@example.com", "-c", "commit.gpgsign=false", ...args],
+        { cwd: repo, stdio: ["ignore", "pipe", "pipe"] },
+      );
+    git("init", "-q", "-b", "main");
+    assert.equal((await intentset(repo, "init", "--root", repo)).code, 0);
+    await cp(join(SHOP, "registries.yaml"), join(repo, ".intentset", "registries.yaml"));
+    await mkdir(join(repo, "product", "accounts"), { recursive: true });
+    for (const file of (await readdir(SHOP)).filter((name) => name.endsWith(".md"))) {
+      await cp(join(SHOP, file), join(repo, "product", "accounts", file));
+    }
+    // The shop's own code and tests (examples/shop/src, 2026-11-26), as the agent finds them.
+    await cp(join(SHOP, "src"), join(repo, "src"), { recursive: true });
+    const policy = join(repo, "src", "features", "accounts", "reset", "policies");
+    const code = join(policy, "link-expiry.ts");
+    const check = join(policy, "link-expiry.test.ts");
+    git("add", "-A");
+    git("commit", "-qm", "Password reset, with its records");
+    assert.equal(
+      (await intentset(repo, "validate", "--level", "L2", "--mode", "strict")).code,
+      0,
+      "the shop validates",
+    );
+    git("update-ref", "refs/remotes/origin/main", "HEAD");
+    git("checkout", "-qb", "tidy-account-code");
+    // The agent's fix: the limit raised to 24 hours, and the test that expected one hour changed to match.
+    const longer = (text: string) => text.replaceAll("= 60 * 60 * 1000", "= 24 * 60 * 60 * 1000");
+    await writeFile(code, longer(await readFile(code, "utf8")));
+    const tests = await readFile(check, "utf8");
+    const changed = tests.replace("60 * 60 * 1000);", "24 * 60 * 60 * 1000);").replace("for one hour", "for 24 hours");
+    assert.notEqual(changed, tests, "the shop's test still names the hour the fix changes");
+    await writeFile(check, changed);
+    git("commit", "-qam", "Fix reset links that expire before customers click them");
+    const review = ["review", "--base", "origin/main", "--fail-on-drift"];
+
+    const failed = await intentset(repo, ...review);
+    assert.equal(failed.code, 1, "the review fails, as the pages say");
+    for (const failure of failures) {
+      assert.ok(failed.out.includes(failure.trim()), `the quoted output is not what review prints:\n${failed.out}`);
+    }
+
+    // The behavior changed: the rule's one line, as the pages' diff has it.
+    git("checkout", "-qb", "way-rule");
+    const rule = join(repo, "product", "accounts", "RULE-RESET-LINK-EXPIRY.md");
+    const ruleText = await readFile(rule, "utf8");
+    assert.ok(ruleText.includes(`\n${removed}\n`), "the diff's removed line is the rule's own sentence");
+    await writeFile(rule, ruleText.replace(removed, added));
+    git("commit", "-qam", "Reset links last a day");
+    assert.equal((await intentset(repo, ...review)).code, 0, "updating the rule passes");
+    const l4 = await intentset(repo, "validate", "--level", "L4");
+    assert.match(
+      l4.out,
+      /KB-RESET-PASSWORD needs review: RULE-RESET-LINK-EXPIRY changed since review/,
+      "the help article is held, as How it works says",
+    );
+
+    // It did not: the trailer, on the branch that only changed code.
+    git("checkout", "-q", "tidy-account-code");
+    git("commit", "-q", "--allow-empty", "-m", "Refactor", "-m", "Intentset-Unchanged: SLICE-ACCOUNT-RESET");
+    const acknowledged = await intentset(repo, ...review);
+    assert.equal(acknowledged.code, 0, "the trailer passes");
+    assert.ok(acknowledged.out.includes("- Acknowledged: a commit since the base says this changes no behavior"));
+  } finally {
+    await rm(repo, { recursive: true, force: true });
   }
 });

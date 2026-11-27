@@ -36,7 +36,7 @@ export interface PageSource {
    * rendered source when it has none: the map's SVG, or a record's text, rendered from its own parse
    * (record-text.ts). Built here, never from a record's text unescaped.
    */
-  html?: string;
+  html?: string | readonly string[];
   /** Scripts the page loads, relative to the Atlas's root, after `<main>`. Only the map has one (ADR 0015). */
   scripts?: string[];
 }
@@ -49,22 +49,33 @@ export const MAP_SLOT_SOURCE: readonly string[] = ["{.am-slot}", "***"];
 /** The slot as render-html writes it. */
 export const MAP_SLOT = '<hr class="am-slot">';
 
-/** A rendered page with its HTML in the map slot, or after it when the page has no slot. */
-export function placeHtml(rendered: string, html: string): string {
-  if (html === "") return rendered;
-  const at = rendered.indexOf(MAP_SLOT);
-  return at === -1 ? rendered + html : rendered.slice(0, at) + html + rendered.slice(at + MAP_SLOT.length);
+/**
+ * A rendered page with its HTML in its slots: one string in the first slot, or a list filling the slots in order (a
+ * record's text, then its neighborhood). HTML with no slot left goes after the page.
+ */
+export function placeHtml(rendered: string, html: string | readonly string[]): string {
+  let out = rendered;
+  for (const one of typeof html === "string" ? [html] : html) {
+    if (one === "") continue;
+    const at = out.indexOf(MAP_SLOT);
+    out = at === -1 ? out + one : out.slice(0, at) + one + out.slice(at + MAP_SLOT.length);
+  }
+  return out;
 }
 
-/** The pages every page's navigation lists, in order. */
+/**
+ * The pages every page's navigation lists, in order (Gary, 2026-11-26): the product as a tree, which says what each
+ * other page is for, then what is waiting on a person, the map and the records, then the specialist pages.
+ */
 export const NAV: readonly { path: string; label: string }[] = [
-  { path: "index.html", label: "Overview" },
+  { path: "index.html", label: "Product" },
+  { path: "attention.html", label: "Needs attention" },
+  { path: "map.html", label: "Map" },
   { path: "records.html", label: "Records" },
   { path: "ownership.html", label: "Ownership" },
   { path: "verification.html", label: "Verification" },
   { path: "publication.html", label: "Publication" },
   { path: "diagnostics.html", label: "Diagnostics" },
-  { path: "map.html", label: "Map" },
 ];
 
 /** The relative prefix from a page back to the Atlas root: "" or "../". */
@@ -95,25 +106,23 @@ export function snapshotLine(snapshot: AtlasSnapshot): string {
   return `Snapshot: ${commit} · graph hash ${text(snapshot.graphHash.slice(0, 12))} · level ${text(snapshot.level)} · ${scope}`;
 }
 
-/** The notice every page opens with: internal unless the records are an invented example's. */
+/** The one line every page opens with: internal unless the records are an invented example's. */
 const NOTICES: Record<AtlasNotice, string[]> = {
   internal: [
-    "> [!WARNING] Internal: not for publication",
-    "> This Atlas is a derived view of the repository's records and may contain internal and restricted ones. " +
-      "Keep it inside the organization. The files are authoritative; published knowledge comes only from the " +
-      "publisher's projection, never from these pages.",
+    "{.small}",
+    "**Internal, not for publication:** these pages are built from this repository's records and may show internal " +
+      "and restricted ones. The files are authoritative.",
   ],
   example: [
-    "> [!NOTE] An invented example",
-    "> This Atlas is drawn from the records of an invented product, so it can be published to show what the Atlas " +
-      "shows. A team's own Atlas may contain internal and restricted records and stays inside the organization. " +
-      "The files are authoritative; these pages are a derived view of them.",
+    "{.small}",
+    "**An invented example:** these pages are drawn from an invented product's records, so they can be published to " +
+      "show what the Atlas shows. A team's own Atlas stays inside its organization.",
   ],
 };
 
 /** The complete Markset source of a page. */
 export function pageSource(page: PageSource, meta: AtlasMeta, notice: AtlasNotice = "internal"): string {
-  const yaml = emitYaml({ markset: 0, [ATLAS_KEY]: meta as unknown as YamlValue });
+  const yaml = emitYaml({ markset: true, [ATLAS_KEY]: meta as unknown as YamlValue });
   return [
     "---",
     yaml.trimEnd(),
@@ -132,13 +141,13 @@ export function pageSource(page: PageSource, meta: AtlasMeta, notice: AtlasNotic
   ].join("\n");
 }
 
-/** Parse a page's source as Markset version 0, and refuse one that reports an error: that is a bug here. */
+/** Parse a page's source as Markset, and refuse one that reports an error: that is a bug here. */
 export function checkedTree(path: string, source: string): ReturnType<typeof parseDocument>["ast"] {
   const parsed = parseDocument(source);
   const errors = parsed.diagnostics.filter((d) => d.severity === "error");
-  if (errors.length > 0 || parsed.frontmatter?.markset !== 0) {
+  if (errors.length > 0 || parsed.frontmatter?.markset !== true) {
     const detail = errors.map((d) => `${d.code} at ${d.start}: ${d.message}`).join("; ");
-    throw new Error(`atlas: generated page ${path} is not valid Markset version 0: ${detail || "no markset: 0"}`);
+    throw new Error(`atlas: generated page ${path} is not valid Markset: ${detail || "no markset: true"}`);
   }
   return parsed.ast;
 }

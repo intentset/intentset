@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.3'
   profile: intentset/verification/0.3
@@ -28,7 +28,9 @@ intentset:
 - `packages/atlas/test/atlas.test.ts`: the test "every record is a node and every authored link an edge, drawn once"
 - `packages/atlas/test/atlas.test.ts`: the test "the same graph gives the same map, whatever order its files are read in"
 - `packages/atlas/test/atlas.test.ts`: the test "the map comes first, after one sentence, and how to read and use it follows the picture"
-- `packages/atlas/test/atlas.test.ts`: the test "no label overlaps another record's label or circle, and the box fits the drawing"
+- `packages/atlas/test/atlas.test.ts`: the test "no label overlaps another record's label or circle in any view the map shows, and the box fits the overview"
+- `packages/atlas/test/atlas.test.ts`: the test "the map is layered: purpose on top, each capability one node with a count, its records folded inside it until opened"
+- `packages/atlas/test/atlas.test.ts`: the test "on a large model the layered map's overview is its capabilities, and each opens alone"
 - `packages/atlas/test/atlas.test.ts`: the test "a verification's ring is green only for a current pass, and its status is in its title"
 - `packages/atlas/test/atlas.test.ts`: the test "the script writes text, never markup, and asks for nothing"
 - `packages/atlas/test/map-browser.test.ts`: the test "on a model of thousands of records the map's IDs and circles keep one size on screen, and no two shown IDs overlap"

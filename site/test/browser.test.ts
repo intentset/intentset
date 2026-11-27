@@ -22,6 +22,7 @@ const WIDTHS = [390, 1440];
 const PAGES = [
   "index.html",
   "start/index.html",
+  "start/ci/index.html",
   "how-it-works/index.html",
   "introducing/index.html",
   "adopt/index.html",
@@ -29,16 +30,12 @@ const PAGES = [
   "guide/index.html",
   "tools/index.html",
   "tools/cli/index.html",
-  "tools/readers/index.html",
   "specifications/index.html",
   "specifications/core/index.html",
-  "markset/index.html",
   "conformance/index.html",
-  "pilot/index.html",
+  "glossary/index.html",
   "example/index.html",
-  "example/BEH-ASMT-SCHEDULE/index.html",
-  "example/atlas/map/index.html",
-  "roadmap/index.html",
+  "tools/serve/index.html",
   "no/such/page/",
 ];
 
@@ -48,6 +45,7 @@ await build(dist);
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
 };
 /** A static server over the build, answering a missing address with 404.html as Pages does. */
@@ -211,40 +209,6 @@ test("Tab from the top lands on the skip link, which moves focus to main; the ne
   }
 });
 
-test("every term on the adoption log shows its tip inside the window when focused, at phone, tablet and desktop widths", async (t) => {
-  if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
-  for (const width of [390, 1024, 1100, 1440]) {
-    const tab = await browser.newPage({ viewport: { width, height: 900 } });
-    try {
-      await tab.goto(url("pilot/index.html"));
-      const count = await tab.locator(".term").count();
-      assert.ok(count > 0, "the log has terms");
-      for (let i = 0; i < count; i++) {
-        const term = tab.locator(".term").nth(i);
-        await term.focus();
-        const box = await term.evaluate((el) => {
-          const tip = el.querySelector(".term-tip") as HTMLElement;
-          const r = tip.getBoundingClientRect();
-          return {
-            text: el.textContent?.slice(0, 40),
-            shown: getComputedStyle(tip).display !== "none",
-            left: r.left,
-            right: r.right,
-            bottom: r.bottom,
-          };
-        });
-        assert.ok(box.shown, `${box.text}: the tip shows on focus at ${width}px`);
-        assert.ok(
-          box.left >= 0 && box.right <= width,
-          `${box.text}: the tip stays inside the window at ${width}px (${Math.round(box.left)} to ${Math.round(box.right)})`,
-        );
-      }
-    } finally {
-      await tab.close();
-    }
-  }
-});
-
 test("a missing address, however deep, gets the 404 page in the site's shell and styles", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   const tab = await browser.newPage({ viewport: { width: 390, height: 900 } });
@@ -261,7 +225,7 @@ test("a missing address, however deep, gets the 404 page in the site's shell and
   assert.equal(result.home, url(""));
 });
 
-test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths", async (t) => {
+test("BEH-ATLAS-MAP: the example's map finds, focuses, filters, goes full screen and follows, at phone and desktop widths", async (t) => {
   if (!browser) return t.skip(`Chromium did not launch: ${launchError}`);
   for (const width of WIDTHS) {
     // Reduced motion turns off the site's smooth scrolling. With it on, scrolling a record into view is an animation,
@@ -270,18 +234,32 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full
     const tab = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
     const errors: string[] = [];
     tab.on("pageerror", (error) => errors.push(error.message));
-    await tab.goto(url("example/atlas/map/index.html"));
+    await tab.goto(url("example/atlas/map.html"));
     // The script shows the controls; without it they stay hidden and the picture stands alone.
     assert.ok(await tab.locator(".am-controls").isVisible(), `${width}px: controls shown`);
-    await tab.fill(".am-find input", "cap-asmt-assign");
+    await tab.fill(".am-find input", "cap-accounts");
     await tab.press(".am-find input", "Enter");
-    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "CAP-ASMT-ASSIGN");
+    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "CAP-ACCOUNTS");
+    // Opening the capability shows every record inside it at full strength, with no record dimmed.
+    assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, `${width}px: opening is not a focus`);
+    const faded = await tab.evaluate(
+      () =>
+        [...document.querySelectorAll<SVGElement>('.am-node[data-block="CAP-ACCOUNTS"]')].filter(
+          (el) => Number(getComputedStyle(el).opacity) < 1,
+        ).length,
+    );
+    assert.equal(faded, 0, `${width}px: no record of the opened capability is dimmed`);
+    assert.ok(
+      (await tab.locator('.am-node[data-block="CAP-ACCOUNTS"]:visible').count()) >= 10,
+      `${width}px: the capability's records show`,
+    );
     assert.ok((await tab.locator(".am-node.am-near").count()) >= 2, "its links are marked");
     const panel = (await tab.locator(".am-panel").textContent()) ?? "";
-    assert.match(panel, /CAP-ASMT-ASSIGN: Student assessment assignment/);
-    assert.match(panel, /BEH-ASMT-SCHEDULE/);
-    await tab.locator(".am-panel button", { hasText: "BEH-ASMT-SCHEDULE" }).click();
-    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "BEH-ASMT-SCHEDULE");
+    assert.match(panel, /CAP-ACCOUNTS: Customer accounts/);
+    assert.match(panel, /BEH-RESET-PASSWORD/);
+    await tab.locator(".am-panel button", { hasText: "BEH-RESET-PASSWORD" }).click();
+    assert.equal(await tab.locator(".am-node.am-selected").getAttribute("data-id"), "BEH-RESET-PASSWORD");
+    assert.equal(await tab.locator(".am-svg.am-focus").count(), 1, `${width}px: a deliberate selection focuses on it`);
     await tab.keyboard.press("Escape");
     assert.equal(await tab.locator(".am-svg.am-focus").count(), 0, "Escape shows everything again");
     await tab.uncheck('.am-filter input[data-group="verification"]');
@@ -320,14 +298,17 @@ test("BEH-ATLAS-MAP: the worked example's map finds, focuses, filters, goes full
         }),
     );
     // A second activation of a selected record follows its link, to the site's own address.
-    const node = tab.locator('.am-node[data-id="BEH-ASMT-SCHEDULE"] circle');
+    const node = tab.locator('.am-node[data-id="BEH-RESET-PASSWORD"] circle');
     await node.click({ force: true });
     assert.equal(
       await tab.locator(".am-node.am-selected").getAttribute("data-id"),
-      "BEH-ASMT-SCHEDULE",
+      "BEH-RESET-PASSWORD",
       `${width}px: the first activation selects the record`,
     );
-    await Promise.all([tab.waitForURL(/\/example\/BEH-ASMT-SCHEDULE\/$/), node.click({ force: true })]);
+    await Promise.all([
+      tab.waitForURL(/\/example\/atlas\/records\/BEH-RESET-PASSWORD\.html$/),
+      node.click({ force: true }),
+    ]);
     assert.deepEqual(errors, [], `${width}px: no script error`);
     await tab.close();
   }
@@ -350,7 +331,7 @@ test("the rail beside a page in a section names the section and marks the page",
       };
     });
     await tab.close();
-    assert.equal(result.title, "Tools", `at ${width}px`);
+    assert.equal(result.title, "Reference", `at ${width}px`);
     assert.equal(result.current, "The intentset command", `at ${width}px`);
     if (width >= 1440) assert.ok(result.beside, "on a desktop the rail sits beside the page");
     else assert.ok(result.above, "on a phone the rail stacks above the page");
@@ -384,7 +365,7 @@ test("the introduction is a 16:9 slide to a window on a desktop, a column of car
     return { tab, result };
   };
   const desktop = await slides(1440, 900);
-  assert.equal(desktop.result.length, 23);
+  assert.equal(desktop.result.length, 10);
   for (const slide of desktop.result) {
     assert.ok(Math.abs(slide.ratio - 16 / 9) < 0.01, `${slide.id}: 16:9 at 1440 by 900 (${slide.ratio.toFixed(3)})`);
     assert.ok(slide.height <= 900, `${slide.id}: fits the window`);
@@ -464,7 +445,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.presenting);
   assert.deepEqual(s.current, ["cover"]);
   assert.equal(s.top, "cover", "the cover is what the window shows");
-  assert.equal(s.count, "1 / 23");
+  assert.equal(s.count, "1 / 10");
   // The largest 16:9 that fits 1440 by 900 is 1440 by 810.
   assert.ok(
     Math.abs(s.width - 1440) < 1 && Math.abs(s.height - 810) < 1,
@@ -473,14 +454,14 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   assert.ok(s.inertHeader, "the page behind is out of reach");
   for (const key of ["ArrowRight", "PageDown", " "]) await tab.keyboard.press(key);
   s = await shown();
-  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 23", "#idea"]);
+  assert.deepEqual([s.current, s.top, s.count, s.hash], [["idea"], "idea", "4 / 10", "#idea"]);
   await tab.keyboard.press("ArrowLeft");
   await tab.mouse.click(720, 300);
   s = await shown();
   assert.deepEqual(s.current, ["idea"], "back one by key, on one by a click on the slide");
   await tab.getByRole("button", { name: "Next slide" }).click();
   s = await shown();
-  assert.deepEqual(s.current, ["behavior"]);
+  assert.deepEqual(s.current, ["review"]);
   await tab.keyboard.press("n");
   s = await shown();
   assert.ok(s.notes && s.notesText.length > 40, "N shows the slide's speaker notes");
@@ -492,7 +473,7 @@ test("Present shows one slide at a time filling the window, moves by key, click 
   );
   await tab.keyboard.press("End");
   s = await shown();
-  assert.deepEqual([s.current, s.count], [["try"], "23 / 23"]);
+  assert.deepEqual([s.current, s.count], [["try"], "10 / 10"]);
   assert.ok(await tab.getByRole("button", { name: "Next slide" }).isDisabled(), "nothing after the last slide");
   await tab.keyboard.press("Escape");
   s = await shown();
@@ -519,18 +500,15 @@ test("the navigation wraps below the brand at phone width and sits beside it on 
     const result = await tab.evaluate(() => {
       const brand = document.querySelector(".site-brand")!.getBoundingClientRect();
       const nav = document.querySelector(".site-nav")!.getBoundingClientRect();
-      const columns = getComputedStyle(document.querySelector(".ms-columns.hero")!).gridTemplateColumns;
-      return { navBelowBrand: nav.top >= brand.bottom - 1, columns: columns.split(" ").length };
+      return { navBelowBrand: nav.top >= brand.bottom - 1 };
     });
     await tab.close();
     return result;
   };
   const phone = await position(390);
   assert.ok(phone.navBelowBrand, "at 390px the nav wraps under the brand");
-  assert.equal(phone.columns, 1, "at 390px the hero stacks");
   const desktop = await position(1440);
   assert.ok(!desktop.navBelowBrand, "at 1440px the nav sits beside the brand");
-  assert.equal(desktop.columns, 2, "at 1440px the hero has two columns");
 });
 
 test("every code block gets a Copy button that copies the block, and only the block", async (t) => {

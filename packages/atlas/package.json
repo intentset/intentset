@@ -37,7 +37,7 @@
   "dependencies": {
     "@intentset/core": "^0.17.1",
     "@intentset/publisher": "^0.17.1",
-    "@markset-lang/parser": "0.4.1",
-    "@markset-lang/render-html": "0.4.1"
+    "@markset-lang/parser": "0.6.0",
+    "@markset-lang/render-html": "0.6.0"
   }
 }

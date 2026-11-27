@@ -3,7 +3,7 @@
  * spec/publication.md).
  *
  * The document is the knowledge body, unchanged, under frontmatter that
- * carries `markset: 0` and a top-level `intentset-publication` block: the
+ * carries `markset: true` and a top-level `intentset-publication` block: the
  * generated profile `intentset/publication/0.3`, marked derived, with the
  * provenance Core §9 requires. It is a top-level key, not `intentset:`, so
  * nothing reads a generated document as a canonical record. A comment line
@@ -298,7 +298,7 @@ function destinationOffset(body: string, type: string, from: number, end: number
 
 /** The document text, and the 1-based line the body's first line lands on. */
 export function marksetSource(publication: PublicationMeta, body: string): { source: string; bodyStartLine: number } {
-  const yaml = emitYaml({ markset: 0, [PUBLICATION_KEY]: publication as unknown as YamlValue });
+  const yaml = emitYaml({ markset: true, [PUBLICATION_KEY]: publication as unknown as YamlValue });
   const head = `---\n${yaml}---\n${markerLine(publication.source.id)}\n`;
   const separated = body.startsWith("\n");
   const headLines = head.split("\n").length - 1;
@@ -406,13 +406,13 @@ export function checkGenerated(
   };
   visit(parsed.ast);
 
-  if (parsed.frontmatter?.markset !== 0) {
+  if (parsed.frontmatter?.markset !== true) {
     diagnostics.push(
       publicationDiagnostic({
         code: "PUB003",
         artifact: id,
         path: artifact.path,
-        message: `The generated frontmatter for ${id} does not read as Markset version 0.`,
+        message: `The generated frontmatter for ${id} does not declare Markset.`,
         remediation:
           "Report this as a publisher defect; the generated frontmatter must be readable by Markset's own reader.",
       }),

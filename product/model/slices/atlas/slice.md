@@ -1,5 +1,5 @@
 ---
-markset: 0
+markset: true
 intentset:
   spec: '0.3'
   profile: intentset/slice/0.3
@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 2
   links:
-    implements: [BEH-ATLAS, BEH-ATLAS-MAP]
+    implements: [BEH-ATLAS, BEH-ATLAS-MAP, BEH-ATLAS-OUTLINE, BEH-ATLAS-TRACE, BEH-ATLAS-ATTENTION, BEH-ATLAS-NEIGHBORHOOD]
     dependsOn: [SLICE-CORE, SLICE-PUBLISHER]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:

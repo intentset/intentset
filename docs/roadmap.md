@@ -9,7 +9,7 @@ Intentset is in draft. You can use it today on a real capability, and what peopl
 
 ## Where it stands
 
-The [specifications](../specifications/) are v0.3 drafts. The reference toolchain is at {{version}} on npm, with a conformance suite for other implementations. Everything [How it works](../how-it-works/) describes is in that release: validation, architecture checks, evidence, impact, questions over the model with `intentset list`, the Atlas, reviewed publication with tips for the product's own interface, agent context, the export, and the guide and drift check that let agents keep the model.
+The [specifications](https://intentset.org/specifications/) are v0.3 drafts. The reference toolchain is published on npm as `@intentset/cli`, with a conformance suite for other implementations. Everything [How it works](https://intentset.org/how-it-works/) describes is in that release: validation, architecture checks, evidence, impact, questions over the model with `intentset list`, the Atlas, reviewed publication with tips for the product's own interface, agent context, the export, and the guide and drift check that let agents keep the model.
 
 The Core model does not depend on a language or platform. The architecture check reads TypeScript, and its one reference profile is TypeScript with AWS Amplify Gen 2.
 
@@ -19,7 +19,7 @@ Drafts can still change, and each change is recorded with its reason in the repo
 
 1.0 is the version you can build on without expecting breaking changes. Real codebases decide what it keeps:
 
-- **Streamlane** (Product · In development), a work management product, where the model is a required check on every pull request, and [what it has caught](../pilot/) has already changed the specifications and the toolchain. Its model holds 1,282 records, and its unit tests' evidence is imported on every commit.
+- **Streamlane** (Product · In development), a work management product, where the model is a required check on every pull request, and [what it has caught](adoption/log.md) has already changed the specifications and the toolchain. Its model holds 1,282 records, and its unit tests' evidence is imported on every commit.
 - **Driftline** (Product · In planning), modelled before any of its code existed, so the model comes before the code. Its first package, not released, reads a product's export and counts the usage evidence each behavior saw.
 - **Intentset itself**, which models its own packages and is checked by the toolchain it builds. A maintainer approved that model on 2026-10-15, and every behavior in it has a current passing run.
 - **Outside adopters**, on codebases we did not write. The first began adding Intentset to its own repository in October 2026, and its pilot is under way. A pilot is complete when Intentset has been a required check on every pull request for four consecutive weeks and the adopter's baseline of known violations has only shrunk. What it found first changed the architecture check in 0.9.0.
@@ -40,7 +40,7 @@ Recent releases, with the reasons for each in the changelog:
 - **0.10.0** gave every record in the Atlas a page of its own, and kept the Atlas readable on thousands of records.
 - **0.9.0** made the architecture check judge what an import takes rather than the file it names, so interface code cannot reach the backend through a slice's public surface, and held a baseline of known violations to shrinking.
 
-[Lantern, the worked example](../example/atlas/map/), shows the Atlas's map of every record and its links.
+[Lantern, the worked example](https://intentset.org/example/atlas/map/), shows the Atlas's map of every record and its links.
 
 ## Not planned
 
@@ -53,4 +53,4 @@ Recent releases, with the reasons for each in the changelog:
 
 The most useful feedback is a capability that is hard to model, a boundary that is hard to enforce, or an explanation that is hard to publish safely. Try the model against one capability and bring back what did not fit.
 
-[[Start with one capability](../start/)]{.button .primary} [[Contribute on GitHub]({{repo}})]{.button}
+[[Try it on your code](https://intentset.org/start/)]{.button .primary} [[Contribute on GitHub](https://github.com/intentset/intentset)]{.button}

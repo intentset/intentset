@@ -54,7 +54,7 @@ const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 export function recordText(model: Model, artifact: Artifact, link: PageLink = relativeLink): RecordText {
   const from = recordPath(artifact.meta.id);
   const body = artifact.body.replace(/^\s*#[ \t]+[^\n]*\n?/, "");
-  const parsed = parseDocument(`---\nmarkset: 0\n---\n\n${body}`);
+  const parsed = parseDocument(`---\nmarkset: true\n---\n\n${body}`);
   const errors = parsed.diagnostics.filter((d) => d.severity === "error");
   if (errors.length > 0) {
     const codes = [...new Set(errors.map((d) => d.code))].sort();

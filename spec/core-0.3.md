@@ -37,6 +37,7 @@ Revisions that changed what a reader who conformed earlier sees (the breaking on
 | 2026-11-15 (`0.2`, no move) | **A publication names its snapshot in a file of its own, and nowhere else** (§9, [publication §5, §6](publication.md#6-the-snapshot-file), ADR 0021, amending ADR 0019). |
 | 2026-11-24 (`0.2`, no move) | **Approval is a reviewed change to a record, and a review lists it** (§7, §10, ADR 0022). |
 | 2026-11-25 (`0.3`) | **`intentset.spec` moves from `0.2` to `0.3`** (ADR 0023, ADR 0024, ADR 0025, ADR 0026, ADR 0027, ADR 0028, ADR 0029). |
+| 2026-11-26 (`0.3`, no move) | **`markset: true` declares a record, and the original `markset: 0` stays valid and means the same** (§3; [publication §2, §3](publication.md#3-review-record-and-needs-review)), following Markset 0.6.0. A `content-v1` pin hashes `true` as `0`, so a source moved from one form to the other keeps the pins on it. |
 
 ## 2. Semantic model and granularity
 
@@ -68,7 +69,7 @@ Frontmatter MUST be the first block between `---` delimiters. It MUST decode to 
 
 ```yaml
 ---
-markset: 0
+markset: true
 intentset:
   spec: "0.3"
   profile: intentset/behavior/0.3
@@ -91,7 +92,7 @@ intentset:
 ---
 ```
 
-`markset` is required by the Intentset Markset binding, not by language-neutral graph interchange. `intentset.profile` is an Intentset-owned semantic profile identifier; it is not a claim that Markset has registered a profile API. Unknown top-level frontmatter is preserved, but cannot alter Intentset semantics. Unknown keys inside `intentset` are errors except under `extensions`.
+`markset` is required by the Intentset Markset binding, not by language-neutral graph interchange. It declares the document Markset: it MUST be the YAML boolean `true`, or the number `0`, the form Markset documents used before Markset 0.6.0, which means the same; any other value, a quoted one included, is CORE001. Tools that write records write `true`. `intentset.profile` is an Intentset-owned semantic profile identifier; it is not a claim that Markset has registered a profile API. Unknown top-level frontmatter is preserved, but cannot alter Intentset semantics. Unknown keys inside `intentset` are errors except under `extensions`.
 
 ## 4. Common fields and identity
 

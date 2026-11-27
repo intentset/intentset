@@ -13,6 +13,11 @@
  * focused one, then product, capability and slice records before behaviors, rules and checks, the most linked first),
  * so zooming in shows more of them and no two shown IDs ever overlap.
  *
+ * On the layered map (ADR 0015, amended 2026-11-26) a capability holds its detail, hidden until it is opened: selecting
+ * a capability opens it, showing its records and their links at full strength and fitting the view to them, and All
+ * capabilities folds it again. Opening dims nothing; selecting a record afterwards focuses on it as usual. Selecting a
+ * record another capability holds opens that one. One capability is open at a time.
+ *
  * Plain JavaScript with no dependency, written to the DOM with textContent only, so no record's text is ever parsed
  * as markup. It reads no storage and makes no request.
  */
@@ -43,7 +48,11 @@ export const MAP_SCRIPT = `"use strict";
     controls.hidden = false;
 
     const vb = svg.viewBox.baseVal;
-    const base = { x: vb.x, y: vb.y, w: vb.width, h: vb.height };
+    const overview = { x: vb.x, y: vb.y, w: vb.width, h: vb.height };
+    let base = { x: vb.x, y: vb.y, w: vb.width, h: vb.height };
+    const layered = svg.classList.contains("am-layered");
+    const closer = controls.querySelector(".am-close");
+    let open = null;
     let view = { x: base.x, y: base.y, w: base.w, h: base.h };
     let selected = null;
     const many = svg.classList.contains("am-many");
@@ -124,6 +133,7 @@ export const MAP_SCRIPT = `"use strict";
         item.py = (item.y - origin.y) / s;
         item.view =
           !hidden.has(item.group) &&
+          visible(item.el) &&
           item.px >= -padLeft &&
           item.px <= rect.width - 8 &&
           item.py >= -BOX_H &&
@@ -175,6 +185,42 @@ export const MAP_SCRIPT = `"use strict";
           t.setAttribute("stroke-width", String(3 * s));
         }
       }
+    }
+    // Whether a record is drawn: always, unless a capability holds it and that capability is not open.
+    function visible(el) {
+      return !el.dataset.block || el.classList.contains("am-shown");
+    }
+    // Open a capability on the layered map: its records and the links among what then shows, and the view fitted to them.
+    function openBlock(id) {
+      if (!layered || open === id) return false;
+      open = id;
+      for (const el of svg.querySelectorAll(".am-shown")) el.classList.remove("am-shown");
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const item of items) {
+        if (id !== null && item.el.dataset.block === id) item.el.classList.add("am-shown");
+        // The view fits the opened capability and its records, where a reader's eye goes; All capabilities goes back.
+        if (item.el.dataset.block !== id && item.id !== id) continue;
+        minX = Math.min(minX, item.x - item.r);
+        minY = Math.min(minY, item.y - item.r - 6);
+        maxX = Math.max(maxX, item.x + item.r + 4 + item.len * 6);
+        maxY = Math.max(maxY, item.y + item.r + 6);
+      }
+      for (const edge of svg.querySelectorAll(".am-edge[data-folded]")) {
+        const a = nodes.get(edge.dataset.from);
+        const b = nodes.get(edge.dataset.to);
+        if (a && b && visible(a) && visible(b)) edge.classList.add("am-shown");
+      }
+      base =
+        id === null
+          ? { x: overview.x, y: overview.y, w: overview.w, h: overview.h }
+          : { x: minX - 16, y: minY - 16, w: maxX - minX + 32, h: maxY - minY + 32 };
+      view = { x: base.x, y: base.y, w: base.w, h: base.h };
+      if (closer) closer.hidden = id === null;
+      apply();
+      return true;
     }
     function rankOrder(a, b) {
       return a.tier - b.tier || b.degree - a.degree || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -374,9 +420,18 @@ export const MAP_SCRIPT = `"use strict";
     function select(id, move) {
       const el = nodes.get(id);
       if (!el) return;
+      // A capability is framed with its records, whether it opens now or was open already (find fires twice).
+      const opening = layered && el.dataset.count !== undefined;
+      if (opening && !openBlock(id)) {
+        view = { x: base.x, y: base.y, w: base.w, h: base.h };
+        apply();
+      }
+      if (!opening && layered && el.dataset.block && !visible(el)) openBlock(el.dataset.block);
       clear();
       selected = el;
-      svg.classList.add("am-focus");
+      // A capability on the layered map is a container: selecting it opens it and shows everything inside at full
+      // strength, however often it is selected. A deliberate selection of a record dims all but it and its links.
+      if (!opening) svg.classList.add("am-focus");
       el.classList.add("am-selected");
       const list = links.get(id) || [];
       for (const link of list) {
@@ -385,7 +440,7 @@ export const MAP_SCRIPT = `"use strict";
         if (other) other.classList.add("am-near");
       }
       describe(el, list);
-      if (move) centre(el);
+      if (move && !opening) centre(el);
       else relabel();
     }
     function describe(el, list) {
@@ -459,6 +514,12 @@ export const MAP_SCRIPT = `"use strict";
         if (box.checked) hidden.delete(box.dataset.group);
         else hidden.add(box.dataset.group);
         relabel();
+      });
+    }
+    if (closer) {
+      closer.addEventListener("click", function () {
+        clear();
+        openBlock(null);
       });
     }
     for (const button of controls.querySelectorAll("button[data-zoom]")) {

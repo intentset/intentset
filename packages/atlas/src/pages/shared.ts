@@ -6,7 +6,8 @@
 import { type ArtifactMeta, DELIVERY_TYPES, deliveryOf } from "@intentset/core";
 import type { ReviewStatus } from "@intentset/publisher";
 import { type Model, STATUS_WORDS } from "../model.ts";
-import { badge, code, text } from "../text.ts";
+import type { Tone } from "../text.ts";
+import { badge, code, series, text } from "../text.ts";
 
 /** A verification's evidence status, or "not assessed" when no evidence was supplied. */
 export function evidenceCell(model: Model, verification: string): string {
@@ -62,4 +63,56 @@ export function deliveryWord(meta: ArtifactMeta): { word: string; derived: boole
   if (!(DELIVERY_TYPES as readonly string[]).includes(meta.type)) return null;
   const effective = deliveryOf(meta);
   return { word: effective ?? "not stated", derived: meta.delivery === undefined && effective !== null };
+}
+
+/** A claim's evidence in words: verified or not and why, or "not assessed" without evidence. */
+export function claimEvidence(model: Model, claim: string): string {
+  if (!model.hasEvidence) return `${badge("not assessed", "neutral")} no run evidence supplied`;
+  const coverage = model.coverageOf(claim);
+  if (coverage === null) return `${badge("not assessed", "neutral")} not in the coverage report`;
+  if (coverage.verifications.length === 0) return badge("not verified", "warn");
+  const statuses = series(coverage.verifications.map((v) => `${code(v.id)} ${STATUS_WORDS[v.status].word}`));
+  return coverage.verified
+    ? `${badge("verified", "success")} ${statuses}`
+    : `${badge("not verified", "warn")} ${statuses}`;
+}
+
+/**
+ * Where a claim stands, as one word: `verified` (every applicable definition has a current pass), `failing` (one
+ * failed or errored at this snapshot), `stale` (runs exist but none at this snapshot, or one was skipped), `missing`
+ * (a definition names it and no run is recorded), `not linked` (no definition names it), or `not assessed` (no run
+ * evidence was supplied, so nothing is claimed either way). Only `verified` is ever green.
+ */
+export type ClaimState = "verified" | "failing" | "stale" | "missing" | "not linked" | "not assessed";
+
+export const CLAIM_STATE_TONES: Readonly<Record<ClaimState, Tone>> = {
+  verified: "success",
+  failing: "danger",
+  stale: "warn",
+  missing: "warn",
+  "not linked": "warn",
+  "not assessed": "neutral",
+};
+
+export function claimState(model: Model, claim: string): ClaimState {
+  if (!model.linked(claim)) return "not linked";
+  if (!model.hasEvidence) return "not assessed";
+  const coverage = model.coverageOf(claim);
+  if (coverage === null) return "not assessed";
+  if (coverage.verified) return "verified";
+  const statuses = coverage.verifications.map((v) => v.status);
+  if (statuses.some((s) => s === "current-fail" || s === "error")) return "failing";
+  if (statuses.some((s) => s === "stale" || s === "skip")) return "stale";
+  return "missing";
+}
+
+/** A claim's state as a badge. */
+export function claimBadge(model: Model, claim: string): string {
+  const state = claimState(model, claim);
+  return badge(state, CLAIM_STATE_TONES[state]);
+}
+
+/** A knowledge record's review as one badge: current, or held for review. */
+export function reviewBadge(review: ReviewStatus): string {
+  return review.status === "current" ? badge("review current", "success") : badge("held for review", "warn");
 }
