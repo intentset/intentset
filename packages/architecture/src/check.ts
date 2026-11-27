@@ -270,7 +270,9 @@ function profileRefused(errors: Diagnostic[], level: Level, mode: Mode): Archite
       baselined: 0,
       baselineStale: 0,
       unresolved: [
-        `${PROFILE_PATH}: the profile has ${errors.length === 1 ? "an error" : "errors"}, so nothing was checked`,
+        errors.every((error) => error.path === null)
+          ? "the language the check was given has no reader, so nothing was checked"
+          : `${PROFILE_PATH}: the profile has ${errors.length === 1 ? "an error" : "errors"}, so nothing was checked`,
       ],
       reviewRequired: [...REVIEW_REQUIRED],
     },
