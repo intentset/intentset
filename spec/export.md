@@ -3,7 +3,7 @@ title: Intentset Export Contract v0.7
 id: intentset/export/0.7
 status: draft
 revision: 2026-11-26
-implementation: 0.17.1
+implementation: 0.18.0
 ---
 
 # Intentset Export Contract v0.7
