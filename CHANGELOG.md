@@ -5,7 +5,61 @@ conformance suite or the export contract moved, because those are what another t
 change a revision is; while the specifications are drafts, the next change that invalidates an existing conformance
 case, in any section of the suite, moves `intentset.spec` (it moved from `0.1` to `0.2` on 2026-10-14, and from `0.2` to `0.3` in 0.18.0, on 2026-11-27).
 
+From 0.18.0 an entry opens with a summary of one short line per change, each pointing to its ADR or issue, grouped
+under the headings of [Keep a Changelog](https://keepachangelog.com): `### Breaking` first, with what an adopter must
+do, then any of `### Added`, `### Changed`, `### Deprecated`, `### Removed`, `### Fixed` and `### Security` that apply.
+Before 1.0 a minor release may break things, so Breaking is what to read first. `### Details` follows with the
+paragraphs that say what moved: the bold sentence, then whether the specifications, the suite and the export moved.
+Earlier entries have only that detail. `pnpm run release:prepare` refuses an Unreleased entry with no summary or with
+another `###` heading, `pnpm run release:notes <version>` prints an entry's body, the release workflow uses it for the
+GitHub Release, and intentset.org's Changelog page and feed are built from this file.
+
 ## 0.18.0 — 2026-11-27
+
+### Breaking
+
+- **Every record moves to specifications `0.3`, and the export to `0.7`.** Run `intentset migrate --to 0.3` in each repository (from `0.2` or `0.1`), then run the suite again: migration re-pins no run record, so every subject-bound pass is stale until it does. A `0.2` record is CORE001 and a 0.6 export is `unsupported-contract`. Tools that read the export or `help.json` should read export 0.7 and `docs/consumers.md` (ADRs 0023 to 0029, #153).
+- **`implemented` and `released` are no longer statuses.** `status` is the review lifecycle and `delivery` says what exists; `migrate` rewrites both to `approved` with `delivery: built` (ADR 0023, #126).
+- **A knowledge review is the core field `review`, and `extensions.intentset.org/review` is CORE001.** `migrate` moves it and re-pins every pin that matched; pins hash content by default (ADR 0025, #130).
+- **Diagnostic codes changed: CORE010, CORE011, CORE012 and CORE013 are new**, and conditions that were CORE001 or CORE003 report them instead (ADR 0024, #129).
+- **`evidence.resources` and `evidence.dependencies` are removed**; a configuration that sets either stops with CFG001, so delete the key (ADR 0026, #127).
+- **`help.json` is `intentset/help/0.3` and the publication index `intentset/publication-index/0.3`**; `readHelp` refuses a `0.2` file, and `audience`, `role` and `flags` are always lists (ADR 0029, #144).
+- **`bindTips` no longer sets `title`.** A product that relied on it passes a `render` that shows the tip (#145).
+
+### Added
+
+- **`intentset migrate --to 0.3` and `intentset approve --renew-review`**: the one upgrade step, and a way to renew a knowledge review without returning it to draft (ADRs 0022 and 0025, #153).
+- **Knowledge whose sources changed can be published, marked under review**, with `keepUnderReview` (ADR 0027, #142).
+- **A slice says which knowledge leads each surface of a product** (`slice.surfaces`), and the help file maps surfaces to articles (ADR 0028, #143).
+- **A publication request may name every audience and role its reader holds** (ADR 0029, #144).
+- **`watchTips` in `@intentset/help`** keeps tips bound as the page changes and puts the page back on `dispose` (#145).
+- **`renderHtml: "fragment"` and `intentset publish --html=fragment`** write a document without the page around it (#146).
+- **The Atlas opens on the product as a tree, traces each behavior, lists what needs attention and lays its map out in layers**; `@intentset/cli` exports `atlasOf` and `openSession` (#159).
+- **`intentset init --example` writes the online shop, with its code and tests**, in place of Lantern (#161).
+- **Records may declare `markset: true`**; `markset: 0` stays valid and means the same (#153).
+
+### Changed
+
+- **`@markset-lang/*` is pinned at exactly 0.6.0**, and everything Intentset writes declares `markset: true` (#153).
+- **A `content-v1` pin hashes `markset: true` as `markset: 0`**, so moving a source between the two keeps its reviews current (#153).
+
+### Removed
+
+- **The Atlas's overview page**: its totals are on the product page (#159).
+
+### Fixed
+
+- **`intentset review` reads a base at an earlier version as migrated**, so a migration's pull request no longer lists every record as newly approved (#153).
+- **`intentset migrate` reads past comment lines, and quoted or spaced keys, in a record's frontmatter**, checks each rewrite as YAML and names a record it could not rewrite (#153).
+- **The Atlas says why a deprecated record's delivery is `built`** (#153).
+
+### Security
+
+- **Published pages and fragments carry only `http`, `https`, `mailto` and scheme-less links and images**, where `javascript:` links reached the page before (#146).
+- **The engineering MCP server withholds a restricted ID in a knowledge record's `tips` and a verification's `exercises`** (#153).
+
+### Details
+
 
 **0.18.0 moves the specifications to `0.3` and the export to `0.7`: `status` is the review lifecycle and `delivery` says what exists (ADR 0023), a diagnostic code names one kind of thing to fix (ADR 0024), a knowledge review is the core field `review` and pins content hashes (ADR 0025), a subject is computed one way (ADR 0026), knowledge whose sources changed can be published kept under review (ADR 0027), a slice says which knowledge leads each surface of a product (ADR 0028), and a publication request may name every audience and role of its reader (ADR 0029); `@intentset/help` keeps tips bound with `watchTips`, and a published document can be rendered as an HTML fragment that carries only safe URLs.** Breaking: every record's `spec` and `profile` move, and `intentset migrate --to 0.3` is the one upgrade step (from `0.2`, or from `0.1`): it rewrites them, rewrites `implemented` and `released` to `approved` with `delivery: built` (ADR 0023), moves the review extension to `review` (ADR 0025) and re-pins every review pin that matched before the move; it re-pins no run record, so every subject-bound pass is stale until the suite runs again. A reader rejects a record at `0.2` (CORE001) and a 0.6 export (`unsupported-contract`). The breaking changes are ADRs 0023 to 0029, each in a bullet below: the export 0.7 gains `review` on every artifact, `slice.surfaces` and `reports.knowledge[].self`; `help.json` is `intentset/help/0.3`, closed, with `surfaces`, `withheldForReview` and list-valued `audience`, `role` and `flags`, and a 0.18 `readHelp` refuses a 0.2 file; the index is `intentset/publication-index/0.3`, with `keptUnderReview`; CORE010 to CORE013 are new; `evidence.resources` and `evidence.dependencies` are CFG001. The suite and the export moved with them. The help and publisher changes (#145, #146) are a behavior change in `bindTips`'s default render, one new function in `@intentset/help`, a widened option and an optional field in `@intentset/publisher`, and a value for the CLI's `--html`; the publication profile adds the fragment as a MAY and requires a page to drop raw source HTML and link and image URLs with an unsafe scheme (§2), with one new publication case and no existing case changed. docs/consumers.md has the upgrade guide.
 

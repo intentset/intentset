@@ -112,8 +112,10 @@ learning from questions, and the AWS rules).
 - A release bumps every manifest, each spec's `implementation`, and adds its `CHANGELOG.md` entry: one bold sentence,
   then whether the specs, the suite or the export moved (tests hold all three). `pnpm run release:prepare <version>`
   writes every carrier and dates the Unreleased entry, and refuses one that has drifted; the `v<version>` tag on main
-  publishes. A spec's `revision` is the date its
-  text last changed.
+  publishes and creates the GitHub Release from the entry (`pnpm run release:notes <version>` prints it). An entry opens
+  with a summary under `### Breaking`, `### Added`, `### Changed`, `### Deprecated`, `### Removed`, `### Fixed` and
+  `### Security`, one line per change pointing to its ADR or issue, then `### Details` (`release:prepare` refuses an
+  entry without one). A spec's `revision` is the date its text last changed.
 - Before 1.0 a changed export envelope is a minor bump of the packages; Driftline reads exports and Streamlane reads the
   repository's records and run records (`docs/consumers.md`), and each moves its pin when it updates. A reader rejects an older export, and a record that declares an older `spec`:
   `intentset migrate --to <spec>` rewrites `spec` and `profile` in a repository's records.

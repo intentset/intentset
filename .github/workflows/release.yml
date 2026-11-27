@@ -13,6 +13,11 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # The job's own permissions replace the workflow's, so it names both. contents: write is for the one step that
+    # creates the GitHub Release; nothing else in the job writes to the repository.
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       # pnpm comes from the packageManager field in package.json, so the version
@@ -77,3 +82,25 @@ jobs:
 
       - name: Install the release from the registry and use it
         run: pnpm run smoke:registry "$(node -p "require('./package.json').version")"
+
+      # The release notes are the version's CHANGELOG section. Last, so a Release exists only for packages that are on
+      # the registry and install. Safe to repeat: a Release the tag already has is left as it is. --verify-tag stops
+      # gh creating a tag the push did not make. A prerelease version (0.19.0-beta.1) is marked as one and never
+      # becomes the latest release.
+      - name: Create the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$GITHUB_REF_NAME"
+          version="${tag#v}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag already has a GitHub Release"
+            exit 0
+          fi
+          node --conditions=intentset-source scripts/release-notes.ts "$version" > "$RUNNER_TEMP/release-notes.md"
+          case "$version" in
+            *-*) channel="--prerelease" ;;
+            *) channel="--latest" ;;
+          esac
+          gh release create "$tag" --verify-tag --title "Intentset $version" --notes-file "$RUNNER_TEMP/release-notes.md" "$channel"
