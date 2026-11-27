@@ -455,7 +455,7 @@ export interface Page {
    * adopted each release. The naming rule in CLAUDE.md exempts these by how they are made
    * (decision of 2026-11-25), and site/test/family.test.ts reads this field rather than a list of addresses.
    */
-  generatedFrom?: "spec" | "tests" | "changelog";
+  generatedFrom?: "spec" | "tests";
 }
 
 /**
@@ -894,7 +894,7 @@ async function readChangelog(): Promise<string> {
 async function changelogPage(): Promise<Page> {
   const file = join(root, "CHANGELOG.md");
   const source = `---\nmarkset: true\n---\n\n${await readChangelog()}`;
-  const page = renderPage(CHANGELOG_PAGE, source, file, { generatedFrom: "changelog" });
+  const page = renderPage(CHANGELOG_PAGE, source, file);
   const banner = `<p class="site-source">Rendered from <a href="${REPO}/blob/main/CHANGELOG.md"><code>CHANGELOG.md</code></a> in the repository · <a href="../${CHANGELOG_FEED}">Atom feed of releases</a></p>\n`;
   const headings = /<h2 id="[^"]*">(\d+\.\d+\.\d+(?:-[a-z]+\.\d+)?) — \d{4}-\d{2}-\d{2}<\/h2>/g;
   const body = page.body.replace(headings, (heading, version: string) =>

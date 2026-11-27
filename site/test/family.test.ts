@@ -9,7 +9,8 @@ import { build, sitePages } from "../build.ts";
  * The family's two products on intentset.org (the user's decision of 2026-11-26, the naming rule in CLAUDE.md, which
  * replaced Gary's of 2026-11-25): no page the site writes names Streamlane or Driftline, and none links to either. A
  * visitor here came to learn Intentset, and a product they cannot use reads as a different product entirely. A page
- * rendered from spec/, generated from tests/ or rendered from CHANGELOG.md is exempt by how it is made, not by its address.
+ * rendered from spec/ or generated from tests/ is exempt by how it is made, not by its address. The changelog page is not
+ * exempt: CHANGELOG.md describes adopters without naming them.
  */
 const PRODUCTS = ["Streamlane", "Driftline"];
 
@@ -22,16 +23,17 @@ after(async () => {
 
 test("no page the site writes itself names either product", () => {
   const written = pages.filter((page) => page.generatedFrom === undefined);
-  assert.ok(
-    written.some((page) => page.path === "index.html"),
-    "Home is among the pages checked",
-  );
+  for (const path of ["index.html", "changelog/index.html"])
+    assert.ok(
+      written.some((page) => page.path === path),
+      `${path} is among the pages checked`,
+    );
   for (const page of written) {
     for (const product of PRODUCTS) assert.ok(!page.body.includes(product), `${page.path} names ${product}`);
   }
 });
 
-test("the exemption is by how a page is made: rendered from spec/, generated from tests/, or the changelog's own history", () => {
+test("the exemption is by how a page is made: rendered from spec/ or generated from tests/", () => {
   const generated = pages.filter((page) => page.generatedFrom !== undefined);
   assert.ok(
     generated.some((page) => page.generatedFrom === "spec"),
@@ -39,7 +41,7 @@ test("the exemption is by how a page is made: rendered from spec/, generated fro
   );
   for (const page of generated)
     assert.ok(
-      page.path.startsWith("specifications/") || ["conformance/index.html", "changelog/index.html"].includes(page.path),
+      page.path.startsWith("specifications/") || page.path === "conformance/index.html",
       page.path,
     );
 });

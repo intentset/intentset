@@ -85,7 +85,8 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
   cannot use reads as a different product entirely. No page links to either. The normative documents under `spec/` and
   the conformance cases under `tests/` are outside the rule where they record the origin of a dated decision; its test
   skips a page by how it is made (`generatedFrom` in `site/build.ts`), not by its address. `site/test/family.test.ts`
-  holds it.
+  holds it. `CHANGELOG.md` is published as `/changelog/`, so it names neither: write "an adopter" or "a tool that
+  reads the export" (2026-11-27).
 - The adoption log (`docs/adoption/log.md`, on the site at `/pilot/` until 2026-11-26, which now redirects there)
   names Streamlane and Driftline by Gary's decision of 2026-10-06. It shows Intentset's side: records, check output
   and counts, each with its source and date, and the friction as well as what worked. Never the products' insides
