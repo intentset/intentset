@@ -67,7 +67,7 @@ function main(page: string): string {
   return doc.slice(doc.indexOf("<main"), doc.indexOf("</main>"));
 }
 
-test("the page list is the content pages, the specifications, the guide, conformance and the example's one page", () => {
+test("the page list is the content pages, the specifications, the guide, conformance, the changelog and the example's one page", () => {
   const expected = [
     ...CONTENT_PAGES.map(([path]) => path),
     // The privacy page, once the chat is launched.
@@ -75,6 +75,7 @@ test("the page list is the content pages, the specifications, the guide, conform
     ...SPECS.map((s) => `specifications/${s.slug}/index.html`),
     "guide/index.html",
     "conformance/index.html",
+    "changelog/index.html",
     "example/index.html",
   ].sort();
   assert.deepEqual([...pages].sort(), expected);
@@ -309,6 +310,8 @@ test("the only destinations outside the site are the repository, Markset, Coral 
     // Cited by the reference profile, rendered from its source.
     "www.typescriptlang.org",
     "docs.amplify.aws",
+    // The convention the changelog's summary follows, linked from its preamble.
+    "keepachangelog.com",
   ]);
   for (const [page, doc] of html) {
     for (const [, href] of doc.matchAll(/href="(https?:[^"]+)"/g)) {

@@ -168,7 +168,8 @@ test("the development server watches what the build reads, and serves the new fi
   // Its list named a directory removed on 2026-10-04 and missed tests/ and the
   // guide's generator, which the build reads since 2026-10-05.
   for (const path of WATCHED) await access(join(root, path)).catch(() => assert.fail(`${path} does not exist`));
-  for (const path of ["tests", "packages/cli/src"]) assert.ok(WATCHED.includes(path), `${path} is not watched`);
+  for (const path of ["tests", "packages/cli/src", "CHANGELOG.md", "scripts"])
+    assert.ok(WATCHED.includes(path), `${path} is not watched`);
   assert.match(contentType("sitemap.xml"), /^application\/xml/);
   assert.match(contentType("llms.txt"), /^text\/plain/);
   assert.match(contentType("guide.md"), /^text\/markdown/);

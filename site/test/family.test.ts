@@ -9,7 +9,7 @@ import { build, sitePages } from "../build.ts";
  * The family's two products on intentset.org (the user's decision of 2026-11-26, the naming rule in CLAUDE.md, which
  * replaced Gary's of 2026-11-25): no page the site writes names Streamlane or Driftline, and none links to either. A
  * visitor here came to learn Intentset, and a product they cannot use reads as a different product entirely. A page
- * rendered from spec/ or generated from tests/ is exempt by how it is made, not by its address.
+ * rendered from spec/, generated from tests/ or rendered from CHANGELOG.md is exempt by how it is made, not by its address.
  */
 const PRODUCTS = ["Streamlane", "Driftline"];
 
@@ -31,14 +31,17 @@ test("no page the site writes itself names either product", () => {
   }
 });
 
-test("the exemption is by how a page is made: rendered from spec/ or generated from tests/", () => {
+test("the exemption is by how a page is made: rendered from spec/, generated from tests/, or the changelog's own history", () => {
   const generated = pages.filter((page) => page.generatedFrom !== undefined);
   assert.ok(
     generated.some((page) => page.generatedFrom === "spec"),
     "the specifications are rendered from spec/",
   );
   for (const page of generated)
-    assert.ok(page.path.startsWith("specifications/") || page.path === "conformance/index.html", page.path);
+    assert.ok(
+      page.path.startsWith("specifications/") || ["conformance/index.html", "changelog/index.html"].includes(page.path),
+      page.path,
+    );
 });
 
 test("no page links to either product", async () => {

@@ -20,7 +20,7 @@ const out = join(root, "dist");
  * reads. tests/ is the conformance page's source and packages/cli/src the
  * agent guide's and the command page's usage.
  */
-export const WATCHED = ["site", "spec", "examples", "tests", "packages/cli/src"];
+export const WATCHED = ["site", "spec", "examples", "tests", "packages/cli/src", "CHANGELOG.md", "scripts"];
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
