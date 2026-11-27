@@ -26,6 +26,7 @@ import type { Heading, Link, Nodes, Root } from "mdast";
 import { agentGuide, USAGE } from "@intentset/cli";
 import { type Diagnostic, parseDocument } from "@markset-lang/parser";
 import { addHeadingIds, bodyAttributes, defaultStylesheetPath, renderHtml } from "@markset-lang/render-html";
+import { type ChangelogEntry, parseChangelog } from "../scripts/changelog.ts";
 import { ATLAS_ROOT, shopAtlas } from "./example-atlas.ts";
 import { EXAMPLE_REQUEST, type ExamplePublication, publishExample } from "./example-publication.ts";
 import { type PublishedKnowledge, publishedKnowledge } from "./knowledge.ts";
@@ -161,6 +162,10 @@ export function railLinks(rail: Rail): Array<[string, string]> {
   return flat(rail.items);
 }
 
+/** The Changelog page, built from CHANGELOG.md, and the Atom feed of releases beside it (2026-11-27, #166). */
+export const CHANGELOG_PAGE = "changelog/index.html";
+export const CHANGELOG_FEED = "changelog.xml";
+
 /**
  * The rails: the pages that belong to each bar item, listed beside every page
  * in that section. The bar cannot hold everything, and a page reached only from
@@ -177,8 +182,8 @@ export function railLinks(rail: Rail): Array<[string, string]> {
  * it is.
  *
  * Reference (2026-11-26) holds the tools, with the review pages `intentset
- * serve` draws, shown on the shop's records, then the specifications, the
- * Markset page, conformance and the glossary.
+ * serve` draws, shown on the shop's records, then the specifications,
+ * conformance, the glossary and the changelog.
  */
 export const RAILS: Rail[] = [
   {
@@ -228,6 +233,7 @@ export const RAILS: Rail[] = [
       },
       ["Conformance", "conformance/index.html"],
       ["Glossary", "glossary/index.html"],
+      ["Changelog", CHANGELOG_PAGE],
     ],
   },
 ];
@@ -445,10 +451,11 @@ export interface Page {
   railPlace?: { under: string; label: string };
   /**
    * Where a page is generated from, when it is not the site's own writing: a normative document rendered from spec/,
-   * or the conformance page generated from tests/. The naming rule in CLAUDE.md exempts these by how they are made
+   * the conformance page generated from tests/, or the Changelog rendered from CHANGELOG.md, which names the products that
+   * adopted each release. The naming rule in CLAUDE.md exempts these by how they are made
    * (decision of 2026-11-25), and site/test/family.test.ts reads this field rather than a list of addresses.
    */
-  generatedFrom?: "spec" | "tests";
+  generatedFrom?: "spec" | "tests" | "changelog";
 }
 
 /**
@@ -567,6 +574,7 @@ async function writeSite(out: string, askUrl: string | null, inputs: InputOption
   await writeFile(join(out, "guide.md"), siteGuide());
   await writeFile(join(out, "llms.txt"), llmsTxt());
   await writeFile(join(out, "robots.txt"), robotsTxt());
+  await writeFile(join(out, CHANGELOG_FEED), await changelogFeed());
 
   const { pages, rails } = await sitePages(askUrl, inputs);
 
@@ -607,6 +615,7 @@ export async function sitePages(
     ...specs,
     guidePage(),
     await conformancePage(),
+    await changelogPage(),
     exampleIndex(records, publication),
     ...(knowledge.length === 0 ? [] : [knowledgeIndex(knowledge)]),
     ...knowledge.map((entry) => knowledgePage(entry, knowledge)),
@@ -865,6 +874,82 @@ ${codeRows.join("\n")}
 A tool that imports an export rather than producing one is checked against ${manifest.cases.length} envelopes for \`${manifest.contract}\`: ${accepted} it must accept and ${manifest.cases.length - accepted} it must reject. Every rejected envelope is an accepted one with one deliberate defect, and several are valid against the schema, so a schema validator alone is not a consumer. The [export contract](../specifications/export/) says what a consumer checks.
 `;
   return renderPage("conformance/index.html", source, join(root, "tests", "index.json"), { generatedFrom: "tests" });
+}
+
+/** An entry's anchor on the Changelog page, and so its id and link in the feed. */
+export function changelogAnchor(version: string): string {
+  return `v${version}`;
+}
+
+async function readChangelog(): Promise<string> {
+  return readFile(join(root, "CHANGELOG.md"), "utf8");
+}
+
+/**
+ * The Changelog, rendered from CHANGELOG.md as it is (2026-11-27, #166): every release, newest first, the summary of
+ * each from 0.18.0 above its detail. Each release's heading carries the anchor `v<version>`, which is what the feed's
+ * entries link to. It names the products that adopted a release, so it is exempt from the naming rule by how it is
+ * made, as the specifications are.
+ */
+async function changelogPage(): Promise<Page> {
+  const file = join(root, "CHANGELOG.md");
+  const source = `---\nmarkset: true\n---\n\n${await readChangelog()}`;
+  const page = renderPage(CHANGELOG_PAGE, source, file, { generatedFrom: "changelog" });
+  const banner = `<p class="site-source">Rendered from <a href="${REPO}/blob/main/CHANGELOG.md"><code>CHANGELOG.md</code></a> in the repository · <a href="../${CHANGELOG_FEED}">Atom feed of releases</a></p>\n`;
+  const headings = /<h2 id="[^"]*">(\d+\.\d+\.\d+(?:-[a-z]+\.\d+)?) — \d{4}-\d{2}-\d{2}<\/h2>/g;
+  const body = page.body.replace(headings, (heading, version: string) =>
+    heading.replace(/id="[^"]*"/, `id="${changelogAnchor(version)}"`),
+  );
+  return { ...page, body: underHeading(body, banner) };
+}
+
+/** XML 1.0 forbids most control characters, whatever escaping is done. */
+function xml(value: string): string {
+  const allowed = (code: number) => code >= 0x20 || code === 0x09 || code === 0x0a || code === 0x0d;
+  return esc([...value].filter((char) => allowed(char.codePointAt(0) as number)).join(""));
+}
+
+/** What a release's feed entry says: its summary from 0.18.0, and the first paragraph of the entry before that. */
+function feedContent(entry: ChangelogEntry): string {
+  const markdown = entry.summary ?? entry.body.split(/\n\s*\n/)[0];
+  const parsed = parseDocument(`---\nmarkset: true\n---\n\n${markdown}\n`);
+  failOnErrors(parsed.diagnostics, `CHANGELOG.md ${entry.heading}`);
+  // A feed reader shows the HTML inside its own page, where the headings' ids would collide with the reader's own.
+  return renderHtml(parsed.ast, { diagrams: false, charts: false }).replace(/ id="[^"]*"/g, "");
+}
+
+/** The feed text for a list of entries: one Atom entry per release, newest first as the changelog is written. */
+export function atomFeed(entries: ChangelogEntry[], render: (entry: ChangelogEntry) => string = feedContent): string {
+  const released = entries.filter((entry) => entry.date !== null);
+  const page = canonicalUrl(CHANGELOG_PAGE);
+  const updated = (date: string) => `${date}T00:00:00Z`;
+  const items = released
+    .map((entry) => {
+      const link = `${page}#${changelogAnchor(entry.version)}`;
+      return `<entry>
+<title>${xml(`${SITE_NAME} ${entry.version}`)}</title>
+<id>${xml(link)}</id>
+<link rel="alternate" type="text/html" href="${xml(link)}"/>
+<updated>${updated(entry.date as string)}</updated>
+<content type="html">${xml(render(entry))}</content>
+</entry>`;
+    })
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<title>${xml(`${SITE_NAME} releases`)}</title>
+<id>${xml(page)}</id>
+<link rel="self" type="application/atom+xml" href="${xml(new URL(CHANGELOG_FEED, CANONICAL).href)}"/>
+<link rel="alternate" type="text/html" href="${xml(page)}"/>
+<updated>${updated(released[0]?.date ?? "1970-01-01")}</updated>
+<author><name>${xml(SITE_NAME)}</name></author>
+${items}
+</feed>
+`;
+}
+
+async function changelogFeed(): Promise<string> {
+  return atomFeed(parseChangelog(await readChangelog()));
 }
 
 function rank(order: string[], name: string): number {
@@ -1219,6 +1304,7 @@ function shell(page: Page, askUrl: string | null = null, rails: typeof RAILS = R
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(page.description)}">
 ${meta}<link rel="icon" type="image/svg+xml" href="${rel}icon.svg">
+<link rel="alternate" type="application/atom+xml" title="${SITE_NAME} releases" href="${rel}${CHANGELOG_FEED}">
 <link rel="stylesheet" href="${rel}css/markset.css">
 <link rel="stylesheet" href="${rel}css/site.css">
 ${askUrl === null ? "" : `<link rel="stylesheet" href="${rel}chat/panel.css">\n`}${(page.styles ?? []).map((href) => `<link rel="stylesheet" href="${rel}${href}">\n`).join("")}</head>

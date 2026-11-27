@@ -36,6 +36,10 @@ repository-relative.
   `/guide/`), `/llms.txt` points agents at it and at markset.org/guide.md, every `spec/*.schema.json` is copied to
   `/spec/` where its `$id` points, and `sitemap.xml`, `robots.txt` and `404.html` come from the page list.
   `/conformance/` is generated from `tests/`.
+  `/changelog/` (Reference, 2026-11-27, #166) is rendered from `CHANGELOG.md` and `/changelog.xml` is its Atom feed, one
+  entry per release (id and link `/changelog/#v<version>`, `updated` the release date, content the summary, or the first
+  paragraph before 0.18.0), linked from every page's head; it is exempt from the naming rule as the specifications are
+  (`generatedFrom: "changelog"`), and it is not in the chat's corpus.
 - **Colours.** The accent is coralreefventures.com's Intentset token (`--crv-intentset-text`,
   `light-dark(#2c6a54, #7cc3a8)`), so the product reads in the same green on both sites. The neutrals are
   Intentset's own green-tinted ground and ink, **deliberately**: each family site's ground carries its own mark's

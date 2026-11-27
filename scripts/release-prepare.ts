@@ -13,7 +13,8 @@
  *   - `VERSION` in `packages/mcp/src/index.ts`;
  *   - the header of `.intentset/agents.md`;
  *   - `implementation` in the frontmatter of every specification in `spec/`;
- *   - `## Unreleased` in `CHANGELOG.md`, which becomes `## <version> — <date>`.
+ *   - `## Unreleased` in `CHANGELOG.md`, which becomes `## <version> — <date>`. It refuses an entry that does not open
+ *     with the summary the changelog's preamble describes (scripts/changelog.ts).
  *
  * It never commits, tags or publishes. A release is the v<version> tag, with
  * the message <version>, pushed after this change is reviewed and merged; `.github/workflows/release.yml`
@@ -24,6 +25,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { summaryProblems } from "./changelog.ts";
 
 export interface PrepareOptions {
   /** The version being released, such as 0.17.1. */
@@ -134,9 +136,10 @@ export function prepareRelease(read: (path: string) => string, paths: string[], 
       );
     } else if (path === "CHANGELOG.md") {
       next = replaceRequired(path, text, /^## Unreleased$/mu, `## ${to} — ${date}`, "## Unreleased");
-      const entry = next.split(/^## /mu)[1] ?? "";
-      if (entry.split("\n").slice(1).join("\n").trim() === "")
-        throw new Error(`${path}: the Unreleased entry is empty`);
+      const body = (next.split(/^## /mu)[1] ?? "").split("\n").slice(1).join("\n").trim();
+      if (body === "") throw new Error(`${path}: the Unreleased entry is empty`);
+      const problems = summaryProblems(body);
+      if (problems.length > 0) throw new Error(`${path}: the Unreleased entry ${problems.join("; and ")}`);
     } else {
       throw new Error(`${path}: no rule for this file`);
     }

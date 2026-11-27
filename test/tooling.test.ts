@@ -3,7 +3,8 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import { plainCarrier, readArtifact } from "@intentset/core";
-import { prepareRelease, releasePaths } from "../scripts/release-prepare.ts";
+import { splitEntry, summaryProblems } from "../scripts/changelog.ts";
+import { compareVersions, prepareRelease, releasePaths } from "../scripts/release-prepare.ts";
 
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
@@ -278,6 +279,9 @@ test("every specification and the agent guide name the root version", async () =
   assert.ok(guide.includes(`(intentset ${version})`), ".intentset/agents.md names another version");
 });
 
+const SUMMARY =
+  "### Added\n\n- **A change.** (#1)\n\n### Details\n\n**A change.** Core and the suite did not move, nor the export.";
+
 test("release:prepare writes the new version into every carrier, and refuses drift", () => {
   const files: Record<string, string> = {
     "package.json":
@@ -290,7 +294,7 @@ test("release:prepare writes the new version into every carrier, and refuses dri
     "packages/mcp/src/index.ts": 'export const VERSION = "1.2.3";\n',
     ".intentset/agents.md": "Written by `intentset init` (intentset 1.2.3). To refresh it\n",
     "spec/core.md": "---\ntitle: Core\nimplementation: 1.2.3\n---\n\nimplementation: 1.2.3 stays in the body\n",
-    "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n**A change.**\n\n## 1.2.3 — 2026-01-01\n",
+    "CHANGELOG.md": `# Changelog\n\n## Unreleased\n\n${SUMMARY}\n\n## 1.2.3 — 2026-01-01\n`,
   };
   const paths = Object.keys(files).sort();
   const read = (p: string) => files[p]!;
@@ -310,7 +314,11 @@ test("release:prepare writes the new version into every carrier, and refuses dri
     out.files.get("spec/core.md"),
     "---\ntitle: Core\nimplementation: 1.2.4\n---\n\nimplementation: 1.2.3 stays in the body\n",
   );
-  assert.match(out.files.get("CHANGELOG.md")!, /^## 1\.2\.4 — 2026-02-02\n\n\*\*A change\.\*\*\n\n## 1\.2\.3/mu);
+  assert.match(
+    out.files.get("CHANGELOG.md")!,
+    /^## 1\.2\.4 — 2026-02-02\n\n### Added\n\n- \*\*A change\.\*\* \(#1\)\n[\s\S]*\n\n## 1\.2\.3/mu,
+  );
+  assert.doesNotMatch(out.files.get("CHANGELOG.md")!, /Unreleased/u);
 
   const run = (override: Record<string, string>, to = "1.2.4") =>
     prepareRelease((p) => override[p] ?? files[p]!, paths, { to, date: "2026-02-02" });
@@ -327,6 +335,56 @@ test("release:prepare writes the new version into every carrier, and refuses dri
     () => run({ "CHANGELOG.md": "## Unreleased\n\n## 1.2.3 — 2026-01-01\n" }),
     /Unreleased entry is empty/u,
   );
+});
+
+test("the release creates the GitHub Release from the changelog, after publishing, with the least permission", async () => {
+  const text = await readFile(join(root, ".github", "workflows", "release.yml"), "utf8");
+  assert.match(text, /^ {4}permissions:\n {6}contents: write\n {6}id-token: write$/mu, "the job may write contents");
+  assert.match(text, /^permissions:\n {2}contents: read\n {2}id-token: write$/mu, "the workflow stays read-only");
+  const create = text.indexOf("name: Create the GitHub Release");
+  assert.ok(
+    create > text.indexOf("pnpm --filter") && create > text.indexOf("smoke:registry"),
+    "after publish and verify",
+  );
+  const step = text.slice(create);
+  assert.match(step, /gh release view "\$tag"/u, "it skips a release that exists");
+  assert.match(step, /scripts\/release-notes\.ts "\$version"/u);
+  assert.match(step, /\*-\*\) channel="--prerelease"/u);
+  assert.match(step, /\*\) channel="--latest"/u);
+  assert.match(step, /gh release create "\$tag" --verify-tag .*--notes-file .*"\$channel"/u);
+});
+
+test("release:prepare refuses an Unreleased entry with no summary, or with a heading outside the list", () => {
+  const files: Record<string, string> = {
+    "package.json": '{\n  "version": "1.2.3"\n}\n',
+    "CHANGELOG.md": "",
+  };
+  const run = (unreleased: string) =>
+    prepareRelease(
+      (p) =>
+        p === "CHANGELOG.md" ? `# Changelog\n\n## Unreleased\n\n${unreleased}\n\n## 1.2.3 — 2026-01-01\n` : files[p]!,
+      ["CHANGELOG.md"],
+      {
+        to: "1.2.4",
+        date: "2026-02-02",
+      },
+    );
+  const line = "- **A change.** (#1)";
+  assert.ok(run(`### Fixed\n\n${line}\n\n### Details\n\n**A change.**`).files.has("CHANGELOG.md"));
+  assert.ok(
+    run(`### Breaking\n\n${line}\n\n### Security\n\n${line}`).files.has("CHANGELOG.md"),
+    "Details is optional here",
+  );
+  assert.throws(() => run("**A change.** Core and the suite did not move, nor the export."), /entry has no summary/u);
+  assert.throws(() => run(`### Details\n\n**A change.**`), /no summary heading before ### Details/u);
+  assert.throws(() => run(`### Features\n\n${line}`), /"### Features", which is not one of/u);
+  assert.throws(() => run(`### Added\n\n${line}\n\n### Notes\n\n${line}`), /"### Notes"/u);
+  assert.throws(() => run(`**Text first.**\n\n### Added\n\n${line}`), /text above its first ### heading/u);
+  assert.throws(() => run(`### Added\n\n${line}\n\n### Breaking\n\n${line}`), /Breaking comes first/u);
+  assert.throws(() => run(`### Fixed\n\n${line}\n\n### Added\n\n${line}`), /out of order/u);
+  assert.throws(() => run(`### Added\n\n${line}\n\n### Added\n\n${line}`), /"### Added" twice/u);
+  assert.throws(() => run(`### Added\n\nNothing here.`), /"### Added" with no line under it/u);
+  assert.throws(() => run(`### Added\n\n${line}\n\n### Details\n\ntext\n\n### Fixed\n\n${line}`), /after ### Details/u);
 });
 
 test("release:prepare reads every carrier the repository has", () => {
@@ -356,9 +414,11 @@ test("the changelog has an entry for the version in package.json, and every entr
   for (const entry of entries) {
     const [heading, ...rest] = entry.split("\n");
     assert.match(heading, /^(Unreleased|\d+\.\d+\.\d+ — \d{4}-\d{2}-\d{2})$/u, `"${heading}" is not a release heading`);
-    const lead = rest
-      .join("\n")
-      .trim()
+    const [entryVersion] = heading.split(" ");
+    if (entryVersion === "Unreleased" || compareVersions(entryVersion, "0.18.0") >= 0)
+      assert.deepEqual(summaryProblems(rest.join("\n").trim()), [], `${heading}: the summary`);
+    // From 0.18.0 the summary comes first and `### Details` opens the paragraphs this reads.
+    const lead = splitEntry(rest.join("\n"))[1]
       .split(/\n\s*\n/u)[0]
       .replace(/\s+/gu, " ");
     // One bold sentence on what changed, then what moved: the specifications,
