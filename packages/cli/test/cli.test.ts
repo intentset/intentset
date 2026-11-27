@@ -179,6 +179,39 @@ test("the guide runs the CLI through the package manager the repository uses", a
   assert.match(readFileSync(join(declared, ".intentset", "agents.md"), "utf8"), /pnpm exec intentset init --agents/);
 });
 
+test("BEH-AGENT-GUIDE: the guide's slice template validates beside its behavior template, with no layers and no resources", async (t) => {
+  const dir = await example(t);
+  const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");
+  const [behavior, slice] = [...guide.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
+  assert.match(slice, /^ {2}type: slice$/m, "the slice's template follows the behavior's");
+  for (const key of ["kind", "domain", "entrypoints", "layers", "claims", "usesResources"]) {
+    assert.match(slice, new RegExp(`^ {4}${key}:`, "m"), `the template carries slice.${key}`);
+  }
+  assert.match(slice, /^ {4}layers: \{\}$/m);
+  assert.match(slice, /^ {4}usesResources: \[\]$/m);
+  assert.match(guide, /never\ninvent a layer the code does not have/);
+  const fill = (template: string) =>
+    template
+      .replaceAll("BEH-AREA-NAME", "BEH-ASMT-NEW")
+      .replace("SLICE-AREA-NAME", "SLICE-ASMT-NEW")
+      .replace("<an owner from the registry>", "team-assessment")
+      .replace("CAP-...", "CAP-ASMT-ASSIGN")
+      .replace("RULE-...", "RULE-ASMT-FUTURE")
+      .replace("PRD-...", "PRD-LANTERN")
+      .replace("<a release from the registry>", "pilot-1")
+      .replace("<a role>", "teacher")
+      .replace("<an edition>", "standard")
+      .replace("<the part of the business it serves, such as assessment>", "assessment");
+  for (const record of [fill(behavior), fill(slice)]) {
+    assert.doesNotMatch(record, /\.\.\.|<[a-z]/, "every placeholder was replaced");
+  }
+  writeFileSync(join(dir, "product", "scheduling", "BEH-ASMT-NEW.md"), fill(behavior));
+  writeFileSync(join(dir, "product", "scheduling", "SLICE-ASMT-NEW.md"), fill(slice));
+  const validate = await run(dir, "validate");
+  assert.equal(validate.code, 0, validate.out + validate.err);
+  assert.match(validate.out, /^17 artifacts, 0 errors/);
+});
+
 test("the guide's behavior template validates once its placeholders name real values", async (t) => {
   const dir = await example(t);
   const guide = readFileSync(join(dir, ".intentset", "agents.md"), "utf8");

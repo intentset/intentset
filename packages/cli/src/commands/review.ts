@@ -64,6 +64,7 @@ import {
   chooseBase,
   fileAt,
   renamesSince,
+  sharesHistory,
   UNCHANGED_TRAILER,
 } from "../git.ts";
 import { count, formatDiagnostic, type Io, json, snapshotLine, TOOL } from "../output.ts";
@@ -416,7 +417,18 @@ export function reviewCommand(
     return 2;
   }
   const base = "unavailable" in chosen ? null : chosen;
-  const changes: Changes = { base, ...changedFiles(repo.root, base) };
+  // A base that shares no history with HEAD, as after a shallow fetch, leaves nothing to compare. Passing would read
+  // "git could not say" as "nothing changed", so it is refused as a base that names no commit is.
+  const files = base !== null && !sharesHistory(repo.root, base.commit) ? null : changedFiles(repo.root, base);
+  if (base !== null && files === null) {
+    io.stderr(
+      `intentset review: the base ${base.ref} shares no history with HEAD, so what changed since it cannot be read. ` +
+        "This usually means a shallow clone or fetch: fetch the full history (`fetch-depth: 0` in actions/checkout, " +
+        "or `git fetch --unshallow`) and run it again.\n",
+    );
+    return 2;
+  }
+  const changes: Changes = { base, ...(files ?? { committed: [], uncommitted: [] }) };
   if ("unavailable" in chosen) changes.baseUnavailable = chosen.unavailable;
   const changed = [...new Set([...changes.committed, ...changes.uncommitted])].sort(compareStrings);
   const { starts, unattributed } = attribute(graph, changed);

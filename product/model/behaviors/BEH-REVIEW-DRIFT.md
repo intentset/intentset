@@ -6,11 +6,11 @@ intentset:
   id: BEH-REVIEW-DRIFT
   type: behavior
   title: Review lists slices whose code changed while their records did not
-  status: approved
+  status: draft
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 1
+  revision: 2
   parent: CAP-AGENT-CONTEXT
   links:
     governedBy: [RULE-READ-ONLY-CHECKS]
@@ -34,7 +34,7 @@ A git repository and a base ref.
 
 ## Outcomes
 
-Success: the review, exit 0. Failure: with `--fail-on-drift`, any slice no commit acknowledged makes the command exit 1.
+Success: the review, exit 0. Failure: with `--fail-on-drift`, any slice no commit acknowledged makes the command exit 1. A base that names no commit, or one that shares no history with HEAD, as a shallow fetch leaves it, is refused with exit 2 and no review, since what changed since it cannot be read and must never be reported as nothing.
 
 ## Sources
 

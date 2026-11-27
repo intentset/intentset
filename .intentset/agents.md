@@ -146,6 +146,57 @@ What must be true first.
 Success: what happens. Failure: what is rejected, and what is left unchanged.
 ```
 
+A slice record says which code delivers behaviors. Modeling code that already exists starts with one, written from
+the code as it is: `claims` are the paths it owns, `entrypoints` the files other code may import, and
+`delivery: built` says the code exists. All six keys under `slice` are required. Write `layers: {}` where the
+code has no layers and `usesResources: []` where it uses no shared resource, and say so in Responsibility; never
+invent a layer the code does not have, since a reviewer reads it as the design:
+
+```markdown
+---
+markset: true
+intentset:
+  spec: '0.3'
+  profile: intentset/slice/0.3
+  id: SLICE-AREA-NAME
+  type: slice
+  title: The code's job in a few words, such as Assessment scheduling
+  status: draft
+  delivery: built
+  owner: <an owner from the registry>
+  visibility: internal
+  audiences: [engineering, product]
+  links:
+    implements: [BEH-AREA-NAME]
+  availability:
+    products: [PRD-...]
+    releases: [<a release from the registry>]
+    roles: [<a role>]
+    editions: [<an edition>]
+    flags: []
+  slice:
+    kind: product
+    domain: <the part of the business it serves, such as assessment>
+    entrypoints: [src/area/name/index.ts]
+    layers: {}
+    claims:
+      - kind: source
+        path: src/area/name/**
+    usesResources: []
+---
+
+# The code's job in a few words, such as Assessment scheduling
+
+## Responsibility
+What this code is accountable for. It has no layers and uses no shared resource.
+
+## Public contract
+What other code may call, through the entrypoints.
+
+## Verification
+The checks that cover it, by ID.
+```
+
 A verification record binds a check to what it verifies. An automated one names the test file and a selector the
 test's title holds as whole words (a `describe`'s name binds all of its tests), which is how `evidence import`
 matches a run to it:
