@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, test } from "node:test";
 import { type Diagnostic, EMPTY_REGISTRIES, type Graph, plainCarrier, validate } from "@intentset/core";
 import {
+  type ArchitectureConfig,
   applyBaseline,
   applyExceptions,
   type BaselineEntry,
@@ -1637,9 +1638,28 @@ describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
       read.diagnostics.map((d) => `${d.code} ${d.origin} ${d.path}:${d.location?.line} ${d.field}`),
       ["CFG001 architecture .intentset/profile.yaml:4 /ruleSets"],
     );
-    const loaded = loadConfig(new Map([[PROFILE_PATH, `extends: ${TYPESCRIPT_PROFILE}\nshared: ["lib/**"]\n`]]));
-    assert.deepEqual(loaded.config, DEFAULT_ARCHITECTURE_CONFIG, "the reference profile, whole");
-    assert.equal(loaded.diagnostics.length, 1);
+    // The check stops with the file's errors: no other profile stands in, and nothing else is checked.
+    const files = new Map([
+      [PROFILE_PATH, `extends: ${TYPESCRIPT_PROFILE}\nscope: ["src/**"]\n`],
+      [".intentset/architecture.yaml", "routers:\n- src/app/Router.tsx\n"],
+      ["src/a.ts", 'import { gone } from "./gone";\n'],
+    ]);
+    const loaded = loadConfig(files);
+    assert.equal(loaded.profileFailed, true);
+    assert.equal(loaded.read, false);
+    const result = checkArchitecture(graphOf({}), EMPTY_REGISTRIES, { files });
+    assert.deepEqual(
+      result.diagnostics.map((d) => `${d.code} ${d.path} ${d.field ?? "-"}`),
+      ["CFG001 .intentset/profile.yaml -", "CFG001 .intentset/profile.yaml /scope"],
+      "the profile's errors only: not the architecture configuration's, and no finding",
+    );
+    assert.match(result.diagnostics[1].message, /`scope` is a fact about one repository/);
+    assert.match(result.diagnostics[1].remediation, /State `scope` in \.intentset\/architecture\.yaml/);
+    assert.deepEqual(result.summary.unresolved, [
+      ".intentset/profile.yaml: the profile has errors, so nothing was checked",
+    ]);
+    assert.equal(result.summary.edges, 0);
+    assert.deepEqual(result.ownership, []);
   });
 
   test("a language with no reader is an error that names the languages read, and nothing is passed", () => {
@@ -1663,6 +1683,72 @@ describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
     assert.deepEqual(result.summary.unresolved, [
       ".intentset/profile.yaml: this release has no reader for python, so no file's imports were checked",
     ]);
+  });
+
+  test("BEH-ARCH-OUTSIDE-PACKAGES: a package that reaches outside is the seam's to import, and never a pure layer's (VSA015)", () => {
+    const slice = `---
+markset: 0
+intentset:
+  spec: '0.3'
+  profile: intentset/slice/0.3
+  id: SLICE-O
+  type: slice
+  title: Outside
+  status: draft
+  owner: team-assessment
+  visibility: internal
+  audiences: [engineering]
+  slice:
+    kind: technical
+    rationale: A slice for the rule.
+    domain: outside
+    entrypoints: [src/o/index.ts]
+    layers:
+      presentation: [src/o/ui/**]
+      policy: [src/o/policies/**]
+      external: [src/o/client/**]
+    claims:
+    - kind: source
+      path: src/o/**
+    usesResources: []
+---
+
+# Outside
+
+## Responsibility
+
+Outside.
+
+## Public contract
+
+None.
+
+## Verification
+
+None.
+`;
+    const files = new Map([
+      ["src/o/index.ts", ""],
+      ["src/o/client/c.ts", 'import { Client } from "pg";\nexport const c = Client;\n'],
+      ["src/o/ui/u.ts", 'import { Client } from "pg";\nexport const u = Client;\n'],
+      ["src/o/policies/p.ts", 'import type { Client } from "pg/types";\nexport type P = Client;\n'],
+    ]);
+    const run = (config: Partial<ArchitectureConfig>) =>
+      checkArchitecture(graphOf({ "SLICE-O.md": slice }), EMPTY_REGISTRIES, { files }, { config })
+        .diagnostics.filter((d) => d.code === "VSA015")
+        .map((d) => `${d.path}: ${d.message}`);
+    const plain = shippedProfile(TYPESCRIPT_PROFILE)!;
+    assert.deepEqual(run({ ...plain, outsidePackages: ["pg/**"] }), [
+      'src/o/policies/p.ts: src/o/policies/p.ts is in a pure layer of SLICE-O and type-imports "pg/types", a package that reaches outside the product.',
+      'src/o/ui/u.ts: src/o/ui/u.ts imports "pg", a package that reaches outside the product, outside the seam of SLICE-O.',
+    ]);
+    assert.deepEqual(run(plain), [], "a profile that lists no such package judges none");
+    assert.deepEqual(run({ outsidePackages: [] }), [], "and nor does the reference profile");
+    assert.deepEqual(
+      run({ ...plain, outsidePackages: ["pg/**"], roles: { seam: null, pure: ["policy"], rendering: [] } }).length,
+      1,
+      "with no seam named, only the pure layers are judged",
+    );
   });
 
   test("the layer functions read the roles from the profile, and the reference profile's by default", () => {

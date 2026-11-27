@@ -29,6 +29,7 @@ layerFolders:
 forbiddenPackages:
   domain: ["react/**"]
   adapters: ["react/**"]
+outsidePackages: ["pg/**", "stripe/**"]   # only the seam may import these, and never a pure layer
 ```
 
 Each slice then declares its layers by those names:
@@ -42,6 +43,21 @@ Each slice then declares its layers by those names:
       adapters: [src/features/orders/adapters/**]
 ```
 
+## Which file a key belongs in
+
+A profile says what is true of a stack, so several repositories could share it. What is true of one repository goes
+in `.intentset/architecture.yaml`, which overrides the profile.
+
+| In `.intentset/profile.yaml` | In `.intentset/architecture.yaml` only |
+|---|---|
+| `id`, `extends`, `language`, `layers`, `roles`, `layerFolders`, `ruleSets` | `scope`, `areas` |
+| `layerMatrix`, `forbiddenPackages`, `outsidePackages` | `routerFiles`, `responseParserModules`, `schemaBridge` |
+| `sourceRoots`, `shared`, `infrastructure`, `composition`, `tests`, `ignore` | `sharedBackend`, `conditions` |
+| `backendRoots`, `backendSdks`, `screensGlob` | |
+
+Every key in the left column but the first row may also be set in `.intentset/architecture.yaml`. A key from the
+right column in a profile is an error.
+
 ## What to know before you change it
 
 - **A key you state replaces the shipped one whole.** Nothing is merged. That is why the example states the matrix,
@@ -50,7 +66,11 @@ Each slice then declares its layers by those names:
   are pure and which render.
 - **`.intentset/architecture.yaml` still works** and overrides the profile. Keep what is true of one repository
   there, such as its scope.
-- **A mistake in the file fails the check** with CFG001, and the file is not applied in part.
-- **The check reads TypeScript and JavaScript.** A profile for another language is refused until a release reads it.
+- **`outsidePackages` is what gives the seam and pure roles teeth.** List the packages that reach a database or an
+  outside service; an import of one outside the seam, or in a pure layer, is VSA015.
+- **A mistake in the file stops the check.** It reports the profile's errors (CFG001) and checks nothing else until
+  they are fixed.
+- **The check reads TypeScript and JavaScript.** A profile for another language is such an error until a release
+  reads it.
 
 Run `intentset architecture check` after each change. It reports what it could not check as well as what it found.

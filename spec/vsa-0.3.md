@@ -2,7 +2,7 @@
 title: Intentset Traceable Vertical Slice Architecture Specification v0.3
 id: intentset/vsa/0.3
 status: draft
-revision: 2026-11-26
+revision: 2026-11-27
 implementation: 0.18.0
 ---
 
@@ -36,6 +36,7 @@ The architecture regions are composition, product slices, shared neutral abstrac
 | VSA012 | Deleting or splitting a slice MUST disposition all owned behavior, paths, contracts and surfaces | Snapshot graph diff |
 | VSA013 | Exception records MUST be complete, unique and current (§9) | Exception record check |
 | VSA014 | A migration baseline MUST hold only violations that still exist (§9) | Baseline application |
+| VSA015 | A package the profile lists as reaching outside MUST be imported only from the seam layer, and never from a pure layer (§5) | Layer import graph |
 
 A checker MUST distinguish automatic structural checks from human assertions. It cannot reliably infer “business-neutral” from names or prove absence of dynamic network behavior. Reviews of VSA007 and unresolvable dynamic dependencies are required; unresolved checks cannot be represented as passed.
 
@@ -105,6 +106,8 @@ A layer policy applies to what an import takes, not only to the file it names. A
 | Slice | Own permitted layers; declared foreign contracts, within what the importing layer may reach; shared; infrastructure through seam | Foreign internals |
 | Shared | Shared neutral abstractions | Infrastructure, slices, composition, owned business policy |
 | Infrastructure | Infrastructure, shared neutral abstractions, external libraries | Slices or composition |
+
+A profile MAY list the packages that reach a backend or an outside service: a database driver, an HTTP client, a cloud SDK. A slice file that imports one MUST be in the layer the profile gives the seam role, and MUST NOT be in a layer it gives the pure role; either is VSA015, an error. The list and the roles are the profile's ([profile contract](profile-contract.md) §2 and §3): a profile that lists no package judges none, and a role it gives no layer judges nothing, so a repository whose profile says neither is checked as it was before the rule (added 2026-11-27, ADR 0030; no case that conformed stops conforming). VSA015 is the part of VSA010 an import shows; reaching outside by a path no import shows stays VSA010's review.
 
 The dependency direction is infrastructure → shared, never shared → infrastructure. Product-specific behavior remains slice-owned. An import that crosses a region the wrong way, shared importing infrastructure, composition or a slice, infrastructure importing composition or a slice, or a slice importing composition, is REG001, an error. It is checked from the import graph; VSA007 asks the different question of who owns business behavior, which no import shows.
 

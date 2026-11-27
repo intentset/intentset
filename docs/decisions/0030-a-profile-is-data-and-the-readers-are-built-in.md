@@ -1,9 +1,8 @@
 # ADR 0030: An architecture profile is data a team writes, and the language readers are built in
 
-**Status:** proposed, 2026-11-27 (issue #158). The ten decisions under "Decided" were made by the maintainers on
-2026-11-27; the rest is the proposal built on them, and the record is accepted when the contract's specification
-lands. No specification, conformance case or export moves with this record: the contract it describes arrives as a
-specification of its own, in the same commit as its cases and its implementation.
+**Status:** accepted, 2026-11-27 (issue #158). Proposed 2026-11-27. The thirteen decisions under "Decided" were made
+by the maintainers the same day. The contract it describes is `spec/profile-contract.md`, which arrived with its cases
+and its implementation; the rename of TS007, the Next.js profile and the Python reader are the steps still to come.
 
 ## Context
 
@@ -56,6 +55,16 @@ as a computed `require` in TypeScript, which the check already reports as not ch
    stack's rules. A stack's profile, the Amplify one and later the Next.js one, is the plain profile with what the
    stack adds, and a team's profile extends whichever shipped one fits.
 10. **A team's profile lives at `.intentset/profile.yaml`**, used when present. One repository has one profile.
+11. **A profile file with an error stops the check with the profile's errors and nothing else.** No other profile
+    stands in for it, no finding of any other profile is reported, and the result fails. A language with no reader
+    is such an error, naming the languages read.
+12. **A profile holds policy and layout, and facts about one repository stay in `.intentset/architecture.yaml`.**
+    `scope`, `areas`, `routerFiles`, `responseParserModules`, `schemaBridge`, `sharedBackend` and `conditions` are
+    each an error in a profile file. The architecture configuration accepts everything it did and still overrides
+    the profile.
+13. **A portable rule gives the seam and pure roles meaning under every profile.** A package the profile lists in
+    `outsidePackages` is imported only from the seam layer and never from a pure layer: VSA015, stated in VSA §5.
+    The reference profile lists none, so no existing case changes.
 
 ## Decision
 
@@ -84,8 +93,8 @@ the stack adds, and is complete when shipped, so a team that extends it is still
 
 A repository's profile is the file at `.intentset/profile.yaml`. Everything `.intentset/architecture.yaml` may set
 today stays settable there and overrides the profile, so a repository's configuration keeps its meaning. With no
-profile file, the reference profile applies, as now. A profile file with an error is never applied in part: the
-errors are reported and the reference profile checks the tree.
+profile file, the reference profile applies, as now. A profile file with an error is never applied in part and no
+other profile stands in for it: the check stops with the file's errors.
 
 ### What a reader is
 
@@ -106,8 +115,10 @@ The reader for TypeScript is today's code, moved behind that interface. The inte
 ### Codes
 
 A profile file defines no diagnostic code, because it holds no check of its own. A violation of its matrix is VSA006
-whatever the profile, and a violation of its package policy is a VSA code too: the rule that is TS007 today becomes
-VSA015, stated in VSA §5 beside the matrix. TS007 is retired and never reused. Each reader owns a prefix for the rules only its language has (`TS`), and each rule set owns
+whatever the profile, and of its list of outside packages VSA015. A violation of its package policy is to be a VSA
+code too: the rule that is TS007 today becomes VSA016, stated in VSA §5 beside the matrix, and TS007 is retired and
+never reused. (This record first gave the rename VSA015. Decision 13's rule took that number when it landed first, so
+the rename is renumbered VSA016.) Each reader owns a prefix for the rules only its language has (`TS`), and each rule set owns
 one (`AMP`). The contract's specification holds the register of prefixes, so two never collide, and
 `test/codes.test.ts` holds the register to the code as it holds every other code.
 
@@ -128,7 +139,7 @@ must do with both. It arrives with:
 2. The contract's specification, the profile file with its one level of extension, and the reference profile as
    data. Still no existing case moves, so `intentset.spec` stays `0.3`, and the seam is proved before anything is
    renamed.
-3. TS007 becomes VSA015. This is the one breaking change: existing cases, exceptions and baseline entries name the
+3. TS007 becomes VSA016. This is the one breaking change: existing cases, exceptions and baseline entries name the
    code, so `intentset.spec` moves to `0.4` and `intentset migrate --to 0.4` rewrites the code where a repository
    wrote it. It is a step of its own so that the move carries nothing else.
 4. TypeScript with Next.js: a profile file and a Next.js rule set. It reuses the TypeScript reader, so it tests the
@@ -180,6 +191,4 @@ Four rules, each with a code under a prefix the rule set owns, defined in the pr
 - Settled by the contract (`spec/profile-contract.md` §2): a profile file's keys are `id`, `extends`, `language`,
   `layers`, `roles`, `layerMatrix`, `layerFolders`, `forbiddenPackages` and `ruleSets`, and every key the
   architecture configuration has.
-- Whether the seam and pure roles should be read by a portable rule. Today only the Amplify rule set reads them, so
-  under a plain profile they are stated and nothing checks them.
 - What "server-only code" is to the Next.js rule set where a file does not say so itself.

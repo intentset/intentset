@@ -2,7 +2,7 @@
 title: Intentset Core Specification v0.3
 id: intentset/core/0.3
 status: draft
-revision: 2026-11-26
+revision: 2026-11-27
 implementation: 0.18.0
 ---
 
@@ -38,6 +38,7 @@ Revisions that changed what a reader who conformed earlier sees (the breaking on
 | 2026-11-24 (`0.2`, no move) | **Approval is a reviewed change to a record, and a review lists it** (§7, §10, ADR 0022). |
 | 2026-11-25 (`0.3`) | **`intentset.spec` moves from `0.2` to `0.3`** (ADR 0023, ADR 0024, ADR 0025, ADR 0026, ADR 0027, ADR 0028, ADR 0029). |
 | 2026-11-26 (`0.3`, no move) | **`markset: true` declares a record, and the original `markset: 0` stays valid and means the same** (§3; [publication §2, §3](publication.md#3-review-record-and-needs-review)), following Markset 0.6.0. A `content-v1` pin hashes `true` as `0`, so a source moved from one form to the other keeps the pins on it. |
+| 2026-11-27 (`0.3`, no move) | **A profile is a file a team writes, and a package the profile lists as reaching outside is the seam's to import** ([profile contract](profile-contract.md); VSA §5, VSA015; ADR 0030). A new rule that judges only what a profile lists, and the reference profile lists nothing, so no case that conformed stops conforming. |
 
 ## 2. Semantic model and granularity
 

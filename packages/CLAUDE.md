@@ -42,8 +42,10 @@ resolveBinding(configured, hasSlices): { binding, reason }; hasSliceClaims(graph
 staleReport(graph, classification): { needRun, manual, counts }; runnerArguments(format, entries)   // `intentset evidence stale`: what needs a run
 computeSubject(input): { hash, parts, unexercised }; movedParts(a, b); partsChangedAmong(subject, changedFiles)   // the subject hash
 // @intentset/architecture
-loadConfig(files, override?): { config, diagnostics, reader, read }   // profile contract §4's one order: shipped profile, .intentset/profile.yaml, architecture.yaml, the caller
-readProfile(text, path?): { config | null, diagnostics }   // CFG001, origin "architecture"; null when anything is wrong: a profile is never applied in part
+loadConfig(files, override?): { config, diagnostics, reader, read, profileFailed }   // profile contract §4's one order: shipped profile, .intentset/profile.yaml, architecture.yaml, the caller
+// profileFailed: the profile file has an error, diagnostics holds only its errors, and checkArchitecture returns them and nothing else (contract §2)
+readProfile(text, path?): { config | null, diagnostics }   // CFG001, origin "architecture"; null when anything is wrong; REPOSITORY_KEYS are refused in a profile
+// config.outsidePackages: VSA015, the seam only and never a pure layer; empty in both shipped profiles
 shippedProfile(id), SHIPPED_PROFILES, REFERENCE_PROFILE, TYPESCRIPT_PROFILE; config.layers, .roles { seam, pure, rendering }, .layerFolders, .ruleSets
 typescriptReader, READERS; runs(config, "amplify")           // ADR 0030: a reader per language, a rule set per stack; no check names a layer
 subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed files, resources, a test's local imports, covers(path); a subject is computed one way (ADR 0026)

@@ -80,6 +80,7 @@ export {
   loadConfig,
   PROFILE_KEYS,
   PROFILE_PATH,
+  REPOSITORY_KEYS,
   readProfile,
   SHIPPED_PROFILE_SOURCES,
   SHIPPED_PROFILES,

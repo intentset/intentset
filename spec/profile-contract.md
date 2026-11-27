@@ -37,13 +37,21 @@ A repository has at most one profile of its own, at `.intentset/profile.yaml`, u
 | `layerFolders` | For each layer, the folders that stand for it in a slice that declares no layers (§3) |
 | `forbiddenPackages` | For each layer, the patterns of the packages it may not import |
 | `ruleSets` | The rule sets that run (§5) |
-| every key of `.intentset/architecture.yaml` | The same value, read and checked the same way (§4) |
+| `outsidePackages` | The patterns of the packages that reach a backend or an outside service (VSA §5, VSA015) |
+| `sourceRoots`, `shared`, `infrastructure`, `composition`, `tests`, `ignore` | The layout: where product source, neutral shared code, technical infrastructure, composition, tests and generated output live |
+| `backendRoots`, `backendSdks`, `screensGlob` | Settings of a reader or a rule set that are true of a stack: where its backend is deployed from, its backend SDKs' names, where its screens live |
+
+The last three rows are keys `.intentset/architecture.yaml` has too, read and checked the same way in either file (§4).
+
+**A profile holds policy and layout: what is true of a stack. A fact about one repository is not a profile's to state.** These keys of `.intentset/architecture.yaml` are each an error in a profile file: `scope`, `areas`, `routerFiles`, `responseParserModules`, `schemaBridge`, `sharedBackend` and `conditions`. Each names what one repository adopted, files it names one by one, or how its own workspace resolves, and stays in the architecture configuration.
 
 An `id` is two or more segments of lowercase letters, digits, hyphens and dots, joined by `/`, such as `acme/web/1`. IDs under `intentset/` name the profiles a release ships (§8), and a repository's file MUST NOT take one.
 
 A profile that extends none starts from nothing: every file is in scope and every other value is empty. It MUST state `language`, `layers` and `layerMatrix`.
 
-A file that is wrong in any way is CFG001 (Core §11) with origin `architecture`, one diagnostic per thing wrong, each naming the key and its line where there is one. The conditions are: the file does not parse; a key is not in the table; `id` is missing, malformed or under `intentset/`; a value has the wrong shape; and each condition §3 to §6 state. **A profile file is never applied in part.** When it has an error, a checker MUST report the errors and check the repository against the reference profile, so the result fails on the errors and nothing was judged by half a profile.
+A file that is wrong in any way is CFG001 (Core §11) with origin `architecture`, one diagnostic per thing wrong, each naming the key and its line where there is one. The conditions are: the file does not parse; a key is not in the table; a key is one of the seven a profile may not hold; `id` is missing, malformed or under `intentset/`; a value has the wrong shape; and each condition §3 to §6 state.
+
+**A profile file with an error stops the check.** A checker MUST report the file's errors and nothing else: it MUST NOT apply the file in part, MUST NOT check the repository against any other profile in its place, and MUST NOT report a finding or a pass for anything in the repository. The result fails, and it says that nothing was checked.
 
 ## 3. Layers and roles
 
@@ -56,6 +64,8 @@ A layer's name carries no meaning to a checker. Three roles do, and a profile sa
 | `seam` | one layer | The one layer that may reach a backend or an outside service (VSA §7) |
 | `pure` | a list of layers | Layers that stay free of SDKs, transport and UI |
 | `rendering` | a list of layers | The layers that may render an interface |
+
+The seam and pure roles are read under every profile by VSA015 (VSA §5): a package the profile lists in `outsidePackages` is imported only from the seam, and never from a pure layer. A rule set or a reader may read a role too (§5, §6).
 
 A role left out is played by no layer, and a rule that reads the role then judges nothing: with no rendering layer named, no layer is judged for rendering. A rule that reads a role MUST read it from the profile and MUST NOT recognize a layer by its name.
 
@@ -76,7 +86,7 @@ The configuration a repository is checked with is resolved in one order, each la
 3. `.intentset/architecture.yaml`, which keeps every key it has;
 4. what the caller of the checker hands in.
 
-`.intentset/architecture.yaml` holds what is true of one repository under its profile: its scope, its named router file, its areas. It cannot set `id`, `extends`, `language`, `layers`, `roles`, `layerFolders` or `ruleSets`.
+`.intentset/architecture.yaml` holds what is true of one repository under its profile, the seven keys of §2 among them, and accepts every key it accepted before this contract, with `outsidePackages`. It cannot set `id`, `extends`, `language`, `layers`, `roles`, `layerFolders` or `ruleSets`.
 
 ## 5. Rule sets
 
@@ -90,7 +100,7 @@ This version defines one rule set:
 |---|---|---|
 | `amplify` | `typescript` | AMP001 to AMP013, [reference profile](profile-typescript-amplify-gen2-0.3.md) §4, §6 and §9 |
 
-The seam and pure roles are read by this rule set (AMP001, AMP002, AMP006). Under a profile with no rule set, VSA010 stays a review assertion: unresolved until a reviewer asserts it, and never a pass.
+This rule set reads the seam and pure roles (AMP001, AMP002, AMP006) for the packages in `backendSdks` and the files under `backendRoots`. Under a profile with no rule set, VSA015 checks the packages the profile lists in `outsidePackages`. What no import shows stays VSA010, a review assertion: unresolved until a reviewer asserts it, and never a pass.
 
 ## 6. Readers
 
@@ -104,13 +114,13 @@ A reader reads source files and the data files that configure resolution. It MUS
 
 The rules only one language has belong to its reader and run whenever that reader does. For `typescript` they are TS001 to TS008 (reference profile §2 and §3), and TS008 reads the rendering role.
 
-A profile whose language a checker has no reader for is an error that names the languages the checker reads. The checker MUST NOT report a pass for that repository.
+A profile whose language a checker has no reader for is an error that names the languages the checker reads, and it stops the check as any error in the file does (§2): nothing else is checked, and no pass is reported.
 
 This version names one language: `typescript`, which covers TypeScript and JavaScript.
 
 ## 7. Codes
 
-A profile file defines no diagnostic code. A violation of its matrix is VSA006 under every profile.
+A profile file defines no diagnostic code. Under every profile a violation of its matrix is VSA006, and of its list of outside packages VSA015.
 
 Each specification owns the prefixes of the codes it defines, and a prefix belongs to one owner:
 
@@ -130,7 +140,7 @@ A checker ships profiles under `intentset/`, each complete when shipped. This ve
 
 | ID | What it is |
 |---|---|
-| `intentset/typescript/0.3` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set |
+| `intentset/typescript/0.3` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set and no outside package listed |
 | `intentset/typescript-amplify-gen2/0.3` | The reference profile: the plain TypeScript profile with the `amplify` rule set, the backend root `amplify/**` and the Amplify and AWS SDKs as `backendSdks` |
 
 The reference profile applies to a repository with no profile file, so a repository that had none is checked exactly as before this contract.
@@ -139,4 +149,4 @@ Each language a checker reads has a plain profile, so a team on any stack in tha
 
 ## 9. Conformance fixtures
 
-The cases are in `tests/vsa.json`, each named `PROFILE …`, over the scheduling example. They cover: a file that extends each shipped profile; a file that extends none; the order of §4; layers of a profile's own naming with each role read from the profile, and a role left out; a rule set turned off and on over the same tree; and one case for each error condition of §2 to §6. Every case of Traceable VSA and of the reference profile holds unchanged under this contract, with no profile file.
+The cases are in `tests/vsa.json`, each named `PROFILE …`, over the scheduling example. They cover: a file that extends each shipped profile; a file that extends none; the order of §4; layers of a profile's own naming with each role read from the profile, and a role left out; a rule set turned off and on over the same tree; one case for each error condition of §2 to §6, one for each key a profile may not hold, and one in which a tree another profile would fault is reported for the profile's error alone. The cases named `VSA015 …` are VSA §5's, run under the plain TypeScript profile. Every case of Traceable VSA and of the reference profile holds unchanged under this contract, with no profile file.

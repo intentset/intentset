@@ -107,7 +107,7 @@ learning from questions, and the AWS rules).
 
 - Diagnostic codes: `CORE001`–`CORE013`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
   of thing to fix, ADR 0024: an unreadable carrier is CORE010, a missing section CORE011, a field CORE001; an outcome
-  with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA014` and `REG001` (VSA §2, §5, §9), `TS001`–`TS008` and
+  with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA015` and `REG001` (VSA §2, §5, §9; VSA015 is the portable rule for the packages a profile lists as reaching outside, ADR 0030), `TS001`–`TS008` and
   `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
@@ -269,13 +269,16 @@ in `docs/implementation-plan.md` §5.
 - Seventy records of the model are drafts: OUT-DOCS-IMPROVE waits for a measure, the nine rules for
   verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
   for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
-- Architecture profiles for other stacks (#158): ADR 0030, proposed 2026-11-27, makes a profile a data file and keeps
-  the language readers built in, so the check still runs no code. The reader interface and the contract
-  (`spec/profile-contract.md`, with the reference profile as data and `.intentset/profile.yaml` for a team's own) are
-  done; the ADR is accepted by the maintainers, not by an agent. Next: TS007 renamed to VSA015 (which moves the
-  specifications to 0.4), then TypeScript with Next.js, then Python. No check recognizes a layer by its name: a rule
-  reads the seam, pure and rendering roles from the profile, and the Amplify checks run only where the profile names
-  the `amplify` rule set.
+- Architecture profiles for other stacks (#158): ADR 0030, accepted 2026-11-27, makes a profile a data file and keeps
+  the language readers built in, so the check still runs no code. Done: the reader interface, and the contract
+  (`spec/profile-contract.md`) with the reference profile as data and `.intentset/profile.yaml` for a team's own.
+  Next, in this order: TS007 renamed to VSA016 (which moves the specifications to 0.4), TypeScript with Next.js, then
+  Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
+  from the profile); the Amplify checks run only where the profile names the `amplify` rule set; a profile file with
+  an error stops the check with its errors and nothing else; a profile holds policy and layout, and `scope`, `areas`,
+  `routerFiles`, `responseParserModules`, `schemaBridge`, `sharedBackend` and `conditions` stay in
+  `.intentset/architecture.yaml`; and VSA015 judges the packages a profile lists in `outsidePackages`, of which the
+  shipped profiles list none.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
   weeks.
 - The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).

@@ -365,6 +365,28 @@ export function checkBoundaries(
         }
         continue;
       }
+      // VSA015: a package that reaches outside is the seam's to import, and never a pure layer's (VSA §5). A role
+      // the profile gives no layer judges nothing.
+      if (source !== undefined && !model.underBackend(from) && matchAny(config.outsidePackages, specifier)) {
+        const pure = config.roles.pure.length > 0 && isPure(source, from, config);
+        if (pure || (config.roles.seam !== null && !inSeam(source, from, config))) {
+          findings.push(
+            finding({
+              code: "VSA015",
+              artifact,
+              path: from,
+              location,
+              message: pure
+                ? `${from} is in a pure layer of ${source.id} and ${how(edge)}, a package that reaches outside the product.`
+                : `${from} ${how(edge)}, a package that reaches outside the product, outside the seam of ${source.id}.`,
+              remediation: `Import it only from ${source.id}'s ${config.roles.seam ?? "seam"} layer, and pass plain values from there (VSA §5, VSA015).`,
+              edges: [{ from, to: edge.specifier }],
+              taken: takenBy(edge),
+            }),
+          );
+          continue;
+        }
+      }
       const layer = source !== undefined && !model.underBackend(from) ? fileLayer(source, from, config) : null;
       const pattern =
         layer === null ? undefined : (config.forbiddenPackages[layer] ?? []).find((p) => matchPattern(p, specifier));
