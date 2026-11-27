@@ -268,8 +268,9 @@ in `docs/implementation-plan.md` §5.
   verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
   for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
 - Architecture profiles for other stacks (#158): ADR 0030, proposed 2026-11-27, makes a profile a data file and keeps
-  the language readers built in, so the check still runs no code. Its order of work: the contract's specification with
-  the reference profile as data, then TypeScript with Next.js, then Python.
+  the language readers built in, so the check still runs no code. Its order of work: the reader interface, the
+  contract's specification with the reference profile as data, TS007 renamed to VSA015 (which moves the specifications
+  to 0.4), then TypeScript with Next.js, then Python.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
   weeks.
 - The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).

@@ -1,9 +1,9 @@
 # ADR 0030: An architecture profile is data a team writes, and the language readers are built in
 
-**Status:** proposed, 2026-11-27 (issue #158). The four decisions under "Decided" were made by the maintainers on
-2026-11-27; the rest is the proposal built on them and waits for acceptance. No specification, conformance case or
-export moves with this record: the contract it describes arrives as a specification of its own, in the same commit as
-its cases and its implementation.
+**Status:** proposed, 2026-11-27 (issue #158). The seven decisions under "Decided" were made by the maintainers on
+2026-11-27; the rest is the proposal built on them, and the record is accepted when the contract's specification
+lands. No specification, conformance case or export moves with this record: the contract it describes arrives as a
+specification of its own, in the same commit as its cases and its implementation.
 
 ## Context
 
@@ -43,6 +43,12 @@ as a computed `require` in TypeScript, which the check already reports as not ch
 2. **The contract is a specification of its own**, not a section of VSA and not only an interface in the code.
 3. **TypeScript with Next.js is the first new profile.**
 4. **Python is the second language**, to show the contract is not TypeScript-shaped.
+5. **A profile file may extend one profile Intentset ships, one level deep.** It states what differs. It may not
+   extend another team's profile, so there is never a chain to trace.
+6. **The package policy takes a language-neutral code now**, in place of TS007. Every language has the rule, and a
+   Python repository reporting a `TS` code would be told something false about itself.
+7. **The first Next.js rule set has four rules**: the server and client boundary, routes as composition, server
+   actions and route handlers as the seam, and no data access in middleware.
 
 ## Decision
 
@@ -62,6 +68,10 @@ Intentset's rule sets apply. The check reads it and executes nothing.**
   output, and the folders that stand for a layer in a slice that declares none.
 - **Its rule sets**: the stack-specific checks Intentset ships that this profile turns on, with their settings. The
   Amplify rules are one set; the Next.js rules will be another.
+
+A team's profile file may name one profile Intentset ships as the one it extends, and then holds only what differs:
+a list or a mapping it states replaces the shipped one whole, and nothing is merged entry by entry, so a reviewer
+never has to work out what a combination means. Extending a profile that itself extends one is a configuration error.
 
 A repository names its profile in `.intentset/architecture.yaml`, either by the ID of one Intentset ships or by the
 path of a profile file in the repository. Everything that file may set today stays settable there and overrides the
@@ -87,7 +97,8 @@ The reader for TypeScript is today's code, moved behind that interface. The inte
 ### Codes
 
 A profile file defines no diagnostic code, because it holds no check of its own. A violation of its matrix is VSA006
-whatever the profile. Each reader owns a prefix for the rules only its language has (`TS`), and each rule set owns
+whatever the profile, and a violation of its package policy is a VSA code too: the rule that is TS007 today becomes
+VSA015, stated in VSA §5 beside the matrix. TS007 is retired and never reused. Each reader owns a prefix for the rules only its language has (`TS`), and each rule set owns
 one (`AMP`). The contract's specification holds the register of prefixes, so two never collide, and
 `test/codes.test.ts` holds the register to the code as it holds every other code.
 
@@ -104,12 +115,30 @@ must do with both. It arrives with:
 
 ### Order of work
 
-1. The contract, the reader interface and the reference profile as data. No case changes and no diagnostic moves, so
-   `intentset.spec` stays `0.3`.
-2. TypeScript with Next.js: a profile file and a Next.js rule set. It reuses the TypeScript reader, so it tests the
+1. The reader interface, with the TypeScript reader moved behind it. A refactor: no case and no diagnostic moves.
+2. The contract's specification, the profile file with its one level of extension, and the reference profile as
+   data. Still no existing case moves, so `intentset.spec` stays `0.3`, and the seam is proved before anything is
+   renamed.
+3. TS007 becomes VSA015. This is the one breaking change: existing cases, exceptions and baseline entries name the
+   code, so `intentset.spec` moves to `0.4` and `intentset migrate --to 0.4` rewrites the code where a repository
+   wrote it. It is a step of its own so that the move carries nothing else.
+4. TypeScript with Next.js: a profile file and a Next.js rule set. It reuses the TypeScript reader, so it tests the
    profile file and the rule-set seam.
-3. Python: a second reader and a plain Python profile. It tests the reader interface.
-4. Java, then Rust, each a reader and a first profile, in the order adopters ask for them.
+5. Python: a second reader and a plain Python profile. It tests the reader interface.
+6. Java, then Rust, each a reader and a first profile, in the order adopters ask for them.
+
+### The Next.js rule set
+
+Four rules, each with a code under a prefix the rule set owns, defined in the profile's specification:
+
+- **The server and client boundary.** A client component, a file that says `"use client"` or is imported by one,
+  takes nothing from server-only code, and server-only code stays out of what a client component imports.
+- **Routes are composition.** Files under the application router (pages, layouts, route handlers) wire slices
+  through their entrypoints and hold no business behavior of their own (VSA §6).
+- **Server actions and route handlers are the seam.** A slice reaches a database or an outside service only from
+  its server actions or handlers, never from its UI (VSA §7).
+- **No data access in middleware.** Middleware may coordinate access; it imports no slice's internals and calls no
+  database.
 
 ## Rejected
 
@@ -134,11 +163,10 @@ must do with both. It arrives with:
 - The TypeScript reader keeps using the TypeScript compiler as a peer dependency. A reader for another language is
   written without a dependency first; a parser as a dependency is a separate decision when precision calls for it.
 - Design invariant 7 is unchanged.
+- Adopters migrate once more, to `0.4`, for a renamed code. Doing it now, before a second language exists, means no
+  repository on another language ever reports a `TS` code.
 
 ## Open, for the contract's specification
 
-- Whether a profile file may extend another, so a team's profile is the few lines that differ from one Intentset
-  ships.
-- Whether TS007, the package policy, keeps its code. It is a rule every language has, carrying one language's
-  prefix. Renaming it invalidates existing cases, so it would move `intentset.spec`.
-- The Next.js rule set's rules: at least which code may run on the server, and which files a route may import.
+- The exact keys of a profile file, and which of them a file that extends another may state.
+- What "server-only code" is to the Next.js rule set where a file does not say so itself.
