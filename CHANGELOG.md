@@ -22,6 +22,7 @@ GitHub Release, and intentset.org's Changelog page and feed are built from this 
 - **A repository can write its own architecture profile**, `.intentset/profile.yaml`: its layers by its own names, their roles, the matrix and the rule sets that run, extending a profile Intentset ships. The profile contract is a new specification, and the plain TypeScript profile `intentset/typescript/0.3` ships beside the reference one (ADR 0030, #158).
 - **VSA015: a package a profile lists in `outsidePackages` is imported only from the seam layer, and never from a pure layer.** A portable rule, under every profile; both shipped profiles list none, so nothing is reported until a repository lists one (VSA §5, ADR 0030, #158).
 - **`@intentset/architecture` exports its reader interface** (`Reader`, `Reading`, `typescriptReader`, `READERS`): the part of the check that knows a language, the first step toward profiles for other stacks (ADR 0030, #158).
+- **The agent guide says a layer's name comes from the repository's profile, and never to change the profile or the architecture configuration to pass the check** (ADR 0030, #158).
 
 ### Fixed
 

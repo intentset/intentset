@@ -190,6 +190,14 @@ test("BEH-AGENT-GUIDE: the guide's slice template validates beside its behavior 
   assert.match(slice, /^ {4}layers: \{\}$/m);
   assert.match(slice, /^ {4}usesResources: \[\]$/m);
   assert.match(guide, /never\ninvent a layer the code does not have/);
+  assert.match(
+    guide,
+    /A layer's name is one the\nrepository's profile lists: `layers` in `\.intentset\/profile\.yaml`/,
+  );
+  assert.match(
+    guide,
+    /^- Change `\.intentset\/profile\.yaml` or `\.intentset\/architecture\.yaml` so that the architecture check passes\./m,
+  );
   const fill = (template: string) =>
     template
       .replaceAll("BEH-AREA-NAME", "BEH-ASMT-NEW")
