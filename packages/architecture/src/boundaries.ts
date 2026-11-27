@@ -57,7 +57,7 @@ import { fileLayer, inSeam, isPure, knownLayer, layerAllows, layerOf } from "./l
 import { NameIndex } from "./names.ts";
 import { compareStrings, matchAny, matchPattern } from "./patterns.ts";
 import { describePackage, type Model, type Region, type SliceInfo } from "./regions.ts";
-import type { Resolver } from "./resolve.ts";
+import type { Reading } from "./reader.ts";
 
 export interface SliceEdge {
   from: string;
@@ -136,7 +136,7 @@ function describeRegion(region: Region): string {
 export function checkBoundaries(
   model: Model,
   edges: readonly ImportEdge[],
-  resolver: Resolver,
+  reading: Pick<Reading, "aliasFor">,
   names: NameIndex = new NameIndex(edges, new Map()),
 ): BoundaryResult {
   const { config } = model;
@@ -516,7 +516,7 @@ export function checkBoundaries(
         continue;
       }
       if (source !== undefined && (edge.via === "relative" || edge.via === "baseUrl")) {
-        const alias = resolver.aliasFor(from, to);
+        const alias = reading.aliasFor(from, to);
         if (alias !== null) {
           findings.push(
             finding({

@@ -19,6 +19,7 @@ GitHub Release, and intentset.org's Changelog page and feed are built from this 
 ### Added
 
 - **The agent guide shows a slice's frontmatter**, with every required key, beside the behavior's (#169).
+- **`@intentset/architecture` exports its reader interface** (`Reader`, `Reading`, `typescriptReader`, `READERS`): the part of the check that knows a language, the first step toward profiles for other stacks (ADR 0030, #158).
 
 ### Fixed
 
@@ -28,6 +29,8 @@ GitHub Release, and intentset.org's Changelog page and feed are built from this 
 ### Details
 
 **`intentset review` exits 2 when its base shares no history with HEAD, and a first slice can be written from the agent guide (#156, #169, #170).** Patch: no specification, conformance case or export moved. `review` ran `git diff <base>...HEAD`, which fails when the two have no common ancestor, and read the failure as no committed change, so `--fail-on-drift` passed a shallow CI checkout whatever it changed; it now stops before writing a review and says to fetch the full history. The guide `intentset init` writes gains a slice template whose six required keys include `layers: {}` and `usesResources: []`, which VSA §3 already allowed, and CORE001's remediation for either key missing says so; neither the check nor its message changed.
+
+**The architecture check reads TypeScript through a reader, an interface of three questions: which files are source, what each imports, and where each specifier resolves (ADR 0030, #158).** Patch: a refactor, with no specification, conformance case or export moved and no diagnostic changed. `checkArchitecture` and the subject source ask the model's reader where they called the TypeScript extractor and resolver directly, and `buildModel` takes a reader as an optional last argument. Only the TypeScript reader exists, so nothing a repository can configure has changed.
 
 ## 0.18.0 — 2026-11-27
 

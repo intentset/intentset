@@ -9,11 +9,8 @@
  */
 import type { Graph, Registries } from "@intentset/core";
 import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
-import { extractImports } from "./extract.ts";
-import { isCode } from "./paths.ts";
 import { compareStrings, matchPattern } from "./patterns.ts";
 import { buildModel } from "./regions.ts";
-import { Resolver } from "./resolve.ts";
 
 export interface SubjectSourceOptions {
   /** Laid over the defaults and `.intentset/architecture.yaml`, as for `checkArchitecture`. */
@@ -65,19 +62,9 @@ export function subjectSource(
   for (const info of model.resources)
     resources.set(info.resource.id, { record: info.resource, files: [...info.files] });
 
-  let resolver: Resolver | null = null;
+  const reading = model.reader.read(model.files, config);
   const closures = new Map<string, string[]>();
-  const importsOf = (path: string): string[] => {
-    resolver ??= new Resolver(model.files, config);
-    const text = model.files.get(path);
-    if (text === undefined || !isCode(path)) return [];
-    const targets: string[] = [];
-    for (const raw of extractImports(path, text).imports) {
-      const resolution = resolver.resolve(path, raw.specifier);
-      if (resolution.problem === undefined && resolution.to !== null) targets.push(resolution.to);
-    }
-    return targets;
-  };
+  const importsOf = (path: string): string[] => reading.importsOf(path);
   const localImports = (start: string): string[] => {
     const cached = closures.get(start);
     if (cached !== undefined) return cached;

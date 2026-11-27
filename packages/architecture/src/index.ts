@@ -83,5 +83,6 @@ export {
   regionLabel,
   type SliceInfo,
 } from "./regions.ts";
+export { READERS, type Reader, type ReaderNote, type Reading, typescriptReader } from "./reader.ts";
 export { type Resolution, Resolver, type Via } from "./resolve.ts";
 export { matchAlias, stripJsonComments, type TsConfig, TsConfigs } from "./tsconfig.ts";

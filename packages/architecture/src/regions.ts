@@ -16,8 +16,9 @@
  */
 import type { Artifact, Graph, Registries, Resource, SliceMeta } from "@intentset/core";
 import type { ArchitectureConfig } from "./config.ts";
-import { ancestors, dirname, isCode, within } from "./paths.ts";
+import { ancestors, dirname, within } from "./paths.ts";
 import { compareStrings, expandClaims, matchAny, matchPattern, validatePattern } from "./patterns.ts";
+import { type Reader, typescriptReader } from "./reader.ts";
 
 export type RegionKind =
   | "slice"
@@ -67,6 +68,8 @@ export interface ResourceInfo {
 
 export interface Model {
   config: ArchitectureConfig;
+  /** The reader for the tree's language (ADR 0030). */
+  reader: Reader;
   /** Every file not ignored, by path. */
   files: ReadonlyMap<string, string>;
   /** Files not ignored and not tests, sorted. */
@@ -106,6 +109,7 @@ export function buildModel(
   registries: Registries,
   tree: ReadonlyMap<string, string>,
   config: ArchitectureConfig,
+  reader: Reader = typescriptReader,
 ): Model {
   const files = new Map<string, string>();
   for (const path of [...tree.keys()].sort(compareStrings)) {
@@ -187,7 +191,7 @@ export function buildModel(
     else if (underBackend(path)) {
       const resource = resources.find((info) => info.files.includes(path));
       region = resource !== undefined ? { kind: "resource", owner: resource.resource.id } : { kind: "backend" };
-    } else if (isCode(path) && matchAny(config.sourceRoots, path)) region = { kind: "unowned" };
+    } else if (reader.isSource(path) && matchAny(config.sourceRoots, path)) region = { kind: "unowned" };
     else region = { kind: "external" };
     regions.set(path, region);
     return region;
@@ -214,6 +218,7 @@ export function buildModel(
 
   return {
     config,
+    reader,
     files,
     production,
     tests,

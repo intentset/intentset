@@ -23,6 +23,8 @@ import {
   MAX_AREAS,
   NameIndex,
   type Origin,
+  type Reader,
+  READERS,
   readArchitectureConfig,
   readExceptionRecord,
   resolveConfig,
@@ -32,6 +34,7 @@ import {
   staleEntryDiagnostics,
   stripJsonComments,
   stronglyConnected,
+  typescriptReader,
   UI_FRAMEWORKS,
   validatePattern,
   writeBaseline,
@@ -1506,5 +1509,56 @@ describe("BEH-ARCH-CHECK: the scanner's TypeScript is loaded when a check first 
       new TypeScriptMissingError(null, null).message,
       /no `typescript` resolves from @intentset\/architecture/,
     );
+  });
+});
+
+describe("readers (ADR 0030)", () => {
+  const files = new Map([
+    ["package.json", "{}"],
+    ["src/a.ts", 'import { b } from "./b";\nimport { join } from "node:path";\nimport { gone } from "./gone";\n'],
+    ["src/b.ts", "export const b = 1;\n"],
+    ["src/c.py", "import a\n"],
+  ]);
+
+  test("the TypeScript reader says which files are source, what each imports and where it resolves", () => {
+    assert.deepEqual(
+      READERS.map((reader) => reader.language),
+      ["typescript"],
+    );
+    assert.equal(typescriptReader.isSource("src/a.ts"), true);
+    assert.equal(typescriptReader.isSource("src/c.py"), false);
+
+    const reading = typescriptReader.read(files, { conditions: [] });
+    const graph = reading.graph();
+    assert.deepEqual(
+      graph.edges.map((edge) => `${edge.from} -> ${edge.to ?? edge.specifier}`),
+      ["src/a.ts -> src/b.ts", "src/a.ts -> node:path"],
+    );
+    assert.deepEqual(
+      graph.unresolved.map((item) => `${item.path}:${item.line} ${item.specifier}`),
+      ["src/a.ts:3 ./gone"],
+      "what it cannot follow is returned beside the edges, never dropped and never guessed",
+    );
+    assert.deepEqual(
+      graph,
+      buildImportGraph(files, new Resolver(files, { conditions: [] })),
+      "the same graph as before",
+    );
+    assert.deepEqual(reading.importsOf("src/a.ts"), ["src/b.ts"]);
+    assert.deepEqual(reading.importsOf("src/c.py"), [], "a file it does not read imports nothing it can see");
+    assert.deepEqual(reading.notes(), []);
+  });
+
+  test("the model asks its reader which files are source, so another language's files are not this one's to own", () => {
+    const graph = graphOf({});
+    const config = resolveConfig({ sourceRoots: ["src/**"] });
+    assert.equal(buildModel(graph, EMPTY_REGISTRIES, files, config).regionOf("src/a.ts").kind, "unowned");
+    assert.equal(buildModel(graph, EMPTY_REGISTRIES, files, config).regionOf("src/c.py").kind, "external");
+
+    const python: Reader = { ...typescriptReader, language: "python", isSource: (path) => path.endsWith(".py") };
+    const model = buildModel(graph, EMPTY_REGISTRIES, files, config, python);
+    assert.equal(model.reader.language, "python");
+    assert.equal(model.regionOf("src/c.py").kind, "unowned");
+    assert.equal(model.regionOf("src/a.ts").kind, "external");
   });
 });

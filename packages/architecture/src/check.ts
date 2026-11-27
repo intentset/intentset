@@ -34,13 +34,11 @@ import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConf
 import { checkDependencies } from "./dependencies.ts";
 import { applyExceptions, type ExceptionRecord, readExceptionRecord, readExceptions } from "./exceptions.ts";
 import { type Finding, finding } from "./finding.ts";
-import { buildImportGraph, type ImportEdge } from "./imports.ts";
+import type { ImportEdge } from "./imports.ts";
 import { NameIndex } from "./names.ts";
 import { checkOwnership } from "./ownership.ts";
-import { isCode } from "./paths.ts";
 import { compareStrings } from "./patterns.ts";
 import { buildModel } from "./regions.ts";
-import { Resolver } from "./resolve.ts";
 
 export interface CheckOptions {
   /** Laid over the defaults and over `.intentset/architecture.yaml`. */
@@ -152,9 +150,9 @@ export function checkArchitecture(
     }
   }
 
-  const codeFiles = new Map([...model.files].filter(([path]) => isCode(path)));
-  const resolver = new Resolver(model.files, config);
-  const imports = buildImportGraph(codeFiles, resolver);
+  const reader = model.reader;
+  const reading = reader.read(model.files, config);
+  const imports = reading.graph();
   const findings: Finding[] = [];
   for (const item of imports.unresolved) {
     if (!model.inScope(item.path)) continue;
@@ -162,22 +160,21 @@ export function checkArchitecture(
     unresolved.push(`${where}: ${item.message}`);
     findings.push(
       finding({
-        code: "TS004",
+        code: reader.unresolved.code,
         severity: "warning",
         artifact: model.regionOf(item.path).kind === "slice" ? (model.regionOf(item.path).owner ?? null) : null,
         path: item.path,
         ...(item.line !== null ? { location: { line: item.line } } : {}),
         message: `${item.message.charAt(0).toUpperCase()}${item.message.slice(1)}; the reference was left out of boundary analysis.`,
-        remediation:
-          "Use a literal specifier that resolves to a file in the repository or to a package, so the boundary can be checked (TS004).",
+        remediation: reader.unresolved.remediation,
       }),
     );
   }
-  for (const note of [...resolver.tsconfigs.notes, ...resolver.notes]) unresolved.push(`${note.path}: ${note.message}`);
+  for (const note of reading.notes()) unresolved.push(`${note.path}: ${note.message}`);
 
   findings.push(...checkClaims(model, graph, registriesPath));
   findings.push(...checkOwnership(model, graph, level));
-  const boundaries = checkBoundaries(model, imports.edges, resolver, new NameIndex(imports.edges, imports.exports));
+  const boundaries = checkBoundaries(model, imports.edges, reading, new NameIndex(imports.edges, imports.exports));
   findings.push(...boundaries.findings);
   unresolved.push(...boundaries.untraced);
   findings.push(...checkJsx(model, imports.jsx));
@@ -229,8 +226,9 @@ export function checkArchitecture(
     level,
     slices: model.slices.length,
     filesClaimed: model.production.filter((path) => (model.claimOwners.get(path) ?? []).length > 0).length,
-    filesUnclaimed: model.production.filter((path) => isCode(path) && model.inScope(path) && !owned(path)).length,
-    outOfScope: [...model.files.keys()].filter((path) => isCode(path) && !model.inScope(path)).length,
+    filesUnclaimed: model.production.filter((path) => reader.isSource(path) && model.inScope(path) && !owned(path))
+      .length,
+    outOfScope: [...model.files.keys()].filter((path) => reader.isSource(path) && !model.inScope(path)).length,
     edges: boundaries.fileEdges,
     crossSliceEdges: boundaries.crossSliceEdges,
     cycles: dependencies.cycles,
