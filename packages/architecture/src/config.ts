@@ -66,6 +66,11 @@ export interface ArchitectureConfig {
   sharedBackend: string[];
   /** The one frontend file that may import area schemas, type-only, and call generateClient (AMP011). */
   schemaBridge: string | null;
+  /**
+   * Packages that reach a backend or an outside service, as specifier patterns matched as backendSdks are. A slice
+   * file may import one only from the seam layer, and never from a pure layer (VSA015, VSA §5). Empty by default.
+   */
+  outsidePackages: string[];
   /** The profile these values come from, by ID (profile contract §2). `.intentset/architecture.yaml` cannot set it. */
   profile: string;
   /** The language whose reader reads the tree (profile contract §6). */
@@ -139,6 +144,7 @@ export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
   areas: [],
   sharedBackend: [],
   schemaBridge: null,
+  outsidePackages: [],
   profile: REFERENCE_PROFILE,
   language: "typescript",
   layers: ["presentation", "application", "policy", "model", "external"],
@@ -161,6 +167,7 @@ const LIST_KEYS = [
   "backendSdks",
   "conditions",
   "sharedBackend",
+  "outsidePackages",
 ] as const;
 
 /** Keys whose entries are path patterns and must pass validatePattern. */

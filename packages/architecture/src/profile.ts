@@ -59,7 +59,6 @@ forbiddenPackages:
   model: ["react/**", "react-dom/**", "react-native/**", "preact/**", "vue/**", "svelte/**", "solid-js/**", "@angular/**"]
   external: ["react/**", "react-dom/**", "react-native/**", "preact/**", "vue/**", "svelte/**", "solid-js/**", "@angular/**"]
 ruleSets: []
-scope: ["**"]
 sourceRoots: ["src/**"]
 shared: ["src/shared/**"]
 infrastructure: ["src/infrastructure/**"]
@@ -99,6 +98,7 @@ const NOTHING: ArchitectureConfig = {
   areas: [],
   sharedBackend: [],
   schemaBridge: null,
+  outsidePackages: [],
   profile: "",
   language: "",
   layers: [],
@@ -107,7 +107,22 @@ const NOTHING: ArchitectureConfig = {
   ruleSets: [],
 };
 
-/** The keys only a profile file has, beside every key `.intentset/architecture.yaml` may set. */
+/**
+ * The architecture configuration's keys a profile may not hold, because each is a fact about one repository and not
+ * about a stack (profile contract §2): its scope, its areas, files it names one by one, and how its own workspace
+ * resolves. They stay in `.intentset/architecture.yaml`.
+ */
+export const REPOSITORY_KEYS: readonly string[] = [
+  "areas",
+  "conditions",
+  "responseParserModules",
+  "routerFiles",
+  "schemaBridge",
+  "scope",
+  "sharedBackend",
+];
+
+/** The keys only a profile file has, beside the layout and policy keys it shares with the configuration. */
 export const PROFILE_KEYS: readonly string[] = [
   "extends",
   "id",
@@ -144,8 +159,7 @@ function isStringList(value: unknown): value is string[] {
 
 /**
  * Read a profile file. `config` is the whole configuration it resolves to, laid over the shipped profile it extends,
- * or null when anything in the file is wrong: a profile is never applied in part, so the caller falls back to the
- * reference profile, whole, and the errors fail the check. Every problem is CFG001 with origin "architecture".
+ * or null when anything in the file is wrong: a profile is never applied in part, and a check stops with its errors. Every problem is CFG001 with origin "architecture".
  */
 export function readProfile(
   text: string,
@@ -233,13 +247,23 @@ export function readProfile(
 
   // The keys a configuration has too, by the configuration's own reader.
   const overlay: Partial<ArchitectureConfig> = {};
-  readConfigKeys(root, at, report, overlay, (key) =>
+  const keys = [...PROFILE_KEYS, ...CONFIG_KEYS.filter((key) => !REPOSITORY_KEYS.includes(key))].sort(compareStrings);
+  const stack: Record<string, unknown> = {};
+  for (const key of Object.keys(root).sort(compareStrings)) {
+    if (!REPOSITORY_KEYS.includes(key)) stack[key] = root[key];
+    else {
+      report(
+        `/${key}`,
+        at(`/${key}`),
+        `\`${key}\` is a fact about one repository, and a profile holds what is true of a stack.`,
+        `State \`${key}\` in ${ARCHITECTURE_CONFIG_PATH}, which overrides the profile (profile contract §2).`,
+      );
+    }
+  }
+  readConfigKeys(stack, at, report, overlay, (key) =>
     PROFILE_KEYS.includes(key)
       ? null
-      : {
-          message: `Unknown profile key \`${key}\`.`,
-          remediation: `Remove it; the keys are ${[...PROFILE_KEYS, ...CONFIG_KEYS].sort(compareStrings).join(", ")}.`,
-        },
+      : { message: `Unknown profile key \`${key}\`.`, remediation: `Remove it; the keys are ${keys.join(", ")}.` },
   );
   Object.assign(config, structuredClone(overlay));
 
@@ -313,7 +337,7 @@ export function readProfile(
     } else config.ruleSets = [...root.ruleSets];
   }
 
-  // A file with an error is never applied in part: the caller falls back to the reference profile, whole.
+  // A file with an error is never applied in part.
   if (diagnostics.length > 0) return { config: null, diagnostics };
 
   // What the whole profile must agree on, whichever file said each part.
@@ -415,6 +439,11 @@ export interface LoadedConfig {
   reader: Reader;
   /** False when the profile's language has no reader: nothing was checked, which is never a pass. */
   read: boolean;
+  /**
+   * True when the repository's profile file has an error. `diagnostics` then holds only the file's errors, and a
+   * check stops with them: no other profile stands in for it, and nothing else is checked (profile contract §2).
+   */
+  profileFailed: boolean;
 }
 
 /**
@@ -427,8 +456,16 @@ export function loadConfig(files: ReadonlyMap<string, string>, override?: Partia
   const profileText = files.get(PROFILE_PATH);
   if (profileText !== undefined) {
     const read = readProfile(profileText, PROFILE_PATH);
-    diagnostics.push(...read.diagnostics);
-    if (read.config !== null) base = read.config;
+    if (read.config === null) {
+      return {
+        config: structuredClone(DEFAULT_ARCHITECTURE_CONFIG),
+        diagnostics: read.diagnostics,
+        reader: NO_READER(""),
+        read: false,
+        profileFailed: true,
+      };
+    }
+    base = read.config;
   }
   let fileConfig: Partial<ArchitectureConfig> | undefined;
   const configText = files.get(ARCHITECTURE_CONFIG_PATH);
@@ -439,5 +476,11 @@ export function loadConfig(files: ReadonlyMap<string, string>, override?: Partia
   }
   const config = resolveConfigFrom(base, fileConfig, override);
   const reader = READERS.find((candidate) => candidate.language === config.language);
-  return { config, diagnostics, reader: reader ?? NO_READER(config.language), read: reader !== undefined };
+  return {
+    config,
+    diagnostics,
+    reader: reader ?? NO_READER(config.language),
+    read: reader !== undefined,
+    profileFailed: false,
+  };
 }

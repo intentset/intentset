@@ -133,6 +133,7 @@ export function checkArchitecture(
   const mode = options.mode ?? "migration";
   const registriesPath = options.registriesPath ?? "registries.yaml";
   const loaded = loadConfig(tree.files, options.config);
+  if (loaded.profileFailed) return profileRefused(loaded.diagnostics, level, mode);
   const configDiagnostics: Diagnostic[] = loaded.diagnostics;
   const config = loaded.config;
   const model = buildModel(graph, registries, tree.files, config, loaded.reader);
@@ -252,6 +253,37 @@ export function checkArchitecture(
   }
   ownership.sort((a, b) => compareStrings(a.path, b.path));
   return { diagnostics, summary, edges: imports.edges, ownership, subjects };
+}
+
+/**
+ * The result for a repository whose profile file has an error (profile contract §2): the file's errors and nothing
+ * else. No other profile stands in for it, no file is read, and what was not checked is said, never passed.
+ */
+function profileRefused(errors: Diagnostic[], level: Level, mode: Mode): ArchitectureResult {
+  return {
+    diagnostics: sortDiagnostics(errors),
+    summary: {
+      mode,
+      level,
+      slices: 0,
+      filesClaimed: 0,
+      filesUnclaimed: 0,
+      outOfScope: 0,
+      edges: 0,
+      crossSliceEdges: 0,
+      cycles: 0,
+      excepted: 0,
+      baselined: 0,
+      baselineStale: 0,
+      unresolved: [
+        `${PROFILE_PATH}: the profile has ${errors.length === 1 ? "an error" : "errors"}, so nothing was checked`,
+      ],
+      reviewRequired: [...REVIEW_REQUIRED],
+    },
+    edges: [],
+    ownership: [],
+    subjects: new Map(),
+  };
 }
 
 /**
