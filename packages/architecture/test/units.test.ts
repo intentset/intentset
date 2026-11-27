@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, test } from "node:test";
 import { type Diagnostic, EMPTY_REGISTRIES, type Graph, plainCarrier, validate } from "@intentset/core";
 import {
@@ -38,6 +40,16 @@ import {
   UI_FRAMEWORKS,
   validatePattern,
   writeBaseline,
+  DEFAULT_ARCHITECTURE_CONFIG,
+  inSeam,
+  isPure,
+  loadConfig,
+  PROFILE_PATH,
+  readProfile,
+  REFERENCE_PROFILE,
+  SHIPPED_PROFILES,
+  shippedProfile,
+  TYPESCRIPT_PROFILE,
 } from "../src/index.ts";
 import { finding } from "../src/finding.ts";
 import { TypeScriptMissingError, typescriptVersion } from "../src/typescript.ts";
@@ -1560,5 +1572,160 @@ describe("readers (ADR 0030)", () => {
     assert.equal(model.reader.language, "python");
     assert.equal(model.regionOf("src/c.py").kind, "unowned");
     assert.equal(model.regionOf("src/a.ts").kind, "external");
+  });
+});
+
+describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
+  test("the example in the guide to writing a profile reads without a diagnostic", () => {
+    const guide = readFileSync(join(import.meta.dirname, "..", "..", "..", "docs", "writing-a-profile.md"), "utf8");
+    const example = /```yaml\n(id: [\s\S]*?)```/.exec(guide)?.[1] ?? "";
+    const read = readProfile(example);
+    assert.deepEqual(read.diagnostics, []);
+    assert.equal(read.config?.profile, "acme/web/1");
+    assert.deepEqual(read.config?.roles, { seam: "adapters", pure: ["domain"], rendering: ["ui"] });
+    assert.deepEqual(read.config?.ruleSets, [], "the plain profile it extends runs no rule set");
+  });
+
+  test("the reference profile, read from its profile file, is the configuration the check always had", () => {
+    assert.deepEqual(SHIPPED_PROFILES, [TYPESCRIPT_PROFILE, REFERENCE_PROFILE].sort());
+    assert.deepEqual(shippedProfile(REFERENCE_PROFILE), DEFAULT_ARCHITECTURE_CONFIG);
+    assert.deepEqual(resolveConfig(), DEFAULT_ARCHITECTURE_CONFIG);
+    assert.equal(shippedProfile("intentset/none/0.3"), null);
+  });
+
+  test("the plain TypeScript profile is the reference profile without the Amplify rule set and its backend", () => {
+    const plain = shippedProfile(TYPESCRIPT_PROFILE)!;
+    assert.deepEqual(plain.ruleSets, []);
+    assert.deepEqual(plain.backendRoots, []);
+    assert.deepEqual(plain.backendSdks, []);
+    assert.deepEqual(
+      {
+        ...plain,
+        profile: REFERENCE_PROFILE,
+        ruleSets: ["amplify"],
+        backendRoots: ["amplify/**"],
+        backendSdks: DEFAULT_ARCHITECTURE_CONFIG.backendSdks,
+      },
+      DEFAULT_ARCHITECTURE_CONFIG,
+      "everything else is the same data",
+    );
+  });
+
+  test("one order: the shipped profile, the profile file, the architecture configuration, the caller", () => {
+    const files = new Map([
+      [PROFILE_PATH, `id: acme/web/1\nextends: ${TYPESCRIPT_PROFILE}\ntests: ["**/*.spec.ts"]\nshared: ["lib/**"]\n`],
+      [".intentset/architecture.yaml", "shared:\n- common/**\ncomposition:\n- app/**\n"],
+    ]);
+    const loaded = loadConfig(files, { composition: ["routes/**"] });
+    assert.deepEqual(loaded.diagnostics, []);
+    assert.equal(loaded.config.profile, "acme/web/1");
+    assert.equal(loaded.reader, typescriptReader);
+    assert.equal(loaded.read, true);
+    assert.deepEqual(loaded.config.tests, ["**/*.spec.ts"], "the profile file's, whole");
+    assert.deepEqual(loaded.config.shared, ["common/**"], "the architecture configuration over the profile");
+    assert.deepEqual(loaded.config.composition, ["routes/**"], "the caller over both");
+    assert.deepEqual(loaded.config.ruleSets, [], "what nothing above states is the shipped profile's");
+    assert.deepEqual(loadConfig(new Map()).config, DEFAULT_ARCHITECTURE_CONFIG, "no file: the reference profile");
+  });
+
+  test("a profile with an error is not applied in part, and each error says where", () => {
+    const read = readProfile(
+      `id: acme/web/1\nextends: ${TYPESCRIPT_PROFILE}\nshared: ["lib/**"]\nruleSets: [nextjs]\n`,
+    );
+    assert.equal(read.config, null);
+    assert.deepEqual(
+      read.diagnostics.map((d) => `${d.code} ${d.origin} ${d.path}:${d.location?.line} ${d.field}`),
+      ["CFG001 architecture .intentset/profile.yaml:4 /ruleSets"],
+    );
+    const loaded = loadConfig(new Map([[PROFILE_PATH, `extends: ${TYPESCRIPT_PROFILE}\nshared: ["lib/**"]\n`]]));
+    assert.deepEqual(loaded.config, DEFAULT_ARCHITECTURE_CONFIG, "the reference profile, whole");
+    assert.equal(loaded.diagnostics.length, 1);
+  });
+
+  test("a language with no reader is an error that names the languages read, and nothing is passed", () => {
+    const profile =
+      "id: acme/api/1\nlanguage: python\nlayers: [handlers, domain]\nlayerMatrix:\n  handlers: [handlers, domain]\n  domain: [domain]\n";
+    const read = readProfile(profile);
+    assert.equal(read.config, null);
+    assert.match(read.diagnostics[0].message, /language is python, which this release does not read/);
+    assert.match(read.diagnostics[0].remediation, /This release reads typescript/);
+
+    // A caller that hands the language in gets a reader that reads nothing, and the check says so.
+    const loaded = loadConfig(new Map(), { language: "python" });
+    assert.equal(loaded.read, false);
+    assert.equal(loaded.reader.isSource("src/a.py"), false);
+    const result = checkArchitecture(
+      graphOf({}),
+      EMPTY_REGISTRIES,
+      { files: new Map() },
+      { config: { language: "python" } },
+    );
+    assert.deepEqual(result.summary.unresolved, [
+      ".intentset/profile.yaml: this release has no reader for python, so no file's imports were checked",
+    ]);
+  });
+
+  test("the layer functions read the roles from the profile, and the reference profile's by default", () => {
+    const record = `---
+markset: 0
+intentset:
+  spec: '0.3'
+  profile: intentset/slice/0.3
+  id: SLICE-R
+  type: slice
+  title: Roles
+  status: draft
+  owner: team-assessment
+  visibility: internal
+  audiences: [engineering]
+  slice:
+    kind: technical
+    rationale: A slice for the roles.
+    domain: roles
+    entrypoints: [src/r/index.ts]
+    layers:
+      domain: [src/r/core/**]
+      adapters: [src/r/io/**]
+      external: [src/r/client/**]
+    claims:
+    - kind: source
+      path: src/r/**
+    usesResources: []
+---
+
+# Roles
+
+## Responsibility
+
+Roles.
+
+## Public contract
+
+None.
+
+## Verification
+
+None.
+`;
+    const files = new Map([
+      ["src/r/index.ts", ""],
+      ["src/r/core/a.ts", ""],
+      ["src/r/io/b.ts", ""],
+      ["src/r/client/c.ts", ""],
+    ]);
+    const model = buildModel(graphOf({ "SLICE-R.md": record }), EMPTY_REGISTRIES, files, resolveConfig());
+    const slice = model.sliceById.get("SLICE-R")!;
+    const own = {
+      layers: ["domain", "adapters"],
+      roles: { seam: "adapters", pure: ["domain"], rendering: [] },
+      layerFolders: {},
+    };
+    assert.equal(inSeam(slice, "src/r/client/c.ts"), true, "the reference profile's seam is `external`");
+    assert.equal(inSeam(slice, "src/r/io/b.ts"), false);
+    assert.equal(inSeam(slice, "src/r/io/b.ts", own), true, "this profile's is `adapters`");
+    assert.equal(inSeam(slice, "src/r/client/c.ts", own), false);
+    assert.equal(isPure(slice, "src/r/core/a.ts", own), true);
+    assert.equal(isPure(slice, "src/r/core/a.ts"), false, "`domain` is no layer of the reference profile");
+    assert.deepEqual(seamPatterns(slice, undefined, { ...own, roles: { ...own.roles, seam: null } }), []);
   });
 });

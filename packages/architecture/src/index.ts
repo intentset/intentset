@@ -37,10 +37,15 @@ export {
   ARCHITECTURE_CONFIG_PATH,
   type AreaConfig,
   type ArchitectureConfig,
+  CONFIG_KEYS,
   DEFAULT_ARCHITECTURE_CONFIG,
+  type LayerRoles,
   MAX_AREAS,
+  REFERENCE_PROFILE,
+  RULE_SETS,
   readArchitectureConfig,
   resolveConfig,
+  resolveConfigFrom,
   UI_FRAMEWORKS,
 } from "./config.ts";
 export { checkDependencies, shortestCycle, stronglyConnected } from "./dependencies.ts";
@@ -70,7 +75,28 @@ export {
 export type { Finding, SubjectEdge, Taken } from "./finding.ts";
 export { buildImportGraph, type ImportEdge, type ImportGraph, takenBy, type UnresolvedImport } from "./imports.ts";
 export { type Definition, NameIndex, type Origin } from "./names.ts";
-export { fileLayer, inSeam, isPure, layerAllows, layerOf, purePatterns, seamPatterns } from "./layers.ts";
+export {
+  type LoadedConfig,
+  loadConfig,
+  PROFILE_KEYS,
+  PROFILE_PATH,
+  readProfile,
+  SHIPPED_PROFILE_SOURCES,
+  SHIPPED_PROFILES,
+  shippedProfile,
+  TYPESCRIPT_PROFILE,
+} from "./profile.ts";
+export {
+  fileLayer,
+  inSeam,
+  isPure,
+  type LayerProfile,
+  layerAllows,
+  layerOf,
+  purePatterns,
+  runs,
+  seamPatterns,
+} from "./layers.ts";
 export { checkOwnership } from "./ownership.ts";
 export { type ArchitectureSubjectSource, type SubjectSourceOptions, subjectSource } from "./subject-source.ts";
 export { expandClaims, matchAny, matchPattern, validatePattern } from "./patterns.ts";

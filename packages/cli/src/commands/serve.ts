@@ -15,7 +15,7 @@
 import { mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { dirname, join, resolve } from "node:path";
-import { ARCHITECTURE_CONFIG_PATH } from "@intentset/architecture";
+import { ARCHITECTURE_CONFIG_PATH, PROFILE_PATH } from "@intentset/architecture";
 import { type AtlasOptions, buildAtlas } from "@intentset/atlas";
 import { count, type Io, snapshotLine } from "../output.ts";
 import { outputDirProblem, outputProblem } from "../outputs.ts";
@@ -81,6 +81,7 @@ function watched(session: Session, evidence: readonly string[]): string[] {
   const files = new Set<string>([
     join(repo.root, CONFIG_PATH),
     join(repo.root, ARCHITECTURE_CONFIG_PATH),
+    join(repo.root, PROFILE_PATH),
     join(repo.root, EVIDENCE_DIR),
     ...evidence,
     ...repo.inputs.map((input) => join(repo.root, input.path)),

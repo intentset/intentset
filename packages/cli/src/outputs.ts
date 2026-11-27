@@ -9,7 +9,7 @@
  */
 import { existsSync } from "node:fs";
 import { isAbsolute, relative, sep } from "node:path";
-import { ARCHITECTURE_CONFIG_PATH, EXCEPTIONS_PATTERNS } from "@intentset/architecture";
+import { ARCHITECTURE_CONFIG_PATH, EXCEPTIONS_PATTERNS, PROFILE_PATH } from "@intentset/architecture";
 import { matchAny } from "./glob.ts";
 import { CONFIG_PATH, type Repository } from "./repository.ts";
 
@@ -36,6 +36,7 @@ export function outputProblem(repo: Repository, target: string): string | null {
   const reads = new Set([
     CONFIG_PATH,
     ARCHITECTURE_CONFIG_PATH,
+    PROFILE_PATH,
     ...(repo.config.registries === null ? [] : [repo.config.registries]),
     ...repo.inputs.map((input) => input.path),
   ]);
