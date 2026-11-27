@@ -83,7 +83,7 @@ GitHub Release, and intentset.org's Changelog page and feed are built from this 
 - **`watchTips(root, help, { render, unrender, attribute })`** binds once, binds again on DOM changes under `root`, batched to one pass per animation frame, and returns `coverage()` and `dispose()`. `dispose` stops observing and calls `unrender` on every element it bound; with the default render and no `unrender` it puts `data-help-tip` and `data-help-knowledge` back as they were, so help mounted into another application's page leaves it as it found it, and with a product's own `render` and no `unrender` it undoes nothing. The observer and the frame scheduler can be passed in, typed so the browser's own and `setTimeout`/`clearTimeout` are accepted, which is how it is tested without a DOM; `cancelAnimationFrame` is the default only when `requestAnimationFrame` is. BEH-HELP-WATCH and TEST-HELP-WATCH are drafts in Intentset's own model.
 - **`renderHtml: "page" | "fragment"`, with `true` meaning `"page"` byte for byte (#146).** A fragment, `PublishedDocument.htmlFragment`, is what the page holds inside `<main>`, rendered by the same `@markset-lang/render-html` call and so sanitized the same way, without the title heading and with no stylesheet, `<html>`, `<head>`, `<body>` or provenance, which is on `publication`. `intentset publish --html=fragment` writes `<ID>.fragment.html`; `--html` and `--html=page` write pages as before. `renderFragment(markset)` is exported. The conformance driver now offers each case's fragments to its `mustNotContain` as well as its pages. BEH-PUBLISH-FRAGMENT and TEST-PUBLISH-FRAGMENT, drafts, on the publisher slice.
 - **A page and a fragment carry only `http`, `https`, `mailto` and scheme-less link and image URLs** (publication §2). `@markset-lang/render-html` drops raw HTML but checks no URL scheme, so `[x](javascript:…)` in a knowledge body reached the page as a live link. The publisher now removes, before rendering, every link, image and definition whose URL has another scheme, read case-insensitively and with tabs, line breaks and leading control characters ignored as a browser ignores them, and keeps the link's text or the image's alt text. The rule is for URLs taken from the source: a diagram the renderer draws from a captioned figure stays a `data:image/svg+xml` image it builds, with the source's text escaped, so a product whose Content Security Policy restricts `img-src` allows `data:` to show one. The Markset document is unchanged. §2 now also requires a page to drop raw source HTML, which the reference publisher already did. The new case is "the HTML carries no link or image URL whose scheme is not http, https or mailto, and keeps their text"; no existing case changes.
-- **`@intentset/core`'s README no longer says Streamlane reads the export.** Its example now reads "as a tool that reads the export does": Streamlane reads a repository's records and run records, and Driftline reads the export (intentset.org's new page, What reads an Intentset model). README text only.
+- **`@intentset/core`'s README no longer names the wrong reader of the export.** Its example now reads "as a tool that reads the export does": one adopter reads a repository's records and run records, and another reads the export (intentset.org's new page, What reads an Intentset model). README text only.
 
 **The Atlas opens on the product as a tree and says what each page is for, traces each behavior on its page, lists what needs a person, and lays its map out in layers (#159).** Minor: two new pages, a section and one page removed in `@intentset/atlas`, the navigation's order, and a layered map; no specification, case or export changed.
 
@@ -296,13 +296,13 @@ own full screen where there is one, and a fixed overlay where there is not (an i
 
 **A dependency slice can count through its contract, as an opt-in, and a selector two verifications share gives each a record (ADR 0013, amended 2026-10-15, second).**
 Under 0.7.0 a slice reached only through `dependsOn` puts every file its claims resolve to in a subject, so a change to a central slice moves nearly every
-subject: `SLICE-PLATFORM-ORGANIZATION` moved 227 of the 237 browser records of Streamlane's store. `evidence.dependencies: entrypoint | files` in
+subject: `SLICE-PLATFORM-ORGANIZATION` moved 227 of the 237 browser records of an adopter's store. `evidence.dependencies: entrypoint | files` in
 `.intentset/config.yaml` (an unknown value is CFG001) chooses what such a dependency contributes: `entrypoint` its binding fields, the files its
 `entrypoints` name and the records of the contracts it exposes or consumes and the decisions they name (new `contract` and `decision` parts of the subject),
 `files` every claimed file, as before. A slice that implements a verified behavior or that `exercises` names still contributes every file. The rule was
 measured before it was shipped (`docs/adoption/subject-binding-backtest.md`, "Amendment 2026-10-15 (second)"): it keeps a median 98.0% of verifications
 current per commit against 97.2% and cuts the files a verification hashes from a median 87 to 17, with 0 false greens among the 27 replayed fix pairs, but on
-Streamlane's 237 records it keeps 5 current at the later commit, as `files` does, because the central slices' entrypoints and records really changed. The
+the adopter's 237 records it keeps 5 current at the later commit, as `files` does, because the central slices' entrypoints and records really changed. The
 bar for a new default was 60%, so **the default stays `files`** and `entrypoint` is an opt-in. A new warning, EVID007, says how many verifications are
 current though a file of a slice they depend on changed outside its entrypoints and contracts since their record, naming the slice, its changed files (the
 first five) and the verifications (the first twenty); it needs the git history EVID005 and EVID006 ask for. Core §8 and §11 and the change table moved, with the D
@@ -310,14 +310,14 @@ cases of `tests/evidence.json` and two CFG001 cases in `tests/core.json`; no exi
 and the export did not change.
 
 **`evidence import` gives every verification that names a selector its own record.** A selector two verifications share (one test verifying two behaviors)
-mapped to the first verification only, so the rest were silently missing: the 237 records of Streamlane's browser store came from an import with this bug.
+mapped to the first verification only, so the rest were silently missing: the 237 records of the adopter's browser store came from an import with this bug.
 `toRunRecords` now takes a selector's verification or list of verifications and writes a record for each from the same tests (each rationale names the matched tests
 as before), a selector no test matched is listed once, and the output stays deterministic; the CLI's note lists the shared selectors and says each gets a record.
 Re-import where verifications share a selector to give the missing ones a record.
 
 **A resource's files count in a subject only where a verification exercises it (ADR 0013, amended 2026-10-15).** Release 0.7.0 hashed
 the files of every resource an included slice lists in `usesResources`, so one backend change made stale every verification of every web slice that
-talks to that backend: Streamlane's first browser run, judged at a later commit, read current for 5 of 274 verifications, 133 of the stale ones
+talks to that backend: an adopter's first browser run, judged at a later commit, read current for 5 of 274 verifications, 133 of the stale ones
 because five `amplify-docs` files changed. A resource's files are now in a subject where `verification.exercises` names the resource, or where a slice
 that implements a verified behavior lists it and also claims a file its path matches (its own resource); the slice record's binding fields,
 `usesResources` among them, still count. `evidence.resources: exercised | used` in `.intentset/config.yaml` chooses (default `exercised`; `used` is
@@ -373,15 +373,14 @@ approved, reviewed and carries two tips, the walkthrough shows what publication 
   `spec` and `profile` lines.
 - **What each consumer must do.** Both pins move to 0.7.0 together, and neither reads a 0.3 export or a `0.1` record
   again.
-  - **Streamlane**: `model:export` and every `pnpm dlx @intentset/cli@0.6.1` script move to `@intentset/cli@0.7.0`, and
-    the repository runs `intentset migrate --to 0.2` once, in the same pull request (750 records: 747 under
-    `product/model` and the three `docs/decisions` files its scope names); the `model.yml` comment and `CLAUDE.md` say
-    Export Contract 0.4. Any reader of `.intentset/export.json` accepts `intentset/export/0.4`, uses export §4.1's rule
-    for a current status, and shows the binding beside a status.
-  - **Driftline**: `@intentset/core` moves to 0.7.0, which rejects `0.1` records, so `intentset migrate --to 0.2` runs in
-    the same change (33 records); `modelFromExport` accepts `intentset/export/0.4` and reads the new members it ignores
-    (`binding`, `bindingReason`, `subject`, `exercises`, a record's `binding` and `subjectHash`), and its watched export
-    fixture (`packages/signals/test/watched-export.json`) is replaced by a 0.4 one.
+  - **A repository that writes the export**: `model:export` and every script that pins `@intentset/cli@0.6.1` move to
+    `@intentset/cli@0.7.0`, and the repository runs `intentset migrate --to 0.2` once, in the same pull request. Any
+    reader of `.intentset/export.json` accepts `intentset/export/0.4`, uses export §4.1's rule for a current status, and
+    shows the binding beside a status.
+  - **A tool that reads the export**: `@intentset/core` moves to 0.7.0, which rejects `0.1` records, so `intentset
+    migrate --to 0.2` runs in the same change on any records it holds; its reader accepts `intentset/export/0.4` and
+    reads the new members (`binding`, `bindingReason`, `subject`, `exercises`, a record's `binding` and `subjectHash`),
+    and any export fixture it keeps is replaced by a 0.4 one.
   - **Markset** has no model (`product/` holds no records), so it migrates nothing. **Intentset** migrated its own 90
     records (and the 15 of the worked example, which `init --example` copies) in this change.
   - `docs/consumers.md`'s requirement tables name the same members; its one new section says what to change.
@@ -434,7 +433,7 @@ suite's baseline is neither, and nothing that conformed stops conforming.
   A test is named by its `describe` titles and its own, so a verification's selector matches as it does for the other
   runners; a test that ran in several projects counts as the worst of them; `skipped` (`test.skip`, `test.fixme`) is
   skip, a flaky test that passed on retry is pass, a timeout or an interrupted run is error, and an assertion that did
-  not hold is fail. Found by Streamlane, whose browser tests verify 247 of its 315 behaviors and which the importer
+  not hold is fail. Found by an adopter, whose browser tests verify 247 of its 315 behaviors and which the importer
   could not read before: imported against a real report of eight of its tests, six verifications matched. No
   specification, conformance case or export changed.
 - **The example's knowledge is approved** (#48). `KB-ASMT-SCHEDULE` is reviewed by its owner against its three
@@ -515,7 +514,7 @@ suite's baseline is neither, and nothing that conformed stops conforming.
   exists only where the clipboard does and a reader with scripting off never meets a control that cannot work. The
   built HTML inside `<main>` still holds no script.
 - **The home page leads with the adoption log** rather than the first pilot alone: two products, the gate on every
-  pull request, and the model read back from what Streamlane's backend records at runtime. The Start and Roadmap
+  pull request, and the model read back from what an adopter's backend records at runtime. The Start and Roadmap
   pages name the log the way the bar does.
 - **The worked example is worked, not listed.** `/example/` was thirteen headings over fifteen links: it said what
   the records were called and nothing about what they do, and reading one meant leaving the page. It is now five
@@ -610,7 +609,7 @@ consumer envelope, and its baseline graph hash changed. The export moved from 0.
   an envelope naming a type it did not know, so the version moved. Consumers must move their pin to 0.3 and upgrade
   `@intentset/core` to read it.
 - **The import extractor reads JSX as JSX**, so a slash in JSX text is no longer an unterminated regular expression,
-  and `//` in JSX text no longer hides an import later on its line. Found as three TS004 warnings in Streamlane.
+  and `//` in JSX text no longer hides an import later on its line. Found as three TS004 warnings in an adopter's repository.
 - **Markset 0.4.1**, pinned exactly as before. Its indentless-sequence fix let the adapter drop its
   `FRONTMATTER_UNPARSEABLE` workaround.
 - **SECURITY.md**: report vulnerabilities privately to security@coralreefventures.com.
