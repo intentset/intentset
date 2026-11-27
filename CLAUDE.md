@@ -5,7 +5,8 @@ connected, as readable Markdown files with YAML frontmatter in a repository. The
 knowledge are derived views; the files are authoritative. This repository is the v0.3 specifications, the conformance
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
-**`spec/` is the source of truth**: `core-0.3.md`, `vsa-0.3.md`, `profile-typescript-amplify-gen2-0.3.md`,
+**`spec/` is the source of truth**: `core-0.3.md`, `vsa-0.3.md`, `profile-contract.md` (what a profile is and what a team may write in
+`.intentset/profile.yaml`, `intentset/profile-contract/0.1`; ADR 0030), `profile-typescript-amplify-gen2-0.3.md`,
 `export.md` (the export contract other tools pin, `intentset/export/0.7`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
@@ -147,7 +148,8 @@ product/model/        Intentset's own model: the product, intent, outcomes and t
 packages/
   core/               carrier reader, types, graph, validator, impact, export, select. No dependencies.
   markset-adapter/    the one Markset import
-  architecture/       M2: claims, import graph, layers, resources, exceptions, baseline
+  architecture/       M2: claims, import graph, layers, resources, exceptions, baseline; the readers (reader.ts) and
+                      the profiles, shipped and a repository's own (profile.ts, ADR 0030)
   verification/       M3: run records, freshness, reporter adapters, what needs a run (evidence stale)
   publisher/          M4: projection and generated Markset, and the help file (publication §5)
   help/               reads help.json, binds tips to the controls of a product's interface and lists a page's lead
@@ -268,9 +270,12 @@ in `docs/implementation-plan.md` §5.
   verifications ("Intentset's own model"), and the behaviors and verifications the 0.3 changes added or revised wait
   for a maintainer to approve them again. The measures' targets and first readings are a maintainer's.
 - Architecture profiles for other stacks (#158): ADR 0030, proposed 2026-11-27, makes a profile a data file and keeps
-  the language readers built in, so the check still runs no code. Its order of work: the reader interface, the
-  contract's specification with the reference profile as data, TS007 renamed to VSA015 (which moves the specifications
-  to 0.4), then TypeScript with Next.js, then Python.
+  the language readers built in, so the check still runs no code. The reader interface and the contract
+  (`spec/profile-contract.md`, with the reference profile as data and `.intentset/profile.yaml` for a team's own) are
+  done; the ADR is accepted by the maintainers, not by an agent. Next: TS007 renamed to VSA015 (which moves the
+  specifications to 0.4), then TypeScript with Next.js, then Python. No check recognizes a layer by its name: a rule
+  reads the seam, pure and rendering roles from the profile, and the Amplify checks run only where the profile names
+  the `amplify` rule set.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
   weeks.
 - The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).

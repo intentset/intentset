@@ -1,6 +1,6 @@
 # ADR 0030: An architecture profile is data a team writes, and the language readers are built in
 
-**Status:** proposed, 2026-11-27 (issue #158). The seven decisions under "Decided" were made by the maintainers on
+**Status:** proposed, 2026-11-27 (issue #158). The ten decisions under "Decided" were made by the maintainers on
 2026-11-27; the rest is the proposal built on them, and the record is accepted when the contract's specification
 lands. No specification, conformance case or export moves with this record: the contract it describes arrives as a
 specification of its own, in the same commit as its cases and its implementation.
@@ -49,6 +49,13 @@ as a computed `require` in TypeScript, which the check already reports as not ch
    Python repository reporting a `TS` code would be told something false about itself.
 7. **The first Next.js rule set has four rules**: the server and client boundary, routes as composition, server
    actions and route handlers as the seam, and no data access in middleware.
+8. **A profile names its own layers and says which play the fixed roles.** The seam is the one layer that may reach a
+   backend or an outside service, the pure layers stay free of SDKs and UI, and the rendering layers may render. A
+   check reads a role from the profile and never recognizes a layer by its name.
+9. **Intentset ships a plain profile for each language it reads**: the layers, the matrix and the layout, with no
+   stack's rules. A stack's profile, the Amplify one and later the Next.js one, is the plain profile with what the
+   stack adds, and a team's profile extends whichever shipped one fits.
+10. **A team's profile lives at `.intentset/profile.yaml`**, used when present. One repository has one profile.
 
 ## Decision
 
@@ -71,12 +78,14 @@ Intentset's rule sets apply. The check reads it and executes nothing.**
 
 A team's profile file may name one profile Intentset ships as the one it extends, and then holds only what differs:
 a list or a mapping it states replaces the shipped one whole, and nothing is merged entry by entry, so a reviewer
-never has to work out what a combination means. Extending a profile that itself extends one is a configuration error.
+never has to work out what a combination means. One level is a limit on a repository's file: it extends a shipped
+profile and never another repository's. A shipped stack profile is written as its language's plain profile with what
+the stack adds, and is complete when shipped, so a team that extends it is still one level from something whole.
 
-A repository names its profile in `.intentset/architecture.yaml`, either by the ID of one Intentset ships or by the
-path of a profile file in the repository. Everything that file may set today stays settable there and overrides the
-profile, so a repository's configuration keeps its meaning. With no profile named, the reference profile applies, as
-now.
+A repository's profile is the file at `.intentset/profile.yaml`. Everything `.intentset/architecture.yaml` may set
+today stays settable there and overrides the profile, so a repository's configuration keeps its meaning. With no
+profile file, the reference profile applies, as now. A profile file with an error is never applied in part: the
+errors are reported and the reference profile checks the tree.
 
 ### What a reader is
 
@@ -168,5 +177,9 @@ Four rules, each with a code under a prefix the rule set owns, defined in the pr
 
 ## Open, for the contract's specification
 
-- The exact keys of a profile file, and which of them a file that extends another may state.
+- Settled by the contract (`spec/profile-contract.md` §2): a profile file's keys are `id`, `extends`, `language`,
+  `layers`, `roles`, `layerMatrix`, `layerFolders`, `forbiddenPackages` and `ruleSets`, and every key the
+  architecture configuration has.
+- Whether the seam and pure roles should be read by a portable rule. Today only the Amplify rule set reads them, so
+  under a plain profile they are stated and nothing checks them.
 - What "server-only code" is to the Next.js rule set where a file does not say so itself.

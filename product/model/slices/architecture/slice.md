@@ -12,7 +12,7 @@ intentset:
   audiences: [engineering, product]
   revision: 1
   links:
-    implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE, BEH-ARCH-LAYER-NAMES, BEH-ARCH-LAYER-PACKAGES, BEH-ARCH-BASELINE-STALE, BEH-ARCH-BASELINE-IDENTITY]
+    implements: [BEH-ARCH-CHECK, BEH-ARCH-BASELINE, BEH-ARCH-LAYER-NAMES, BEH-ARCH-LAYER-PACKAGES, BEH-ARCH-BASELINE-STALE, BEH-ARCH-BASELINE-IDENTITY, BEH-ARCH-PROFILE]
     dependsOn: [SLICE-CORE]
     informedBy: [ADR-PACKAGE-LAYERS]
   slice:
@@ -34,7 +34,7 @@ intentset:
 
 ## Responsibility
 
-The VSA and profile checks: claims, the import graph, layers, regions, areas, exceptions and the baseline.
+The VSA and profile checks: claims, the import graph, layers, regions, areas, exceptions and the baseline; the readers, one per language; and the profiles, those Intentset ships and a repository's own.
 
 The slice is the package `@intentset/architecture`. Its layers are empty: a package is a library with one public surface, its entrypoint, and the profile's layer matrix (presentation, application, policy, model, external) does not describe it. ADR-PACKAGE-LAYERS records that choice, and that the check's VSA006 warning about the package's unlayered files stays. It uses no backend resources.
 
@@ -44,4 +44,4 @@ The exports of `packages/architecture/src/index.ts`, reached by other packages a
 
 ## Verification
 
-The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK), TEST-ARCH-BASELINE (BEH-ARCH-BASELINE), TEST-ARCH-LAYER-NAMES (BEH-ARCH-LAYER-NAMES), TEST-ARCH-LAYER-PACKAGES (BEH-ARCH-LAYER-PACKAGES), TEST-ARCH-BASELINE-STALE (BEH-ARCH-BASELINE-STALE) and TEST-ARCH-BASELINE-IDENTITY (BEH-ARCH-BASELINE-IDENTITY). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.
+The package's tests under `packages/architecture/test/`. The verification records of the behaviors it implements are TEST-ARCH-CHECK (BEH-ARCH-CHECK), TEST-ARCH-BASELINE (BEH-ARCH-BASELINE), TEST-ARCH-LAYER-NAMES (BEH-ARCH-LAYER-NAMES), TEST-ARCH-LAYER-PACKAGES (BEH-ARCH-LAYER-PACKAGES), TEST-ARCH-BASELINE-STALE (BEH-ARCH-BASELINE-STALE), TEST-ARCH-BASELINE-IDENTITY (BEH-ARCH-BASELINE-IDENTITY) and TEST-ARCH-PROFILE (BEH-ARCH-PROFILE). Each names the tests whose titles carry the behavior's ID, wherever those tests live; `pnpm run model:evidence` turns a run of them into run records.

@@ -225,6 +225,7 @@ export const RAILS: Rail[] = [
           ["All specifications", "specifications/index.html"],
           ["Core", "specifications/core/index.html"],
           ["Traceable VSA", "specifications/vsa/index.html"],
+          ["Profile contract", "specifications/profile-contract/index.html"],
           ["TypeScript + Amplify Gen 2", "specifications/profile-typescript-amplify-gen2/index.html"],
           ["Publication profile", "specifications/publication/index.html"],
           ["Export contract", "specifications/export/index.html"],
@@ -368,6 +369,7 @@ export const CARD_ALT = `${SITE_NAME}: ${FOOTER.statement}`;
 export const SPECS: Array<{ slug: string; file: string }> = [
   { slug: "core", file: "core-0.3.md" },
   { slug: "vsa", file: "vsa-0.3.md" },
+  { slug: "profile-contract", file: "profile-contract.md" },
   { slug: "profile-typescript-amplify-gen2", file: "profile-typescript-amplify-gen2-0.3.md" },
   { slug: "publication", file: "publication.md" },
   { slug: "export", file: "export.md" },

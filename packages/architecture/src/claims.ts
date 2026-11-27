@@ -22,6 +22,7 @@
 import { type Graph, patternProblem } from "@intentset/core";
 import { pathsMayBePlanned } from "./delivery.ts";
 import { type Finding, finding, listSome, plural } from "./finding.ts";
+import { runs } from "./layers.ts";
 import { compareStrings, validatePattern } from "./patterns.ts";
 import type { Model } from "./regions.ts";
 
@@ -209,7 +210,7 @@ export function checkClaims(model: Model, graph: Graph, registriesPath: string):
   for (const file of model.production) {
     if (!model.reader.isSource(file) || !model.inScope(file)) continue;
     const region = model.regionOf(file);
-    if (region.kind === "backend") {
+    if (region.kind === "backend" && runs(model.config, "amplify")) {
       findings.push(
         finding({
           code: "AMP004",

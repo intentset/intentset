@@ -30,18 +30,20 @@ import {
 } from "./baseline.ts";
 import { checkBoundaries, checkJsx, checkUnclassified } from "./boundaries.ts";
 import { checkClaims } from "./claims.ts";
-import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
+import type { ArchitectureConfig } from "./config.ts";
 import { checkDependencies } from "./dependencies.ts";
 import { applyExceptions, type ExceptionRecord, readExceptionRecord, readExceptions } from "./exceptions.ts";
 import { type Finding, finding } from "./finding.ts";
 import type { ImportEdge } from "./imports.ts";
 import { NameIndex } from "./names.ts";
 import { checkOwnership } from "./ownership.ts";
+import { runs } from "./layers.ts";
 import { compareStrings } from "./patterns.ts";
+import { loadConfig, PROFILE_PATH } from "./profile.ts";
 import { buildModel } from "./regions.ts";
 
 export interface CheckOptions {
-  /** Laid over the defaults and over `.intentset/architecture.yaml`. */
+  /** Laid over the profile and over `.intentset/architecture.yaml`. */
   config?: Partial<ArchitectureConfig>;
   /** Conformance level; VSA001 runs at L2 and above. Default L2. */
   level?: Level;
@@ -130,17 +132,17 @@ export function checkArchitecture(
   const level = options.level ?? "L2";
   const mode = options.mode ?? "migration";
   const registriesPath = options.registriesPath ?? "registries.yaml";
-  const configDiagnostics: Diagnostic[] = [];
-  let fileConfig: Partial<ArchitectureConfig> | undefined;
-  const configText = tree.files.get(ARCHITECTURE_CONFIG_PATH);
-  if (configText !== undefined) {
-    const read = readArchitectureConfig(configText, ARCHITECTURE_CONFIG_PATH);
-    fileConfig = read.config;
-    configDiagnostics.push(...read.diagnostics);
-  }
-  const config = resolveConfig(fileConfig, options.config);
-  const model = buildModel(graph, registries, tree.files, config);
+  const loaded = loadConfig(tree.files, options.config);
+  const configDiagnostics: Diagnostic[] = loaded.diagnostics;
+  const config = loaded.config;
+  const model = buildModel(graph, registries, tree.files, config, loaded.reader);
   const unresolved: string[] = [];
+  if (!loaded.read) {
+    // Nothing was read, so nothing is passed (profile contract §6, design invariant 6).
+    unresolved.push(
+      `${PROFILE_PATH}: this release has no reader for ${config.language || "a profile that states no language"}, so no file's imports were checked`,
+    );
+  }
 
   for (const slice of model.slices) {
     for (const i of slice.invalidClaims) {
@@ -179,7 +181,7 @@ export function checkArchitecture(
   unresolved.push(...boundaries.untraced);
   findings.push(...checkJsx(model, imports.jsx));
   findings.push(...checkUnclassified(model));
-  const areaCheck = checkAreas(model, imports.edges);
+  const areaCheck = runs(config, "amplify") ? checkAreas(model, imports.edges) : { findings: [], unresolved: [] };
   findings.push(...areaCheck.findings);
   unresolved.push(...areaCheck.unresolved);
   const dependencies = checkDependencies(model, graph, boundaries.sliceEdges);

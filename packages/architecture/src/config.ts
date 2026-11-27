@@ -66,7 +66,38 @@ export interface ArchitectureConfig {
   sharedBackend: string[];
   /** The one frontend file that may import area schemas, type-only, and call generateClient (AMP011). */
   schemaBridge: string | null;
+  /** The profile these values come from, by ID (profile contract §2). `.intentset/architecture.yaml` cannot set it. */
+  profile: string;
+  /** The language whose reader reads the tree (profile contract §6). */
+  language: string;
+  /** The profile's own layers, in the order it lists them (profile contract §3). */
+  layers: string[];
+  /** Which of the profile's layers play the fixed roles (profile contract §3). */
+  roles: LayerRoles;
+  /**
+   * The folders, under an entrypoint's directory, that stand for a layer in a slice that declares no layers, by
+   * layer (profile contract §3).
+   */
+  layerFolders: Record<string, string[]>;
+  /** The stack-specific rule sets that run (profile contract §5). */
+  ruleSets: string[];
 }
+
+/** The roles a profile gives its layers (profile contract §3). A role no layer plays is null or empty. */
+export interface LayerRoles {
+  /** The one layer that may reach a backend or an outside service. */
+  seam: string | null;
+  /** The layers that stay free of SDKs, transport and UI. */
+  pure: string[];
+  /** The layers that may render. */
+  rendering: string[];
+}
+
+/** The rule sets this release ships, each with the language it is written for (profile contract §5). */
+export const RULE_SETS: Readonly<Record<string, { language: string }>> = { amplify: { language: "typescript" } };
+
+/** The ID of the reference profile, which applies when a repository names none. */
+export const REFERENCE_PROFILE = "intentset/typescript-amplify-gen2/0.3";
 
 /**
  * The UI frameworks profile §3 keeps out of policies, models and the client seam by default. A repository adds its
@@ -108,6 +139,12 @@ export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
   areas: [],
   sharedBackend: [],
   schemaBridge: null,
+  profile: REFERENCE_PROFILE,
+  language: "typescript",
+  layers: ["presentation", "application", "policy", "model", "external"],
+  roles: { seam: "external", pure: ["policy", "model"], rendering: ["presentation"] },
+  layerFolders: { policy: ["domain/policies"], model: ["domain/models"], external: ["client"] },
+  ruleSets: ["amplify"],
 };
 
 const LIST_KEYS = [
@@ -146,9 +183,17 @@ const KNOWN_KEYS = [...LIST_KEYS, "screensGlob", "layerMatrix", "forbiddenPackag
   compareStrings,
 );
 
-/** The defaults with a partial configuration laid over them; a key given replaces the default whole. */
+/** The reference profile with a partial configuration laid over it; a key given replaces the default whole. */
 export function resolveConfig(...layers: (Partial<ArchitectureConfig> | undefined)[]): ArchitectureConfig {
-  const config: ArchitectureConfig = structuredClone(DEFAULT_ARCHITECTURE_CONFIG);
+  return resolveConfigFrom(DEFAULT_ARCHITECTURE_CONFIG, ...layers);
+}
+
+/** `base` with each partial configuration laid over it in turn; a key given replaces the one beneath it whole. */
+export function resolveConfigFrom(
+  base: ArchitectureConfig,
+  ...layers: (Partial<ArchitectureConfig> | undefined)[]
+): ArchitectureConfig {
+  const config: ArchitectureConfig = structuredClone(base);
   for (const layer of layers) {
     if (layer === undefined) continue;
     for (const [key, value] of Object.entries(layer)) {
@@ -192,19 +237,47 @@ export function readArchitectureConfig(
     );
     return { config, diagnostics };
   }
-  const root = parsed.value;
-  const at = (field: string) => parsed.lines.get(field);
+  readConfigKeys(
+    parsed.value,
+    (field) => parsed.lines.get(field),
+    report,
+    config,
+    (key) => ({
+      message: `Unknown architecture configuration key \`${key}\`.`,
+      remediation: `Remove it; the keys are ${KNOWN_KEYS.join(", ")}.`,
+    }),
+  );
+  return { config, diagnostics };
+}
 
+/** The keys `.intentset/architecture.yaml` may set, sorted; a profile file may set each of them too. */
+export const CONFIG_KEYS: readonly string[] = KNOWN_KEYS;
+
+export type ConfigReport = (
+  field: string | undefined,
+  line: number | undefined,
+  message: string,
+  remediation: string,
+) => void;
+
+/**
+ * Read the configuration keys of a parsed mapping into `config`, reporting each that is wrong. A key outside
+ * CONFIG_KEYS is reported with what `unknown` says of it, or passed over when `unknown` returns null: a profile
+ * file's own keys are read by its reader.
+ */
+export function readConfigKeys(
+  root: Record<string, unknown>,
+  at: (field: string) => number | undefined,
+  report: ConfigReport,
+  config: Partial<ArchitectureConfig>,
+  unknown: (key: string) => { message: string; remediation: string } | null,
+): void {
   for (const key of Object.keys(root).sort(compareStrings)) {
     const field = `/${key}`;
     const value = root[key];
     if (!KNOWN_KEYS.includes(key)) {
-      report(
-        field,
-        at(field),
-        `Unknown architecture configuration key \`${key}\`.`,
-        `Remove it; the keys are ${KNOWN_KEYS.join(", ")}.`,
-      );
+      const said = unknown(key);
+      if (said !== null) report(field, at(field), said.message, said.remediation);
       continue;
     }
     if (value === null) continue;
@@ -286,10 +359,9 @@ export function readArchitectureConfig(
     }
     (config as Record<string, unknown>)[key] = [...list];
   }
-  return { config, diagnostics };
 }
 
-function readMatrix(value: unknown): Record<string, string[]> | null {
+export function readMatrix(value: unknown): Record<string, string[]> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   const matrix: Record<string, string[]> = {};
   for (const [layer, targets] of Object.entries(value)) {

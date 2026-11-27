@@ -8,8 +8,9 @@
  * contents through the function it is given.
  */
 import type { Graph, Registries } from "@intentset/core";
-import { ARCHITECTURE_CONFIG_PATH, type ArchitectureConfig, readArchitectureConfig, resolveConfig } from "./config.ts";
+import type { ArchitectureConfig } from "./config.ts";
 import { compareStrings, matchPattern } from "./patterns.ts";
+import { loadConfig } from "./profile.ts";
 import { buildModel } from "./regions.ts";
 
 export interface SubjectSourceOptions {
@@ -48,11 +49,8 @@ export function subjectSource(
   tree: { files: ReadonlyMap<string, string> },
   options: SubjectSourceOptions,
 ): ArchitectureSubjectSource {
-  const configText = tree.files.get(ARCHITECTURE_CONFIG_PATH);
-  const fileConfig =
-    configText === undefined ? undefined : readArchitectureConfig(configText, ARCHITECTURE_CONFIG_PATH).config;
-  const config = resolveConfig(fileConfig, options.config);
-  const model = buildModel(graph, registries, tree.files, config);
+  const { config, reader } = loadConfig(tree.files, options.config);
+  const model = buildModel(graph, registries, tree.files, config, reader);
 
   const sliceFiles = new Map<string, string[]>();
   for (const slice of model.slices) {

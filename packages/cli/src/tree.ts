@@ -9,7 +9,7 @@
  */
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { ARCHITECTURE_CONFIG_PATH, readArchitectureConfig, resolveConfig } from "@intentset/architecture";
+import { ARCHITECTURE_CONFIG_PATH, loadConfig, PROFILE_PATH } from "@intentset/architecture";
 import type { Config } from "@intentset/core";
 import { listFiles } from "./repository.ts";
 
@@ -42,13 +42,16 @@ export interface Tree {
 }
 
 export function readTree(root: string, config: Pick<Config, "ignore">): Tree {
-  let ignore = resolveConfig().ignore;
-  try {
-    const text = readFileSync(join(root, ARCHITECTURE_CONFIG_PATH), "utf8");
-    ignore = resolveConfig(readArchitectureConfig(text).config).ignore;
-  } catch {
-    // No architecture configuration: its default ignore list stands.
+  // The ignore list is the profile's, with the architecture configuration's over it (profile contract §4).
+  const configuration = new Map<string, string>();
+  for (const path of [PROFILE_PATH, ARCHITECTURE_CONFIG_PATH]) {
+    try {
+      configuration.set(path, readFileSync(join(root, path), "utf8"));
+    } catch {
+      // Neither file is required: without them the reference profile's ignore list stands.
+    }
   }
+  const { ignore } = loadConfig(configuration).config;
   const files = new Map<string, string>();
   const skipped: string[] = [];
   const paths = listFiles(root, [...config.ignore, ...ignore]);

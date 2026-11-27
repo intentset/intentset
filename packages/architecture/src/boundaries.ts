@@ -53,7 +53,8 @@
 import { isAreaSchema } from "./areas.ts";
 import { type Finding, finding, listSome } from "./finding.ts";
 import { type ImportEdge, takenBy } from "./imports.ts";
-import { fileLayer, inSeam, isPure, knownLayer, layerAllows, layerOf } from "./layers.ts";
+import type { ArchitectureConfig } from "./config.ts";
+import { fileLayer, inSeam, isPure, knownLayer, layerAllows, layerOf, runs } from "./layers.ts";
 import { NameIndex } from "./names.ts";
 import { compareStrings, matchAny, matchPattern } from "./patterns.ts";
 import { describePackage, type Model, type Region, type SliceInfo } from "./regions.ts";
@@ -140,6 +141,7 @@ export function checkBoundaries(
   names: NameIndex = new NameIndex(edges, new Map()),
 ): BoundaryResult {
   const { config } = model;
+  const amplify = runs(config, "amplify");
   const findings: Finding[] = [];
   const untraced: string[] = [];
   const sliceEdges = new Map<string, SliceEdge>();
@@ -162,7 +164,8 @@ export function checkBoundaries(
     if (owner === target.id) return null;
     if (!test && model.underBackend(to)) {
       if (source === undefined && model.underBackend(from)) return null; // the unified backend composition (VSA §7)
-      if (source !== undefined && inSeam(source, from) && matchAny(config.responseParserModules, to)) return null;
+      if (source !== undefined && inSeam(source, from, config) && matchAny(config.responseParserModules, to))
+        return null;
     }
     const who = test ? `Test file ${from}` : from;
     const subject = {
@@ -331,8 +334,8 @@ export function checkBoundaries(
 
     if (edge.to === null) {
       const specifier = edge.specifier.replace(/^node:/, "");
-      if (source !== undefined && !model.underBackend(from) && matchAny(config.backendSdks, specifier)) {
-        if (isPure(source, from)) {
+      if (amplify && source !== undefined && !model.underBackend(from) && matchAny(config.backendSdks, specifier)) {
+        if (isPure(source, from, config)) {
           findings.push(
             finding({
               code: "AMP006",
@@ -346,7 +349,7 @@ export function checkBoundaries(
               taken: takenBy(edge),
             }),
           );
-        } else if (!inSeam(source, from)) {
+        } else if (!inSeam(source, from, config)) {
           findings.push(
             finding({
               code: "AMP002",
@@ -362,7 +365,7 @@ export function checkBoundaries(
         }
         continue;
       }
-      const layer = source !== undefined && !model.underBackend(from) ? fileLayer(source, from) : null;
+      const layer = source !== undefined && !model.underBackend(from) ? fileLayer(source, from, config) : null;
       const pattern =
         layer === null ? undefined : (config.forbiddenPackages[layer] ?? []).find((p) => matchPattern(p, specifier));
       if (source !== undefined && layer !== null && pattern !== undefined) {
@@ -373,7 +376,7 @@ export function checkBoundaries(
             path: from,
             location,
             message: `${from} is in the ${layer} layer of ${source.id} and ${how(edge)}, a package the ${layer} layer may not import (forbiddenPackages: ${pattern}).`,
-            remediation: forbiddenRemediation(layer, specifier),
+            remediation: forbiddenRemediation(config, layer, specifier),
             edges: [{ from, to: edge.specifier }],
             taken: takenBy(edge),
           }),
@@ -401,8 +404,8 @@ export function checkBoundaries(
 
     // 1. AMP001, and AMP011 for an area repository's schema bridge (profile §9). The shared backend
     // package is backend code: what it may import is AMP008's question.
-    if (model.underBackend(to) && !model.underBackend(from) && !matchAny(config.sharedBackend, from)) {
-      const seam = source !== undefined && inSeam(source, from);
+    if (amplify && model.underBackend(to) && !model.underBackend(from) && !matchAny(config.sharedBackend, from)) {
+      const seam = source !== undefined && inSeam(source, from, config);
       if (edge.typeOnly && isAreaSchema(config.areas, to)) {
         if (from !== config.schemaBridge) {
           findings.push(
@@ -557,7 +560,11 @@ export function checkBoundaries(
       continue;
     }
     // 5. AMP006
-    if (isPure(source, from) && ((target !== undefined && inSeam(source, to)) || regionTo.kind === "infrastructure")) {
+    if (
+      amplify &&
+      isPure(source, from, config) &&
+      ((target !== undefined && inSeam(source, to, config)) || regionTo.kind === "infrastructure")
+    ) {
       findings.push(
         finding({
           code: "AMP006",
@@ -604,18 +611,40 @@ export function checkBoundaries(
   return { findings, sliceEdges, fileEdges, crossSliceEdges, untraced: [...new Set(untraced)].sort(compareStrings) };
 }
 
-function forbiddenRemediation(layer: string, specifier: string): string {
-  if (layer === "policy" || layer === "model") {
-    return `Policies and models stay free of UI and transport: keep what needs "${specifier}" in the presentation layer and pass plain values in (profile §3, TS007).`;
-  }
-  if (layer === "external") {
-    return `The client seam is transport: return plain values from it, and let a hook in the presentation layer hold the state "${specifier}" provides (profile §3, TS007).`;
+/** The profile's rendering layers as a sentence names them: "the presentation layer", "the ui or widgets layer". */
+function renderingLayer(config: ArchitectureConfig): string {
+  const names = config.roles.rendering;
+  if (names.length === 0) return "a layer that may import it";
+  return `the ${names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} or ${names.at(-1)}`} layer`;
+}
+
+function forbiddenRemediation(config: ArchitectureConfig, layer: string, specifier: string): string {
+  const pure = config.roles.pure.includes(layer);
+  if (pure || layer === config.roles.seam) {
+    // The reference profile's layers keep the words its specification uses for them.
+    const subject =
+      layer === "policy" || layer === "model"
+        ? "Policies and models stay free of UI and transport"
+        : layer === "external"
+          ? "The client seam is transport"
+          : pure
+            ? `The ${layer} layer stays free of UI and transport`
+            : `The ${layer} layer is the seam, and the seam is transport`;
+    return pure
+      ? `${subject}: keep what needs "${specifier}" in ${renderingLayer(config)} and pass plain values in (profile §3, TS007).`
+      : `${subject}: return plain values from it, and let a hook in ${renderingLayer(config)} hold the state "${specifier}" provides (profile §3, TS007).`;
   }
   return `Move what needs "${specifier}" to a layer that may import it, or change forbiddenPackages in .intentset/architecture.yaml if the policy is wrong (TS007).`;
 }
 
-/** The profile's layers other than presentation, which render no JSX (TS008). A layer of the repository's own naming is not judged. */
-const NO_JSX_LAYERS = ["application", "policy", "model", "external"];
+/**
+ * The profile's layers other than its rendering ones, which render no JSX (TS008). A layer the profile does not list
+ * is not judged, and nor is any layer of a profile in which none has the rendering role.
+ */
+function noJsxLayers(config: ArchitectureConfig): string[] {
+  const rendering = config.roles.rendering;
+  return rendering.length === 0 ? [] : config.layers.filter((layer) => !rendering.includes(layer));
+}
 
 /**
  * TS008: a slice file outside the presentation layer that renders JSX. The automatic runtime needs no import for it,
@@ -624,28 +653,36 @@ const NO_JSX_LAYERS = ["application", "policy", "model", "external"];
  */
 export function checkJsx(model: Model, jsx: ReadonlyMap<string, number>): Finding[] {
   const findings: Finding[] = [];
+  const judged = noJsxLayers(model.config);
+  const rendering = renderingLayer(model.config);
   for (const path of [...jsx.keys()].sort(compareStrings)) {
     if (!model.inScope(path) || model.isTest(path) || model.underBackend(path)) continue;
     const region = model.regionOf(path);
     const slice = region.kind === "slice" ? model.sliceById.get(region.owner as string) : undefined;
     if (slice === undefined || slice.meta.entrypoints.includes(path)) continue;
-    const layer = fileLayer(slice, path);
-    if (layer === null || !NO_JSX_LAYERS.includes(layer)) continue;
+    const layer = fileLayer(slice, path, model.config);
+    if (layer === null || !judged.includes(layer)) continue;
     findings.push(
       finding({
         code: "TS008",
         artifact: slice.id,
         path,
         location: { line: jsx.get(path) as number },
-        message: `${path} is in the ${layer} layer of ${slice.id} and renders JSX, which only the presentation layer may.`,
+        message: `${path} is in the ${layer} layer of ${slice.id} and renders JSX, which only ${rendering} may.`,
         remediation:
-          layer === "external"
-            ? "The client seam is transport: return data from it and render it in a component under the presentation layer (profile §3, TS008)."
-            : "Move the markup into a component in the presentation layer, and pass it the values this file computes (profile §3, TS008).",
+          layer === model.config.roles.seam
+            ? `${layer === "external" ? "The client seam" : `The ${layer} layer, the seam,`} is transport: return data from it and render it in a component under ${rendering} (profile §3, TS008).`
+            : `Move the markup into a component in ${rendering}, and pass it the values this file computes (profile §3, TS008).`,
       }),
     );
   }
   return findings;
+}
+
+/** The profile's layers as a sentence lists them: "presentation, application, policy, model and external". */
+function layerList(config: ArchitectureConfig): string {
+  const names = config.layers;
+  return names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
 /** One warning per slice whose code files are in no declared layer, or in a layer the matrix does not know (VSA006). */
@@ -656,7 +693,7 @@ export function checkUnclassified(model: Model): Finding[] {
     const files = new Set(slice.claimFiles.flat());
     for (const file of [...files].sort()) {
       if (
-        !/\.[cm]?[jt]sx?$/.test(file) ||
+        !model.reader.isSource(file) ||
         matchAny(model.config.tests, file) ||
         slice.meta.entrypoints.includes(file) ||
         model.underBackend(file) ||
@@ -677,8 +714,7 @@ export function checkUnclassified(model: Model): Finding[] {
         path: slice.path,
         field: "/intentset/slice/layers",
         message: `${unclassified.length === 1 ? "1 file" : `${unclassified.length} files`} of ${slice.id} ${unclassified.length === 1 ? "is" : "are"} in no single layer the matrix knows, so ${unclassified.length === 1 ? "its" : "their"} imports were not layer-checked: ${unclassified.slice(0, 3).join(", ")}${unclassified.length > 3 ? ` and ${unclassified.length - 3} more` : ""}.`,
-        remediation:
-          "Cover each file with exactly one of the presentation, application, policy, model and external layer patterns (VSA006).",
+        remediation: `Cover each file with exactly one of the ${layerList(model.config)} layer patterns (VSA006).`,
         paths: unclassified,
       }),
     );
