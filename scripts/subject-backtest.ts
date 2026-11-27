@@ -10,7 +10,7 @@
  * under its `.claude/worktrees` and removed afterwards; nothing else in that
  * repository is touched), reads the commit's own records and configuration
  * with the in-repo packages exactly as `intentset graph` does (the Markset
- * carrier, `.intentset/config.yaml`, the registries, `.intentset/architecture.yaml`),
+ * carrier, `.intentset/config.yaml`, the registries, `.intentset/profile.yaml` and `.intentset/architecture.yaml`),
  * resolves every slice's claimed files with the architecture package's
  * `buildModel`, and computes `computeSubject` (packages/verification/src/subject.ts)
  * for every automated verification. It then reports, in Markdown:
@@ -76,13 +76,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import {
-  ARCHITECTURE_CONFIG_PATH,
-  buildModel,
-  matchAny,
-  readArchitectureConfig,
-  resolveConfig,
-} from "@intentset/architecture";
+import { ARCHITECTURE_CONFIG_PATH, buildModel, loadConfig, matchAny, PROFILE_PATH } from "@intentset/architecture";
 import { canonicalJson, type Graph, sha256Hex, validate } from "@intentset/core";
 import { computeSubject, includedSlices, movedParts, type Subject, verifiedBehaviors } from "@intentset/verification";
 import { marksetCarrier } from "@intentset/markset-adapter";
@@ -361,12 +355,13 @@ function migrated(inputs: ReturnType<typeof loadRepository>["inputs"]) {
 function build(root: string, sha: string): State {
   const repo = loadRepository(root, "markset");
   const graph = validate(migrated(repo.inputs), repo.registries, { level: "L2" }).graph;
-  let arch = resolveConfig();
-  try {
-    arch = resolveConfig(readArchitectureConfig(readFileSync(join(root, ARCHITECTURE_CONFIG_PATH), "utf8")).config);
-  } catch {
-    // No architecture configuration: the default ignore and test lists stand.
+  // The commit's own profile file and architecture configuration, resolved as the check resolves them. A commit
+  // with neither is read with the reference profile's ignore and test lists.
+  const configuration = new Map<string, string>();
+  for (const path of [PROFILE_PATH, ARCHITECTURE_CONFIG_PATH]) {
+    if (existsSync(join(root, path))) configuration.set(path, readFileSync(join(root, path), "utf8"));
   }
+  const arch = loadConfig(configuration).config;
   const oids = new Map<string, string>();
   for (const [path, oid] of lsFiles(root)) {
     if (!matchAny([...repo.config.ignore, ...arch.ignore], path)) oids.set(path, oid);
