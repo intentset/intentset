@@ -17,7 +17,17 @@ intentset:
   audiences:
   - engineering
   - product
-  revision: 1
+  revision: 2
+  availability:
+    products:
+    - PRD-SHOP
+    releases:
+    - v1
+    roles:
+    - customer
+    editions:
+    - standard
+    flags: []
   links:
     implements:
     - BEH-RESET-PASSWORD
@@ -35,6 +45,10 @@ intentset:
     - kind: source
       path: src/features/accounts/reset/**
     usesResources: []
+    surfaces:
+      /account/reset-password:
+        knowledge:
+        - KB-RESET-PASSWORD
 ---
 
 # Password reset

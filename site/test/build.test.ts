@@ -540,8 +540,10 @@ test("the worked example opens every record on the page, in the act it belongs t
     "withheldSources: 3",
     "reviewer: team-support",
     "intentset/help/0.3",
-    // The shop's slices declare no surface, so the help file maps none (ADR 0028).
-    '"surfaces": {}',
+    // Each slice names the article that leads its page, so the help file maps both routes to it (ADR 0028).
+    '"surfaces": {',
+    '"/account/reset-password": {',
+    '"/sign-in": {',
     ...(kb?.tips.map(([, tip]) => tip) ?? []),
   ]) {
     assert.ok(out.includes(expected), `the publication lacks ${expected}`);
