@@ -32,6 +32,9 @@ export const PROFILE_PATH = ".intentset/profile.yaml";
 /** The plain TypeScript profile: the layers, their matrix and the layout, and no stack's rules. */
 export const TYPESCRIPT_PROFILE = "intentset/typescript/0.4";
 
+/** The TypeScript profile for Next.js: the plain one with the `nextjs` rule set and the application router's layout. */
+export const NEXTJS_PROFILE = "intentset/typescript-nextjs/0.4";
+
 /**
  * The profiles this release ships, as profile files. The reference profile is the TypeScript one with the Amplify
  * rule set and the backend it checks; a test holds what it resolves to equal to DEFAULT_ARCHITECTURE_CONFIG.
@@ -67,6 +70,14 @@ ignore: ["**/node_modules/**", "**/dist/**", ".git/**"]
 tests: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"]
 screensGlob: "**/ui/screens/**"
 `,
+  [NEXTJS_PROFILE]: `id: ${NEXTJS_PROFILE}
+extends: ${TYPESCRIPT_PROFILE}
+ruleSets: [nextjs]
+sourceRoots: ["src/**", "app/**", "middleware.ts"]
+composition: ["app/**", "src/app/**", "middleware.ts", "src/middleware.ts"]
+middlewareFiles: ["middleware.ts", "src/middleware.ts"]
+serverOnly: ["**/server/**", "**/*.server.ts", "**/*.server.tsx"]
+`,
   [REFERENCE_PROFILE]: `id: ${REFERENCE_PROFILE}
 extends: ${TYPESCRIPT_PROFILE}
 ruleSets: [amplify]
@@ -99,6 +110,8 @@ const NOTHING: ArchitectureConfig = {
   sharedBackend: [],
   schemaBridge: null,
   outsidePackages: [],
+  serverOnly: [],
+  middlewareFiles: [],
   profile: "",
   language: "",
   layers: [],
@@ -428,7 +441,7 @@ const NO_READER = (language: string): Reader => ({
   unresolved: { code: "CFG001", remediation: "" },
   isSource: () => false,
   read: () => ({
-    graph: () => ({ edges: [], unresolved: [], exports: new Map(), jsx: new Map() }),
+    graph: () => ({ edges: [], unresolved: [], exports: new Map(), jsx: new Map(), directives: new Map() }),
     notes: () => [],
     importsOf: () => [],
     aliasFor: () => null,

@@ -6,7 +6,7 @@ knowledge are derived views; the files are authoritative. This repository is the
 suite, the reference implementation in TypeScript, and the intentset.org site.
 
 **`spec/` is the source of truth**: `core-0.4.md`, `vsa-0.4.md`, `profile-contract.md` (what a profile is and what a team may write in
-`.intentset/profile.yaml`, `intentset/profile-contract/0.1`; ADR 0030), `profile-typescript-amplify-gen2-0.4.md`,
+`.intentset/profile.yaml`, `intentset/profile-contract/0.1`; ADR 0030), `profile-typescript-amplify-gen2-0.4.md`, `profile-typescript-nextjs-0.4.md` (the Next.js profile and its rule set),
 `export.md` (the export contract other tools pin, `intentset/export/0.8`), `list.md` (the result `intentset list`
 writes, `intentset/list/0.1`, and the selector it reads; ADR 0016), `publication.md`, `frontmatter.schema.json`, `conformance.schema.json`, `export.schema.json`, `evidence.schema.json` (run records). Read the Core spec before implementing
 anything. When code and spec disagree, the spec wins, or the spec changes first in the same commit. Each spec opens with
@@ -110,7 +110,7 @@ learning from questions, and the AWS rules).
 - Diagnostic codes: `CORE001`–`CORE013`, `CFG001`–`CFG002` and `EVID001`–`EVID006` (Core §11, one code per kind
   of thing to fix, ADR 0024: an unreadable carrier is CORE010, a missing section CORE011, a field CORE001; an outcome
   with no measure is CORE009 draft, CORE012 past draft; a surface two slices declare is CORE013), `VSA001`–`VSA016` and `REG001` (VSA §2, §5, §9; VSA015 is the portable rule for the packages a profile lists as reaching outside and VSA016 the package policy, ADR 0030), `TS001`–`TS006` and `TS008` (TS007 is retired: it was the package policy until `0.4`, and a retired code is never reused) and
-  `AMP001`–`AMP013` (profile §2 to §4, §9), `PUB001`–`PUB004` (publication §4). Three digits always.
+  `AMP001`–`AMP013` (profile §2 to §4, §9), `NEXT001`–`NEXT004` (the `nextjs` rule set, Next.js profile §2), `PUB001`–`PUB004` (publication §4). Three digits always.
   Markset's diagnostics (origin `syntax`) keep Markset's own AREA_NAME codes (`DIRECTIVE_UNKNOWN_NAME`); the export
   schema, the conformance schema and `readExport` key the code's shape on the origin, and a host never renames either.
 - A release bumps every manifest, each spec's `implementation`, and adds its `CHANGELOG.md` entry: one bold sentence,
@@ -284,7 +284,7 @@ in `docs/implementation-plan.md` §5.
   the language readers built in, so the check still runs no code. Done: the reader interface, and the contract
   (`spec/profile-contract.md`) with the reference profile as data and `.intentset/profile.yaml` for a team's own.
   TS007 is VSA016, which moved the specifications to 0.4 and the export to 0.8 (unreleased; `intentset migrate --to
-  0.4` moves a repository). Next, in this order: TypeScript with Next.js, then Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
+  0.4` moves a repository). The Next.js profile (`intentset/typescript-nextjs/0.4`, the `nextjs` rule set, NEXT001 to NEXT004, `packages/architecture/src/nextjs.ts`) is in review. Next: Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
   from the profile); the Amplify checks run only where the profile names the `amplify` rule set; a profile file with
   an error stops the check with its errors and nothing else; a profile holds policy and layout, and `scope`, `areas`,
   `routerFiles`, `responseParserModules`, `schemaBridge`, `sharedBackend` and `conditions` stay in

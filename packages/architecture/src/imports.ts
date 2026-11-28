@@ -43,6 +43,8 @@ export interface ImportGraph {
   exports: Map<string, LocalExports>;
   /** The line of the first JSX element in each file that renders one, by path. */
   jsx: Map<string, number>;
+  /** The directives each file opens with, by path, for the files that have any. */
+  directives: Map<string, string[]>;
 }
 
 /** Build the graph over every code file in `files` (already filtered of ignored paths). */
@@ -51,9 +53,12 @@ export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: R
   const unresolved: UnresolvedImport[] = [];
   const exported = new Map<string, LocalExports>();
   const rendered = new Map<string, number>();
+  const directives = new Map<string, string[]>();
   for (const path of [...files.keys()].sort(compareStrings)) {
     if (!isCode(path)) continue;
-    const { imports, problems, exports, jsx } = extractImports(path, files.get(path) as string);
+    const extraction = extractImports(path, files.get(path) as string);
+    const { imports, problems, exports, jsx } = extraction;
+    if (extraction.directives.length > 0) directives.set(path, extraction.directives);
     exported.set(path, exports);
     if (jsx !== null) rendered.set(path, jsx);
     for (const problem of problems) {
@@ -85,7 +90,7 @@ export function buildImportGraph(files: ReadonlyMap<string, string>, resolver: R
       });
     }
   }
-  return { edges, unresolved, exports: exported, jsx: rendered };
+  return { edges, unresolved, exports: exported, jsx: rendered, directives };
 }
 
 /** The import as a baseline identifies it (VSA §9): one entry per name it takes. */

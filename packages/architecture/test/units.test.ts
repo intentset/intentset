@@ -51,6 +51,7 @@ import {
   SHIPPED_PROFILES,
   shippedProfile,
   TYPESCRIPT_PROFILE,
+  NEXTJS_PROFILE,
 } from "../src/index.ts";
 import { finding } from "../src/finding.ts";
 import { TypeScriptMissingError, typescriptVersion } from "../src/typescript.ts";
@@ -1588,7 +1589,7 @@ describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
   });
 
   test("the reference profile, read from its profile file, is the configuration the check always had", () => {
-    assert.deepEqual(SHIPPED_PROFILES, [TYPESCRIPT_PROFILE, REFERENCE_PROFILE].sort());
+    assert.deepEqual(SHIPPED_PROFILES, [TYPESCRIPT_PROFILE, REFERENCE_PROFILE, NEXTJS_PROFILE].sort());
     assert.deepEqual(shippedProfile(REFERENCE_PROFILE), DEFAULT_ARCHITECTURE_CONFIG);
     assert.deepEqual(resolveConfig(), DEFAULT_ARCHITECTURE_CONFIG);
     assert.equal(shippedProfile("intentset/none/0.4"), null);
@@ -1630,9 +1631,7 @@ describe("BEH-ARCH-PROFILE: profiles (profile contract, ADR 0030)", () => {
   });
 
   test("a profile with an error is not applied in part, and each error says where", () => {
-    const read = readProfile(
-      `id: acme/web/1\nextends: ${TYPESCRIPT_PROFILE}\nshared: ["lib/**"]\nruleSets: [nextjs]\n`,
-    );
+    const read = readProfile(`id: acme/web/1\nextends: ${TYPESCRIPT_PROFILE}\nshared: ["lib/**"]\nruleSets: [rails]\n`);
     assert.equal(read.config, null);
     assert.deepEqual(
       read.diagnostics.map((d) => `${d.code} ${d.origin} ${d.path}:${d.location?.line} ${d.field}`),
@@ -1845,5 +1844,67 @@ describe("a renamed code (ADR 0030)", () => {
     const applied = applyBaseline([about("VSA016")], written, "migration", () => subject);
     assert.equal(applied.baselined, 1);
     assert.deepEqual(applied.stale, [], "the entry is not stale, so the rename raises no VSA014");
+  });
+});
+
+describe("BEH-ARCH-NEXTJS: the Next.js profile and its rule set", () => {
+  test("a directive is a string statement a file opens with, and the same string later is not one", () => {
+    const of = (text: string) => extractImports("src/a.tsx", text).directives;
+    assert.deepEqual(of('"use client";\nimport { a } from "./a";\n'), ["use client"]);
+    assert.deepEqual(of("// a comment first\n'use client'\n'use strict';\nexport const a = 1;\n"), [
+      "use client",
+      "use strict",
+    ]);
+    assert.deepEqual(of('import { a } from "./a";\n"use client";\n'), []);
+    assert.deepEqual(of('"use client" + suffix;\n'), [], "an expression that starts with a string");
+    assert.deepEqual(of(""), []);
+  });
+
+  test("the shipped profile is the plain TypeScript one with the rule set, the router as composition and the defaults", () => {
+    const next = shippedProfile(NEXTJS_PROFILE)!;
+    const plain = shippedProfile(TYPESCRIPT_PROFILE)!;
+    assert.deepEqual(next.ruleSets, ["nextjs"]);
+    assert.deepEqual(next.serverOnly, ["**/server/**", "**/*.server.ts", "**/*.server.tsx"]);
+    assert.deepEqual(next.middlewareFiles, ["middleware.ts", "src/middleware.ts"]);
+    assert.deepEqual(next.composition, ["app/**", "src/app/**", "middleware.ts", "src/middleware.ts"]);
+    assert.deepEqual(next.outsidePackages, [], "which packages reach outside is the team's to say");
+    assert.deepEqual([next.layers, next.roles, next.layerMatrix], [plain.layers, plain.roles, plain.layerMatrix]);
+    assert.deepEqual(shippedProfile(REFERENCE_PROFILE)?.serverOnly, [], "no other profile has the settings");
+  });
+
+  test("a file that says nothing is not judged, and the check says for how many, never that they passed", () => {
+    const files = new Map([
+      [".intentset/profile.yaml", `id: acme/shop/1\nextends: ${NEXTJS_PROFILE}\noutsidePackages: ["pg/**"]\n`],
+      [
+        "app/page.tsx",
+        'import { Cart } from "../src/shared/Cart";\nexport default function Page() {\n  return <Cart />;\n}\n',
+      ],
+      [
+        "src/shared/Cart.tsx",
+        '"use client";\nimport { total } from "./total";\nexport const Cart = () => <b>{total}</b>;\n',
+      ],
+      ["src/shared/total.ts", "export const total = 1;\n"],
+      ["src/shared/server/db.ts", 'import { Client } from "pg";\nexport const db = Client;\n'],
+      ["src/shared/quiet.ts", "export const quiet = 1;\n"],
+      ["middleware.ts", "export function middleware() {}\n"],
+    ]);
+    const result = checkArchitecture(graphOf({}), EMPTY_REGISTRIES, { files });
+    assert.deepEqual(result.diagnostics, []);
+    assert.deepEqual(
+      result.summary.unresolved.filter((line) => line.includes("boundary")),
+      [
+        'the server and client boundary was not judged for 3 files that client code does not import and that say neither "use client" nor "use server", import no server-only and match no serverOnly pattern: app/page.tsx, middleware.ts, src/shared/quiet.ts',
+      ],
+      "the client file, what it imports and the server-only file are judged; the rest are named",
+    );
+
+    // The same tree with the client file reaching the database: reported once, by the Next.js rule.
+    files.set("src/shared/total.ts", 'import { Client } from "pg";\nexport const total = Client;\n');
+    assert.deepEqual(
+      checkArchitecture(graphOf({}), EMPTY_REGISTRIES, { files }).diagnostics.map(
+        (d) => `${d.code} ${d.path}:${d.location?.line}`,
+      ),
+      ["NEXT003 src/shared/total.ts:1"],
+    );
   });
 });

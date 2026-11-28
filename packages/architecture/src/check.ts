@@ -39,6 +39,7 @@ import { NameIndex } from "./names.ts";
 import { checkOwnership } from "./ownership.ts";
 import { runs } from "./layers.ts";
 import { compareStrings } from "./patterns.ts";
+import { checkNextjs } from "./nextjs.ts";
 import { loadConfig, PROFILE_PATH } from "./profile.ts";
 import { buildModel } from "./regions.ts";
 
@@ -179,6 +180,11 @@ export function checkArchitecture(
   const areaCheck = runs(config, "amplify") ? checkAreas(model, imports.edges) : { findings: [], unresolved: [] };
   findings.push(...areaCheck.findings);
   unresolved.push(...areaCheck.unresolved);
+  if (runs(config, "nextjs")) {
+    const next = checkNextjs(model, imports);
+    findings.push(...next.findings);
+    unresolved.push(...next.unresolved);
+  }
   const dependencies = checkDependencies(model, graph, boundaries.sliceEdges);
   findings.push(...dependencies.findings);
 

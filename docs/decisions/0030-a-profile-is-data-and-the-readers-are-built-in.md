@@ -1,6 +1,6 @@
 # ADR 0030: An architecture profile is data a team writes, and the language readers are built in
 
-**Status:** accepted, 2026-11-27 (issue #158). Proposed 2026-11-27. The thirteen decisions under "Decided" were made
+**Status:** accepted, 2026-11-27 (issue #158). Proposed 2026-11-27. The fifteen decisions under "Decided" were made
 by the maintainers the same day. The contract it describes is `spec/profile-contract.md`, which arrived with its cases
 and its implementation. TS007 was renamed VSA016 the same day, which moved the specifications to `0.4` and the export
 to 0.8; the Next.js profile and the Python reader are the steps still to come.
@@ -66,6 +66,14 @@ as a computed `require` in TypeScript, which the check already reports as not ch
 13. **A portable rule gives the seam and pure roles meaning under every profile.** A package the profile lists in
     `outsidePackages` is imported only from the seam layer and never from a pure layer: VSA015, stated in VSA §5.
     The reference profile lists none, so no existing case changes.
+14. **A generated format has a version of its own**, recorded in [ADR 0031](0031-a-generated-format-has-a-version-of-its-own.md).
+15. **How the Next.js rule set knows server-only code.** A file is server-only if it imports the `server-only`
+    package, says "use server", or matches patterns the profile lists; the shipped profile gives defaults
+    (`**/server/**`, `**/*.server.ts`, `**/*.server.tsx`), and a team's profile or `.intentset/architecture.yaml` may
+    replace them. A file with "use client", or imported by one, is client code. A file that says nothing and matches
+    nothing is not judged, and the check reports that it was not judged, never as a pass. As built, a "use server"
+    file runs on the server and is the one kind of server code client code may import, since importing a server
+    action is how a Next.js client calls the server; the Next.js profile §3 says so.
 
 ## Decision
 
@@ -192,4 +200,3 @@ Four rules, each with a code under a prefix the rule set owns, defined in the pr
 - Settled by the contract (`spec/profile-contract.md` §2): a profile file's keys are `id`, `extends`, `language`,
   `layers`, `roles`, `layerMatrix`, `layerFolders`, `forbiddenPackages` and `ruleSets`, and every key the
   architecture configuration has.
-- What "server-only code" is to the Next.js rule set where a file does not say so itself.

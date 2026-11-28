@@ -4633,7 +4633,7 @@
       "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
       "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
       "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
-      ".intentset/profile.yaml": "id: lantern/web/1\nextends: intentset/typescript-amplify-gen2/0.4\nruleSets: [amplify, nextjs]\n"
+      ".intentset/profile.yaml": "id: lantern/web/1\nextends: intentset/typescript-amplify-gen2/0.4\nruleSets: [amplify, rails]\n"
     },
     "valid": false,
     "diagnostics": [
@@ -5184,5 +5184,523 @@
       "VSA015"
     ],
     "notes": "Contract §4: outsidePackages is a key of .intentset/architecture.yaml as well, and overrides the profile's."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT a client screen reaches the backend through a server action",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Next.js profile §3 and §5: the screen says \"use client\" and the use-case says \"use server\". Client code may import a server action, and what the action imports, the client that reaches aws-amplify, is not client code."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 client code imports a file that imports server-only",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { sign } from \"../../domain/policies/signing\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport const signed = sign;\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/domain/policies/signing.ts": "import \"server-only\";\n\nexport const sign = (value: string): string => value;\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT001"
+    ],
+    "notes": "Next.js profile §3: the policy imports the server-only package, so it is server-only, and a \"use client\" screen imports it."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 client code imports a file a serverOnly pattern matches",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { sign } from \"../../domain/policies/signing.server\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport const signed = sign;\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/domain/policies/signing.server.ts": "export const sign = (value: string): string => value;\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT001"
+    ],
+    "notes": "Next.js profile §3: the shipped profile's serverOnly patterns include **/*.server.ts."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 boundary: with the pattern replaced, the same file is client code like any other the screen imports",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { sign } from \"../../domain/policies/signing.server\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport const signed = sign;\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/domain/policies/signing.server.ts": "export const sign = (value: string): string => value;\n",
+      ".intentset/architecture.yaml": "serverOnly:\n- \"**/server/**\"\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Next.js profile §3: .intentset/architecture.yaml replaces serverOnly, so the file no longer matches. It imports no server-only, and the screen that imports it makes it client code."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 a file client code imports is client code too",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import { sign } from \"../../domain/policies/signing\";\nimport type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n\nexport const signed = sign;\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/domain/policies/signing.ts": "import \"server-only\";\n\nexport const sign = (value: string): string => value;\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT001"
+    ],
+    "notes": "Next.js profile §3: the hook says nothing, and the \"use client\" screen imports it, so it is client code; it imports a server-only file."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 boundary: client code takes only a type from a server-only file",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport type { Signer } from \"../../domain/policies/signing\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport type S = Signer;\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/domain/policies/signing.ts": "import \"server-only\";\n\nexport type Signer = (value: string) => string;\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Next.js profile §3: a type-only import is erased, so it puts no server code in the browser."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 client code imports server-only itself",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport \"server-only\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT001"
+    ],
+    "notes": "Next.js profile §3: a file cannot be both."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 a file says use client inside a server-only folder",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/ui/server/Panel.tsx": "\"use client\";\n\nexport function Panel() {\n  return <div />;\n}\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT001"
+    ],
+    "notes": "Next.js profile §3: the path matches **/server/** and the file opens with \"use client\"."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT001 boundary: a directive is a first statement, and the same string later is not one",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { sign } from \"../../domain/policies/signing\";\n\"use client\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport const signed = sign;\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/features/assessment/schedule/domain/policies/signing.ts": "import \"server-only\";\n\nexport const sign = (value: string): string => value;\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Next.js profile §3: the string \"use client\" after an import is an expression, so the screen says nothing. It imports a server-only file and is not judged."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT boundary: a tree in which no file says anything is not judged, and nothing is reported",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Next.js profile §3: no file says \"use client\" or \"use server\", imports server-only or matches a pattern. No rule has anything to judge; the check's summary says for how many files the boundary was not judged, which is never a pass."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT002 a route file imports a package that reaches outside",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { generateClient } from \"aws-amplify/data\";\nimport { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n\nexport const client = generateClient();\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT002"
+    ],
+    "notes": "Next.js profile §4: files under the application router are composition (VSA §6). They call a slice through its entrypoint and import no package the profile lists in outsidePackages."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT002 boundary: the same route under the plain TypeScript profile, which runs no Next.js rule",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { generateClient } from \"aws-amplify/data\";\nimport { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n\nexport const client = generateClient();\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Profile contract §5: a rule set runs when the profile names it. VSA015 judges slice files, and a route file is none."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT002 boundary: a route file that reaches into a slice's private file is VSA003's",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { scheduleAssessment } from \"../features/assessment/schedule/domain/use-cases/schedule-assessment\";\n\nexport function App() {\n  return <main data-ready={typeof scheduleAssessment === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "VSA003"
+    ],
+    "notes": "Next.js profile §4: which code reports what. The portable rule already refuses composition a slice's internals; the rule set adds no second code for it."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT003 a seam file that is client code imports a package that reaches outside",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT003"
+    ],
+    "notes": "Next.js profile §5: the screen says \"use client\" and nothing below it says \"use server\", so the hook, the use-case and the client are all client code, and the client imports aws-amplify. VSA015 passes the import, since it is in the seam; this rule reports that the seam would run in the browser."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT003 boundary: outside the seam the same import is VSA015's, reported once",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { generateClient } from \"aws-amplify/data\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport const direct = generateClient();\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "VSA015"
+    ],
+    "notes": "Next.js profile §5: a \"use client\" screen imports aws-amplify itself. VSA015 reports an outside package imported outside the seam, and NEXT003 does not report the same import again."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT003 shared code that client code imports reaches outside",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "\"use server\";\nimport { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "\"use client\";\nimport { fetchUser } from \"../../../../../shared/fetch-user\";\nimport { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n\nexport const who = fetchUser;\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/shared/fetch-user.ts": "import { generateClient } from \"aws-amplify/data\";\n\nexport const fetchUser = () => generateClient();\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT003"
+    ],
+    "notes": "Next.js profile §5: a shared file is in no slice, so VSA015 does not judge it; a \"use client\" screen imports it, and it imports aws-amplify."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT004 middleware imports a package that reaches outside",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/middleware.ts": "import { generateClient } from \"aws-amplify/data\";\n\nexport function middleware() {\n  return generateClient();\n}\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "NEXT004"
+    ],
+    "notes": "Next.js profile §6: middleware coordinates access and reaches no data."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT004 boundary: middleware calls a slice through its entrypoint",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/middleware.ts": "import { scheduleAssessment } from \"@assessment/schedule\";\n\nexport function middleware() {\n  return typeof scheduleAssessment;\n}\n"
+    },
+    "valid": true,
+    "diagnostics": [],
+    "notes": "Next.js profile §6."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT004 boundary: middleware that reaches into a slice's private file is VSA003's",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\n",
+      "src/middleware.ts": "import { isFutureRelease } from \"./features/assessment/schedule/domain/policies/release-time\";\n\nexport function middleware() {\n  return typeof isFutureRelease;\n}\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "VSA003"
+    ],
+    "notes": "Next.js profile §6: middleware is composition, so the portable rule reports it."
+  },
+  {
+    "section": "vsa",
+    "baseline": "scheduling",
+    "level": "L2",
+    "name": "NEXT a profile gives serverOnly a pattern that is not one",
+    "sources": {
+      "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"jsx\": \"react-jsx\",\n    // One alias per domain group (profile §1).\n    \"paths\": { \"@assessment/*\": [\"./src/features/assessment/*\"] },\n  },\n}\n",
+      "src/features/assessment/schedule/index.ts": "export { scheduleAssessment } from \"./domain/use-cases/schedule-assessment\";\nexport type { Schedule, ScheduleRequest } from \"./domain/models/schedule\";\nexport { useSchedule } from \"./ui/hooks/use-schedule\";\n",
+      "src/features/assessment/schedule/domain/models/schedule.ts": "export interface ScheduleRequest {\n  assessmentId: string;\n  classId: string;\n  releaseAt: string;\n}\n\nexport interface Schedule {\n  scheduleId: string;\n}\n",
+      "src/features/assessment/schedule/domain/policies/release-time.ts": "import type { ScheduleRequest } from \"../models/schedule\";\n\nexport function isFutureRelease(request: ScheduleRequest, now: Date): boolean {\n  return Date.parse(request.releaseAt) > now.getTime();\n}\n",
+      "src/features/assessment/schedule/domain/use-cases/schedule-assessment.ts": "import { scheduleClient } from \"../../client/schedule-client\";\nimport type { Schedule, ScheduleRequest } from \"../models/schedule\";\nimport { isFutureRelease } from \"../policies/release-time\";\n\nexport async function scheduleAssessment(request: ScheduleRequest, now: Date): Promise<Schedule> {\n  if (!isFutureRelease(request, now)) throw new Error(\"invalid-time\");\n  return scheduleClient.schedule(request);\n}\n",
+      "src/features/assessment/schedule/client/schedule-client.ts": "import { generateClient } from \"aws-amplify/data\";\nimport type { Schedule, ScheduleRequest } from \"../domain/models/schedule\";\n\nconst client = generateClient();\n\nexport const scheduleClient = {\n  async schedule(request: ScheduleRequest): Promise<Schedule> {\n    const result = await client.mutations.scheduleAssessment(request);\n    return { scheduleId: result.data.scheduleId };\n  },\n};\n",
+      "src/features/assessment/schedule/ui/hooks/use-schedule.ts": "import type { ScheduleRequest } from \"../../domain/models/schedule\";\nimport { scheduleAssessment } from \"../../domain/use-cases/schedule-assessment\";\n\nexport function useSchedule() {\n  return (request: ScheduleRequest) => scheduleAssessment(request, new Date());\n}\n",
+      "src/features/assessment/schedule/ui/screens/ScheduleScreen.tsx": "import { useSchedule } from \"../hooks/use-schedule\";\n\nexport function ScheduleScreen() {\n  const schedule = useSchedule();\n  return <form onSubmit={() => schedule({ assessmentId: \"a\", classId: \"c\", releaseAt: \"2030-01-01T00:00:00Z\" })} />;\n}\n",
+      "src/app/App.tsx": "import { useSchedule } from \"@assessment/schedule\";\n\nexport function App() {\n  const schedule = useSchedule();\n  return <main data-ready={typeof schedule === \"function\"} />;\n}\n",
+      "amplify/data/resource.ts": "import { type ClientSchema, a, defineData } from \"@aws-amplify/backend\";\n\nconst schema = a.schema({\n  AssessmentSchedule: a.model({ assessmentId: a.id(), classId: a.id(), releaseAt: a.datetime() }),\n});\n\nexport type Schema = ClientSchema<typeof schema>;\nexport const data = defineData({ schema });\n",
+      "amplify/functions/schedule-assessment/resource.ts": "import { defineFunction } from \"@aws-amplify/backend\";\n\nexport const scheduleAssessment = defineFunction({ name: \"schedule-assessment\" });\n",
+      "amplify/functions/schedule-assessment/handler.ts": "import type { Schema } from \"../../data/resource\";\n\ntype Handler = Schema[\"AssessmentSchedule\"][\"type\"];\n\nexport const handler = async (event: { arguments: Handler }) => ({ scheduleId: event.arguments.assessmentId });\n",
+      ".intentset/profile.yaml": "id: lantern/next/1\nextends: intentset/typescript-nextjs/0.4\nbackendRoots: [\"amplify/**\"]\noutsidePackages: [\"aws-amplify/**\", \"@aws-amplify/**\"]\nserverOnly: [\"src/{a,b}/**\"]\n"
+    },
+    "valid": false,
+    "diagnostics": [
+      "CFG001"
+    ],
+    "notes": "Profile contract §2: serverOnly and middlewareFiles are read as path patterns, in a profile or in the architecture configuration."
   }
 ]

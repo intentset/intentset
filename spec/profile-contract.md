@@ -39,7 +39,7 @@ A repository has at most one profile of its own, at `.intentset/profile.yaml`, u
 | `ruleSets` | The rule sets that run (§5) |
 | `outsidePackages` | The patterns of the packages that reach a backend or an outside service (VSA §5, VSA015) |
 | `sourceRoots`, `shared`, `infrastructure`, `composition`, `tests`, `ignore` | The layout: where product source, neutral shared code, technical infrastructure, composition, tests and generated output live |
-| `backendRoots`, `backendSdks`, `screensGlob` | Settings of a reader or a rule set that are true of a stack: where its backend is deployed from, its backend SDKs' names, where its screens live |
+| `backendRoots`, `backendSdks`, `screensGlob`, `serverOnly`, `middlewareFiles` | Settings of a reader or a rule set that are true of a stack: where its backend is deployed from, its backend SDKs' names, where its screens live, which files run only on the server, which are middleware |
 
 The last three rows are keys `.intentset/architecture.yaml` has too, read and checked the same way in either file (§4).
 
@@ -94,13 +94,14 @@ A rule set is a group of checks for one stack, written for one language. A profi
 
 A rule set that a profile does not name MUST NOT run, whatever else the configuration holds: a backend SDK listed in `backendSdks` under a profile without the rule set that reads the key is a package like any other.
 
-This version defines one rule set:
+This version defines two rule sets:
 
 | Rule set | Language | Rules |
 |---|---|---|
 | `amplify` | `typescript` | AMP001 to AMP013, [reference profile](profile-typescript-amplify-gen2-0.4.md) §4, §6 and §9 |
+| `nextjs` | `typescript` | NEXT001 to NEXT004, [Next.js profile](profile-typescript-nextjs-0.4.md) §2 to §6 |
 
-This rule set reads the seam and pure roles (AMP001, AMP002, AMP006) for the packages in `backendSdks` and the files under `backendRoots`. Under a profile with no rule set, VSA015 checks the packages the profile lists in `outsidePackages`. What no import shows stays VSA010, a review assertion: unresolved until a reviewer asserts it, and never a pass.
+The `amplify` rule set reads the seam and pure roles (AMP001, AMP002, AMP006) for the packages in `backendSdks` and the files under `backendRoots`. Under a profile with no rule set, VSA015 checks the packages the profile lists in `outsidePackages`. What no import shows stays VSA010, a review assertion: unresolved until a reviewer asserts it, and never a pass.
 
 ## 6. Readers
 
@@ -131,16 +132,18 @@ Each specification owns the prefixes of the codes it defines, and a prefix belon
 | `PUB` | The publication profile |
 | `TS` | The `typescript` reader |
 | `AMP` | The `amplify` rule set |
+| `NEXT` | The `nextjs` rule set |
 
 A new reader or rule set takes a prefix no row holds, and adds its row here in the same change.
 
 ## 8. Shipped profiles
 
-A checker ships profiles under `intentset/`, each complete when shipped. This version names two:
+A checker ships profiles under `intentset/`, each complete when shipped. This version names three:
 
 | ID | What it is |
 |---|---|
 | `intentset/typescript/0.4` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set and no outside package listed |
+| `intentset/typescript-nextjs/0.4` | The [Next.js profile](profile-typescript-nextjs-0.4.md): the plain TypeScript profile with the `nextjs` rule set, the application router as composition, the middleware files and the default `serverOnly` patterns |
 | `intentset/typescript-amplify-gen2/0.4` | The reference profile: the plain TypeScript profile with the `amplify` rule set, the backend root `amplify/**` and the Amplify and AWS SDKs as `backendSdks` |
 
 The reference profile applies to a repository with no profile file, so a repository that had none is checked exactly as before this contract.

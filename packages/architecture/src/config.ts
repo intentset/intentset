@@ -71,6 +71,10 @@ export interface ArchitectureConfig {
    * file may import one only from the seam layer, and never from a pure layer (VSA015, VSA §5). Empty by default.
    */
   outsidePackages: string[];
+  /** Files that run only on the server, as path patterns (the `nextjs` rule set, NEXT001). Empty by default. */
+  serverOnly: string[];
+  /** The middleware files, as path patterns (the `nextjs` rule set, NEXT004). Empty by default. */
+  middlewareFiles: string[];
   /** The profile these values come from, by ID (profile contract §2). `.intentset/architecture.yaml` cannot set it. */
   profile: string;
   /** The language whose reader reads the tree (profile contract §6). */
@@ -99,7 +103,10 @@ export interface LayerRoles {
 }
 
 /** The rule sets this release ships, each with the language it is written for (profile contract §5). */
-export const RULE_SETS: Readonly<Record<string, { language: string }>> = { amplify: { language: "typescript" } };
+export const RULE_SETS: Readonly<Record<string, { language: string }>> = {
+  amplify: { language: "typescript" },
+  nextjs: { language: "typescript" },
+};
 
 /** The ID of the reference profile, which applies when a repository names none. */
 export const REFERENCE_PROFILE = "intentset/typescript-amplify-gen2/0.4";
@@ -145,6 +152,8 @@ export const DEFAULT_ARCHITECTURE_CONFIG: ArchitectureConfig = {
   sharedBackend: [],
   schemaBridge: null,
   outsidePackages: [],
+  serverOnly: [],
+  middlewareFiles: [],
   profile: REFERENCE_PROFILE,
   language: "typescript",
   layers: ["presentation", "application", "policy", "model", "external"],
@@ -168,6 +177,8 @@ const LIST_KEYS = [
   "conditions",
   "sharedBackend",
   "outsidePackages",
+  "serverOnly",
+  "middlewareFiles",
 ] as const;
 
 /** Keys whose entries are path patterns and must pass validatePattern. */
@@ -184,6 +195,8 @@ const PATTERN_KEYS = new Set<string>([
   "tests",
   "screensGlob",
   "sharedBackend",
+  "serverOnly",
+  "middlewareFiles",
 ]);
 
 const KNOWN_KEYS = [...LIST_KEYS, "screensGlob", "layerMatrix", "forbiddenPackages", "areas", "schemaBridge"].sort(

@@ -106,6 +106,11 @@ export interface Extraction {
    * needs no import, so this is the only sign of it (TS008).
    */
   jsx: number | null;
+  /**
+   * The file's directives: the string statements it opens with, such as `"use client"`, in order. A directive is a
+   * first statement of the file; a string anywhere else is an expression (the Next.js rule set reads them).
+   */
+  directives: string[];
 }
 
 interface Token {
@@ -675,7 +680,16 @@ export function extractImports(path: string, text: string): Extraction {
   for (const token of tokens) {
     if (token.kind === SyntaxKind.JsxElement && (jsx === null || token.line < jsx)) jsx = token.line;
   }
-  return { imports, problems, exports, jsx };
+  // Directives: each leading token that is a whole statement of one string, up to the first that is not.
+  const directives: string[] = [];
+  for (let i = 0; i < tokens.length && isString(i); ) {
+    const next = tokens[i + 1];
+    const ends = next === undefined || is(i + 1, SyntaxKind.SemicolonToken) || next.line > tokens[i].line;
+    if (!ends) break;
+    directives.push(tokens[i].value);
+    i += is(i + 1, SyntaxKind.SemicolonToken) ? 2 : 1;
+  }
+  return { imports, problems, exports, jsx, directives };
 }
 
 /** What an Amplify schema declares at its top level (profile §9, AMP009). */
