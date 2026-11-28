@@ -12,7 +12,7 @@ Extend a shipped profile and state only what differs. For a TypeScript codebase 
 
 ```yaml
 id: acme/web/1
-extends: intentset/typescript/0.4
+extends: intentset/typescript/1
 layers: [ui, app, domain, adapters]
 roles:
   seam: adapters      # the one layer that may reach a backend or an outside service
@@ -45,13 +45,17 @@ Each slice then declares its layers by those names:
 
 ## A Next.js application
 
-Extend the Next.js profile and list the packages that reach a database or an outside service:
+Extend the Next.js profile, and replace its list of packages that reach a database or an outside service with your
+own:
 
 ```yaml
 id: acme/shop/1
-extends: intentset/typescript-nextjs/0.4
+extends: intentset/typescript-nextjs/1
 outsidePackages: ["@prisma/client/**", "stripe/**"]
 ```
+
+The shipped list is a starting point of well-known clients (`pg`, `@prisma/client`, `stripe`, `@aws-sdk/*` and a
+dozen more). Yours replaces it whole, so list every package your product reaches outside through.
 
 Routes under `app/` and `middleware.ts` are composition, and four rules run (NEXT001 to NEXT004): client code never
 imports server-only code or one of those packages, and neither a route file nor middleware imports one. A file is

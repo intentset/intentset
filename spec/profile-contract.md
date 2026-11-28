@@ -138,13 +138,13 @@ A new reader or rule set takes a prefix no row holds, and adds its row here in t
 
 ## 8. Shipped profiles
 
-A checker ships profiles under `intentset/`, each complete when shipped. This version names three:
+A checker ships profiles under `intentset/`, each complete when shipped. **A shipped profile's version is its own**: a whole number that moves only when the profile changes what it checks or how a tree must be laid out, and never because `intentset.spec` moved (ADR 0031). A repository's profile file names one in `extends`, so a move of the specifications leaves that file as written. The document that specifies a profile has an `id` of its own, which carries the specifications' version as every specification's does; the two are different identifiers. This version names three:
 
 | ID | What it is |
 |---|---|
-| `intentset/typescript/0.4` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set and no outside package listed |
-| `intentset/typescript-nextjs/0.4` | The [Next.js profile](profile-typescript-nextjs-0.4.md): the plain TypeScript profile with the `nextjs` rule set, the application router as composition, the middleware files and the default `serverOnly` patterns |
-| `intentset/typescript-amplify-gen2/0.4` | The reference profile: the plain TypeScript profile with the `amplify` rule set, the backend root `amplify/**` and the Amplify and AWS SDKs as `backendSdks` |
+| `intentset/typescript/1` | The plain TypeScript profile: the five layers of the reference layout, their matrix, the layout and the package policy, with no rule set and no outside package listed |
+| `intentset/typescript-nextjs/1` | The [Next.js profile](profile-typescript-nextjs-0.4.md): the plain TypeScript profile with the `nextjs` rule set, the application router as composition, the middleware files, a starting list of outside packages and the default `serverOnly` patterns |
+| `intentset/typescript-amplify-gen2/1` | The reference profile: the plain TypeScript profile with the `amplify` rule set, the backend root `amplify/**` and the Amplify and AWS SDKs as `backendSdks` |
 
 The reference profile applies to a repository with no profile file, so a repository that had none is checked exactly as before this contract.
 

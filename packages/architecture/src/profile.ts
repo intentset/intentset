@@ -30,10 +30,10 @@ import { READERS, type Reader } from "./reader.ts";
 export const PROFILE_PATH = ".intentset/profile.yaml";
 
 /** The plain TypeScript profile: the layers, their matrix and the layout, and no stack's rules. */
-export const TYPESCRIPT_PROFILE = "intentset/typescript/0.4";
+export const TYPESCRIPT_PROFILE = "intentset/typescript/1";
 
 /** The TypeScript profile for Next.js: the plain one with the `nextjs` rule set and the application router's layout. */
-export const NEXTJS_PROFILE = "intentset/typescript-nextjs/0.4";
+export const NEXTJS_PROFILE = "intentset/typescript-nextjs/1";
 
 /**
  * The profiles this release ships, as profile files. The reference profile is the TypeScript one with the Amplify
@@ -77,6 +77,7 @@ sourceRoots: ["src/**", "app/**", "middleware.ts"]
 composition: ["app/**", "src/app/**", "middleware.ts", "src/middleware.ts"]
 middlewareFiles: ["middleware.ts", "src/middleware.ts"]
 serverOnly: ["**/server/**", "**/*.server.ts", "**/*.server.tsx"]
+outsidePackages: ["pg/**", "mysql2/**", "mongodb/**", "mongoose/**", "@prisma/client/**", "drizzle-orm/**", "sequelize/**", "typeorm/**", "knex/**", "better-sqlite3/**", "redis/**", "ioredis/**", "firebase-admin/**", "stripe/**", "nodemailer/**", "@aws-sdk/**"]
 `,
   [REFERENCE_PROFILE]: `id: ${REFERENCE_PROFILE}
 extends: ${TYPESCRIPT_PROFILE}

@@ -10,7 +10,7 @@ intentset:
   owner: maintainers
   visibility: public
   audiences: [engineering, product]
-  revision: 7
+  revision: 8
   links:
     verifies: [BEH-MIGRATE]
   verification:
@@ -35,7 +35,7 @@ intentset:
 - `packages/cli/test/cli.test.ts`: the test "a move from 0.2, which did not read a review's self, never re-pins one, matched or not", over `repinReviews` given a knowledge record at `0.2` and as moved (ADR 0027)
 - `packages/cli/test/cli.test.ts`: the test "migrate refuses a tree with uncommitted changes, and a target it does not know, and writes nothing"
 
-Two more tests cover the move to `0.4`: from `0.3`, where a record is refused until it is moved and the review found current is re-pinned; and the rename of TS007 to VSA016 in an exception's rule and a baseline's entries with the profile's `extends`, leaving another rule, another code, a file that is not a record and a second run alone.
+Two more tests cover the move to `0.4`: from `0.3`, where a record is refused until it is moved and the review found current is re-pinned; and the rename of TS007 to VSA016 in an exception's rule and a baseline's entries, leaving the profile file, another rule, another code, a file that is not a record and a second run alone.
 
 ## Expected result
 

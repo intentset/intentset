@@ -555,3 +555,28 @@ test("each generated format's version is its own, stated in its specification an
     "the publication profile's version is its formats'",
   );
 });
+
+test("each shipped architecture profile's version is its own, and a move of the specifications does not touch it (ADR 0031)", async () => {
+  const { NEXTJS_PROFILE, REFERENCE_PROFILE, SHIPPED_PROFILES, TYPESCRIPT_PROFILE } = await import(
+    "@intentset/architecture"
+  );
+  // Written out, so a search and replace across the repository at the next move of intentset.spec fails here.
+  assert.equal(TYPESCRIPT_PROFILE, "intentset/typescript/1");
+  assert.equal(REFERENCE_PROFILE, "intentset/typescript-amplify-gen2/1");
+  assert.equal(NEXTJS_PROFILE, "intentset/typescript-nextjs/1");
+  assert.equal(SHIPPED_PROFILES.length, 3, "a new shipped profile is written out here too");
+  const contract = await readFile(join(root, "spec", "profile-contract.md"), "utf8");
+  for (const id of SHIPPED_PROFILES) assert.ok(contract.includes(`\`${id}\``), `the profile contract names ${id}`);
+  // A specification document's own id carries the specifications' version, and is another identifier.
+  const specs = (await readdir(join(root, "spec"))).filter((f) => f.startsWith("profile-typescript-"));
+  assert.equal(specs.length, 2);
+  for (const file of specs) {
+    const text = await readFile(join(root, "spec", file), "utf8");
+    const id = /^id: (intentset\/typescript-[a-z0-9-]+)\/(\S+)$/mu.exec(text);
+    assert.ok(
+      id !== null && /^0\.\d+$/u.test(id[2]),
+      `spec/${file}: the document's id carries the specifications' version`,
+    );
+    assert.ok(text.includes(`\`${id[1]}/1\``), `spec/${file} names the profile it specifies`);
+  }
+});

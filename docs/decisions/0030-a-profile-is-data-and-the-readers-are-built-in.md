@@ -1,6 +1,6 @@
 # ADR 0030: An architecture profile is data a team writes, and the language readers are built in
 
-**Status:** accepted, 2026-11-27 (issue #158). Proposed 2026-11-27. The fifteen decisions under "Decided" were made
+**Status:** accepted, 2026-11-27 (issue #158). Proposed 2026-11-27. The eighteen decisions under "Decided" were made
 by the maintainers the same day. The contract it describes is `spec/profile-contract.md`, which arrived with its cases
 and its implementation. TS007 was renamed VSA016 the same day, which moved the specifications to `0.4` and the export
 to 0.8; the Next.js profile and the Python reader are the steps still to come.
@@ -74,6 +74,16 @@ as a computed `require` in TypeScript, which the check already reports as not ch
     nothing is not judged, and the check reports that it was not judged, never as a pass. As built, a "use server"
     file runs on the server and is the one kind of server code client code may import, since importing a server
     action is how a Next.js client calls the server; the Next.js profile §3 says so.
+16. **A "use server" file is the doorway from client to server.** Client code may import it, the walk that finds
+    client code stops there, and what lies behind it stays server-only. This accepts the departure from decision
+    15's wording that the text above describes.
+17. **The shipped Next.js profile carries a starting `outsidePackages` list** of well-known database and service
+    clients, with no general HTTP helper, so its rules and VSA015 judge something on the first run. A team is
+    expected to replace it, and a list stated replaces it whole. The plain TypeScript profile and the reference
+    profile list none.
+18. **A shipped profile's version is its own**, a whole number that moves only when the profile changes, recorded as
+    an amendment to [ADR 0031](0031-a-generated-format-has-a-version-of-its-own.md): `intentset/typescript/1`,
+    `intentset/typescript-amplify-gen2/1`, `intentset/typescript-nextjs/1`.
 
 ## Decision
 

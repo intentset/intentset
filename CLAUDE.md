@@ -24,8 +24,7 @@ These are non-negotiable. If a proposed change conflicts with one, the change lo
    uncommitted changes to tracked files unless `--allow-dirty` says otherwise: `intentset migrate
    --to <spec>` rewrites `spec` and `profile`, applies that version's transforms (for `0.3`, ADR 0023's status rewrite
    and ADR 0025's move of the review), re-pins the review pins that matched before the move, and, for `0.4`, writes
-   VSA016 for TS007 in each exception record's `rule` and in the entries of the baseline `--baseline` names, and moves
-   the shipped profile `.intentset/profile.yaml` extends (ADR 0030); and `intentset approve`
+   VSA016 for TS007 in each exception record's `rule` and in the entries of the baseline `--baseline` names (ADR 0030); and `intentset approve`
    (ADR 0022) rewrites `status` and `approval` in the drafts it is given, and the review of a knowledge record among
    them, and, with `--renew-review`, only the review of the approved or deprecated knowledge it is given. Unknown keys inside
    `intentset` are errors except under `extensions`; unknown top-level keys are preserved and never interpreted.
@@ -284,12 +283,15 @@ in `docs/implementation-plan.md` §5.
   the language readers built in, so the check still runs no code. Done: the reader interface, and the contract
   (`spec/profile-contract.md`) with the reference profile as data and `.intentset/profile.yaml` for a team's own.
   TS007 is VSA016, which moved the specifications to 0.4 and the export to 0.8 (unreleased; `intentset migrate --to
-  0.4` moves a repository). The Next.js profile (`intentset/typescript-nextjs/0.4`, the `nextjs` rule set, NEXT001 to NEXT004, `packages/architecture/src/nextjs.ts`) is in review. Next: Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
+  0.4` moves a repository). The Next.js profile (`intentset/typescript-nextjs/1`, the `nextjs` rule set, NEXT001 to NEXT004, `packages/architecture/src/nextjs.ts`) landed. **A shipped profile's version is its own** (ADR 0031, amended):
+  `intentset/typescript/1`, `intentset/typescript-amplify-gen2/1` and `intentset/typescript-nextjs/1` move only when the
+  profile changes, never with `intentset.spec`; a specification document's own `id` still carries the specifications'
+  version, and `test/tooling.test.ts` writes the three ids out. Next: Python. What holds now: no check recognizes a layer by its name (a rule reads the seam, pure and rendering roles
   from the profile); the Amplify checks run only where the profile names the `amplify` rule set; a profile file with
   an error stops the check with its errors and nothing else; a profile holds policy and layout, and `scope`, `areas`,
   `routerFiles`, `responseParserModules`, `schemaBridge`, `sharedBackend` and `conditions` stay in
   `.intentset/architecture.yaml`; and VSA015 judges the packages a profile lists in `outsidePackages`, of which the
-  shipped profiles list none.
+  plain TypeScript profile and the reference profile list none and the Next.js profile a starting list.
 - The alpha exit is MEAS-OUTSIDE-PILOT: an outside codebase with Intentset a required check for four consecutive
   weeks.
 - The chat answers with Sonnet 4.6 until Anthropic approves Opus 5.5 on Bedrock (`amplify/CLAUDE.md`).

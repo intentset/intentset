@@ -27,7 +27,7 @@ intentset:
 
 ## Behavior
 
-`intentset architecture check` runs the `nextjs` rule set where the repository's profile names it, as the shipped profile `intentset/typescript-nextjs/0.4` does. It reads each file's directives, the string statements the file opens with, and judges four things. Client code, a file that opens with "use client" or that client code imports by a value import, imports no server-only file, one that imports the `server-only` package or matches a `serverOnly` pattern (NEXT001); a file that opens with "use server" holds server actions, which client code may import. A route file under the application router, which is composition, imports no package the profile lists in `outsidePackages` (NEXT002). Client code imports no such package, where VSA015 has not already reported the import (NEXT003). A middleware file imports no such package (NEXT004).
+`intentset architecture check` runs the `nextjs` rule set where the repository's profile names it, as the shipped profile `intentset/typescript-nextjs/1` does. It reads each file's directives, the string statements the file opens with, and judges four things. Client code, a file that opens with "use client" or that client code imports by a value import, imports no server-only file, one that imports the `server-only` package or matches a `serverOnly` pattern (NEXT001); a file that opens with "use server" holds server actions, which client code may import. A route file under the application router, which is composition, imports no package the profile lists in `outsidePackages` (NEXT002). Client code imports no such package, where VSA015 has not already reported the import (NEXT003). A middleware file imports no such package (NEXT004).
 
 ## Preconditions
 

@@ -148,7 +148,8 @@ ${run} review --base main
 \`\`\`
 
 Fix every error. Resolve each slice \`review\` lists under "Code changed, records unchanged", by updating its records
-or with the trailer. The architecture check needs TypeScript 7; on an earlier TypeScript, run the toolchain as
+or with the trailer. A repository's profile may turn on rule sets of its stack, and each error the check reports
+carries its code and what to do. The architecture check needs TypeScript 7; on an earlier TypeScript, run the toolchain as
 \`${isolated}\`.
 
 ## Record format

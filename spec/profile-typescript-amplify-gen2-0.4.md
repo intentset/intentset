@@ -8,7 +8,7 @@ implementation: 0.18.0
 
 # TypeScript + AWS Amplify Gen 2 Reference Profile v0.4
 
-Implements [Core](core-0.4.md) and [Traceable VSA](vsa-0.4.md), and follows Core §1's change policy. Rules below are Intentset decisions, not requirements imposed by AWS. This profile says what `intentset architecture check` checks in a TypeScript and Amplify Gen 2 repository; it is not an Amplify starter, and it does not install or configure one.
+Implements [Core](core-0.4.md) and [Traceable VSA](vsa-0.4.md), and follows Core §1's change policy. Rules below are Intentset decisions, not requirements imposed by AWS. This profile says what `intentset architecture check` checks in a TypeScript and Amplify Gen 2 repository; The profile this document specifies is `intentset/typescript-amplify-gen2/1`, whose version is its own (profile contract §8): this document's `id` carries the specifications' version, and the profile's does not. It is not an Amplify starter, and it does not install or configure one.
 
 ## 1. Reference layout
 

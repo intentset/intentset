@@ -1867,7 +1867,30 @@ describe("BEH-ARCH-NEXTJS: the Next.js profile and its rule set", () => {
     assert.deepEqual(next.serverOnly, ["**/server/**", "**/*.server.ts", "**/*.server.tsx"]);
     assert.deepEqual(next.middlewareFiles, ["middleware.ts", "src/middleware.ts"]);
     assert.deepEqual(next.composition, ["app/**", "src/app/**", "middleware.ts", "src/middleware.ts"]);
-    assert.deepEqual(next.outsidePackages, [], "which packages reach outside is the team's to say");
+    assert.deepEqual(
+      next.outsidePackages,
+      [
+        "pg/**",
+        "mysql2/**",
+        "mongodb/**",
+        "mongoose/**",
+        "@prisma/client/**",
+        "drizzle-orm/**",
+        "sequelize/**",
+        "typeorm/**",
+        "knex/**",
+        "better-sqlite3/**",
+        "redis/**",
+        "ioredis/**",
+        "firebase-admin/**",
+        "stripe/**",
+        "nodemailer/**",
+        "@aws-sdk/**",
+      ],
+      "a starting point a team replaces whole",
+    );
+    assert.deepEqual(plain.outsidePackages, []);
+    assert.deepEqual(shippedProfile(REFERENCE_PROFILE)?.outsidePackages, []);
     assert.deepEqual([next.layers, next.roles, next.layerMatrix], [plain.layers, plain.roles, plain.layerMatrix]);
     assert.deepEqual(shippedProfile(REFERENCE_PROFILE)?.serverOnly, [], "no other profile has the settings");
   });

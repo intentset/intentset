@@ -109,7 +109,7 @@ export const RULE_SETS: Readonly<Record<string, { language: string }>> = {
 };
 
 /** The ID of the reference profile, which applies when a repository names none. */
-export const REFERENCE_PROFILE = "intentset/typescript-amplify-gen2/0.4";
+export const REFERENCE_PROFILE = "intentset/typescript-amplify-gen2/1";
 
 /**
  * The UI frameworks profile §3 keeps out of policies, models and the client seam by default. A repository adds its

@@ -12,7 +12,7 @@ Implements [Traceable VSA](vsa-0.4.md) under the [profile contract](profile-cont
 
 ## 1. The profile
 
-`intentset/typescript-nextjs/0.4` is the plain TypeScript profile (profile contract §8) with the `nextjs` rule set and the application router's layout:
+The profile this document specifies is `intentset/typescript-nextjs/1`. Its version is its own (profile contract §8): this document's `id` carries the specifications' version, and the profile's does not. It is the plain TypeScript profile with the `nextjs` rule set and the application router's layout:
 
 | Key | Value |
 |---|---|
@@ -21,8 +21,9 @@ Implements [Traceable VSA](vsa-0.4.md) under the [profile contract](profile-cont
 | `composition` | `app/**`, `src/app/**`, `middleware.ts`, `src/middleware.ts` |
 | `middlewareFiles` | `middleware.ts`, `src/middleware.ts` |
 | `serverOnly` | `**/server/**`, `**/*.server.ts`, `**/*.server.tsx` |
+| `outsidePackages` | `pg`, `mysql2`, `mongodb`, `mongoose`, `@prisma/client`, `drizzle-orm`, `sequelize`, `typeorm`, `knex`, `better-sqlite3`, `redis`, `ioredis`, `firebase-admin`, `stripe`, `nodemailer` and `@aws-sdk/*`, each with its subpaths |
 
-Its layers, their roles, their matrix and the package policy are the plain TypeScript profile's. It lists no `outsidePackages`: which packages reach a database or an outside service is the team's to say, in its own profile or in `.intentset/architecture.yaml`, and NEXT002 to NEXT004 and VSA015 judge nothing until it does.
+Its layers, their roles, their matrix and the package policy are the plain TypeScript profile's. Its `outsidePackages` is a starting point, so that NEXT002 to NEXT004 and VSA015 judge something before a team has said anything: well-known clients for a database or an outside service, and no general HTTP helper. A team is expected to replace it with the packages its own product reaches through, in its profile or in `.intentset/architecture.yaml`; a list stated replaces this one whole.
 
 `serverOnly` and `middlewareFiles` are lists of path patterns (VSA §3). Both are settings of this rule set that a profile or `.intentset/architecture.yaml` may state, and a value stated replaces the one beneath it whole (profile contract §4).
 
