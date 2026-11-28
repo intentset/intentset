@@ -265,6 +265,11 @@ from source (the installed bin points at `dist/`, which only the build writes).
 Open work only. What shipped is in `CHANGELOG.md`, why in `docs/decisions/`, and the milestones (M0 to M5, all done)
 in `docs/implementation-plan.md` §5.
 
+- **A generated format has a version of its own** (ADR 0031, 2026-11-27): the help file, the publication index, the
+  generated document's block, the snapshot file and the Atlas page's block are `0.3`, the list result `0.1`, and each
+  moves only when its own shape changes, never because `intentset.spec` moved. The export moves with the
+  specifications because its envelope carries `spec`. `test/tooling.test.ts` writes each version out, so a search and
+  replace at the next move fails there. Do not move them when moving the specifications.
 - The specifications are 0.4 and the export 0.8 on main, not yet released (ADR 0030, #158): the one breaking change
   is the renamed code, and the release that carries it says so first in its entry. A new step goes in `MIGRATIONS`
   with the codes it renames (`codes`), and a renamed code joins `RETIRED` in `test/codes.test.ts` and

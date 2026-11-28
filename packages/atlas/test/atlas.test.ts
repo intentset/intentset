@@ -553,7 +553,7 @@ test("every page declares Markset, with the derived atlas block, and parses with
       assert.equal(parsed.frontmatter?.markset, true, path);
       assert.match(
         source,
-        /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.4\n {2}derived: true\n {2}snapshot:\n/,
+        /\nintentset-atlas:\n {2}profile: intentset\/atlas\/0\.3\n {2}derived: true\n {2}snapshot:\n/,
         path,
       );
       assert.ok(!/^intentset:/m.test(source), `${path} must never read as a canonical record`);

@@ -523,3 +523,35 @@ test("the worked example's knowledge is reviewed against its sources as they are
     );
   }
 });
+
+test("each generated format's version is its own, stated in its specification and moved by nothing else (ADR 0031)", async () => {
+  const { SPEC_VERSION, EXPORT_CONTRACT, LIST_CONTRACT } = await import("@intentset/core");
+  const { ATLAS_PROFILE } = await import("@intentset/atlas");
+  const { HELP_PROFILE: READER_HELP_PROFILE } = await import("@intentset/help");
+  const { HELP_PROFILE, PUBLICATION_INDEX_PROFILE, PUBLICATION_PROFILE, SNAPSHOT_PROFILE } = await import(
+    "@intentset/publisher"
+  );
+  // Written out, so a search and replace across the repository at the next move of intentset.spec fails here.
+  const formats: [string, string, string][] = [
+    [HELP_PROFILE, "intentset/help/0.3", "publication.md"],
+    [READER_HELP_PROFILE, "intentset/help/0.3", "publication.md"],
+    [PUBLICATION_INDEX_PROFILE, "intentset/publication-index/0.3", "publication.md"],
+    [PUBLICATION_PROFILE, "intentset/publication/0.3", "publication.md"],
+    [SNAPSHOT_PROFILE, "intentset/snapshot/0.3", "publication.md"],
+    [ATLAS_PROFILE, "intentset/atlas/0.3", `core-${SPEC_VERSION}.md`],
+    [LIST_CONTRACT, "intentset/list/0.1", "list.md"],
+    [EXPORT_CONTRACT, "intentset/export/0.8", "export.md"],
+  ];
+  for (const [constant, version, spec] of formats) {
+    assert.equal(constant, version);
+    const text = await readFile(join(root, "spec", spec), "utf8");
+    assert.ok(text.includes(`\`${version}\``), `spec/${spec} states ${version}`);
+  }
+  assert.equal(SPEC_VERSION, "0.4", "the specifications' version is another number, and moves on its own");
+  const publication = await readFile(join(root, "spec", "publication.md"), "utf8");
+  assert.match(
+    publication,
+    /^id: intentset\/publication\/0\.3$/mu,
+    "the publication profile's version is its formats'",
+  );
+});
