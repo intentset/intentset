@@ -1660,7 +1660,7 @@ test("BEH-MIGRATE: migrate --to 0.4 from 0.3 rewrites spec and profile, re-pins 
   assert.deepEqual(await currentAtL4(dir), [], "the review current at 0.3 is current at 0.4");
 });
 
-test("BEH-MIGRATE: migrate --to 0.4 renames TS007 to VSA016 in an exception's rule and a baseline's entries, moves the profile's extends, and leaves every other code alone", async (t) => {
+test("BEH-MIGRATE: migrate --to 0.4 renames TS007 to VSA016 in an exception's rule and a baseline's entries, and leaves every other code and the profile file alone", async (t) => {
   const { dir } = await atEarlier(t, "0.3");
   const exception = (id: string, rule: string, quote = "") =>
     `id: ${id}\nrule: ${quote}${rule}${quote} # the package policy\nrationale: A kit the policies still import.\nowner: team-assessment\napprover: team-platform\ncreated: '2026-09-01'\nexpires: '2999-12-31'\nremediation: LANTERN-500\npaths:\n- src/a.ts\n`;
@@ -1686,7 +1686,7 @@ test("BEH-MIGRATE: migrate --to 0.4 renames TS007 to VSA016 in an exception's ru
     "architecture/exceptions/notes.txt": "rule: TS007\n",
     "baseline.json": baseline,
     ".intentset/profile.yaml":
-      'id: lantern/web/1\nextends: "intentset/typescript/0.3" # the plain profile\nshared: ["lib/**"]\n',
+      'id: lantern/web/1\nextends: "intentset/typescript/1" # the plain profile\nshared: ["lib/**"]\n',
   });
   git(dir, "add", "-A");
   git(dir, "commit", "-q", "-m", "an exception, a baseline and a profile written at 0.3");
@@ -1696,7 +1696,7 @@ test("BEH-MIGRATE: migrate --to 0.4 renames TS007 to VSA016 in an exception's ru
   assert.equal(moved.code, 0, moved.err);
   assert.match(
     moved.out,
-    /; renamed TS007 to VSA016 in the rule of 2 exception records and the code of 1 baseline entry; moved the shipped profile \.intentset\/profile\.yaml extends to 0\.4\.\n$/,
+    /; renamed TS007 to VSA016 in the rule of 2 exception records and the code of 1 baseline entry\.\n$/,
   );
   assert.equal(readFileSync(join(dir, "architecture/exceptions/EXC-KIT.yaml"), "utf8"), exception("EXC-KIT", "VSA016"));
   assert.equal(
@@ -1713,14 +1713,15 @@ test("BEH-MIGRATE: migrate --to 0.4 renames TS007 to VSA016 in an exception's ru
   );
   assert.equal(
     readFileSync(join(dir, ".intentset/profile.yaml"), "utf8"),
-    'id: lantern/web/1\nextends: "intentset/typescript/0.4" # the plain profile\nshared: ["lib/**"]\n',
+    'id: lantern/web/1\nextends: "intentset/typescript/1" # the plain profile\nshared: ["lib/**"]\n',
+    "a shipped profile's version is its own, so a move of the specifications leaves the file as written",
   );
 
   // A second run finds nothing to rename, and says nothing of it.
   git(dir, "commit", "-q", "-am", "migrated");
   const again = await run(dir, "migrate", "--to", "0.4", "--baseline", "baseline.json");
   assert.equal(again.code, 0, again.err);
-  assert.doesNotMatch(again.out, /renamed|extends/);
+  assert.doesNotMatch(again.out, /renamed/);
 
   const missing = await run(dir, "migrate", "--to", "0.4", "--baseline", "no-such.json");
   assert.equal(missing.code, 2);

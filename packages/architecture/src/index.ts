@@ -78,6 +78,7 @@ export { type Definition, NameIndex, type Origin } from "./names.ts";
 export {
   type LoadedConfig,
   loadConfig,
+  NEXTJS_PROFILE,
   PROFILE_KEYS,
   PROFILE_PATH,
   REPOSITORY_KEYS,

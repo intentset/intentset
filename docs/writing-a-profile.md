@@ -12,7 +12,7 @@ Extend a shipped profile and state only what differs. For a TypeScript codebase 
 
 ```yaml
 id: acme/web/1
-extends: intentset/typescript/0.4
+extends: intentset/typescript/1
 layers: [ui, app, domain, adapters]
 roles:
   seam: adapters      # the one layer that may reach a backend or an outside service
@@ -43,6 +43,26 @@ Each slice then declares its layers by those names:
       adapters: [src/features/orders/adapters/**]
 ```
 
+## A Next.js application
+
+Extend the Next.js profile, and replace its list of packages that reach a database or an outside service with your
+own:
+
+```yaml
+id: acme/shop/1
+extends: intentset/typescript-nextjs/1
+outsidePackages: ["@prisma/client/**", "stripe/**"]
+```
+
+The shipped list is a starting point of well-known clients (`pg`, `@prisma/client`, `stripe`, `@aws-sdk/*` and a
+dozen more). Yours replaces it whole, so list every package your product reaches outside through.
+
+Routes under `app/` and `middleware.ts` are composition, and four rules run (NEXT001 to NEXT004): client code never
+imports server-only code or one of those packages, and neither a route file nor middleware imports one. A file is
+client code when it opens with `"use client"` or client code imports it, and server-only when it imports
+`server-only` or sits under a `server/` folder or is named `*.server.ts`. A file that says neither is not judged,
+and the check says how many were not.
+
 ## Which file a key belongs in
 
 A profile says what is true of a stack, so several repositories could share it. What is true of one repository goes
@@ -53,7 +73,7 @@ in `.intentset/architecture.yaml`, which overrides the profile.
 | `id`, `extends`, `language`, `layers`, `roles`, `layerFolders`, `ruleSets` | `scope`, `areas` |
 | `layerMatrix`, `forbiddenPackages`, `outsidePackages` | `routerFiles`, `responseParserModules`, `schemaBridge` |
 | `sourceRoots`, `shared`, `infrastructure`, `composition`, `tests`, `ignore` | `sharedBackend`, `conditions` |
-| `backendRoots`, `backendSdks`, `screensGlob` | |
+| `backendRoots`, `backendSdks`, `screensGlob`, `serverOnly`, `middlewareFiles` | |
 
 Every key in the left column but the first row may also be set in `.intentset/architecture.yaml`. A key from the
 right column in a profile is an error.

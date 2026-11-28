@@ -86,7 +86,8 @@ Ten packages are published under the `@intentset` scope: `core`, `markset-adapte
 
 - Specifications: [`spec/core-0.4.md`](spec/core-0.4.md), [`spec/vsa-0.4.md`](spec/vsa-0.4.md),
   the profile contract a team's own profile follows, [`spec/profile-contract.md`](spec/profile-contract.md)
-  ([how to write one](docs/writing-a-profile.md)), the reference profile
+  ([how to write one](docs/writing-a-profile.md)), the Next.js profile
+  [`spec/profile-typescript-nextjs-0.4.md`](spec/profile-typescript-nextjs-0.4.md), the reference profile
   [`spec/profile-typescript-amplify-gen2-0.4.md`](spec/profile-typescript-amplify-gen2-0.4.md),
   [`spec/publication.md`](spec/publication.md), the export contract other tools read,
   [`spec/export.md`](spec/export.md), and the list contract `intentset list` writes, [`spec/list.md`](spec/list.md)

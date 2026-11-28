@@ -47,6 +47,7 @@ loadConfig(files, override?): { config, diagnostics, reader, read, profileFailed
 readProfile(text, path?): { config | null, diagnostics }   // CFG001, origin "architecture"; null when anything is wrong; REPOSITORY_KEYS are refused in a profile
 // config.outsidePackages: VSA015, the seam only and never a pure layer; empty in both shipped profiles
 shippedProfile(id), SHIPPED_PROFILES, REFERENCE_PROFILE, TYPESCRIPT_PROFILE; config.layers, .roles { seam, pure, rendering }, .layerFolders, .ruleSets
+checkNextjs(model, imports): { findings, unresolved }   // the nextjs rule set, NEXT001–NEXT004; ImportGraph.directives; config.serverOnly, .middlewareFiles; NEXTJS_PROFILE
 typescriptReader, READERS; runs(config, "amplify")           // ADR 0030: a reader per language, a rule set per stack; no check names a layer
 subjectSource(graph, registries, tree, { globalInputs, readFile })   // claimed files, resources, a test's local imports, covers(path); a subject is computed one way (ADR 0026)
 ```

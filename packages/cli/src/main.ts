@@ -152,8 +152,7 @@ commands
                             self) that matched before the move, leaving a stale one stale, and
                             says how many. To 0.4 it also renames the code TS007 to VSA016 in
                             the rule of each exception record and in the entries of the
-                            baseline --baseline names, and moves the shipped profile
-                            .intentset/profile.yaml extends. Refuses a tree with uncommitted
+                            baseline --baseline names. Refuses a tree with uncommitted
                             changes to tracked files unless --allow-dirty
   mcp --mode engineering [--include-restricted]
   mcp --mode customer --visibility <public|customer> --audience <a>... --product <ID>

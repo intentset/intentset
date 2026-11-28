@@ -5,14 +5,14 @@ markset: true
 # The specifications
 
 {.lead}
-Seven documents define what Intentset records and checks. Start with Core. Add the others when you want what each one gives you.
+Eight documents define what Intentset records and checks. Start with Core. Add the others when you want what each one gives you.
 
 ## The model, and the code around it
 
 :::card
 ### {{spec.core.title}}
 
-**Start here.** Core defines the records: what your repository says about the product, from why it is changing down to each behavior and rule, and how those records link to the tests that check them and the help that explains them. It stands on its own: you can adopt it without the other six.
+**Start here.** Core defines the records: what your repository says about the product, from why it is changing down to each behavior and rule, and how those records link to the tests that check them and the help that explains them. It stands on its own: you can adopt it without the other seven.
 
 [[Read Core](core/)]{.button}
 :::
@@ -43,6 +43,14 @@ Seven documents define what Intentset records and checks. Start with Core. Add t
 **The profile Intentset uses when you write none.** It is for TypeScript and AWS Amplify Gen 2: where slices live, how imports resolve, the layer matrix, and the stack's own ways of breaking a boundary, such as type-only and dynamic imports, path aliases, or interface code inside business logic. `intentset architecture check` reads TypeScript today; another language needs a release that reads it.
 
 [[Read the reference profile](profile-typescript-amplify-gen2/)]{.button}
+:::
+
+:::card
+### {{spec.profile-typescript-nextjs.title}}
+
+**For a Next.js application.** Four rules on top of the portable ones: code marked for the browser never imports server-only code, route files and middleware wire slices and reach no database themselves, and the packages you list as reaching outside are imported only on the server.
+
+[[Read the Next.js profile](profile-typescript-nextjs/)]{.button}
 :::
 
 ## Getting the records to people and other tools

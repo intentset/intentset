@@ -2,7 +2,8 @@
  * `intentset migrate --to 0.4` (Core §1): moves the records the model reads to the specifications' current version,
  * `0.4`, from `0.3`, `0.2` or `0.1`. The step to `0.4` rewrites no record beyond its `spec` and `profile`; it renames
  * the code TS007 to VSA016 where a repository wrote it (ADR 0030): the `rule` of each exception record, the `code` of
- * each entry of the baseline `--baseline` names, and the shipped profile `.intentset/profile.yaml` extends. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
+ * each entry of the baseline `--baseline` names. A shipped profile's ID has a version of its own (ADR 0031), so a
+ * repository's profile file is not touched. A move is a chain of steps, one per version (`MIGRATIONS`): each step rewrites two
  * values in the record's frontmatter, `intentset.spec` and `intentset.profile`, which Core §4 requires to agree with
  * it, and then applies the per-record transforms that version lists, in order. The step to `0.3` has two:
  * `statusToReviewLifecycle` (ADR 0023), by which a `status` of `implemented` or `released` becomes `approved`, and a
@@ -23,7 +24,7 @@
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { EXCEPTIONS_PATTERNS, PROFILE_PATH } from "@intentset/architecture";
+import { EXCEPTIONS_PATTERNS } from "@intentset/architecture";
 import {
   closingFenceIndex,
   compareStrings,
@@ -384,28 +385,6 @@ export const RENAMED_CODES: Readonly<Record<string, string>> = Object.assign(
   {},
   ...MIGRATIONS.map((step) => step.codes ?? {}),
 );
-
-const SHIPPED_PROFILE_LINE = /^(extends\s*:\s*)(['"]?)intentset\/([a-z0-9-]+)\/(\d+\.\d+)\2(\s*(?:#.*)?)$/;
-
-/**
- * A repository's profile file with the shipped profile it extends moved to `to` (profile contract §4, §8): a
- * shipped profile's ID carries the specifications' version, so a file that extends one at an earlier version names a
- * profile this release does not ship. Only the top-level `extends` line is rewritten, keeping its quoting and
- * comment; null when there is nothing to move.
- */
-export function migrateProfile(text: string, to: string = MIGRATE_TO): string | null {
-  const earlier = MIGRATIONS.map((step) => step.from);
-  let changed = false;
-  const lines = text.split("\n").map((raw) => {
-    const eol = raw.endsWith("\r") ? "\r" : "";
-    const line = eol === "" ? raw : raw.slice(0, -1);
-    const found = SHIPPED_PROFILE_LINE.exec(line);
-    if (found === null || !earlier.includes(found[4])) return raw;
-    changed = true;
-    return `${found[1]}${found[2]}intentset/${found[3]}/${to}${found[2]}${found[5]}${eol}`;
-  });
-  return changed ? lines.join("\n") : null;
-}
 
 const EXCEPTION_RULE_LINE = /^(\s*(['"]?)rule\2\s*:\s*)(['"]?)([A-Z]+[0-9]{3})\3(\s*(?:#.*)?)$/;
 
@@ -959,16 +938,6 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
   const renames = Object.entries(RENAMED_CODES)
     .map(([was, now]) => `${was} to ${now}`)
     .join(", ");
-  let profile = "";
-  try {
-    const text = migrateProfile(readFileSync(join(root, PROFILE_PATH), "utf8"));
-    if (text !== null) {
-      writeFileSync(join(root, PROFILE_PATH), text);
-      profile = `; moved the shipped profile ${PROFILE_PATH} extends to ${MIGRATE_TO}`;
-    }
-  } catch {
-    // No profile file: the reference profile applies.
-  }
   const renamed = also.length > 0 ? `; renamed ${renames} in ${also.join(" and ")}` : "";
   const pins = (n: number) => `${n} review pin${n === 1 ? "" : "s"}`;
   const repinned =
@@ -978,7 +947,7 @@ export function migrateCommand(options: MigrateOptions, io: Io): number {
       : "";
   io.stdout(
     `intentset migrate: moved ${moved} record${moved === 1 ? "" : "s"} to ${MIGRATE_TO}` +
-      `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}${repinned}${renamed}${profile}.\n`,
+      `${current > 0 ? `; ${current} already ${MIGRATE_TO}` : ""}${other > 0 ? `; ${other} declare neither (left as they are)` : ""}${repinned}${renamed}.\n`,
   );
   if (unread.length > 0) {
     io.stderr(
