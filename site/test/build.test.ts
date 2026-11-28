@@ -539,10 +539,10 @@ test("the worked example opens every record on the page, in the act it belongs t
   );
   const out = text(published[0]);
   for (const expected of [
-    "intentset/publication/0.4",
+    "intentset/publication/0.3",
     "withheldSources: 3",
     "reviewer: team-support",
-    "intentset/help/0.4",
+    "intentset/help/0.3",
     // Each slice names the article that leads its page, so the help file maps both routes to it (ADR 0028).
     '"surfaces": {',
     '"/account/reset-password": {',

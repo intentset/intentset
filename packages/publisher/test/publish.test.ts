@@ -138,7 +138,7 @@ test("BEH-PUBLISH: only the snapshot file names the snapshot: a change elsewhere
   }
   assert.deepEqual(Object.keys(before.snapshot), ["profile", "derived", "commit", "graphHash"]);
   assert.deepEqual(before.snapshot, {
-    profile: "intentset/snapshot/0.4",
+    profile: "intentset/snapshot/0.3",
     derived: true,
     commit: "c0ffee",
     graphHash: before.snapshot.graphHash,
@@ -415,7 +415,7 @@ test("the index names the request without authorization and counts exclusions", 
   const result = publishOnce(customer({ visibility: "internal", authorizedInternal: true }));
   assert.deepEqual(Object.keys(result.index), ["profile", "request", "published", "excludedCounts", "keptUnderReview"]);
   assert.deepEqual(result.index.keptUnderReview, []);
-  assert.equal(result.index.profile, "intentset/publication-index/0.4");
+  assert.equal(result.index.profile, "intentset/publication-index/0.3");
   assert.equal(Object.hasOwn(result.index.request ?? {}, "authorizedInternal"), false);
   assert.deepEqual(result.index.published, ["KB-ASMT-SCHEDULE"]);
   assert.deepEqual(result.index.excludedCounts, { "not-knowledge": 14 });

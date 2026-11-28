@@ -40,7 +40,7 @@ import { UNDER_REVIEW_DIR } from "./generate.ts";
 import { type CheckedRequest, type PublicationRequest, asList } from "./request.ts";
 import { helpSurfaces } from "./surfaces.ts";
 
-export const HELP_PROFILE = "intentset/help/0.4";
+export const HELP_PROFILE = "intentset/help/0.3";
 /** The file's name beside the published documents. */
 export const HELP_FILE = "help.json";
 

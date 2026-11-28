@@ -2636,7 +2636,7 @@
         "KB-ASMT-SCHEDULE"
       ],
       "mustContain": [
-        "\"profile\":\"intentset/help/0.4\"",
+        "\"profile\":\"intentset/help/0.3\"",
         "\"knowledge\":[{\"id\":\"KB-ASMT-SCHEDULE\",\"title\":\"Prepare a scheduled student assessment\",\"path\":\"KB-ASMT-SCHEDULE.md\"}]",
         "\"tips\":{\"BEH-ASMT-SCHEDULE\":{\"text\":\"Pick a published assessment, a class you manage and a future release time.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"},\"RULE-ASMT-FUTURE\":{\"text\":\"The release time must be in the future.\",\"knowledge\":\"KB-ASMT-SCHEDULE\"}}"
       ],
@@ -2691,7 +2691,7 @@
       "mustContain": [
         "  withheldSources: 3\n  audience:\n    - teacher\n  availability:\n",
         "\"derived\":true,\"projection\":\"customer\",\"audience\":[\"teacher\"]",
-        "{\"profile\":\"intentset/snapshot/0.4\",\"derived\":true,\"commit\":null,\"graphHash\":\""
+        "{\"profile\":\"intentset/snapshot/0.3\",\"derived\":true,\"commit\":null,\"graphHash\":\""
       ],
       "mustNotContain": [
         "\"snapshot\":",
@@ -4079,7 +4079,7 @@
         "KB-ASMT-SCHEDULE"
       ],
       "mustContain": [
-        "{\"profile\":\"intentset/publication-index/0.4\",\"request\":{\"visibility\":\"customer\"",
+        "{\"profile\":\"intentset/publication-index/0.3\",\"request\":{\"visibility\":\"customer\"",
         "],\"excludedCounts\":{"
       ]
     }

@@ -1,14 +1,16 @@
 ---
-title: Intentset Publication Profile v0.4
-id: intentset/publication/0.4
+title: Intentset Publication Profile v0.3
+id: intentset/publication/0.3
 status: draft
 revision: 2026-11-27
 implementation: 0.18.0
 ---
 
-# Intentset Publication Profile v0.4
+# Intentset Publication Profile v0.3
 
 **Extends:** [Core §9](core-0.4.md#9-markset-profiles-and-document-publication), and follows Core §1's change policy.
+
+**This profile's version is its own** (Core §1, ADR 0031). It is `0.3`, and so is each format it defines: the generated document's block (`intentset/publication/0.3`, §2), the index (`intentset/publication-index/0.3`, §4), the help file (`intentset/help/0.3`, §5) and the snapshot file (`intentset/snapshot/0.3`, §6). A format's version moves only when what a reader of that format must accept changes: a member added that a closed reader would refuse, removed, renamed or given another meaning. It does not move because `intentset.spec` moved, so the move of the specifications to `0.4` changed none of them, and a reader built for `0.3` reads what a `0.4` repository publishes.
 
 Publication turns reviewed knowledge, the explanations a product's readers are given, into documentation and in-app
 help for one reader, in one or more audiences and roles, on one release, and leaves out everything that reader may
@@ -39,7 +41,7 @@ role in a list, MUST refuse the whole request rather than match nothing or be dr
 
 A knowledge artifact is eligible only when all hold: type `knowledge`; status `approved` or `deprecated`;
 no artifact it `explains` says `delivery: planned` (Core §7: planned work is not current, and
-prospective documentation belongs only in a separately labeled roadmap projection, which v0.4 does not define);
+prospective documentation belongs only in a separately labeled roadmap projection, which v0.3 does not define);
 visibility admitted; at least one of the request's audiences in `audiences`; `availability` present; the request's
 product, release and edition each in the corresponding list, and at least one of the request's roles in
 `availability.roles`; every flag in `availability.flags` named by the
@@ -78,7 +80,7 @@ under review adds below. The published path is `<ID>.md`.
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/publication/0.4` |
+| `profile` | `intentset/publication/0.3` |
 | `derived` | `true` |
 | `projection` | the request's visibility; the document is as restricted as its projection |
 | `source` | `id`, `revision` (null when undeclared), `sourceHash` of the knowledge; `path` only when the projection admits internal |
@@ -272,7 +274,7 @@ its roles is in `availability.roles`. A CORE008 for a requested ID excluded by e
 values, never the knowledge's.
 
 The index a publisher writes for customer tools (Core §10) has five members, in this order: `profile`
-(`intentset/publication-index/0.4`), `request`, `published`, `excludedCounts` and `keptUnderReview`. A reader MUST
+(`intentset/publication-index/0.3`), `request`, `published`, `excludedCounts` and `keptUnderReview`. A reader MUST
 refuse an index whose `profile` is any other value or that has a member this paragraph does not give it. `request`
 records the request without its authorization: `visibility`, `audience`, `product`, `release`, `role`, `edition`,
 `flags`, then `ids` when the request named them, then `keepUnderReview` only when it is `true`, in that order. `audience`, `role`, `flags` and `ids` are each a list sorted by code
@@ -298,7 +300,7 @@ its bytes change only when a tip, a tip's mark, a written surface, a published d
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/help/0.4` |
+| `profile` | `intentset/help/0.3` |
 | `derived` | `true` |
 | `projection` | the request's visibility |
 | `audience` | the request's audiences, a list sorted by code unit without repeats |
@@ -353,7 +355,7 @@ is written. The publication index counts nothing about surfaces. A generated doc
 chunks MUST NOT carry surfaces. In a file made for several roles or audiences (§1), a surface may be admitted by one
 of them only; such a file is served only to a reader who holds all of them.
 
-A reader MUST refuse a help file, whole, when its `profile` is not `intentset/help/0.4`; when a member of the table
+A reader MUST refuse a help file, whole, when its `profile` is not `intentset/help/0.3`; when a member of the table
 is missing, or the file or any object in it (an `availability`, a `knowledge` entry, a surface entry, a tip) has a member the table
 does not give it; when `audience` or `availability.role` is not a non-empty list of strings in strictly ascending
 code-unit order; when `availability.flags` is not a list of strings in that order; when `knowledge` is not strictly
@@ -380,7 +382,7 @@ UTF-8 JSON object, written whenever the request is accepted.
 
 | Field | Value |
 |---|---|
-| `profile` | `intentset/snapshot/0.4` |
+| `profile` | `intentset/snapshot/0.3` |
 | `derived` | `true` |
 | `commit` | the commit published from, or null when unavailable |
 | `graphHash` | the hash of the graph published from |
